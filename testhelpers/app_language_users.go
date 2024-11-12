@@ -81,14 +81,11 @@ func (ctx *TestContext) setUserFieldInDatabase(primaryKey map[string]string, fie
 }
 
 // ThereIsAUser create a user.
-func (ctx *TestContext) ThereIsAUser(name string) error {
+func (ctx *TestContext) ThereIsAUser(name string) (err error) {
+	defer recoverPanics(&err)
+
 	ctx.addUser(name)
-
-	err := ctx.ThereIsAGroup(name)
-	mustNotBeError(err)
-
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getIDOfReference(name))
-	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "User")
+	ctx.addGroup(name, "User")
 
 	return nil
 }

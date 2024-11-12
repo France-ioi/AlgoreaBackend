@@ -356,6 +356,7 @@ type requiredApprovalsAndLimits struct {
 	RequireWatchApproval              bool
 	EnforceMaxParticipants            bool
 	MaxParticipants                   int
+	IsTeam                            bool
 }
 
 // Transition performs a groups_groups relation transition according to groupGroupTransitionRules.
@@ -377,7 +378,7 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		Select(`
 				require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
 				NOW() < IFNULL(require_lock_membership_approval_until, 0) AS require_lock_membership_approval,
-				require_watch_approval, enforce_max_participants, max_participants`).
+				require_watch_approval, enforce_max_participants, max_participants, type = 'Team' AS is_team`).
 		WithSharedWriteLock().Scan(&groupRequiredApprovalsAndLimits).Error())
 
 	// Here we get current states for each childGroupID:
@@ -431,13 +432,32 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 
 	shouldCreateNewAncestors := false
 	shouldPropagatePermissions := false
-	if len(idsToDeletePending) > 0 {
-		idsToDeleteSlice := make([]int64, 0, len(idsToDeletePending))
-		for id := range idsToDeletePending {
-			idsToDeleteSlice = append(idsToDeleteSlice, id)
-		}
-		mustNotBeError(dataStore.GroupPendingRequests().Delete("group_id = ? AND member_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
+	shouldPropagateResults := false
+
+	deletePending(dataStore, idsToDeletePending, parentGroupID)
+	deleteRelations(dataStore, idsToDeleteRelation, parentGroupID, &groupRequiredApprovalsAndLimits,
+		&shouldCreateNewAncestors, &shouldPropagatePermissions)
+	insertGroupPendingRequests(dataStore, idsToInsertPending, parentGroupID, approvals)
+	insertRelations(dataStore, idsToInsertRelation, parentGroupID, approvals, oldActionsMap,
+		&groupRequiredApprovalsAndLimits, &shouldCreateNewAncestors, &shouldPropagateResults)
+	insertGroupMembershipChanges(dataStore, idsChanged, parentGroupID, performedByUserID)
+
+	if shouldCreateNewAncestors {
+		dataStore.GroupGroups().createNewAncestors()
 	}
+	if shouldPropagatePermissions {
+		dataStore.SchedulePermissionsPropagation()
+	}
+	if shouldPropagateResults {
+		dataStore.ScheduleResultsPropagation()
+	}
+
+	return results, approvalsToRequest, nil
+}
+
+func deleteRelations(dataStore *DataStore, idsToDeleteRelation map[int64]bool, parentGroupID int64,
+	groupRequiredApprovalsAndLimits *requiredApprovalsAndLimits, shouldCreateNewAncestors, shouldPropagatePermissions *bool,
+) {
 	if len(idsToDeleteRelation) > 0 {
 		idsToDeleteSlice := make([]int64, 0, len(idsToDeleteRelation))
 		for id := range idsToDeleteRelation {
@@ -447,12 +467,27 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 		result := dataStore.PermissionsGranted().
 			Delete("origin = 'group_membership' AND source_group_id = ? AND group_id IN (?)", parentGroupID, idsToDeleteSlice)
 		mustNotBeError(result.Error())
-		shouldCreateNewAncestors = true
-		shouldPropagatePermissions = result.RowsAffected() > 0
+		if !groupRequiredApprovalsAndLimits.IsTeam {
+			*shouldCreateNewAncestors = true
+		}
+		*shouldPropagatePermissions = result.RowsAffected() > 0
 	}
+}
 
-	insertGroupPendingRequests(dataStore, idsToInsertPending, parentGroupID, approvals)
+func deletePending(dataStore *DataStore, idsToDeletePending map[int64]bool, parentGroupID int64) {
+	if len(idsToDeletePending) > 0 {
+		idsToDeleteSlice := make([]int64, 0, len(idsToDeletePending))
+		for id := range idsToDeletePending {
+			idsToDeleteSlice = append(idsToDeleteSlice, id)
+		}
+		mustNotBeError(dataStore.GroupPendingRequests().Delete("group_id = ? AND member_id IN (?)", parentGroupID, idsToDeleteSlice).Error())
+	}
+}
 
+func insertRelations(dataStore *DataStore, idsToInsertRelation map[int64]bool, parentGroupID int64,
+	approvals map[int64]GroupApprovals, oldActionsMap map[int64]stateInfo, groupRequiredApprovalsAndLimits *requiredApprovalsAndLimits,
+	shouldCreateNewAncestors, shouldPropagateResults *bool,
+) {
 	if len(idsToInsertRelation) > 0 {
 		insertQuery := `
 			INSERT INTO groups_groups (
@@ -472,21 +507,12 @@ func (s *GroupGroupStore) Transition(action GroupGroupTransitionAction,
 			values = append(values, parentGroupID, id,
 				personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt)
 		}
-		shouldCreateNewAncestors = true
+		if !groupRequiredApprovalsAndLimits.IsTeam {
+			*shouldCreateNewAncestors = true
+			*shouldPropagateResults = true
+		}
 		mustNotBeError(dataStore.Exec(insertQuery, values...).Error())
 	}
-
-	insertGroupMembershipChanges(dataStore, idsChanged, parentGroupID, performedByUserID)
-
-	if shouldCreateNewAncestors {
-		dataStore.GroupGroups().createNewAncestors()
-		if shouldPropagatePermissions {
-			dataStore.SchedulePermissionsPropagation()
-		}
-		dataStore.ScheduleResultsPropagation()
-	}
-
-	return results, approvalsToRequest, nil
 }
 
 func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, parentGroupID int64,

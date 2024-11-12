@@ -20,12 +20,11 @@ func (s *DataStore) CheckIfTeamParticipationsConflictWithExistingUserMemberships
 	}
 
 	query := s.ActiveGroupGroups().Where("child_group_id = ?", userGroupID).
-		Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id").
+		Where("is_team_membership = 1").
 		Joins("JOIN (?) AS teams_contests", contestsQuery. // all the team's attempts (not only active ones)
 									Select("root_item_id AS item_id, MAX(NOW() < attempts.allows_submissions_until) AS is_active").QueryExpr()).
 		Joins("JOIN items ON items.id = teams_contests.item_id").
-		Joins("JOIN attempts ON attempts.participant_id = groups.id AND attempts.root_item_id = items.id").
-		Where("groups.type = 'Team'").
+		Joins("JOIN attempts ON attempts.participant_id = parent_group_id AND attempts.root_item_id = items.id").
 		Where("parent_group_id != ?", teamID).
 		Where("(teams_contests.is_active AND NOW() < attempts.allows_submissions_until) OR NOT items.allows_multiple_attempts")
 	if withLock {

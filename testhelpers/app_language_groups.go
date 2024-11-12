@@ -129,16 +129,16 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 }
 
 // ThereIsAGroup creates a new group (type=Class).
-func (ctx *TestContext) ThereIsAGroup(group string) error {
+func (ctx *TestContext) ThereIsAGroup(group string) (err error) {
+	defer recoverPanics(&err)
 	ctx.addGroup(group, "Class")
-
 	return nil
 }
 
 // ThereIsATeam creates a new team.
-func (ctx *TestContext) ThereIsATeam(group string) error {
+func (ctx *TestContext) ThereIsATeam(group string) (err error) {
+	defer recoverPanics(&err)
 	ctx.addGroup(group, "Team")
-
 	return nil
 }
 
@@ -202,15 +202,13 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 }
 
 // AllUsersGroupIsDefinedAsTheGroup creates and sets the allUsersGroup.
-func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) error {
-	err := ctx.ThereIsAGroup(group)
-	if err != nil {
-		return err
-	}
+func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) (err error) {
+	defer recoverPanics(&err)
+
+	ctx.addGroup(group, "Base")
 
 	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getIDOfReference(group))
 	ctx.setGroupFieldInDatabase(groupPrimaryKey, "name", "AllUsers")
-	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "Base")
 
 	err = ctx.TheApplicationConfigIs(&godog.DocString{
 		Content: `

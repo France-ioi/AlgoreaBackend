@@ -2,6 +2,7 @@ Feature: Get root skills for a participant group - robustness
   Background:
     Given the database has the following table "groups":
       | id | name      | type  | root_activity_id | created_at          |
+      | 1  | Class     | Class | null             | 2019-01-30 08:26:46 |
       | 13 | Group B   | Team  | 230              | 2019-01-30 08:26:46 |
       | 14 | Group C   | Team  | 230              | 2019-01-30 08:26:46 |
     And the database has the following table "languages":

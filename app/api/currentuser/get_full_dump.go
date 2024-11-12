@@ -85,6 +85,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 			service.MustNotBeError(store.Sessions().
 				Where("user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS refresh_token").
+				Order("session_id").
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
@@ -95,6 +96,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 				Joins("JOIN sessions ON sessions.session_id = access_tokens.session_id").
 				Where("sessions.user_id = ?", user.GroupID).
 				Select(columns + ", '***' AS token").
+				Order("session_id").
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 	}
@@ -121,6 +123,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 		writeComma(w)
 		writeJSONObjectArrayElement("answers", w, func(writer io.Writer) {
 			service.MustNotBeError(store.Answers().Where("author_id = ?", user.GroupID).
+				Order("id").
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 
@@ -144,6 +147,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 			Where("child_group_id = ?", user.GroupID).
 			Joins("JOIN `groups` ON `groups`.id = parent_group_id").
 			Select(columns + ", `groups`.name").
+			Order("parent_group_id").
 			ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
@@ -154,6 +158,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 			Where("manager_id = ?", user.GroupID).
 			Joins("JOIN `groups` ON `groups`.id = group_id").
 			Select(columns + ", `groups`.name").
+			Order("group_id").
 			ScanAndHandleMaps(streamerFunc(w)).Error())
 	})
 
@@ -176,6 +181,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 				Where("member_id = ?", user.GroupID).
 				Joins("JOIN `groups` ON `groups`.id = group_id").
 				Select(columns + ", `groups`.name").
+				Order("group_id").
 				ScanAndHandleMaps(streamerFunc(w)).Error())
 		})
 	}
@@ -266,7 +272,7 @@ func buildQueryForGettingAttemptsOrResults(store *database.DataStore, user *data
 				Select(columns).
 				Where("participant_id IN (?)",
 					store.GroupGroups().WhereUserIsMember(user).
-						Select("`groups`.id").
-						Joins("JOIN `groups` ON `groups`.id = groups_groups.parent_group_id AND `groups`.type = 'Team'").
+						Where("groups_groups.is_team_membership = 1").
+						Select("groups_groups.parent_group_id AS id").
 						QueryExpr()))
 }

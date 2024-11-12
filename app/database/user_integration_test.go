@@ -75,7 +75,7 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 			testhelpers.SuppressOutputIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
-				groups: [{id: 101}, {id: 111}, {id: 121}]
+				groups: [{id: 101}, {id: 102}, {id: 111}, {id: 121}]
 				users:
 					- {login: "john", group_id: 101}
 					- {login: "jane", group_id: 111}
@@ -84,7 +84,6 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 					- {parent_group_id: 102, child_group_id: 101}
 				groups_ancestors:
 					- {ancestor_group_id: 102, child_group_id: 101}
-					- {ancestor_group_id: 102, child_group_id: 102}
 				languages: [{tag: fr}]
 				items:
 					- {id: 10, default_language_tag: fr}

@@ -264,8 +264,6 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 
 		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
 
-		service.MustNotBeError(store.ItemItems().CreateNewAncestors())
-
 		return nil
 	})
 	if err == nil {
@@ -617,6 +615,8 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		parentChildSpec = append(parentChildSpec,
 			constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
 		insertItemItems(store, parentChildSpec)
+
+		service.MustNotBeError(store.ItemItems().CreateNewAncestors())
 	}
 
 	return itemID, service.NoError

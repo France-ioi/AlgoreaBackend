@@ -136,35 +136,40 @@ Feature: Export the current user's data
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
-          "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z",
+          "is_team_membership": 1
         },
         {
           "child_group_id": "11", "parent_group_id": "5",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
-          "name": "Other people", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Other people", "expires_at": "9999-12-31T23:59:59Z",
+          "is_team_membership": 0
         },
         {
           "child_group_id": "11", "parent_group_id": "6",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
-          "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z",
+          "is_team_membership": 0
         },
         {
           "child_group_id": "11", "parent_group_id": "9",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
-          "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z",
+          "is_team_membership": 0
         },
         {
           "child_group_id": "11", "parent_group_id": "10",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
-          "name": "Secret group", "expires_at": "9999-12-31T23:59:59Z"
+          "name": "Secret group", "expires_at": "9999-12-31T23:59:59Z",
+          "is_team_membership": 0
         }
       ],
       "group_managers": [

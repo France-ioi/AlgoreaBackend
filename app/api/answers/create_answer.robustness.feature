@@ -4,8 +4,9 @@ Feature: Create a 'saved' answer - robustness
       | login | group_id |
       | john  | 101      |
     And the database table "groups" also has the following row:
-      | id | type |
-      | 13 | Team |
+      | id | type  |
+      | 13 | Team  |
+      | 22 | Class |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 22              | 13             |

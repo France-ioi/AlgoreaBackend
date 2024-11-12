@@ -28,24 +28,6 @@ func (s *GroupStore) ManagedBy(user *User) *DB {
 					user_ancestors.child_group_id = ?`, user.GroupID)
 }
 
-// TeamGroupForTeamItemAndUser returns a composable query for getting a team that
-//  1. the given user is a member of
-//  2. has an unexpired attempt with root_item_id = `itemID`.
-//
-// If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
-func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
-	return s.
-		Joins(`JOIN groups_groups_active
-			ON groups_groups_active.parent_group_id = groups.id AND
-				groups_groups_active.child_group_id = ?`, user.GroupID).
-		Joins(`
-			JOIN attempts ON attempts.participant_id = groups.id AND
-				attempts.root_item_id = ? AND NOW() < attempts.allows_submissions_until`, itemID).
-		Where("groups.type = 'Team'").
-		Order("groups.id").
-		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
-}
-
 // TeamGroupForUser returns a composable query for getting team group of the given user with given id.
 func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 	return s.

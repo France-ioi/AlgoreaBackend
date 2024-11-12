@@ -363,3 +363,38 @@ func Test_GroupStore_DeleteGroup(t *testing.T) {
 	assert.NoError(t, groupStore.Table("groups_propagate").Pluck("id", &ids).Error())
 	assert.Empty(t, ids)
 }
+
+func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
+	const expectedErrorMessage = "Error 1644: Unable to change groups.type from/to User/Team"
+
+	for _, test := range []struct {
+		oldType     string
+		newType     string
+		expectError bool
+	}{
+		{oldType: "User", newType: "Team", expectError: true},
+		{oldType: "Team", newType: "User", expectError: true},
+		{oldType: "Class", newType: "User", expectError: true},
+		{oldType: "Class", newType: "Team", expectError: true},
+		{oldType: "User", newType: "Class", expectError: true},
+		{oldType: "Team", newType: "Class", expectError: true},
+		{oldType: "Team", newType: "Team", expectError: false},
+		{oldType: "User", newType: "User", expectError: false},
+		{oldType: "Other", newType: "Club", expectError: false},
+	} {
+		test := test
+		t.Run(fmt.Sprintf("%s to %s", test.oldType, test.newType), func(t *testing.T) {
+			testhelpers.SuppressOutputIfPasses(t)
+			db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, type: ` + test.oldType + `}]`)
+			defer func() { _ = db.Close() }()
+
+			groupGroupStore := database.NewDataStore(db).Groups()
+			result := groupGroupStore.ByID(1).UpdateColumn("type", test.newType)
+			if test.expectError {
+				assert.EqualError(t, result.Error(), expectedErrorMessage)
+			} else {
+				assert.NoError(t, result.Error())
+			}
+		})
+	}
+}

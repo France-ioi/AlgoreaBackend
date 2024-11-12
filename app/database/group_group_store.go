@@ -198,3 +198,21 @@ func (s *GroupGroupStore) CreateNewAncestors() (err error) {
 	s.createNewAncestors()
 	return nil
 }
+
+// TeamGroupForTeamItemAndUser returns a composable query for getting a team
+//
+//	(as groups_groups_active.parent_group_id) that
+//	1. the given user is a member of
+//	2. has an unexpired attempt with root_item_id = `itemID`.
+//
+// If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
+func (s *GroupGroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
+	return s.
+		Where("groups_groups_active.is_team_membership = 1").
+		Where("groups_groups_active.child_group_id = ?", user.GroupID).
+		Joins(`
+			JOIN attempts ON attempts.participant_id = groups_groups_active.parent_group_id AND
+				attempts.root_item_id = ? AND NOW() < attempts.allows_submissions_until`, itemID).
+		Order("groups_groups_active.parent_group_id").
+		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
+}

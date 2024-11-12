@@ -3,6 +3,10 @@ Feature: Update participant's current answer
     Given the database has the following users:
       | login | group_id |
       | john  | 101      |
+    And the database has the following table "groups":
+      | id  |
+      | 13  |
+      | 22  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 22              | 13             |

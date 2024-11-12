@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 	"sort"
 
 	"bou.ke/monkey"
@@ -235,5 +236,18 @@ func (ctx *TestContext) initDB() error {
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+func recoverPanics(returnErr *error) {
+	if p := recover(); p != nil {
+		switch e := p.(type) {
+		case runtime.Error:
+			panic(e)
+		case error:
+			*returnErr = e
+		default:
+			panic(p)
+		}
 	}
 }

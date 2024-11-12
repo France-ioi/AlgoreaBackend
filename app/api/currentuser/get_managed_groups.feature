@@ -1,11 +1,14 @@
 Feature: List groups managed by the current user
   Background:
     Given the database has the following table "groups":
-      | id | name          | type  | description |
-      | 5  | Group         | Class | null        |
-      | 13 | Our Class     | Class | null        |
-      | 14 | Our Friends   | Other | null        |
-      | 15 | Another Group | Other | Super Group |
+      | id | name          | type    | description |
+      | 1  | Friends       | Friends | null        |
+      | 5  | Group         | Class   | null        |
+      | 6  | Club          | Club    | null        |
+      | 9  | Other         | Other   | null        |
+      | 13 | Our Class     | Class   | null        |
+      | 14 | Our Friends   | Other   | null        |
+      | 15 | Another Group | Other   | Super Group |
     And the database has the following users:
       | group_id | login |
       | 21       | owner |
