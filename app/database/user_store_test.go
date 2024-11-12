@@ -18,7 +18,7 @@ func TestUserStore_deleteWithTraps_DoesNothingWhenScopeReturnsNothing(t *testing
 
 	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
 		userStore := store.Users()
-		cnt := userStore.deleteWithTraps(userStore.DB)
+		cnt := userStore.deleteWithTraps(userStore.DB, false)
 		assert.Zero(t, cnt)
 		return nil
 	}))
