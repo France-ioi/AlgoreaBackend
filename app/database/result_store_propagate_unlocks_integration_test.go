@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type unlocksResultRow struct {
@@ -23,7 +24,7 @@ type unlocksResultRow struct {
 }
 
 func TestResultStore_Propagate_Unlocks(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
@@ -32,7 +33,7 @@ func TestResultStore_Propagate_Unlocks(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture(
 		"results_propagation/_common",
@@ -44,7 +45,7 @@ func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture(
 		"results_propagation/_common",
@@ -98,7 +99,7 @@ func generateGrantedPermissionsRow(itemID, canView, canEnterFrom, canEnterUntil,
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
@@ -108,7 +109,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T)
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHasBeenSetAlready(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
@@ -140,7 +141,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromIsInTheFuture(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()

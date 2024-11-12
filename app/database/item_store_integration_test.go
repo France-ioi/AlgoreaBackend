@@ -12,6 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func setupDB() *database.DB {
@@ -31,7 +32,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.methodToCall, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := setupDB()
 			defer func() { _ = db.Close() }()
@@ -56,7 +57,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 }
 
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
@@ -87,7 +88,7 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				hasAccess, reason, err := store.Items().CheckSubmissionRights(test.participantID, test.itemID)
@@ -102,7 +103,7 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 }
 
 func TestItemStore_GetItemIDFromTextID(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [
@@ -133,7 +134,7 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				itemID, err := store.Items().GetItemIDFromTextID(test.textID)
@@ -146,7 +147,7 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 }
 
 func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_BreadcrumbsHierarchyForParentAttempt(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
@@ -571,7 +572,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		tt := tt
 		testEachWriteLockMode(t, tt.name+": is valid", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
-				testhelpers.SuppressOutputIfPasses(t)
+				testoutput.SuppressIfPasses(t)
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
@@ -584,7 +585,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		})
 		testEachWriteLockMode(t, tt.name+": breadcrumbs hierarchy", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
-				testhelpers.SuppressOutputIfPasses(t)
+				testoutput.SuppressIfPasses(t)
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(
@@ -607,7 +608,7 @@ func assertBreadcrumbsHierarchy(t *testing.T,
 }
 
 func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
@@ -1019,7 +1020,7 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 		tt := tt
 		testEachWriteLockMode(t, tt.name, func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
-				testhelpers.SuppressOutputIfPasses(t)
+				testoutput.SuppressIfPasses(t)
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
@@ -1058,7 +1059,7 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
@@ -1111,7 +1112,7 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
@@ -1169,7 +1170,7 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
@@ -1235,7 +1236,7 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
@@ -1266,7 +1267,7 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 }
 
 func Test_ItemStore_DeleteItem(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		languages: [{tag: fr}]

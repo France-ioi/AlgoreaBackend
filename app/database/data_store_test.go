@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
@@ -54,6 +55,8 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 			mock.ExpectQuery("SELECT \\* FROM " + tt.wantTable).
@@ -114,6 +117,8 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 }
 
 func TestDataStore_ByID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -138,6 +143,8 @@ func TestDataStore_ByID_ForAbstractDataStore(t *testing.T) {
 }
 
 func TestDataStore_InTransaction_NoErrors(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -166,6 +173,8 @@ func TestDataStore_InTransaction_NoErrors(t *testing.T) {
 }
 
 func TestDataStore_InTransaction_DBError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -190,6 +199,8 @@ func TestDataStore_InTransaction_DBError(t *testing.T) {
 }
 
 func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	var callsCount int
 
 	type ctxKey string
@@ -217,6 +228,8 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 }
 
 func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -238,6 +251,8 @@ func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes(t *
 }
 
 func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes_Hooks(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -271,6 +286,8 @@ func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes_Hoo
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -291,6 +308,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_WithTxOptions(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	var callsCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
 	patch := patchBeginTxWithVerifier(t, &callsCount, txOptions, nil)
@@ -315,6 +334,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_WithTxOptions(t *testing.T) {
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnCommittingTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -337,6 +358,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnCommittingTransaction(t
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorInsideTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -357,6 +380,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorInsideTransaction(t *test
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorWithoutTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -379,6 +404,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorWithoutTransaction(t *tes
 }
 
 func TestDataStore_WithNamedLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	lockName := "some lock name"
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -417,6 +444,8 @@ func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeou
 }
 
 func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -438,6 +467,8 @@ func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
 }
 
 func TestDataStore_RetryOnDuplicateKeyError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -460,6 +491,8 @@ func TestDataStore_RetryOnDuplicateKeyError(t *testing.T) {
 }
 
 func TestDataStore_InsertMap(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -475,6 +508,8 @@ func TestDataStore_InsertMap(t *testing.T) {
 }
 
 func TestDataStore_InsertOrUpdateMap(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -492,6 +527,8 @@ func TestDataStore_InsertOrUpdateMap(t *testing.T) {
 }
 
 func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -512,6 +549,8 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 }
 
 func TestDataStore_WithSharedWriteLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -543,6 +582,8 @@ func TestDataStore_WithSharedWriteLock_PanicsWhenNotInTransaction(t *testing.T) 
 }
 
 func TestDataStore_WithCustomWriteLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -592,6 +633,8 @@ func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
 }
 
 func TestProhibitResultsPropagation(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

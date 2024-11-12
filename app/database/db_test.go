@@ -22,6 +22,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 const someName = "some name"
@@ -49,6 +50,8 @@ func TestDB_inTransaction_NoErrors(t *testing.T) {
 }
 
 func TestDB_inTransaction_DBErrorOnBegin(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -65,6 +68,8 @@ func TestDB_inTransaction_DBErrorOnBegin(t *testing.T) {
 }
 
 func TestDB_inTransaction_DBError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -83,6 +88,8 @@ func TestDB_inTransaction_DBError(t *testing.T) {
 }
 
 func TestDB_inTransaction_Panic(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -103,6 +110,8 @@ func TestDB_inTransaction_Panic(t *testing.T) {
 }
 
 func TestDB_inTransaction_PanicWithString(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -120,6 +129,8 @@ func TestDB_inTransaction_PanicWithString(t *testing.T) {
 }
 
 func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -141,6 +152,8 @@ func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
 }
 
 func TestDB_inTransaction_ErrorOnCommit(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -161,6 +174,8 @@ func TestDB_inTransaction_ErrorOnCommit(t *testing.T) {
 func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -196,6 +211,8 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrorsAndPanicsOnRollbackError(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -224,6 +241,8 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrorsAndPanicsOnRo
 func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -273,6 +292,8 @@ func patchBeginTxWithVerifier(
 }
 
 func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	var calledCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
 	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
@@ -303,6 +324,8 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
 }
 
 func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	var calledCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
 	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
@@ -334,6 +357,8 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRollbackError(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -363,6 +388,8 @@ func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRoll
 func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -395,6 +422,8 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -426,6 +455,8 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -455,6 +486,8 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -564,6 +597,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -603,6 +638,8 @@ func TestDB_With_Duplicate(t *testing.T) {
 }
 
 func TestDB_Count(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -622,6 +659,8 @@ func TestDB_Count(t *testing.T) {
 }
 
 func TestDB_Count_DoesNothingIfDBContainsError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -640,6 +679,8 @@ func TestDB_Count_DoesNothingIfDBContainsError(t *testing.T) {
 }
 
 func TestDB_Take(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -660,6 +701,8 @@ func TestDB_Take(t *testing.T) {
 }
 
 func TestDB_HasRows(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -677,6 +720,8 @@ func TestDB_HasRows(t *testing.T) {
 }
 
 func TestDB_HasRows_NoRows(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -694,6 +739,8 @@ func TestDB_HasRows_NoRows(t *testing.T) {
 }
 
 func TestDB_HasRows_Error(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -712,6 +759,8 @@ func TestDB_HasRows_Error(t *testing.T) {
 }
 
 func TestDB_Pluck(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -731,6 +780,8 @@ func TestDB_Pluck(t *testing.T) {
 }
 
 func TestDB_Pluck_DoesNothingIfErrorIsSet(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -744,6 +795,8 @@ func TestDB_Pluck_DoesNothingIfErrorIsSet(t *testing.T) {
 }
 
 func TestDB_Pluck_WipesOldData(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -788,6 +841,8 @@ func TestDB_Pluck_NonPointer(t *testing.T) {
 }
 
 func TestDB_PluckFirst(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -807,6 +862,8 @@ func TestDB_PluckFirst(t *testing.T) {
 }
 
 func TestDB_PluckFirst_NotFound(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -825,6 +882,8 @@ func TestDB_PluckFirst_NotFound(t *testing.T) {
 }
 
 func TestDB_PluckFirst_Error(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -844,6 +903,8 @@ func TestDB_PluckFirst_Error(t *testing.T) {
 }
 
 func TestDB_Scan(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -867,6 +928,8 @@ func TestDB_Scan(t *testing.T) {
 }
 
 func TestDB_Scan_WipesOldData(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -920,6 +983,8 @@ func TestDB_Scan_NonPointer(t *testing.T) {
 }
 
 func TestDB_RowsAffected(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -936,6 +1001,8 @@ func TestDB_RowsAffected(t *testing.T) {
 }
 
 func TestDB_Delete(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -956,6 +1023,8 @@ func TestDB_Delete(t *testing.T) {
 }
 
 func TestDB_Exec(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -973,6 +1042,8 @@ func TestDB_Exec(t *testing.T) {
 }
 
 func TestDB_insertMaps(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -988,6 +1059,8 @@ func TestDB_insertMaps(t *testing.T) {
 }
 
 func TestDB_insertMaps_MultipleRows(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1014,6 +1087,8 @@ func TestDB_insertMaps_WithEmptyArray(t *testing.T) {
 }
 
 func TestDB_insertOrUpdateMaps(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1038,6 +1113,8 @@ func TestDB_insertOrUpdateMaps_WithEmptyArray(t *testing.T) {
 }
 
 func TestDB_ScanIntoSlices(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1061,6 +1138,8 @@ func TestDB_ScanIntoSlices(t *testing.T) {
 }
 
 func TestDB_ScanIntoSlices_DoesNothingIfErrorIsSet(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1076,6 +1155,8 @@ func TestDB_ScanIntoSlices_DoesNothingIfErrorIsSet(t *testing.T) {
 }
 
 func TestDB_ScanIntoSlices_WipesOldData(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1096,6 +1177,8 @@ func TestDB_ScanIntoSlices_WipesOldData(t *testing.T) {
 }
 
 func TestDB_ScanIntoSlices_RowsError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1114,6 +1197,8 @@ func TestDB_ScanIntoSlices_RowsError(t *testing.T) {
 }
 
 func TestDB_ScanIntoSlices_ErrorOnScan(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1134,6 +1219,8 @@ func TestDB_ScanIntoSlices_ErrorOnScan(t *testing.T) {
 }
 
 func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1158,6 +1245,8 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 }
 
 func TestDB_ScanIntoSliceOfMaps_DoesNothingIfErrorIsSet(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1173,6 +1262,8 @@ func TestDB_ScanIntoSliceOfMaps_DoesNothingIfErrorIsSet(t *testing.T) {
 }
 
 func TestDB_ScanIntoSliceOfMaps_WipesOldData(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1196,6 +1287,8 @@ func TestDB_ScanIntoSliceOfMaps_WipesOldData(t *testing.T) {
 }
 
 func TestDB_ScanIntoSliceOfMaps_RowsError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1214,6 +1307,8 @@ func TestDB_ScanIntoSliceOfMaps_RowsError(t *testing.T) {
 }
 
 func TestDB_ScanIntoSliceOfMaps_ErrorOnGettingColumns(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1234,6 +1329,8 @@ func TestDB_ScanIntoSliceOfMaps_ErrorOnGettingColumns(t *testing.T) {
 }
 
 func TestDB_ScanIntoSliceOfMaps_ErrorOnScan(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1254,6 +1351,8 @@ func TestDB_ScanIntoSliceOfMaps_ErrorOnScan(t *testing.T) {
 }
 
 func TestDB_ScanAndHandleMaps_FailsIfHandlerReturnsError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1272,6 +1371,8 @@ func TestDB_ScanAndHandleMaps_FailsIfHandlerReturnsError(t *testing.T) {
 }
 
 func TestDB_Updates(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1290,6 +1391,8 @@ func TestDB_Updates(t *testing.T) {
 }
 
 func TestDB_UpdateColumn(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1308,6 +1411,8 @@ func TestDB_UpdateColumn(t *testing.T) {
 }
 
 func TestDB_Set(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1332,6 +1437,8 @@ func TestOpenRawDBConnection(t *testing.T) {
 }
 
 func TestOpen_DSN(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, err := Open("/db")
 	assert.Error(t, err) // we want an error since dsn is wrong, but other things should be ok
 	assert.NotNil(t, db)
@@ -1363,6 +1470,8 @@ func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
 }
 
 func TestDB_isInTransaction_ReturnsTrue(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1385,6 +1494,8 @@ func TestDB_isInTransaction_ReturnsFalse(t *testing.T) {
 }
 
 func TestDB_mustBeInTransaction_DoesNothingInTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1462,8 +1573,11 @@ func Test_recoverPanics_PanicsOnRecoveringValueOfNonErrorType(t *testing.T) {
 }
 
 func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
 	lockName := "lock name"
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -1480,8 +1594,11 @@ func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t
 }
 
 func TestDB_withNamedLock_ReturnsErrorWhenDBFails(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
 	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -1499,8 +1616,11 @@ func TestDB_withNamedLock_ReturnsErrorWhenDBFails(t *testing.T) {
 }
 
 func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
 	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -1519,8 +1639,11 @@ func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
 }
 
 func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
 	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -1540,8 +1663,11 @@ func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
 }
 
 func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
 	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -1562,8 +1688,11 @@ func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
 }
 
 func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
+
 	lockName := someName
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -1584,6 +1713,8 @@ func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
 }
 
 func TestDB_WithExclusiveWriteLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1617,6 +1748,8 @@ func TestDB_WithExclusiveWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
 var retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp = "^" + regexp.QuoteMeta("INSERT INTO users (id) VALUES (?)") + "$"
 
 func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1637,6 +1770,8 @@ func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 }
 
 func TestDB_retryOnDuplicatePrimaryKeyError_ErrorsWhenLimitExceeded(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -1671,6 +1806,8 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -1724,6 +1861,8 @@ func TestDB_InsertIgnoreMaps_WithEmptyArray(t *testing.T) {
 }
 
 func TestDB_InsertIgnoreMaps(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

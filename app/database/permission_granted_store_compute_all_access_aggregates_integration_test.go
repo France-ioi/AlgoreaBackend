@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type permissionsGeneratedResultRow struct {
@@ -25,7 +26,7 @@ var expectedRow14 = permissionsGeneratedResultRow{
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
@@ -99,7 +100,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
@@ -177,7 +178,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 	for _, access := range []string{"solution", "content_with_descendants"} {
 		access := access
 		t.Run(access, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 			defer func() { _ = db.Close() }()
@@ -330,7 +331,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 	} {
 		testcase := testcase
 		t.Run(testcase.canView+" as "+testcase.expectedCanView, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(`
 				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -354,7 +355,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
@@ -383,7 +384,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanView(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -407,7 +408,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
@@ -427,7 +428,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForOwners(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
@@ -447,7 +448,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForO
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantView(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
@@ -478,7 +479,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantV
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanGrantView(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -501,7 +502,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantView(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
@@ -521,7 +522,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantV
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsSolutionWithGrantForOwners(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -546,7 +547,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsSolutio
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
@@ -577,7 +578,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanWatch(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -600,7 +601,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
@@ -620,7 +621,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanWatchAsAnswerWithGrantForOwners(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
@@ -640,7 +641,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanWatchAsAnswerWithG
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
@@ -671,7 +672,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanEdit(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -694,7 +695,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
@@ -714,7 +715,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanEditAsAllWithGrantForOwners(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
@@ -798,7 +799,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_Propagates(t *testing.T) {
 
 func testPropagates(t *testing.T, column, propagationColumn, valueForParent string, propagationMode bool, expectedValue string) {
 	t.Run(valueForParent+" as "+expectedValue, func(t *testing.T) {
-		testhelpers.SuppressOutputIfPasses(t)
+		testoutput.SuppressIfPasses(t)
 
 		grantViewPropagationString := fmt.Sprint(propagationMode)
 		db := testhelpers.SetupDBWithFixtureString(`

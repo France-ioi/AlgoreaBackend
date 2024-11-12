@@ -14,10 +14,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestBase_ResolveWatchedGroupID(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1, type: Class}, {id: 2, type: Team}, {id: 3, type: Other}, {id: 4, type: User}, {id: 5, type: User}, {id: 6, type: Team}]
@@ -60,7 +61,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			req, _ := http.NewRequest("GET", tt.url, http.NoBody)
 			watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(req)

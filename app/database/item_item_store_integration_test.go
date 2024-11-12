@@ -9,9 +9,12 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 	defer func() { _ = db.Close() }()
 

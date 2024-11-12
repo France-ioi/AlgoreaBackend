@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type groupAncestorsResultRow struct {
@@ -27,7 +28,7 @@ type groupPropagateResultRow struct {
 var maxExpiresAt = "9999-12-31 23:59:59"
 
 func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
@@ -67,7 +68,7 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common", "group_group_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
@@ -99,7 +100,7 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
@@ -139,7 +140,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAcceptedRequestsAndInvitations(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
@@ -177,7 +178,7 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 }
 
 func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
@@ -226,7 +227,7 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()

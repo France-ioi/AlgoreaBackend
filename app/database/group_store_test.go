@@ -6,9 +6,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGroupStore_ManagedBy(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -30,6 +34,8 @@ func TestGroupStore_ManagedBy(t *testing.T) {
 }
 
 func TestGroupStore_TeamGroupForUser(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -49,6 +55,8 @@ func TestGroupStore_TeamGroupForUser(t *testing.T) {
 }
 
 func TestGroupStore_CreateNew_MustBeRunInTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -59,6 +67,8 @@ func TestGroupStore_CreateNew_MustBeRunInTransaction(t *testing.T) {
 }
 
 func TestGroupStore_DeleteGroup_MustBeRunInTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -70,6 +80,8 @@ func TestGroupStore_DeleteGroup_MustBeRunInTransaction(t *testing.T) {
 }
 
 func TestGroupStore_DeleteGroup_HandlesErrorOfInnerMethod(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

@@ -12,6 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
@@ -39,7 +40,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
 			db := setupDBForDeleteWithTrapsTests(t, currentTime)
 			defer func() { _ = db.Close() }()
@@ -53,7 +54,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 }
 
 func TestUserStore_DeleteWithTraps(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	currentTime := time.Now().UTC().Truncate(time.Second)
 	testhelpers.MockDBTime(currentTime.Format(time.DateTime))
@@ -70,7 +71,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 }
 
 func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	currentTime := time.Now().UTC().Truncate(time.Second)
 	testhelpers.MockDBTime(currentTime.Format(time.DateTime))

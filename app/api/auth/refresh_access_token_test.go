@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
@@ -22,6 +23,8 @@ import (
 )
 
 func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	expectedClientID := "1234"
 	expectedClientSecret := "secret"
 	loginModuleStubServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

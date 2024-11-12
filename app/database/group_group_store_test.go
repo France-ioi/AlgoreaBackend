@@ -9,6 +9,8 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
@@ -32,6 +34,8 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.tableName, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
@@ -49,6 +53,8 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateRelation(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -113,6 +119,8 @@ func TestGroupGroupStore_CreateRelation_MustBeRunInTransaction(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -137,6 +145,8 @@ func TestGroupGroupStore_CreateRelation_PreventsRelationCycles(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -206,6 +216,8 @@ func TestGroupGroupStore_DeleteRelation_MustBeRunInTransaction(t *testing.T) {
 }
 
 func TestGroupGroupStore_createRelation(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	const (
 		parentGroupID = 1
 		childGroupID  = 2
@@ -243,6 +255,8 @@ func TestGroupGroupStore_CreateNewAncestors_MustBeInTransaction(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	expectedError := errors.New("some error")
 
 	db, dbMock := NewDBMock()
@@ -259,6 +273,8 @@ func TestGroupGroupStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *
 }
 
 func TestGroupGroupStore_TeamGroupForTeamItemAndUser(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

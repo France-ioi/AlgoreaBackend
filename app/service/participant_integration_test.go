@@ -13,10 +13,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGetParticipantIDFromRequest(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1, type: Class}, {id: 2, type: Team}, {id: 3, type: Team}, {id: 4, type: User}, {id: 5, type: User}]
@@ -61,7 +62,7 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		testhelpers.SuppressOutputIfPasses(t)
+		testoutput.SuppressIfPasses(t)
 
 		test := test
 		participantID, apiError := service.GetParticipantIDFromRequest(

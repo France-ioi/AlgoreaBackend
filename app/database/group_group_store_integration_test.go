@@ -11,6 +11,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGroupGroupStore_DeleteRelation(t *testing.T) {
@@ -168,6 +169,8 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixture("group_group_store/delete_relation/" + tt.fixture)
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)
@@ -383,6 +386,8 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
@@ -469,6 +474,8 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			expiresAt := "2019-05-30 11:00:00"
 			if test.doNotSetExpired {
 				expiresAt = maxDateTime
@@ -501,6 +508,8 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 }
 
 func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChildGroupIDOrIsTeamMembership(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}, {id: 2}]
 		groups_groups: [{parent_group_id: 1, child_group_id: 2}]
@@ -574,7 +583,7 @@ func queryResultsAndStatesForTests(t *testing.T, s *database.ResultStore, result
 }
 
 func TestGroupGroupStore_TriggerBeforeDelete(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}, {id: 2}, {id: 3, type: Team}, {id: 4}]

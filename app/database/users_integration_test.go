@@ -10,10 +10,11 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(t *testing.T) {
-	testhelpers.SuppressOutputIfPasses(t)
+	testoutput.SuppressIfPasses(t)
 
 	tests := []struct {
 		name   string
@@ -94,7 +95,7 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 		for _, withLock := range []bool{true, false} {
 			withLock := withLock
 			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
-				testhelpers.SuppressOutputIfPasses(t)
+				testoutput.SuppressIfPasses(t)
 
 				store := database.NewDataStore(db)
 				var got bool
