@@ -102,7 +102,7 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	if shouldDeleteChildGroup {
 		s.GroupGroups().deleteGroupAndOrphanedDescendants(childGroupID)
 	} else {
-		// delete the relation we are asked to delete (triggers will delete a lot from groups_ancestors and mark relations for propagation)
+		// delete the relation we are asked to delete (triggers will mark relations for propagation)
 		mustNotBeError(s.GroupGroups().Delete("parent_group_id = ? AND child_group_id = ?", parentGroupID, childGroupID).Error())
 
 		permissionsResult := s.PermissionsGranted().
@@ -134,10 +134,12 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 		Pluck("groups.id", &candidatesForDeletion).Error())
 
 	// we delete groups_groups linked to groupID here in order to recalculate new ancestors correctly
-	mustNotBeError(s.deleteObjectsLinkedToGroups([]int64{groupID}).Error())
+	groupRelationsDeleted, permissionsDeleted := s.deleteObjectsLinkedToGroups([]int64{groupID})
 
 	// recalculate relations
-	s.GroupGroups().createNewAncestors()
+	if groupRelationsDeleted > 0 {
+		s.GroupGroups().createNewAncestors()
+	}
 
 	var idsToDelete []int64
 	// besides the group with id = groupID, we also want to delete its descendants
@@ -162,9 +164,9 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 			Pluck("groups.id", &idsToDelete).Error())
 
 		if len(idsToDelete) > 0 {
-			deleteResult := s.deleteObjectsLinkedToGroups(idsToDelete)
-			mustNotBeError(deleteResult.Error())
-			if deleteResult.RowsAffected() > 0 {
+			groupRelationsDeleted, permissionsDeletedForDescendants := s.deleteObjectsLinkedToGroups(idsToDelete)
+			permissionsDeleted += permissionsDeletedForDescendants
+			if groupRelationsDeleted > 0 {
 				s.GroupGroups().createNewAncestors()
 			}
 		}
@@ -174,20 +176,23 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// cascading deletes from many tables including groups_ancestors, groups_propagate, permission_granted & permissions_generated
 	mustNotBeError(s.Groups().Delete("id IN (?)", idsToDelete).Error())
 
-	s.SchedulePermissionsPropagation()
+	if permissionsDeleted > 0 {
+		s.SchedulePermissionsPropagation()
+	}
 }
 
-func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) *DB {
-	return s.Exec(`
-		DELETE group_children, group_parents, filters
-		FROM `+"`groups`"+`
-		LEFT JOIN groups_groups AS group_children
-			ON group_children.parent_group_id = groups.id
-		LEFT JOIN groups_groups AS group_parents
-			ON group_parents.child_group_id = groups.id
-		LEFT JOIN filters
-			ON filters.group_id = groups.id
-		WHERE groups.id IN(?)`, groupIDs)
+func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) (groupRelationsDeleted, permissionsDeleted int64) {
+	result := s.GroupGroups().Delete("parent_group_id IN(?)", groupIDs)
+	mustNotBeError(result.Error())
+	groupRelationsDeleted += result.RowsAffected()
+	result = s.GroupGroups().Delete("child_group_id IN(?)", groupIDs)
+	mustNotBeError(result.Error())
+	groupRelationsDeleted += result.RowsAffected()
+	mustNotBeError(s.Table("filters").Delete("group_id IN(?)", groupIDs).Error())
+	result = s.PermissionsGranted().Delete("source_group_id IN(?)", groupIDs)
+	mustNotBeError(result.Error())
+	permissionsDeleted = result.RowsAffected()
+	return groupRelationsDeleted, permissionsDeleted
 }
 
 // CreateNewAncestors creates ancestors for groups marked as 'todo' in `groups_propagate`.

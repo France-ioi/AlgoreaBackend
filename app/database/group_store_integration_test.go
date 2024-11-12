@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -357,7 +358,7 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 	}
 }
 
-func Test_GroupStore_DeleteGroup(t *testing.T) {
+func TestGroupStore_DeleteGroup(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1234}]`)
@@ -371,6 +372,52 @@ func Test_GroupStore_DeleteGroup(t *testing.T) {
 	assert.Empty(t, ids)
 	assert.NoError(t, groupStore.Table("groups_propagate").Pluck("id", &ids).Error())
 	assert.Empty(t, ids)
+}
+
+func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1234}, {id: 1235}]
+		items: [{id: 10, default_language_tag: fr}]
+		permissions_granted:
+			- {group_id: 1234, item_id: 10, source_group_id: 1235, can_view: content}
+			- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
+		permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`)
+	defer func() { _ = db.Close() }()
+
+	dataStore := database.NewDataStore(db).Groups()
+	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+		return store.Groups().DeleteGroup(1235)
+	}))
+	var newPermission string
+	require.NoError(t, dataStore.Permissions().Where("group_id = 1234 AND item_id = 10").
+		PluckFirst("can_view_generated", &newPermission).Error())
+	assert.Equal(t, "info", newPermission)
+}
+
+func TestGroupStore_DeleteGroup_RecomputesAccessForOrphanedSourceGroups(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1234}, {id: 1235}, {id: 1236}]
+		groups_groups: [{parent_group_id: 1235, child_group_id: 1236}]
+		groups_ancestors: [{ancestor_group_id: 1235, child_group_id: 1236}]
+		items: [{id: 10, default_language_tag: fr}]
+		permissions_granted:
+			- {group_id: 1234, item_id: 10, source_group_id: 1236, can_view: content}
+			- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
+		permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`)
+	defer func() { _ = db.Close() }()
+
+	dataStore := database.NewDataStore(db).Groups()
+	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+		return store.Groups().DeleteGroup(1235)
+	}))
+	var newPermission string
+	require.NoError(t, dataStore.Permissions().Where("group_id = 1234 AND item_id = 10").
+		PluckFirst("can_view_generated", &newPermission).Error())
+	assert.Equal(t, "info", newPermission)
 }
 
 func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
