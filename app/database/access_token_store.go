@@ -28,7 +28,7 @@ type MostRecentToken struct {
 }
 
 // GetMostRecentValidTokenForSession returns the most recent valid token for the given sessionID.
-func (s *AccessTokenStore) GetMostRecentValidTokenForSession(sessionID int64) MostRecentToken {
+func (s *AccessTokenStore) GetMostRecentValidTokenForSession(sessionID int64) (MostRecentToken, error) {
 	var mostRecentToken MostRecentToken
 
 	// A token is considered too new to refresh if it was issued less than 5 minutes ago.
@@ -39,25 +39,17 @@ func (s *AccessTokenStore) GetMostRecentValidTokenForSession(sessionID int64) Mo
 		`).
 		Where("session_id = ?", sessionID).
 		Order("expires_at DESC").
-		Limit(1).
-		Scan(&mostRecentToken).
+		Take(&mostRecentToken).
 		Error()
-	mustNotBeError(err)
 
-	return mostRecentToken
+	return mostRecentToken, err
 }
 
 // DeleteExpiredTokensOfUser deletes all expired tokens of the given user.
-func (s *AccessTokenStore) DeleteExpiredTokensOfUser(userID int64) {
-	sessionIDofUserQuery := s.Sessions().
-		Select("session_id").
-		Where("user_id = ?", userID).
-		SubQuery()
-
-	err := s.
-		Where("session_id IN (?)", sessionIDofUserQuery).
-		Where("expires_at < NOW()").
-		Delete().
-		Error()
-	mustNotBeError(err)
+func (s *AccessTokenStore) DeleteExpiredTokensOfUser(userID int64) error {
+	return s.Exec(`
+		DELETE access_tokens
+		FROM access_tokens
+		JOIN sessions ON access_tokens.session_id = sessions.session_id
+		WHERE sessions.user_id = ? AND access_tokens.expires_at <= NOW()`, userID).Error()
 }

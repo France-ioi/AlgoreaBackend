@@ -71,14 +71,9 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 						WithArgs("newfirstrefreshtoken", sqlmock.AnyArg()).
 						WillReturnResult(sqlmock.NewResult(-1, 1))
 					mock.ExpectCommit()
-					mock.ExpectBegin()
-					mock.ExpectExec("^" + regexp.QuoteMeta(
-						"DELETE FROM `access_tokens`  WHERE "+
-							"(session_id IN ((SELECT session_id FROM `sessions`  WHERE (user_id = ?)))) AND (expires_at < NOW())",
-					) + "$").
+					mock.ExpectExec("^DELETE access_tokens .+$").
 						WithArgs(sqlmock.AnyArg()).
 						WillReturnResult(sqlmock.NewResult(-1, 1))
-					mock.ExpectCommit()
 				}
 			},
 			func(router *chi.Mux, baseService *service.Base) {
@@ -115,7 +110,7 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 		done <- true
 	}
 
-	// check that the service waits while the user is locked
+	// check that the service waits while the session is locked
 	mutexChannel := make(chan bool, 1)
 	(*sync.Map)(&sessionIDsInProgress).Store(auth.MockCtxSessionID, mutexChannel) // lock the session
 	mutexChannel <- true
@@ -125,7 +120,7 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	(*sync.Map)(&sessionIDsInProgress).Delete(auth.MockCtxSessionID) // here the service gets unlocked
 	<-done                                                           // wait until the service finishes
 
-	// check that the service timeouts if the user is locked for too long
+	// check that the service timeouts if the session is locked for too long
 	mutexChannel = make(chan bool, 1)
 	(*sync.Map)(&sessionIDsInProgress).Store(auth.MockCtxSessionID, mutexChannel) // lock the session
 	// Remove the mutex once we're finished, otherwise it makes further tests block if they use the same session ID.
