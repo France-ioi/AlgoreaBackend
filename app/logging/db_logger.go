@@ -15,21 +15,42 @@ func (l *sharedLoggerWriter) Println(v ...interface{}) {
 	SharedLogger.Println(v...)
 }
 
-// NewDBLogger returns a logger for the database and the `logMode` as well as the 'rawLogMode', according to the config.
-func (l *Logger) NewDBLogger() (DBLogger, bool, bool) {
+// NewDBLogger returns a logger for the database according to the config.
+func (l *Logger) NewDBLogger() DBLogger {
 	if l.config == nil {
 		// if cannot parse config, log on error to stdout
-		return gorm.Logger{LogWriter: &sharedLoggerWriter{}}, false, false
+		return gorm.Logger{LogWriter: &sharedLoggerWriter{}}
 	}
 
-	logMode := l.config.GetBool("LogSQLQueries")
-	rawLogMode := l.config.GetBool("LogRawSQLQueries")
 	switch l.config.GetString("format") {
 	case formatText:
-		return gorm.Logger{LogWriter: &sharedLoggerWriter{}}, logMode, rawLogMode
+		return gorm.Logger{LogWriter: &sharedLoggerWriter{}}
 	case formatJSON:
-		return NewStructuredDBLogger(), logMode, rawLogMode
+		return NewStructuredDBLogger()
 	default:
 		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.GetString("format"))
 	}
+}
+
+// IsSQLQueriesLoggingEnabled returns whether the SQL queries logging is enabled in the config.
+func (l *Logger) IsSQLQueriesLoggingEnabled() bool {
+	return l.getBoolConfigFlagValue("LogSQLQueries")
+}
+
+// IsRawSQLQueriesLoggingEnabled returns whether the raw SQL queries logging is enabled in the config.
+func (l *Logger) IsRawSQLQueriesLoggingEnabled() bool {
+	return l.getBoolConfigFlagValue("LogRawSQLQueries")
+}
+
+// IsSQLQueriesAnalyzingEnabled returns whether the SQL queries analyzing is enabled in the config.
+// Note: SQL queries analyzing is only enabled if the SQL queries logging is enabled as well.
+func (l *Logger) IsSQLQueriesAnalyzingEnabled() bool {
+	return l.getBoolConfigFlagValue("AnalyzeSQLQueries")
+}
+
+func (l *Logger) getBoolConfigFlagValue(flagName string) bool {
+	if l.config == nil {
+		return false
+	}
+	return l.config.GetBool(flagName)
 }

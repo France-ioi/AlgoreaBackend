@@ -1453,7 +1453,7 @@ func TestDB_Set(t *testing.T) {
 }
 
 func TestOpenRawDBConnection(t *testing.T) {
-	db, err := OpenRawDBConnection("/db")
+	db, err := OpenRawDBConnection("/db", true)
 	assert.NoError(t, err)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
 	assertRawDBIsOK(t, db)
@@ -1461,6 +1461,10 @@ func TestOpenRawDBConnection(t *testing.T) {
 
 func TestOpen_DSN(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
+
+	patchGuard := monkey.PatchInstanceMethod(reflect.TypeOf(&logging.Logger{}), "IsRawSQLQueriesLoggingEnabled",
+		func(*logging.Logger) bool { return true })
+	defer patchGuard.Unpatch()
 
 	db, err := Open("/db")
 	assert.Error(t, err) // we want an error since dsn is wrong, but other things should be ok
@@ -1479,7 +1483,7 @@ func TestOpen_WrongSourceType(t *testing.T) {
 
 func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(OpenRawDBConnection, func(string) (*sql.DB, error) { return &sql.DB{}, expectedError })
+	monkey.Patch(OpenRawDBConnection, func(string, bool) (*sql.DB, error) { return &sql.DB{}, expectedError })
 	defer monkey.UnpatchAll()
 
 	db, err := Open("mydsn")
