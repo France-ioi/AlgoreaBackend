@@ -71,6 +71,12 @@ func ErrNotFound(err error) APIError {
 	return APIError{http.StatusNotFound, err}
 }
 
+// ErrRequestTimeout is for errors caused by out inability to perform the operation in a timely manner.
+// It results in a 408 Request Timeout.
+func ErrRequestTimeout() APIError {
+	return APIError{HTTPStatusCode: http.StatusRequestTimeout}
+}
+
 // ErrConflict is for errors caused by wrong resource state not allowing to perform the operation
 // It results in a 409 Conflict.
 func ErrConflict(err error) APIError {

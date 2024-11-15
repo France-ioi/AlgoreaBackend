@@ -74,6 +74,8 @@ type contestAdminListRow struct {
 //					"$ref": "#/definitions/contestAdminListRow"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) service.APIError {

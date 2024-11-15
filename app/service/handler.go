@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"runtime/debug"
@@ -24,8 +26,12 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			case APIError:
 				apiErr = err
 			case error:
-				apiErr = ErrUnexpected(err)
-				shouldLogError = true
+				if errors.Is(err, context.DeadlineExceeded) {
+					apiErr = ErrRequestTimeout()
+				} else {
+					apiErr = ErrUnexpected(err)
+					shouldLogError = true
+				}
 			default:
 				apiErr = ErrUnexpected(fmt.Errorf("unknown error: %+v", err))
 				shouldLogError = true

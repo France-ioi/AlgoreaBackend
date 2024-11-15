@@ -102,7 +102,7 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 			defer func() { _ = response.Body.Close() }()
 		}
 		if timeout {
-			assert.Equal(t, 500, response.StatusCode)
+			assert.Equal(t, 408, response.StatusCode)
 			assert.Contains(t, logs, "The request is canceled: context deadline exceeded")
 		} else {
 			assert.Equal(t, 201, response.StatusCode)

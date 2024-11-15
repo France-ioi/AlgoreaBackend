@@ -195,6 +195,8 @@ const parsedRequestData ctxKey = iota
 //			"$ref": "#/responses/badRequestResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
