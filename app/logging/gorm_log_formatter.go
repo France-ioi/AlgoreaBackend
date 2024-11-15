@@ -162,11 +162,15 @@ func formatGormDBLog(values ...interface{}) (messages []interface{}) {
 			}
 		}
 
-		messages = append(messages,
-			sql,
-			fmt.Sprintf(" \n\033[36;31m[%v]\033[0m ",
-				strconv.FormatInt(values[5].(int64), 10)+" rows affected or returned "),
-		)
+		messages = append(messages, sql)
+
+		if len(values) >= 6 {
+			messages = append(messages,
+				fmt.Sprintf(" \n\033[36;31m[%v]\033[0m ",
+					strconv.FormatInt(values[5].(int64), 10)+" rows affected "),
+			)
+		}
+
 		return messages
 	}
 

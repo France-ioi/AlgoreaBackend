@@ -22,7 +22,7 @@ var (
 )
 
 // Print defines how StructuredDBLogger print log entries.
-// values: 0: level, 1: source file, 2: duration in ns, 3: query, 4: slice of parameters, 5: rows affected or returned
+// values: 0: level, 1: source file, 2: duration in ns, 3: query, 4: slice of parameters, 5: rows affected
 func (l *StructuredDBLogger) Print(values ...interface{}) {
 	level := values[0]
 	logger := SharedLogger.WithField("type", "db")
@@ -31,11 +31,14 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 	case sqlString:
 		duration := float64(values[2].(time.Duration).Nanoseconds()) / float64(time.Second.Nanoseconds()) // to seconds
 		sql := fillSQLPlaceholders(values[3].(string), values[4].([]interface{}))
-		logger.WithFields(map[string]interface{}{
+		fields := map[string]interface{}{
 			"duration": duration,
 			"ts":       time.Now().Format(time.DateTime),
-			"rows":     values[5].(int64),
-		}).Println(strings.TrimSpace(sql))
+		}
+		if len(values) >= 6 {
+			fields["rows"] = values[5].(int64)
+		}
+		logger.WithFields(fields).Println(strings.TrimSpace(sql))
 	case "rawsql":
 		/*
 		   values[0] - level (rawsql)
