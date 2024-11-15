@@ -614,6 +614,7 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 		for key := range dataMaps[0] {
 			updateColumns = append(updateColumns, key)
 		}
+		sort.Strings(updateColumns)
 	}
 
 	var builder strings.Builder

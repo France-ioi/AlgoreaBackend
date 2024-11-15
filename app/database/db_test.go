@@ -527,6 +527,11 @@ func TestDB_QueryConstructors(t *testing.T) {
 			expectedQuery: "SELECT * FROM `myTable` LIMIT 1",
 		},
 		{
+			name:          "Limit and Offset",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Limit(1).Offset(2), nil },
+			expectedQuery: "SELECT * FROM `myTable` LIMIT 1 OFFSET 2",
+		},
+		{
 			name:          "Order",
 			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Order("id"), nil },
 			expectedQuery: "SELECT * FROM `myTable` ORDER BY `id`",
@@ -1104,6 +1109,24 @@ func TestDB_insertOrUpdateMaps(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDB_insertOrUpdateMaps_WithNilUpdateColumnsList(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRows := []map[string]interface{}{{"id": int64(1), "sField": "some value", "sNullField": nil}}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?)"+
+		" ON DUPLICATE KEY UPDATE `id` = VALUES(`id`), `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		WithArgs(int64(1), "some value", nil).
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, db.insertOrUpdateMaps("myTable", dataRows, nil))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_insertOrUpdateMaps_WithEmptyArray(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -1467,30 +1490,6 @@ func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
 	assert.Equal(t, "*instrumentedsql.WrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
 	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.connector)")
-}
-
-func TestDB_isInTransaction_ReturnsTrue(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectBegin()
-	mock.ExpectCommit()
-
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		assert.True(t, db.isInTransaction())
-		return nil
-	}))
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_isInTransaction_ReturnsFalse(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	assert.False(t, db.isInTransaction())
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_mustBeInTransaction_DoesNothingInTransaction(t *testing.T) {

@@ -652,3 +652,45 @@ func TestProhibitResultsPropagation(t *testing.T) {
 	}))
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
+
+func TestDataStore_MergeContext(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataStoreWithEmptyContext := NewDataStore(db)
+	newContext := dataStoreWithEmptyContext.MergeContext(context.Background())
+	assert.Equal(t, propagationsBitField{}, newContext.Value(prohibitedPropagationsContextKey))
+
+	expectedBitField := propagationsBitField{
+		Permissions: false,
+		Results:     true,
+	}
+	dataStoreWithProhibitedResultsPropagation := NewDataStoreWithContext(
+		context.WithValue(context.Background(), prohibitedPropagationsContextKey, expectedBitField), db)
+	newContext = dataStoreWithProhibitedResultsPropagation.MergeContext(context.Background())
+	assert.Equal(t, expectedBitField, newContext.Value(prohibitedPropagationsContextKey))
+}
+
+func TestDataStore_IsInTransaction_ReturnsTrue(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		assert.True(t, store.isInTransaction())
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_IsInTransaction_ReturnsFalse(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.False(t, NewDataStore(db).IsInTransaction())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
