@@ -117,7 +117,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11").
 		UpdateColumn("can_view", "content").Error())
-	assert.NoError(t, permissionGrantedStore.ItemItems().Updates(map[string]interface{}{
+	assert.NoError(t, permissionGrantedStore.ItemItems().UpdateColumn(map[string]interface{}{
 		"content_view_propagation": "as_info",
 	}).Error())
 	assert.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {

@@ -1370,7 +1370,7 @@ func TestDB_ScanAndHandleMaps_FailsIfHandlerReturnsError(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_Updates(t *testing.T) {
+func TestDB_UpdateColumns(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, mock := NewDBMock()
@@ -1383,7 +1383,7 @@ func TestDB_Updates(t *testing.T) {
 	mock.ExpectCommit()
 
 	db = db.Table("myTable")
-	updateDB := db.Updates(map[string]interface{}{"id": 1, "name": someName})
+	updateDB := db.UpdateColumns(map[string]interface{}{"id": 1, "name": someName})
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
 

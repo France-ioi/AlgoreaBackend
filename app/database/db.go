@@ -297,9 +297,9 @@ func (conn *DB) Raw(query string, args ...interface{}) *DB {
 			Raw("").Joins(query, args...), nil)
 }
 
-// Updates update attributes with callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
-func (conn *DB) Updates(values interface{}, ignoreProtectedAttrs ...bool) *DB {
-	return newDB(conn.ctx, conn.toQuery().Updates(values, ignoreProtectedAttrs...), nil)
+// UpdateColumns is a synonym for UpdateColumn.
+func (conn *DB) UpdateColumns(attrs ...interface{}) *DB {
+	return conn.UpdateColumn(attrs...)
 }
 
 // UpdateColumn updates attributes without callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
