@@ -33,11 +33,14 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	mustNotBeError(s.db.Exec(query).Error)
 
-	createTemporaryTableQuery := "CREATE TEMPORARY TABLE " + objectName + "_propagate_processing (id BIGINT NOT NULL)"
 	dropTemporaryTableQuery := "DROP TEMPORARY TABLE IF EXISTS " + objectName + "_propagate_processing"
+	mustNotBeError(s.db.Exec(dropTemporaryTableQuery).Error)
+	createTemporaryTableQuery := "CREATE TEMPORARY TABLE " + objectName + "_propagate_processing (id BIGINT NOT NULL)"
 	mustNotBeError(s.db.Exec(createTemporaryTableQuery).Error)
 	defer func() {
-		mustNotBeError(s.db.Exec(dropTemporaryTableQuery).Error)
+		// As we start from dropping the temporary table, it's optional to delete it here.
+		// This means we can use a potentially canceled context and ignore the error.
+		s.db.Exec(dropTemporaryTableQuery)
 	}()
 
 	relationsTable := objectName + "_" + objectName

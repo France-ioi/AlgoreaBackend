@@ -160,6 +160,11 @@ func setAdditionalTimeForGroupInContest(
 			expires_at DATETIME NOT NULL,
 			PRIMARY KEY child_group_id (child_group_id)
 		)`).Error())
+	defer func() {
+		// As we start from dropping the temporary table, it's optional to delete it here.
+		// This means we can use a potentially canceled context and ignore the error.
+		store.Exec("DROP TEMPORARY TABLE IF EXISTS new_expires_at")
+	}()
 	service.MustNotBeError(store.Exec(`
 		INSERT INTO new_expires_at ?`,
 		// For each of groups participating/participated in the contest ...
@@ -230,7 +235,6 @@ func setAdditionalTimeForGroupInContest(
 				) AS latest_attempt) AND
 			(NOW() < new_expires_at.expires_at OR NOW() < attempts.allows_submissions_until)
 	`, itemID, itemID).Error())
-	service.MustNotBeError(store.Exec("DROP TEMPORARY TABLE new_expires_at").Error())
 	if groupsGroupsModified {
 		service.MustNotBeError(store.GroupGroups().CreateNewAncestors())
 		store.ScheduleResultsPropagation()
