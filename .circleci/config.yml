@@ -64,12 +64,11 @@ jobs:
           name: Prepare for report
           command: |
             mkdir -p test-results
-            go get -u github.com/jstemmer/go-junit-report
-            go install github.com/jstemmer/go-junit-report
+            go install github.com/jstemmer/go-junit-report/v2@latest
       - run:
           name: Run tests (make verbosity disabled)
           no_output_timeout: 30m
-          command: NOECHO=1 make test 2>&1 | go-junit-report > test-results/junit.xml
+          command: NOECHO=1 make test 2>&1 | go-junit-report -iocopy -set-exit-code -out test-results/junit.xml
       - run:
           name: Upload test coverage results to Codecov
           command: bash <(curl -s https://codecov.io/bash)
@@ -78,11 +77,6 @@ jobs:
       - store_artifacts: *TESTPATH
       - store_artifacts:
           path: log
-      - run:
-          when: on_fail
-          name: On failure, run BDD tests with details
-          no_output_timeout: 30m
-          command: make test-bdd
   migration-tests:
     docker:
       - image: cimg/go:1.20.2
