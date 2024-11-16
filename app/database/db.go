@@ -150,19 +150,22 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
+			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
+			// In all cases, the DB library closes the connection on rollback failure and logs the error.
+			// But still, in both cases, we should not retry the transaction.
+			// If the panic was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
 			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, p, rollbackErr, &err, txOptions...) {
 				return
 			}
-			panic(p) // re-throw panic after rollback
+			panic(p) // re-throw panic after rollback if it was not a deadlock/timeout error
 		case err != nil:
-			// do not change the err
+			// ensure the rollback is executed, do not change the err
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...) {
-				return
-			}
-			if rollbackErr != nil {
-				panic(err) // in case of error on rollback, panic
-			}
+			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
+			// In all cases, the DB library closes the connection on rollback failure and logs the error.
+			// But still, in both cases, we should not retry the transaction.
+			// If the error was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
+			conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...)
 		default:
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
@@ -179,13 +182,15 @@ func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
 
 func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
 	returnErr *error, txOptions ...*sql.TxOptions,
-) bool {
+) (shouldIgnoreInitialError bool) {
 	errToHandleError, _ := errToHandle.(error)
 
 	// Deadlock found / lock wait timeout exceeded
 	if errToHandle != nil && (IsDeadlockError(errToHandleError) || IsLockWaitTimeoutExceededError(errToHandleError)) {
-		if rollbackErr != nil {
-			panic(rollbackErr)
+		if rollbackErr != nil { // do not retry if rollback failed
+			// as the previous error was a retryable error, we should return the rollback error, as it is more important
+			*returnErr = rollbackErr
+			return true
 		}
 		// retry
 		log.Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())

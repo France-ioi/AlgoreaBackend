@@ -140,14 +140,13 @@ func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback().WillReturnError(errors.New("rollback error"))
 
-	assert.PanicsWithValue(t, expectedError, func() {
-		_ = db.inTransaction(func(db *DB) error {
-			var result []interface{}
-			err := db.Raw("SELECT 1").Scan(&result).Error()
-			assert.Equal(t, expectedError, err)
-			return err
-		})
+	err := db.inTransaction(func(db *DB) error {
+		var result []interface{}
+		err := db.Raw("SELECT 1").Scan(&result).Error()
+		assert.Equal(t, expectedError, err)
+		return err
 	})
+	assert.Equal(t, expectedError, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -208,7 +207,7 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 	}
 }
 
-func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrorsAndPanicsOnRollbackError(t *testing.T) {
+func TestDB_inTransaction_SkipsRetryingOnDeadlockAndLockWaitTimeoutErrorsOnRollbackError(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
@@ -226,12 +225,12 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrorsAndPanicsOnRo
 				WillReturnError(&mysql.MySQLError{Number: errorNumber})
 			mock.ExpectRollback().WillReturnError(expectedError)
 
-			assert.PanicsWithValue(t, expectedError, func() {
-				_ = db.inTransaction(func(db *DB) error {
-					var result []interface{}
-					return db.Raw("SELECT 1").Scan(&result).Error()
-				})
+			err := db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				return db.Raw("SELECT 1").Scan(&result).Error()
 			})
+			assert.Equal(t, expectedError, err)
+
 			assert.Zero(t, duration)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
@@ -354,7 +353,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 	assert.Equal(t, 2, calledCount)
 }
 
-func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRollbackError(t *testing.T) {
+func TestDB_inTransaction_SkipsRetryingOnDeadockAndLockWaitTimeoutPanicOnRollbackError(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
@@ -372,13 +371,13 @@ func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRoll
 				WillReturnError(&mysql.MySQLError{Number: errorNumber})
 			mock.ExpectRollback().WillReturnError(expectedError)
 
-			assert.PanicsWithValue(t, expectedError, func() {
-				_ = db.inTransaction(func(db *DB) error {
-					var result []interface{}
-					mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
-					return nil
-				})
+			err := db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+				return nil
 			})
+			assert.Equal(t, expectedError, err)
+
 			assert.Zero(t, duration)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
