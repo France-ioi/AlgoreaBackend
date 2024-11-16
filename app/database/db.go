@@ -252,29 +252,59 @@ func (conn *DB) isInTransaction() bool {
 	return false
 }
 
-func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func(*DB) error) (err error) {
+func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall func(*DB) error) (err error) {
 	initGetLockTime := time.Now()
 
-	// Use a lock so that we don't execute the listener multiple times in parallel
-	var getLockResult int64
-	err = conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Row().Scan(&getLockResult)
+	var sqlDB *sql.DB
+	if conn.isInTransaction() {
+		type sqlTxDBAccessor struct {
+			db *sql.DB
+		}
+		sqlDB = (*sqlTxDBAccessor)((unsafe.Pointer)(conn.db.CommonDB().(*sqlTxWrapper).sqlTx)).db
+	} else {
+		sqlDB = conn.db.CommonDB().(*sqlDBWrapper).sqlDB
+	}
+	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx, logConfig: conn.logConfig}
+
+	var shouldDiscardNamedLockDBConnection bool
+	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx)
 	if err != nil {
+		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
 		return err
 	}
-	if getLockResult != 1 {
+	defer func() {
+		_ = namedLockDBConnection.close(
+			// return driver.ErrBadConn on RELEASE_LOCK() error to discard the connection releasing the lock
+			golang.IfElse(shouldDiscardNamedLockDBConnection, driver.ErrBadConn, nil))
+	}()
+
+	var getLockResult *int64
+	err = namedLockDBConnection.QueryRowContext(conn.ctx, "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
+	if err != nil {
+		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
+		return err
+	}
+	if getLockResult == nil || *getLockResult != 1 {
 		return ErrLockWaitTimeoutExceeded
 	}
 
-	log.Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
-
 	defer func() {
-		releaseErr := conn.db.Exec("SELECT RELEASE_LOCK(?)", lockName).Error
-		if err == nil {
-			err = releaseErr
+		var releaseLockResult *int64
+		// call RELEASE_LOCK() even if the context is canceled or timed out
+		releaseErr := namedLockDBConnection.QueryRowContext(context.Background(),
+			"SELECT RELEASE_LOCK(?)", lockName).Scan(&releaseLockResult)
+		if releaseErr != nil || releaseLockResult == nil || *releaseLockResult != 1 {
+			// on error we just close the connection to release the lock
+			shouldDiscardNamedLockDBConnection = true
+			// do not return an error, it should not affect the result
+			conn.logConfig.Logger.Print("error", fileWithLineNum(),
+				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
 		}
 	}()
-	err = txFunc(conn)
-	return
+
+	log.Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
+
+	return funcToCall(conn)
 }
 
 // Close closes current db connection.  If database connection is not an io.Closer, returns an error.

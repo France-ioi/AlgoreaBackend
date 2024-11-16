@@ -428,8 +428,8 @@ func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeou
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	dbMock.ExpectQuery("SELECT 1 AS id").
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(expectedLockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(expectedLockName).WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	store := NewDataStoreWithTable(db, "tableName")
 	err := funcToTestGenerator(store)(func(s *DataStore) error {

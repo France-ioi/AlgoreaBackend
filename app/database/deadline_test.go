@@ -213,6 +213,40 @@ func Test_Deadline(t *testing.T) {
 				mock.ExpectRollback()
 			},
 		},
+		{
+			name: "Before releasing a named lock inside a transaction",
+			funcToCall: func(s *DataStore, cancel context.CancelFunc) error {
+				return s.InTransaction(func(s *DataStore) error {
+					return s.WithNamedLock("test_lock", time.Second, func(s *DataStore) error {
+						cancel()
+						return nil
+					})
+				})
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").WithArgs("test_lock", 1).
+					WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('test_lock', 1)"}).AddRow(1))
+				mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").WithArgs("test_lock").
+					WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK('test_lock')"}).AddRow(1))
+				mock.ExpectRollback()
+			},
+		},
+		{
+			name: "Before acquiring a named lock inside a transaction",
+			funcToCall: func(s *DataStore, cancel context.CancelFunc) error {
+				return s.InTransaction(func(s *DataStore) error {
+					cancel()
+					return s.WithNamedLock("test_lock", time.Second, func(s *DataStore) error {
+						return nil
+					})
+				})
+			},
+			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectRollback()
+			},
+		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {

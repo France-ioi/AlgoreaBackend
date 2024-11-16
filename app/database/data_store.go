@@ -321,9 +321,9 @@ func (s *DataStore) IsInTransaction() bool {
 }
 
 // WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK.
-func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
+func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, funcToCall func(*DataStore) error) error {
 	return s.withNamedLock(lockName, timeout, func(db *DB) error {
-		return txFunc(NewDataStoreWithTable(db, s.tableName))
+		return funcToCall(NewDataStoreWithTable(db, s.tableName))
 	})
 }
 

@@ -1623,8 +1623,9 @@ func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs(lockName, expectedTimeout).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	err := db.withNamedLock(lockName, timeout, func(*DB) error {
 		return nil
@@ -1647,8 +1648,9 @@ func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs(lockName, expectedTimeout).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName)
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	err := db.withNamedLock(lockName, timeout, func(*DB) error {
 		return expectedError
@@ -1671,8 +1673,9 @@ func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs(lockName, expectedTimeout).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	assert.PanicsWithValue(t, expectedError, func() {
 		_ = db.withNamedLock(lockName, timeout, func(*DB) error {
@@ -1682,29 +1685,72 @@ func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
+func TestDB_withNamedLock_HandlesReleaseError(t *testing.T) {
+	for _, test := range []struct {
+		name                 string
+		setReleaseResultFunc func(*sqlmock.ExpectedQuery)
+		logsShouldContain    string
+	}{
+		{
+			name: "release error",
+			setReleaseResultFunc: func(query *sqlmock.ExpectedQuery) {
+				query.WillReturnError(errors.New("some error"))
+			},
+			logsShouldContain: "some error",
+		},
+		{
+			name: "empty release result",
+			setReleaseResultFunc: func(query *sqlmock.ExpectedQuery) {
+				query.WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}))
+			},
+		},
+		{
+			name: "wrong release result",
+			setReleaseResultFunc: func(query *sqlmock.ExpectedQuery) {
+				query.WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(0)))
+			},
+		},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
+			db, dbMock := NewDBMock()
+			defer func() { _ = db.Close() }()
+			logHook, logRestoreFunc := logging.MockSharedLoggerHook()
+			defer logRestoreFunc()
 
-	lockName := someName
-	timeout := 1234 * time.Millisecond
-	expectedTimeout := int(timeout.Round(time.Second).Seconds())
-	expectedError := errors.New("some error")
+			lockName := someName
+			timeout := 1234 * time.Millisecond
+			expectedTimeout := int(timeout.Round(time.Second).Seconds())
 
-	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs(lockName, expectedTimeout).
-		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName).WillReturnError(expectedError)
+			dbMock.ExpectBegin()
+			dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+				WithArgs(lockName, expectedTimeout).
+				WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+			test.setReleaseResultFunc(
+				dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+					WithArgs(lockName))
+			dbMock.ExpectClose()
+			dbMock.ExpectCommit()
 
-	err := db.withNamedLock(lockName, timeout, func(*DB) error {
-		return nil
-	})
+			err := db.inTransaction(func(db *DB) error {
+				assert.NoError(t, db.withNamedLock(lockName, timeout, func(*DB) error {
+					return nil
+				}))
+				return nil
+			})
 
-	assert.Equal(t, expectedError, err)
-	assert.NoError(t, dbMock.ExpectationsWereMet())
+			assert.NoError(t, err)
+			assert.NoError(t, dbMock.ExpectationsWereMet())
+
+			logs := (&loggingtest.Hook{Hook: logHook}).GetAllLogs()
+			if test.logsShouldContain != "" {
+				assert.Contains(t, logs, test.logsShouldContain)
+			}
+			assert.Contains(t, logs, "failed to release the lock \"some name\", closing the DB connection to release the lock")
+		})
+	}
 }
 
 func TestDB_WithExclusiveWriteLock(t *testing.T) {
