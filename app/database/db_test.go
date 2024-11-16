@@ -18,6 +18,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
@@ -269,11 +270,11 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T)
 	}
 }
 
-func patchBeginTxWithVerifier(
+func patchGormBeginTxWithVerifier(
 	t *testing.T, callsCount *int, expectedTxOptions *sql.TxOptions, expectedContextVars map[interface{}]interface{},
 ) (patch *monkey.PatchGuard) {
-	patch = monkey.PatchInstanceMethod(reflect.TypeOf(&gorm.DB{}), "BeginTx",
-		func(db *gorm.DB, ctx context.Context, opts *sql.TxOptions) *gorm.DB {
+	patch = monkey.Patch(gormDBBeginTxReplacement,
+		func(ctx context.Context, db *gorm.DB, opts *sql.TxOptions) *gorm.DB {
 			*callsCount++
 			assert.Equal(t, expectedTxOptions, opts)
 			if len(expectedContextVars) > 0 {
@@ -285,7 +286,7 @@ func patchBeginTxWithVerifier(
 
 			defer patch.Restore()
 			patch.Unpatch()
-			return db.BeginTx(ctx, opts)
+			return gormDBBeginTxReplacement(ctx, db, opts)
 		})
 	return patch
 }
@@ -295,7 +296,7 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
 
 	var calledCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
+	patch := patchGormBeginTxWithVerifier(t, &calledCount, txOptions, nil)
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -327,7 +328,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 
 	var calledCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
+	patch := patchGormBeginTxWithVerifier(t, &calledCount, txOptions, nil)
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -992,11 +993,9 @@ func TestDB_RowsAffected(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec("^" + regexp.QuoteMeta("UPDATE `myTable` SET `myColumn` = ?") + "$").
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(-1, 123))
-	mock.ExpectCommit()
 
 	rowsAffected := db.Table("myTable").UpdateColumn("myColumn", 1).RowsAffected()
 
@@ -1010,11 +1009,9 @@ func TestDB_Delete(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `myTable`") + `\s+` +
 		regexp.QuoteMeta("WHERE (id = 1)")).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
-	mock.ExpectCommit()
 
 	db = db.Table("myTable")
 
@@ -1398,11 +1395,9 @@ func TestDB_UpdateColumns(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `id` = ?, `name` = ?")).
 		WithArgs(1, someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectCommit()
 
 	db = db.Table("myTable")
 	updateDB := db.UpdateColumns(map[string]interface{}{"id": 1, "name": someName})
@@ -1418,11 +1413,9 @@ func TestDB_UpdateColumn(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `name` = ?")).
 		WithArgs(someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectCommit()
 
 	db = db.Table("myTable")
 	updateDB := db.UpdateColumn("name", someName)
@@ -1470,7 +1463,7 @@ func TestOpen_DSN(t *testing.T) {
 	assert.NotNil(t, db)
 	assert.NotNil(t, db.db)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
-	rawDB := db.db.DB()
+	rawDB := db.db.CommonDB().(*sqlDBWrapper).sqlDB
 	assertRawDBIsOK(t, rawDB)
 }
 
@@ -1879,5 +1872,22 @@ func TestDB_InsertIgnoreMaps(t *testing.T) {
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, db.InsertIgnoreMaps("myTable", dataRows))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_gormDBBeginTxReplacement_ErrsWhenDBIsNotSQLDBWrapper(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	sqlDB := db.db.CommonDB().(*sqlDBWrapper).sqlDB
+	gormDB, err := gorm.Open("", sqlDB)
+	require.NoError(t, err)
+	gormDB.LogMode(false)
+
+	newGormDB := gormDBBeginTxReplacement(context.Background(), gormDB, &sql.TxOptions{})
+	assert.Equal(t, gorm.ErrCantStartTransaction, newGormDB.Error)
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

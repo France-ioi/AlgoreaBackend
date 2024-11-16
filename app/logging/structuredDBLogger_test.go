@@ -42,7 +42,7 @@ func TestStructuredDBLogger_Print_SQL_Select(t *testing.T) {
 	assert.Equal(t, "db", data["type"])
 	assert.True(t, data["duration"].(float64) < 0.1, "unexpected duration: %v", data["duration"])
 	assert.NotNil(t, data["ts"])
-	assert.Equal(t, int64(1), data["rows"].(int64))
+	assert.NotContains(t, data, "rows")
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -118,17 +118,18 @@ func TestStructuredDBLogger_Print_SQLError(t *testing.T) {
 	var result []interface{}
 	db.Raw("SELECT 2").Scan(&result)
 
-	assert.Equal(t, "a query error", hook.Entries[0].Message)
+	assert.Equal(t, "SELECT 2", hook.Entries[0].Message)
 	data := hook.Entries[0].Data
-	assert.Equal(t, "db", data["type"])
-
-	assert.Equal(t, "SELECT 2", hook.Entries[1].Message)
-	data = hook.Entries[1].Data
 	assert.Equal(t, "db", data["type"])
 	assert.True(t, data["duration"].(float64) < 1.0, "unexpected duration: %v", data["duration"])
 	assert.NotNil(t, data["ts"])
-	assert.Equal(t, int64(0), data["rows"].(int64))
+	assert.Nil(t, data["rows"])
 	assert.NoError(t, mock.ExpectationsWereMet())
+
+	assert.Equal(t, "a query error", hook.Entries[1].Message)
+	assert.Equal(t, "error", hook.Entries[1].Level.String())
+	assert.NotNil(t, hook.Entries[1].Time)
+	assert.Equal(t, "db", hook.Entries[1].Data["type"])
 }
 
 func TestStructuredDBLogger_Print_RawSQLWithDuration(t *testing.T) {

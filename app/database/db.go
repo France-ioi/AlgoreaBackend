@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -74,21 +75,30 @@ func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEna
 	ctx := context.Background()
 
 	var rawConnection gorm.SQLCommon
+	var ownSQLDBConnection bool
 	switch src := source.(type) {
 	case string:
-		rawConnection, err = OpenRawDBConnection(src, rawSQLQueriesLoggingEnabled)
+		var sqlDB *sql.DB
+		sqlDB, err = OpenRawDBConnection(src, rawSQLQueriesLoggingEnabled)
 		if err != nil {
 			return nil, err
 		}
-	case gorm.SQLCommon:
-		rawConnection = src
+		rawConnection = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &lc}
+		ownSQLDBConnection = true
+	case *sql.DB:
+		rawConnection = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &lc}
 	default:
 		return nil, fmt.Errorf("unknown database source type: %T (%v)", src, src)
 	}
-	dbConn, err = gorm.Open(driverName, rawConnection)
+	dbConn, _ = gorm.Open(driverName, rawConnection)
 
-	dbConn.LogMode(lc.LogSQLQueries)
-	dbConn.SetLogger(lc.Logger)
+	// gorm.Open only pings the connection when it's sql.DB. So we need to ping it ourselves.
+	if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Ping(); err != nil && ownSQLDBConnection {
+		_ = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Close()
+	}
+
+	// we log queries and errors ourselves
+	dbConn.LogMode(false)
 
 	return newDB(ctx, dbConn, nil, &lc), err
 }
@@ -140,7 +150,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		txOpts = txOptions[0]
 	}
 
-	txDB := conn.db.BeginTx(conn.ctx, txOpts)
+	txDB := gormDBBeginTxReplacement(conn.ctx, conn.db, txOpts)
 	if txDB.Error != nil {
 		return txDB.Error
 	}
@@ -178,6 +188,41 @@ func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
 	if count > 0 && conn.ctx.Value(retryEachTransactionContextKey) == nil {
 		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
 	}
+}
+
+func cloneGormDB(db *gorm.DB) *gorm.DB {
+	return db.Model(db.Value) // clone the db
+}
+
+type gormDBAccessor struct {
+	sync.RWMutex
+	Value        interface{}
+	Error        error
+	RowsAffected int64
+
+	// single db
+	DB gorm.SQLCommon
+}
+
+func replaceDBInGormDB(db *gorm.DB, newDB gorm.SQLCommon) {
+	(*gormDBAccessor)(unsafe.Pointer(db)).DB = newDB //nolint:gosec // G103: Here we write into a private field of a struct.
+	db.Dialect().SetDB(newDB)
+}
+
+// gormDBBeginTxReplacement is a replacement for gorm.DB.BeginTx that uses our sqlDBWrapper.
+// The code does absolutely the same as gorm.DB.BeginTx, but uses our sqlDBWrapper instead of sql.DB.
+// Happily, the original gorm.DB.BeginTx is only called from gorm.DB.Begin which is only called from gorm.DB.Transaction,
+// and we never use/expose gorm.DB.Transaction.
+func gormDBBeginTxReplacement(ctx context.Context, db *gorm.DB, txOpts *sql.TxOptions) *gorm.DB {
+	c := cloneGormDB(db)
+	if db, ok := db.CommonDB().(*sqlDBWrapper); ok && db != nil {
+		tx, err := db.BeginTx(ctx, txOpts)
+		replaceDBInGormDB(c, tx)
+		_ = c.AddError(err)
+	} else {
+		_ = c.AddError(gorm.ErrCantStartTransaction)
+	}
+	return c
 }
 
 func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
@@ -728,6 +773,15 @@ func (conn *DB) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DB 
 	}
 
 	return conn.Set("gorm:query_option", builder.String())
+}
+
+// Prepare creates a prepared statement for later queries or executions.
+// As the method must be executed in a transaction, the returned statement is bound to the transaction.
+func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
+	conn.mustBeInTransaction()
+
+	tx := conn.db.CommonDB().(*sqlTxWrapper)
+	return tx.prepare(query)
 }
 
 const keyTriesCount = 10

@@ -70,10 +70,10 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			)
 		FOR UPDATE OF children` // #nosec
 
-	createTemporaryTable, err := s.db.CommonDB().Prepare(createTemporaryTableQuery)
+	createTemporaryTable, err := s.Prepare(createTemporaryTableQuery)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(createTemporaryTable.Close()) }()
-	markAsProcessing, err := s.db.CommonDB().Prepare(markAsProcessingQuery)
+	markAsProcessing, err := s.Prepare(markAsProcessingQuery)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsProcessing.Close()) }()
 
@@ -137,9 +137,9 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			FOR SHARE OF items_items`) // #nosec
 	}
 
-	recomputeAncestors := make([]*sql.Stmt, len(recomputeQueries))
+	recomputeAncestors := make([]*SQLStmtWrapper, len(recomputeQueries))
 	for i := 0; i < len(recomputeQueries); i++ {
-		recomputeAncestors[i], err = s.db.CommonDB().Prepare(recomputeQueries[i])
+		recomputeAncestors[i], err = s.Prepare(recomputeQueries[i])
 		mustNotBeError(err)
 
 		defer func(i int) { mustNotBeError(recomputeAncestors[i].Close()) }(i)
@@ -151,23 +151,23 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		JOIN ` + objectName + `_propagate_processing
 			ON ` + objectName + `_propagate.id = ` + objectName + `_propagate_processing.id
 		SET ancestors_computation_state = 'done'` // #nosec
-	markAsDone, err := s.db.CommonDB().Prepare(markAsDoneQuery)
+	markAsDone, err := s.Prepare(markAsDoneQuery)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsDone.Close()) }()
-	dropTemporaryTable, err := s.db.CommonDB().Prepare(dropTemporaryTableQuery)
+	dropTemporaryTable, err := s.Prepare(dropTemporaryTableQuery)
 	mustNotBeError(err)
 	defer func() { mustNotBeError(dropTemporaryTable.Close()) }()
 
 	for {
-		_, err = markAsProcessing.Exec()
+		_, err = markAsProcessing.ExecContext(s.ctx)
 		mustNotBeError(err)
 		for i := 0; i < len(recomputeAncestors); i++ {
-			_, err = recomputeAncestors[i].Exec()
+			_, err = recomputeAncestors[i].ExecContext(s.ctx)
 			mustNotBeError(err)
 		}
 
 		var result sql.Result
-		result, err = markAsDone.Exec()
+		result, err = markAsDone.ExecContext(s.ctx)
 		mustNotBeError(err)
 		var rowsAffected int64
 		rowsAffected, err = result.RowsAffected()
@@ -176,10 +176,10 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			break
 		}
 
-		_, err = dropTemporaryTable.Exec()
+		_, err = dropTemporaryTable.ExecContext(s.ctx)
 		mustNotBeError(err)
 
-		_, err = createTemporaryTable.Exec()
+		_, err = createTemporaryTable.ExecContext(s.ctx)
 		mustNotBeError(err)
 	}
 }

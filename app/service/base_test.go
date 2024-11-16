@@ -35,7 +35,9 @@ func TestBase_GetUser(t *testing.T) {
 }
 
 func TestBase_GetStore(t *testing.T) {
-	expectedDB := &database.DB{}
+	db, _ := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	expectedDB := db
 	expectedContext := context.Background()
 	expectedStore := database.NewDataStoreWithContext(expectedContext, expectedDB)
 	req := (&http.Request{}).WithContext(expectedContext)

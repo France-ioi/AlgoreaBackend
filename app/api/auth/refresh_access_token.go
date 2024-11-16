@@ -17,7 +17,7 @@ import (
 
 type sessionIDsInProgressMap sync.Map
 
-func (m *sessionIDsInProgressMap) withLock(sessionID int64, r *http.Request, f func() error) error {
+func (m *sessionIDsInProgressMap) WithLock(sessionID int64, r *http.Request, f func() error) error {
 	sessionMutex := make(chan bool)
 	defer close(sessionMutex)
 	sessionMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex)
@@ -68,7 +68,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			// We should not allow concurrency in this part because the login module generates not only
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
-			service.MustNotBeError(sessionIDsInProgress.withLock(sessionID, r, func() error {
+			service.MustNotBeError(sessionIDsInProgress.WithLock(sessionID, r, func() error {
 				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID)
 				return nil
 			}))

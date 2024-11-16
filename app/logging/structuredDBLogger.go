@@ -53,7 +53,7 @@ func (l *StructuredDBLogger) Print(values ...interface{}) {
 		valuesMap["ts"] = time.Now().Format(time.DateTime)
 		logger.WithFields(valuesMap).Println(values[2])
 	default: // level is not "sql"/"rawsql", so typically errors
-		logger.Println(values[2:]...)
+		logger.Errorln(values[2:]...)
 	}
 }
 

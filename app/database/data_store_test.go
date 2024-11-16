@@ -206,7 +206,7 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 	type ctxKey string
 
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
+	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -312,7 +312,7 @@ func TestDataStore_WithForeignKeyChecksDisabled_WithTxOptions(t *testing.T) {
 
 	var callsCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &callsCount, txOptions, nil)
+	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, nil)
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -435,7 +435,7 @@ func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeou
 	err := funcToTestGenerator(store)(func(s *DataStore) error {
 		assert.Equal(t, expectedTableName, s.tableName)
 		assert.NotEqual(t, store, s)
-		assert.Equal(t, store.db.DB(), s.db.DB())
+		assert.Equal(t, store.db.CommonDB(), s.db.CommonDB())
 		var result []interface{}
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})
