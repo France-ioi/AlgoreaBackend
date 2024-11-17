@@ -7,9 +7,13 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestItemStore_ContestManagedByUser(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -40,6 +44,8 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 }
 
 func TestItemStore_DeleteItem_MustBeRunInTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -51,6 +57,8 @@ func TestItemStore_DeleteItem_MustBeRunInTransaction(t *testing.T) {
 }
 
 func TestItemStore_DeleteItem_ShouldUseNamedLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
