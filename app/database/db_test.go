@@ -613,7 +613,9 @@ func TestDB_QueryConstructors(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
+			db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 			db = db.Table("myTable")
+			db.ctes = make([]cte, 0, 1)
 			if testCase.funcToPrepare != nil {
 				db = testCase.funcToPrepare(db, mock)
 			}
@@ -624,12 +626,14 @@ func TestDB_QueryConstructors(t *testing.T) {
 
 			resultDB, oldDBObjects := testCase.funcToCall(db)
 			assert.NotEqual(t, resultDB, db)
+			assert.Equal(t, db.ctx, resultDB.ctx)
 			assert.Equal(t, db.logConfig, resultDB.logConfig)
 			if !testCase.skipCTEsChecking {
 				assert.Equal(t, db.ctes, resultDB.ctes)
 			}
 			for _, oldDBObject := range oldDBObjects {
 				assert.NotEqual(t, oldDBObject, db)
+				assert.Equal(t, db.ctx, oldDBObject.ctx)
 				assert.Equal(t, db.logConfig, oldDBObject.logConfig)
 				if !testCase.skipCTEsChecking {
 					assert.Equal(t, db.ctes, oldDBObject.ctes)
@@ -665,13 +669,19 @@ func TestDB_Count(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"count"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	var result int
 	countDB := db.Count(&result)
 
 	assert.NotEqual(t, countDB, db)
 	assert.NoError(t, countDB.Error())
+	assert.Equal(t, db.ctx, countDB.ctx)
+	assert.Nil(t, countDB.ctes)
+	assert.Equal(t, db.logConfig, countDB.logConfig)
+
 	assert.Equal(t, 1, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -706,7 +716,9 @@ func TestDB_Take(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` WHERE (id = 1) LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	type resultType struct{ ID int }
 	var result resultType
@@ -714,6 +726,10 @@ func TestDB_Take(t *testing.T) {
 
 	assert.NotEqual(t, takeDB, db)
 	assert.NoError(t, takeDB.Error())
+	assert.Equal(t, db.ctx, takeDB.ctx)
+	assert.Nil(t, takeDB.ctes)
+	assert.Equal(t, db.logConfig, takeDB.logConfig)
+
 	assert.Equal(t, resultType{1}, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -786,13 +802,19 @@ func TestDB_Pluck(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	var result []int64
 	pluckDB := db.Pluck("id", &result)
 
 	assert.NotEqual(t, pluckDB, db)
 	assert.NoError(t, pluckDB.Error())
+	assert.Equal(t, db.ctx, pluckDB.ctx)
+	assert.Nil(t, pluckDB.ctes)
+	assert.Equal(t, db.logConfig, pluckDB.logConfig)
+
 	assert.Equal(t, []int64{1}, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -868,13 +890,19 @@ func TestDB_PluckFirst(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable` LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	var result int64
 	pluckFirstDB := db.PluckFirst("id", &result)
 
 	assert.NotEqual(t, pluckFirstDB, db)
 	assert.NoError(t, pluckFirstDB.Error())
+	assert.Equal(t, db.ctx, pluckFirstDB.ctx)
+	assert.Nil(t, pluckFirstDB.ctes)
+	assert.Equal(t, db.logConfig, pluckFirstDB.logConfig)
+
 	assert.Equal(t, int64(1), result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -930,7 +958,9 @@ func TestDB_Scan(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id", "value"}).AddRow(int64(1), "value"))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	type resultType struct {
 		ID    int64
@@ -941,6 +971,10 @@ func TestDB_Scan(t *testing.T) {
 
 	assert.NotEqual(t, scanDB, db)
 	assert.NoError(t, scanDB.Error())
+	assert.Equal(t, db.ctx, scanDB.ctx)
+	assert.Nil(t, scanDB.ctes)
+	assert.Equal(t, db.logConfig, scanDB.logConfig)
+
 	assert.Equal(t, []resultType{{ID: 1, Value: "value"}}, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -1027,11 +1061,17 @@ func TestDB_Delete(t *testing.T) {
 		regexp.QuoteMeta("WHERE (id = 1)")).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	deleteDB := db.Delete("id = 1")
 
 	assert.NotEqual(t, deleteDB, db)
+	assert.Equal(t, db.ctx, deleteDB.ctx)
+	assert.Nil(t, deleteDB.ctes)
+	assert.Equal(t, db.logConfig, deleteDB.logConfig)
+
 	assert.NoError(t, deleteDB.Error())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -1048,10 +1088,16 @@ func TestDB_Exec(t *testing.T) {
 		WithArgs(1, 2).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db.ctes = make([]cte, 0, 1)
+
 	execDB := db.Exec(query, 1, 2)
 
 	assert.NotEqual(t, execDB, db)
 	assert.NoError(t, execDB.Error())
+	assert.Equal(t, db.ctx, execDB.ctx)
+	assert.Nil(t, execDB.ctes)
+	assert.Equal(t, db.logConfig, execDB.logConfig)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1431,10 +1477,16 @@ func TestDB_UpdateColumn(t *testing.T) {
 		WithArgs(someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
+
 	updateDB := db.UpdateColumn("name", someName)
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
+	assert.Equal(t, db.ctx, updateDB.ctx)
+	assert.Nil(t, updateDB.ctes)
+	assert.Equal(t, db.logConfig, updateDB.logConfig)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1448,10 +1500,16 @@ func TestDB_Set(t *testing.T) {
 	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR UPDATE").
 		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
+
 	setDB := db.Set("gorm:query_option", "FOR UPDATE")
 	assert.NotEqual(t, setDB, db)
 	assert.NoError(t, setDB.Error())
+	assert.Equal(t, db.ctx, setDB.ctx)
+	assert.Equal(t, db.ctes, setDB.ctes)
+	assert.Equal(t, db.logConfig, setDB.logConfig)
 
 	var result []interface{}
 	assert.NoError(t, setDB.Scan(&result).Error())

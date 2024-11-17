@@ -24,11 +24,11 @@ func NewDataStore(conn *DB) *DataStore {
 }
 
 // NewDataStoreWithContext returns a new DataStore with the given context.
-func NewDataStoreWithContext(ctx context.Context, conn *DB) *DataStore {
-	newSQLDB := conn.db.CommonDB().(withContexter).withContext(ctx)
-	newGormDB := cloneGormDB(conn.db)
+func NewDataStoreWithContext(ctx context.Context, db *DB) *DataStore {
+	newSQLDB := db.db.CommonDB().(withContexter).withContext(ctx)
+	newGormDB := cloneGormDB(db.db)
 	replaceDBInGormDB(newGormDB, newSQLDB)
-	return &DataStore{DB: newDB(ctx, newGormDB, conn.ctes, conn.logConfig)}
+	return &DataStore{DB: cloneDBWithNewContext(ctx, db)}
 }
 
 // NewDataStoreWithTable returns a specialized DataStore.

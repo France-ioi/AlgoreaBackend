@@ -52,6 +52,14 @@ func newDB(ctx context.Context, db *gorm.DB, ctes []cte, logConfig *LogConfig) *
 	return &DB{db: db, ctx: ctx, ctes: ctes, logConfig: logConfig}
 }
 
+// cloneDBWithNewContext clones the current db connection replacing the context with the given one.
+func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
+	newSQLDB := conn.db.CommonDB().(withContexter).withContext(ctx)
+	newGormDB := cloneGormDB(conn.db)
+	replaceDBInGormDB(newGormDB, newSQLDB)
+	return newDB(ctx, newGormDB, conn.ctes, conn.logConfig)
+}
+
 // Open connects to the database and tests the connection.
 func Open(source interface{}) (*DB, error) {
 	logger := log.SharedLogger.NewDBLogger()
