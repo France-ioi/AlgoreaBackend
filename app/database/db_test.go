@@ -520,6 +520,7 @@ func TestDB_QueryConstructors(t *testing.T) {
 		funcToCall        func(*DB) (*DB, []*DB)
 		expectedQuery     string
 		expectedQueryArgs []driver.Value
+		skipCTEsChecking  bool
 	}{
 		{
 			name:          "Limit",
@@ -542,9 +543,10 @@ func TestDB_QueryConstructors(t *testing.T) {
 			expectedQuery: "SELECT * FROM `myTable` HAVING (id > 0)",
 		},
 		{
-			name:          "Raw",
-			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Raw("SELECT 1"), nil },
-			expectedQuery: "SELECT 1",
+			name:             "Raw",
+			funcToCall:       func(db *DB) (*DB, []*DB) { return db.Raw("SELECT 1"), nil },
+			expectedQuery:    "SELECT 1",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "Union",
@@ -553,7 +555,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbTwo)
 				return db.Union(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION (SELECT * FROM `otherTable` )",
+			expectedQuery:    "(SELECT * FROM `myTable` ) UNION (SELECT * FROM `otherTable` )",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "UnionAll",
@@ -562,7 +565,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbTwo)
 				return db.UnionAll(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION ALL (SELECT * FROM `otherTable` )",
+			expectedQuery:    "(SELECT * FROM `myTable` ) UNION ALL (SELECT * FROM `otherTable` )",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "With",
@@ -575,7 +579,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbFour)
 				return dbFour.With("t2", dbThree), dbs
 			},
-			expectedQuery: "WITH `t1` AS (SELECT * FROM `otherTable` ), `t2` AS (SELECT * FROM `thirdTable` ) SELECT * FROM `myTable`",
+			expectedQuery:    "WITH `t1` AS (SELECT * FROM `otherTable` ), `t2` AS (SELECT * FROM `thirdTable` ) SELECT * FROM `myTable`",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "With (with locking)",
@@ -596,7 +601,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, newDB)
 				return newDB, dbs
 			},
-			expectedQuery: "WITH `t1` AS (SELECT * FROM `otherTable` FOR UPDATE) SELECT * FROM `myTable` FOR UPDATE",
+			expectedQuery:    "WITH `t1` AS (SELECT * FROM `otherTable` FOR UPDATE) SELECT * FROM `myTable` FOR UPDATE",
+			skipCTEsChecking: true,
 		},
 	}
 	for _, testCase := range tests {
@@ -618,8 +624,16 @@ func TestDB_QueryConstructors(t *testing.T) {
 
 			resultDB, oldDBObjects := testCase.funcToCall(db)
 			assert.NotEqual(t, resultDB, db)
+			assert.Equal(t, db.logConfig, resultDB.logConfig)
+			if !testCase.skipCTEsChecking {
+				assert.Equal(t, db.ctes, resultDB.ctes)
+			}
 			for _, oldDBObject := range oldDBObjects {
 				assert.NotEqual(t, oldDBObject, db)
+				assert.Equal(t, db.logConfig, oldDBObject.logConfig)
+				if !testCase.skipCTEsChecking {
+					assert.Equal(t, db.ctes, oldDBObject.ctes)
+				}
 			}
 			assert.NoError(t, resultDB.Error())
 
