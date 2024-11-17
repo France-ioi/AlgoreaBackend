@@ -11,6 +11,23 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
+func Test_fileWithLineNum(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	require.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		assert.Contains(t, fileWithLineNum(), "/query_logger_test.go:")
+		return nil
+	}))
+
+	assert.Nil(t, mock.ExpectationsWereMet())
+}
+
 func Test_fileWithLineNum_ReturnsEmptyStringWhenNoSuitableCallerFound(t *testing.T) {
 	assert.Equal(t, "", fileWithLineNum())
 }

@@ -73,12 +73,12 @@ func fileWithLineNum() string {
 			return ""
 		}
 		if strings.Contains(file, "jinzhu/gorm") ||
-			strings.HasSuffix(file, "/AlgoreaBackend/app/database/db.go") ||
-			strings.HasSuffix(file, "/AlgoreaBackend/app/database/data_store.go") ||
-			strings.HasSuffix(file, "/AlgoreaBackend/app/database/sql_conn_wrapper.go") ||
-			strings.HasSuffix(file, "/AlgoreaBackend/app/database/sql_db_wrapper.go") ||
-			strings.HasSuffix(file, "/AlgoreaBackend/app/database/sql_stmt_wrapper.go") ||
-			strings.HasSuffix(file, "/AlgoreaBackend/app/database/sql_tx_wrapper.go") {
+			strings.HasSuffix(file, "/app/database/db.go") ||
+			strings.HasSuffix(file, "/app/database/data_store.go") ||
+			strings.HasSuffix(file, "/app/database/sql_conn_wrapper.go") ||
+			strings.HasSuffix(file, "/app/database/sql_db_wrapper.go") ||
+			strings.HasSuffix(file, "/app/database/sql_stmt_wrapper.go") ||
+			strings.HasSuffix(file, "/app/database/sql_tx_wrapper.go") {
 			continue
 		}
 		return fmt.Sprintf("%v:%v", file, line)
