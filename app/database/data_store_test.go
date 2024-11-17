@@ -8,10 +8,13 @@ import (
 	"strconv"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
@@ -693,4 +696,66 @@ func TestDataStore_IsInTransaction_ReturnsFalse(t *testing.T) {
 
 	assert.False(t, NewDataStore(db).IsInTransaction())
 	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+type gormDialectDBAccessor struct {
+	_ unsafe.Pointer
+	v *struct {
+		db gorm.SQLCommon
+		gorm.DefaultForeignKeyNamer
+	}
+}
+
+type testContextKey string
+
+func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	ctx := context.WithValue(context.Background(), testContextKey("key"), "value")
+	dataStore := NewDataStoreWithContext(ctx, db)
+
+	assert.Equal(t, db.ctes, dataStore.ctes)
+	assert.Equal(t, db.logConfig, dataStore.logConfig)
+	assert.Equal(t, ctx, dataStore.ctx)
+
+	dbWrapper := dataStore.DB.db.CommonDB().(*sqlDBWrapper)
+	assert.Equal(t, ctx, dbWrapper.ctx)
+	assert.Equal(t, db.logConfig, dbWrapper.logConfig)
+	assert.Equal(t, db.db.CommonDB().(*sqlDBWrapper).sqlDB, dbWrapper.sqlDB)
+	dialect := dataStore.DB.db.Dialect()
+	assert.Equal(t, dbWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
+
+	assert.Nil(t, mock.ExpectationsWereMet())
+}
+
+func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	err := db.inTransaction(func(db *DB) error {
+		ctx := context.WithValue(context.Background(), testContextKey("key"), "value")
+		dataStore := NewDataStoreWithContext(ctx, db)
+
+		assert.Equal(t, db.ctes, dataStore.ctes)
+		assert.Equal(t, db.logConfig, dataStore.logConfig)
+		assert.Equal(t, ctx, dataStore.ctx)
+
+		txWrapper := dataStore.DB.db.CommonDB().(*sqlTxWrapper)
+		assert.Equal(t, db.logConfig, txWrapper.logConfig)
+		assert.Equal(t, ctx, txWrapper.ctx)
+		assert.Equal(t, db.db.CommonDB().(*sqlTxWrapper).sqlTx, txWrapper.sqlTx)
+		dialect := dataStore.DB.db.Dialect()
+		assert.Equal(t, txWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	assert.Nil(t, mock.ExpectationsWereMet())
 }
