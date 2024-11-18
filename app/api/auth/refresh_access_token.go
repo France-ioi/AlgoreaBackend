@@ -17,7 +17,7 @@ import (
 
 type sessionIDsInProgressMap sync.Map
 
-func (m *sessionIDsInProgressMap) withLock(sessionID int64, r *http.Request, f func() error) error {
+func (m *sessionIDsInProgressMap) WithLock(sessionID int64, r *http.Request, f func() error) error {
 	sessionMutex := make(chan bool)
 	defer close(sessionMutex)
 	sessionMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex)
@@ -50,9 +50,11 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	var expiresIn int32
 	apiError := service.NoError
 
-	sessionMostRecentToken := store.
+	sessionMostRecentToken, err := store.
 		AccessTokens().
 		GetMostRecentValidTokenForSession(sessionID)
+	service.MustNotBeError(err)
+
 	if sessionMostRecentToken.Token != oldAccessToken || sessionMostRecentToken.TooNewToRefresh {
 		// We return the most recent token if the input token is not the most recent one or if it is too new to refresh.
 		// Note: we know that the token is valid because we checked it in the middleware.
@@ -60,16 +62,13 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 		expiresIn = sessionMostRecentToken.SecondsUntilExpiry
 	} else {
 		if user.IsTempUser {
-			service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-				var err error
-				newToken, expiresIn, err = auth.RefreshTempUserSession(store, user.GroupID, sessionID)
-				return err
-			}))
+			newToken, expiresIn, err = auth.RefreshTempUserSession(store, user.GroupID, sessionID)
+			service.MustNotBeError(err)
 		} else {
 			// We should not allow concurrency in this part because the login module generates not only
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
-			service.MustNotBeError(sessionIDsInProgress.withLock(sessionID, r, func() error {
+			service.MustNotBeError(sessionIDsInProgress.WithLock(sessionID, r, func() error {
 				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID)
 				return nil
 			}))
@@ -79,7 +78,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			return apiError
 		}
 
-		store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID)
+		service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
 	}
 
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], newToken,

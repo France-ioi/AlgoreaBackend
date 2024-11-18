@@ -86,6 +86,8 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"409":
 //			"$ref": "#/responses/conflictResponse"
 //		"422":

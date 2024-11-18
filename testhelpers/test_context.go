@@ -21,6 +21,7 @@ import (
 	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type dbquery struct {
@@ -181,7 +182,10 @@ func (ctx *TestContext) openDB() *sql.DB {
 	if ctx.db == nil {
 		var err error
 		config, _ := app.DBConfig(ctx.application.Config)
-		ctx.db, err = sql.Open("instrumented-mysql", config.FormatDSN())
+		loggingConfig := app.LoggingConfig(ctx.application.Config)
+		ctx.db, err = sql.Open(
+			golang.IfElse(loggingConfig.GetBool("LogRawSQLQueries"), "instrumented-mysql", "mysql"),
+			config.FormatDSN())
 		if err != nil {
 			fmt.Println("Unable to connect to the database: ", err)
 			os.Exit(1)

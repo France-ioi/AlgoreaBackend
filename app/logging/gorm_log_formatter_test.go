@@ -52,7 +52,7 @@ func Test_GormLogFormatter(t *testing.T) {
 				" \033[36;1m[52739.32ms]\033[0m ",
 				"INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`, `c7`, `c8`, `c9`, `c10`, `c11`, `c12`, `c13`) VALUES " +
 					"(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0.11, 0.12, true)",
-				" \n\x1b[36;31m[1 rows affected or returned ]\x1b[0m ",
+				" \n\x1b[36;31m[1 rows affected ]\x1b[0m ",
 			},
 		},
 		{
@@ -70,7 +70,7 @@ func Test_GormLogFormatter(t *testing.T) {
 				"INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`) VALUES " +
 					"('2022-08-02 15:04:05.123456789', '2022-08-02 15:04:05.123456789', " +
 					"'2022-08-02 15:04:05.123456', '2022-08-02 15:04:05.123456', NULL, '0000-00-00 00:00:00')",
-				" \n\x1b[36;31m[1 rows affected or returned ]\x1b[0m ",
+				" \n\x1b[36;31m[1 rows affected ]\x1b[0m ",
 			},
 		},
 		{
@@ -86,7 +86,7 @@ func Test_GormLogFormatter(t *testing.T) {
 				"\n\033[33m[2021-08-02 15:04:05]\033[0m",
 				" \033[36;1m[52739.32ms]\033[0m ",
 				"INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`) VALUES (123451234512345, 'testsessiontestsessiontestsessio', 1, 1)",
-				" \n\x1b[36;31m[1 rows affected or returned ]\x1b[0m ",
+				" \n\x1b[36;31m[1 rows affected ]\x1b[0m ",
 			},
 		},
 		{
@@ -102,7 +102,7 @@ func Test_GormLogFormatter(t *testing.T) {
 				"\n\033[33m[2021-08-02 15:04:05]\033[0m",
 				" \033[36;1m[52739.32ms]\033[0m ",
 				"INSERT INTO `t` (`c1`, `c2`) VALUES ('test', '<binary>')",
-				" \n\x1b[36;31m[1 rows affected or returned ]\x1b[0m ",
+				" \n\x1b[36;31m[1 rows affected ]\x1b[0m ",
 			},
 		},
 		{
@@ -118,7 +118,7 @@ func Test_GormLogFormatter(t *testing.T) {
 				"\n\033[33m[2021-08-02 15:04:05]\033[0m",
 				" \033[36;1m[52739.32ms]\033[0m ",
 				"INSERT INTO `t` (`c1`, `c2`) VALUES (12345, NULL)",
-				" \n\x1b[36;31m[1 rows affected or returned ]\x1b[0m ",
+				" \n\x1b[36;31m[1 rows affected ]\x1b[0m ",
 			},
 		},
 		{
@@ -134,7 +134,7 @@ func Test_GormLogFormatter(t *testing.T) {
 				"\n\033[33m[2021-08-02 15:04:05]\033[0m",
 				" \033[36;1m[52739.32ms]\033[0m ",
 				"INSERT INTO `t` (`c1`) VALUES (NULL)",
-				" \n\x1b[36;31m[1 rows affected or returned ]\x1b[0m ",
+				" \n\x1b[36;31m[1 rows affected ]\x1b[0m ",
 			},
 		},
 		{

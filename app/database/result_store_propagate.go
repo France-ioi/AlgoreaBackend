@@ -112,7 +112,11 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 				result_exists TINYINT(1) NOT NULL,
 				KEY result_exists (result_exists)
 			)`).Error())
-		defer func() { mustNotBeError(s.Exec("DROP TEMPORARY TABLE results_to_mark").Error()) }()
+		defer func() {
+			// As we start from dropping the temporary table, it's optional to delete it here.
+			// This means we can use a potentially canceled context and ignore the error.
+			s.Exec("DROP TEMPORARY TABLE results_to_mark")
+		}()
 
 		// We mark as 'to_be_recomputed' results of all parents of a chunk of results marked as 'to_be_propagated'.
 		// Also, we insert missing results for chapters having children with results marked as 'to_be_propagated'.

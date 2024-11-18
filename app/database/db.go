@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -23,6 +24,13 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
+// LogConfig is the configuration for the database logs.
+type LogConfig struct {
+	Logger            log.DBLogger
+	LogSQLQueries     bool
+	AnalyzeSQLQueries bool
+}
+
 type cte struct {
 	name     string
 	subQuery interface{}
@@ -30,69 +38,103 @@ type cte struct {
 
 // DB contains information for current db connection (wraps *gorm.DB).
 type DB struct {
-	db   *gorm.DB
-	ctx  context.Context
-	ctes []cte
+	db        *gorm.DB
+	ctx       context.Context
+	ctes      []cte
+	logConfig *LogConfig
 }
 
 // ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock.
 var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
 
 // newDB wraps *gorm.DB.
-func newDB(ctx context.Context, db *gorm.DB, ctes []cte) *DB {
-	return &DB{db: db, ctx: ctx, ctes: ctes}
+func newDB(ctx context.Context, db *gorm.DB, ctes []cte, logConfig *LogConfig) *DB {
+	return &DB{db: db, ctx: ctx, ctes: ctes, logConfig: logConfig}
+}
+
+// cloneDBWithNewContext clones the current db connection replacing the context with the given one.
+func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
+	newSQLDB := conn.db.CommonDB().(withContexter).withContext(ctx)
+	newGormDB := cloneGormDB(conn.db)
+	replaceDBInGormDB(newGormDB, newSQLDB)
+	return newDB(ctx, newGormDB, conn.ctes, conn.logConfig)
 }
 
 // Open connects to the database and tests the connection.
-// nolint: gosec
 func Open(source interface{}) (*DB, error) {
+	logger := log.SharedLogger.NewDBLogger()
+
+	lc := LogConfig{
+		Logger:            logger,
+		LogSQLQueries:     log.SharedLogger.IsSQLQueriesLoggingEnabled(),
+		AnalyzeSQLQueries: log.SharedLogger.IsSQLQueriesAnalyzingEnabled(),
+	}
+
+	rawSQLQueriesLoggingEnabled := log.SharedLogger.IsRawSQLQueriesLoggingEnabled()
+	return OpenWithLogConfig(source, lc, rawSQLQueriesLoggingEnabled)
+}
+
+// OpenWithLogConfig connects to the database and tests the connection. It uses the given logging settings.
+func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	driverName := "mysql"
-	logger, logMode, _ := log.SharedLogger.NewDBLogger()
+
+	ctx := context.Background()
 
 	var rawConnection gorm.SQLCommon
+	var ownSQLDBConnection bool
 	switch src := source.(type) {
 	case string:
-		rawConnection, err = OpenRawDBConnection(src)
+		var sqlDB *sql.DB
+		sqlDB, err = OpenRawDBConnection(src, rawSQLQueriesLoggingEnabled)
 		if err != nil {
 			return nil, err
 		}
-	case gorm.SQLCommon:
-		rawConnection = src
+		rawConnection = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &lc}
+		ownSQLDBConnection = true
+	case *sql.DB:
+		rawConnection = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &lc}
 	default:
 		return nil, fmt.Errorf("unknown database source type: %T (%v)", src, src)
 	}
-	dbConn, err = gorm.Open(driverName, rawConnection)
+	dbConn, _ = gorm.Open(driverName, rawConnection)
 
-	dbConn.LogMode(logMode)
-	dbConn.SetLogger(logger)
+	// gorm.Open only pings the connection when it's sql.DB. So we need to ping it ourselves.
+	if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Ping(); err != nil && ownSQLDBConnection {
+		_ = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Close()
+	}
 
-	return newDB(context.Background(), dbConn, nil), err
+	// we log queries and errors ourselves
+	dbConn.LogMode(false)
+
+	return newDB(ctx, dbConn, nil, &lc), err
 }
 
 // OpenRawDBConnection creates a new DB connection.
-func OpenRawDBConnection(sourceDSN string) (*sql.DB, error) {
-	registerDriver := true
-	for _, driverName := range sql.Drivers() {
-		if driverName == "instrumented-mysql" {
-			registerDriver = false
-			break
+func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB, error) {
+	if enableRawLevelLogging {
+		registerDriver := true
+		for _, driverName := range sql.Drivers() {
+			if driverName == "instrumented-mysql" {
+				registerDriver = false
+				break
+			}
+		}
+
+		if registerDriver {
+			logger := log.SharedLogger.NewDBLogger()
+			rawDBLogger := log.NewRawDBLogger(logger, log.SharedLogger.IsRawSQLQueriesLoggingEnabled())
+			sql.Register("instrumented-mysql",
+				instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
 		}
 	}
-
-	if registerDriver {
-		logger, _, rawLogMode := log.SharedLogger.NewDBLogger()
-		rawDBLogger := log.NewRawDBLogger(logger, rawLogMode)
-		sql.Register("instrumented-mysql",
-			instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
-	}
-	return sql.Open("instrumented-mysql", sourceDSN)
+	return sql.Open(golang.IfElse(enableRawLevelLogging, "instrumented-mysql", "mysql"), sourceDSN)
 }
 
 // New clones a new db connection without search conditions.
 func (conn *DB) New() *DB {
-	return newDB(conn.ctx, conn.db.New(), nil)
+	return newDB(conn.ctx, conn.db.New(), nil, conn.logConfig)
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
@@ -116,7 +158,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		txOpts = txOptions[0]
 	}
 
-	txDB := conn.db.BeginTx(conn.ctx, txOpts)
+	txDB := gormDBBeginTxReplacement(conn.ctx, conn.db, txOpts)
 	if txDB.Error != nil {
 		return txDB.Error
 	}
@@ -126,24 +168,27 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		case p != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
+			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
+			// In all cases, the DB library closes the connection on rollback failure and logs the error.
+			// But still, in both cases, we should not retry the transaction.
+			// If the panic was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
 			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, p, rollbackErr, &err, txOptions...) {
 				return
 			}
-			panic(p) // re-throw panic after rollback
+			panic(p) // re-throw panic after rollback if it was not a deadlock/timeout error
 		case err != nil:
-			// do not change the err
+			// ensure the rollback is executed, do not change the err
 			rollbackErr := txDB.Rollback().Error
-			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...) {
-				return
-			}
-			if rollbackErr != nil {
-				panic(err) // in case of error on rollback, panic
-			}
+			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
+			// In all cases, the DB library closes the connection on rollback failure and logs the error.
+			// But still, in both cases, we should not retry the transaction.
+			// If the error was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
+			conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...)
 		default:
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
-	err = txFunc(newDB(conn.ctx, txDB, nil))
+	err = txFunc(newDB(conn.ctx, txDB, nil, conn.logConfig))
 	return err
 }
 
@@ -153,15 +198,52 @@ func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
 	}
 }
 
+func cloneGormDB(db *gorm.DB) *gorm.DB {
+	return db.Model(db.Value) // clone the db
+}
+
+type gormDBAccessor struct {
+	sync.RWMutex
+	Value        interface{}
+	Error        error
+	RowsAffected int64
+
+	// single db
+	DB gorm.SQLCommon
+}
+
+func replaceDBInGormDB(db *gorm.DB, newDB gorm.SQLCommon) {
+	(*gormDBAccessor)(unsafe.Pointer(db)).DB = newDB //nolint:gosec // G103: Here we write into a private field of a struct.
+	db.Dialect().SetDB(newDB)
+}
+
+// gormDBBeginTxReplacement is a replacement for gorm.DB.BeginTx that uses our sqlDBWrapper.
+// The code does absolutely the same as gorm.DB.BeginTx, but uses our sqlDBWrapper instead of sql.DB.
+// Happily, the original gorm.DB.BeginTx is only called from gorm.DB.Begin which is only called from gorm.DB.Transaction,
+// and we never use/expose gorm.DB.Transaction.
+func gormDBBeginTxReplacement(ctx context.Context, db *gorm.DB, txOpts *sql.TxOptions) *gorm.DB {
+	c := cloneGormDB(db)
+	if db, ok := db.CommonDB().(*sqlDBWrapper); ok && db != nil {
+		tx, err := db.BeginTx(ctx, txOpts)
+		replaceDBInGormDB(c, tx)
+		_ = c.AddError(err)
+	} else {
+		_ = c.AddError(gorm.ErrCantStartTransaction)
+	}
+	return c
+}
+
 func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
 	returnErr *error, txOptions ...*sql.TxOptions,
-) bool {
+) (shouldIgnoreInitialError bool) {
 	errToHandleError, _ := errToHandle.(error)
 
 	// Deadlock found / lock wait timeout exceeded
 	if errToHandle != nil && (IsDeadlockError(errToHandleError) || IsLockWaitTimeoutExceededError(errToHandleError)) {
-		if rollbackErr != nil {
-			panic(rollbackErr)
+		if rollbackErr != nil { // do not retry if rollback failed
+			// as the previous error was a retryable error, we should return the rollback error, as it is more important
+			*returnErr = rollbackErr
+			return true
 		}
 		// retry
 		log.Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
@@ -178,29 +260,59 @@ func (conn *DB) isInTransaction() bool {
 	return false
 }
 
-func (conn *DB) withNamedLock(lockName string, timeout time.Duration, txFunc func(*DB) error) (err error) {
+func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall func(*DB) error) (err error) {
 	initGetLockTime := time.Now()
 
-	// Use a lock so that we don't execute the listener multiple times in parallel
-	var getLockResult int64
-	err = conn.db.Raw("SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Row().Scan(&getLockResult)
+	var sqlDB *sql.DB
+	if conn.isInTransaction() {
+		type sqlTxDBAccessor struct {
+			db *sql.DB
+		}
+		sqlDB = (*sqlTxDBAccessor)((unsafe.Pointer)(conn.db.CommonDB().(*sqlTxWrapper).sqlTx)).db
+	} else {
+		sqlDB = conn.db.CommonDB().(*sqlDBWrapper).sqlDB
+	}
+	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx, logConfig: conn.logConfig}
+
+	var shouldDiscardNamedLockDBConnection bool
+	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx)
 	if err != nil {
+		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
 		return err
 	}
-	if getLockResult != 1 {
+	defer func() {
+		_ = namedLockDBConnection.close(
+			// return driver.ErrBadConn on RELEASE_LOCK() error to discard the connection releasing the lock
+			golang.IfElse(shouldDiscardNamedLockDBConnection, driver.ErrBadConn, nil))
+	}()
+
+	var getLockResult *int64
+	err = namedLockDBConnection.QueryRowContext(conn.ctx, "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
+	if err != nil {
+		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
+		return err
+	}
+	if getLockResult == nil || *getLockResult != 1 {
 		return ErrLockWaitTimeoutExceeded
 	}
 
-	log.Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
-
 	defer func() {
-		releaseErr := conn.db.Exec("SELECT RELEASE_LOCK(?)", lockName).Error
-		if err == nil {
-			err = releaseErr
+		var releaseLockResult *int64
+		// call RELEASE_LOCK() even if the context is canceled or timed out
+		releaseErr := namedLockDBConnection.QueryRowContext(context.Background(),
+			"SELECT RELEASE_LOCK(?)", lockName).Scan(&releaseLockResult)
+		if releaseErr != nil || releaseLockResult == nil || *releaseLockResult != 1 {
+			// on error we just close the connection to release the lock
+			shouldDiscardNamedLockDBConnection = true
+			// do not return an error, it should not affect the result
+			conn.logConfig.Logger.Print("error", fileWithLineNum(),
+				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
 		}
 	}()
-	err = txFunc(conn)
-	return
+
+	log.Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
+
+	return funcToCall(conn)
 }
 
 // Close closes current db connection.  If database connection is not an io.Closer, returns an error.
@@ -210,41 +322,41 @@ func (conn *DB) Close() error {
 
 // Limit specifies the number of records to be retrieved.
 func (conn *DB) Limit(limit interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Limit(limit), conn.ctes)
+	return newDB(conn.ctx, conn.db.Limit(limit), conn.ctes, conn.logConfig)
 }
 
 // Offset specifies the offset of the records to be retrieved.
 func (conn *DB) Offset(offset interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Offset(offset), conn.ctes)
+	return newDB(conn.ctx, conn.db.Offset(offset), conn.ctes, conn.logConfig)
 }
 
 // Where returns a new relation, filters records with given conditions, accepts `map`,
 // `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
 func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Where(query, args...), conn.ctes)
+	return newDB(conn.ctx, conn.db.Where(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Joins specifies Joins conditions
 //
 //	db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
 func (conn *DB) Joins(query string, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Joins(query, args...), conn.ctes)
+	return newDB(conn.ctx, conn.db.Joins(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
 // When creating/updating, specify fields that you want to save to database.
 func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Select(query, args...), conn.ctes)
+	return newDB(conn.ctx, conn.db.Select(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Table specifies the table you would like to run db operations.
 func (conn *DB) Table(name string) *DB {
-	return newDB(conn.ctx, conn.db.Table(name), conn.ctes)
+	return newDB(conn.ctx, conn.db.Table(name), conn.ctes, conn.logConfig)
 }
 
 // Group specifies the group method on the find.
 func (conn *DB) Group(query string) *DB {
-	return newDB(conn.ctx, conn.db.Group(query), conn.ctes)
+	return newDB(conn.ctx, conn.db.Group(query), conn.ctes, conn.logConfig)
 }
 
 // Order specifies order when retrieve records from database, set reorder to `true` to overwrite defined conditions
@@ -253,12 +365,12 @@ func (conn *DB) Group(query string) *DB {
 //	db.Order("name DESC", true) // reorder
 //	db.Order(gorm.SqlExpr("name = ? DESC", "first")) // sql expression
 func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
-	return newDB(conn.ctx, conn.db.Order(value, reorder...), conn.ctes)
+	return newDB(conn.ctx, conn.db.Order(value, reorder...), conn.ctes, conn.logConfig)
 }
 
 // Having specifies HAVING conditions for GROUP BY.
 func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Having(query, args...), conn.ctes)
+	return newDB(conn.ctx, conn.db.Having(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Union specifies UNION of two queries (receiver UNION query).
@@ -284,7 +396,7 @@ func (conn *DB) With(name string, query *DB) *DB {
 	newCTEs := make([]cte, 0, len(conn.ctes)+1)
 	newCTEs = append(newCTEs, conn.ctes...)
 	newCTEs = append(newCTEs, cte{name: name, subQuery: query.SubQuery()})
-	return newDB(conn.ctx, conn.db, newCTEs)
+	return newDB(conn.ctx, conn.db, newCTEs, conn.logConfig)
 }
 
 // Raw uses raw sql as conditions
@@ -294,17 +406,17 @@ func (conn *DB) Raw(query string, args ...interface{}) *DB {
 	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
 	return newDB(conn.ctx,
 		conn.db.New().Set("gorm:query_option", "").
-			Raw("").Joins(query, args...), nil)
+			Raw("").Joins(query, args...), nil, conn.logConfig)
 }
 
-// Updates update attributes with callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
-func (conn *DB) Updates(values interface{}, ignoreProtectedAttrs ...bool) *DB {
-	return newDB(conn.ctx, conn.toQuery().Updates(values, ignoreProtectedAttrs...), nil)
+// UpdateColumns is a synonym for UpdateColumn.
+func (conn *DB) UpdateColumns(attrs ...interface{}) *DB {
+	return conn.UpdateColumn(attrs...)
 }
 
 // UpdateColumn updates attributes without callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
 func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().UpdateColumn(attrs...), nil)
+	return newDB(conn.ctx, conn.toQuery().UpdateColumn(attrs...), nil, conn.logConfig)
 }
 
 // SubQuery returns the query as sub query.
@@ -343,7 +455,7 @@ func (conn *DB) toQuery() *gorm.DB {
 
 // Scan scans value to a struct.
 func (conn *DB) Scan(dest interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().Scan(dest), nil)
+	return newDB(conn.ctx, conn.toQuery().Scan(dest), nil, conn.logConfig)
 }
 
 // ScanIntoSlices scans multiple columns into slices.
@@ -454,7 +566,7 @@ func (conn *DB) Count(dest interface{}) *DB {
 	if conn.Error() != nil {
 		return conn
 	}
-	return newDB(conn.ctx, conn.toQuery().Count(dest), nil)
+	return newDB(conn.ctx, conn.toQuery().Count(dest), nil, conn.logConfig)
 }
 
 // Pluck is used to query a single column into a slice of values
@@ -477,7 +589,7 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 	if reflectValue.Kind() != reflect.Slice {
 		panic(fmt.Sprintf("values should be a pointer to a slice, not a pointer to %s", reflectValue.Kind()))
 	}
-	return newDB(conn.ctx, conn.toQuery().Pluck(column, values), nil)
+	return newDB(conn.ctx, conn.toQuery().Pluck(column, values), nil, conn.logConfig)
 }
 
 // PluckFirst is used to query a single column and take the first value
@@ -492,7 +604,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 	valuesPtrReflValue.Elem().Set(valuesReflValue)
 	valuesReflValue = valuesPtrReflValue.Elem()
 	values := valuesPtrReflValue.Interface()
-	result := newDB(conn.ctx, conn.Limit(1).toQuery().Pluck(column, values), nil)
+	result := newDB(conn.ctx, conn.Limit(1).toQuery().Pluck(column, values), nil, conn.logConfig)
 	if result.Error() != nil {
 		return result
 	}
@@ -506,7 +618,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 
 // Take returns a record that match given conditions, the order will depend on the database implementation.
 func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().Take(out, where...), nil)
+	return newDB(conn.ctx, conn.toQuery().Take(out, where...), nil, conn.logConfig)
 }
 
 // HasRows returns true if at least one row is found.
@@ -521,7 +633,7 @@ func (conn *DB) HasRows() (bool, error) {
 
 // Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition.
 func (conn *DB) Delete(where ...interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().Delete(nil, where...), nil)
+	return newDB(conn.ctx, conn.toQuery().Delete(nil, where...), nil, conn.logConfig)
 }
 
 // RowsAffected returns the number of rows affected by the last INSERT/UPDATE/DELETE statement.
@@ -536,7 +648,7 @@ func (conn *DB) Error() error {
 
 // Exec executes raw sql.
 func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Exec(sqlQuery, values...), nil)
+	return newDB(conn.ctx, conn.db.Exec(sqlQuery, values...), nil, conn.logConfig)
 }
 
 // insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
@@ -614,6 +726,7 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 		for key := range dataMaps[0] {
 			updateColumns = append(updateColumns, key)
 		}
+		sort.Strings(updateColumns)
 	}
 
 	var builder strings.Builder
@@ -634,7 +747,7 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 
 // Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting.
 func (conn *DB) Set(name string, value interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Set(name, value), conn.ctes)
+	return newDB(conn.ctx, conn.db.Set(name, value), conn.ctes, conn.logConfig)
 }
 
 // ErrNoTransaction means that a called method/function cannot work outside of a transaction.
@@ -698,6 +811,15 @@ func (conn *DB) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DB 
 	}
 
 	return conn.Set("gorm:query_option", builder.String())
+}
+
+// Prepare creates a prepared statement for later queries or executions.
+// As the method must be executed in a transaction, the returned statement is bound to the transaction.
+func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
+	conn.mustBeInTransaction()
+
+	tx := conn.db.CommonDB().(*sqlTxWrapper)
+	return tx.prepare(query)
 }
 
 const keyTriesCount = 10

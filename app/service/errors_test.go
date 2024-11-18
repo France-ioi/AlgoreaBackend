@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -97,6 +98,13 @@ func TestNotFound(t *testing.T) {
 	assert.Equal(http.StatusNotFound, recorder.Code)
 }
 
+func TestRequestTimeout(t *testing.T) {
+	assert := assertlib.New(t)
+	recorder := responseForError(service.ErrRequestTimeout())
+	assert.Equal(`{"success":false,"message":"Request Timeout"}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusRequestTimeout, recorder.Code)
+}
+
 func TestConflict(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrConflict(errors.New("conflict error")))
@@ -139,6 +147,16 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 	assert.Contains(hook.GetAllLogs(), "unexpected error: unknown error: some error")
+}
+
+func TestRendersErrRequestTimeoutOnPanicContextDeadlineExceeded(t *testing.T) {
+	assert := assertlib.New(t)
+	handler, _ := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+		panic(context.DeadlineExceeded)
+	}))
+	recorder := responseForHTTPHandler(handler)
+	assert.Equal(`{"success":false,"message":"Request Timeout"}`+"\n", recorder.Body.String())
+	assert.Equal(http.StatusRequestTimeout, recorder.Code)
 }
 
 func TestMustNotBeError_PanicsOnError(t *testing.T) {

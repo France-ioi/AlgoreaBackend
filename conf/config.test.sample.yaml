@@ -30,6 +30,7 @@ logging:
   level: debug # debug, info, warning, error, fatal, panic
   logSQLQueries: true
   logRawSQLQueries: false
+  analyzeSQLQueries: false # run EXPLAIN ANALYZE on all SQL queries (works only if logSQLQueries is true)
 domains:
   -
     domains: [default] # of a list of domains

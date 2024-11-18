@@ -24,8 +24,11 @@ func NewDataStore(conn *DB) *DataStore {
 }
 
 // NewDataStoreWithContext returns a new DataStore with the given context.
-func NewDataStoreWithContext(ctx context.Context, conn *DB) *DataStore {
-	return &DataStore{DB: newDB(ctx, conn.db, conn.ctes)}
+func NewDataStoreWithContext(ctx context.Context, db *DB) *DataStore {
+	newSQLDB := db.db.CommonDB().(withContexter).withContext(ctx)
+	newGormDB := cloneGormDB(db.db)
+	replaceDBInGormDB(newGormDB, newSQLDB)
+	return &DataStore{DB: cloneDBWithNewContext(ctx, db)}
 }
 
 // NewDataStoreWithTable returns a specialized DataStore.
@@ -201,7 +204,7 @@ func (s *DataStore) UserBatchPrefixes() *UserBatchPrefixStore {
 }
 
 // NewID generates a positive random int64 to be used as id
-// !!! To be safe, the insertion should be be retried if the id conflicts with an existing entry.
+// !!! To be safe, the insertion should be retried if the id conflicts with an existing entry.
 func (s *DataStore) NewID() int64 {
 	// gen a 63-bits number as we want unsigned number stored in a 64-bits signed DB attribute
 	return rand.Int63()
@@ -318,9 +321,9 @@ func (s *DataStore) IsInTransaction() bool {
 }
 
 // WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK.
-func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
+func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, funcToCall func(*DataStore) error) error {
 	return s.withNamedLock(lockName, timeout, func(db *DB) error {
-		return txFunc(NewDataStoreWithTable(db, s.tableName))
+		return funcToCall(NewDataStoreWithTable(db, s.tableName))
 	})
 }
 

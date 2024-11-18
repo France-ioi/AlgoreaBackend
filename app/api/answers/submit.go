@@ -79,6 +79,8 @@ type answerSubmitResponse struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) service.APIError {

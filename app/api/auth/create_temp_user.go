@@ -58,6 +58,8 @@ import (
 //				"$ref": "#/definitions/userCreateTmpResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) service.APIError {

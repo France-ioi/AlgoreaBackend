@@ -212,6 +212,8 @@ type itemResponse struct {
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {

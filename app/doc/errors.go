@@ -61,6 +61,13 @@ type notFound struct {
 	Message string `json:"message"`
 }
 
+type requestTimeout struct {
+	genericError
+	// required: true
+	// enum: Request Timeout
+	Message string `json:"message"`
+}
+
 type unprocessableEntity struct {
 	genericError
 	// required: true

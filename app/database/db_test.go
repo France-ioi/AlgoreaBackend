@@ -18,6 +18,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
@@ -140,14 +141,13 @@ func TestDB_inTransaction_ErrorOnRollback(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback().WillReturnError(errors.New("rollback error"))
 
-	assert.PanicsWithValue(t, expectedError, func() {
-		_ = db.inTransaction(func(db *DB) error {
-			var result []interface{}
-			err := db.Raw("SELECT 1").Scan(&result).Error()
-			assert.Equal(t, expectedError, err)
-			return err
-		})
+	err := db.inTransaction(func(db *DB) error {
+		var result []interface{}
+		err := db.Raw("SELECT 1").Scan(&result).Error()
+		assert.Equal(t, expectedError, err)
+		return err
 	})
+	assert.Equal(t, expectedError, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -208,7 +208,7 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 	}
 }
 
-func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrorsAndPanicsOnRollbackError(t *testing.T) {
+func TestDB_inTransaction_SkipsRetryingOnDeadlockAndLockWaitTimeoutErrorsOnRollbackError(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
@@ -226,12 +226,12 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrorsAndPanicsOnRo
 				WillReturnError(&mysql.MySQLError{Number: errorNumber})
 			mock.ExpectRollback().WillReturnError(expectedError)
 
-			assert.PanicsWithValue(t, expectedError, func() {
-				_ = db.inTransaction(func(db *DB) error {
-					var result []interface{}
-					return db.Raw("SELECT 1").Scan(&result).Error()
-				})
+			err := db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				return db.Raw("SELECT 1").Scan(&result).Error()
 			})
+			assert.Equal(t, expectedError, err)
+
 			assert.Zero(t, duration)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
@@ -270,11 +270,11 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T)
 	}
 }
 
-func patchBeginTxWithVerifier(
+func patchGormBeginTxWithVerifier(
 	t *testing.T, callsCount *int, expectedTxOptions *sql.TxOptions, expectedContextVars map[interface{}]interface{},
 ) (patch *monkey.PatchGuard) {
-	patch = monkey.PatchInstanceMethod(reflect.TypeOf(&gorm.DB{}), "BeginTx",
-		func(db *gorm.DB, ctx context.Context, opts *sql.TxOptions) *gorm.DB {
+	patch = monkey.Patch(gormDBBeginTxReplacement,
+		func(ctx context.Context, db *gorm.DB, opts *sql.TxOptions) *gorm.DB {
 			*callsCount++
 			assert.Equal(t, expectedTxOptions, opts)
 			if len(expectedContextVars) > 0 {
@@ -286,7 +286,7 @@ func patchBeginTxWithVerifier(
 
 			defer patch.Restore()
 			patch.Unpatch()
-			return db.BeginTx(ctx, opts)
+			return gormDBBeginTxReplacement(ctx, db, opts)
 		})
 	return patch
 }
@@ -296,7 +296,7 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
 
 	var calledCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
+	patch := patchGormBeginTxWithVerifier(t, &calledCount, txOptions, nil)
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -328,7 +328,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 
 	var calledCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &calledCount, txOptions, nil)
+	patch := patchGormBeginTxWithVerifier(t, &calledCount, txOptions, nil)
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -354,7 +354,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 	assert.Equal(t, 2, calledCount)
 }
 
-func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRollbackError(t *testing.T) {
+func TestDB_inTransaction_SkipsRetryingOnDeadockAndLockWaitTimeoutPanicOnRollbackError(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
@@ -372,13 +372,13 @@ func TestDB_inTransaction_RetriesOnDeadockAndLockWaitTimeoutPanicAndPanicsOnRoll
 				WillReturnError(&mysql.MySQLError{Number: errorNumber})
 			mock.ExpectRollback().WillReturnError(expectedError)
 
-			assert.PanicsWithValue(t, expectedError, func() {
-				_ = db.inTransaction(func(db *DB) error {
-					var result []interface{}
-					mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
-					return nil
-				})
+			err := db.inTransaction(func(db *DB) error {
+				var result []interface{}
+				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+				return nil
 			})
+			assert.Equal(t, expectedError, err)
+
 			assert.Zero(t, duration)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
@@ -520,11 +520,17 @@ func TestDB_QueryConstructors(t *testing.T) {
 		funcToCall        func(*DB) (*DB, []*DB)
 		expectedQuery     string
 		expectedQueryArgs []driver.Value
+		skipCTEsChecking  bool
 	}{
 		{
 			name:          "Limit",
 			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Limit(1), nil },
 			expectedQuery: "SELECT * FROM `myTable` LIMIT 1",
+		},
+		{
+			name:          "Limit and Offset",
+			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Limit(1).Offset(2), nil },
+			expectedQuery: "SELECT * FROM `myTable` LIMIT 1 OFFSET 2",
 		},
 		{
 			name:          "Order",
@@ -537,9 +543,10 @@ func TestDB_QueryConstructors(t *testing.T) {
 			expectedQuery: "SELECT * FROM `myTable` HAVING (id > 0)",
 		},
 		{
-			name:          "Raw",
-			funcToCall:    func(db *DB) (*DB, []*DB) { return db.Raw("SELECT 1"), nil },
-			expectedQuery: "SELECT 1",
+			name:             "Raw",
+			funcToCall:       func(db *DB) (*DB, []*DB) { return db.Raw("SELECT 1"), nil },
+			expectedQuery:    "SELECT 1",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "Union",
@@ -548,7 +555,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbTwo)
 				return db.Union(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION (SELECT * FROM `otherTable` )",
+			expectedQuery:    "(SELECT * FROM `myTable` ) UNION (SELECT * FROM `otherTable` )",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "UnionAll",
@@ -557,7 +565,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbTwo)
 				return db.UnionAll(dbTwo), dbs
 			},
-			expectedQuery: "(SELECT * FROM `myTable` ) UNION ALL (SELECT * FROM `otherTable` )",
+			expectedQuery:    "(SELECT * FROM `myTable` ) UNION ALL (SELECT * FROM `otherTable` )",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "With",
@@ -570,7 +579,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, dbFour)
 				return dbFour.With("t2", dbThree), dbs
 			},
-			expectedQuery: "WITH `t1` AS (SELECT * FROM `otherTable` ), `t2` AS (SELECT * FROM `thirdTable` ) SELECT * FROM `myTable`",
+			expectedQuery:    "WITH `t1` AS (SELECT * FROM `otherTable` ), `t2` AS (SELECT * FROM `thirdTable` ) SELECT * FROM `myTable`",
+			skipCTEsChecking: true,
 		},
 		{
 			name: "With (with locking)",
@@ -591,7 +601,8 @@ func TestDB_QueryConstructors(t *testing.T) {
 				dbs = append(dbs, newDB)
 				return newDB, dbs
 			},
-			expectedQuery: "WITH `t1` AS (SELECT * FROM `otherTable` FOR UPDATE) SELECT * FROM `myTable` FOR UPDATE",
+			expectedQuery:    "WITH `t1` AS (SELECT * FROM `otherTable` FOR UPDATE) SELECT * FROM `myTable` FOR UPDATE",
+			skipCTEsChecking: true,
 		},
 	}
 	for _, testCase := range tests {
@@ -602,7 +613,9 @@ func TestDB_QueryConstructors(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
+			db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 			db = db.Table("myTable")
+			db.ctes = make([]cte, 0, 1)
 			if testCase.funcToPrepare != nil {
 				db = testCase.funcToPrepare(db, mock)
 			}
@@ -613,8 +626,18 @@ func TestDB_QueryConstructors(t *testing.T) {
 
 			resultDB, oldDBObjects := testCase.funcToCall(db)
 			assert.NotEqual(t, resultDB, db)
+			assert.Equal(t, db.ctx, resultDB.ctx)
+			assert.Equal(t, db.logConfig, resultDB.logConfig)
+			if !testCase.skipCTEsChecking {
+				assert.Equal(t, db.ctes, resultDB.ctes)
+			}
 			for _, oldDBObject := range oldDBObjects {
 				assert.NotEqual(t, oldDBObject, db)
+				assert.Equal(t, db.ctx, oldDBObject.ctx)
+				assert.Equal(t, db.logConfig, oldDBObject.logConfig)
+				if !testCase.skipCTEsChecking {
+					assert.Equal(t, db.ctes, oldDBObject.ctes)
+				}
 			}
 			assert.NoError(t, resultDB.Error())
 
@@ -646,13 +669,19 @@ func TestDB_Count(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"count"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	var result int
 	countDB := db.Count(&result)
 
 	assert.NotEqual(t, countDB, db)
 	assert.NoError(t, countDB.Error())
+	assert.Equal(t, db.ctx, countDB.ctx)
+	assert.Nil(t, countDB.ctes)
+	assert.Equal(t, db.logConfig, countDB.logConfig)
+
 	assert.Equal(t, 1, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -687,7 +716,9 @@ func TestDB_Take(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` WHERE (id = 1) LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	type resultType struct{ ID int }
 	var result resultType
@@ -695,6 +726,10 @@ func TestDB_Take(t *testing.T) {
 
 	assert.NotEqual(t, takeDB, db)
 	assert.NoError(t, takeDB.Error())
+	assert.Equal(t, db.ctx, takeDB.ctx)
+	assert.Nil(t, takeDB.ctes)
+	assert.Equal(t, db.logConfig, takeDB.logConfig)
+
 	assert.Equal(t, resultType{1}, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -767,13 +802,19 @@ func TestDB_Pluck(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	var result []int64
 	pluckDB := db.Pluck("id", &result)
 
 	assert.NotEqual(t, pluckDB, db)
 	assert.NoError(t, pluckDB.Error())
+	assert.Equal(t, db.ctx, pluckDB.ctx)
+	assert.Nil(t, pluckDB.ctes)
+	assert.Equal(t, db.logConfig, pluckDB.logConfig)
+
 	assert.Equal(t, []int64{1}, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -849,13 +890,19 @@ func TestDB_PluckFirst(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable` LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	var result int64
 	pluckFirstDB := db.PluckFirst("id", &result)
 
 	assert.NotEqual(t, pluckFirstDB, db)
 	assert.NoError(t, pluckFirstDB.Error())
+	assert.Equal(t, db.ctx, pluckFirstDB.ctx)
+	assert.Nil(t, pluckFirstDB.ctes)
+	assert.Equal(t, db.logConfig, pluckFirstDB.logConfig)
+
 	assert.Equal(t, int64(1), result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -911,7 +958,9 @@ func TestDB_Scan(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id", "value"}).AddRow(int64(1), "value"))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	type resultType struct {
 		ID    int64
@@ -922,6 +971,10 @@ func TestDB_Scan(t *testing.T) {
 
 	assert.NotEqual(t, scanDB, db)
 	assert.NoError(t, scanDB.Error())
+	assert.Equal(t, db.ctx, scanDB.ctx)
+	assert.Nil(t, scanDB.ctes)
+	assert.Equal(t, db.logConfig, scanDB.logConfig)
+
 	assert.Equal(t, []resultType{{ID: 1, Value: "value"}}, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -988,11 +1041,9 @@ func TestDB_RowsAffected(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec("^" + regexp.QuoteMeta("UPDATE `myTable` SET `myColumn` = ?") + "$").
 		WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(-1, 123))
-	mock.ExpectCommit()
 
 	rowsAffected := db.Table("myTable").UpdateColumn("myColumn", 1).RowsAffected()
 
@@ -1006,17 +1057,21 @@ func TestDB_Delete(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("DELETE FROM `myTable`") + `\s+` +
 		regexp.QuoteMeta("WHERE (id = 1)")).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
-	mock.ExpectCommit()
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
 
 	deleteDB := db.Delete("id = 1")
 
 	assert.NotEqual(t, deleteDB, db)
+	assert.Equal(t, db.ctx, deleteDB.ctx)
+	assert.Nil(t, deleteDB.ctes)
+	assert.Equal(t, db.logConfig, deleteDB.logConfig)
+
 	assert.NoError(t, deleteDB.Error())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -1033,10 +1088,16 @@ func TestDB_Exec(t *testing.T) {
 		WithArgs(1, 2).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db.ctes = make([]cte, 0, 1)
+
 	execDB := db.Exec(query, 1, 2)
 
 	assert.NotEqual(t, execDB, db)
 	assert.NoError(t, execDB.Error())
+	assert.Equal(t, db.ctx, execDB.ctx)
+	assert.Nil(t, execDB.ctes)
+	assert.Equal(t, db.logConfig, execDB.logConfig)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1101,6 +1162,24 @@ func TestDB_insertOrUpdateMaps(t *testing.T) {
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, db.insertOrUpdateMaps("myTable", dataRows, []string{"sField", "sNullField"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_insertOrUpdateMaps_WithNilUpdateColumnsList(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRows := []map[string]interface{}{{"id": int64(1), "sField": "some value", "sNullField": nil}}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?)"+
+		" ON DUPLICATE KEY UPDATE `id` = VALUES(`id`), `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		WithArgs(int64(1), "some value", nil).
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, db.insertOrUpdateMaps("myTable", dataRows, nil))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -1370,20 +1449,18 @@ func TestDB_ScanAndHandleMaps_FailsIfHandlerReturnsError(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_Updates(t *testing.T) {
+func TestDB_UpdateColumns(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `id` = ?, `name` = ?")).
 		WithArgs(1, someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectCommit()
 
 	db = db.Table("myTable")
-	updateDB := db.Updates(map[string]interface{}{"id": 1, "name": someName})
+	updateDB := db.UpdateColumns(map[string]interface{}{"id": 1, "name": someName})
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
 
@@ -1396,16 +1473,20 @@ func TestDB_UpdateColumn(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectBegin()
 	mock.ExpectExec(regexp.QuoteMeta("UPDATE `myTable` SET `name` = ?")).
 		WithArgs(someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectCommit()
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
+
 	updateDB := db.UpdateColumn("name", someName)
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
+	assert.Equal(t, db.ctx, updateDB.ctx)
+	assert.Nil(t, updateDB.ctes)
+	assert.Equal(t, db.logConfig, updateDB.logConfig)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1419,10 +1500,16 @@ func TestDB_Set(t *testing.T) {
 	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR UPDATE").
 		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
+	db.ctes = make([]cte, 0, 1)
+
 	setDB := db.Set("gorm:query_option", "FOR UPDATE")
 	assert.NotEqual(t, setDB, db)
 	assert.NoError(t, setDB.Error())
+	assert.Equal(t, db.ctx, setDB.ctx)
+	assert.Equal(t, db.ctes, setDB.ctes)
+	assert.Equal(t, db.logConfig, setDB.logConfig)
 
 	var result []interface{}
 	assert.NoError(t, setDB.Scan(&result).Error())
@@ -1430,7 +1517,7 @@ func TestDB_Set(t *testing.T) {
 }
 
 func TestOpenRawDBConnection(t *testing.T) {
-	db, err := OpenRawDBConnection("/db")
+	db, err := OpenRawDBConnection("/db", true)
 	assert.NoError(t, err)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
 	assertRawDBIsOK(t, db)
@@ -1439,12 +1526,16 @@ func TestOpenRawDBConnection(t *testing.T) {
 func TestOpen_DSN(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	patchGuard := monkey.PatchInstanceMethod(reflect.TypeOf(&logging.Logger{}), "IsRawSQLQueriesLoggingEnabled",
+		func(*logging.Logger) bool { return true })
+	defer patchGuard.Unpatch()
+
 	db, err := Open("/db")
 	assert.Error(t, err) // we want an error since dsn is wrong, but other things should be ok
 	assert.NotNil(t, db)
 	assert.NotNil(t, db.db)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
-	rawDB := db.db.DB()
+	rawDB := db.db.CommonDB().(*sqlDBWrapper).sqlDB
 	assertRawDBIsOK(t, rawDB)
 }
 
@@ -1456,7 +1547,7 @@ func TestOpen_WrongSourceType(t *testing.T) {
 
 func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(OpenRawDBConnection, func(string) (*sql.DB, error) { return &sql.DB{}, expectedError })
+	monkey.Patch(OpenRawDBConnection, func(string, bool) (*sql.DB, error) { return &sql.DB{}, expectedError })
 	defer monkey.UnpatchAll()
 
 	db, err := Open("mydsn")
@@ -1467,30 +1558,6 @@ func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
 	assert.Equal(t, "*instrumentedsql.WrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
 	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.connector)")
-}
-
-func TestDB_isInTransaction_ReturnsTrue(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectBegin()
-	mock.ExpectCommit()
-
-	assert.NoError(t, db.inTransaction(func(db *DB) error {
-		assert.True(t, db.isInTransaction())
-		return nil
-	}))
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestDB_isInTransaction_ReturnsFalse(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	assert.False(t, db.isInTransaction())
-	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_mustBeInTransaction_DoesNothingInTransaction(t *testing.T) {
@@ -1628,8 +1695,9 @@ func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs(lockName, expectedTimeout).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	err := db.withNamedLock(lockName, timeout, func(*DB) error {
 		return nil
@@ -1652,8 +1720,9 @@ func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs(lockName, expectedTimeout).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName)
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	err := db.withNamedLock(lockName, timeout, func(*DB) error {
 		return expectedError
@@ -1676,8 +1745,9 @@ func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
 	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
 		WithArgs(lockName, expectedTimeout).
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(lockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	assert.PanicsWithValue(t, expectedError, func() {
 		_ = db.withNamedLock(lockName, timeout, func(*DB) error {
@@ -1687,29 +1757,72 @@ func TestDB_withNamedLock_ReleasesLockOnPanic(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
-func TestDB_withNamedLock_ReturnsReleaseError(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
+func TestDB_withNamedLock_HandlesReleaseError(t *testing.T) {
+	for _, test := range []struct {
+		name                 string
+		setReleaseResultFunc func(*sqlmock.ExpectedQuery)
+		logsShouldContain    string
+	}{
+		{
+			name: "release error",
+			setReleaseResultFunc: func(query *sqlmock.ExpectedQuery) {
+				query.WillReturnError(errors.New("some error"))
+			},
+			logsShouldContain: "some error",
+		},
+		{
+			name: "empty release result",
+			setReleaseResultFunc: func(query *sqlmock.ExpectedQuery) {
+				query.WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}))
+			},
+		},
+		{
+			name: "wrong release result",
+			setReleaseResultFunc: func(query *sqlmock.ExpectedQuery) {
+				query.WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(0)))
+			},
+		},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
+			db, dbMock := NewDBMock()
+			defer func() { _ = db.Close() }()
+			logHook, logRestoreFunc := logging.MockSharedLoggerHook()
+			defer logRestoreFunc()
 
-	lockName := someName
-	timeout := 1234 * time.Millisecond
-	expectedTimeout := int(timeout.Round(time.Second).Seconds())
-	expectedError := errors.New("some error")
+			lockName := someName
+			timeout := 1234 * time.Millisecond
+			expectedTimeout := int(timeout.Round(time.Second).Seconds())
 
-	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs(lockName, expectedTimeout).
-		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(lockName).WillReturnError(expectedError)
+			dbMock.ExpectBegin()
+			dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+				WithArgs(lockName, expectedTimeout).
+				WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+			test.setReleaseResultFunc(
+				dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+					WithArgs(lockName))
+			dbMock.ExpectClose()
+			dbMock.ExpectCommit()
 
-	err := db.withNamedLock(lockName, timeout, func(*DB) error {
-		return nil
-	})
+			err := db.inTransaction(func(db *DB) error {
+				assert.NoError(t, db.withNamedLock(lockName, timeout, func(*DB) error {
+					return nil
+				}))
+				return nil
+			})
 
-	assert.Equal(t, expectedError, err)
-	assert.NoError(t, dbMock.ExpectationsWereMet())
+			assert.NoError(t, err)
+			assert.NoError(t, dbMock.ExpectationsWereMet())
+
+			logs := (&loggingtest.Hook{Hook: logHook}).GetAllLogs()
+			if test.logsShouldContain != "" {
+				assert.Contains(t, logs, test.logsShouldContain)
+			}
+			assert.Contains(t, logs, "failed to release the lock \"some name\", closing the DB connection to release the lock")
+		})
+	}
 }
 
 func TestDB_WithExclusiveWriteLock(t *testing.T) {
@@ -1877,5 +1990,22 @@ func TestDB_InsertIgnoreMaps(t *testing.T) {
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, db.InsertIgnoreMaps("myTable", dataRows))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_gormDBBeginTxReplacement_ErrsWhenDBIsNotSQLDBWrapper(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	sqlDB := db.db.CommonDB().(*sqlDBWrapper).sqlDB
+	gormDB, err := gorm.Open("", sqlDB)
+	require.NoError(t, err)
+	gormDB.LogMode(false)
+
+	newGormDB := gormDBBeginTxReplacement(context.Background(), gormDB, &sql.TxOptions{})
+	assert.Equal(t, gorm.ErrCantStartTransaction, newGormDB.Error)
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

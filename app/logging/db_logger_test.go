@@ -1,85 +1,75 @@
 package logging
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/jinzhu/gorm"
-	assertlib "github.com/stretchr/testify/assert"
-
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestNewDBLogger_ErrorFallback(t *testing.T) {
-	assert := assertlib.New(t)
+func TestLogger_NewDBLogger_ErrorFallback(t *testing.T) {
 	logger := createLogger() // no config
-	dbLogger, logMode, rawLogMode := logger.NewDBLogger()
-	assert.IsType(gorm.Logger{}, dbLogger)
-	assert.False(logMode)
-	assert.False(rawLogMode)
+	dbLogger := logger.NewDBLogger()
+	assert.IsType(t, gorm.Logger{}, dbLogger)
 }
 
-func TestLoggerFromConfig_TextLog(t *testing.T) {
-	assert := assertlib.New(t)
+func TestLogger_NewDBLogger_TextLog(t *testing.T) {
 	logger := createLogger()
 	config := viper.New()
 	config.Set("Format", "text")
 	config.Set("Output", "file")
 	logger.Configure(config)
-	dbLogger, _, _ := logger.NewDBLogger()
-	assert.IsType(gorm.Logger{}, dbLogger)
+	dbLogger := logger.NewDBLogger()
+	assert.IsType(t, gorm.Logger{}, dbLogger)
 }
 
-func TestLoggerFromConfig_JSONLog(t *testing.T) {
-	assert := assertlib.New(t)
+func TestLogger_NewDBLogger_JSONLog(t *testing.T) {
 	logger := createLogger()
 	config := viper.New()
 	config.Set("Format", "json")
 	config.Set("Output", "file")
 	logger.Configure(config)
-	dbLogger, _, _ := logger.NewDBLogger()
-	assert.IsType(&StructuredDBLogger{}, dbLogger)
+	dbLogger := logger.NewDBLogger()
+	assert.IsType(t, &StructuredDBLogger{}, dbLogger)
 }
 
-func TestLoggerFromConfig_WrongFormat(t *testing.T) {
-	assert := assertlib.New(t)
+func TestLogger_NewDBLogger_WrongFormat(t *testing.T) {
 	logger := createLogger()
 	config := viper.New()
 	config.Set("Format", "yml")
 	config.Set("Output", "file")
 	logger.config = config
-	assert.Panics(func() { logger.NewDBLogger() })
+	assert.Panics(t, func() { logger.NewDBLogger() })
 }
 
-func TestNewDBLogger_LogMode(t *testing.T) {
-	tests := []struct {
-		name             string
-		format           string
-		logSQLQueries    bool
-		logRawSQLQueries bool
+func TestLogger_BooleanConfigFlags(t *testing.T) {
+	for _, test := range []struct {
+		flagName   string
+		funcToCall func(*Logger) bool
 	}{
-		{name: "text: without SQL", format: "text", logSQLQueries: false, logRawSQLQueries: false},
-		{name: "text: with SQL", format: "text", logSQLQueries: true, logRawSQLQueries: false},
-		{name: "text: only raw SQL", format: "text", logSQLQueries: false, logRawSQLQueries: true},
-		{name: "text: full SQL logging", format: "text", logSQLQueries: true, logRawSQLQueries: true},
-		{name: "json: without SQL", format: "json", logSQLQueries: false, logRawSQLQueries: false},
-		{name: "json: with SQL", format: "json", logSQLQueries: true, logRawSQLQueries: false},
-		{name: "json: only raw SQL", format: "json", logSQLQueries: false, logRawSQLQueries: true},
-		{name: "json: full SQL logging", format: "json", logSQLQueries: true, logRawSQLQueries: true},
-	}
-	for _, test := range tests {
+		{"LogSQLQueries", (*Logger).IsSQLQueriesLoggingEnabled},
+		{"LogRawSQLQueries", (*Logger).IsRawSQLQueriesLoggingEnabled},
+		{"AnalyzeSQLQueries", (*Logger).IsSQLQueriesAnalyzingEnabled},
+	} {
 		test := test
-		t.Run(test.name, func(t *testing.T) {
-			assert := assertlib.New(t)
-			logger := createLogger()
-			config := viper.New()
-			config.Set("LogSQLQueries", test.logSQLQueries)
-			config.Set("LogRawSQLQueries", test.logRawSQLQueries)
-			config.Set("Format", test.format)
-			config.Set("Output", "file")
-			logger.Configure(config)
-			_, logMode, rawLogMode := logger.NewDBLogger()
-			assert.Equal(test.logSQLQueries, logMode)
-			assert.Equal(test.logRawSQLQueries, rawLogMode)
+		t.Run(test.flagName, func(t *testing.T) {
+			t.Run("nil config", func(t *testing.T) {
+				logger := createLogger()
+				assert.False(t, test.funcToCall(logger))
+			})
+
+			for _, value := range []bool{true, false} {
+				t.Run("value="+strconv.FormatBool(value), func(t *testing.T) {
+					logger := createLogger()
+					config := viper.New()
+					config.Set(test.flagName, value)
+					config.Set("Output", "file")
+					logger.Configure(config)
+					assert.Equal(t, value, test.funcToCall(logger))
+				})
+			}
 		})
 	}
 }

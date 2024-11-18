@@ -8,10 +8,13 @@ import (
 	"strconv"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
@@ -206,7 +209,7 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 	type ctxKey string
 
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
+	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -312,7 +315,7 @@ func TestDataStore_WithForeignKeyChecksDisabled_WithTxOptions(t *testing.T) {
 
 	var callsCount int
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchBeginTxWithVerifier(t, &callsCount, txOptions, nil)
+	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, nil)
 	defer patch.Unpatch()
 
 	db, mock := NewDBMock()
@@ -428,14 +431,14 @@ func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeou
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	dbMock.ExpectQuery("SELECT 1 AS id").
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(expectedLockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(expectedLockName).WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	store := NewDataStoreWithTable(db, "tableName")
 	err := funcToTestGenerator(store)(func(s *DataStore) error {
 		assert.Equal(t, expectedTableName, s.tableName)
 		assert.NotEqual(t, store, s)
-		assert.Equal(t, store.db.DB(), s.db.DB())
+		assert.Equal(t, store.db.CommonDB(), s.db.CommonDB())
 		var result []interface{}
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})
@@ -651,4 +654,108 @@ func TestProhibitResultsPropagation(t *testing.T) {
 		return nil
 	}))
 	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDataStore_MergeContext(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataStoreWithEmptyContext := NewDataStore(db)
+	newContext := dataStoreWithEmptyContext.MergeContext(context.Background())
+	assert.Equal(t, propagationsBitField{}, newContext.Value(prohibitedPropagationsContextKey))
+
+	expectedBitField := propagationsBitField{
+		Permissions: false,
+		Results:     true,
+	}
+	dataStoreWithProhibitedResultsPropagation := NewDataStoreWithContext(
+		context.WithValue(context.Background(), prohibitedPropagationsContextKey, expectedBitField), db)
+	newContext = dataStoreWithProhibitedResultsPropagation.MergeContext(context.Background())
+	assert.Equal(t, expectedBitField, newContext.Value(prohibitedPropagationsContextKey))
+}
+
+func TestDataStore_IsInTransaction_ReturnsTrue(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		assert.True(t, store.isInTransaction())
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_IsInTransaction_ReturnsFalse(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.False(t, NewDataStore(db).IsInTransaction())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+type gormDialectDBAccessor struct {
+	_ unsafe.Pointer
+	v *struct {
+		db gorm.SQLCommon
+		gorm.DefaultForeignKeyNamer
+	}
+}
+
+type testContextKey string
+
+func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	ctx := context.WithValue(context.Background(), testContextKey("key"), "value")
+	dataStore := NewDataStoreWithContext(ctx, db)
+
+	assert.Equal(t, db.ctes, dataStore.ctes)
+	assert.Equal(t, db.logConfig, dataStore.logConfig)
+	assert.Equal(t, ctx, dataStore.ctx)
+
+	dbWrapper := dataStore.DB.db.CommonDB().(*sqlDBWrapper)
+	assert.Equal(t, ctx, dbWrapper.ctx)
+	assert.Equal(t, db.logConfig, dbWrapper.logConfig)
+	assert.Equal(t, db.db.CommonDB().(*sqlDBWrapper).sqlDB, dbWrapper.sqlDB)
+	dialect := dataStore.DB.db.Dialect()
+	assert.Equal(t, dbWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
+
+	assert.Nil(t, mock.ExpectationsWereMet())
+}
+
+func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	err := db.inTransaction(func(db *DB) error {
+		ctx := context.WithValue(context.Background(), testContextKey("key"), "value")
+		dataStore := NewDataStoreWithContext(ctx, db)
+
+		assert.Equal(t, db.ctes, dataStore.ctes)
+		assert.Equal(t, db.logConfig, dataStore.logConfig)
+		assert.Equal(t, ctx, dataStore.ctx)
+
+		txWrapper := dataStore.DB.db.CommonDB().(*sqlTxWrapper)
+		assert.Equal(t, db.logConfig, txWrapper.logConfig)
+		assert.Equal(t, ctx, txWrapper.ctx)
+		assert.Equal(t, db.db.CommonDB().(*sqlTxWrapper).sqlTx, txWrapper.sqlTx)
+		dialect := dataStore.DB.db.Dialect()
+		assert.Equal(t, txWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	assert.Nil(t, mock.ExpectationsWereMet())
 }

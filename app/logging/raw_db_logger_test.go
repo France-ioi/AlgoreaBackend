@@ -17,11 +17,10 @@ func TestNewRawDBLogger_TextLog(t *testing.T) {
 	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "text")
-	config.Set("LogRawSQLQueries", true)
 	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
+	dbLogger := logger.NewDBLogger()
 
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	rawLogger := NewRawDBLogger(dbLogger, true)
 	rawLogger.Log(context.TODO(), "some message", "err", nil)
 	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
 }
@@ -32,10 +31,9 @@ func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
 	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "text")
-	config.Set("LogRawSQLQueries", false)
 	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	dbLogger := logger.NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, false)
 	rawLogger.Log(context.TODO(), "some message", "err", nil)
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }
@@ -46,10 +44,9 @@ func TestNewRawDBLogger_JSONLog(t *testing.T) {
 	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "json")
-	config.Set("LogRawSQLQueries", true)
 	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	dbLogger := logger.NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, true)
 	rawLogger.Log(context.TODO(), "some message", "err", nil)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
 	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
@@ -61,10 +58,9 @@ func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
 	defer ResetShared()
 	config := viper.New()
 	config.Set("Format", "json")
-	config.Set("LogRawSQLQueries", true)
 	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger, _, rawLogMode := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, rawLogMode)
+	dbLogger := logger.NewDBLogger()
+	rawLogger := NewRawDBLogger(dbLogger, true)
 	rawLogger.Log(context.TODO(), "sql-stmt-exec", "err", driver.ErrSkip)
 	assert.Empty(t, hook.GetAllStructuredLogs())
 }

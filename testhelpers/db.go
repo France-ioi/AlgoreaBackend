@@ -86,8 +86,10 @@ func OpenRawDBConnection() (*sql.DB, error) {
 	appenv.ForceTestEnv()
 
 	// needs actual config for connection to DB
-	dbConfig, _ := app.DBConfig(app.LoadConfig())
-	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN())
+	config := app.LoadConfig()
+	dbConfig, _ := app.DBConfig(config)
+	loggingConfig := app.LoggingConfig(config)
+	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN(), loggingConfig.GetBool("LogRawSQLQueries"))
 	if err != nil {
 		panic(err)
 	}

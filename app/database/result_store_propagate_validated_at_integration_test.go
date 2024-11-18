@@ -210,10 +210,10 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (1, 3, 4)").
 		UpdateColumn("category", "Validation").Error())
 
-	assert.NoError(t, itemStore.Where("id=1").Updates(map[string]interface{}{
+	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(map[string]interface{}{
 		"type": "Task",
 	}).Error())
-	assert.NoError(t, itemStore.Where("id=3").Updates(map[string]interface{}{
+	assert.NoError(t, itemStore.Where("id=3").UpdateColumn(map[string]interface{}{
 		"no_score": true,
 	}).Error())
 
