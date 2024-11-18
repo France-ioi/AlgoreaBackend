@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -334,18 +335,18 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 		parentGroupID   int64
 		childGroupID    int64
 		expiresAt       string
-		expectedChanged []resultPrimaryKey
+		expectedChanged []resultPrimaryKeyAndState
 	}{
 		{
 			name:          "group joins another group",
 			parentGroupID: 103,
 			childGroupID:  104,
 			expiresAt:     "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2},
-				{104, 1, 3},
-				{105, 1, 2},
-				{105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -353,35 +354,35 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 			parentGroupID:   103,
 			childGroupID:    104,
 			expiresAt:       "2019-05-30 11:00:00",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "group joins a group, but the relation is a team membership",
 			parentGroupID:   109,
 			childGroupID:    104,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "group having no results joins another group",
 			parentGroupID:   105,
 			childGroupID:    103,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "parent group has no permissions on ancestor items",
 			parentGroupID:   106,
 			childGroupID:    104,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "no new visible item ancestors after joining a group",
 			parentGroupID:   105,
 			childGroupID:    102,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 	} {
 		test := test
@@ -410,7 +411,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 		parentGroupID   int64
 		childGroupID    int64
 		expiresAt       string
-		expectedChanged []resultPrimaryKey
+		expectedChanged []resultPrimaryKeyAndState
 		doNotSetExpired bool
 		noChanges       bool
 	}{
@@ -419,11 +420,11 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			parentGroupID: 103,
 			childGroupID:  104,
 			expiresAt:     "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2},
-				{104, 1, 3},
-				{105, 1, 2},
-				{105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -431,7 +432,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			parentGroupID:   109,
 			childGroupID:    104,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "expire the relation",
@@ -439,28 +440,28 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			childGroupID:    104,
 			doNotSetExpired: true,
 			expiresAt:       "2019-05-30 11:00:00",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "group having no results joins another group",
 			parentGroupID:   105,
 			childGroupID:    103,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "parent group has no permissions on ancestor items",
 			parentGroupID:   106,
 			childGroupID:    104,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "no new visible item ancestors after joining a group",
 			parentGroupID:   105,
 			childGroupID:    102,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "no changes",
@@ -468,7 +469,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			childGroupID:    102,
 			doNotSetExpired: true,
 			expiresAt:       "9999-12-31 23:59:59",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 			noChanges:       true,
 		},
 	} {
@@ -531,38 +532,34 @@ func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChild
 	assert.EqualError(t, result.Error(), expectedErrorMessage)
 }
 
-type resultPrimaryKey struct {
+type ResultPrimaryKey struct {
 	ParticipantID int64
 	AttemptID     int64
 	ItemID        int64
 }
 
-func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, expectedChanged []resultPrimaryKey) {
-	type resultRow struct {
-		ParticipantID int64
-		AttemptID     int64
-		ItemID        int64
-		State         string
-	}
-	var results []resultRow
+type resultPrimaryKeyAndState struct {
+	ResultPrimaryKey
+	State string
+}
+
+func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, expectedChanged []resultPrimaryKeyAndState) {
+	var results []resultPrimaryKeyAndState
 	queryResultsAndStatesForTests(t, dataStore.Results(), &results, "")
 
-	expectedChangedResultsMap := make(map[resultPrimaryKey]bool, len(expectedChanged))
+	expectedChangedResultsMap := make(map[ResultPrimaryKey]string, len(expectedChanged))
 	for _, result := range expectedChanged {
-		expectedChangedResultsMap[result] = true
+		expectedChangedResultsMap[result.ResultPrimaryKey] = golang.IfElse(result.State == "", "to_be_propagated", result.State)
 	}
 	for _, dbResult := range results {
 		expectedState := done
-		if expectedChangedResultsMap[resultPrimaryKey{
-			ParticipantID: dbResult.ParticipantID, AttemptID: dbResult.AttemptID, ItemID: dbResult.ItemID,
-		}] {
-			expectedState = "to_be_propagated"
+		if state, ok := expectedChangedResultsMap[dbResult.ResultPrimaryKey]; ok {
+			expectedState = state
 		}
 		assert.Equal(t, expectedState, dbResult.State,
 			"Wrong result propagation state for result with participant_id=%d, attempt_id=%d, item_id=%d",
 			dbResult.ParticipantID, dbResult.AttemptID, dbResult.ItemID)
-		delete(expectedChangedResultsMap,
-			resultPrimaryKey{ParticipantID: dbResult.ParticipantID, AttemptID: dbResult.AttemptID, ItemID: dbResult.ItemID})
+		delete(expectedChangedResultsMap, dbResult.ResultPrimaryKey)
 	}
 	assert.Empty(t, expectedChangedResultsMap,
 		"Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
