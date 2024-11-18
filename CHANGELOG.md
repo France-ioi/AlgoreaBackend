@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.23.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.4...v2.23.5) - 2024-11-18
+- db wrappers: handle DB request timeouts
+- log SQL queries everywhere
+- analyze SQL statement
+- rework named locking
+- add 408 status code
+- test-system improvements
+- do not run groups ancestors propagation in currentUserDeletion & userBatchRemove services and delete-temp-users command
+- schedule permissions propagations when needed in currentUserDeletion & userBatchRemove
+- groupRemoveChild & groupDelete: mark permissions for propagation properly, run only needed propagations
 
 ## [v2.23.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.3...v2.23.4) - 2024-11-12
 - make groups and items propagations faster
