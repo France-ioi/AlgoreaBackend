@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	propagationLockName    = "listener_propagate"
-	propagationLockTimeout = 600 * time.Second
+	propagationCommandLockName    = "propagation_command"
+	propagationCommandLockTimeout = 600 * time.Second
 )
 
 func init() { //nolint:gochecknoinits
@@ -42,7 +42,7 @@ func init() { //nolint:gochecknoinits
 			// Propagation.
 			// We use a lock because we don't want this process to be called concurrently.
 			err = database.NewDataStore(application.Database).
-				WithNamedLock(propagationLockName, propagationLockTimeout, func(s *database.DataStore) error {
+				WithNamedLock(propagationCommandLockName, propagationCommandLockTimeout, func(s *database.DataStore) error {
 					return s.InTransaction(func(store *database.DataStore) error {
 						store.SchedulePermissionsPropagation()
 						store.ScheduleResultsPropagation()
