@@ -29,6 +29,8 @@ import (
 const someName = "some name"
 
 func TestDB_inTransaction_NoErrors(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

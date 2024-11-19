@@ -7,9 +7,13 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestPermissionGrantedStore_ViewIndexByName(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -32,6 +36,8 @@ func TestPermissionGrantedStore_ViewIndexByName(t *testing.T) {
 }
 
 func TestPermissionGrantedStore_ViewNameByIndex(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -55,6 +61,8 @@ func TestPermissionGrantedStore_ViewNameByIndex(t *testing.T) {
 }
 
 func TestPermissionGrantedStore_ViewNameByIndex_Load(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -68,6 +76,8 @@ func TestPermissionGrantedStore_ViewNameByIndex_Load(t *testing.T) {
 }
 
 func TestPermissionGrantedStore_GrantViewEnum(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -97,6 +107,8 @@ func TestPermissionGrantedStore_GrantViewEnum(t *testing.T) {
 }
 
 func TestPermissionGrantedStore_GrantViewIndexByName_Load(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -110,6 +122,8 @@ func TestPermissionGrantedStore_GrantViewIndexByName_Load(t *testing.T) {
 }
 
 func TestPermissionGrantedStore_EditEnum(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
@@ -140,6 +154,8 @@ func TestPermissionGrantedStore_EditEnum(t *testing.T) {
 }
 
 func TestPermissionGrantedStore_EditIndexByName_Load(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -153,6 +169,8 @@ func TestPermissionGrantedStore_EditIndexByName_Load(t *testing.T) {
 }
 
 func TestPermissionGrantedStore_WatchEnum(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, _ := NewDBMock()
 	defer func() { _ = db.Close() }()
 	permissionsGrantedStore := NewDataStore(db).PermissionsGranted()
