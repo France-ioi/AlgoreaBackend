@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	resultsPropagationLockName               = "listener_propagate"
+	resultsPropagationLockName               = "results_propagation"
 	resultsPropagationLockWaitTimeout        = 10 * time.Second
 	resultsPropagationPropagationChunkSize   = 200
 	resultsPropagationRecomputationChunkSize = 1000
