@@ -8,8 +8,6 @@ exclude github.com/thingful/httpmock v0.0.2
 
 exclude github.com/thingful/httpmock v0.0.1
 
-replace github.com/jinzhu/gorm v1.9.6 => github.com/France-ioi/gorm v0.0.0-20200829222212-0373d329b88b
-
 require (
 	bou.ke/monkey v1.0.1
 	github.com/CloudyKit/jet v2.1.3-0.20180809161101-62edd43e4f88+incompatible
@@ -29,7 +27,7 @@ require (
 	github.com/go-playground/universal-translator v0.16.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/go-cmp v0.5.9
-	github.com/jinzhu/gorm v1.9.6
+	github.com/jinzhu/gorm v1.9.17-0.20211120011537-5c235b72a414
 	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/pmezard/go-difflib v1.0.0
