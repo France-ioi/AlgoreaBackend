@@ -196,9 +196,10 @@ type itemAnswerGetResponse struct {
 		AuthorID int64 `json:"author_id,string"`
 		// required:true
 		ItemID int64 `json:"item_id,string"`
-		// format:int64
 		// required:true
-		AttemptID *string `json:"attempt_id,string"`
+		AttemptID int64 `json:"attempt_id,string"`
+		// required:true
+		ParticipantID int64 `json:"participant_id,string"`
 		// Can be `null` when there is no applicable existing answer for the user.
 		// e.g., No answer when we try to retrieve the current answer.
 		// Nullable
