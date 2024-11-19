@@ -100,7 +100,7 @@ Feature: Create item
       """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout  | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Task   | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List             |0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | 5577006791947779410 | Task   | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List             | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -454,3 +454,63 @@ Feature: Create item
       | 11                  | 34                  | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
       | 11                  | 50                  | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
       | 11                  | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
+
+  Scenario: Recomputes the score of a parent item
+    Given the database table "items" also has the following rows:
+      | id | default_language_tag | type    |
+      | 30 | fr                   | Chapter |
+      | 31 | fr                   | Task    |
+    And the database has the following table "items_items":
+      | parent_item_id | child_item_id | child_order |
+      | 30             | 31            | 1           |
+    And the database has the following table "items_ancestors":
+      | ancestor_item_id | child_item_id |
+      | 30               | 31            |
+    And the database also has the following user:
+      | group_id | login   |
+      | 12       | manager |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 30      | 50             |
+      | 0          | 11             | 31      | 50             |
+    And I am the user with id "12"
+    And the database has the following table "permissions_generated":
+      | group_id | item_id | can_view_generated | can_edit_generated |
+      | 12       | 30      | solution           | children           |
+    When I send a POST request to "/items" with the following body:
+    """
+    {
+      "type": "Task",
+      "language_tag": "sl",
+      "title": "my title",
+      "image_url":"http://bit.ly/1234",
+      "subtitle": "hard task",
+      "description": "the goal of this task is ...",
+      "parent": {"item_id": 30}
+    }
+    """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+    """
+    {
+      "success": true,
+      "message": "created",
+      "data": { "id": "5577006791947779410" }
+    }
+    """
+    And the table "items" at id "5577006791947779410" should be:
+      | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout  | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
+      | 5577006791947779410 | Task   | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List             |0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+    And the table "items_items" should be:
+      | parent_item_id | child_item_id       | child_order |
+      | 30             | 31                  | 1           |
+      | 30             | 5577006791947779410 | 2           |
+    And the table "items_ancestors" should be:
+      | ancestor_item_id | child_item_id       |
+      | 30               | 31                  |
+      | 30               | 5577006791947779410 |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 21      | 0              |
+      | 0          | 11             | 30      | 25             |
+      | 0          | 11             | 31      | 50             |

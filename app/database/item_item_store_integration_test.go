@@ -23,15 +23,25 @@ func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 		"parent_item_id": 1, "child_item_id": 2, "child_order": 1,
 	}))
 
-	assertResultsMarkedAsChanged(t, dataStore, []resultPrimaryKey{
-		{101, 1, 2},
-		{102, 1, 2},
-		{103, 1, 2},
-		{104, 1, 2},
-		{105, 1, 2},
-		{106, 1, 2},
-		{107, 1, 2},
-		{108, 1, 2},
-		{109, 1, 2},
+	assertResultsMarkedAsChanged(t, dataStore, []resultPrimaryKeyAndState{
+		{ResultPrimaryKey: ResultPrimaryKey{101, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{102, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{103, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{104, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{105, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{106, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{107, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{108, 1, 1}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{109, 1, 1}, State: "to_be_recomputed"},
+
+		{ResultPrimaryKey: ResultPrimaryKey{101, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{102, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{103, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{104, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{106, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{107, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{108, 1, 2}},
+		{ResultPrimaryKey: ResultPrimaryKey{109, 1, 2}},
 	})
 }

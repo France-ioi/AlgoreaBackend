@@ -51,15 +51,16 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 		groupID         int64
 		itemID          int64
 		canView         string
-		expectedChanged []resultPrimaryKey
+		expectedChanged []resultPrimaryKeyAndState
 	}{
 		{
 			name:    "make a parent item visible",
 			groupID: 104,
 			itemID:  2,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 3}, {105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -67,11 +68,11 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 			groupID: 104,
 			itemID:  1,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2},
-				{104, 1, 3},
-				{105, 1, 2},
-				{105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -79,21 +80,21 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 			groupID:         104,
 			itemID:          2,
 			canView:         "none",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "make an item visible",
 			groupID:         104,
 			itemID:          3,
 			canView:         "info",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "make a parent item visible for an expired membership",
 			groupID:         108,
 			itemID:          2,
 			canView:         "none",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 	} {
 		test := test
@@ -122,7 +123,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 		groupID         int64
 		itemID          int64
 		canView         string
-		expectedChanged []resultPrimaryKey
+		expectedChanged []resultPrimaryKeyAndState
 		noChanges       bool
 		updateExisting  bool
 	}{
@@ -131,8 +132,9 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID: 104,
 			itemID:  2,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 3}, {105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -140,11 +142,11 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID: 104,
 			itemID:  1,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2},
-				{104, 1, 3},
-				{105, 1, 2},
-				{105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -152,7 +154,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID:         108,
 			itemID:          1,
 			canView:         "none",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 			updateExisting:  true,
 		},
 		{
@@ -160,7 +162,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID:         104,
 			itemID:          3,
 			canView:         "info",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:           "switch ancestor from invisible to visible",
@@ -168,11 +170,11 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			itemID:         1,
 			canView:        "info",
 			updateExisting: true,
-			expectedChanged: []resultPrimaryKey{
-				{105, 1, 2},
-				{105, 1, 3},
-				{107, 1, 2},
-				{107, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{107, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{107, 1, 3}},
 			},
 		},
 		{
@@ -180,7 +182,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID:         108,
 			itemID:          2,
 			canView:         "info",
-			expectedChanged: []resultPrimaryKey{{108, 1, 3}},
+			expectedChanged: []resultPrimaryKeyAndState{{ResultPrimaryKey: ResultPrimaryKey{108, 1, 3}}},
 		},
 		{
 			name:            "no changes",
@@ -188,7 +190,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			itemID:          1,
 			canView:         "info",
 			updateExisting:  true,
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 			noChanges:       true,
 		},
 	} {
