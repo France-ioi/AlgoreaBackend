@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.23.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.5...v2.23.6) - 2024-11-20
+- make tests of app/logging cacheable
+- use the latest version of Gorm from jinzhu/gorm instead of a patched version from France-ioi/gorm
+- add even more output suppressing in tests
+- bug fix: mark results of a parent item as 'to_be_recomputed' on items_items insertion
+- fix itemAnswerGetResponse used by swagger docs of currentAnswerGet, answerGet, bestAnswerGet
+- bug fix: use different named locks for the propagation command and for the results propagation
+
 ## [v2.23.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.4...v2.23.5) - 2024-11-18
 - db wrappers: handle DB request timeouts
 - log SQL queries everywhere
