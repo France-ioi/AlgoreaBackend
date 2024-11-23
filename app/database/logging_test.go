@@ -602,6 +602,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := sqlDBWrapper.BeginTx(ctx, &sql.TxOptions{})
 			require.NoError(t, err)
 			sqlDBWrapper.logConfig.LogSQLQueries = oldLogSQLQueriesValue
+			tx.logConfig.LogSQLQueries = oldLogSQLQueriesValue
 			cancelFunc()
 
 			assert.Eventually(t, func() bool {
@@ -632,6 +633,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := sqlDBWrapper.BeginTx(ctx, &sql.TxOptions{})
 			require.NoError(t, err)
 			sqlDBWrapper.logConfig.LogSQLQueries = oldLogSQLQueriesValue
+			tx.logConfig.LogSQLQueries = oldLogSQLQueriesValue
 			cancelFunc()
 
 			assert.Eventually(t, func() bool {

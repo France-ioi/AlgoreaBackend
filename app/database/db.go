@@ -26,8 +26,9 @@ import (
 
 // LogConfig is the configuration for the database logs.
 type LogConfig struct {
-	LogSQLQueries     bool
-	AnalyzeSQLQueries bool
+	LogSQLQueries            bool
+	AnalyzeSQLQueries        bool
+	LogRetryableErrorsAsInfo bool
 }
 
 type cte struct {
@@ -142,10 +143,6 @@ const (
 )
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
-	if count > transactionRetriesLimit {
-		return errors.New("transaction retries limit exceeded")
-	}
-
 	conn.sleepBeforeStartingTransactionIfNeeded(count)
 
 	txOpts := &sql.TxOptions{}
@@ -183,8 +180,14 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
-	err = txFunc(newDB(conn.ctx, txDB, nil, conn.logConfig))
+	txLogConfig := txDB.CommonDB().(*sqlTxWrapper).logConfig
+	txLogConfig.LogRetryableErrorsAsInfo = true
+	err = txFunc(newDB(conn.ctx, txDB, nil, txLogConfig))
 	return err
+}
+
+func isRetryableError(err error) bool {
+	return IsDeadlockError(err) || IsLockWaitTimeoutExceededError(err)
 }
 
 func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
@@ -234,13 +237,19 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 	errToHandleError, _ := errToHandle.(error)
 
 	// Deadlock found / lock wait timeout exceeded
-	if errToHandle != nil && (IsDeadlockError(errToHandleError) || IsLockWaitTimeoutExceededError(errToHandleError)) {
+	if errToHandle != nil && isRetryableError(errToHandleError) {
 		if rollbackErr != nil { // do not retry if rollback failed
 			// as the previous error was a retryable error, we should return the rollback error, as it is more important
 			*returnErr = rollbackErr
 			return true
 		}
 		// retry
+		if count == transactionRetriesLimit {
+			logDBError(conn.ctx, conn.logConfig,
+				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %w", errToHandleError))
+			*returnErr = errors.New("transaction retries limit exceeded")
+			return true
+		}
 		log.SharedLogger.WithContext(conn.ctx).WithField("type", "db").
 			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
 		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)

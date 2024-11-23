@@ -17,6 +17,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -462,6 +463,12 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
+			loggerHook, restoreLoggerFunc := logging.MockSharedLoggerHook()
+			defer restoreLoggerFunc()
+			conf := viper.New()
+			conf.Set("Level", "error")
+			logging.SharedLogger.Configure(conf)
+
 			var duration time.Duration
 			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
 			defer monkey.UnpatchAll()
@@ -481,6 +488,12 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 				}))
 			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 			assert.NoError(t, mock.ExpectationsWereMet())
+
+			require.Len(t, loggerHook.AllEntries(), 1)
+			assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
+			assert.Equal(t,
+				fmt.Sprintf("transaction retries limit has been exceeded, cannot retry the error: Error %d: ", errorNumber),
+				loggerHook.LastEntry().Message)
 		})
 	}
 }
@@ -492,6 +505,12 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
+
+			loggerHook, restoreLoggerFunc := logging.MockSharedLoggerHook()
+			defer restoreLoggerFunc()
+			conf := viper.New()
+			conf.Set("Level", "error")
+			logging.SharedLogger.Configure(conf)
 
 			var duration time.Duration
 			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
@@ -511,6 +530,12 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 				}))
 			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
 			assert.NoError(t, mock.ExpectationsWereMet())
+
+			require.Len(t, loggerHook.AllEntries(), 1)
+			assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
+			assert.Equal(t,
+				fmt.Sprintf("transaction retries limit has been exceeded, cannot retry the error: Error %d: ", errorNumber),
+				loggerHook.LastEntry().Message)
 		})
 	}
 }
@@ -595,7 +620,6 @@ func TestDB_QueryConstructors(t *testing.T) {
 				var queryExpr interface{}
 				mustNotBeError(db.inTransaction(func(db *DB) error {
 					dbTwo := db.Table("otherTable").WithExclusiveWriteLock()
-					dbs = append(dbs, dbTwo)
 					queryExpr = db.WithExclusiveWriteLock().With("t1", dbTwo).QueryExpr()
 					return nil
 				}))

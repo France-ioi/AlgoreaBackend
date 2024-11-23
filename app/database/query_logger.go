@@ -28,10 +28,14 @@ func logSQLQuery(ctx context.Context, duration time.Duration, sql string, args [
 	log.SharedLogger.WithContext(ctx).WithFields(fields).Info(strings.TrimSpace(fillSQLPlaceholders(sql, args)))
 }
 
-func logDBError(ctx context.Context, _ *LogConfig, err error) {
+func logDBError(ctx context.Context, logConfig *LogConfig, err error) {
 	entry := log.SharedLogger.WithContext(ctx).WithFields(
 		map[string]interface{}{"type": "db", "fileline": fileWithLineNum()})
-	entry.Error(err)
+	if logConfig.LogRetryableErrorsAsInfo && isRetryableError(err) {
+		entry.Info(err)
+	} else {
+		entry.Error(err)
+	}
 }
 
 var _ queryRowWithoutLogging = &sqlDBWrapper{}

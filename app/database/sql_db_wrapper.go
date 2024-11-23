@@ -117,7 +117,8 @@ func (sqlDB *sqlDBWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*s
 		logDBError(sqlDB.ctx, sqlDB.logConfig, err)
 		return nil, err
 	}
-	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, logConfig: sqlDB.logConfig}, nil
+	newLogConfig := *sqlDB.logConfig // clone logConfig to avoid changing the original one when setting LogRetryableErrorsAsInfo
+	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, logConfig: &newLogConfig}, nil
 }
 
 // We intentionally do not implement the 'sqlDb' interface to avoid Gorm from calling 'Begin' method.
