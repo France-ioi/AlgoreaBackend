@@ -22,8 +22,9 @@ type Logger struct {
 var SharedLogger = createLogger()
 
 const (
-	formatJSON = "json"
-	formatText = "text"
+	formatJSON    = "json"
+	formatText    = "text"
+	formatConsole = "console"
 )
 
 const (
@@ -46,11 +47,13 @@ func (l *Logger) Configure(config *viper.Viper) {
 	// Format
 	switch config.GetString("format") {
 	case formatText:
-		l.SetFormatter(&logrus.TextFormatter{DisableTimestamp: true, ForceColors: config.GetString("output") != outputFile})
+		l.SetFormatter(newTextFormatter(config.GetString("output") != outputFile))
 	case formatJSON:
-		l.SetFormatter(&logrus.JSONFormatter{})
+		l.SetFormatter(newJSONFormatter())
+	case formatConsole:
+		l.SetFormatter(newConsoleFormatter())
 	default:
-		panic("Logging format must be either 'text' or 'json'. Got: " + config.GetString("format"))
+		panic("Logging format must be one of 'text'/'json'/'console'. Got: " + config.GetString("format"))
 	}
 
 	// Output
@@ -60,6 +63,9 @@ func (l *Logger) Configure(config *viper.Viper) {
 	case outputStderr:
 		l.SetOutput(os.Stderr)
 	case outputFile:
+		if config.GetString("format") == formatConsole {
+			panic("Logging format 'console' is not supported with output 'file'")
+		}
 		_, codeFilePath, _, _ := runtime.Caller(0)
 		codeDir := filepath.Dir(codeFilePath)
 		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600) //nolint:gosec,gosec No user input.

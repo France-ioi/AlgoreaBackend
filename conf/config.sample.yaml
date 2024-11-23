@@ -25,7 +25,7 @@ database:
   #dbname: algorea_db
   allownativepasswords: true
 logging:
-  format: text # text, json
+  format: text # text, json, console (colorized multiline text, suitable for development)
   output: stdout # stdout, stderr, file
   level: debug # debug, info, warning, error, fatal, panic
   logSQLQueries: true
