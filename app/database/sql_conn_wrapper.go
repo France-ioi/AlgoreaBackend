@@ -55,11 +55,11 @@ func (c *sqlConnWrapper) QueryContext(ctx context.Context, query string, args ..
 // Otherwise, the *Row's Scan scans the first selected row and discards
 // the rest.
 func (c *sqlConnWrapper) QueryRowContext(ctx context.Context, query string, args ...any) (row *sql.Row) {
-	defer getSQLExecutionPlanLoggingFunc(c, c.logConfig, query, args...)()
+	defer getSQLExecutionPlanLoggingFunc(ctx, c, c.logConfig, query, args...)()
 	startTime := gorm.NowFunc()
 	defer func() {
 		err := row.Err()
-		getSQLQueryLoggingFunc(nil, &err, startTime, query, args...)(c.logConfig)
+		getSQLQueryLoggingFunc(ctx, nil, &err, startTime, query, args...)(c.logConfig)
 	}()
 
 	return c.conn.QueryRowContext(ctx, query, args...)
@@ -77,10 +77,10 @@ func (c *sqlConnWrapper) QueryRowContext(ctx context.Context, query string, args
 func (c *sqlConnWrapper) PrepareContext(ctx context.Context, query string) (*SQLStmtWrapper, error) {
 	stmt, err := c.conn.PrepareContext(ctx, query)
 	if err != nil {
-		c.LogConfig.Logger.Print("error", fileWithLineNum(), err)
+		logDBError(ctx, c.logConfig, err)
 		return nil, err
 	}
-	return &SQLStmtWrapper{db: c, sql: query, stmt: stmt, LogConfig: c.LogConfig}, nil
+	return &SQLStmtWrapper{db: c, sql: query, stmt: stmt, logConfig: c.logConfig}, nil
 }
 */
 
@@ -109,14 +109,14 @@ func (c *sqlConnWrapper) Raw(f func(driverConn any) error) (err error) {
 func (c *sqlConnWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sqlTxWrapper, error) {
 	startTime := gorm.NowFunc()
 	tx, err := c.conn.BeginTx(ctx, opts)
-	if c.LogConfig.LogSQLQueries {
-		logSQLQuery(c.LogConfig.Logger, gorm.NowFunc().Sub(startTime), beginTransactionLogMessage, nil, nil)
+	if c.logConfig.LogSQLQueries {
+		logSQLQuery(ctx, gorm.NowFunc().Sub(startTime), beginTransactionLogMessage, nil, nil)
 	}
 	if err != nil {
-		c.LogConfig.Logger.Print("error", fileWithLineNum(), err)
+		logDBError(ctx, c.logConfig, err)
 		return nil, err
 	}
-	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, LogConfig: c.LogConfig}, nil
+	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, logConfig: c.logConfig}, nil
 }
 */
 

@@ -18,8 +18,8 @@ type sqlDBWrapper struct {
 //
 // Exec uses the context of [sqlDBWrapper] internally.
 func (sqlDB *sqlDBWrapper) Exec(query string, args ...interface{}) (result sql.Result, err error) {
-	defer getSQLExecutionPlanLoggingFunc(sqlDB, sqlDB.logConfig, query, args...)()
-	defer getSQLQueryLoggingFunc(func() *int64 {
+	defer getSQLExecutionPlanLoggingFunc(sqlDB.ctx, sqlDB, sqlDB.logConfig, query, args...)()
+	defer getSQLQueryLoggingFunc(sqlDB.ctx, func() *int64 {
 		rowsAffected, _ := result.RowsAffected()
 		return &rowsAffected
 	}, &err, gorm.NowFunc(), query, args...)(sqlDB.logConfig)
@@ -39,8 +39,8 @@ func (sqlDB *sqlDBWrapper) Prepare(_ string) (*sql.Stmt, error) {
 //
 // Query uses the context of [sqlDBWrapper] internally.
 func (sqlDB *sqlDBWrapper) Query(query string, args ...interface{}) (_ *sql.Rows, err error) {
-	defer getSQLExecutionPlanLoggingFunc(sqlDB, sqlDB.logConfig, query, args...)()
-	defer getSQLQueryLoggingFunc(nil, &err, gorm.NowFunc(), query, args...)(sqlDB.logConfig)
+	defer getSQLExecutionPlanLoggingFunc(sqlDB.ctx, sqlDB, sqlDB.logConfig, query, args...)()
+	defer getSQLQueryLoggingFunc(sqlDB.ctx, nil, &err, gorm.NowFunc(), query, args...)(sqlDB.logConfig)
 
 	return sqlDB.sqlDB.QueryContext(sqlDB.ctx, query, args...)
 }
@@ -54,11 +54,11 @@ func (sqlDB *sqlDBWrapper) Query(query string, args ...interface{}) (_ *sql.Rows
 //
 // QueryRow uses the context of [sqlDBWrapper] internally.
 func (sqlDB *sqlDBWrapper) QueryRow(query string, args ...interface{}) (row *sql.Row) {
-	defer getSQLExecutionPlanLoggingFunc(sqlDB, sqlDB.logConfig, query, args...)()
+	defer getSQLExecutionPlanLoggingFunc(sqlDB.ctx, sqlDB, sqlDB.logConfig, query, args...)()
 	startTime := gorm.NowFunc()
 	defer func() {
 		err := row.Err()
-		getSQLQueryLoggingFunc(nil, &err, startTime, query, args...)(sqlDB.logConfig)
+		getSQLQueryLoggingFunc(sqlDB.ctx, nil, &err, startTime, query, args...)(sqlDB.logConfig)
 	}()
 
 	return sqlDB.sqlDB.QueryRowContext(sqlDB.ctx, query, args...)
@@ -111,10 +111,10 @@ func (sqlDB *sqlDBWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*s
 	startTime := gorm.NowFunc()
 	tx, err := sqlDB.sqlDB.BeginTx(ctx, opts)
 	if sqlDB.logConfig.LogSQLQueries {
-		logSQLQuery(sqlDB.logConfig.Logger, gorm.NowFunc().Sub(startTime), beginTransactionLogMessage, nil, nil)
+		logSQLQuery(sqlDB.ctx, gorm.NowFunc().Sub(startTime), beginTransactionLogMessage, nil, nil)
 	}
 	if err != nil {
-		sqlDB.logConfig.Logger.Print("error", fileWithLineNum(), err)
+		logDBError(sqlDB.ctx, sqlDB.logConfig, err)
 		return nil, err
 	}
 	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, logConfig: sqlDB.logConfig}, nil
@@ -152,6 +152,7 @@ var _ interface{ Close() error } = &sqlDBWrapper{}
 func (sqlDB *sqlDBWrapper) conn(ctx context.Context) (*sqlConnWrapper, error) {
 	conn, err := sqlDB.sqlDB.Conn(ctx)
 	if err != nil {
+		logDBError(sqlDB.ctx, sqlDB.logConfig, err)
 		return nil, err
 	}
 	return &sqlConnWrapper{conn: conn, logConfig: sqlDB.logConfig}, nil

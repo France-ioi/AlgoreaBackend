@@ -1,68 +1,37 @@
-package logging
+package database
 
 import (
 	"context"
 	"database/sql/driver"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 )
 
-func TestNewRawDBLogger_TextLog(t *testing.T) {
-	var hook *loggingtest.Hook
-	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
-	defer ResetShared()
-	config := viper.New()
-	config.Set("Format", "text")
-	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger := logger.NewDBLogger()
+func TestNewRawDBLogger(t *testing.T) {
+	hook, restoreFunc := logging.MockSharedLoggerHook()
+	defer restoreFunc()
 
-	rawLogger := NewRawDBLogger(dbLogger, true)
+	rawLogger := NewRawDBLogger()
 	rawLogger.Log(context.TODO(), "some message", "err", nil)
-	assert.Contains(t, hook.GetAllStructuredLogs(), "some message map[err:<nil>]")
-}
-
-func TestNewRawDBLogger_HonoursLogMode(t *testing.T) {
-	var hook *loggingtest.Hook
-	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
-	defer ResetShared()
-	config := viper.New()
-	config.Set("Format", "text")
-	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, false)
-	rawLogger.Log(context.TODO(), "some message", "err", nil)
-	assert.Empty(t, hook.GetAllStructuredLogs())
-}
-
-func TestNewRawDBLogger_JSONLog(t *testing.T) {
-	var hook *loggingtest.Hook
-	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
-	defer ResetShared()
-	config := viper.New()
-	config.Set("Format", "json")
-	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, true)
-	rawLogger.Log(context.TODO(), "some message", "err", nil)
-	assert.Contains(t, hook.GetAllStructuredLogs(), `msg="some message"`)
-	assert.Contains(t, hook.GetAllStructuredLogs(), `err="<nil>"`)
+	entries := hook.AllEntries()
+	require.Len(t, entries, 1)
+	assert.Equal(t, "info", entries[0].Level.String())
+	assert.Equal(t, "some message", entries[0].Message)
+	require.Contains(t, entries[0].Data, "err")
+	assert.Nil(t, entries[0].Data["err"])
 }
 
 func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
-	var hook *loggingtest.Hook
-	SharedLogger.Logger, hook = loggingtest.NewNullLogger()
-	defer ResetShared()
-	config := viper.New()
-	config.Set("Format", "json")
-	logger := &Logger{SharedLogger.Logger, config}
-	dbLogger := logger.NewDBLogger()
-	rawLogger := NewRawDBLogger(dbLogger, true)
+	hook, restoreFunc := logging.MockSharedLoggerHook()
+	defer restoreFunc()
+	rawLogger := NewRawDBLogger()
 	rawLogger.Log(context.TODO(), "sql-stmt-exec", "err", driver.ErrSkip)
-	assert.Empty(t, hook.GetAllStructuredLogs())
+	assert.Empty(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 }
 
 func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
@@ -78,7 +47,7 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 				"args", "{[int64 1], [string \"Joe\"]}",
 			},
 			want: map[string]interface{}{
-				"query": `SELECT * FROM users WHERE users.id=1 and users.name="Joe"`,
+				"query": `SELECT * FROM users WHERE users.id=1 and users.name='Joe'`,
 			},
 		},
 		{
@@ -90,7 +59,7 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 			},
 			want: map[string]interface{}{
 				"query": "UPDATE `users_items` SET `children_validated` = 8, `tasks_solved` = 7, `tasks_tried` = 5, " +
-					"`tasks_with_help` = 6, `latest_activity_at` = \"2019-03-18 16:24:01 +0000 UTC\" WHERE (id=13)",
+					"`tasks_with_help` = 6, `latest_activity_at` = '2019-03-18 16:24:01 +0000 UTC' WHERE (id=13)",
 			},
 		},
 		{
@@ -100,8 +69,8 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 				"args", "{[<nil> <nil>], [time.Time 2019-03-18 16:24:01 +0000 UTC], [<nil> <nil>], [time.Time 2018-03-18 16:24:01 +0000 UTC]}",
 			},
 			want: map[string]interface{}{
-				"query": "UPDATE some_table SET column1 = NULL, column2 = \"2019-03-18 16:24:01 +0000 UTC\", column3 = NULL, " +
-					"column4 = \"2018-03-18 16:24:01 +0000 UTC\"",
+				"query": "UPDATE some_table SET column1 = NULL, column2 = '2019-03-18 16:24:01 +0000 UTC', column3 = NULL, " +
+					"column4 = '2018-03-18 16:24:01 +0000 UTC'",
 			},
 		},
 	}

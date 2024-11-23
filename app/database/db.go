@@ -26,7 +26,6 @@ import (
 
 // LogConfig is the configuration for the database logs.
 type LogConfig struct {
-	Logger            log.DBLogger
 	LogSQLQueries     bool
 	AnalyzeSQLQueries bool
 }
@@ -62,10 +61,7 @@ func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
 
 // Open connects to the database and tests the connection.
 func Open(source interface{}) (*DB, error) {
-	logger := log.SharedLogger.NewDBLogger()
-
 	lc := LogConfig{
-		Logger:            logger,
 		LogSQLQueries:     log.SharedLogger.IsSQLQueriesLoggingEnabled(),
 		AnalyzeSQLQueries: log.SharedLogger.IsSQLQueriesAnalyzingEnabled(),
 	}
@@ -123,8 +119,7 @@ func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB,
 		}
 
 		if registerDriver {
-			logger := log.SharedLogger.NewDBLogger()
-			rawDBLogger := log.NewRawDBLogger(logger, log.SharedLogger.IsRawSQLQueriesLoggingEnabled())
+			rawDBLogger := NewRawDBLogger()
 			sql.Register("instrumented-mysql",
 				instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
 		}
@@ -277,7 +272,6 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	var shouldDiscardNamedLockDBConnection bool
 	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx)
 	if err != nil {
-		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
 		return err
 	}
 	defer func() {
@@ -289,7 +283,6 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	var getLockResult *int64
 	err = namedLockDBConnection.QueryRowContext(conn.ctx, "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
 	if err != nil {
-		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
 		return err
 	}
 	if getLockResult == nil || *getLockResult != 1 {
@@ -305,7 +298,7 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 			// on error we just close the connection to release the lock
 			shouldDiscardNamedLockDBConnection = true
 			// do not return an error, it should not affect the result
-			conn.logConfig.Logger.Print("error", fileWithLineNum(),
+			logDBError(conn.ctx, conn.logConfig,
 				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
 		}
 	}()
@@ -841,7 +834,7 @@ func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db 
 		return nil
 	}
 	err := fmt.Errorf("cannot generate a new %s", nameInError)
-	log.Error(err)
+	logDBError(conn.ctx, conn.logConfig, err)
 	return err
 }
 

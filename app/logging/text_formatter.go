@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"regexp"
 	"sort"
 	"strings"
 
@@ -21,6 +22,8 @@ func newTextFormatter(useColors bool) *textFormatter {
 		SortingFunc:     logFieldsSorter,
 	}}
 }
+
+var spacesRegexp = regexp.MustCompile(`\s+`)
 
 func (f *textFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	if !f.logrusTextFormatter.DisableQuote && f.logrusTextFormatter.ForceColors {

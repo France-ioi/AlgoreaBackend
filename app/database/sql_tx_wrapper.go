@@ -6,6 +6,8 @@ import (
 	"database/sql/driver"
 
 	"github.com/jinzhu/gorm"
+
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 type sqlTxWrapper struct {
@@ -19,8 +21,8 @@ type sqlTxWrapper struct {
 //
 // Exec uses the context of [sqlTxWrapper] internally.
 func (sqlTX *sqlTxWrapper) Exec(query string, args ...interface{}) (result sql.Result, err error) {
-	defer getSQLExecutionPlanLoggingFunc(sqlTX, sqlTX.logConfig, query, args...)()
-	defer getSQLQueryLoggingFunc(func() *int64 {
+	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
+	defer getSQLQueryLoggingFunc(sqlTX.ctx, func() *int64 {
 		affectedRows, _ := result.RowsAffected()
 		return &affectedRows
 	}, &err, gorm.NowFunc(), query, args...)(sqlTX.logConfig)
@@ -46,7 +48,7 @@ func (sqlTX *sqlTxWrapper) Prepare(_ string) (*sql.Stmt, error) {
 func (sqlTX *sqlTxWrapper) prepare(query string) (*SQLStmtWrapper, error) {
 	stmt, err := sqlTX.sqlTx.PrepareContext(sqlTX.ctx, query)
 	if err != nil {
-		sqlTX.logConfig.Logger.Print("error", fileWithLineNum(), err)
+		logDBError(sqlTX.ctx, sqlTX.logConfig, err)
 		return nil, err
 	}
 	return &SQLStmtWrapper{db: sqlTX, sql: query, stmt: stmt, logConfig: sqlTX.logConfig}, nil
@@ -56,8 +58,8 @@ func (sqlTX *sqlTxWrapper) prepare(query string) (*SQLStmtWrapper, error) {
 //
 // Query uses the context of [sqlTxWrapper] internally.
 func (sqlTX *sqlTxWrapper) Query(query string, args ...interface{}) (_ *sql.Rows, err error) {
-	defer getSQLExecutionPlanLoggingFunc(sqlTX, sqlTX.logConfig, query, args...)()
-	defer getSQLQueryLoggingFunc(nil, &err, gorm.NowFunc(), query, args...)(sqlTX.logConfig)
+	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
+	defer getSQLQueryLoggingFunc(sqlTX.ctx, nil, &err, gorm.NowFunc(), query, args...)(sqlTX.logConfig)
 
 	return sqlTX.sqlTx.QueryContext(sqlTX.ctx, query, args...)
 }
@@ -71,11 +73,11 @@ func (sqlTX *sqlTxWrapper) Query(query string, args ...interface{}) (_ *sql.Rows
 //
 // QueryRow uses the context of [sqlTxWrapper] internally.
 func (sqlTX *sqlTxWrapper) QueryRow(query string, args ...interface{}) (row *sql.Row) {
-	defer getSQLExecutionPlanLoggingFunc(sqlTX, sqlTX.logConfig, query, args...)()
+	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
 	startTime := gorm.NowFunc()
 	defer func() {
 		err := row.Err()
-		getSQLQueryLoggingFunc(nil, &err, startTime, query, args...)(sqlTX.logConfig)
+		getSQLQueryLoggingFunc(sqlTX.ctx, nil, &err, startTime, query, args...)(sqlTX.logConfig)
 	}()
 
 	return sqlTX.sqlTx.QueryRowContext(sqlTX.ctx, query, args...)
@@ -90,7 +92,7 @@ func (sqlTX *sqlTxWrapper) Commit() (err error) {
 	startTime := gorm.NowFunc()
 	err = sqlTX.sqlTx.Commit()
 	if sqlTX.logConfig.LogSQLQueries {
-		logSQLQuery(sqlTX.logConfig.Logger, gorm.NowFunc().Sub(startTime), commitTransactionLogMessage, nil, nil)
+		logSQLQuery(sqlTX.ctx, gorm.NowFunc().Sub(startTime), commitTransactionLogMessage, nil, nil)
 	}
 	return sqlTX.handleCommitOrRollbackError(err)
 }
@@ -102,7 +104,7 @@ func (sqlTX *sqlTxWrapper) Rollback() (err error) {
 	startTime := gorm.NowFunc()
 	err = sqlTX.sqlTx.Rollback()
 	if sqlTX.logConfig.LogSQLQueries {
-		logSQLQuery(sqlTX.logConfig.Logger, gorm.NowFunc().Sub(startTime), rollbackTransactionLogMessage, nil, nil)
+		logSQLQuery(sqlTX.ctx, gorm.NowFunc().Sub(startTime), rollbackTransactionLogMessage, nil, nil)
 	}
 	return sqlTX.handleCommitOrRollbackError(err)
 }
@@ -118,7 +120,8 @@ func (sqlTX *sqlTxWrapper) handleCommitOrRollbackError(err error) error {
 		if errorWasPatched {
 			errString += " (the transaction has been rolled back implicitly)"
 		}
-		sqlTX.logConfig.Logger.Print("error", fileWithLineNum(), errString)
+		log.SharedLogger.WithContext(sqlTX.ctx).WithFields(
+			map[string]interface{}{"type": "db", "fileline": fileWithLineNum()}).Error(errString)
 	}
 	return err
 }

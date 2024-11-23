@@ -4,45 +4,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/jinzhu/gorm"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestLogger_NewDBLogger_ErrorFallback(t *testing.T) {
-	logger := createLogger() // no config
-	dbLogger := logger.NewDBLogger()
-	assert.IsType(t, gorm.Logger{}, dbLogger)
-}
-
-func TestLogger_NewDBLogger_TextLog(t *testing.T) {
-	logger := createLogger()
-	config := viper.New()
-	config.Set("Format", "text")
-	config.Set("Output", "stdout")
-	logger.Configure(config)
-	dbLogger := logger.NewDBLogger()
-	assert.IsType(t, gorm.Logger{}, dbLogger)
-}
-
-func TestLogger_NewDBLogger_JSONLog(t *testing.T) {
-	logger := createLogger()
-	config := viper.New()
-	config.Set("Format", "json")
-	config.Set("Output", "stdout")
-	logger.Configure(config)
-	dbLogger := logger.NewDBLogger()
-	assert.IsType(t, &StructuredDBLogger{}, dbLogger)
-}
-
-func TestLogger_NewDBLogger_WrongFormat(t *testing.T) {
-	logger := createLogger()
-	config := viper.New()
-	config.Set("Format", "yml")
-	config.Set("Output", "stdout")
-	logger.config = config
-	assert.Panics(t, func() { logger.NewDBLogger() })
-}
 
 func TestLogger_BooleanConfigFlags(t *testing.T) {
 	for _, test := range []struct {

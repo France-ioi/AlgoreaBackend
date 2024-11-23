@@ -1,37 +1,5 @@
 package logging
 
-import (
-	"github.com/jinzhu/gorm"
-)
-
-// DBLogger is the logger interface for the DB logs.
-type DBLogger interface {
-	Print(v ...interface{})
-}
-
-type sharedLoggerWriter struct{}
-
-func (l *sharedLoggerWriter) Println(v ...interface{}) {
-	SharedLogger.Println(v...)
-}
-
-// NewDBLogger returns a logger for the database according to the config.
-func (l *Logger) NewDBLogger() DBLogger {
-	if l.config == nil {
-		// if cannot parse config, log on error to stdout
-		return gorm.Logger{LogWriter: &sharedLoggerWriter{}}
-	}
-
-	switch l.config.GetString("format") {
-	case formatText:
-		return gorm.Logger{LogWriter: &sharedLoggerWriter{}}
-	case formatJSON:
-		return NewStructuredDBLogger()
-	default:
-		panic("Logging format must be either 'text' or 'json'. Got: " + l.config.GetString("format"))
-	}
-}
-
 // IsSQLQueriesLoggingEnabled returns whether the SQL queries logging is enabled in the config.
 func (l *Logger) IsSQLQueriesLoggingEnabled() bool {
 	return l.getBoolConfigFlagValue("LogSQLQueries")
