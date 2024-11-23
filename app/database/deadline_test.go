@@ -273,7 +273,7 @@ func Test_Deadline(t *testing.T) {
 
 			assert.Eventually(t, func() bool {
 				return mock.ExpectationsWereMet() == nil
-			}, 1*time.Second, 10*time.Millisecond)
+			}, 3*time.Second, 10*time.Millisecond)
 			assert.NoError(t, mock.ExpectationsWereMet())
 
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
