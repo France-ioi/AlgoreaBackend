@@ -87,7 +87,6 @@ func doRequest(forcePanic bool) {
 }
 
 func checkCommon(assert *assertlib.Assertions, entryData logrus.Fields) {
-	assert.NotNil(entryData["ts"])
 	assert.Equal("web", entryData["type"])
 	assert.Equal("https", entryData["http_scheme"])
 	assert.Equal("HTTP/1.1", entryData["http_proto"])

@@ -47,7 +47,6 @@ func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 	logFields := logrus.Fields{}
 
 	logFields["type"] = "web"
-	logFields["ts"] = time.Now().UTC().Format(time.RFC1123)
 
 	scheme := "http"
 	if r.TLS != nil {
