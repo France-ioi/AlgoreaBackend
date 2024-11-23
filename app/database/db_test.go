@@ -1665,7 +1665,7 @@ func Test_recoverPanics_PanicsOnRecoveringValueOfNonErrorType(t *testing.T) {
 	assert.Equal(t, expectedPanicValue, panicValue)
 }
 
-func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
+func TestDB_withNamedLock_ReturnsErrNamedLockWaitTimeoutExceededWhenGetLockTimeouts(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, dbMock := NewDBMock()
@@ -1682,7 +1682,7 @@ func TestDB_withNamedLock_ReturnsErrLockWaitTimeoutExceededWhenGetLockTimeouts(t
 	err := db.withNamedLock(lockName, timeout, func(*DB) error {
 		return nil
 	})
-	assert.Equal(t, ErrLockWaitTimeoutExceeded, err)
+	assert.Equal(t, ErrNamedLockWaitTimeoutExceeded, err)
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 

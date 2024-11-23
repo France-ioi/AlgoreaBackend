@@ -44,8 +44,8 @@ type DB struct {
 	logConfig *LogConfig
 }
 
-// ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock.
-var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
+// ErrNamedLockWaitTimeoutExceeded is returned when we cannot acquire a named lock.
+var ErrNamedLockWaitTimeoutExceeded = errors.New("named lock wait timeout exceeded")
 
 // newDB wraps *gorm.DB.
 func newDB(ctx context.Context, db *gorm.DB, ctes []cte, logConfig *LogConfig) *DB {
@@ -296,7 +296,7 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 		return err
 	}
 	if getLockResult == nil || *getLockResult != 1 {
-		return ErrLockWaitTimeoutExceeded
+		return ErrNamedLockWaitTimeoutExceeded
 	}
 
 	defer func() {
