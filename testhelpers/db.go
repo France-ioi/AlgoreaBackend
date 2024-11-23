@@ -3,6 +3,7 @@
 package testhelpers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -140,7 +141,8 @@ func LoadFixture(db *sql.DB, fileName string) {
 				panic(err)
 			}
 			tableName := name
-			logging.SharedLogger.Infof("Loading data into %q:\n%s", tableName, string(data))
+			logging.SharedLogger.WithContext(context.Background()).
+				Infof("Loading data into %q:\n%s", tableName, string(data))
 			InsertBatch(db, tableName, content)
 		}
 	}
@@ -153,7 +155,7 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 	fixture = dedent.Dedent(fixture)
 	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
 	bytesFixture := []byte(fixture)
-	logging.SharedLogger.Infof("Loading data chain:\n%s", bytesFixture)
+	logging.SharedLogger.WithContext(context.Background()).Infof("Loading data chain:\n%s", bytesFixture)
 	err := yaml.Unmarshal(bytesFixture, &content)
 	if err != nil {
 		panic(err)

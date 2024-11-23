@@ -2011,3 +2011,9 @@ func Test_gormDBBeginTxReplacement_ErrsWhenDBIsNotSQLDBWrapper(t *testing.T) {
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestDB_GetContext(t *testing.T) {
+	expectedContext := context.WithValue(context.Background(), testContextKey("key"), "value")
+	conn := &DB{ctx: expectedContext}
+	assert.Equal(t, expectedContext, conn.GetContext())
+}

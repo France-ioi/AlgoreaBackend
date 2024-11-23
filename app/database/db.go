@@ -241,7 +241,8 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 			return true
 		}
 		// retry
-		log.Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
+		log.SharedLogger.WithContext(conn.ctx).WithField("type", "db").
+			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
 		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
 		return true
 	}
@@ -303,7 +304,8 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 		}
 	}()
 
-	log.Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
+	log.SharedLogger.WithContext(conn.ctx).WithField("type", "db").
+		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
 
 	return funcToCall(conn)
 }
@@ -813,6 +815,11 @@ func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
 
 	tx := conn.db.CommonDB().(*sqlTxWrapper)
 	return tx.prepare(query)
+}
+
+// GetContext returns the context of the DB connection.
+func (conn *DB) GetContext() context.Context {
+	return conn.ctx
 }
 
 const keyTriesCount = 10

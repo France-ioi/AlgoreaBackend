@@ -2,6 +2,7 @@
 package logging
 
 import (
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,8 +14,8 @@ import (
 
 // Logger is wrapper around a logger and keeping the logging config so that it can be reused by other loggers.
 type Logger struct {
-	*logrus.Logger
-	config *viper.Viper
+	logrusLogger *logrus.Logger
+	config       *viper.Viper
 }
 
 // SharedLogger is the global scope logger
@@ -47,11 +48,11 @@ func (l *Logger) Configure(config *viper.Viper) {
 	// Format
 	switch config.GetString("format") {
 	case formatText:
-		l.SetFormatter(newTextFormatter(config.GetString("output") != outputFile))
+		l.logrusLogger.SetFormatter(newTextFormatter(config.GetString("output") != outputFile))
 	case formatJSON:
-		l.SetFormatter(newJSONFormatter())
+		l.logrusLogger.SetFormatter(newJSONFormatter())
 	case formatConsole:
-		l.SetFormatter(newConsoleFormatter())
+		l.logrusLogger.SetFormatter(newConsoleFormatter())
 	default:
 		panic("Logging format must be one of 'text'/'json'/'console'. Got: " + config.GetString("format"))
 	}
@@ -59,9 +60,9 @@ func (l *Logger) Configure(config *viper.Viper) {
 	// Output
 	switch config.GetString("output") {
 	case outputStdout:
-		l.SetOutput(os.Stdout)
+		l.logrusLogger.SetOutput(os.Stdout)
 	case outputStderr:
-		l.SetOutput(os.Stderr)
+		l.logrusLogger.SetOutput(os.Stderr)
 	case outputFile:
 		if config.GetString("format") == formatConsole {
 			panic("Logging format 'console' is not supported with output 'file'")
@@ -70,10 +71,10 @@ func (l *Logger) Configure(config *viper.Viper) {
 		codeDir := filepath.Dir(codeFilePath)
 		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600) //nolint:gosec,gosec No user input.
 		if err != nil {
-			l.SetOutput(os.Stdout)
-			l.Errorf("Unable to open file for logs, fallback to stdout: %v\n", err)
+			l.logrusLogger.SetOutput(os.Stdout)
+			l.logrusLogger.Errorf("Unable to open file for logs, fallback to stdout: %v\n", err)
 		} else {
-			l.SetOutput(f)
+			l.logrusLogger.SetOutput(f)
 		}
 	default:
 		panic("Logging output must be either 'stdout', 'stderr' or 'file'. Got: " + config.GetString("output"))
@@ -81,17 +82,24 @@ func (l *Logger) Configure(config *viper.Viper) {
 
 	// Level
 	if level, err := logrus.ParseLevel(config.GetString("level")); err != nil {
-		l.Errorf("Unable to parse logging level config, use default (%s)", l.GetLevel().String())
+		l.logrusLogger.Errorf("Unable to parse logging level config, use default (%s)", l.logrusLogger.GetLevel().String())
 	} else {
-		l.SetLevel(level)
+		l.logrusLogger.SetLevel(level)
 	}
 
-	log.SetOutput(l.Logger.Writer())
+	log.SetOutput(l.logrusLogger.Writer())
 }
 
 // ResetShared reset the global logger to its default settings before its configuration.
 func ResetShared() {
 	SharedLogger = createLogger()
+}
+
+// WithContext returns a new entry with the given context.
+func (l *Logger) WithContext(ctx context.Context) *logrus.Entry {
+	entry := l.logrusLogger.WithContext(ctx)
+
+	return entry
 }
 
 func createLogger() *Logger { //nolint:gosec

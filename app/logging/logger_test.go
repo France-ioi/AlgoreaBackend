@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -17,12 +18,12 @@ import (
 func TestGlobal(t *testing.T) {
 	assert := assertlib.New(t)
 	ResetShared()
-	assert.IsType(&logrus.TextFormatter{}, SharedLogger.Formatter) // TextFormatter is logrus default
+	assert.IsType(&logrus.TextFormatter{}, SharedLogger.logrusLogger.Formatter) // TextFormatter is logrus default
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
 	SharedLogger.Configure(conf)
-	assert.IsType(&jsonFormatter{}, SharedLogger.Formatter)
+	assert.IsType(&jsonFormatter{}, SharedLogger.logrusLogger.Formatter)
 	ResetShared()
 }
 
@@ -33,7 +34,7 @@ func TestLogger_Configure_FormatText(t *testing.T) {
 	conf.Set("Output", "stdout")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.IsType(&textFormatter{}, logger.Formatter)
+	assert.IsType(&textFormatter{}, logger.logrusLogger.Formatter)
 }
 
 func TestLogger_Configure_FormatJson(t *testing.T) {
@@ -43,7 +44,7 @@ func TestLogger_Configure_FormatJson(t *testing.T) {
 	conf.Set("Output", "stdout")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.IsType(&jsonFormatter{}, logger.Formatter)
+	assert.IsType(&jsonFormatter{}, logger.logrusLogger.Formatter)
 }
 
 func TestLogger_Configure_FormatConsole(t *testing.T) {
@@ -53,7 +54,7 @@ func TestLogger_Configure_FormatConsole(t *testing.T) {
 	conf.Set("Output", "stdout")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.IsType(&consoleFormatter{}, logger.Formatter)
+	assert.IsType(&consoleFormatter{}, logger.logrusLogger.Formatter)
 }
 
 func TestLogger_Configure_FormatInvalid(t *testing.T) {
@@ -72,7 +73,7 @@ func TestLogger_Configure_OutputStdout(t *testing.T) {
 	conf.Set("Output", "stdout")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(os.Stdout, logger.Out)
+	assert.Equal(os.Stdout, logger.logrusLogger.Out)
 }
 
 func TestLogger_Configure_OutputStderr(t *testing.T) {
@@ -82,7 +83,7 @@ func TestLogger_Configure_OutputStderr(t *testing.T) {
 	conf.Set("Output", "stderr")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(os.Stderr, logger.Out)
+	assert.Equal(os.Stderr, logger.logrusLogger.Out)
 }
 
 func TestLogger_Configure_OutputFile(t *testing.T) {
@@ -106,12 +107,12 @@ func TestLogger_Configure_OutputFile(t *testing.T) {
 
 	logger1 := createLogger()
 	logger1.Configure(conf)
-	logger1.Errorf("logexec1 %d", timestamp)
+	logger1.WithContext(context.Background()).Errorf("logexec1 %d", timestamp)
 
 	// redo another init to check it will not override
 	logger2 := createLogger()
 	logger2.Configure(conf)
-	logger2.Warnf("logexec2 %d", timestamp)
+	logger2.WithContext(context.Background()).Warnf("logexec2 %d", timestamp)
 
 	// check the resulting file
 	content, _ := ioutil.ReadFile("../../log/all.log")
@@ -131,7 +132,7 @@ func TestLogger_Configure_OutputFileError(t *testing.T) {
 	defer patch.Unpatch()
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(os.Stdout, logger.Out)
+	assert.Equal(os.Stdout, logger.logrusLogger.Out)
 }
 
 func TestLogger_Configure_OutputInvalid(t *testing.T) {
@@ -160,7 +161,7 @@ func TestLogger_Configure_LevelDefault(t *testing.T) {
 	conf.Set("Level", "")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(logrus.InfoLevel, logger.Level)
+	assert.Equal(logrus.InfoLevel, logger.logrusLogger.Level)
 }
 
 func TestLogger_Configure_LevelParsed(t *testing.T) {
@@ -171,7 +172,7 @@ func TestLogger_Configure_LevelParsed(t *testing.T) {
 	conf.Set("Level", "warn")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(logrus.WarnLevel, logger.Level)
+	assert.Equal(logrus.WarnLevel, logger.logrusLogger.Level)
 }
 
 func TestLogger_Configure_LevelInvalid(t *testing.T) {
@@ -182,5 +183,5 @@ func TestLogger_Configure_LevelInvalid(t *testing.T) {
 	conf.Set("Level", "invalid_level")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(logrus.InfoLevel, logger.Level)
+	assert.Equal(logrus.InfoLevel, logger.logrusLogger.Level)
 }

@@ -34,18 +34,16 @@ import (
 )
 
 // StructuredLogger is a structured logrus Logger.
-type StructuredLogger struct {
-	*logrus.Logger
-}
+type StructuredLogger struct{}
 
 // NewStructuredLogger implements a custom structured logger using the global one.
 func NewStructuredLogger() func(next http.Handler) http.Handler {
-	return middleware.RequestLogger(&StructuredLogger{SharedLogger.Logger})
+	return middleware.RequestLogger(&StructuredLogger{})
 }
 
 // NewLogEntry sets default request log fields.
 func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
-	entry := &StructuredLoggerEntry{Logger: logrus.NewEntry(l.Logger)}
+	entry := &StructuredLoggerEntry{Logger: SharedLogger.WithContext(r.Context())}
 	logFields := logrus.Fields{}
 
 	logFields["type"] = "web"

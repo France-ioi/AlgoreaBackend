@@ -199,7 +199,8 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 					"newScore":     score,
 					"oldScore":     *oldScore,
 				})
-				logging.Warnf("A user tries to replay a score token with a different score value (%s)", fieldsForLoggingMarshaled)
+				logging.SharedLogger.WithContext(store.GetContext()).
+					Warnf("A user tries to replay a score token with a different score value (%s)", fieldsForLoggingMarshaled)
 			}
 			return false
 		}

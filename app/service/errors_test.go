@@ -114,9 +114,12 @@ func TestConflict(t *testing.T) {
 
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
-		panic(errors.New("some error"))
-	}))
+	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
+		service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+			panic(errors.New("some error"))
+		}))
+	defer restoreFunc()
+
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
 		recorder.Body.String())
@@ -126,9 +129,12 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 
 func TestRendersRecoveredAPIErrorOnPanicWithAPIError(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
-		panic(service.InsufficientAccessRightsError)
-	}))
+	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
+		service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+			panic(service.InsufficientAccessRightsError)
+		}))
+	defer restoreFunc()
+
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Forbidden","error_text":"Insufficient access rights"}`+"\n",
 		recorder.Body.String())
@@ -139,9 +145,12 @@ func TestRendersRecoveredAPIErrorOnPanicWithAPIError(t *testing.T) {
 func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
-	handler, hook := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
-		panic(expectedMessage)
-	}))
+	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
+		service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+			panic(expectedMessage)
+		}))
+	defer restoreFunc()
+
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
 		recorder.Body.String())
@@ -151,9 +160,11 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 
 func TestRendersErrRequestTimeoutOnPanicContextDeadlineExceeded(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, _ := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+	handler, _, restoreFunc := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
 		panic(context.DeadlineExceeded)
 	}))
+	defer restoreFunc()
+
 	recorder := responseForHTTPHandler(handler)
 	assert.Equal(`{"success":false,"message":"Request Timeout"}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusRequestTimeout, recorder.Code)

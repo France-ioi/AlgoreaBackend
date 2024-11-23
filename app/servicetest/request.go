@@ -27,7 +27,8 @@ func GetResponseForRouteWithMockedDBAndUser(
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
 	setRouterFunc func(router *chi.Mux, baseService *service.Base),
 ) (*http.Response, sqlmock.Sqlmock, string, error) {
-	logger, hook := loggingtest.NewNullLogger()
+	hook, restoreFunc := logging.MockSharedLoggerHook()
+	defer restoreFunc()
 
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }() // nolint: gosec
@@ -38,7 +39,7 @@ func GetResponseForRouteWithMockedDBAndUser(
 	base.SetGlobalStore(database.NewDataStore(db))
 	router := chi.NewRouter()
 	router.Use(auth.MockUserMiddleware(user))
-	router.Use(middleware.RequestLogger(&logging.StructuredLogger{Logger: logger}))
+	router.Use(middleware.RequestLogger(&logging.StructuredLogger{}))
 	setRouterFunc(router, &base)
 
 	ts := httptest.NewServer(router)
@@ -50,12 +51,12 @@ func GetResponseForRouteWithMockedDBAndUser(
 		response, err = http.DefaultClient.Do(request)
 	}
 
-	return response, mock, hook.GetAllLogs(), err
+	return response, mock, (&loggingtest.Hook{Hook: hook}).GetAllLogs(), err
 }
 
 // WithLoggingMiddleware wraps the given handler in NullLogger with hook.
-func WithLoggingMiddleware(appHandler http.Handler) (http.Handler, *loggingtest.Hook) {
-	logger, hook := loggingtest.NewNullLogger()
-	loggingMiddleware := middleware.RequestLogger(&logging.StructuredLogger{Logger: logger})
-	return loggingMiddleware(appHandler), hook
+func WithLoggingMiddleware(appHandler http.Handler) (http.Handler, *loggingtest.Hook, func()) {
+	hook, restoreFunc := logging.MockSharedLoggerHook()
+	loggingMiddleware := middleware.RequestLogger(&logging.StructuredLogger{})
+	return loggingMiddleware(appHandler), &loggingtest.Hook{Hook: hook}, restoreFunc
 }

@@ -29,8 +29,9 @@ func CreateNewTempSession(s *database.DataStore, userID int64) (
 
 	mustNotBeError(s.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn))
 
-	logging.Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
-		expiresIn, userID)
+	logging.SharedLogger.WithContext(s.GetContext()).
+		Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
+			expiresIn, userID)
 
 	return
 }
@@ -44,8 +45,9 @@ func RefreshTempUserSession(s *database.DataStore, userID, sessionID int64) (acc
 
 	mustNotBeError(s.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn))
 
-	logging.Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
-		expiresIn, userID)
+	logging.SharedLogger.WithContext(s.GetContext()).
+		Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
+			expiresIn, userID)
 
 	return
 }

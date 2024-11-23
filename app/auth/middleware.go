@@ -83,7 +83,7 @@ func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *ht
 		user, sessionID, err = service.GetStore(r).Sessions().GetUserAndSessionIDByValidAccessToken(accessToken)
 		authorized = err == nil
 		if err != nil && !gorm.IsRecordNotFoundError(err) {
-			logging.Errorf("Can't validate an access token: %s", err)
+			logging.SharedLogger.WithContext(r.Context()).Errorf("Can't validate an access token: %s", err)
 
 			return r.Context(), false, "", err
 		}
