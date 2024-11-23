@@ -49,10 +49,6 @@ func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
 	logFields["type"] = "web"
 	logFields["ts"] = time.Now().UTC().Format(time.RFC1123)
 
-	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
-		logFields["req_id"] = reqID
-	}
-
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"

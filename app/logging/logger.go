@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/sirupsen/logrus" //nolint:depguard
 	"github.com/spf13/viper"
 )
@@ -98,6 +99,11 @@ func ResetShared() {
 // WithContext returns a new entry with the given context.
 func (l *Logger) WithContext(ctx context.Context) *logrus.Entry {
 	entry := l.logrusLogger.WithContext(ctx)
+
+	requestID := middleware.GetReqID(ctx)
+	if requestID != "" {
+		entry = entry.WithField("req_id", requestID)
+	}
 
 	return entry
 }
