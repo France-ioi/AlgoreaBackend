@@ -24,10 +24,11 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 
 		callTime := time.Now()
 		response, err := client.Get(endpoint + "?types=" + strings.Join(types, ","))
-		logging.Infof("Propagation endpoint called: %v, types=%v, duration=%v", endpoint, types, time.Since(callTime))
+		logging.SharedLogger.WithContext(store.GetContext()).
+			Infof("Propagation endpoint called: %v, types=%v, duration=%v", endpoint, types, time.Since(callTime))
 
 		if err != nil {
-			logging.Errorf("Propagation endpoint error: %v", err)
+			logging.SharedLogger.WithContext(store.GetContext()).Errorf("Propagation endpoint error: %v", err)
 
 			endpointFailed = true
 		} else {
@@ -36,7 +37,8 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 			}(response)
 
 			if response.StatusCode != http.StatusOK {
-				logging.Errorf("Propagation endpoint error: status=%v", response.StatusCode)
+				logging.SharedLogger.WithContext(store.GetContext()).
+					Errorf("Propagation endpoint error: status=%v", response.StatusCode)
 
 				endpointFailed = true
 			}

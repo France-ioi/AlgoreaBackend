@@ -45,7 +45,8 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
 		return nil, fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode)
 	}
 	var decoded map[string]interface{}
@@ -53,13 +54,15 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	decoder.UseNumber()
 	err = decoder.Decode(&decoded)
 	if err != nil {
-		logging.Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
 		return nil, errors.New("can't parse user's profile")
 	}
 
 	profile, err = convertUserProfile(decoded)
 	if err != nil {
-		logging.Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
 		return nil, errors.New("user's profile is invalid")
 	}
 	return profile, nil
@@ -184,8 +187,9 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.Warnf("Login module returned a bad status code for %s (status code = %d, response = %q)",
-			urlPath, response.StatusCode, responseBody)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("Login module returned a bad status code for %s (status code = %d, response = %q)",
+				urlPath, response.StatusCode, responseBody)
 		panic(errors.New("bad response code"))
 	}
 
@@ -193,8 +197,9 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	n, err := base64.StdEncoding.Decode(decodedBody, responseBody)
 	decodedBody = decodedBody[0:n]
 	if err != nil {
-		logging.Warnf("Can't decode response from the login module for %s (status code = %d, response = %q): %s",
-			urlPath, response.StatusCode, responseBody, err)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("Can't decode response from the login module for %s (status code = %d, response = %q): %s",
+				urlPath, response.StatusCode, responseBody, err)
 		panic(err)
 	}
 	decryptedBody := decryptAes128Ecb(decodedBody, []byte(clientKey)[:16]) // note that only the first 16 bytes are used
@@ -202,12 +207,14 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	decoder.UseNumber()
 	err = decoder.Decode(&decodedResponse)
 	if err != nil {
-		logging.Warnf("Can't parse response from the login module for %s (decrypted response = %q, encrypted response = %q): %s",
-			urlPath, decryptedBody, decodedBody, err)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("Can't parse response from the login module for %s (decrypted response = %q, encrypted response = %q): %s",
+				urlPath, decryptedBody, decodedBody, err)
 		panic(err)
 	}
 	if !decodedResponse.Success {
-		logging.Warnf("The login module returned an error for %s: %s", urlPath, decodedResponse.Error)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("The login module returned an error for %s: %s", urlPath, decodedResponse.Error)
 	}
 	return decodedResponse, nil
 }

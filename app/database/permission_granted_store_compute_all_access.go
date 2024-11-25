@@ -114,7 +114,8 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 			rowsAffected := store.Exec(queryMarkSelfAsChildren).RowsAffected()
 			mustNotBeError(store.Error())
 
-			logging.Debugf("Duration of permissions propagation step: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
+			logging.SharedLogger.WithContext(store.ctx).
+				Debugf("Duration of permissions propagation step: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
 
 			hasChanges = rowsAffected > 0
 

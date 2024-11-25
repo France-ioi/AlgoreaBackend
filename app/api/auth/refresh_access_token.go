@@ -97,7 +97,8 @@ func (srv *Service) refreshTokens(
 	err := store.Sessions().Where("session_id = ?", sessionID).
 		PluckFirst("refresh_token", &refreshToken).Error()
 	if refreshToken == "" {
-		logging.Warnf("No refresh token found in the DB for user %d", user.GroupID)
+		logging.SharedLogger.WithContext(ctx).
+			Warnf("No refresh token found in the DB for user %d", user.GroupID)
 		return "", 0, service.ErrNotFound(errors.New("no refresh token found in the DB for the authenticated user"))
 	}
 	service.MustNotBeError(err)

@@ -6,7 +6,6 @@ package loggingtest
 import (
 	"strings"
 
-	"github.com/sirupsen/logrus"            //nolint
 	"github.com/sirupsen/logrus/hooks/test" //nolint
 )
 
@@ -17,7 +16,7 @@ type Hook struct {
 
 const newLine = "\n"
 
-// GetAllLogs returns all the logs collected by the hook as a string.
+// GetAllLogs returns all the log messages (entry.Message) collected by the hook as a string.
 func (hook *Hook) GetAllLogs() string {
 	logs := ""
 
@@ -49,10 +48,4 @@ func (hook *Hook) GetAllStructuredLogs() string {
 	}
 
 	return logs
-}
-
-// NewNullLogger creates a discarding logger and installs the test hook.
-func NewNullLogger() (*logrus.Logger, *Hook) {
-	logger, hook := test.NewNullLogger()
-	return logger, &Hook{hook}
 }

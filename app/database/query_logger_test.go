@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql/driver"
 	"regexp"
 	"testing"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -66,25 +68,16 @@ func Test_getSQLExecutionPlanLoggingFunc_DoesNothingDependingOnParameters(t *tes
 			emptyFunc = func() { called = true }
 
 			logConfig := &LogConfig{
-				Logger:            nil,
 				LogSQLQueries:     tt.logSQLQueries,
 				AnalyzeSQLQueries: tt.analyzeSQLQueries,
 			}
 
-			getSQLExecutionPlanLoggingFunc(db.db.CommonDB().(*sqlDBWrapper), logConfig, tt.query)()
+			getSQLExecutionPlanLoggingFunc(db.ctx, db.db.CommonDB().(*sqlDBWrapper), logConfig, tt.query)()
 			assert.True(t, called)
 
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
-}
-
-type getSQLExecutionPlanLoggingFuncTestLogger struct {
-	printsCalled [][]interface{}
-}
-
-func (l *getSQLExecutionPlanLoggingFuncTestLogger) Print(args ...interface{}) {
-	l.printsCalled = append(l.printsCalled, args)
 }
 
 func Test_getSQLExecutionPlanLoggingFunc_RunsExplainAnalyzeForSuitableQueries(t *testing.T) {
@@ -107,28 +100,124 @@ func Test_getSQLExecutionPlanLoggingFunc_RunsExplainAnalyzeForSuitableQueries(t 
 
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
+			loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
+			defer loggerRestoreFunc()
 
 			logConfig := &LogConfig{
-				Logger:            &getSQLExecutionPlanLoggingFuncTestLogger{},
 				LogSQLQueries:     true,
 				AnalyzeSQLQueries: true,
 			}
 
 			mock.ExpectQuery("^" + regexp.QuoteMeta("EXPLAIN ANALYZE "+query) + "$").
 				WillReturnRows(mock.NewRows([]string{"plan"}).AddRow("plan"))
-			getSQLExecutionPlanLoggingFunc(db.db.CommonDB().(*sqlDBWrapper), logConfig, query)()
+			getSQLExecutionPlanLoggingFunc(db.ctx, db.db.CommonDB().(*sqlDBWrapper), logConfig, query)()
 			require.NoError(t, mock.ExpectationsWereMet())
 
-			printsCalled := logConfig.Logger.(*getSQLExecutionPlanLoggingFuncTestLogger).printsCalled
+			printsCalled := loggerHook.AllEntries()
 			require.Len(t, printsCalled, 1)
 			printCalled := printsCalled[0]
-			require.Len(t, printCalled, 5)
+			require.Len(t, printCalled.Data, 3)
 
-			assert.Equal(t, "sql", printCalled[0])
-			assert.IsType(t, "", printCalled[1])
-			assert.IsType(t, time.Duration(0), printCalled[2])
-			assert.Equal(t, "query execution plan:\nplan", printCalled[3])
-			assert.Nil(t, printCalled[4])
+			assertDurationIsOK(t, printCalled)
+			assert.Equal(t, "db", printCalled.Data["type"])
+			assert.IsType(t, "", printCalled.Data["fileline"])
+			assert.Equal(t, "query execution plan:\nplan\n", printCalled.Message)
+			assert.NotContains(t, printCalled.Data, "rows")
+		})
+	}
+}
+
+type timeType time.Time
+
+// Value returns a timeType Value (*time.Time).
+func (t *timeType) Value() (driver.Value, error) {
+	if t == nil {
+		return nil, nil
+	}
+	return (*time.Time)(t).UTC().Format("2006-01-02 15:04:05.999999"), nil
+}
+
+func Test_fillSQLPlaceholders(t *testing.T) {
+	timeValue := time.Date(2022, 8, 2, 15, 4, 5, 123456789, time.UTC)
+	timeValuePtr := timeValue
+	timeTypeValue := timeType(timeValue)
+	timeTypeValuePtr := &timeTypeValue
+	int64Value := int64(12345)
+	int64Ptr := &int64Value
+	nilValue := (*int64)(nil)
+	nilValuePtr := &nilValue
+
+	type testArgs struct {
+		query  string
+		values []interface{}
+	}
+
+	tests := []struct {
+		name     string
+		args     testArgs
+		expected string
+	}{
+		{
+			name: "scalar numbers and booleans",
+			args: testArgs{
+				query: "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`, `c7`, `c8`, `c9`, `c10`, `c11`, `c12`, `c13`) VALUES " +
+					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+				values: []interface{}{
+					1, int8(2), int16(3), int32(4), int64(5), uint(6), uint8(7), uint16(8), uint32(9), uint64(10),
+					float32(0.11), float64(0.12), true,
+				},
+			},
+			expected: "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`, `c7`, `c8`, `c9`, `c10`, `c11`, `c12`, `c13`) VALUES " +
+				"(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0.11, 0.12, true)",
+		},
+		{
+			name: "time values",
+			args: testArgs{
+				query:  "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`) VALUES (?, ?, ?, ?, ?, ?)",
+				values: []interface{}{timeValue, timeValuePtr, timeTypeValue, timeTypeValuePtr, (*timeType)(nil), time.Time{}},
+			},
+			expected: "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`) VALUES " +
+				"('2022-08-02 15:04:05.123456789', '2022-08-02 15:04:05.123456789', " +
+				"'2022-08-02 15:04:05.123456', '2022-08-02 15:04:05.123456', NULL, '0000-00-00 00:00:00')",
+		},
+		{
+			name: "$n placeholders",
+			args: testArgs{
+				query:  "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`) VALUES ($1, $2, $3, $3)",
+				values: []interface{}{int64(123451234512345), "testsessiontestsessiontestsessio", int64(1), int64(2)},
+			},
+			expected: "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`) VALUES (123451234512345, 'testsessiontestsessiontestsessio', 1, 1)",
+		},
+		{
+			name: "bytes values",
+			args: testArgs{
+				query:  "INSERT INTO `t` (`c1`, `c2`) VALUES ($1, $2)",
+				values: []interface{}{[]byte("test"), []byte{0x01, 0x02, 0x03}},
+			},
+			expected: "INSERT INTO `t` (`c1`, `c2`) VALUES ('test', '<binary>')",
+		},
+		{
+			name: "pointer values",
+			args: testArgs{
+				query:  "INSERT INTO `t` (`c1`, `c2`) VALUES (?, ?)",
+				values: []interface{}{int64Ptr, nilValuePtr},
+			},
+			expected: "INSERT INTO `t` (`c1`, `c2`) VALUES (12345, NULL)",
+		},
+		{
+			name: "nil value",
+			args: testArgs{
+				query:  "INSERT INTO `t` (`c1`) VALUES (?)",
+				values: []interface{}{nil},
+			},
+			expected: "INSERT INTO `t` (`c1`) VALUES (NULL)",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, fillSQLPlaceholders(test.args.query, test.args.values))
 		})
 	}
 }

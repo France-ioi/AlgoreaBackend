@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/sirupsen/logrus" //nolint:depguard
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -600,6 +602,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := sqlDBWrapper.BeginTx(ctx, &sql.TxOptions{})
 			require.NoError(t, err)
 			sqlDBWrapper.logConfig.LogSQLQueries = oldLogSQLQueriesValue
+			tx.logConfig.LogSQLQueries = oldLogSQLQueriesValue
 			cancelFunc()
 
 			assert.Eventually(t, func() bool {
@@ -630,6 +633,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := sqlDBWrapper.BeginTx(ctx, &sql.TxOptions{})
 			require.NoError(t, err)
 			sqlDBWrapper.logConfig.LogSQLQueries = oldLogSQLQueriesValue
+			tx.logConfig.LogSQLQueries = oldLogSQLQueriesValue
 			cancelFunc()
 
 			assert.Eventually(t, func() bool {
@@ -673,7 +677,6 @@ func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sql
 
 	db.logConfig.LogSQLQueries = logSQLQueries
 	db.logConfig.AnalyzeSQLQueries = analyzeSQLQueries
-	db.logConfig.Logger = logging.NewStructuredDBLogger()
 
 	expectedQuery, expectedAffectedRows, expectedError := test.funcToRun(t, db, mock, analyzeSQLQueries)
 
@@ -696,7 +699,7 @@ func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sql
 		assert.Equal(t, "info", logEntries[0].Level.String())
 		assert.Equal(t, expectedQuery, logEntries[0].Message)
 		assert.Equal(t, "db", logEntries[0].Data["type"])
-		assert.Greater(t, logEntries[0].Data["duration"], 0.0)
+		assertDurationIsOK(t, logEntries[0])
 		if expectedAffectedRows != nil {
 			assert.Equal(t, *expectedAffectedRows, logEntries[0].Data["rows"])
 		} else {
@@ -718,9 +721,138 @@ func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sql
 			assert.Equal(t, "Failed to get an execution plan for a SQL query: "+expectedError.Error(), logEntries[index].Message)
 		} else {
 			assert.Equal(t, "info", logEntries[index].Level.String())
-			assert.Equal(t, "query execution plan: plan", logEntries[index].Message)
-			assert.Greater(t, logEntries[index].Data["duration"], 0.0)
+			assert.Equal(t, "query execution plan:\nplan\n", logEntries[index].Message)
+			assertDurationIsOK(t, logEntries[index])
 		}
 		assert.Equal(t, "db", logEntries[index].Data["type"])
 	}
+}
+
+func assertDurationIsOK(t *testing.T, entry *logrus.Entry) {
+	assert.Contains(t, entry.Data, "duration")
+	if duration, ok := entry.Data["duration"]; ok {
+		assert.IsType(t, "", duration)
+		if durationStr, ok := duration.(string); ok {
+			parsedDuration, err := time.ParseDuration(durationStr)
+			assert.NoError(t, err)
+			if err == nil {
+				assert.Greater(t, parsedDuration, 0*time.Second)
+			}
+		}
+	}
+}
+
+func Test_SQLQueryLogging_Select(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
+	defer loggerRestoreFunc()
+
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	conf.Set("LogSQLQueries", true)
+	logging.SharedLogger.Configure(conf)
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	timeParam := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+
+	mock.ExpectQuery(`^SELECT \$1, \$2, \$3, \$4, \$5$`).
+		WithArgs(1, timeParam, "foo", []byte("bar"), nil).
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+
+	var result []interface{}
+	db.Raw("SELECT $1, $2, $3, $4, $5", 1, timeParam, "foo", []byte("bar"), nil).Scan(&result)
+	assert.Equal(t, `SELECT 1, '2009-11-10 23:00:00', 'foo', 'bar', NULL`, loggerHook.LastEntry().Message)
+	data := loggerHook.LastEntry().Data
+	assert.Equal(t, "db", data["type"])
+	assertDurationIsOK(t, loggerHook.LastEntry())
+	assert.NotContains(t, data, "rows")
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_SQLQueryLogging_Update(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
+	defer loggerRestoreFunc()
+
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	conf.Set("LogSQLQueries", true)
+	logging.SharedLogger.Configure(conf)
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	timeParam := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+
+	mock.ExpectExec(`^UPDATE t1 SET c1=\$1, c2=\$2, c3=\$3, c4=\$4, c5=\$5$`).
+		WithArgs(1, timeParam, "foo", []byte("bar"), nil).
+		WillReturnResult(sqlmock.NewResult(-1, 123))
+
+	db.Exec("UPDATE t1 SET c1=$1, c2=$2, c3=$3, c4=$4, c5=$5", 1, timeParam, "foo", []byte("bar"), nil)
+	assert.Equal(t, `UPDATE t1 SET c1=1, c2='2009-11-10 23:00:00', c3='foo', c4='bar', c5=NULL`, loggerHook.LastEntry().Message)
+	data := loggerHook.LastEntry().Data
+	assert.Equal(t, "db", data["type"])
+	assertDurationIsOK(t, loggerHook.LastEntry())
+	assert.Equal(t, int64(123), data["rows"].(int64))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_SQLQueryLogging__SQLWithInterrogationMark(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
+	defer loggerRestoreFunc()
+
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	conf.Set("LogSQLQueries", true)
+	logging.SharedLogger.Configure(conf)
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery(`^SELECT \?$`).WithArgs(1).WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+
+	var result []interface{}
+	db.Raw("SELECT ?", 1).Scan(&result)
+	assert.Equal(t, "SELECT 1", loggerHook.LastEntry().Message)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_SQLQueryLogging_SQLError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
+	defer loggerRestoreFunc()
+
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	conf.Set("LogSQLQueries", true)
+	conf.Set("Level", "debug")
+	logging.SharedLogger.Configure(conf)
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectQuery("SELECT 2").WillReturnError(errors.New("a query error"))
+
+	var result []interface{}
+	db.Raw("SELECT 2").Scan(&result)
+
+	assert.Equal(t, "SELECT 2", loggerHook.Entries[0].Message)
+	entry := loggerHook.Entries[0]
+	data := entry.Data
+	assert.Equal(t, "db", data["type"])
+	assertDurationIsOK(t, &entry)
+	assert.Nil(t, data["rows"])
+	assert.NoError(t, mock.ExpectationsWereMet())
+
+	assert.Equal(t, "a query error", loggerHook.Entries[1].Message)
+	assert.Equal(t, "error", loggerHook.Entries[1].Level.String())
+	assert.NotNil(t, loggerHook.Entries[1].Time)
+	assert.Equal(t, "db", loggerHook.Entries[1].Data["type"])
 }

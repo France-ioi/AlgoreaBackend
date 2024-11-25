@@ -1,32 +1,34 @@
-package logging
+package database
 
 import (
 	"context"
 	"database/sql/driver"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/luna-duclos/instrumentedsql"
+
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[(?:<nil>|[\w.]+) )|$)`)
 
-// NewRawDBLogger returns a logger for raw database actions using an existing dblogger and rawLogMode setting.
-func NewRawDBLogger(logger DBLogger, rawLogMode bool) instrumentedsql.Logger {
+// NewRawDBLogger returns a logger for raw database actions.
+func NewRawDBLogger() instrumentedsql.Logger {
 	return instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
-		if !rawLogMode {
-			return
-		}
-
 		valuesMap := prepareRawDBLoggerValuesMap(keyvals)
 		if valuesMap["err"] != nil && valuesMap["err"] == driver.ErrSkip { // duplicated message
 			return
 		}
 
-		args := make([]interface{}, 0, 4)
+		if valuesMap["duration"] != nil {
+			valuesMap["duration"] = valuesMap["duration"].(time.Duration).String()
+		}
 
-		args = append(args, "rawsql", ctx, msg, valuesMap)
-		logger.Print(args...)
+		valuesMap["type"] = "db"
+
+		log.SharedLogger.WithContext(ctx).WithFields(valuesMap).Info(msg)
 	})
 }
 

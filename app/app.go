@@ -2,6 +2,7 @@
 package app
 
 import (
+	"context"
 	crand "crypto/rand"
 	"encoding/binary"
 	"fmt"
@@ -75,7 +76,7 @@ func (app *Application) Reset(config *viper.Viper) error {
 	// Init DB
 	db, err := database.Open(dbConfig.FormatDSN())
 	if err != nil {
-		logging.WithField("module", "database").Error(err)
+		logging.SharedLogger.WithContext(context.Background()).WithField("module", "database").Error(err)
 		return err
 	}
 

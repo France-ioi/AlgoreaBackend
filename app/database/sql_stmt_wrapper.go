@@ -33,8 +33,8 @@ type SQLStmtWrapper struct {
 // ExecContext executes a prepared statement with the given arguments and
 // returns a [sql.Result] summarizing the effect of the statement.
 func (s *SQLStmtWrapper) ExecContext(ctx context.Context, args ...interface{}) (result sql.Result, err error) {
-	defer getSQLExecutionPlanLoggingFunc(s.db, s.logConfig, s.sql, args...)()
-	defer getSQLQueryLoggingFunc(func() *int64 {
+	defer getSQLExecutionPlanLoggingFunc(ctx, s.db, s.logConfig, s.sql, args...)()
+	defer getSQLQueryLoggingFunc(ctx, func() *int64 {
 		rowsAffected, _ := result.RowsAffected()
 		return &rowsAffected
 	}, &err, gorm.NowFunc(), s.sql, args...)(s.logConfig)
@@ -52,8 +52,8 @@ func (s *SQLStmtWrapper) Exec(...interface{}) (result sql.Result, err error) {
 // QueryContext executes a prepared query statement with the given arguments
 // and returns the query results as a [*sql.Rows].
 func (s *SQLStmtWrapper) QueryContext(ctx context.Context, args ...interface{}) (_ *sql.Rows, err error) {
-	defer getSQLExecutionPlanLoggingFunc(s.db, s.logConfig, s.sql, args...)()
-	defer getSQLQueryLoggingFunc(nil, &err, gorm.NowFunc(), s.sql, args...)(s.logConfig)
+	defer getSQLExecutionPlanLoggingFunc(ctx, s.db, s.logConfig, s.sql, args...)()
+	defer getSQLQueryLoggingFunc(ctx, nil, &err, gorm.NowFunc(), s.sql, args...)(s.logConfig)
 
 	return s.stmt.QueryContext(ctx, args...)
 }
@@ -77,11 +77,11 @@ func (s *SQLStmtWrapper) Query(...interface{}) (_ *sql.Rows, err error) {
 //	var name string
 //	err := nameByUseridStmt.QueryRow(ctx, id).Scan(&name)
 func (s *SQLStmtWrapper) QueryRowContext(ctx context.Context, args ...interface{}) (row *sql.Row) {
-	defer getSQLExecutionPlanLoggingFunc(s.db, s.logConfig, s.sql, args...)()
+	defer getSQLExecutionPlanLoggingFunc(ctx, s.db, s.logConfig, s.sql, args...)()
 	startTime := gorm.NowFunc()
 	defer func() {
 		err := row.Err()
-		getSQLQueryLoggingFunc(nil, &err, startTime, s.sql, args...)(s.logConfig)
+		getSQLQueryLoggingFunc(ctx, nil, &err, startTime, s.sql, args...)(s.logConfig)
 	}()
 
 	return s.stmt.QueryRowContext(ctx, args...)

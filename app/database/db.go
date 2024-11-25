@@ -26,9 +26,9 @@ import (
 
 // LogConfig is the configuration for the database logs.
 type LogConfig struct {
-	Logger            log.DBLogger
-	LogSQLQueries     bool
-	AnalyzeSQLQueries bool
+	LogSQLQueries            bool
+	AnalyzeSQLQueries        bool
+	LogRetryableErrorsAsInfo bool
 }
 
 type cte struct {
@@ -44,8 +44,8 @@ type DB struct {
 	logConfig *LogConfig
 }
 
-// ErrLockWaitTimeoutExceeded is returned when we cannot acquire a lock.
-var ErrLockWaitTimeoutExceeded = errors.New("lock wait timeout exceeded")
+// ErrNamedLockWaitTimeoutExceeded is returned when we cannot acquire a named lock.
+var ErrNamedLockWaitTimeoutExceeded = errors.New("named lock wait timeout exceeded")
 
 // newDB wraps *gorm.DB.
 func newDB(ctx context.Context, db *gorm.DB, ctes []cte, logConfig *LogConfig) *DB {
@@ -62,10 +62,7 @@ func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
 
 // Open connects to the database and tests the connection.
 func Open(source interface{}) (*DB, error) {
-	logger := log.SharedLogger.NewDBLogger()
-
 	lc := LogConfig{
-		Logger:            logger,
 		LogSQLQueries:     log.SharedLogger.IsSQLQueriesLoggingEnabled(),
 		AnalyzeSQLQueries: log.SharedLogger.IsSQLQueriesAnalyzingEnabled(),
 	}
@@ -123,8 +120,7 @@ func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB,
 		}
 
 		if registerDriver {
-			logger := log.SharedLogger.NewDBLogger()
-			rawDBLogger := log.NewRawDBLogger(logger, log.SharedLogger.IsRawSQLQueriesLoggingEnabled())
+			rawDBLogger := NewRawDBLogger()
 			sql.Register("instrumented-mysql",
 				instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
 		}
@@ -147,10 +143,6 @@ const (
 )
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
-	if count > transactionRetriesLimit {
-		return errors.New("transaction retries limit exceeded")
-	}
-
 	conn.sleepBeforeStartingTransactionIfNeeded(count)
 
 	txOpts := &sql.TxOptions{}
@@ -188,8 +180,14 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
-	err = txFunc(newDB(conn.ctx, txDB, nil, conn.logConfig))
+	txLogConfig := txDB.CommonDB().(*sqlTxWrapper).logConfig
+	txLogConfig.LogRetryableErrorsAsInfo = true
+	err = txFunc(newDB(conn.ctx, txDB, nil, txLogConfig))
 	return err
+}
+
+func isRetryableError(err error) bool {
+	return IsDeadlockError(err) || IsLockWaitTimeoutExceededError(err)
 }
 
 func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
@@ -239,14 +237,21 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 	errToHandleError, _ := errToHandle.(error)
 
 	// Deadlock found / lock wait timeout exceeded
-	if errToHandle != nil && (IsDeadlockError(errToHandleError) || IsLockWaitTimeoutExceededError(errToHandleError)) {
+	if errToHandle != nil && isRetryableError(errToHandleError) {
 		if rollbackErr != nil { // do not retry if rollback failed
 			// as the previous error was a retryable error, we should return the rollback error, as it is more important
 			*returnErr = rollbackErr
 			return true
 		}
 		// retry
-		log.Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
+		if count == transactionRetriesLimit {
+			logDBError(conn.ctx, conn.logConfig,
+				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %w", errToHandleError))
+			*returnErr = errors.New("transaction retries limit exceeded")
+			return true
+		}
+		log.SharedLogger.WithContext(conn.ctx).WithField("type", "db").
+			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
 		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
 		return true
 	}
@@ -277,7 +282,6 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	var shouldDiscardNamedLockDBConnection bool
 	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx)
 	if err != nil {
-		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
 		return err
 	}
 	defer func() {
@@ -289,11 +293,10 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	var getLockResult *int64
 	err = namedLockDBConnection.QueryRowContext(conn.ctx, "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
 	if err != nil {
-		conn.logConfig.Logger.Print("error", fileWithLineNum(), err)
 		return err
 	}
 	if getLockResult == nil || *getLockResult != 1 {
-		return ErrLockWaitTimeoutExceeded
+		return ErrNamedLockWaitTimeoutExceeded
 	}
 
 	defer func() {
@@ -305,12 +308,13 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 			// on error we just close the connection to release the lock
 			shouldDiscardNamedLockDBConnection = true
 			// do not return an error, it should not affect the result
-			conn.logConfig.Logger.Print("error", fileWithLineNum(),
+			logDBError(conn.ctx, conn.logConfig,
 				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
 		}
 	}()
 
-	log.Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
+	log.SharedLogger.WithContext(conn.ctx).WithField("type", "db").
+		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
 
 	return funcToCall(conn)
 }
@@ -822,6 +826,11 @@ func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
 	return tx.prepare(query)
 }
 
+// GetContext returns the context of the DB connection.
+func (conn *DB) GetContext() context.Context {
+	return conn.ctx
+}
+
 const keyTriesCount = 10
 
 func (conn *DB) retryOnDuplicatePrimaryKeyError(f func(db *DB) error) error {
@@ -841,7 +850,7 @@ func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db 
 		return nil
 	}
 	err := fmt.Errorf("cannot generate a new %s", nameInError)
-	log.Error(err)
+	logDBError(conn.ctx, conn.logConfig, err)
 	return err
 }
 

@@ -66,8 +66,7 @@ func TestDataStore_WithNamedLock_WorksOutsideOfTransaction(t *testing.T) {
 	defer restoreFunc()
 	rawDB, err := testhelpers.OpenRawDBConnection()
 	require.NoError(t, err)
-	db, err := database.OpenWithLogConfig(rawDB,
-		database.LogConfig{Logger: logging.NewStructuredDBLogger(), LogSQLQueries: false}, true)
+	db, err := database.OpenWithLogConfig(rawDB, database.LogConfig{LogSQLQueries: false}, true)
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 
