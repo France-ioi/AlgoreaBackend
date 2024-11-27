@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.23.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.6...v2.23.7) - 2024-11-27
+- log retryable DB errors (deadlocks and lock wait timeouts) as INFO, rework logging, introduce console log formatter, add req_id into every log entry implicitly
+
 ## [v2.23.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.5...v2.23.6) - 2024-11-20
 - make tests of app/logging cacheable
 - use the latest version of Gorm from jinzhu/gorm instead of a patched version from France-ioi/gorm
