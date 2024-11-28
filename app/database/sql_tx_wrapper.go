@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"unsafe"
 
 	"github.com/jinzhu/gorm"
 
@@ -27,7 +28,9 @@ func (sqlTX *sqlTxWrapper) Exec(query string, args ...interface{}) (result sql.R
 		return &affectedRows
 	}, &err, gorm.NowFunc(), query, args...)(sqlTX.logConfig)
 
-	return sqlTX.sqlTx.ExecContext(sqlTX.ctx, query, args...)
+	result, err = sqlTX.sqlTx.ExecContext(sqlTX.ctx, query, args...)
+	err = sqlTX.handleError(err)
+	return result, err
 }
 
 // Prepare is not implemented intentionally and panics if called. Instead, use [prepare].
@@ -47,6 +50,7 @@ func (sqlTX *sqlTxWrapper) Prepare(_ string) (*sql.Stmt, error) {
 // prepare uses the context of [sqlTxWrapper] internally.
 func (sqlTX *sqlTxWrapper) prepare(query string) (*SQLStmtWrapper, error) {
 	stmt, err := sqlTX.sqlTx.PrepareContext(sqlTX.ctx, query)
+	err = sqlTX.handleError(err)
 	if err != nil {
 		logDBError(sqlTX.ctx, sqlTX.logConfig, err)
 		return nil, err
@@ -57,11 +61,13 @@ func (sqlTX *sqlTxWrapper) prepare(query string) (*SQLStmtWrapper, error) {
 // Query executes a query that returns rows, typically a SELECT.
 //
 // Query uses the context of [sqlTxWrapper] internally.
-func (sqlTX *sqlTxWrapper) Query(query string, args ...interface{}) (_ *sql.Rows, err error) {
+func (sqlTX *sqlTxWrapper) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
 	defer getSQLQueryLoggingFunc(sqlTX.ctx, nil, &err, gorm.NowFunc(), query, args...)(sqlTX.logConfig)
 
-	return sqlTX.sqlTx.QueryContext(sqlTX.ctx, query, args...)
+	rows, err = sqlTX.sqlTx.QueryContext(sqlTX.ctx, query, args...)
+	err = sqlTX.handleError(err)
+	return rows, err
 }
 
 // QueryRow executes a query that is expected to return at most one row.
@@ -76,7 +82,10 @@ func (sqlTX *sqlTxWrapper) QueryRow(query string, args ...interface{}) (row *sql
 	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
 	startTime := gorm.NowFunc()
 	defer func() {
-		err := row.Err()
+		err := sqlTX.handleError(row.Err())
+		if err != nil {
+			row = (*sql.Row)(unsafe.Pointer(&sqlRowAccessor{err: err})) //nolint:gosec // G103: patch the error
+		}
 		getSQLQueryLoggingFunc(sqlTX.ctx, nil, &err, startTime, query, args...)(sqlTX.logConfig)
 	}()
 
@@ -109,12 +118,17 @@ func (sqlTX *sqlTxWrapper) Rollback() (err error) {
 	return sqlTX.handleCommitOrRollbackError(err)
 }
 
-func (sqlTX *sqlTxWrapper) handleCommitOrRollbackError(err error) error {
-	var errorWasPatched bool
+func (sqlTX *sqlTxWrapper) handleError(err error) error {
 	if err != nil && sqlTX.ctx.Err() != nil { // ignore the returned error if the context has been canceled before
 		err = sqlTX.ctx.Err() // return the context error instead as it is the root cause
-		errorWasPatched = true
 	}
+	return err
+}
+
+func (sqlTX *sqlTxWrapper) handleCommitOrRollbackError(err error) error {
+	newErr := sqlTX.handleError(err)
+	errorWasPatched := newErr != err
+	err = newErr
 	if err != nil {
 		errString := err.Error()
 		if errorWasPatched {
