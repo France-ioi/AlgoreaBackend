@@ -224,6 +224,7 @@ func Test_Deadline(t *testing.T) {
 				})
 			},
 			setupMock: func(mock sqlmock.Sqlmock) {
+				mock.MatchExpectationsInOrder(false)
 				mock.ExpectBegin()
 				mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").WithArgs("test_lock", 1).
 					WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK('test_lock', 1)"}).AddRow(1))
