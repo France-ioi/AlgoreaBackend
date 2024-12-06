@@ -4,7 +4,6 @@ package database_test
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -69,8 +68,8 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			if test.shouldCreateAttempts {
 				expectedAttempts = []map[string]interface{}{
 					{
-						"participant_id": strconv.FormatInt(newID, 10), "id": "0", "creator_id": nil, "parent_attempt_id": nil,
-						"root_item_id": nil, "created_at_set": "1",
+						"participant_id": newID, "id": int64(0), "creator_id": nil, "parent_attempt_id": nil,
+						"root_item_id": nil, "created_at_set": int64(1),
 					},
 				}
 			}
@@ -421,7 +420,7 @@ func TestGroupStore_DeleteGroup_RecomputesAccessForOrphanedSourceGroups(t *testi
 }
 
 func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
-	const expectedErrorMessage = "Error 1644: Unable to change groups.type from/to User/Team"
+	const expectedErrorMessage = "Error 1644 (45000): Unable to change groups.type from/to User/Team"
 
 	for _, test := range []struct {
 		oldType     string

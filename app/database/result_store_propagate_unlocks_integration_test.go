@@ -54,12 +54,12 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 
 	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow("1001", "content", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("1002", "content_with_descendants", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("2001", "content", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("2002", "info", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("4001", "none", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("4002", "content", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(1001, "content", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(1002, "content_with_descendants", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2001, "content", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2002, "info", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4001, "none", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4002, "content", oldTS, "9999-12-31 23:59:58", oldTS),
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
@@ -72,14 +72,14 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := range grantedPermissions {
-		grantedPermissions[i]["updated"] = "0"
+		grantedPermissions[i]["updated"] = int64(0)
 		delete(grantedPermissions[i], "latest_update_at")
 	}
 	const content = "content"
 	grantedPermissions[3]["can_view"] = content
 	grantedPermissions[4]["can_view"] = content
-	grantedPermissions[3]["updated"] = "1"
-	grantedPermissions[4]["updated"] = "1"
+	grantedPermissions[3]["updated"] = int64(1)
+	grantedPermissions[4]["updated"] = int64(1)
 
 	var result []map[string]interface{}
 	assert.NoError(t, dataStore.PermissionsGranted().
@@ -91,10 +91,10 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	assert.Equal(t, grantedPermissions, result)
 }
 
-func generateGrantedPermissionsRow(itemID, canView, canEnterFrom, canEnterUntil, latestUpdateAt string) map[string]interface{} {
+func generateGrantedPermissionsRow(itemID int64, canView, canEnterFrom, canEnterUntil, latestUpdateAt string) map[string]interface{} {
 	return map[string]interface{}{
-		"group_id": "101", "item_id": itemID, "can_view": canView, "can_enter_from": canEnterFrom,
-		"can_enter_until": canEnterUntil, "source_group_id": "101", "origin": "item_unlocking", "latest_update_at": latestUpdateAt,
+		"group_id": int64(101), "item_id": itemID, "can_view": canView, "can_enter_from": canEnterFrom,
+		"can_enter_until": canEnterUntil, "source_group_id": int64(101), "origin": "item_unlocking", "latest_update_at": latestUpdateAt,
 	}
 }
 
@@ -116,12 +116,12 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
 	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow("1001", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("1002", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2001", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2002", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4001", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4002", "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1002, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2002, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4002, "content", oldTS, "9999-12-31 23:59:59", oldTS),
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
@@ -149,12 +149,12 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 	futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow("1001", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("1002", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2001", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2002", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4001", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4002", "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 

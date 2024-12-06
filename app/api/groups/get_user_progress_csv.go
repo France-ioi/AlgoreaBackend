@@ -220,15 +220,12 @@ func processCSVResultRow(
 	currentRowNumber := 0
 	return func(m map[string]interface{}) error {
 		var score string
-		switch v := m["score"].(type) {
-		case string:
-			score = v
-		case nil:
-			score = ""
+		if m["score"] != nil {
+			score = fmt.Sprintf("%v", m["score"])
 		}
 
-		itemID := convertToInt64(m["item_id"])
-		groupID := convertToInt64(m["group_id"])
+		itemID := m["item_id"].(int64)
+		groupID := m["group_id"].(int64)
 
 		if currentRowNumber%uniqueItemsCount == 0 {
 			groupNames := generateGroupNamesFunc(groupID)
@@ -249,19 +246,6 @@ func processCSVResultRow(
 		currentRowNumber++
 		return nil
 	}
-}
-
-func convertToInt64(value interface{}) int64 {
-	var err error
-	var result int64
-	switch v := value.(type) {
-	case string:
-		result, err = strconv.ParseInt(v, 10, 64)
-		service.MustNotBeError(err)
-	case int64:
-		result = v
-	}
-	return result
 }
 
 func joinUserProgressResultsForCSV(db *database.DB, userID interface{}) *database.DB {
