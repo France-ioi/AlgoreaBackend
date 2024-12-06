@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"unsafe"
 
 	"github.com/jinzhu/gorm"
 )
@@ -39,7 +40,9 @@ func (s *SQLStmtWrapper) ExecContext(ctx context.Context, args ...interface{}) (
 		return &rowsAffected
 	}, &err, gorm.NowFunc(), s.sql, args...)(s.logConfig)
 
-	return s.stmt.ExecContext(ctx, args...)
+	result, err = s.stmt.ExecContext(ctx, args...)
+	err = s.handleError(ctx, err)
+	return result, err
 }
 
 /*
@@ -51,11 +54,13 @@ func (s *SQLStmtWrapper) Exec(...interface{}) (result sql.Result, err error) {
 
 // QueryContext executes a prepared query statement with the given arguments
 // and returns the query results as a [*sql.Rows].
-func (s *SQLStmtWrapper) QueryContext(ctx context.Context, args ...interface{}) (_ *sql.Rows, err error) {
+func (s *SQLStmtWrapper) QueryContext(ctx context.Context, args ...interface{}) (rows *sql.Rows, err error) {
 	defer getSQLExecutionPlanLoggingFunc(ctx, s.db, s.logConfig, s.sql, args...)()
 	defer getSQLQueryLoggingFunc(ctx, nil, &err, gorm.NowFunc(), s.sql, args...)(s.logConfig)
 
-	return s.stmt.QueryContext(ctx, args...)
+	rows, err = s.stmt.QueryContext(ctx, args...)
+	err = s.handleError(ctx, err)
+	return rows, err
 }
 
 /*
@@ -80,11 +85,19 @@ func (s *SQLStmtWrapper) QueryRowContext(ctx context.Context, args ...interface{
 	defer getSQLExecutionPlanLoggingFunc(ctx, s.db, s.logConfig, s.sql, args...)()
 	startTime := gorm.NowFunc()
 	defer func() {
-		err := row.Err()
+		err := s.handleError(ctx, row.Err())
+		if err != nil {
+			row = (*sql.Row)(unsafe.Pointer(&sqlRowAccessor{err: err})) //nolint:gosec // G103: patch the error
+		}
 		getSQLQueryLoggingFunc(ctx, nil, &err, startTime, s.sql, args...)(s.logConfig)
 	}()
 
 	return s.stmt.QueryRowContext(ctx, args...)
+}
+
+type sqlRowAccessor struct {
+	err  error
+	rows *sql.Rows
 }
 
 /*
@@ -97,4 +110,11 @@ func (s *SQLStmtWrapper) QueryRow(...interface{}) (row *sql.Row) {
 // Close closes the statement.
 func (s *SQLStmtWrapper) Close() error {
 	return s.stmt.Close()
+}
+
+func (s *SQLStmtWrapper) handleError(ctx context.Context, err error) error {
+	if err != nil && ctx.Err() != nil { // ignore the returned error if the context has been canceled before
+		err = ctx.Err() // return the context error instead as it is the root cause
+	}
+	return err
 }
