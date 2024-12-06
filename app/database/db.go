@@ -98,7 +98,7 @@ func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEna
 	dbConn, _ = gorm.Open(driverName, rawConnection)
 
 	// gorm.Open only pings the connection when it's sql.DB. So we need to ping it ourselves.
-	if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Ping(); err != nil && ownSQLDBConnection {
+	if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.PingContext(ctx); err != nil && ownSQLDBConnection {
 		_ = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Close()
 	}
 
