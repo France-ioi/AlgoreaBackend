@@ -297,7 +297,7 @@ func (ctx *TestContext) loadColumnsFromDBTable(gormDB *database.DB, dbTableName 
 		rowCells := make([]*messages.PickleTableCell, len(dbColumnNames))
 		for j, columnName := range dbColumnNames {
 			rowCells[j] = &messages.PickleTableCell{
-				Value: row[columnName].(string),
+				Value: fmt.Sprintf("%v", row[columnName]),
 			}
 		}
 

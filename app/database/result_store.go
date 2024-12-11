@@ -1,5 +1,7 @@
 package database
 
+import "github.com/France-ioi/AlgoreaBackend/v2/golang"
+
 // ResultStore implements database operations on `results`.
 type ResultStore struct {
 	*DataStore
@@ -36,10 +38,14 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 // MarkAsToBePropagated marks a given result as 'to_be_propagated'.
 func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int64, propagateNow bool) error {
 	err := s.Exec(`
-		INSERT IGNORE INTO results_propagate (participant_id, attempt_id, item_id, state)
+		INSERT IGNORE INTO `+s.resultsPropagateTableName()+` (participant_id, attempt_id, item_id, state)
 		VALUES(?, ?, ?, 'to_be_propagated')`, participantID, attemptID, itemID).Error()
 	if err == nil && propagateNow {
 		s.ScheduleResultsPropagation()
 	}
 	return err
+}
+
+func (s *ResultStore) resultsPropagateTableName() string {
+	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync", "results_propagate")
 }

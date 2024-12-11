@@ -32,16 +32,16 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			shouldDeleteOrphans: false,
 			remainingGroupIDs:   []int64{1, 2, 3, 4, 5},
 			remainingGroupsGroups: []map[string]interface{}{
-				{"parent_group_id": "2", "child_group_id": "5"},
+				{"parent_group_id": int64(2), "child_group_id": int64(5)},
 			},
 			remainingGroupsAncestors: []map[string]interface{}{
-				{"ancestor_group_id": "1", "child_group_id": "1"},
-				{"ancestor_group_id": "2", "child_group_id": "2"},
-				{"ancestor_group_id": "2", "child_group_id": "5"},
-				{"ancestor_group_id": "3", "child_group_id": "3"},
-				{"ancestor_group_id": "4", "child_group_id": "4"},
-				{"ancestor_group_id": "5", "child_group_id": "5"},
-				{"ancestor_group_id": "111", "child_group_id": "111"},
+				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
+				{"ancestor_group_id": int64(2), "child_group_id": int64(2)},
+				{"ancestor_group_id": int64(2), "child_group_id": int64(5)},
+				{"ancestor_group_id": int64(3), "child_group_id": int64(3)},
+				{"ancestor_group_id": int64(4), "child_group_id": int64(4)},
+				{"ancestor_group_id": int64(5), "child_group_id": int64(5)},
+				{"ancestor_group_id": int64(111), "child_group_id": int64(111)},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -64,14 +64,14 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			shouldDeleteOrphans: false,
 			remainingGroupIDs:   []int64{1, 2, 3},
 			remainingGroupsGroups: []map[string]interface{}{
-				{"parent_group_id": "3", "child_group_id": "2"},
+				{"parent_group_id": int64(3), "child_group_id": int64(2)},
 			},
 			remainingGroupsAncestors: []map[string]interface{}{
-				{"ancestor_group_id": "1", "child_group_id": "1"},
-				{"ancestor_group_id": "2", "child_group_id": "2"},
-				{"ancestor_group_id": "3", "child_group_id": "2"},
-				{"ancestor_group_id": "3", "child_group_id": "3"},
-				{"ancestor_group_id": "111", "child_group_id": "111"},
+				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
+				{"ancestor_group_id": int64(2), "child_group_id": int64(2)},
+				{"ancestor_group_id": int64(3), "child_group_id": int64(2)},
+				{"ancestor_group_id": int64(3), "child_group_id": int64(3)},
+				{"ancestor_group_id": int64(111), "child_group_id": int64(111)},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -93,10 +93,10 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			remainingGroupIDs:     []int64{1, 3, 4},
 			remainingGroupsGroups: nil,
 			remainingGroupsAncestors: []map[string]interface{}{
-				{"ancestor_group_id": "1", "child_group_id": "1"},
-				{"ancestor_group_id": "3", "child_group_id": "3"},
-				{"ancestor_group_id": "4", "child_group_id": "4"},
-				{"ancestor_group_id": "111", "child_group_id": "111"},
+				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
+				{"ancestor_group_id": int64(3), "child_group_id": int64(3)},
+				{"ancestor_group_id": int64(4), "child_group_id": int64(4)},
+				{"ancestor_group_id": int64(111), "child_group_id": int64(111)},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -115,17 +115,17 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			shouldDeleteOrphans: true,
 			remainingGroupIDs:   []int64{1, 3, 5, 10},
 			remainingGroupsGroups: []map[string]interface{}{
-				{"parent_group_id": "10", "child_group_id": "3"},
-				{"parent_group_id": "10", "child_group_id": "5"},
+				{"parent_group_id": int64(10), "child_group_id": int64(3)},
+				{"parent_group_id": int64(10), "child_group_id": int64(5)},
 			},
 			remainingGroupsAncestors: []map[string]interface{}{
-				{"ancestor_group_id": "1", "child_group_id": "1"},
-				{"ancestor_group_id": "3", "child_group_id": "3"},
-				{"ancestor_group_id": "5", "child_group_id": "5"},
-				{"ancestor_group_id": "10", "child_group_id": "3"},
-				{"ancestor_group_id": "10", "child_group_id": "5"},
-				{"ancestor_group_id": "10", "child_group_id": "10"},
-				{"ancestor_group_id": "111", "child_group_id": "111"},
+				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
+				{"ancestor_group_id": int64(3), "child_group_id": int64(3)},
+				{"ancestor_group_id": int64(5), "child_group_id": int64(5)},
+				{"ancestor_group_id": int64(10), "child_group_id": int64(3)},
+				{"ancestor_group_id": int64(10), "child_group_id": int64(5)},
+				{"ancestor_group_id": int64(10), "child_group_id": int64(10)},
+				{"ancestor_group_id": int64(111), "child_group_id": int64(111)},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -147,11 +147,11 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			remainingGroupIDs:     []int64{1, 8, 9, 11},
 			remainingGroupsGroups: nil,
 			remainingGroupsAncestors: []map[string]interface{}{
-				{"ancestor_group_id": "1", "child_group_id": "1"},
-				{"ancestor_group_id": "8", "child_group_id": "8"},
-				{"ancestor_group_id": "9", "child_group_id": "9"},
-				{"ancestor_group_id": "11", "child_group_id": "11"},
-				{"ancestor_group_id": "111", "child_group_id": "111"},
+				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
+				{"ancestor_group_id": int64(8), "child_group_id": int64(8)},
+				{"ancestor_group_id": int64(9), "child_group_id": int64(9)},
+				{"ancestor_group_id": int64(11), "child_group_id": int64(11)},
+				{"ancestor_group_id": int64(111), "child_group_id": int64(111)},
 			},
 			expectedGrantedPermissions: []grantedPermission{
 				{GroupID: 1, ItemID: 1, SourceGroupID: 1, Origin: "group_membership", CanView: "none"},
@@ -517,7 +517,7 @@ func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChild
 	`)
 	defer func() { _ = db.Close() }()
 
-	const expectedErrorMessage = "Error 1644: Unable to change immutable columns of groups_groups " +
+	const expectedErrorMessage = "Error 1644 (45000): Unable to change immutable columns of groups_groups " +
 		"(parent_group_id/child_group_id/is_team_membership)"
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()

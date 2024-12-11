@@ -1,8 +1,8 @@
 Feature: Save grading result
   Background:
     Given the database has the following user:
-      | login | group_id |
-      | john  | 101      |
+      | login | group_id | default_language |
+      | john  | 101      | en               |
     And the database has the following table "groups":
       | id  | name | type |
       | 201 | team | Team |
@@ -20,6 +20,10 @@ Feature: Save grading result
       | 60 | 10          | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937 | All             | fr                   |
       | 10 | null        | null                                                                    | AllButOne       | fr                   |
       | 70 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839  | All             | fr                   |
+    And the database has the following table "items_strings":
+      | item_id | language_tag | title        |
+      | 50      | fr           | Chapitre A   |
+      | 50      | en           | Chapter A    |
     And the database has the following table "item_dependencies":
       | item_id | dependent_item_id | score |
       | 60      | 50                | 98    |
@@ -78,7 +82,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": true
+          "validated": true,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -95,6 +100,7 @@ Feature: Save grading result
       | 0          | 101            | 50      | 100            | 1           | 1         | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
       | 1          | 101            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: User is able to save the grading result for a team (participant_id is the first integer in idAttempt in the score token)
     Given I am the user with id "101"
@@ -133,7 +139,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": true
+          "validated": true,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -150,6 +157,7 @@ Feature: Save grading result
       | 0          | 201            | 50      | 100            | 1           | 1         | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
       | 1          | 201            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
     Given I am the user with id "101"
@@ -188,7 +196,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": false
+          "validated": false,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -205,6 +214,7 @@ Feature: Save grading result
       | 0          | 101            | 50      | <score_computed> | 1           | 0         | 2019-05-30 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
       | 1          | 101            | 60      | 0                | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null         |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
   Examples:
     | score | score_edit_rule | score_edit_value | score_computed | parent_score |
     | 99    | null            | null             | 99             | 49.5         |
@@ -250,7 +260,15 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": false
+          "validated": false,
+          "unlocked_items": [
+            {
+              "item_id": 50,
+              "language_tag": "en",
+              "title": "Chapter A",
+              "type": "Chapter"
+            }
+          ]
         },
         "message": "created",
         "success": true
@@ -266,6 +284,7 @@ Feature: Save grading result
       | 101            | 0          | 50      | 0              | 0           | 0         | 2019-05-30 11:00:00 | null                 | 2017-04-29 06:38:38 | null         |
       | 101            | 1          | 60      | 99             | 1           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario Outline: Should keep previous score if it is greater
     Given I am the user with id "101"
@@ -308,7 +327,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": false
+          "validated": false,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -366,7 +386,15 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": true
+          "validated": true,
+          "unlocked_items": [
+            {
+              "item_id": 50,
+              "language_tag": "en",
+              "title": "Chapter A",
+              "type": "Chapter"
+            }
+          ]
         },
         "message": "created",
         "success": true
@@ -412,7 +440,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": true
+          "validated": true,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -452,7 +481,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": false
+          "validated": false,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -493,7 +523,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": true
+          "validated": true,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -537,7 +568,8 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": true
+          "validated": true,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
@@ -593,9 +625,107 @@ Feature: Save grading result
       """
       {
         "data": {
-          "validated": true
+          "validated": true,
+          "unlocked_items": []
         },
         "message": "created",
         "success": true
       }
       """
+
+  Scenario: Unlocks multiple items recursively
+    Given I am the user with id "101"
+    And the database has the following table "attempts":
+      | id | participant_id |
+      | 0  | 101            |
+      | 1  | 101            |
+    And the database table "items" also has the following row:
+      | id  | platform_id | url                                                                     | validation_type | default_language_tag |
+      | 80  | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721840  | All             | fr                   |
+      | 90  | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721841  | All             | fr                   |
+      | 100 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721842  | All             | fr                   |
+    And the database table "item_dependencies" also has the following row:
+      | item_id | dependent_item_id | score |
+      | 60      | 80                | 0     |
+      | 80      | 100               | 0     |
+    And the database table "items_items" also has the following row:
+      | parent_item_id | child_item_id | child_order |
+      | 80             | 90            | 0           |
+    And the database table "items_ancestors" also has the following row:
+      | ancestor_item_id | child_item_id |
+      | 80               | 90            |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title      |
+      | 80      | fr           | Chapitre B |
+      | 100     | de           | Kapitel C  |
+    And the database has the following table "results":
+      | attempt_id | participant_id | item_id | score_obtained_at   | latest_activity_at  | score_computed |
+      | 0          | 101            | 50      | 2017-04-29 06:38:38 | 2019-05-30 11:00:00 | 0              |
+      | 1          | 101            | 60      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 | 0              |
+      | 1          | 101            | 80      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 | 0              |
+      | 1          | 101            | 90      | 2017-05-29 06:38:38 | 2019-05-29 11:00:00 | 20             |
+    And the database has the following table "answers":
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
+    And "scoreToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "60",
+        "idAttempt": "101/1",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
+        "score": "99",
+        "idUserAnswer": "124"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "data": {
+          "validated": false,
+          "unlocked_items": [
+            {
+              "item_id": 50,
+              "language_tag": "en",
+              "title": "Chapter A",
+              "type": "Chapter"
+            },
+            {
+              "item_id": 80,
+              "language_tag": "fr",
+              "title": "Chapitre B",
+              "type": "Chapter"
+            },
+            {
+              "item_id": 100,
+              "language_tag": null,
+              "title": null,
+              "type": "Chapter"
+            }
+          ]
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "answers" should stay unchanged
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 124       | 99    | 1                                                |
+    And the table "attempts" should stay unchanged
+    And the table "results" should be:
+      | participant_id | attempt_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
+      | 101            | 0          | 50      | 0              | 0           | 0         | 2019-05-30 11:00:00 | null                 | 2017-04-29 06:38:38 | null         |
+      | 101            | 1          | 60      | 99             | 1           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
+      | 101            | 1          | 80      | 20             | 0           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
+      | 101            | 1          | 90      | 20             | 0           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty

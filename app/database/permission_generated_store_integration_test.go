@@ -237,7 +237,7 @@ func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrIt
 	`)
 	defer func() { _ = db.Close() }()
 
-	const expectedErrorMessage = "Error 1644: Unable to change immutable " +
+	const expectedErrorMessage = "Error 1644 (45000): Unable to change immutable " +
 		"permissions_generated.group_id and/or permissions_generated.child_item_id"
 
 	dataStore := database.NewDataStoreWithTable(db, "permissions_generated")

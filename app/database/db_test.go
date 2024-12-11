@@ -1583,7 +1583,7 @@ func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 
 func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
 	assert.Equal(t, "*instrumentedsql.WrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
-	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*mysql.connector)")
+	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*database.mysqlConnectorWrapper)")
 }
 
 func TestDB_mustBeInTransaction_DoesNothingInTransaction(t *testing.T) {
