@@ -429,3 +429,8 @@ func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateC
 func ContextWithTransactionRetrying(ctx context.Context) context.Context {
 	return context.WithValue(ctx, retryEachTransactionContextKey, true)
 }
+
+func (s *DataStore) arePropagationsSync() bool {
+	propagationsAreSync, _ := s.ctx.Value(propagationsAreSyncContextKey).(bool)
+	return propagationsAreSync
+}

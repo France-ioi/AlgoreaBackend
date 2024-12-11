@@ -23,9 +23,11 @@ import (
 //   - The function may loop endlessly if items_items is a cyclic graph.
 //   - Processed group-item pairs are removed from permissions_propagate.
 func (s *PermissionGrantedStore) computeAllAccess() {
+	permissionsPropagateTableName := s.permissionsPropagateTableName()
+
 	// marking group-item pairs whose parents are marked with propagate_to = 'children' as 'self'
-	const queryMarkChildrenOfChildrenAsSelf = `
-		INSERT INTO permissions_propagate (group_id, item_id, propagate_to)
+	queryMarkChildrenOfChildrenAsSelf := `
+		INSERT INTO ` + permissionsPropagateTableName + ` (group_id, item_id, propagate_to)
 		SELECT
 			parents.group_id,
 			items_items.child_item_id,
@@ -33,14 +35,14 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 		FROM items_items
 		JOIN permissions_generated AS parents
 			ON parents.item_id = items_items.parent_item_id
-		JOIN permissions_propagate AS parents_propagate
+		JOIN ` + permissionsPropagateTableName + ` AS parents_propagate
 			ON parents_propagate.group_id = parents.group_id AND parents_propagate.item_id = parents.item_id
 		WHERE parents_propagate.propagate_to = 'children'
 		GROUP BY parents.group_id, items_items.child_item_id
 		ON DUPLICATE KEY UPDATE propagate_to='self'`
 
 	// deleting 'children' permissions_propagate
-	const queryDeleteProcessedChildren = `DELETE FROM permissions_propagate WHERE propagate_to = 'children'`
+	queryDeleteProcessedChildren := `DELETE FROM ` + permissionsPropagateTableName + ` WHERE propagate_to = 'children'`
 
 	const queryDropTemporaryTable = `DROP TEMPORARY TABLE IF EXISTS permissions_propagate_processing`
 	// creating permissions_propagate_processing
@@ -49,17 +51,17 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 
 	// marking 'self' permissions_propagate that are not descendants of other 'self' permissions_propagate for processing
 	// in permissions_propagate_processing
-	const queryInsertIntoPermissionsPropagateProcessing = `
+	queryInsertIntoPermissionsPropagateProcessing := `
 		INSERT INTO permissions_propagate_processing (group_id, item_id)
 		SELECT group_id, item_id
-		FROM permissions_propagate
+		FROM ` + permissionsPropagateTableName + `
 		WHERE propagate_to = 'self' AND (
 			SELECT 1
-			FROM permissions_propagate AS ancestor_propagate
+			FROM ` + permissionsPropagateTableName + ` AS ancestor_propagate
 			JOIN items_ancestors
-				ON items_ancestors.child_item_id = permissions_propagate.item_id AND
+				ON items_ancestors.child_item_id = ` + permissionsPropagateTableName + `.item_id AND
 				   items_ancestors.ancestor_item_id = ancestor_propagate.item_id
-			WHERE ancestor_propagate.group_id = permissions_propagate.group_id AND
+			WHERE ancestor_propagate.group_id = ` + permissionsPropagateTableName + `.group_id AND
 			      ancestor_propagate.propagate_to = 'self'
 			LIMIT 1
 			FOR SHARE
@@ -115,12 +117,12 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 			is_owner_generated = VALUES(is_owner_generated)`
 
 	// marking 'self' permissions_propagate (so all of them) as 'children'
-	const queryMarkSelfAsChildren = `
-		UPDATE permissions_propagate
+	queryMarkSelfAsChildren := `
+		UPDATE ` + permissionsPropagateTableName + `
 		JOIN permissions_propagate_processing
-			ON permissions_propagate_processing.group_id = permissions_propagate.group_id AND
-			   permissions_propagate_processing.item_id = permissions_propagate.item_id
-		SET permissions_propagate.propagate_to = 'children'`
+			ON permissions_propagate_processing.group_id = ` + permissionsPropagateTableName + `.group_id AND
+			   permissions_propagate_processing.item_id = ` + permissionsPropagateTableName + `.item_id
+		SET ` + permissionsPropagateTableName + `.propagate_to = 'children'`
 
 	// ------------------------------------------------------------------------------------
 	// Here we execute the statements
@@ -129,7 +131,7 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	for hasChanges {
 		CallBeforePropagationStepHook(PropagationStepAccessMain)
 
-		mustNotBeError(s.InTransaction(func(store *DataStore) error {
+		mustNotBeError(s.EnsureTransaction(func(store *DataStore) error {
 			initTransactionTime := time.Now()
 
 			mustNotBeError(store.Exec(queryCreateTemporaryTable).Error())
