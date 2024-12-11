@@ -166,7 +166,7 @@ npm install -g swagger2openapi
 
 Also, you need to install [redocly-cli](https://redocly.com/redocly-cli) to serve the documentation locally:
 ```
-npm install -g @redocly/cli@latest
+npm install -g @redocly/cli@1.25.15
 ```
 
 After everything is installed, you can generate the specification file from code and validate it:
