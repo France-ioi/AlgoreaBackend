@@ -221,6 +221,7 @@ const (
 	awaitingPropagationsContextKey   = dbContextKey("awaitingPropagations")
 	prohibitedPropagationsContextKey = dbContextKey("prohibitedPropagations")
 	retryEachTransactionContextKey   = dbContextKey("retryEachTransaction")
+	propagationsAreSyncContextKey    = dbContextKey("propagationsAreSync")
 )
 
 var (
@@ -277,6 +278,15 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 	return err
 }
 
+// EnsureTransaction executes the given function in a transaction and commits. If a transaction is already started,
+// it will execute the function in the current transaction.
+func (s *DataStore) EnsureTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
+	if s.IsInTransaction() {
+		return txFunc(s)
+	}
+	return s.InTransaction(txFunc, txOptions...)
+}
+
 // SetOnStartOfTransactionToBeRetriedForcefullyHook sets a hook to be called on the start
 // of a transaction that will be forcefully retried.
 // For testing purposes only.
@@ -289,6 +299,20 @@ func SetOnStartOfTransactionToBeRetriedForcefullyHook(hook func()) {
 // For testing purposes only.
 func SetOnForcefulRetryOfTransactionHook(hook func()) {
 	onForcefulRetryOfTransactionHook = hook
+}
+
+// SetPropagationsModeToSync sets the mode of propagations to synchronous.
+// In this mode, the propagation of permissions and results will be done synchronously
+// before the transaction commit.
+func (s *DataStore) SetPropagationsModeToSync() (err error) {
+	s.mustBeInTransaction()
+
+	defer recoverPanics(&err)
+
+	mustNotBeError(s.Exec("SET @synchronous_propagations = 1").Error())
+
+	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx, propagationsAreSyncContextKey, true), s.DB)
+	return nil
 }
 
 // ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
