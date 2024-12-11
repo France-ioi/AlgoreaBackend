@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -224,9 +225,14 @@ const (
 )
 
 var (
-	onStartOfTransactionToBeRetriedForcefullyHook = func() {}
-	onForcefulRetryOfTransactionHook              = func() {}
+	onStartOfTransactionToBeRetriedForcefullyHook atomic.Value
+	onForcefulRetryOfTransactionHook              atomic.Value
 )
+
+func init() {
+	onStartOfTransactionToBeRetriedForcefullyHook.Store(func() {})
+	onForcefulRetryOfTransactionHook.Store(func() {})
+}
 
 // InTransaction executes the given function in a transaction and commits.
 // If a propagation is scheduled, it will be run after the transaction commit,
@@ -243,14 +249,14 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 
 		dataStore := NewDataStoreWithTable(db, s.tableName)
 		if shouldForceTransactionRetry {
-			onStartOfTransactionToBeRetriedForcefullyHook()
+			onStartOfTransactionToBeRetriedForcefullyHook.Load().(func())()
 		}
 
 		err := txFunc(dataStore)
 
 		if err == nil && shouldForceTransactionRetry {
 			retried = true
-			onForcefulRetryOfTransactionHook()
+			onForcefulRetryOfTransactionHook.Load().(func())()
 			return &mysql.MySQLError{
 				Number: uint16(mysqldb.DeadlockError),
 			}
@@ -281,14 +287,14 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 // of a transaction that will be forcefully retried.
 // For testing purposes only.
 func SetOnStartOfTransactionToBeRetriedForcefullyHook(hook func()) {
-	onStartOfTransactionToBeRetriedForcefullyHook = hook
+	onStartOfTransactionToBeRetriedForcefullyHook.Store(hook)
 }
 
 // SetOnForcefulRetryOfTransactionHook sets a hook to be called on the retry
 // of a forcefully retried transaction.
 // For testing purposes only.
 func SetOnForcefulRetryOfTransactionHook(hook func()) {
-	onForcefulRetryOfTransactionHook = hook
+	onForcefulRetryOfTransactionHook.Store(hook)
 }
 
 // ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
