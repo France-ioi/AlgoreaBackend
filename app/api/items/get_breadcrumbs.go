@@ -68,6 +68,7 @@ import (
 //							enum: [Chapter,Task,Skill]
 //						title:
 //							type: string
+//							x-nullable: true
 //						language_tag:
 //							type: string
 //						attempt_id:
