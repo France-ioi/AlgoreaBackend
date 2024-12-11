@@ -26,9 +26,6 @@ func NewDataStore(conn *DB) *DataStore {
 
 // NewDataStoreWithContext returns a new DataStore with the given context.
 func NewDataStoreWithContext(ctx context.Context, db *DB) *DataStore {
-	newSQLDB := db.db.CommonDB().(withContexter).withContext(ctx)
-	newGormDB := cloneGormDB(db.db)
-	replaceDBInGormDB(newGormDB, newSQLDB)
 	return &DataStore{DB: cloneDBWithNewContext(ctx, db)}
 }
 
