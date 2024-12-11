@@ -272,7 +272,7 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 	}
 	if propagationsToRun.Results && !prohibitedPropagations.Results {
 		propagationsToRun.Results = false
-		err = s.Results().propagate()
+		err = s.Results().processResultsRecomputeForItemsAndPropagate()
 	}
 
 	return err
@@ -315,7 +315,7 @@ func (s *DataStore) SetPropagationsModeToSync() (err error) {
 	return nil
 }
 
-// ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
+// ScheduleResultsPropagation schedules a run of ResultStore::processResultsRecomputeForItemsAndPropagate() after the transaction commit.
 func (s *DataStore) ScheduleResultsPropagation() {
 	s.mustBeInTransaction()
 

@@ -3,12 +3,14 @@
 package database_test
 
 import (
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -161,17 +163,45 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 	testExplicitEntryUnlocks(db, t)
 }
 
+func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterUntilIsNotMax(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
+	defer func() { _ = db.Close() }()
+	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
+	futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
+	grantedPermissions := []map[string]interface{}{
+		generateGrantedPermissionsRow(1001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(1002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+	}
+	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
+
+	testExplicitEntryUnlocks(db, t)
+}
+
 var maxTime = database.Time(time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC))
 
 func testRegularUnlocks(db *database.DB, t *testing.T) {
 	prepareDependencies(db, t)
 
+	var unlockedItems *golang.Set[int64]
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		var err error
+		unlockedItems, err = s.Results().PropagateAndCollectUnlockedItemsForParticipant(101)
+		return err
 	})
 	assert.NoError(t, err)
+
+	unlockedItemsList := unlockedItems.Values()
+	sort.Slice(unlockedItemsList, func(i, j int) bool { return unlockedItemsList[i] < unlockedItemsList[j] })
+
+	assert.Equal(t, []int64{1001, 1002, 2001, 2002, 4001, 4002}, unlockedItemsList)
 
 	var result []unlocksResultRow
 	assert.NoError(t, dataStore.PermissionsGranted().
@@ -219,12 +249,21 @@ func testRegularUnlocks(db *database.DB, t *testing.T) {
 
 func testExplicitEntryUnlocks(db *database.DB, t *testing.T) {
 	prepareDependencies(db, t)
+
+	var unlockedItems *golang.Set[int64]
+
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		var err error
+		unlockedItems, err = s.Results().PropagateAndCollectUnlockedItemsForParticipant(101)
+		return err
 	})
 	assert.NoError(t, err)
+
+	unlockedItemsList := unlockedItems.Values()
+	sort.Slice(unlockedItemsList, func(i, j int) bool { return unlockedItemsList[i] < unlockedItemsList[j] })
+
+	assert.Equal(t, []int64{1001, 1002, 2001, 2002, 4001, 4002}, unlockedItemsList)
 
 	var result []unlocksResultRow
 	assert.NoError(t, dataStore.PermissionsGranted().
