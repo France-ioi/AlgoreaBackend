@@ -181,7 +181,7 @@ jobs:
       - run: go install github.com/France-ioi/go-swagger/cmd/swagger@00200fa
       - run: apk add npm
       - run: npm install -g swagger2openapi
-      - run: npm install -g @redocly/cli@latest
+      - run: npm install -g @redocly/cli@1.25.15
       - checkout
       - run: go build -v # do not use 'make' as the image does not support '-race' arg
       - run: make swagger-generate
