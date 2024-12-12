@@ -640,10 +640,10 @@ Feature: Save grading result
       | 0  | 101            |
       | 1  | 101            |
     And the database table "items" also has the following row:
-      | id  | platform_id | url                                                                     | validation_type | default_language_tag |
-      | 80  | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721840  | All             | fr                   |
-      | 90  | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721841  | All             | fr                   |
-      | 100 | 20          | http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721842  | All             | fr                   |
+      | id  | type    | validation_type | default_language_tag |
+      | 80  | Chapter | All             | fr                   |
+      | 90  | Chapter | All             | fr                   |
+      | 100 | Chapter | All             | de                   |
     And the database table "item_dependencies" also has the following row:
       | item_id | dependent_item_id | score |
       | 60      | 80                | 0     |
@@ -706,8 +706,8 @@ Feature: Save grading result
             },
             {
               "item_id": 100,
-              "language_tag": null,
-              "title": null,
+              "language_tag": "de",
+              "title": "Kapitel C",
               "type": "Chapter"
             }
           ]
