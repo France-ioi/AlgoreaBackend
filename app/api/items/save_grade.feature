@@ -263,7 +263,7 @@ Feature: Save grading result
           "validated": false,
           "unlocked_items": [
             {
-              "item_id": 50,
+              "item_id": "50",
               "language_tag": "en",
               "title": "Chapter A",
               "type": "Chapter"
@@ -389,7 +389,7 @@ Feature: Save grading result
           "validated": true,
           "unlocked_items": [
             {
-              "item_id": 50,
+              "item_id": "50",
               "language_tag": "en",
               "title": "Chapter A",
               "type": "Chapter"
@@ -693,19 +693,19 @@ Feature: Save grading result
           "validated": false,
           "unlocked_items": [
             {
-              "item_id": 50,
+              "item_id": "50",
               "language_tag": "en",
               "title": "Chapter A",
               "type": "Chapter"
             },
             {
-              "item_id": 80,
+              "item_id": "80",
               "language_tag": "fr",
               "title": "Chapitre B",
               "type": "Chapter"
             },
             {
-              "item_id": 100,
+              "item_id": "100",
               "language_tag": "de",
               "title": "Kapitel C",
               "type": "Chapter"

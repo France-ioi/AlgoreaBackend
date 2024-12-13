@@ -148,7 +148,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
 		"validated":      validated,
-		"unlocked_items": unlockedItems,
+		"unlocked_items": service.ConvertSliceOfMapsFromDBToJSON(unlockedItems),
 	})))
 	return service.NoError
 }
