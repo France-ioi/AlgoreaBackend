@@ -1,7 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [v2.24.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.7...v2.24.0) - 2024-11-27
+## [v2.24.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.0...v2.24.1) - 2024-12-13
+- fix: render `item_id` of `unlocked_items` in `saveGrade` as string
+
+## [v2.24.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.7...v2.24.0) - 2024-12-13
 - return unlocked items in `saveGrade` + other fixes (major change to the propagation process)
 - mark the title as nullable in swagger docs of `itemBreadcrumbsGet`
 - eliminate data races when reading/setting hooks related to forceful retrying of transactions (used only in tests)
