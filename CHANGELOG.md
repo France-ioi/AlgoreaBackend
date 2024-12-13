@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.7...v2.24.0) - 2024-11-27
+- return unlocked items in `saveGrade` + other fixes (major change to the propagation process)
+- mark the title as nullable in swagger docs of `itemBreadcrumbsGet`
+- eliminate data races when reading/setting hooks related to forceful retrying of transactions (used only in tests)
+- make `Test_Deadline` stable
+
 ## [v2.23.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.23.6...v2.23.7) - 2024-11-27
 - log retryable DB errors (deadlocks and lock wait timeouts) as INFO, rework logging, introduce console log formatter, add req_id into every log entry implicitly
 
