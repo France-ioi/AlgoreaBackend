@@ -98,7 +98,7 @@ func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEna
 	dbConn, _ = gorm.Open(driverName, rawConnection)
 
 	// gorm.Open only pings the connection when it's sql.DB. So we need to ping it ourselves.
-	if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Ping(); err != nil && ownSQLDBConnection {
+	if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.PingContext(ctx); err != nil && ownSQLDBConnection {
 		_ = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Close()
 	}
 
@@ -110,22 +110,33 @@ func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEna
 
 // OpenRawDBConnection creates a new DB connection.
 func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB, error) {
+	registerWrappedDriver := true
+	for _, driverName := range sql.Drivers() {
+		if driverName == "wrapped-mysql" {
+			registerWrappedDriver = false
+			break
+		}
+	}
+	if registerWrappedDriver {
+		sql.Register("wrapped-mysql", newMySQLDriverWrapper(&mysql.MySQLDriver{}))
+	}
+
 	if enableRawLevelLogging {
-		registerDriver := true
+		registerInstrumentedDriver := true
 		for _, driverName := range sql.Drivers() {
 			if driverName == "instrumented-mysql" {
-				registerDriver = false
+				registerInstrumentedDriver = false
 				break
 			}
 		}
 
-		if registerDriver {
+		if registerInstrumentedDriver {
 			rawDBLogger := NewRawDBLogger()
 			sql.Register("instrumented-mysql",
-				instrumentedsql.WrapDriver(&mysql.MySQLDriver{}, instrumentedsql.WithLogger(rawDBLogger)))
+				instrumentedsql.WrapDriver(newMySQLDriverWrapper(&mysql.MySQLDriver{}), instrumentedsql.WithLogger(rawDBLogger)))
 		}
 	}
-	return sql.Open(golang.IfElse(enableRawLevelLogging, "instrumented-mysql", "mysql"), sourceDSN)
+	return sql.Open(golang.IfElse(enableRawLevelLogging, "instrumented-mysql", "wrapped-mysql"), sourceDSN)
 }
 
 // New clones a new db connection without search conditions.

@@ -219,6 +219,7 @@ const (
 	awaitingPropagationsContextKey   = dbContextKey("awaitingPropagations")
 	prohibitedPropagationsContextKey = dbContextKey("prohibitedPropagations")
 	retryEachTransactionContextKey   = dbContextKey("retryEachTransaction")
+	propagationsAreSyncContextKey    = dbContextKey("propagationsAreSync")
 )
 
 var (
@@ -274,10 +275,19 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 	}
 	if propagationsToRun.Results && !prohibitedPropagations.Results {
 		propagationsToRun.Results = false
-		err = s.Results().propagate()
+		err = s.Results().processResultsRecomputeForItemsAndPropagate()
 	}
 
 	return err
+}
+
+// EnsureTransaction executes the given function in a transaction and commits. If a transaction is already started,
+// it will execute the function in the current transaction.
+func (s *DataStore) EnsureTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
+	if s.IsInTransaction() {
+		return txFunc(s)
+	}
+	return s.InTransaction(txFunc, txOptions...)
 }
 
 // SetOnStartOfTransactionToBeRetriedForcefullyHook sets a hook to be called on the start
@@ -294,7 +304,21 @@ func SetOnForcefulRetryOfTransactionHook(hook func()) {
 	onForcefulRetryOfTransactionHook.Store(hook)
 }
 
-// ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
+// SetPropagationsModeToSync sets the mode of propagations to synchronous.
+// In this mode, the propagation of permissions and results will be done synchronously
+// before the transaction commit.
+func (s *DataStore) SetPropagationsModeToSync() (err error) {
+	s.mustBeInTransaction()
+
+	defer recoverPanics(&err)
+
+	mustNotBeError(s.Exec("SET @synchronous_propagations = 1").Error())
+
+	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx, propagationsAreSyncContextKey, true), s.DB)
+	return nil
+}
+
+// ScheduleResultsPropagation schedules a run of ResultStore::processResultsRecomputeForItemsAndPropagate() after the transaction commit.
 func (s *DataStore) ScheduleResultsPropagation() {
 	s.mustBeInTransaction()
 
@@ -407,4 +431,9 @@ func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateC
 // Use it for testing purposes only.
 func ContextWithTransactionRetrying(ctx context.Context) context.Context {
 	return context.WithValue(ctx, retryEachTransactionContextKey, true)
+}
+
+func (s *DataStore) arePropagationsSync() bool {
+	propagationsAreSync, _ := s.ctx.Value(propagationsAreSyncContextKey).(bool)
+	return propagationsAreSync
 }

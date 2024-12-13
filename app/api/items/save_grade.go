@@ -18,6 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation POST /items/save-grade items saveGrade
@@ -71,11 +72,29 @@ import (
 //							enum: [created]
 //						data:
 //							type: object
-//							required: [validated]
+//							required: [validated, unlocked_items]
 //							properties:
 //								validated:
 //									description: Whether the full score was obtained on this grading
 //									type: boolean
+//								unlocked_items:
+//									description: Items unlocked by the participant as the result of this grading
+//									type: array
+//									items:
+//										type: object
+//										properties:
+//											item_id:
+//												type: string
+//												format: int64
+//											type:
+//												type: string
+//												enum: [Chapter,Task,Skill]
+//											title:
+//												type: string
+//												x-nullable: true
+//											language_tag:
+//												type: string
+//										required: [item_id, type, title, language_tag]
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
 //		"403":
@@ -94,8 +113,31 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	var validated, ok bool
+	unlockedItems := make([]map[string]interface{}, 0)
 	err = store.InTransaction(func(store *database.DataStore) error {
-		validated, ok = saveGradingResultsIntoDB(store, &requestData)
+		service.MustNotBeError(store.SetPropagationsModeToSync())
+		var unlockedItemIDs *golang.Set[int64]
+		validated, ok, unlockedItemIDs = saveGradingResultsIntoDB(store, &requestData)
+
+		if !ok || unlockedItemIDs.Size() == 0 {
+			return nil
+		}
+
+		service.MustNotBeError(store.Items().Select(`
+				items.id AS item_id,
+				items.type,
+				COALESCE(user_strings.title, default_strings.title) AS title,
+				COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag`).
+			Joins(
+				`LEFT JOIN items_strings default_strings
+         ON default_strings.item_id = items.id AND default_strings.language_tag = items.default_language_tag`).
+			Joins(`LEFT JOIN items_strings user_strings
+         ON user_strings.item_id=items.id AND user_strings.language_tag = (SELECT default_language FROM users WHERE group_id = ?)`,
+				requestData.ScoreToken.UserID).
+			Where("items.id IN (?)", unlockedItemIDs.Values()).
+			Order("items.id").
+			ScanIntoSliceOfMaps(&unlockedItems).Error())
+
 		return nil
 	})
 	service.MustNotBeError(err)
@@ -105,18 +147,21 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
-		"validated": validated,
+		"validated":      validated,
+		"unlocked_items": unlockedItems,
 	})))
 	return service.NoError
 }
 
-func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeRequestParsed) (validated, ok bool) {
+func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeRequestParsed) (
+	validated, ok bool, unlockedItemIDs *golang.Set[int64],
+) {
 	score := requestData.ScoreToken.Converted.Score
 
 	gotFullScore := score == 100
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
 	if !saveNewScoreIntoGradings(store, requestData, score) {
-		return validated, false
+		return validated, false, golang.NewSet[int64]()
 	}
 
 	// Build query to update results
@@ -167,8 +212,12 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 	resultStore := store.Results()
 	service.MustNotBeError(resultStore.MarkAsToBePropagated(
 		requestData.ScoreToken.Converted.ParticipantID, requestData.ScoreToken.Converted.AttemptID,
-		requestData.ScoreToken.Converted.LocalItemID, true))
-	return validated, true
+		requestData.ScoreToken.Converted.LocalItemID, false))
+
+	unlockedItemIDs, err := resultStore.PropagateAndCollectUnlockedItemsForParticipant(requestData.ScoreToken.Converted.ParticipantID)
+	service.MustNotBeError(err)
+
+	return validated, true, unlockedItemIDs
 }
 
 func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeRequestParsed, score float64) bool {

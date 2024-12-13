@@ -25,7 +25,7 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/locales v0.12.1
 	github.com/go-playground/universal-translator v0.16.0
-	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/go-cmp v0.5.9
 	github.com/jinzhu/gorm v1.9.17-0.20211120011537-5c235b72a414
 	github.com/lithammer/dedent v1.1.0
@@ -43,6 +43,7 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
 	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect

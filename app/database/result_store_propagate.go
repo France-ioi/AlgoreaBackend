@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 const (
@@ -12,6 +13,37 @@ const (
 	resultsPropagationPropagationChunkSize   = 200
 	resultsPropagationRecomputationChunkSize = 1000
 )
+
+func (s *ResultStore) processResultsRecomputeForItemsAndPropagate() (err error) {
+	defer recoverPanics(&err)
+
+	CallBeforePropagationStepHook(PropagationStepResultsNamedLockAcquire)
+
+	// Use a lock so that we don't execute the listener multiple times in parallel
+	mustNotBeError(s.WithNamedLock(resultsPropagationLockName, resultsPropagationLockWaitTimeout, func(s *DataStore) error {
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate)
+		setResultsPropagationFromTableResultsRecomputeForItems(s)
+
+		_, err = s.Results().propagate(nil)
+		return err
+	}))
+
+	return nil
+}
+
+// PropagateAndCollectUnlockedItemsForParticipant recomputes fields of results and propagates permissions for unlocked items.
+// It returns the set of unlocked items for the given participant.
+//
+// Note: The method propagates results and permissions synchronously. It does not use propagations scheduling.
+// Callers probably want to call this method inside a transaction and mark the transaction with DataStore.SetPropagationsModeToSync()
+// to ensure it will not process results and permissions that are marked for propagation by other transactions.
+//
+// Note 2: The method does not process the results_recompute_for_items table.
+func (s *ResultStore) PropagateAndCollectUnlockedItemsForParticipant(participantID int64) (
+	participantItemsUnlocked *golang.Set[int64], err error,
+) {
+	return s.Results().propagate(&participantID)
+}
 
 // propagate recomputes fields of results
 // For results marked as 'to_be_propagated':
@@ -44,63 +76,61 @@ const (
 // - before_delete_items_items.
 //
 //	Not: The function may loop endlessly if items_items is a cyclic graph.
-func (s *ResultStore) propagate() (err error) {
-	var itemsUnlocked int64
+func (s *ResultStore) propagate(collectUnlockedItemsForParticipant *int64) (
+	participantItemsUnlocked *golang.Set[int64], err error,
+) {
 	defer recoverPanics(&err)
 
-	CallBeforePropagationStepHook(PropagationStepResultsNamedLockAcquire)
+	var itemsUnlockedCount int64
+	participantItemsUnlocked = golang.NewSet[int64]()
 
-	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(resultsPropagationLockName, resultsPropagationLockWaitTimeout, func(s *DataStore) error {
-		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate)
-		setResultsPropagationFromTableResultsRecomputeForItems(s)
+	// Initially there can be results of any kind
+	for {
+		// First we take a chunk of results marked as 'to_be_propagated' and mark them as 'propagating'.
+		// Then we create missing results for their parents and mark those parent results as 'to_be_recomputed'.
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
+		markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s.DataStore, resultsPropagationPropagationChunkSize)
 
-		// Initially there can be results of any kind
-		for {
-			// First we take a chunk of results marked as 'to_be_propagated' and mark them as 'propagating'.
-			// Then we create missing results for their parents and mark those parent results as 'to_be_recomputed'.
-			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
-			markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s, resultsPropagationPropagationChunkSize)
+		// Now we unlock dependent items for results marked as 'propagating' and unmark them.
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockItemUnlocking)
 
-			// Now we unlock dependent items for results marked as 'propagating' and unmark them.
-			CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockItemUnlocking)
-			itemsUnlocked += unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s)
+		itemsUnlockedCountAtStep, participantItemsUnlockedAtStep := unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(
+			s.DataStore, collectUnlockedItemsForParticipant)
+		itemsUnlockedCount += itemsUnlockedCountAtStep
+		participantItemsUnlocked.Add(participantItemsUnlockedAtStep...)
 
-			resultsPropagateTableIsNotEmpty, err := s.Table("results_propagate").HasRows()
-			mustNotBeError(err)
-			if !resultsPropagateTableIsNotEmpty {
-				break
-			}
-
-			// Now there are no 'propagating' results left, so we can recompute results marked as 'to_be_recomputed'
-			// and mark them as 'to_be_propagated'.
-			recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s, resultsPropagationRecomputationChunkSize)
-
-			// From here, there can be only results marked as 'to_be_propagated'.
+		resultsPropagateTableIsNotEmpty, err := s.Table(s.Results().resultsPropagateTableName()).HasRows()
+		mustNotBeError(err)
+		if !resultsPropagateTableIsNotEmpty {
+			break
 		}
-		return nil
-	}))
 
-	// If items have been unlocked, need to recompute access
-	if itemsUnlocked > 0 {
-		CallBeforePropagationStepHook(PropagationStepResultsPropagationScheduling)
+		// Now there are no 'propagating' results left, so we can recompute results marked as 'to_be_recomputed'
+		// and mark them as 'to_be_propagated'.
+		recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s.DataStore, resultsPropagationRecomputationChunkSize)
 
-		mustNotBeError(s.InTransaction(func(s *DataStore) error {
-			// generate permissions_generated from permissions_granted
-			s.SchedulePermissionsPropagation()
-			// we should compute attempts again as new permissions were set and
-			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-			s.ScheduleResultsPropagation()
-
-			return nil
-		}))
+		// From here, there can be only results marked as 'to_be_propagated'.
 	}
 
-	return nil
+	// If items have been unlocked, need to recompute access
+	if itemsUnlockedCount > 0 {
+		CallBeforePropagationStepHook(PropagationStepResultsPropagationScheduling)
+
+		// generate permissions_generated from permissions_granted
+		s.PermissionsGranted().computeAllAccess()
+		// we should compute attempts again as new permissions were set and
+		// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
+		participantItemsUnlocked2, err := s.Results().propagate(collectUnlockedItemsForParticipant)
+		mustNotBeError(err)
+
+		participantItemsUnlocked.Add(participantItemsUnlocked2.Values()...)
+	}
+
+	return participantItemsUnlocked, nil
 }
 
 func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s *DataStore, chunkSize int) {
-	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+	mustNotBeError(s.EnsureTransaction(func(s *DataStore) error {
 		initTransactionTime := time.Now()
 
 		mustNotBeError(s.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
@@ -118,12 +148,15 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 			s.Exec("DROP TEMPORARY TABLE results_to_mark")
 		}()
 
+		resultsPropagateTableName := s.Results().resultsPropagateTableName()
+
 		// We mark as 'to_be_recomputed' results of all parents of a chunk of results marked as 'to_be_propagated'.
 		// Also, we insert missing results for chapters having children with results marked as 'to_be_propagated'.
 		// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
 		// to solve the child items. Chapters requiring explicit entry or placed outside the scope
 		// of the attempts' root item are skipped).
-		mustNotBeError(s.Exec("UPDATE results_propagate SET state = 'propagating' WHERE state = 'to_be_propagated' LIMIT ?", chunkSize).Error())
+		mustNotBeError(s.Exec(
+			"UPDATE "+resultsPropagateTableName+" SET state = 'propagating' WHERE state = 'to_be_propagated' LIMIT ?", chunkSize).Error())
 		result := s.db.Exec(`
 			INSERT INTO results_to_mark (participant_id, attempt_id, item_id, result_exists)
 			WITH results_to_insert (participant_id, attempt_id, item_id, result_exists) AS (
@@ -132,7 +165,7 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 								 items_items.parent_item_id AS item_id,
 								 existing.participant_id IS NOT NULL AS result_exists
 					FROM results
-					JOIN results_propagate USING(participant_id, attempt_id, item_id)
+					JOIN ` + resultsPropagateTableName + ` AS results_propagate USING(participant_id, attempt_id, item_id)
 					JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id
 					JOIN items_items ON items_items.child_item_id = results.item_id
 					JOIN items ON items.id = items_items.parent_item_id
@@ -140,7 +173,7 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 						ON existing.participant_id = results.participant_id AND
 							 existing.attempt_id = IF(attempts.root_item_id = results.item_id, attempts.parent_attempt_id, results.attempt_id) AND
 							 existing.item_id = items_items.parent_item_id
-					LEFT JOIN results_propagate AS existing_propagate
+					LEFT JOIN ` + resultsPropagateTableName + ` AS existing_propagate
 						ON existing_propagate.participant_id = existing.participant_id AND existing_propagate.attempt_id = existing.attempt_id AND
                existing_propagate.item_id = existing.item_id
 					WHERE
@@ -190,7 +223,7 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 				WHERE NOT result_exists`).Error())
 
 			mustNotBeError(s.Exec(`
-				INSERT INTO results_propagate (participant_id, attempt_id, item_id, state)
+				INSERT INTO ` + resultsPropagateTableName + ` (participant_id, attempt_id, item_id, state)
 				SELECT
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
 				FROM results_to_mark
@@ -213,7 +246,7 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 	for hasChanges {
 		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMain)
 
-		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		mustNotBeError(s.EnsureTransaction(func(s *DataStore) error {
 			initTransactionTime := time.Now()
 
 			// We process only those objects that were marked as 'to_be_recomputed' and
@@ -228,13 +261,17 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 			//  - validated, depending on the items_items.category and items.validation_type
 			//    (an item should have at least one validated child to become validated itself by the propagation)
 
+			resultsPropagateTableName := s.Results().resultsPropagateTableName()
+
 			// Process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'.
 			// Start from marking them as 'recomputing'. It's important that the 'recomputing' state never leaks outside the transaction.
 			// Instead of marking all the suitable results as 'recomputing' at once, we do it in chunks to avoid locking the table for too long.
 			result := s.Exec(`
 				WITH
-					marked_to_be_recomputed AS (SELECT participant_id, attempt_id, item_id FROM results_propagate WHERE state='to_be_recomputed')
-				UPDATE results_propagate AS target_results_propagate
+					marked_to_be_recomputed AS (
+						SELECT participant_id, attempt_id, item_id FROM `+resultsPropagateTableName+` WHERE state='to_be_recomputed'
+					)
+				UPDATE `+resultsPropagateTableName+` AS target_results_propagate
 				SET state = 'recomputing'
 				WHERE
 					state = 'to_be_recomputed' AND
@@ -268,9 +305,9 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 				return nil
 			}
 
-			const updateQuery = `
+			updateQuery := `
 					UPDATE results AS target_results
-					JOIN results_propagate USING (participant_id, attempt_id, item_id)
+					JOIN ` + resultsPropagateTableName + ` AS results_propagate USING (participant_id, attempt_id, item_id)
 					JOIN items
 						ON items.id = target_results.item_id
 					LEFT JOIN LATERAL (
@@ -355,7 +392,7 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 
 			// We mark all modified results marked as 'recomputing' as 'to_be_propagated'.
 			result = s.Exec(`
-				UPDATE results_propagate
+				UPDATE ` + resultsPropagateTableName + ` AS results_propagate
 				JOIN results USING(participant_id, attempt_id, item_id)
 				SET results_propagate.state = 'to_be_propagated'
 				WHERE results_propagate.state = 'recomputing' AND results.recomputing_state = 'modified'`)
@@ -363,7 +400,7 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 			rowsModified := result.RowsAffected()
 
 			// Finally we unmark all unchanged results marked as 'recomputing'.
-			mustNotBeError(s.Exec(`DELETE FROM results_propagate WHERE state = 'recomputing'`).Error())
+			mustNotBeError(s.Exec(`DELETE FROM ` + resultsPropagateTableName + ` WHERE state = 'recomputing'`).Error())
 
 			logging.SharedLogger.WithContext(s.ctx).
 				Debugf("Duration of step of results propagation: %d rows affected, %d rows modified, took %v",
@@ -374,44 +411,85 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 	}
 }
 
-func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore) (itemsUnlocked int64) {
-	mustNotBeError(s.InTransaction(func(s *DataStore) error {
+func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore, collectUnlockedItemsForParticipant *int64) (
+	unlockedItemsCount int64, participantItemsUnlocked []int64,
+) {
+	mustNotBeError(s.EnsureTransaction(func(s *DataStore) error {
 		initTransactionTime := time.Now()
+
+		participantItemsUnlocked = nil
+		resultsPropagateTableName := s.Results().resultsPropagateTableName()
+
+		mustNotBeError(s.db.Exec(`
+			CREATE TEMPORARY TABLE items_to_unlock (
+				participant_id BIGINT(20) NOT NULL,
+				item_id BIGINT(20) NOT NULL,
+				can_view ENUM('none', 'content') NOT NULL,
+				can_enter_from DATETIME NOT NULL,
+				latest_update_at DATETIME NOT NULL
+			)`).Error)
+
+		defer s.db.Exec("DROP TEMPORARY TABLE items_to_unlock")
 
 		canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
 		result := s.db.Exec(`
-			INSERT INTO permissions_granted
-				(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
-				SELECT
-					results.participant_id,
-					item_dependencies.dependent_item_id AS item_id,
-					results.participant_id,
-					'item_unlocking',
-					IF(items.requires_explicit_entry, 'none', 'content'),
-					IF(items.requires_explicit_entry, NOW(), '9999-12-31 23:59:59'),
-					NOW()
-				FROM results_propagate
+				INSERT INTO items_to_unlock
+				SELECT results.participant_id, items.id AS item_id,
+					IF(items.requires_explicit_entry, 'none', 'content') AS can_view,
+					IF(items.requires_explicit_entry, NOW(), '9999-12-31 23:59:59') AS can_enter_from,
+					NOW() AS latest_update_at
+				FROM `+resultsPropagateTableName+`
 				JOIN results USING(participant_id, attempt_id, item_id)
 				JOIN item_dependencies ON item_dependencies.item_id = results.item_id AND
 					item_dependencies.score <= results.score_computed AND item_dependencies.grant_content_view
 				JOIN items ON items.id = item_dependencies.dependent_item_id
-				WHERE results_propagate.state = 'propagating'
-			ON DUPLICATE KEY UPDATE
-				latest_update_at = IF(
-					VALUES(can_view) = 'content' AND can_view_value < ? OR
-					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_from > VALUES(can_enter_from) OR
-					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_until <> '9999-12-31 23:59:59',
-					NOW(), latest_update_at),
-				can_view = IF(VALUES(can_view) = 'content' AND can_view_value < ?, 'content', can_view),
-				can_enter_from = IF(
-					VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND can_enter_from > VALUES(can_enter_from),
-					VALUES(can_enter_from), can_enter_from)`,
-			canViewContentIndex, canViewContentIndex)
-
+				LEFT JOIN permissions_granted AS existing_permissions
+					ON existing_permissions.group_id = results.participant_id AND
+					   existing_permissions.item_id = item_dependencies.dependent_item_id AND
+					   existing_permissions.source_group_id = results.participant_id AND
+					   existing_permissions.origin = 'item_unlocking' AND
+					   NOT ((NOT items.requires_explicit_entry) AND existing_permissions.can_view_value < ? OR
+						  items.requires_explicit_entry AND existing_permissions.can_enter_from > NOW() OR
+						  items.requires_explicit_entry AND existing_permissions.can_enter_until <> '9999-12-31 23:59:59')
+				WHERE `+resultsPropagateTableName+`.state = 'propagating' AND
+				      existing_permissions.group_id IS NULL
+				FOR SHARE OF items, item_dependencies, results
+				FOR UPDATE OF existing_permissions`,
+			canViewContentIndex)
 		mustNotBeError(result.Error)
-		itemsUnlocked = result.RowsAffected
 
-		mustNotBeError(s.Exec("DELETE FROM results_propagate WHERE state = 'propagating'").Error())
+		if result.RowsAffected > 0 {
+			if collectUnlockedItemsForParticipant != nil {
+				mustNotBeError(s.Table("items_to_unlock").
+					Select("DISTINCT item_id").
+					Where("participant_id = ?", *collectUnlockedItemsForParticipant).
+					Order("item_id").Pluck("DISTINCT item_id", &participantItemsUnlocked).Error())
+			}
+
+			result = s.db.Exec(`
+				INSERT INTO permissions_granted
+					(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
+					SELECT
+						participant_id, item_id, participant_id, 'item_unlocking', can_view, can_enter_from, latest_update_at
+					FROM items_to_unlock
+				ON DUPLICATE KEY UPDATE
+					permissions_granted.latest_update_at = VALUES(latest_update_at),
+					permissions_granted.can_view = IF(
+						VALUES(can_view) = 'content' AND permissions_granted.can_view_value < ?,
+						'content', permissions_granted.can_view),
+					permissions_granted.can_enter_from = IF(
+						VALUES(can_enter_from) <> '9999-12-31 23:59:59' AND permissions_granted.can_enter_from > VALUES(can_enter_from),
+						VALUES(can_enter_from), permissions_granted.can_enter_from),
+					permissions_granted.can_enter_until = IF(
+						VALUES(can_enter_from) <> '9999-12-31 23:59:59',
+						'9999-12-31 23:59:59', permissions_granted.can_enter_until)`,
+				canViewContentIndex)
+
+			mustNotBeError(result.Error)
+			unlockedItemsCount = result.RowsAffected
+		}
+
+		mustNotBeError(s.Exec("DELETE FROM " + resultsPropagateTableName + " WHERE state = 'propagating'").Error())
 
 		logging.SharedLogger.WithContext(s.ctx).Debugf(
 			"Duration of final step of results propagation: %d rows affected, took %v",
@@ -422,7 +500,7 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore)
 		return nil
 	}))
 
-	return itemsUnlocked
+	return unlockedItemsCount, participantItemsUnlocked
 }
 
 // setResultsPropagationFromTableResultsRecomputeForItems inserts results_propagate rows from results_recompute_for_items.

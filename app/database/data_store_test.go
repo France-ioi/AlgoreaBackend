@@ -759,3 +759,58 @@ func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
 
 	assert.Nil(t, mock.ExpectationsWereMet())
 }
+
+func TestDataStore_EnsureTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, NewDataStore(db).EnsureTransaction(func(store *DataStore) error {
+		assert.True(t, store.isInTransaction())
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_EnsureTransaction_InsideTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		return store.EnsureTransaction(func(store *DataStore) error {
+			assert.True(t, store.isInTransaction())
+			return nil
+		})
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_SetPropagationsModeToSync(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectExec("SET @synchronous_propagations = 1").WillReturnResult(sqlmock.NewResult(-1, 0))
+	mock.ExpectCommit()
+
+	require.Nil(t, db.ctx.Value(propagationsAreSyncContextKey))
+
+	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		require.NoError(t, store.SetPropagationsModeToSync())
+		assert.Equal(t, store.DB.ctx.Value(propagationsAreSyncContextKey), true)
+		assert.Equal(t, store.DB.db.CommonDB().(*sqlTxWrapper).ctx.Value(propagationsAreSyncContextKey), true)
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
