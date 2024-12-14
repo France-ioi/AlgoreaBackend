@@ -19,6 +19,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -268,6 +269,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
+		logging.LogEntrySetField(r, "user_id", userID)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), userID, true))
 
 		sessionID := rand.Int63()

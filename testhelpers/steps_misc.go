@@ -104,7 +104,7 @@ func (ctx *TestContext) LogsShouldContain(docString *godog.DocString) error {
 		return err
 	}
 	stringToSearch := strings.TrimSpace(preprocessed)
-	logs := ctx.logsHook.GetAllLogs()
+	logs := ctx.logsHook.GetAllStructuredLogs()
 	if !strings.Contains(logs, stringToSearch) {
 		return fmt.Errorf("cannot find %q in logs:\n%s", stringToSearch, logs)
 	}

@@ -158,6 +158,11 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	set.AddGlobal("taskPlatformPublicKey", tokentest.TaskPlatformPublicKey)
 	set.AddGlobal("taskPlatformPrivateKey", tokentest.TaskPlatformPrivateKey)
 
+	set.AddGlobalFunc("quote", func(a jet.Arguments) reflect.Value {
+		a.RequireNumOfArguments("quote", 1, 1)
+		return reflect.ValueOf(fmt.Sprintf("%q", a.Get(0).Interface()))
+	})
+
 	return set
 }
 

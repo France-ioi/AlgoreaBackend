@@ -101,6 +101,8 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		return apiError
 	}
 
+	logging.LogEntrySetField(r, "user_id", requestData.TaskToken.Converted.UserID)
+
 	err = store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error

@@ -73,6 +73,10 @@ Feature: Submit a new answer
         "success": true
       }
       """
+    And logs should contain:
+      """
+      user_id=101
+      """
     And the table "answers" should be:
       | author_id | participant_id | attempt_id | item_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
       | 101       | 101            | 1          | 50      | Submission | print 1 | 1                                                 |
@@ -124,6 +128,10 @@ Feature: Submit a new answer
         "message": "created",
         "success": true
       }
+      """
+    And logs should contain:
+      """
+      user_id=101
       """
     And the table "answers" should be:
       | author_id | participant_id | attempt_id | item_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
@@ -180,6 +188,10 @@ Feature: Submit a new answer
         "message": "created",
         "success": true
       }
+      """
+    And logs should contain:
+      """
+      user_id=101
       """
     And the table "answers" should be:
       | author_id | participant_id | attempt_id | item_id | type       | answer   | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |

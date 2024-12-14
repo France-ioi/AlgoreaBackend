@@ -112,6 +112,8 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
 		return service.ErrInvalidRequest(err)
 	}
 
+	logging.LogEntrySetField(r, "user_id", requestData.ScoreToken.Converted.UserID)
+
 	var validated, ok bool
 	unlockedItems := make([]map[string]interface{}, 0)
 	err = store.InTransaction(func(store *database.DataStore) error {
@@ -133,7 +135,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.AP
          ON default_strings.item_id = items.id AND default_strings.language_tag = items.default_language_tag`).
 			Joins(`LEFT JOIN items_strings user_strings
          ON user_strings.item_id=items.id AND user_strings.language_tag = (SELECT default_language FROM users WHERE group_id = ?)`,
-				requestData.ScoreToken.UserID).
+				requestData.ScoreToken.Converted.UserID).
 			Where("items.id IN (?)", unlockedItemIDs.Values()).
 			Order("items.id").
 			ScanIntoSliceOfMaps(&unlockedItems).Error())
