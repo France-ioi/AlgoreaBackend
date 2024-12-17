@@ -345,5 +345,5 @@ Feature: Ask for a hint
     And the table "results_propagate" should be empty
     And logs should contain:
       """
-      Unable to parse hints_requested ({"idAttempt":"101/0","idItemLocal":"50","idUser":"101"}) having value "not an array": invalid character 'o' in literal null (expecting 'u')
+      {{ quote(`Unable to parse hints_requested ({"idAttempt":"101/0","idItemLocal":"50","idUser":"101"}) having value "not an array": invalid character 'o' in literal null (expecting 'u')`) }}
       """

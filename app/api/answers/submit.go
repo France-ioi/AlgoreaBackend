@@ -13,6 +13,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/doc"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
@@ -94,6 +95,8 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	var answerID int64
 	var hintsInfo *database.HintsInfo
 	apiError := service.NoError
+
+	logging.LogEntrySetField(httpReq, "user_id", requestData.TaskToken.Converted.UserID)
 
 	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool

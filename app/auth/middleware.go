@@ -98,6 +98,8 @@ func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *ht
 	ctx = context.WithValue(ctx, ctxUser, &user)
 	ctx = context.WithValue(ctx, ctxSessionID, sessionID)
 
+	logging.LogEntrySetField(r, "user_id", user.GroupID)
+
 	return ctx, true, "", nil
 }
 

@@ -206,7 +206,7 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 			assert.NoError(t, mock.ExpectationsWereMet())
 
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-			assert.Contains(t, logs, fmt.Sprintf("Retrying transaction (count: 1) after Error %d: ", errorNumber))
+			assert.Contains(t, logs, fmt.Sprintf("Retrying transaction (count: 1) after Error %d:", errorNumber))
 		})
 	}
 }

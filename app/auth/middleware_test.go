@@ -47,6 +47,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123\nBearer:1234567",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "missing access token",
@@ -62,7 +63,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       500,
 			expectedServiceWasCalled: false,
 			expectedBody:             `{"success":false,"message":"Internal server error"}` + "\n",
-			expectedLogs:             `level=error msg="Can't validate an access token: some error"`,
+			expectedLogs:             `level=error .* msg="Can't validate an access token: some error"`,
 		},
 		{
 			name:                     "expired token",
@@ -117,6 +118,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "accepts access token from cookies",
@@ -126,6 +128,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name: "takes the first access token from cookies",
@@ -138,6 +141,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "prefers an access token from the Authorization header if both cookie and the Authorization header are given",
@@ -148,6 +152,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "sets user attributes",
@@ -217,10 +222,8 @@ func TestUserMiddleware(t *testing.T) {
 			}
 			assert.Contains(string(bodyBytes), tt.expectedBody)
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-			if tt.expectedLogs == "" {
-				assert.Empty(logs)
-			} else {
-				assert.Contains(logs, tt.expectedLogs)
+			if tt.expectedLogs != "" {
+				assert.Regexp(tt.expectedLogs, logs)
 			}
 			assert.NoError(mock.ExpectationsWereMet())
 		})
@@ -281,7 +284,7 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))
 	})
-	mainSrv := httptest.NewServer(middleware(handler))
+	mainSrv := httptest.NewServer(logging.NewStructuredLogger()(middleware(handler)))
 	defer mainSrv.Close()
 
 	// calling web server

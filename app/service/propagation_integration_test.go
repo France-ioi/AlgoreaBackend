@@ -3,6 +3,7 @@ package service_test
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -120,7 +121,7 @@ func TestSchedulePropagation(t *testing.T) {
 			// Verify logs.
 			if tt.loggedError != "" {
 				logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-				assert.Contains(t, logs, fmt.Sprintf("level=error msg=%q", tt.loggedError))
+				assert.Regexp(t, "level=error .* "+regexp.QuoteMeta(fmt.Sprintf("msg=%q", tt.loggedError)), logs)
 			}
 		})
 	}

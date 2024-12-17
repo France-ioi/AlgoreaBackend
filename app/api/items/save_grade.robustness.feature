@@ -299,7 +299,7 @@ Feature: Save grading result - robustness
     And the response error message should contain "The answer has been already graded or is not found"
     And logs should contain:
     """
-    A user tries to replay a score token with a different score value ({"idAttempt":"101/1","idItem":"80","idUser":"101","idUserAnswer":"124","newScore":100,"oldScore":0})
+    {{ quote(`A user tries to replay a score token with a different score value ({"idAttempt":"101/1","idItem":"80","idUser":"101","idUserAnswer":"124","newScore":100,"oldScore":0})`) }}
     """
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged

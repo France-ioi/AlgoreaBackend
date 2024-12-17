@@ -23,6 +23,11 @@ func newTextFormatter(useColors bool) *textFormatter {
 	}}
 }
 
+// NewTextFormatterForTests creates a new text formatter without colors.
+func NewTextFormatterForTests() logrus.Formatter {
+	return newTextFormatter(false)
+}
+
 var spacesRegexp = regexp.MustCompile(`\s+`)
 
 func (f *textFormatter) Format(entry *logrus.Entry) ([]byte, error) {
