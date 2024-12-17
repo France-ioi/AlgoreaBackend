@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.1...v2.24.2) - 2024-12-17
+- add `user_id` into "request complete" logs
+
 ## [v2.24.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.0...v2.24.1) - 2024-12-13
 - fix: render `item_id` of `unlocked_items` in `saveGrade` as string
 
