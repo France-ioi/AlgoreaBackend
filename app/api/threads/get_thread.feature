@@ -31,7 +31,9 @@ Feature: Get thread
       | group_id | item_id | can_view_generated       | can_watch_generated |
       | 1        | 10      | content                  | none                |
       | 1        | 21      | content_with_descendants | none                |
-      | 2        | 30      | none                     | answer              |
+      | 2        | 30      | content                  | answer              |
+      | 4        | 40      | content                  | result              |
+      | 20       | 50      | content                  | result              |
     And the database has the following table "threads":
       | item_id | participant_id | status                  | helper_group_id | latest_update_at    |
       | 10      | 2              | closed                  | 2               | 2019-01-01 00:00:00 |
@@ -84,7 +86,10 @@ Feature: Get thread
     And the response at $.item_id should be "30"
     And the response at $.status should be "waiting_for_trainer"
 
-  Scenario: The current-user is descendant of the thread helper group and the thread is open and user has validated the item
+  Scenario: >
+    The current user is a descendant of the thread's helper group
+      and can watch for results and the thread is open
+      and the current user has a validated result on the item
     Given I am the user with id "4"
     When I send a GET request to "/items/40/participant/3/thread"
     Then the response code should be 200
@@ -93,9 +98,10 @@ Feature: Get thread
     And the response at $.status should be "waiting_for_participant"
 
   Scenario: >
-      The current-user is descendant of the thread helper group
+      The current user is a descendant of the thread's helper group
+      and the current user can watch for results
       and the thread is closed for less than 2 weeks
-      and user has validated the item
+      and the current user has a validated result on the item
     Given I am the user with id "4"
     When I send a GET request to "/items/50/participant/3/thread"
     Then the response code should be 200

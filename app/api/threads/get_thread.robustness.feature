@@ -76,60 +76,85 @@ Feature: Get thread - robustness
 
   Scenario: >
       Should be forbidden when
-      the current-user is descendant of the thread helper group
-      and user has validated the item
-      but the thread is closed for more than 2 weeks
+      the current user is a descendant of the thread helper group
+      and the current user has a validated result on the item,
+      and the current user has can_watch=result permission on the item,
+      but the thread has been closed for more than 2 weeks
     Given I am the user with id "4"
+    And I have the watch permission set to "result" on the item 20
     When I send a GET request to "/items/20/participant/3/thread"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: >
       Should be forbidden when
-      the current-user is descendant of the thread helper group
-      and the thread is closed for less than 2 weeks
-      but the user has not validated the item
+      the current user is a descendant of the thread helper group
+      and the thread has been closed for less than 2 weeks,
+      and the current user has can_watch=result permission on the item,
+      but the current user doesn't have a validated result on the item
     Given I am the user with id "4"
+    And I have the watch permission set to "result" on the item 40
     When I send a GET request to "/items/40/participant/3/thread"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: >
       Should be forbidden when
-      the current-user is descendant of the thread helper group
-      and the thread is closed for less than 2 weeks
-      but the user has not entry in results for the item
+      the current user is a descendant of the thread helper group,
+      and the thread has been closed for less than 2 weeks,
+      and the current user has can_watch=result permission on the item,
+      but the current user doesn't have an entry in results for the item
     Given I am the user with id "4"
+    And I have the watch permission set to "result" on the item 50
     When I send a GET request to "/items/50/participant/3/thread"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: >
       Should be forbidden when
-      The current-user has validated the item
-      and the thread is closed for less than 2 weeks
+      the current user has a validated result on the item,
+      and the user has can_watch=result permission on the item,
+      and the thread has been closed for less than 2 weeks,
       but the user is not a descendant of the thread helper group
     Given I am the user with id "4"
+    And I have the watch permission set to "result" on the item 60
     When I send a GET request to "/items/60/participant/3/thread"
       Then the response code should be 403
       And the response error message should contain "Insufficient access rights"
 
   Scenario: >
       Should be forbidden when
-      the thread is open
-      and current-user has validated the item
-      but the user is not a descendant of the thread helper group
+      the thread is open,
+      and the current user has a validated result on the item,
+      and the current user has can_watch=result permission on the item,
+      but the current user is not a descendant of the thread helper group
     Given I am the user with id "4"
+    And I have the watch permission set to "result" on the item 70
     When I send a GET request to "/items/70/participant/3/thread"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: >
       Should be forbidden when
-      the thread is open
-      and the user is a descendant of the thread helper group
-      but the user has not validated the item
+      the thread is open,
+      and the current user is a descendant of the thread helper group,
+      and the current user has can_watch=result permission on the item,
+      but the current user doesn't have a validated result on the item
     Given I am the user with id "4"
+    And I have the watch permission set to "result" on the item 80
+    When I send a GET request to "/items/80/participant/3/thread"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: >
+      Should be forbidden when
+      the thread is open,
+      and the current user is a descendant of the thread helper group,
+      and the current user has a validated result on the item
+      but the current user has can_watch<result permission on the item
+    Given I am the user with id "4"
+    And I have a validated result on the item 80
+    And I have the watch permission set to "none" on the item 80
     When I send a GET request to "/items/80/participant/3/thread"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
