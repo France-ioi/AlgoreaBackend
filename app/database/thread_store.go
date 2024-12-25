@@ -28,44 +28,6 @@ func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int
 	mustNotBeError(err)
 }
 
-// CanRetrieveThread checks whether a user can retrieve a thread.
-func (s *ThreadStore) CanRetrieveThread(user *User, participantID, itemID int64) bool {
-	//nolint TODO: Try to make the permission checks one query with OR instead of using subqueries.
-
-	//nolint TODO: We need to update GORM for this and use https://gorm.io/docs/advanced_query.html#Group-Conditions
-	// Update in progress by Dmitry: https://github.com/France-ioi/AlgoreaBackend/issues/769
-
-	// we check the permissions first without joining the threads because we need to distinguish between an
-	// access error and the non-existence of the thread, which should be reported as status=not_started
-
-	// check if the current-user is the thread participant and allowed to "can_view >= content" the item
-	currentUserParticipantCanViewContent, err := s.Permissions().MatchingUserAncestors(user).
-		Where("? = ?", user.GroupID, participantID).
-		Where("permissions.item_id = ?", itemID).
-		WherePermissionIsAtLeast("view", "content").
-		Select("1").
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-	if currentUserParticipantCanViewContent {
-		return true
-	}
-
-	// the current-user has the "can_watch >= answer" permission on the item
-	if user.CanWatchItemAnswer(s.DataStore, itemID) {
-		return true
-	}
-
-	currentUserCanHelp, err := s.Threads().
-		WhereUserCanHelp(user).
-		Where("threads.item_id = ?", itemID).
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-
-	return currentUserCanHelp
-}
-
 // GetThreadQuery returns a query to get a thread's information.
 func (s *ThreadStore) GetThreadQuery(participantID, itemID int64) *DB {
 	return s.
