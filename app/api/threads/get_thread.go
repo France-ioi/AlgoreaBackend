@@ -52,6 +52,7 @@ type threadGetResponse struct {
 //					* the current user should be a descendant of the thread helper_group AND
 //					* the thread should be either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks AND
 //					* the current user should have a validated result on the item.
+//
 //			Otherwise, a forbidden error is returned.
 //
 //	parameters:
