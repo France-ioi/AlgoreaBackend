@@ -38,6 +38,19 @@ type threadInfo struct {
 	UserHasValidatedResultOnItem  bool
 }
 
+func userCanWriteInThread(user *database.User, participantID int64, threadInfo *threadInfo) bool {
+	return database.IsThreadOpenStatus(threadInfo.ThreadStatus) &&
+		((participantID == user.GroupID) ||
+			(threadInfo.UserCanWatchAnswer && threadInfo.UserCanWatchForParticipant) ||
+			(threadInfo.UserIsDescendantOfHelperGroup &&
+				(threadInfo.UserCanWatchAnswer ||
+					threadInfo.UserCanWatchResult && threadInfo.UserHasValidatedResultOnItem)))
+}
+
+func userCanWatchForThread(threadInfo *threadInfo) bool {
+	return threadInfo.UserCanWatchAnswer && threadInfo.UserCanWatchForParticipant
+}
+
 func constructThreadInfoQuery(store *database.DataStore, user *database.User, itemID, participantID int64) *database.DB {
 	canWatchForParticipantSubQuery := store.ActiveGroupAncestors().ManagedByUser(user).
 		Where("groups_ancestors_active.child_group_id = ?", participantID).

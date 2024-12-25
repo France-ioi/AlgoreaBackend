@@ -125,7 +125,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 
 	threadGetResponse.Status = threadInfo.ThreadStatus
 
-	threadGetResponse.ThreadToken, err = srv.generateThreadToken(itemID, participantID, user, store)
+	threadGetResponse.ThreadToken, err = srv.generateThreadToken(itemID, participantID, &threadInfo, user)
 	service.MustNotBeError(err)
 
 	render.Respond(rw, r, threadGetResponse)
@@ -133,7 +133,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 	return service.NoError
 }
 
-func (srv *Service) generateThreadToken(itemID, participantID int64, user *database.User, store *database.DataStore) (string, error) {
+func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo *threadInfo, user *database.User) (string, error) {
 	twoHoursLater := time.Now().Add(time.Hour * 2)
 
 	threadToken, err := (&token.Thread{
@@ -141,8 +141,8 @@ func (srv *Service) generateThreadToken(itemID, participantID int64, user *datab
 		ParticipantID: strconv.FormatInt(participantID, 10),
 		UserID:        strconv.FormatInt(user.GroupID, 10),
 		IsMine:        participantID == user.GroupID,
-		CanWatch:      user.CanWatchItemAnswer(store, itemID) && user.CanWatchGroupMembers(store, participantID),
-		CanWrite:      store.Threads().UserCanWrite(user, participantID, itemID),
+		CanWatch:      userCanWatchForThread(threadInfo),
+		CanWrite:      userCanWriteInThread(user, participantID, threadInfo),
 		Exp:           strconv.FormatInt(twoHoursLater.Unix(), 10),
 	}).Sign(srv.TokenConfig.PrivateKey)
 
