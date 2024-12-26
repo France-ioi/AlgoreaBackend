@@ -9,11 +9,6 @@ type ThreadStore struct {
 	*DataStore
 }
 
-// NewThreadStore returns a new thread store.
-func (s *DataStore) NewThreadStore(db *DB) *ThreadStore {
-	return &ThreadStore{NewDataStoreWithTable(db, s.tableName)}
-}
-
 // UpdateHelperGroupID updates all occurrences of a certain helper_group_id to a new value.
 func (s *ThreadStore) UpdateHelperGroupID(oldHelperGroupID, newHelperGroupID int64) {
 	var err error
