@@ -23,13 +23,6 @@ func (s *ItemStore) VisibleByID(groupID, itemID int64) *DB {
 	return s.Visible(groupID).Where("items.id = ?", itemID)
 }
 
-// WhereItemsAreSelfOrDescendantsOf filters items who are self or descendant of a given item.
-func (conn *DB) WhereItemsAreSelfOrDescendantsOf(itemAncestorID int64) *DB {
-	return conn.
-		Joins("LEFT JOIN items_ancestors ON items_ancestors.child_item_id = items.id").
-		Where("(items_ancestors.ancestor_item_id = ? OR items.id = ?)", itemAncestorID, itemAncestorID)
-}
-
 // GetSearchQuery returns a query for searching items by title.
 // It returns only items visible for the given user, which matches the given types.
 func (s *ItemStore) GetSearchQuery(user *User, searchString string, typesList []string) *DB {
