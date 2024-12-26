@@ -177,7 +177,7 @@ Feature: Update thread - robustness
   #  (1) be the participant of the thread
   #  (2) have can_watch>=answer permission on the item AND can_watch_members on the participant
   #  (3) be part of the group the participant has requested help to AND either have can_watch>=answer on the item
-  #    OR have validated the item.
+  #    OR (have can_watch=result permission AND a validated result on the item).
   Scenario: >
   Should return access error when the status is not set and
   "can write to thread" condition (2) is not met: can_watch>=answer not met
@@ -210,7 +210,7 @@ Feature: Update thread - robustness
 
   Scenario: >
   Should return access error when the status is not set and
-  "can write to thread" condition (3) is not met: user is not part of the help group
+  "can write to thread" condition (3) is not met: user is not a part of the help group
     Given I am the user with id "1"
     And I have a validated result on the item 40
     And I have the watch permission set to "answer" on the item 40
@@ -226,9 +226,28 @@ Feature: Update thread - robustness
 
   Scenario: >
   Should return access error when the status is not set and
-  "can write to thread" condition (3) is not met: user have neither can_watch>=answer, nor validated the item
+  "can write to thread" condition (3) is not met:
+  user has neither can_watch>=answer permission, nor a validated result on the item,
+  although he has a can_watch=result permission on the item
     Given I am the user with id "5"
     And there is a thread with "item_id=50,participant_id=3"
+    And I have the watch permission set to "result" on the item 50
+    When I send a PUT request to "/items/50/participant/3/thread" with the following body:
+      """
+      {
+        "message_count": 42
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: >
+  Should return access error when the status is not set and
+  "can write to thread" condition (3) is not met: user has neither can_watch>=answer, nor can_watch=result,
+  although he has a validated result on the item
+    Given I am the user with id "5"
+    And there is a thread with "item_id=50,participant_id=3"
+    And I have a validated result on the item 50
     When I send a PUT request to "/items/50/participant/3/thread" with the following body:
       """
       {
@@ -417,7 +436,9 @@ Feature: Update thread - robustness
       | 130     | answer            | waiting_for_trainer     |
       | 140     | answer_with_grant | waiting_for_participant |
 
-  Scenario: Cannot switch between open status if only can_watch>answer but not a part of the helper group, and cannot watch participant
+  Scenario: >
+  Cannot switch between open statuses if the user has only can_watch>answer permission on the item,
+  but he is not a descendant of the helper group and he cannot watch for the participant
     Given I am the user with id "1"
     And I have the watch permission set to "answer" on the item 150
     And there is a thread with "item_id=150,participant_id=3,status=waiting_for_participant"
@@ -430,10 +451,28 @@ Feature: Update thread - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: Cannot switch between open status if only item validated but not a part of the helper group, and cannot watch participant
+  Scenario: >
+  Cannot switch between open statuses if the user has can_watch=result permission and a validated result on the item,
+  but he is not a descendant of the helper group and he cannot watch for the participant
     Given I am the user with id "1"
     And I have a validated result on the item 160
+    And I have the watch permission set to "result" on the item 160
     And there is a thread with "item_id=160,participant_id=3,status=waiting_for_trainer"
+    When I send a PUT request to "/items/160/participant/3/thread" with the following body:
+      """
+      {
+        "status": "waiting_for_participant"
+      }
+      """
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+
+  Scenario: >
+  Cannot switch between open statuses if the user is a descendant of the helper group and has a validated result on the item,
+  but doesn't have can_watch=result permission on the item
+    Given I am the user with id "1"
+    And I have a validated result on the item 160
+    And there is a thread with "item_id=160,participant_id=3,helper_group_id=1,status=waiting_for_trainer"
     When I send a PUT request to "/items/160/participant/3/thread" with the following body:
       """
       {
