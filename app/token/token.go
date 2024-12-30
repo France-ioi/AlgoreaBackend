@@ -133,6 +133,24 @@ func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte
 	return token
 }
 
+// UnexpectedError represents an unexpected error so that we could differentiate it from expected errors.
+type UnexpectedError struct {
+	err error
+}
+
+// Error returns a string representation for an unexpected error.
+func (ue *UnexpectedError) Error() string {
+	return ue.err.Error()
+}
+
+// IsUnexpectedError returns true if its argument is an unexpected error.
+func IsUnexpectedError(err error) bool {
+	if _, unexpected := err.(*UnexpectedError); unexpected {
+		return true
+	}
+	return false
+}
+
 // UnmarshalDependingOnItemPlatform unmarshals a token from JSON representation
 // using a platform's public key for given itemID.
 // The function returns nil (success) if the platform doesn't use tokens.
@@ -144,11 +162,14 @@ func UnmarshalDependingOnItemPlatform(
 	tokenFieldName string,
 ) (platformHasKey bool, err error) {
 	targetRefl := reflect.ValueOf(target)
+	defer recoverPanics(&err)
 
 	publicKey, err := store.Platforms().GetPublicKeyByItemID(itemID)
 	if gorm.IsRecordNotFoundError(err) {
 		return false, fmt.Errorf("cannot find the platform for item %d", itemID)
 	}
+	mustNotBeError(err)
+
 	if publicKey == "" {
 		return false, nil
 	}
@@ -174,4 +195,16 @@ func UnmarshalDependingOnItemPlatform(
 	}
 
 	return true, nil
+}
+
+func mustNotBeError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func recoverPanics(err *error) { // nolint:gocritic
+	if r := recover(); r != nil {
+		*err = &UnexpectedError{err: r.(error)}
+	}
 }

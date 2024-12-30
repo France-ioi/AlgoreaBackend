@@ -248,7 +248,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 		wrapper.HintRequestedToken.Bytes(),
 		"hint_requested",
 	)
-	if err != nil {
+	if err != nil && !token.IsUnexpectedError(err) {
 		return err
 	}
 	service.MustNotBeError(err)
