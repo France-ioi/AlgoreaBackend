@@ -15,6 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
@@ -127,12 +128,14 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := database.NewDBMock()
 			defer func() { _ = db.Close() }()
 
 			if tt.mockDB {
-				mockQuery := mock.ExpectQuery(regexp.QuoteMeta("SELECT public_key " +
-					"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?) LIMIT 1")).
+				mockQuery := mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT public_key "+
+					"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?) LIMIT 1") + "$").
 					WithArgs(tt.itemID)
 
 				if tt.platform != nil {
