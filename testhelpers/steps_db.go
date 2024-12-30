@@ -645,26 +645,29 @@ func (ctx *TestContext) formatDBRowAsTableRow(dbRow []*string) string {
 		}
 
 		dbRowValuesStr[i] = *value
-
-		if id, err := strconv.ParseInt(dbRowValuesStr[i], 10, 64); err == nil {
-			if reference, ok := ctx.idToReferenceMap[id]; ok {
-				dbRowValuesStr[i] = reference
-			}
-			continue
-		}
-
-		if dbRowValuesStr[i] == time.Now().Format(time.DateTime) {
-			dbRowValuesStr[i] = "{{currentTimeDB()}}"
-			continue
-		}
-
-		if dbRowValuesStr[i] == time.Now().Format("2006-01-02 15:04:05.000") {
-			dbRowValuesStr[i] = "{{currentTimeDBMs()}}"
-			continue
-		}
+		dbRowValuesStr[i] = ctx.readableValue(dbRowValuesStr[i])
 	}
 
 	return "| " + strings.Join(dbRowValuesStr, " | ") + " |"
+}
+
+func (ctx *TestContext) readableValue(value string) string {
+	if id, err := strconv.ParseInt(value, 10, 64); err == nil {
+		if reference, ok := ctx.idToReferenceMap[id]; ok {
+			return reference
+		}
+		return value
+	}
+
+	if value == time.Now().Format(time.DateTime) {
+		return "{{currentTimeDB()}}"
+	}
+
+	if value == time.Now().Format("2006-01-02 15:04:05.000") {
+		return "{{currentTimeDBMs()}}"
+	}
+
+	return value
 }
 
 // dataRowMatchesSQLRow checks that a data row matches a row from database.
