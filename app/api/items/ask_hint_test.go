@@ -179,3 +179,27 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestAskHintRequest_UnmarshalJSON_DBError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("error")
+	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT public_key "+
+		"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?) LIMIT 1") + "$").
+		WithArgs(901756573345831409).WillReturnError(expectedError)
+
+	r := &AskHintRequest{
+		store:     database.NewDataStore(db),
+		publicKey: tokentest.AlgoreaPlatformPublicKeyParsed,
+	}
+	assert.PanicsWithError(t, expectedError.Error(), func() {
+		_ = r.UnmarshalJSON([]byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": %q}`,
+			token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
+			token.Generate(payloadstest.HintPayloadFromTaskPlatform, tokentest.TaskPlatformPrivateKeyParsed),
+		)))
+	})
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
