@@ -55,7 +55,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the group (@\w+) is a manager of the group (@\w+) and can grant group access`,
 		ctx.GroupIsAManagerOfTheGroupAndCanGrantGroupAccess)
 	s.Step(
-		`^the group (@\w+) is a manager of the group (@\w+) and can can manage memberships and the group`,
+		`^the group (@\w+) is a manager of the group (@\w+) and can manage memberships and the group`,
 		ctx.GroupIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
 	)
 
@@ -98,7 +98,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the response should be "([^"]*)"$`, ctx.TheResponseShouldBe)
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
 
-	s.Step(`^the response should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
+	s.Step(`^the response should be a JSON array with (\d+) entr(?:ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
 	s.Step(`^the response at ([^ ]+) should be "([^"]*)"$`, ctx.TheResponseAtShouldBeTheValue)
 	s.Step("^the response at ([^ ]+) should be:$", ctx.TheResponseAtShouldBe)
 	s.Step("^the response at ([^ ]+) in JSON should be:$", ctx.TheResponseAtInJSONShouldBe)
