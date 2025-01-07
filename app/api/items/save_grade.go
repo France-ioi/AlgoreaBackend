@@ -306,9 +306,10 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 			wrapper.ScoreToken.Bytes(),
 			"score_token",
 		)
-		if err != nil {
+		if err != nil && !token.IsUnexpectedError(err) {
 			return err
 		}
+		service.MustNotBeError(err)
 	}
 
 	if !hasScoreToken || !hasPlatformKey {
