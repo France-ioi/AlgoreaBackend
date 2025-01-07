@@ -121,11 +121,19 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *godog.Tabl
 
 		// The result is an array (eg. "element": [...])
 		if len(typedJSONRes) != wantLength {
+			expectedJSONRows := make([]interface{}, len(typedJSONRes))
+			for index, row := range typedJSONRes {
+				if strValue, ok := row.(string); ok {
+					expectedJSONRows[index] = ctx.readableValue(strValue)
+				} else {
+					expectedJSONRows[index] = row
+				}
+			}
 			return fmt.Errorf(
 				"TheResponseAtShouldBe: The JsonPath result length should be %v but is %v for %v",
 				wantLength,
 				len(typedJSONRes),
-				typedJSONRes,
+				expectedJSONRows,
 			)
 		}
 
