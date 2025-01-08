@@ -11,6 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // threadUpdateFields represents the fields of a thread in database.
@@ -40,7 +41,7 @@ type updateThreadRequest struct {
 //	summary: Update a thread
 //	description: >
 //
-//		Service to update thread information.
+//		Updates a thread with the given information.
 //
 //
 //		If the thread doesn't exist, it is created.
@@ -120,20 +121,15 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 	service.MustBeNoError(apiError)
 
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		var oldThread struct {
-			Status        string
-			HelperGroupID int64
-			MessageCount  int
-		}
-		err = store.
-			WithExclusiveWriteLock().
-			Threads().
-			GetThreadInfo(participantID, itemID, &oldThread)
+		user := srv.GetUser(r)
+
+		var oldThreadInfo threadInfo
+		err = database.NewDataStore(constructThreadInfoQuery(store, user, itemID, participantID)).
+			WithCustomWriteLocks(golang.NewSet[string](), golang.NewSet[string]("threads")).
+			Take(&oldThreadInfo).Error()
 		if !gorm.IsRecordNotFoundError(err) {
 			service.MustNotBeError(err)
 		}
-
-		user := srv.GetUser(r)
 
 		input := updateThreadRequest{}
 		formData := formdata.NewFormData(&input)
@@ -142,11 +138,11 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		formData.RegisterTranslation("exclude_increment_if_message_count_set",
 			"cannot have both message_count and message_count_increment set")
 		formData.RegisterValidation("helper_group_id_set_if_non_open_to_open_status",
-			constructHelperGroupIDSetIfNonOpenToOpenStatus(oldThread.Status))
+			constructHelperGroupIDSetIfNonOpenToOpenStatus(oldThreadInfo.ThreadStatus))
 		formData.RegisterTranslation("helper_group_id_set_if_non_open_to_open_status",
 			"the helper_group_id must be set to switch from a non-open to an open status")
 		formData.RegisterValidation("helper_group_id_not_set_when_set_or_keep_closed",
-			constructHelperGroupIDNotSetWhenSetOrKeepClosed(oldThread.Status))
+			constructHelperGroupIDNotSetWhenSetOrKeepClosed(oldThreadInfo.ThreadStatus))
 		formData.RegisterTranslation("helper_group_id_not_set_when_set_or_keep_closed",
 			"the helper_group_id must not be given when setting or keeping status to closed")
 		formData.RegisterValidation("group_visible_by", constructValidateGroupVisibleBy(srv, r))
@@ -162,12 +158,13 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 			return apiError.Error
 		}
 
-		apiError = checkUpdateThreadPermissions(user, store, oldThread.Status, input, itemID, participantID)
+		apiError = checkUpdateThreadPermissions(user, oldThreadInfo.ThreadStatus, input, participantID, &oldThreadInfo)
 		if apiError != service.NoError {
 			return apiError.Error
 		}
 
-		threadData := computeNewThreadData(formData, oldThread.MessageCount, oldThread.HelperGroupID, input, itemID, participantID)
+		threadData := computeNewThreadData(
+			formData, oldThreadInfo.ThreadMessageCount, oldThreadInfo.ThreadHelperGroupID, input, itemID, participantID)
 		service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil))
 
 		return nil
@@ -212,11 +209,10 @@ func computeNewThreadData(
 
 func checkUpdateThreadPermissions(
 	user *database.User,
-	store *database.DataStore,
 	oldThreadStatus string,
 	input updateThreadRequest,
-	itemID int64,
 	participantID int64,
+	threadInfo *threadInfo,
 ) service.APIError {
 	if input.Status == "" {
 		if input.HelperGroupID == nil && input.MessageCount == nil && input.MessageCountIncrement == nil {
@@ -225,10 +221,10 @@ func checkUpdateThreadPermissions(
 		}
 
 		// the current-user must be allowed to write
-		if !store.Threads().UserCanWrite(user, participantID, itemID) {
+		if !userCanWriteInThread(user, participantID, threadInfo) {
 			return service.InsufficientAccessRightsError
 		}
-	} else if !store.Threads().UserCanChangeStatus(user, oldThreadStatus, input.Status, participantID, itemID) {
+	} else if !userCanChangeThreadStatus(user, oldThreadStatus, input.Status, participantID, threadInfo) {
 		return service.InsufficientAccessRightsError
 	}
 
@@ -323,4 +319,38 @@ func excludeIncrementIfMessageCountSetValidator(messageCountField validator.Fiel
 	messageCountIncrementPtr := messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Interface().(*int)
 
 	return !(messageCountPtr != nil && messageCountIncrementPtr != nil)
+}
+
+// userCanChangeThreadStatus checks whether a user can change the status of a thread
+//   - The participant of a thread can always switch the thread from open to any another other status.
+//     He can only switch it from non-open to an open status if he is allowed to request help on this item
+//   - A user who has can_watch>=answer on the item AND can_watch_members on the participant:
+//     can always switch a thread to any open status (i.e. he can always open it but not close it)
+//   - A user who can write on the thread can switch from an open status to another open status.
+func userCanChangeThreadStatus(user *database.User, oldStatus, newStatus string, participantID int64, threadInfo *threadInfo) bool {
+	if oldStatus == newStatus {
+		return true
+	}
+
+	wasOpen := database.IsThreadOpenStatus(oldStatus)
+	willBeOpen := database.IsThreadOpenStatus(newStatus)
+
+	if user.GroupID == participantID {
+		// * the participant of a thread can always switch the thread from open to any another other status.
+		// * he can only switch it from not-open to an open status if he is allowed to request help on this item.
+		// -> "allowed request help" have been checked before calling this method, therefore, the user can always
+		//     change the status in this situation.
+		return true
+	} else if willBeOpen {
+		// a user who has can_watch>=answer on the item AND can_watch_members on the participant:
+		// can always switch a thread to any open status (i.e. he can always open it but not close it)
+		if userCanWatchForThread(threadInfo) {
+			return true
+		} else if wasOpen {
+			// a user who can write on the thread can switch from an open status to another open status
+			return userCanWriteInThread(user, participantID, threadInfo)
+		}
+	}
+
+	return false
 }

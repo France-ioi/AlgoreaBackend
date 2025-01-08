@@ -17,6 +17,18 @@ Feature: List threads - robustness
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
+  Scenario: The user should have can_view >= content permission on the item_id
+    Given I am @John
+    And the database has the following table "items":
+      | id  | default_language_tag |
+      | 100 | fr                   |
+    And the database has the following table "permissions_generated":
+      | item_id | group_id | can_view_generated |
+      | 100     | @John    | info               |
+    When I send a GET request to "/threads?is_mine=1&item_id=100"
+    Then the response code should be 403
+    And the response error message should contain "No rights to view content of the item"
+
   Scenario: The user should be a manager of watched_group_id group
     Given I am @John
     And there is a group @Classroom

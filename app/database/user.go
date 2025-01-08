@@ -145,18 +145,6 @@ func (u *User) HasStartedResultOnItem(s *DataStore, itemID int64) bool {
 	return hasStartedResultOntem
 }
 
-// HasValidatedItem checks whether the user has validated an item.
-func (u *User) HasValidatedItem(s *DataStore, itemID int64) bool {
-	hasValidatedItem, err := s.Results().
-		Where("results.item_id = ?", itemID).
-		Where("results.validated").
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-
-	return hasValidatedItem
-}
-
 // IsMemberOfGroupOrSelf checks whether the user is a member of a group, or is the group.
 func (u *User) IsMemberOfGroupOrSelf(s *DataStore, groupID int64) bool {
 	if groupID == u.GroupID {

@@ -90,7 +90,7 @@ Feature: Update thread
   #  (1) be the participant of the thread
   #  (2) have can_watch>=answer permission on the item AND can_watch_members on the participant
   #  (3) be part of the group the participant has requested help to AND either have can_watch>=answer on the item
-  #    OR have validated the item.
+  #    OR (have can_watch>=answer on the item AND have a validated result on the item).
   Scenario: Can write to thread condition (1) when status is not set
     Given I am the user with id "1"
     And there is a thread with "item_id=10,participant_id=1"
@@ -140,11 +140,12 @@ Feature: Update thread
       | latest_update_at    | message_count |
       | 2022-01-01 00:00:00 | 3             |
 
-  Scenario: Can write to thread test condition (3) with validated item, when status is not set
+  Scenario: Can write to thread test condition (3) with validated item and can_watch=result permission on the item, when status is not set
     Given I am the user with id "4"
     And there is a thread with "item_id=40,participant_id=3"
     And I am part of the helper group of the thread
     And I have a validated result on the item 40
+    And I have the watch permission set to "result" on the item 40
     When I send a PUT request to "/items/40/participant/3/thread" with the following body:
       """
       {
@@ -296,9 +297,10 @@ Feature: Update thread
       | 220     | waiting_for_trainer     | waiting_for_participant |
       | 230     | waiting_for_participant | waiting_for_trainer     |
 
-  Scenario Outline: Can switch to open if part of the group the participant has requested help to AND have validated the item
+  Scenario Outline: Can switch to open if part of the group the participant has requested help to AND (have can_watch=result permission and a validated result on the item)
     Given I am the user with id "4"
     And I have a validated result on the item <item_id>
+    And I have the watch permission set to "result" on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>,helper_group_id=50"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """

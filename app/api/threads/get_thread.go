@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/render"
+	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
@@ -42,13 +43,16 @@ type threadGetResponse struct {
 //
 //
 //		Restrictions:
+//			* the current user should have `can_view` >= content permission on the item AND
 //			* one of these conditions must match:
-//				- the current-user is the thread participant and allowed to "can_view >= content" the item
-//				- the current-user has the "can_watch >= answer" permission on the item
-//				- the following rules all matches:
-//					* the current-user is descendant of the thread helper_group
-//					* the thread is either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks
-//					* the current-user has validated the item
+//				- the current user should be the thread's participant OR
+//				- the current user should have `can_watch` >= answer permission on the item OR
+//				- all the following rules should be satisfied:
+//					* the current user should have `can_watch` >= result permission on the item AND
+//					* the current user should be a descendant of the thread helper_group AND
+//					* the thread should be either open (=waiting_for_participant or =waiting_for_trainer), or closed for less than 2 weeks AND
+//					* the current user should have a validated result on the item.
+//
 //			Otherwise, a forbidden error is returned.
 //
 //	parameters:
@@ -91,17 +95,38 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	canRetrieveThread := store.Threads().CanRetrieveThread(user, participantID, itemID)
-	if !canRetrieveThread {
-		return service.InsufficientAccessRightsError
-	}
-
 	threadGetResponse := new(threadGetResponse)
 	threadGetResponse.ItemID = itemID
 	threadGetResponse.ParticipantID = participantID
-	threadGetResponse.Status = store.Threads().GetThreadStatus(participantID, itemID)
 
-	threadGetResponse.ThreadToken, err = srv.generateThreadToken(itemID, participantID, user, store)
+	// check if the current-user has "can_view >= content" on the item
+	currentUserCanViewContentSubQuery := store.Permissions().MatchingUserAncestors(user).
+		Where("permissions.item_id = ?", itemID).
+		WherePermissionIsAtLeast("view", "content").
+		Select("1").
+		Limit(1).
+		SubQuery()
+
+	var threadInfo threadInfo
+	err = constructThreadInfoQuery(store, user, itemID, participantID).
+		Where("?", currentUserCanViewContentSubQuery).
+		Having(`
+			(? = ?) OR
+			user_can_watch_answer OR (
+				(thread_is_open OR thread_was_updated_recently) AND
+				user_can_watch_result AND user_is_descendant_of_helper_group AND user_has_validated_result_on_item
+			)`,
+			user.GroupID, participantID).
+		Take(&threadInfo).Error()
+
+	if gorm.IsRecordNotFoundError(err) {
+		return service.InsufficientAccessRightsError
+	}
+	service.MustNotBeError(err)
+
+	threadGetResponse.Status = threadInfo.ThreadStatus
+
+	threadGetResponse.ThreadToken, err = srv.generateThreadToken(itemID, participantID, &threadInfo, user)
 	service.MustNotBeError(err)
 
 	render.Respond(rw, r, threadGetResponse)
@@ -109,7 +134,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 	return service.NoError
 }
 
-func (srv *Service) generateThreadToken(itemID, participantID int64, user *database.User, store *database.DataStore) (string, error) {
+func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo *threadInfo, user *database.User) (string, error) {
 	twoHoursLater := time.Now().Add(time.Hour * 2)
 
 	threadToken, err := (&token.Thread{
@@ -117,8 +142,8 @@ func (srv *Service) generateThreadToken(itemID, participantID int64, user *datab
 		ParticipantID: strconv.FormatInt(participantID, 10),
 		UserID:        strconv.FormatInt(user.GroupID, 10),
 		IsMine:        participantID == user.GroupID,
-		CanWatch:      user.CanWatchItemAnswer(store, itemID) && user.CanWatchGroupMembers(store, participantID),
-		CanWrite:      store.Threads().UserCanWrite(user, participantID, itemID),
+		CanWatch:      userCanWatchForThread(threadInfo),
+		CanWrite:      userCanWriteInThread(user, participantID, threadInfo),
 		Exp:           strconv.FormatInt(twoHoursLater.Unix(), 10),
 	}).Sign(srv.TokenConfig.PrivateKey)
 
