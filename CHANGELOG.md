@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.2...v2.24.3) - 2025-01-09
+- adapt threads-related services to the recent forum permission rules change + fix some bugs related to permissions checking there
+- handle DB errors during token unmarshalling correctly in `itemGetHintToken` & `saveGrade`
+- print readable values of expected JSON rows in TheResponseAtShouldBe() when lengths do not match
+- fix a mistake in a cucumber step name
+
 ## [v2.24.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.1...v2.24.2) - 2024-12-17
 - add `user_id` into "request complete" logs
 
