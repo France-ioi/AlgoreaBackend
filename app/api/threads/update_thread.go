@@ -51,6 +51,7 @@ type updateThreadRequest struct {
 //
 //
 //		Validations and restrictions:
+//			* the current user should have `can_view` >= content permission on the item in order to have the right to write to the thread.
 //			* if `status` is given:
 //				- The participant of a thread can always switch the thread from open to any another other status.
 //					He can only switch it from non-open to an open status if he is allowed to request help on this item.
@@ -120,9 +121,19 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 	rawRequestData, apiError := service.ResolveJSONBodyIntoMap(r)
 	service.MustBeNoError(apiError)
 
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		user := srv.GetUser(r)
+	user := srv.GetUser(r)
+	store := srv.GetStore(r)
 
+	userCanViewItemContent, err := store.Permissions().MatchingUserAncestors(user).
+		Where("permissions.item_id = ?", itemID).
+		WherePermissionIsAtLeast("view", "content").
+		HasRows()
+	service.MustNotBeError(err)
+	if !userCanViewItemContent {
+		return service.InsufficientAccessRightsError
+	}
+
+	err = store.InTransaction(func(store *database.DataStore) error {
 		var oldThreadInfo threadInfo
 		err = database.NewDataStore(constructThreadInfoQuery(store, user, itemID, participantID)).
 			WithCustomWriteLocks(golang.NewSet[string](), golang.NewSet[string]("threads")).
