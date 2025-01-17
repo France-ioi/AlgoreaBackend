@@ -2,6 +2,7 @@ package items
 
 import (
 	"net/http"
+	"sync/atomic"
 
 	"github.com/go-chi/render"
 
@@ -101,6 +102,8 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 			return apiError.Error // rollback
 		}
 
+		onBeforeInsertingResultInResultStartHook.Load().(func())()
+
 		itemID := ids[len(ids)-1]
 		var found bool
 		found, err = store.Items().ByID(itemID).
@@ -145,4 +148,10 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(&attemptInfo)))
 	return service.NoError
+}
+
+var onBeforeInsertingResultInResultStartHook atomic.Value
+
+func init() {
+	onBeforeInsertingResultInResultStartHook.Store(func() {})
 }
