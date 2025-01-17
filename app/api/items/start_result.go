@@ -129,6 +129,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 
 		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(r)).
 			Where("attempts.id = ?", attemptID).
+			WithExclusiveWriteLock().
 			Scan(&attemptInfo).Error())
 
 		if attemptInfo.UserCreator.GroupID == nil {
