@@ -71,6 +71,7 @@ Feature: Update thread
     Given I am the user with id "3"
     And there is no thread with "item_id=1000,participant_id=3"
     And I am a member of the group with id "100"
+    And I can view content of the item 1000
     And I can request help to the group with id "100" on the item with id "1000"
     When I send a PUT request to "/items/1000/participant/3/thread" with the following body:
       """
@@ -94,6 +95,7 @@ Feature: Update thread
   Scenario: Can write to thread condition (1) when status is not set
     Given I am the user with id "1"
     And there is a thread with "item_id=10,participant_id=1"
+    And I can view content of the item 10
     When I send a PUT request to "/items/10/participant/1/thread" with the following body:
       """
       {
@@ -109,6 +111,7 @@ Feature: Update thread
   Scenario: Can write to thread condition (2) when status is not set
     Given I am the user with id "2"
     And there is a thread with "item_id=20,participant_id=3"
+    And I can view content of the item 20
     And I have the watch permission set to "answer" on the item 20
     And I am a manager of the group 3 and can watch for submissions from the group and its descendants
     When I send a PUT request to "/items/20/participant/3/thread" with the following body:
@@ -127,6 +130,7 @@ Feature: Update thread
     Given I am the user with id "2"
     And there is a thread with "item_id=30,participant_id=3"
     And I am part of the helper group of the thread
+    And I can view content of the item 30
     And I have the watch permission set to "answer" on the item 30
     When I send a PUT request to "/items/30/participant/3/thread" with the following body:
       """
@@ -145,6 +149,7 @@ Feature: Update thread
     And there is a thread with "item_id=40,participant_id=3"
     And I am part of the helper group of the thread
     And I have a validated result on the item 40
+    And I can view content of the item 40
     And I have the watch permission set to "result" on the item 40
     When I send a PUT request to "/items/40/participant/3/thread" with the following body:
       """
@@ -161,6 +166,7 @@ Feature: Update thread
   Scenario: Set message_count to 0
     Given I am the user with id "1"
     And there is a thread with "item_id=50,participant_id=1"
+    And I can view content of the item 50
     When I send a PUT request to "/items/50/participant/1/thread" with the following body:
       """
       {
@@ -176,6 +182,7 @@ Feature: Update thread
   Scenario: Should set message_count to 0 if decrement to a negative value
     Given I am the user with id "1"
     And there is a thread with "item_id=60,participant_id=1,message_count=10"
+    And I can view content of the item 60
     When I send a PUT request to "/items/60/participant/1/thread" with the following body:
       """
       {
@@ -191,6 +198,7 @@ Feature: Update thread
   Scenario Outline: Should increment message_count by message_count_increments
     Given I am the user with id "1"
     And there is a thread with "item_id=<item_id>,participant_id=1,message_count=10"
+    And I can view content of the item <item_id>
     When I send a PUT request to "/items/<item_id>/participant/1/thread" with the following body:
       """
       {
@@ -211,6 +219,7 @@ Feature: Update thread
   Scenario Outline: Participant of a thread can always switch the thread from open to any other status
     Given I am the user with id "3"
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>"
+    And I can view content of the item <item_id>
     And I have the watch permission set to "none" on the item <item_id>
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
       """
@@ -232,6 +241,7 @@ Feature: Update thread
 
   Scenario Outline: A user who has can_watch>=answer on the item AND can_watch_members on the participant can always switch to an open status when thread exists
     Given I am the user with id "2"
+    And I can view content of the item <item_id>
     And I have the watch permission set to "answer" on the item <item_id>
     And I am a manager of the group 3 and can watch for submissions from the group and its descendants
     And there is a thread with "item_id=<item_id>,participant_id=3,status=closed"
@@ -256,6 +266,7 @@ Feature: Update thread
 
   Scenario Outline: A user who has can_watch>=answer on the item AND can_watch_members on the participant can always switch to an open status when thread doesn't exists
     Given I am the user with id "2"
+    And I can view content of the item <item_id>
     And I have the watch permission set to "answer" on the item <item_id>
     And I am a manager of the group 3 and can watch for submissions from the group and its descendants
     And there is no thread with "item_id=<item_id>,participant_id=3"
@@ -278,6 +289,7 @@ Feature: Update thread
 
   Scenario Outline: Can switch to open if part of the group the participant has requested help to AND can_watch>=answer on the item
     Given I am the user with id "4"
+    And I can view content of the item <item_id>
     And I have the watch permission set to "answer" on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>,helper_group_id=50"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
@@ -300,6 +312,7 @@ Feature: Update thread
   Scenario Outline: Can switch to open if part of the group the participant has requested help to AND (have can_watch=result permission and a validated result on the item)
     Given I am the user with id "4"
     And I have a validated result on the item <item_id>
+    And I can view content of the item <item_id>
     And I have the watch permission set to "result" on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=<old_status>,helper_group_id=50"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
@@ -321,6 +334,7 @@ Feature: Update thread
 
   Scenario: If status is open and not provided (no change): update helper_group_id
     Given I am the user with id "2"
+    And I can view content of the item 260
     And I have the watch permission set to "answer" on the item 260
     And there is a thread with "item_id=260,participant_id=3,helper_group_id=10"
     When I send a PUT request to "/items/260/participant/3/thread" with the following body:
@@ -336,6 +350,7 @@ Feature: Update thread
 
   Scenario Outline: Participant of a thread can switch from non-open to open status when allowed to request help on the item
     Given I am the user with id "3"
+    And I can view content of the item <item_id>
     And I have the watch permission set to "none" on the item <item_id>
     And there is a thread with "item_id=<item_id>,participant_id=3,status=closed,helper_group_id=<old_helper_group_id>"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
@@ -359,6 +374,7 @@ Feature: Update thread
 
   Scenario Outline: Participant of a thread can switch from non-open to open status when allowed to request help on the item when thread doesn't exists
     Given I am the user with id "3"
+    And I can view content of the item <item_id>
     And I have the watch permission set to "none" on the item <item_id>
     And there is no thread with "item_id=<item_id>,participant_id=3"
     When I send a PUT request to "/items/<item_id>/participant/3/thread" with the following body:
@@ -383,6 +399,7 @@ Feature: Update thread
   Scenario: Participant who can request help on region can request help on class
     Given I am the user with id "3"
     And there is no thread with "item_id=270,participant_id=3"
+    And I can view content of the item 270
     And I can request help to the group with id "12" on the item with id "270"
     When I send a PUT request to "/items/270/participant/3/thread" with the following body:
       """
