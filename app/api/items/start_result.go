@@ -8,6 +8,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // The request has successfully updated the object
@@ -132,7 +133,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 
 		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(r)).
 			Where("attempts.id = ?", attemptID).
-			WithExclusiveWriteLock().
+			WithCustomWriteLocks(golang.NewSet("attempts"), golang.NewSet("results")).
 			Scan(&attemptInfo).Error())
 
 		if attemptInfo.UserCreator.GroupID == nil {
