@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.3...v2.24.4) - 2025-01-17
+- bugfix: select the newly created/updated result FOR UPDATE in resultStart
+- require the current user be able to view content of the item in order to modify threads in threadUpdate
+
 ## [v2.24.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.2...v2.24.3) - 2025-01-09
 - adapt threads-related services to the recent forum permission rules change + fix some bugs related to permissions checking there
 - handle DB errors during token unmarshalling correctly in `itemGetHintToken` & `saveGrade`
