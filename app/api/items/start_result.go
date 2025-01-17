@@ -2,11 +2,13 @@ package items
 
 import (
 	"net/http"
+	"sync/atomic"
 
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // The request has successfully updated the object
@@ -101,6 +103,8 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 			return apiError.Error // rollback
 		}
 
+		onBeforeInsertingResultInResultStartHook.Load().(func())()
+
 		itemID := ids[len(ids)-1]
 		var found bool
 		found, err = store.Items().ByID(itemID).
@@ -129,6 +133,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 
 		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(r)).
 			Where("attempts.id = ?", attemptID).
+			WithCustomWriteLocks(golang.NewSet("attempts"), golang.NewSet("results")).
 			Scan(&attemptInfo).Error())
 
 		if attemptInfo.UserCreator.GroupID == nil {
@@ -144,4 +149,10 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(&attemptInfo)))
 	return service.NoError
+}
+
+var onBeforeInsertingResultInResultStartHook atomic.Value
+
+func init() {
+	onBeforeInsertingResultInResultStartHook.Store(func() {})
 }
