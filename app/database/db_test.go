@@ -1962,6 +1962,38 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 	}
 }
 
+func TestDB_retryOnDuplicateKeyError_LogsRetryableErrorsAsInfo(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMockWithLogConfig(LogConfig{LogSQLQueries: false, AnalyzeSQLQueries: false}, false)
+	defer func() { _ = db.Close() }()
+	logHook, logRestoreFunc := logging.MockSharedLoggerHook()
+	defer logRestoreFunc()
+
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry 'login-1' for key 'users.login'"})
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '1' for key 'users.PRIMARY'"})
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := db.retryOnDuplicateKeyError("users", "login", "user's login", func(db *DB) error {
+		return db.retryOnDuplicatePrimaryKeyError("users", func(db *DB) error {
+			return db.Exec("INSERT INTO users (id) VALUES (?)", 1).Error()
+		})
+	})
+	require.NoError(t, err)
+	require.NoError(t, mock.ExpectationsWereMet())
+
+	entries := logHook.Entries
+	require.Len(t, entries, 2)
+
+	assert.Equal(t, "info", entries[0].Level.String())
+	assert.Equal(t, "Error 1062: Duplicate entry 'login-1' for key 'users.login'", entries[0].Message)
+	assert.Equal(t, "info", entries[1].Level.String())
+	assert.Equal(t, "Error 1062: Duplicate entry '1' for key 'users.PRIMARY'", entries[1].Message)
+}
+
 func TestDefault(t *testing.T) {
 	assert.Equal(t, gorm.Expr("DEFAULT"), Default())
 }

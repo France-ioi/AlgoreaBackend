@@ -850,8 +850,20 @@ func (conn *DB) retryOnDuplicatePrimaryKeyError(tableName string, f func(db *DB)
 
 func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string, f func(db *DB) error) error {
 	i := 0
+	outerCtx := conn.ctx
+	innerCtx := context.WithValue(conn.ctx, logErrorAsInfoFuncContextKey, func(err error) bool {
+		if IsDuplicateEntryErrorForKey(err, tableName, keyName) {
+			return true
+		}
+		if f, ok := outerCtx.Value(logErrorAsInfoFuncContextKey).(func(error) bool); ok {
+			return f(err)
+		}
+		return false
+	})
+	innerConn := cloneDBWithNewContext(innerCtx, conn)
+
 	for ; i < keyTriesCount; i++ {
-		err := f(conn)
+		err := f(innerConn)
 		if err != nil {
 			if IsDuplicateEntryErrorForKey(err, tableName, keyName) {
 				continue // retry with a new id

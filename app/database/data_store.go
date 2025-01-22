@@ -220,6 +220,7 @@ const (
 	prohibitedPropagationsContextKey = dbContextKey("prohibitedPropagations")
 	retryEachTransactionContextKey   = dbContextKey("retryEachTransaction")
 	propagationsAreSyncContextKey    = dbContextKey("propagationsAreSync")
+	logErrorAsInfoFuncContextKey     = dbContextKey("logErrorAsInfoFunc")
 )
 
 var (

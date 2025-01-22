@@ -33,6 +33,8 @@ func logDBError(ctx context.Context, logConfig *LogConfig, err error) {
 		map[string]interface{}{"type": "db", "fileline": fileWithLineNum()})
 	if logConfig.LogRetryableErrorsAsInfo && isRetryableError(err) {
 		entry.Info(err)
+	} else if f, ok := ctx.Value(logErrorAsInfoFuncContextKey).(func(error) bool); ok && f(err) {
+		entry.Info(err)
 	} else {
 		entry.Error(err)
 	}
