@@ -3,8 +3,11 @@
 package database_test
 
 import (
+	"reflect"
 	"testing"
+	_ "unsafe"
 
+	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -430,3 +433,25 @@ func getGroupIDByBadgeURL(store *database.DataStore, url string, knownBadgeGroup
 	knownBadgeGroups[url] = id
 	return id
 }
+
+func TestGroupStore_createBadgeGroup_Duplicate(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1, text_id: badge_url}]`)
+	defer func() { _ = db.Close() }()
+	groupStore := database.NewDataStore(db).Groups()
+
+	var nextID int64
+	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(_ *database.DataStore) int64 {
+		nextID++
+		return nextID
+	})
+	defer monkey.UnpatchAll()
+
+	newID := groupStoreCreateBadgeGroup(groupStore, "url", "name")
+	assert.Equal(t, int64(2), newID)
+}
+
+//go:linkname groupStoreCreateBadgeGroup github.com/France-ioi/AlgoreaBackend/v2/app/database.(*GroupStore).createBadgeGroup
+func groupStoreCreateBadgeGroup(store *database.GroupStore, badgeURL, badgeName string) int64

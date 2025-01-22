@@ -188,7 +188,7 @@ func (s *GroupStore) findOrCreateBadgeGroup(
 
 func (s *GroupStore) createBadgeGroup(badgeURL, badgeName string) int64 {
 	var badgeGroupID int64
-	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *DataStore) error {
+	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *DataStore) error {
 		badgeGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
 			"id":          badgeGroupID,

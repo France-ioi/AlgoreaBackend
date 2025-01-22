@@ -461,9 +461,9 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 // (a caller should do both on their own).
 func createContestParticipantsGroup(store *database.DataStore, itemID int64) int64 {
 	var participantsGroupID int64
-	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
-		participantsGroupID = s.NewID()
-		return s.Groups().InsertMap(map[string]interface{}{
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(store *database.DataStore) error {
+		participantsGroupID = store.NewID()
+		return store.Groups().InsertMap(map[string]interface{}{
 			"id": participantsGroupID, "type": "ContestParticipants",
 			"name": fmt.Sprintf("%d-participants", itemID),
 		})

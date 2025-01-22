@@ -546,15 +546,9 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	itemMap := formData.ConstructPartialMapForDB("ItemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
-	err := store.WithForeignKeyChecksDisabled(func(fkStore *database.DataStore) error {
-		return fkStore.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
-			itemID = s.NewID()
+	itemMap["default_language_tag"] = newItemRequest.LanguageTag
 
-			itemMap["id"] = itemID
-			itemMap["default_language_tag"] = newItemRequest.LanguageTag
-			return s.Items().InsertMap(itemMap)
-		})
-	})
+	itemID, err := insertItemRow(store, itemMap)
 	if err != nil && database.IsDuplicateEntryError(err) {
 		return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
 			"text_id must be unique",
@@ -622,6 +616,19 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	}
 
 	return itemID, service.NoError
+}
+
+func insertItemRow(store *database.DataStore, itemMap map[string]interface{}) (int64, error) {
+	var itemID int64
+	err := store.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
+		return store.RetryOnDuplicatePrimaryKeyError("items", func(store *database.DataStore) error {
+			itemID = store.NewID()
+
+			itemMap["id"] = itemID
+			return store.Items().InsertMap(itemMap)
+		})
+	})
+	return itemID, err
 }
 
 // setItemRequestDefaults sets the default values of a newItemRequest which are not set.

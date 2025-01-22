@@ -12,8 +12,8 @@ func IsDuplicateEntryError(err error) bool {
 }
 
 // IsDuplicateEntryErrorForKey checks whether an error corresponds to a duplicate of primary keys on insertion for a certain key.
-func IsDuplicateEntryErrorForKey(err error, key string) bool {
-	return IsDuplicateEntryError(err) && mysqldb.ErrorContains(err, fmt.Sprintf("for key '%s'", key))
+func IsDuplicateEntryErrorForKey(err error, table, key string) bool {
+	return IsDuplicateEntryError(err) && mysqldb.ErrorContains(err, fmt.Sprintf("for key '%s.%s'", table, key))
 }
 
 // IsForeignConstraintError checks whether an error corresponds to a foreign key constraint fail on insert/update.

@@ -282,19 +282,7 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 				usersInSubgroup = 0
 			}
 
-			var userGroupID int64
-			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
-				userGroupID = retryIDStore.NewID()
-				return retryIDStore.Groups().InsertMap(map[string]interface{}{
-					"id":          userGroupID,
-					"name":        createdUser.Login,
-					"type":        groupTypeUser,
-					"description": createdUser.Login,
-					"created_at":  database.Now(),
-					"is_open":     false,
-					"send_emails": false,
-				})
-			}))
+			userGroupID := createUserGroup(store, createdUser.Login)
 
 			var personalInfoApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{}
 			if subgroupsApprovals[currentSubgroupIndex].RequirePersonalInfoAccessApproval {
@@ -354,4 +342,21 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 		return nil
 	}))
 	return finalResult
+}
+
+func createUserGroup(store *database.DataStore, login string) int64 {
+	var userGroupID int64
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *database.DataStore) error {
+		userGroupID = retryIDStore.NewID()
+		return retryIDStore.Groups().InsertMap(map[string]interface{}{
+			"id":          userGroupID,
+			"name":        login,
+			"type":        groupTypeUser,
+			"description": login,
+			"created_at":  database.Now(),
+			"is_open":     false,
+			"send_emails": false,
+		})
+	}))
+	return userGroupID
 }

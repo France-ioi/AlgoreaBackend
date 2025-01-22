@@ -387,16 +387,16 @@ func (s *DataStore) ByID(id int64) *DB {
 
 // RetryOnDuplicatePrimaryKeyError will retry the given function on getting duplicate entry errors
 // for primary keys.
-func (s *DataStore) RetryOnDuplicatePrimaryKeyError(f func(store *DataStore) error) error {
-	return s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+func (s *DataStore) RetryOnDuplicatePrimaryKeyError(tableName string, f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicatePrimaryKeyError(tableName, func(db *DB) error {
 		return f(NewDataStore(db))
 	})
 }
 
 // RetryOnDuplicateKeyError will retry the given function on getting duplicate entry errors
 // for the given key.
-func (s *DataStore) RetryOnDuplicateKeyError(keyName, nameInError string, f func(store *DataStore) error) error {
-	return s.DB.retryOnDuplicateKeyError(keyName, nameInError, func(db *DB) error {
+func (s *DataStore) RetryOnDuplicateKeyError(tableName, keyName, nameInError string, f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicateKeyError(tableName, keyName, nameInError, func(db *DB) error {
 		return f(NewDataStore(db))
 	})
 }

@@ -454,13 +454,13 @@ func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
 
 	for i := 1; i < keyTriesCount; i++ {
 		dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
-			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'PRIMARY'"})
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.PRIMARY'"})
 	}
 	dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
-	err := NewDataStore(db).RetryOnDuplicatePrimaryKeyError(func(store *DataStore) error {
+	err := NewDataStore(db).RetryOnDuplicatePrimaryKeyError("users", func(store *DataStore) error {
 		retryCount++
 		return db.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
 	})
@@ -478,13 +478,13 @@ func TestDataStore_RetryOnDuplicateKeyError(t *testing.T) {
 	queryRegexp := "^" + regexp.QuoteMeta("INSERT INTO users (login) VALUES (?)") + "$"
 	for i := 1; i < keyTriesCount; i++ {
 		dbMock.ExpectExec(queryRegexp).WithArgs(i).
-			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'login'"})
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.login'"})
 	}
 	dbMock.ExpectExec(queryRegexp).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
-	err := NewDataStore(db).RetryOnDuplicateKeyError("login", "login", func(store *DataStore) error {
+	err := NewDataStore(db).RetryOnDuplicateKeyError("users", "login", "login", func(store *DataStore) error {
 		retryCount++
 		return db.Exec("INSERT INTO users (login) VALUES (?)", retryCount).Error()
 	})

@@ -609,7 +609,7 @@ func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]Gro
 		insertQuery += " VALUES " +
 			strings.Repeat(valuesTemplate+", ", len(idsChanged)-1) +
 			valuesTemplate // #nosec
-		mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+		mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError("group_membership_changes", func(db *DB) error {
 			values := make([]interface{}, 0, len(idsChanged)*paramsCount)
 			for id, toAction := range idsChanged {
 				values = append(values, parentGroupID, id, toAction[strings.LastIndex(string(toAction), ",")+1:], performedByUserID)

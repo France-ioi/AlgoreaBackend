@@ -844,16 +844,16 @@ func (conn *DB) GetContext() context.Context {
 
 const keyTriesCount = 10
 
-func (conn *DB) retryOnDuplicatePrimaryKeyError(f func(db *DB) error) error {
-	return conn.retryOnDuplicateKeyError("PRIMARY", "id", f)
+func (conn *DB) retryOnDuplicatePrimaryKeyError(tableName string, f func(db *DB) error) error {
+	return conn.retryOnDuplicateKeyError(tableName, "PRIMARY", "id", f)
 }
 
-func (conn *DB) retryOnDuplicateKeyError(keyName, nameInError string, f func(db *DB) error) error {
+func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string, f func(db *DB) error) error {
 	i := 0
 	for ; i < keyTriesCount; i++ {
 		err := f(conn)
 		if err != nil {
-			if IsDuplicateEntryErrorForKey(err, keyName) {
+			if IsDuplicateEntryErrorForKey(err, tableName, keyName) {
 				continue // retry with a new id
 			}
 			return err

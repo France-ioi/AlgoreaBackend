@@ -42,7 +42,7 @@ func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
-	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
+	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError("groups", func(retryStore *DataStore) error {
 		groupID = retryStore.NewID()
 		return retryStore.Groups().InsertMap(map[string]interface{}{
 			"id":         groupID,
