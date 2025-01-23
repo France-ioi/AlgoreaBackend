@@ -4,11 +4,16 @@ package database_test
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"testing"
 	"time"
+	_ "unsafe"
 
+	"bou.ke/monkey"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
@@ -1438,3 +1443,38 @@ func assertGeneratedPermissionsEqual(
 		Order("group_id, item_id").Scan(&generatedPermissions).Error())
 	assert.EqualValues(t, expected, generatedPermissions)
 }
+
+func Test_insertGroupMembershipChanges_Duplicate(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1}, {id: 2}, {id: 3}]
+		users: [{group_id: 3}]
+		group_membership_changes: [{group_id: 1, member_id: 2, action: join_request_created, initiator_id: 3, at: 2019-05-30 11:00:00.123}]`)
+	defer func() { _ = db.Close() }()
+
+	timeMs := 122
+	callsCount := 0
+	var patchGuard *monkey.PatchGuard
+	patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&gorm.DB{}), "Exec", func(db *gorm.DB, sql string, values ...interface{}) *gorm.DB {
+		patchGuard.Unpatch()
+		defer patchGuard.Restore()
+		timeMs++
+		callsCount++
+		testhelpers.MockDBTime(fmt.Sprintf("2019-05-30 11:00:00.%03d", timeMs))
+		defer testhelpers.RestoreDBTime()
+		return db.Exec(sql, values...)
+	})
+	defer patchGuard.Unpatch()
+
+	dataStore := database.NewDataStore(db)
+	insertGroupMembershipChanges(dataStore, map[int64]database.GroupMembershipAction{2: database.JoinRequestCreated}, 1, 3)
+	var count int64
+	require.NoError(t, dataStore.Table("group_membership_changes").Count(&count).Error())
+	assert.Equal(t, int64(2), count)
+
+	assert.Equal(t, 2, callsCount)
+}
+
+//go:linkname insertGroupMembershipChanges github.com/France-ioi/AlgoreaBackend/v2/app/database.insertGroupMembershipChanges
+func insertGroupMembershipChanges(*database.DataStore, map[int64]database.GroupMembershipAction, int64, int64)

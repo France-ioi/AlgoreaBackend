@@ -4,8 +4,10 @@ package database_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
+	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -76,6 +78,27 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			assert.Equal(t, expectedAttempts, attempts)
 		})
 	}
+}
+
+func TestGroupStore_CreateNew_Duplicate(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, name: "Some group"}]`)
+	defer func() { _ = db.Close() }()
+
+	var nextID int64
+	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(*database.DataStore) int64 {
+		nextID++
+		return nextID
+	})
+	defer monkey.UnpatchAll()
+
+	var newID int64
+	require.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+		var err error
+		newID, err = store.Groups().CreateNew("Some group", "Class")
+		return err
+	}))
+	assert.Equal(t, int64(2), newID)
 }
 
 func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(t *testing.T) {

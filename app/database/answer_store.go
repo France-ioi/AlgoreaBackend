@@ -70,17 +70,23 @@ func (s *AnswerStore) GetCurrentAnswer(participantID, itemID, attemptID int64) (
 	return result[0], true
 }
 
-// SubmitNewAnswer inserts a new row with type='Submission', created_at=NOW()
-// into the `answers` table.
+// SubmitNewAnswer inserts a new row with type='Submission', state=NULL, created_at=NOW() into the `answers` table.
 func (s *AnswerStore) SubmitNewAnswer(authorID, participantID, attemptID, itemID int64, answer string) (int64, error) {
+	return s.CreateNewAnswer(authorID, participantID, attemptID, itemID, "Submission", answer, nil)
+}
+
+// CreateNewAnswer inserts a new row with created_at=NOW() into the `answers` table.
+func (s *AnswerStore) CreateNewAnswer(authorID, participantID, attemptID, itemID int64,
+	answerType, answer string, state *string,
+) (int64, error) {
 	var answerID int64
-	err := s.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+	err := s.retryOnDuplicatePrimaryKeyError("answers", func(db *DB) error {
 		store := NewDataStore(db)
 		answerID = store.NewID()
 		return db.db.Exec(`
-				INSERT INTO answers (id, author_id, participant_id, attempt_id, item_id, answer, created_at, type)
-				VALUES (?, ?, ?, ?, ?, ?, NOW(), 'Submission')`,
-			answerID, authorID, participantID, attemptID, itemID, answer).Error
+				INSERT INTO answers (id, author_id, participant_id, attempt_id, item_id, answer, created_at, type, state)
+				VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?)`,
+			answerID, authorID, participantID, attemptID, itemID, answer, answerType, state).Error
 	})
 	return answerID, err
 }

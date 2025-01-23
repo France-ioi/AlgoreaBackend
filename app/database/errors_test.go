@@ -10,7 +10,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
 )
 
-const DuplicateEntryErrorKey = "key"
+const (
+	DuplicateEntryErrorTable = "table"
+	DuplicateEntryErrorKey   = "key"
+)
 
 func TestIsDuplicateEntryError_matchError(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
@@ -40,43 +43,59 @@ func TestIsDuplicateEntryError_otherErrors(t *testing.T) {
 }
 
 func TestIsDuplicateEntryErrorForKey_matchError(t *testing.T) {
+	table := DuplicateEntryErrorTable
 	key := DuplicateEntryErrorKey
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
-		Message: fmt.Sprintf("Duplicate Error for key '%s'", key),
+		Message: fmt.Sprintf("Duplicate Error for key '%s.%s'", table, key),
 	}
 
-	if !IsDuplicateEntryErrorForKey(error(&duplicateEntryError), key) {
-		t.Errorf("should be a DuplicateEntryError with key %s", key)
+	if !IsDuplicateEntryErrorForKey(error(&duplicateEntryError), table, key) {
+		t.Errorf("should be a DuplicateEntryError with key %s.%s", table, key)
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithoutKey(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherKey(t *testing.T) {
+	table := DuplicateEntryErrorTable
 	otherKey := "otherkey"
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
-		Message: "Duplicate Error for key 'test'",
+		Message: fmt.Sprintf("Duplicate Error for key '%s.test'", table),
 	}
 
-	if IsDuplicateEntryErrorForKey(error(&duplicateEntryError), otherKey) {
-		t.Errorf("should not match key %s of DuplicateEntryError", otherKey)
+	if IsDuplicateEntryErrorForKey(error(&duplicateEntryError), table, otherKey) {
+		t.Errorf("should not match key %s.%s of DuplicateEntryError", table, otherKey)
+	}
+}
+
+func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherTable(t *testing.T) {
+	otherTable := "othertable"
+	key := DuplicateEntryErrorKey
+	duplicateEntryError := mysql.MySQLError{
+		Number:  uint16(mysqldb.DuplicateEntryError),
+		Message: fmt.Sprintf("Duplicate Error for key '%s.%s'", otherTable, key),
+	}
+
+	if IsDuplicateEntryErrorForKey(error(&duplicateEntryError), DuplicateEntryErrorTable, key) {
+		t.Errorf("should not match key %s.%s of DuplicateEntryError", DuplicateEntryErrorTable, key)
 	}
 }
 
 func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
+	table := DuplicateEntryErrorTable
 	key := DuplicateEntryErrorKey
 
 	lockDeadlockErrorWithKey := mysql.MySQLError{
 		Number:  uint16(mysqldb.DeadlockError),
-		Message: fmt.Sprintf("Lock Deadlock Error for key '%s'", key),
+		Message: fmt.Sprintf("Lock Deadlock Error for key '%s.%s'", table, key),
 	}
 
-	if IsDuplicateEntryErrorForKey(error(&lockDeadlockErrorWithKey), key) {
+	if IsDuplicateEntryErrorForKey(error(&lockDeadlockErrorWithKey), table, key) {
 		t.Error("should not match a Lock Deadlock Error")
 	}
 
-	nonMysqlErrorWithKey := fmt.Errorf("other error for key '%s'", key)
-	if IsDuplicateEntryErrorForKey(nonMysqlErrorWithKey, key) {
+	nonMysqlErrorWithKey := fmt.Errorf("other error for key '%s.%s'", table, key)
+	if IsDuplicateEntryErrorForKey(nonMysqlErrorWithKey, table, key) {
 		t.Error("should not match a non-mysql error")
 	}
 }

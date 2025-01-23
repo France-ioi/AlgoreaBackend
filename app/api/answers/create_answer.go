@@ -106,20 +106,8 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 				Delete().Error())
 		}
 
-		return answersStore.RetryOnDuplicatePrimaryKeyError(func(store *database.DataStore) error {
-			answerID := store.NewID()
-			return store.Answers().InsertMap(map[string]interface{}{
-				"id":             answerID,
-				"author_id":      user.GroupID,
-				"attempt_id":     attemptID,
-				"participant_id": participantID,
-				"item_id":        itemID,
-				"type":           answerType,
-				"state":          requestData.State,
-				"answer":         requestData.Answer,
-				"created_at":     database.Now(),
-			})
-		})
+		_, err = answersStore.CreateNewAnswer(user.GroupID, participantID, attemptID, itemID, answerType, requestData.Answer, &requestData.State)
+		return err
 	})
 	service.MustNotBeError(err)
 
