@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.4...v2.24.5) - 2025-01-23
+- fix retrying on duplicate key errors, log such errors using INFO log level
+
 ## [v2.24.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.3...v2.24.4) - 2025-01-17
 - bugfix: select the newly created/updated result FOR UPDATE in resultStart
 - require the current user be able to view content of the item in order to modify threads in threadUpdate
