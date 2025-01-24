@@ -71,5 +71,5 @@ func (s *PermissionGrantedStore) EditNameByIndex(index int) string {
 }
 
 func (s *PermissionGrantedStore) permissionsPropagateTableName() string {
-	return golang.IfElse(s.arePropagationsSync(), "permissions_propagate_sync", "permissions_propagate")
+	return golang.IfElse(s.arePropagationsSync(), "permissions_propagate_sync_conn", "permissions_propagate")
 }

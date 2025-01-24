@@ -14,9 +14,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestService_startResult_concurrency(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, type: Task, default_language_tag: 'fr', requires_explicit_entry: 0}]
 		groups: [{id: 3, type: User, root_activity_id: 1}]

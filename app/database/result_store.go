@@ -38,8 +38,9 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 // MarkAsToBePropagated marks a given result as 'to_be_propagated'.
 func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int64, propagateNow bool) error {
 	err := s.Exec(`
-		INSERT IGNORE INTO `+s.resultsPropagateTableName()+` (participant_id, attempt_id, item_id, state)
-		VALUES(?, ?, ?, 'to_be_propagated')`, participantID, attemptID, itemID).Error()
+		INSERT IGNORE INTO `+s.resultsPropagateTableName()+
+		` (`+golang.If(s.arePropagationsSync(), "connection_id, ")+`participant_id, attempt_id, item_id, state)
+		VALUES(`+golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ")+`?, ?, ?, 'to_be_propagated')`, participantID, attemptID, itemID).Error()
 	if err == nil && propagateNow {
 		s.ScheduleResultsPropagation()
 	}
@@ -47,5 +48,5 @@ func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int6
 }
 
 func (s *ResultStore) resultsPropagateTableName() string {
-	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync", "results_propagate")
+	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync_conn", "results_propagate")
 }

@@ -223,8 +223,10 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 				WHERE NOT result_exists`).Error())
 
 			mustNotBeError(s.Exec(`
-				INSERT INTO ` + resultsPropagateTableName + ` (participant_id, attempt_id, item_id, state)
+				INSERT INTO ` + resultsPropagateTableName +
+				` (` + golang.If(s.arePropagationsSync(), "connection_id, ") + `participant_id, attempt_id, item_id, state)
 				SELECT
+					` + golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ") + `
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
 				FROM results_to_mark
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
