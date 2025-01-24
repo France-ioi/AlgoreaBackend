@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.5...v2.24.6) - 2025-01-24
+- prevent mutual blocking of concurrent sync propagations
+
 ## [v2.24.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.4...v2.24.5) - 2025-01-23
 - fix retrying on duplicate key errors, log such errors using INFO log level
 
