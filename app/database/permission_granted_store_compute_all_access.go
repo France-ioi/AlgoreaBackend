@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // computeAllAccess recomputes fields of permissions_generated.
@@ -27,8 +28,10 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 
 	// marking group-item pairs whose parents are marked with propagate_to = 'children' as 'self'
 	queryMarkChildrenOfChildrenAsSelf := `
-		INSERT INTO ` + permissionsPropagateTableName + ` (group_id, item_id, propagate_to)
+		INSERT INTO ` + permissionsPropagateTableName +
+		` (` + golang.If(s.arePropagationsSync(), "connection_id, ") + `group_id, item_id, propagate_to)
 		SELECT
+			` + golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ") + `
 			parents.group_id,
 			items_items.child_item_id,
 			'self' as propagate_to
