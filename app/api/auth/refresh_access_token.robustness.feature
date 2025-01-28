@@ -24,8 +24,8 @@ Feature: Refresh an access token - robustness
       """
       No refresh token found in the DB for user 13
       """
-    And the table "sessions" should stay unchanged
-    And the table "access_tokens" should stay unchanged
+    And the table "sessions" should remain unchanged
+    And the table "access_tokens" should remain unchanged
 
   Scenario: Should return an error when trying to refresh an expired token
     Given the "Authorization" request header is "Bearer jane_expired_token"
@@ -50,5 +50,5 @@ Feature: Refresh an access token - robustness
       The refresh token is invalid for user 14
       """
     # The broken token has been removed
-    And the table "sessions" should stay unchanged but the row with session_id "2" should be deleted
-    And the table "access_tokens" should stay unchanged but the rows with session_id "2" should be deleted
+    And the table "sessions" should remain unchanged, except that the row with session_id "2" should be deleted
+    And the table "access_tokens" should remain unchanged, except that the rows with session_id "2" should be deleted
