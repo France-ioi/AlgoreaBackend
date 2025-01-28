@@ -313,7 +313,7 @@ func (s *DataStore) SetPropagationsModeToSync() (err error) {
 
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.Exec("SET @synchronous_propagations = 1").Error())
+	mustNotBeError(s.Exec("SET @synchronous_propagations_connection_id = CONNECTION_ID()").Error())
 
 	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx, propagationsAreSyncContextKey, true), s.DB)
 	return nil
