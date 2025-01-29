@@ -801,7 +801,8 @@ func TestDataStore_SetPropagationsModeToSync(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectBegin()
-	mock.ExpectExec("SET @synchronous_propagations = 1").WillReturnResult(sqlmock.NewResult(-1, 0))
+	mock.ExpectExec("^" + regexp.QuoteMeta("SET @synchronous_propagations_connection_id = CONNECTION_ID()") + "$").
+		WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectCommit()
 
 	require.Nil(t, db.ctx.Value(propagationsAreSyncContextKey))
