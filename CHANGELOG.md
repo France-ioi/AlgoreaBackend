@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.6...v2.24.7) - 2025-01-29
+- fix MySQL triggers related to sync propagations
+
 ## [v2.24.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.5...v2.24.6) - 2025-01-24
 - prevent mutual blocking of concurrent sync propagations
 
