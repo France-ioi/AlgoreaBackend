@@ -585,6 +585,7 @@ func TestGroupGroupStore_TriggerBeforeDelete(t *testing.T) {
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}, {id: 2}, {id: 3, type: Team}, {id: 4}]
 		groups_groups: [{parent_group_id: 1, child_group_id: 2}, {parent_group_id: 3, child_group_id: 4}]`)
+	defer func() { _ = db.Close() }()
 
 	dataStore := database.NewDataStore(db)
 	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
