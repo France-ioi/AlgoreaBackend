@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.24.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.7...v2.24.8) - 2025-02-10
+- acquire shared row locks instead of exclusive row locks in DB queries causing request timeouts in production
+- add a comment for logRawSQLQueries in config sample files
+
 ## [v2.24.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.6...v2.24.7) - 2025-01-29
 - fix MySQL triggers related to sync propagations
 
