@@ -291,7 +291,7 @@ func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAcces
 	var readOnly bool
 	err = s.WhereGroupHasPermissionOnItems(participantID, "view", "content").
 		Where("id = ?", itemID).
-		WithExclusiveWriteLock().
+		WithSharedWriteLock().
 		PluckFirst("read_only", &readOnly).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return false, errors.New("no access to the task item"), nil
