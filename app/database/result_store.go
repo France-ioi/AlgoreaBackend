@@ -28,7 +28,7 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 	var hintsInfo HintsInfo
 	mustNotBeError(s.Results().
 		ByID(participantID, attemptID, itemID).
-		WithExclusiveWriteLock().Select("hints_requested, hints_cached").
+		WithCustomWriteLocks(golang.NewSet("attempts"), golang.NewSet("results")).
 		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Where("NOW() < attempts.allows_submissions_until").
 		Scan(&hintsInfo).Error())
