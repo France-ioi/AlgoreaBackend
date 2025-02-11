@@ -9,6 +9,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func init() { //nolint:gochecknoinits
@@ -34,6 +35,8 @@ func init() { //nolint:gochecknoinits
 				os.Exit(1)
 			}
 
+			defer func() { _ = application.Database.Close() }()
+
 			assertNoError(recomputeDBCaches(application.Database), "Cannot recompute db caches")
 
 			// Success
@@ -42,4 +45,17 @@ func init() { //nolint:gochecknoinits
 	}
 
 	rootCmd.AddCommand(recomputeCmd)
+}
+
+func recomputeDBCaches(gormDB *database.DB) error {
+	return database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+		fmt.Print("Recalculating groups ancestors\n")
+		assertNoError(store.GroupGroups().CreateNewAncestors(), "Cannot compute groups_groups")
+		fmt.Print("Recalculating items ancestors\n")
+		assertNoError(store.ItemItems().CreateNewAncestors(), "Cannot compute items_items")
+		fmt.Print("Schedule the propagations\n")
+		store.SchedulePermissionsPropagation()
+		store.ScheduleResultsPropagation()
+		return nil
+	})
 }

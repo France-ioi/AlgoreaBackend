@@ -11,7 +11,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func init() { //nolint:gochecknoinits
@@ -45,6 +44,13 @@ func init() { //nolint:gochecknoinits
 				os.Exit(1)
 			}
 
+			defer func() {
+				if db.Close() != nil {
+					fmt.Println("Cannot close DB connection:", err)
+					os.Exit(1)
+				}
+			}()
+
 			// migrate
 			var applied int
 			for {
@@ -66,41 +72,9 @@ func init() { //nolint:gochecknoinits
 				fmt.Println("No migrations to apply!")
 			default:
 				fmt.Printf("%d migration(s) applied successfully!\n", applied)
-
-				var gormDB *database.DB
-				gormDB, err = database.Open(db)
-				assertNoError(err, "Cannot open GORM db connection: ")
-				fmt.Print("Running ANALYZE TABLE attempts\n")
-				_, err = db.Exec("ANALYZE TABLE `attempts`")
-				assertNoError(err, "Cannot execute ANALYZE TABLE")
-				fmt.Print("Running ANALYZE TABLE `groups`\n")
-				_, err = db.Exec("ANALYZE TABLE `groups`")
-				assertNoError(err, "Cannot execute ANALYZE TABLE")
-				fmt.Print("Running ANALYZE TABLE `items`\n")
-				_, err = db.Exec("ANALYZE TABLE `items`")
-				assertNoError(err, "Cannot execute ANALYZE TABLE")
-				assertNoError(recomputeDBCaches(gormDB), "Cannot recompute db caches")
-			}
-
-			if db.Close() != nil {
-				fmt.Println("Cannot close DB connection:", err)
-				os.Exit(1)
 			}
 		},
 	}
 
 	rootCmd.AddCommand(migrateCmd)
-}
-
-func recomputeDBCaches(gormDB *database.DB) error {
-	return database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-		fmt.Print("Recalculating groups ancestors\n")
-		assertNoError(store.GroupGroups().CreateNewAncestors(), "Cannot compute groups_groups")
-		fmt.Print("Recalculating items ancestors\n")
-		assertNoError(store.ItemItems().CreateNewAncestors(), "Cannot compute items_items")
-		fmt.Print("Schedule the propagations\n")
-		store.SchedulePermissionsPropagation()
-		store.ScheduleResultsPropagation()
-		return nil
-	})
 }
