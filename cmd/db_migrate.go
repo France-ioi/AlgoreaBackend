@@ -19,7 +19,7 @@ func init() { //nolint:gochecknoinits
 		Short: "apply schema-change migrations to the database",
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
 			// if arg given, replace the env
@@ -44,12 +44,7 @@ func init() { //nolint:gochecknoinits
 				os.Exit(1)
 			}
 
-			defer func() {
-				if db.Close() != nil {
-					fmt.Println("Cannot close DB connection:", err)
-					os.Exit(1)
-				}
-			}()
+			defer func() { _ = db.Close() }()
 
 			// migrate
 			var applied int
@@ -57,8 +52,7 @@ func init() { //nolint:gochecknoinits
 				var n int
 				n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Up, 1)
 				if err != nil {
-					fmt.Println("\nUnable to apply migration:", err)
-					os.Exit(1)
+					return fmt.Errorf("unable to apply migration: %v", err)
 				}
 				applied += n
 				if n == 0 {
@@ -73,6 +67,8 @@ func init() { //nolint:gochecknoinits
 			default:
 				fmt.Printf("%d migration(s) applied successfully!\n", applied)
 			}
+
+			return nil
 		},
 	}
 

@@ -61,6 +61,8 @@ in the future.`,
 				os.Exit(1)
 			}
 
+			defer func() { _ = rawdb.Close() }()
+
 			commentRegexp := regexp.MustCompile(" COMMENT '(.+)'$")
 
 			renamedColumns := map[string]string{}

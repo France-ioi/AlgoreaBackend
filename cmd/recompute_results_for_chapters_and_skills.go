@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
@@ -19,7 +18,7 @@ func init() { //nolint:gochecknoinits
 		Short: "recompute results for chapters and skills",
 		Long:  `for each chapter/skill marks all results linked to it as to_be_recomputed and runs the results propagation`,
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
 			// Set the environment.
@@ -29,8 +28,13 @@ func init() { //nolint:gochecknoinits
 
 			var application *app.Application
 			application, err = app.New()
+			defer func() {
+				if application != nil && application.Database != nil {
+					_ = application.Database.Close()
+				}
+			}()
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			store := database.NewDataStore(application.Database)
@@ -49,11 +53,12 @@ func init() { //nolint:gochecknoinits
 					})
 				}).Error()
 			if err != nil {
-				fmt.Println("Error while recomputing results: ", err)
-				os.Exit(1)
+				return fmt.Errorf("error while recomputing results: %v", err)
 			}
 
 			fmt.Println("Done.")
+
+			return nil
 		},
 	}
 
