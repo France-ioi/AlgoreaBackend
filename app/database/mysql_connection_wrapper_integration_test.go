@@ -46,6 +46,35 @@ func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
 	assert.Nil(t, result)
 }
 
+func TestMysqlConnectionWrapper_ResetSession_ResetsForeignKeyChecks(t *testing.T) {
+	db, err := testhelpers.OpenRawDBConnection()
+	require.NoError(t, err)
+	defer func() { _ = db.Close() }()
+
+	ctx := context.Background()
+	conn, err := db.Conn(ctx)
+	require.NoError(t, err)
+	defer func() { _ = conn.Close() }()
+
+	var result *int64
+	_, err = conn.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 0")
+	require.NoError(t, err)
+	err = conn.QueryRowContext(ctx, "SELECT @@FOREIGN_KEY_CHECKS").Scan(&result)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, int64(0), *result)
+
+	err = conn.Raw(func(driverConn any) error {
+		return driverConn.(driver.SessionResetter).ResetSession(context.Background())
+	})
+	require.NoError(t, err)
+
+	err = conn.QueryRowContext(ctx, "SELECT @@FOREIGN_KEY_CHECKS").Scan(&result)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.Equal(t, int64(1), *result)
+}
+
 func TestMysqlConnectionWrapper_ResetSession_FailsOnClosedConnection(t *testing.T) {
 	db, err := testhelpers.OpenRawDBConnection()
 	require.NoError(t, err)
