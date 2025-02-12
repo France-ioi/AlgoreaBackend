@@ -3,11 +3,10 @@ package app
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
-	"os"
 	"reflect"
 	"strings"
-	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -23,98 +22,130 @@ func TestServer_Start(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check defaults are applied correctly
-	assert.True(t, strings.HasSuffix(srv.Addr, ":8080"))
+	assert.True(t, strings.HasSuffix(srv.Addr, ":8088"))
 	assert.Equal(t, time.Duration(60000000000), srv.ReadTimeout)
 	assert.Equal(t, time.Duration(60000000000), srv.WriteTimeout)
 
-	lock := sync.Mutex{}
-	exitCalled := false
-	monkey.Patch(os.Exit, func(code int) {
-		lock.Lock()
-		exitCalled = true
-		lock.Unlock()
-		killErr := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-		assert.NoError(t, killErr)
-	})
-	defer monkey.UnpatchAll()
-
 	doneChannel := srv.Start()
+	defer close(doneChannel)
+
 	err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 	assert.NoError(t, err)
 
 	select {
-	case <-doneChannel:
+	case err = <-doneChannel:
+		assert.NoError(t, err)
 	case <-time.After(3 * time.Second):
 		assert.Fail(t, "Timeout on waiting for server to stop")
 	}
-
-	lock.Lock()
-	defer lock.Unlock()
-	assert.False(t, exitCalled)
 }
 
-func TestServer_StartHandlesListenerError(t *testing.T) {
+func TestServer_Start_HandlesListenerError(t *testing.T) {
 	app, err := New()
 	assert.NoError(t, err)
 	app.Config.Set("server.port", -1)
 	srv, err := NewServer(app)
 	assert.NoError(t, err)
 
-	lock := sync.Mutex{}
-	exitCalled := false
-	var exitCode int
-	monkey.Patch(os.Exit, func(code int) {
-		lock.Lock()
-		exitCalled = true
-		exitCode = code
-		lock.Unlock()
-		err := syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-		assert.NoError(t, err)
-	})
-	defer monkey.UnpatchAll()
+	doneChannel := srv.Start()
+	defer close(doneChannel)
+
 	select {
-	case <-srv.Start():
+	case err = <-doneChannel:
+		assert.Equal(t, errors.New("server returned an error: listen tcp: address -1: invalid port"), err)
 	case <-time.After(3 * time.Second):
 		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		assert.Fail(t, "Timeout on waiting for server to stop")
 	}
-	lock.Lock()
-	defer lock.Unlock()
-	assert.True(t, exitCalled)
-	assert.Equal(t, 1, exitCode)
 }
 
-func TestServer_StartHandlesShutdownError(t *testing.T) {
+func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 	app, err := New()
 	assert.NoError(t, err)
 	srv, err := NewServer(app)
 	assert.NoError(t, err)
 
-	lock := sync.Mutex{}
-	exitCalled := false
-	var exitCode int
-	monkey.Patch(os.Exit, func(code int) {
-		lock.Lock()
-		exitCalled = true
-		exitCode = code
-		lock.Unlock()
+	expectedError := errors.New("some error")
+
+	shutdownCalledCh := make(chan struct{})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "ListenAndServe", func(srv *http.Server) error {
+		err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		assert.NoError(t, err)
+		select {
+		case <-shutdownCalledCh:
+		case <-time.After(3 * time.Second):
+			assert.Fail(t, "Timeout on waiting for server to call Shutdown()")
+		}
+		return expectedError
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{ReadTimeout: 1 * time.Second}), "Shutdown",
-		func(*http.Server, context.Context) error { return errors.New("some errror") })
+	var shutdownGuard *monkey.PatchGuard
+	shutdownGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "Shutdown", func(srv *http.Server, ctx context.Context) error {
+		close(shutdownCalledCh)
+		shutdownGuard.Unpatch()
+		defer shutdownGuard.Restore()
+		return srv.Shutdown(ctx)
+	})
 	defer monkey.UnpatchAll()
 
 	doneChannel := srv.Start()
-	_ = srv.Shutdown(context.Background())
-	err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-	assert.NoError(t, err)
+	defer close(doneChannel)
+
 	select {
-	case <-doneChannel:
+	case err = <-doneChannel:
+		assert.Equal(t, errors.New("server returned an error: some error"), err)
+	case <-time.After(3 * time.Second):
+		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		assert.Fail(t, "Timeout on waiting for server to stop")
+	}
+}
+
+func TestServer_Start_CanBeStoppedByShutdown(t *testing.T) {
+	app, err := New()
+	assert.NoError(t, err)
+	srv, err := NewServer(app)
+	assert.NoError(t, err)
+
+	doneChannel := srv.Start()
+	defer close(doneChannel)
+
+	_ = srv.Shutdown(context.Background())
+
+	select {
+	case err := <-doneChannel:
+		assert.NoError(t, err)
 	case <-time.After(3 * time.Second):
 		assert.Fail(t, "Timeout on waiting for server to stop")
 	}
+}
 
-	lock.Lock()
-	defer lock.Unlock()
-	assert.True(t, exitCalled)
-	assert.Equal(t, 1, exitCode)
+func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
+	app, err := New()
+	assert.NoError(t, err)
+	srv, err := NewServer(app)
+	assert.NoError(t, err)
+
+	expectedError := errors.New("some error")
+	var patchGuard *monkey.PatchGuard
+	patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "Shutdown",
+		func(server *http.Server, ctx context.Context) error {
+			patchGuard.Unpatch()
+			defer patchGuard.Restore()
+			_ = server.Shutdown(ctx)
+			return expectedError
+		})
+	defer monkey.UnpatchAll()
+
+	doneChannel := srv.Start()
+	defer close(doneChannel)
+
+	err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+	assert.NoError(t, err)
+
+	select {
+	case err := <-doneChannel:
+		assert.Equal(t, fmt.Errorf("can't shut down the server: %v", expectedError), err)
+	case <-time.After(3 * time.Second):
+		assert.Fail(t, "Timeout on waiting for server to stop")
+	}
 }
