@@ -40,7 +40,7 @@ func TestServer_Start(t *testing.T) {
 	}
 }
 
-func TestServer_StartHandlesListenerError(t *testing.T) {
+func TestServer_Start_HandlesListenerError(t *testing.T) {
 	app, err := New()
 	assert.NoError(t, err)
 	app.Config.Set("server.port", -1)
@@ -52,14 +52,55 @@ func TestServer_StartHandlesListenerError(t *testing.T) {
 
 	select {
 	case err = <-doneChannel:
-		assert.Error(t, err)
+		assert.Equal(t, errors.New("server returned an error: listen tcp: address -1: invalid port"), err)
 	case <-time.After(3 * time.Second):
 		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		assert.Fail(t, "Timeout on waiting for server to stop")
 	}
 }
 
-func TestServer_StartCanBeStoppedByShutdown(t *testing.T) {
+func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
+	app, err := New()
+	assert.NoError(t, err)
+	srv, err := NewServer(app)
+	assert.NoError(t, err)
+
+	expectedError := errors.New("some error")
+
+	shutdownCalledCh := make(chan struct{})
+
+	monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "ListenAndServe", func(srv *http.Server) error {
+		err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		assert.NoError(t, err)
+		select {
+		case <-shutdownCalledCh:
+		case <-time.After(3 * time.Second):
+			assert.Fail(t, "Timeout on waiting for server to call Shutdown()")
+		}
+		return expectedError
+	})
+	var shutdownGuard *monkey.PatchGuard
+	shutdownGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "Shutdown", func(srv *http.Server, ctx context.Context) error {
+		close(shutdownCalledCh)
+		shutdownGuard.Unpatch()
+		defer shutdownGuard.Restore()
+		return srv.Shutdown(ctx)
+	})
+	defer monkey.UnpatchAll()
+
+	doneChannel := srv.Start()
+	defer close(doneChannel)
+
+	select {
+	case err = <-doneChannel:
+		assert.Equal(t, errors.New("server returned an error: some error"), err)
+	case <-time.After(3 * time.Second):
+		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		assert.Fail(t, "Timeout on waiting for server to stop")
+	}
+}
+
+func TestServer_Start_CanBeStoppedByShutdown(t *testing.T) {
 	app, err := New()
 	assert.NoError(t, err)
 	srv, err := NewServer(app)
@@ -78,7 +119,7 @@ func TestServer_StartCanBeStoppedByShutdown(t *testing.T) {
 	}
 }
 
-func TestServer_StartHandlesShutdownError_OnKilling(t *testing.T) {
+func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
 	app, err := New()
 	assert.NoError(t, err)
 	srv, err := NewServer(app)
