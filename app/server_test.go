@@ -22,7 +22,7 @@ func TestServer_Start(t *testing.T) {
 	assert.NoError(t, err)
 
 	// check defaults are applied correctly
-	assert.True(t, strings.HasSuffix(srv.Addr, ":8080"))
+	assert.True(t, strings.HasSuffix(srv.Addr, ":8088"))
 	assert.Equal(t, time.Duration(60000000000), srv.ReadTimeout)
 	assert.Equal(t, time.Duration(60000000000), srv.WriteTimeout)
 
