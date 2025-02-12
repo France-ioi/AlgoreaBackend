@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/akrylysov/algnhsa"
@@ -15,13 +14,20 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use: "AlgoreaBackend",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		application, err := app.New()
+		defer func() {
+			if application != nil && application.Database != nil {
+				_ = application.Database.Close()
+			}
+		}()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		algnhsa.ListenAndServe(application.HTTPHandler, nil)
+
+		return nil
 	},
 }
 

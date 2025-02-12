@@ -21,7 +21,7 @@ func init() { //nolint:gochecknoinits,gocyclo
 		Use:   "delete-temp-users [environment]",
 		Short: "delete all temporary users with expired sessions",
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if delay < 0 {
 				fmt.Println("delay must be positive or equal to 0")
 				os.Exit(1)
@@ -42,19 +42,24 @@ func init() { //nolint:gochecknoinits,gocyclo
 			var application *app.Application
 			var err error
 			application, err = app.New()
+			defer func() {
+				if application != nil && application.Database != nil {
+					_ = application.Database.Close()
+				}
+			}()
 			if err != nil {
-				fmt.Println("Fatal error: ", err)
-				os.Exit(1)
+				return err
 			}
 
 			err = database.NewDataStore(application.Database).Users().DeleteTemporaryWithTraps(delay)
 			if err != nil {
-				fmt.Println("Fatal error: ", err)
-				os.Exit(1)
+				return fmt.Errorf("cannot delete temporary users: %v", err)
 			}
 
 			// Success
 			fmt.Println("DONE")
+
+			return nil
 		},
 	}
 
