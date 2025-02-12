@@ -43,7 +43,6 @@ func (srv *Server) Start() chan error {
 	signal.Notify(quit, os.Interrupt)
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			fmt.Printf("server returned an error: %v\n", err)
 			serverErrChannel <- err
 		} else {
 			serverErrChannel <- nil
