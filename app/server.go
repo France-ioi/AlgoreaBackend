@@ -34,27 +34,47 @@ func NewServer(app *Application) (*Server, error) {
 }
 
 // Start runs ListenAndServe on the http.Server with graceful shutdown.
-func (srv *Server) Start() chan bool {
+// The caller should close the done channel upon error or when the server has stopped.
+func (srv *Server) Start() chan error {
 	log.Println("Starting server...")
-	doneChannel := make(chan bool)
+	doneChannel := make(chan error)
+	serverErrChannel := make(chan error)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			log.Fatal("Server returned an error: ", err)
+			fmt.Printf("server returned an error: %v\n", err)
+			serverErrChannel <- err
+		} else {
+			serverErrChannel <- nil
 		}
 	}()
 	log.Printf("Listening on %s\n", srv.Addr)
 
 	// dealing with termination
 	go func() {
-		sig := <-quit
-		log.Println("Shutting down server... Reason:", sig)
-		if err := srv.Shutdown(context.Background()); err != nil {
-			log.Fatal("Can't shut down the server: ", err)
+		select {
+		case err := <-serverErrChannel:
+			if err != nil {
+				doneChannel <- fmt.Errorf("server returned an error: %v", err)
+			} else {
+				doneChannel <- nil
+			}
+		case sig := <-quit:
+			log.Println("Shutting down server... Reason:", sig)
+			shutdownErr := srv.Shutdown(context.Background())
+			if serverErr := <-serverErrChannel; serverErr != nil {
+				doneChannel <- fmt.Errorf("server returned an error: %v", serverErr)
+			} else if shutdownErr != nil {
+				doneChannel <- fmt.Errorf("can't shut down the server: %v", shutdownErr)
+			} else {
+				doneChannel <- nil
+			}
+			log.Println("Server gracefully stopped")
 		}
-		close(doneChannel)
-		log.Println("Server gracefully stopped")
+		close(serverErrChannel)
+		signal.Stop(quit)
+		close(quit)
 	}()
 	return doneChannel
 }

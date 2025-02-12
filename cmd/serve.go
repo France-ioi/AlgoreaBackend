@@ -63,9 +63,9 @@ func init() { //nolint:gochecknoinits
 			if err != nil {
 				return err
 			}
-			<-server.Start()
-
-			return nil
+			doneChannel := server.Start()
+			defer close(doneChannel)
+			return <-doneChannel
 		},
 	}
 
