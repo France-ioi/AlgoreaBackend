@@ -45,6 +45,7 @@ const minSearchStringLength = 3
 //			description: Start the page from the group next to one with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N groups
 //			in: query

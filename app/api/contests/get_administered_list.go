@@ -52,6 +52,7 @@ type contestAdminListRow struct {
 //			description: Start the page from the contest next to the contest with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [title,id]

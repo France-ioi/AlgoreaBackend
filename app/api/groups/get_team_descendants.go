@@ -26,10 +26,12 @@ import (
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: from.id
 //			description: Start the page from the team next to the team with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [name,id]

@@ -146,14 +146,17 @@ type canRequestHelpToPermissionsRaw struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: source_group_id
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: item_id
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Permissions for the group.

@@ -62,6 +62,7 @@ type groupNavigationViewResponse struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: limit
 //			description: Display the first N children

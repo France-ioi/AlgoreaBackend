@@ -78,6 +78,7 @@ type groupUserProgressResponseTableCell struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			required: true
@@ -85,10 +86,12 @@ type groupUserProgressResponseTableCell struct {
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //		- name: from.id
 //			description: Start the page from the user next to the user with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display results for the first N users (sorted by `groups.name`)
 //			in: query

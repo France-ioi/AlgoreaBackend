@@ -85,6 +85,7 @@ type groupRequestsViewResponseRow struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: old_rejections_weeks
 //			in: query
@@ -108,6 +109,7 @@ type groupRequestsViewResponseRow struct {
 //							 (`{from.at}` is also required if `{from.member_id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N requests/invitations
 //			in: query

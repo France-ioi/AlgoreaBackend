@@ -60,6 +60,7 @@ type membershipsViewResponseRow struct {
 //			description: Start the page from the membership next to one with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N memberships
 //			in: query

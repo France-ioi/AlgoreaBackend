@@ -74,14 +74,17 @@ type attemptsListResponseRow struct {
 //			description: "`id` of a parent attempt. This parameter is incompatible with `attempt_id`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: attempt_id
 //			description: "`id` of an attempt for the `{item_id}`.
 //								This parameter is incompatible with `parent_attempt_id`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [id]

@@ -45,6 +45,7 @@ import (
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"201":
 //			description: "Created. Success response with the attempt id for the last item in the path"

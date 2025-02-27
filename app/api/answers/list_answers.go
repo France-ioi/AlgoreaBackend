@@ -36,13 +36,16 @@ import (
 //		- name: item_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: author_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: attempt_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [-created_at,id]
@@ -54,6 +57,7 @@ import (
 //			description: Start the page from the answer next to the answer with `answers.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N answers
 //			in: query

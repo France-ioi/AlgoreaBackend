@@ -29,6 +29,7 @@ import (
 //	parameters:
 //		- name: item_id
 //			type: integer
+//			format: int64
 //			required: true
 //			in: path
 //	responses:

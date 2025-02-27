@@ -34,6 +34,7 @@ import (
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //			description: >
 //				A participant (`team_id` or user).
 //				If given, get the best answer of the participant instead of the one of the user.

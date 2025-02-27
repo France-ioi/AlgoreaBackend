@@ -47,6 +47,7 @@ type groupParentsViewResponseRow struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: sort
 //			in: query
@@ -59,6 +60,7 @@ type groupParentsViewResponseRow struct {
 //			description: Start the page from the parent next to the parent with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N parents
 //			in: query

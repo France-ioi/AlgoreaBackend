@@ -97,35 +97,42 @@ type itemActivityLogResponseRow struct {
 //		- name: ancestor_item_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			description: The current user should be a manager of the watched group with `can_watch_members` = true,
 //							 otherwise the 'forbidden' error is returned
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.item_id
 //			description: Start the page from the row next to the row with `item_id`=`{from.item_id}`
 //							 (all other `{from.*}` parameters are required when `{from.item_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.participant_id
 //			description: Start the page from the row next to the row with `participant_id`=`{from.participant_id}`
 //							 (all other `{from.*}` parameters are required when `{from.participant_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.attempt_id
 //			description: Start the page from the row next to the row with `attempt_id`=`{from.attempt_id}`
 //							 (all other `{from.*}` parameters are required when `{from.attempt_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.answer_id
 //			description: Start the page from the row next to the row with `from_answer_id`=`{from.answer_id}`
 //							 (all other `{from.*}` parameters are required when `{from.answer_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.activity_type
 //			description: Start the page from the row next to the row with `activity_type`=`{from.activity_type}`
 //							 (all other `{from.*}` parameters are required when `{from.activity_type}` is present)

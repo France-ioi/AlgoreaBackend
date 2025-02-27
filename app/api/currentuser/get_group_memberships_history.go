@@ -35,6 +35,7 @@ import (
 //							 (`{from.at}` is required when `{from.group_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Return the first N invitations/requests
 //			in: query

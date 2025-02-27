@@ -83,6 +83,7 @@ const maxAllowedLoginsToInvite = 100
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- in: body
 //			name: logins_info

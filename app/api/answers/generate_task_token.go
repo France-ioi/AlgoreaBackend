@@ -44,6 +44,7 @@ import (
 //		- name: answer_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":

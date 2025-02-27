@@ -11,7 +11,7 @@ import (
 //	---
 //	summary: Withdraw a group leave request
 //	description: >
-//		Lets the current user withdraw a request to leave a group (idenfified by {group_id}).
+//		Lets the current user withdraw a request to leave a group (identified by {group_id}).
 //
 //
 //		On success the service removes a row  with `group_id` = `{group_id}`,
@@ -28,6 +28,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":

@@ -40,15 +40,18 @@ import (
 //			description: "`id` of a timed contest"
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: from.id
 //			description: Start the page from the group next to the group with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [name,id]

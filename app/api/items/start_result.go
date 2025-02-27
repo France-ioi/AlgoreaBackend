@@ -60,10 +60,12 @@ type updatedStartResultResponse struct { // nolint:unused
 //			- name: attempt_id
 //				in: query
 //				type: integer
+//				format: int64
 //				required: true
 //			- name: as_team_id
 //				in: query
 //				type: integer
+//				format: int64
 //		responses:
 //			"200":
 //				"$ref": "#/responses/updatedStartResultResponse"

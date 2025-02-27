@@ -45,6 +45,7 @@ import (
 //			description: "`id` of a timed contest"
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: name
 //			in: query

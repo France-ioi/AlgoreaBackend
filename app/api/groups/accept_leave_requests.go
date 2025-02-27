@@ -44,12 +44,14 @@ import (
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: group_ids
 //			in: query
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //			required: true
 //	responses:
 //		"200":

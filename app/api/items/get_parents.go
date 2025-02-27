@@ -64,13 +64,16 @@ type parentItem struct {
 //			description: "`id` of an attempt for the item."
 //			in: query
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with item parents data

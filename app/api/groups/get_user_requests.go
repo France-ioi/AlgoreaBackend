@@ -70,6 +70,7 @@ type groupUserRequestsViewResponseRow struct {
 //		- name: group_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: include_descendant_groups
 //			in: query
 //			type: integer
@@ -95,6 +96,7 @@ type groupUserRequestsViewResponseRow struct {
 //							 (only if `{group_id}` is not given; `{from.user.group_id}` is also required when `{from.group.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.user.group_id
 //			description: Start the page from the request next to the request with
 //							 `group_pending_requests.member_id`=`{from.user.group_id}`
@@ -102,6 +104,7 @@ type groupUserRequestsViewResponseRow struct {
 //								either `{group_id}` is not given or descendants are included)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N requests
 //			in: query

@@ -35,11 +35,13 @@ import (
 //		- name: attempt_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			description: fails with 'bad request' error if given, this service does not currently support team work
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			"$ref": "#/responses/publishedOrFailedResponse"

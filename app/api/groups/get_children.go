@@ -66,6 +66,7 @@ type groupChildrenViewResponseRow struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: types_include
 //			in: query
 //			default: [Class,Team,Club,Friends,Other,User,Session,Base]
@@ -84,6 +85,7 @@ type groupChildrenViewResponseRow struct {
 //			description: Start the page from the sub-group next to the sub-group with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [name,id]
