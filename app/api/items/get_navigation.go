@@ -102,16 +102,20 @@ type itemWatchedGroupStat struct {
 //			description: "`id` of an attempt for the item. This parameter is incompatible with `{child_attempt_id}`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: child_attempt_id
 //			description: "`id` of an attempt for one of the item's children. This parameter is incompatible with `{attempt_id}`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Navigation data

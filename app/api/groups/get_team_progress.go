@@ -72,6 +72,7 @@ type groupTeamProgressResponseTableCell struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -79,10 +80,12 @@ type groupTeamProgressResponseTableCell struct {
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //		- name: from.id
 //			description: Start the page from the team next to the team with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display results for the first N teams (sorted by `name`)
 //			in: query

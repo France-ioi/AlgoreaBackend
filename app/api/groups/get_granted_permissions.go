@@ -75,6 +75,7 @@ type grantedPermissionsViewResultRow struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: descendants
 //			description: If equal to 1, the results are permissions granted to the group's descendants (not including the group itself),
 //							 otherwise the results are permissions granted to the group's ancestors (including the group itself).
@@ -95,16 +96,19 @@ type grantedPermissionsViewResultRow struct {
 //							 (`{from.item.id}` and `{from.group.id}` should be given too when `{from.source_group.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.group.id
 //			description: Start the page from permissions next to the permissions with `group_id`=`{from.group.id}`
 //							 (`{from.item.id}` and `{from.source_group.id}` should be given too when `{from.group.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.item.id
 //			description: Start the page from permissions next to the permissions with `item_id`=`{from.item.id}`
 //							 (`{from.group.id}` and `{from.source_group.id}` should be given too when `{from.item.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N permissions
 //			in: query

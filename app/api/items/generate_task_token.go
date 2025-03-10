@@ -45,10 +45,12 @@ import (
 //		- name: attempt_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: item_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query

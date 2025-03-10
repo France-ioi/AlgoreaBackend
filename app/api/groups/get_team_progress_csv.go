@@ -37,6 +37,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -44,6 +45,7 @@ import (
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with users progress on items

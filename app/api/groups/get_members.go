@@ -52,6 +52,7 @@ type groupsMembersViewResponseRow struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: sort
 //			in: query
@@ -64,6 +65,7 @@ type groupsMembersViewResponseRow struct {
 //			description: Start the page from the member next to the member with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N members
 //			in: query

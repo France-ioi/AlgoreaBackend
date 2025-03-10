@@ -31,10 +31,12 @@ import (
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: child_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"201":

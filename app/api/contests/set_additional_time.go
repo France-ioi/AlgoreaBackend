@@ -42,10 +42,12 @@ import (
 //			description: "`id` of a timed contest"
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: seconds
 //			description: additional time in seconds (can be negative)

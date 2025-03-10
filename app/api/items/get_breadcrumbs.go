@@ -43,11 +43,13 @@ import (
 //								This parameter is incompatible with `attempt_id`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: attempt_id
 //			description: "`id` of an attempt for the last item in the path.
 //								This parameter is incompatible with `parent_attempt_id`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: as_team_id
 //			in: query
 //			type: integer

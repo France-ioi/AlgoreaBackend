@@ -27,10 +27,12 @@ import (
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: manager_id
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- in: body
 //			name: data
 //			required: true

@@ -44,6 +44,7 @@ type idName struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -51,6 +52,7 @@ type idName struct {
 //			required: true
 //			items:
 //				type: integer
+//				format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with users progress on items

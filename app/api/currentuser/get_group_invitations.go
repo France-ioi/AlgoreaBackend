@@ -85,6 +85,7 @@ type groupWithApprovals struct {
 //							 (`{from.at}` is required when `{from.group_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N requests/invitations
 //			in: query

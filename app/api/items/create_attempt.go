@@ -48,10 +48,12 @@ import (
 //		- name: parent_attempt_id
 //			in: query
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"201":
 //			"$ref": "#/responses/createdWithIDResponse"

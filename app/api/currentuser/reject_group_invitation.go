@@ -19,12 +19,13 @@ import (
 //
 //		* There should be a row in `group_pending_requests` with the `{group_id}` as `group_id`
 //		and the authenticated user’s `group_id` as `member_id` with `type`=`invitation_created`.
-//		Otherwise the unprocessable entity error is returned.
+//		Otherwise, the unprocessable entity error is returned.
 //
 //	parameters:
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":

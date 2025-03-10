@@ -44,6 +44,7 @@ import (
 //			description: "`id` of an attempt which will be used as a parent attempt for the participation"
 //			in: query
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query
