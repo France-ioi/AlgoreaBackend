@@ -28,17 +28,17 @@ Feature: Update an item string entry
     When I send a PUT request to "/items/50/strings/default" with the following body:
       """
       {
-        "title": "The title",
+        "title": "The title 🐱",
         "image_url": "http://mysite.com/image.jpg",
-        "subtitle": "The subtitle",
-        "description": "The description"
+        "subtitle": "The subtitle 🐱",
+        "description": "The description 🐱"
       }
       """
     Then the response should be "updated"
     And the table "items_strings" should stay unchanged but the row with language_tag "en"
     And the table "items_strings" at language_tag "en" should be:
-      | item_id | language_tag | title     | image_url                   | subtitle     | description     |
-      | 50      | en           | The title | http://mysite.com/image.jpg | The subtitle | The description |
+      | item_id | language_tag | title        | image_url                   | subtitle        | description        |
+      | 50      | en           | The title 🐱 | http://mysite.com/image.jpg | The subtitle 🐱 | The description 🐱 |
 
   Scenario: Update the default language string with an image_url > 100 and < 2048 characters.
     Given I am the user with id "11"
