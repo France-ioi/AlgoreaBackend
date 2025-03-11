@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.25.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.8...v2.25.0) - 2025-03-11
+- implement a service for getting additional time of a group on a contest
+- remove special characters from search strings in database.DB.WhereSearchStringMatches()
+- docker improvements
+- do not analyze tables or recompute db caches in db-migrate command + always close the DB connection in commands
+- add a test checking that connection resetting restores the default value of FOREIGN_KEY_CHECKS setting
+- rework app.Server.Start() to return errors instead of exiting the app + change the server's port in tests
+
 ## [v2.24.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.7...v2.24.8) - 2025-02-10
 - acquire shared row locks instead of exclusive row locks in DB queries causing request timeouts in production
 - add a comment for logRawSQLQueries in config sample files
