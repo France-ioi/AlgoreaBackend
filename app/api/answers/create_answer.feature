@@ -33,7 +33,7 @@ Feature: Create a 'saved' answer
     When I send a POST request to "/items/50/attempts/1/answers" with the following body:
       """
       {
-        "answer": "print 1",
+        "answer": "print 1 # 🐱",
         "state": "some state"
       }
       """
@@ -46,9 +46,9 @@ Feature: Create a 'saved' answer
       }
       """
     And the table "answers" should be:
-      | author_id | attempt_id | participant_id | item_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 1          | 101            | 50      | Submission | null    | null       | 0                                                 |
-      | 101       | 1          | 101            | 50      | Saved      | print 1 | some state | 1                                                 |
+      | author_id | attempt_id | participant_id | item_id | type       | answer       | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 1          | 101            | 50      | Submission | null         | null       | 0                                                 |
+      | 101       | 1          | 101            | 50      | Saved      | print 1 # 🐱 | some state | 1                                                 |
 
   Scenario: User is able to save an answer as a team
     Given I am the user with id "101"

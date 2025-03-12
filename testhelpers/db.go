@@ -20,7 +20,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
-const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
+const (
+	fixtureDir = "testdata" // special directory which is not included in binaries by the compiler
+	utf8mb4    = "utf8mb4"
+)
 
 func init() { //nolint:gochecknoinits
 	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
@@ -90,6 +93,10 @@ func OpenRawDBConnection() (*sql.DB, error) {
 	config := app.LoadConfig()
 	dbConfig, _ := app.DBConfig(config)
 	loggingConfig := app.LoggingConfig(config)
+	if dbConfig.Params == nil {
+		dbConfig.Params = make(map[string]string, 1)
+	}
+	dbConfig.Params["charset"] = utf8mb4
 	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN(), loggingConfig.GetBool("LogRawSQLQueries"))
 	if err != nil {
 		panic(err)

@@ -46,7 +46,7 @@ Feature: Submit a new answer
       """
       {
         "task_token": "{{userTaskToken}}",
-        "answer": "print 1"
+        "answer": "print 1 # 🐱"
       }
       """
     Then the response code should be 201
@@ -65,7 +65,7 @@ Feature: Submit a new answer
             "randomSeed": "",
             "sHintsRequested": "[{\"rotorIndex\":0,\"cellRank\":0}]",
             "nbHintsGiven": "12",
-            "sAnswer": "print 1",
+            "sAnswer": "print 1 # 🐱",
             "idUserAnswer": "5577006791947779410"
           }
         },
@@ -78,8 +78,8 @@ Feature: Submit a new answer
       user_id=101
       """
     And the table "answers" should be:
-      | author_id | participant_id | attempt_id | item_id | type       | answer  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 101            | 1          | 50      | Submission | print 1 | 1                                                 |
+      | author_id | participant_id | attempt_id | item_id | type       | answer       | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 101            | 1          | 50      | Submission | print 1 # 🐱 | 1                                                 |
     And the table "results" should be:
       | attempt_id | participant_id | item_id | hints_requested                 | hints_cached | submissions | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 |
       | 1          | 101            | 10      | null                            | 0            | 0           | 1                                                         | null                                                        |
