@@ -16,7 +16,7 @@ func TestUserStore_deleteWithTraps_DoesNothingWhenScopeReturnsNothing(t *testing
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT group_id FROM `users` LIMIT 1000 FOR UPDATE") + "$").
+	mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT group_id FROM `users` LIMIT 30 FOR UPDATE") + "$").
 		WillReturnRows(mock.NewRows([]string{"group_id"}))
 	mock.ExpectCommit()
 
@@ -40,7 +40,7 @@ func TestUserStore_executeBatchesInTransactions_ProcessesAllTheBatches(t *testin
 	mock.ExpectBegin()
 	mock.ExpectCommit()
 
-	counts := []int{1000, 999}
+	counts := []int{30, 29}
 	step := 0
 	totalCount := 0
 	NewDataStore(db).Users().executeBatchesInTransactions(func(store *DataStore) int {
@@ -50,6 +50,6 @@ func TestUserStore_executeBatchesInTransactions_ProcessesAllTheBatches(t *testin
 		step++
 		return counts[step-1]
 	})
-	assert.Equal(t, 1999, totalCount)
+	assert.Equal(t, 59, totalCount)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

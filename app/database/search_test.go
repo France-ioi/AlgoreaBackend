@@ -7,9 +7,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDB_WhereSearchStringMatches(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	type args struct {
 		field         string
 		fallbackField string
@@ -51,6 +55,8 @@ func TestDB_WhereSearchStringMatches(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, sqlMock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
