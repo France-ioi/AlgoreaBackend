@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.25.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.25.0...v2.25.1) - 2025-03-13
+- convert all the db tables into the utf8mb4 charset and use it for MySQL connections
+- set deleteWithTrapsBatchSize to 30 instead of 1000 (should decrease locking time during temp user deletion)
+- ensure transactions in auth.CreateNewTempSession() and auth.RefreshTempUserSession()
+
 ## [v2.25.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.8...v2.25.0) - 2025-03-11
 - implement a service for getting additional time of a group on a contest
 - remove special characters from search strings in database.DB.WhereSearchStringMatches()
