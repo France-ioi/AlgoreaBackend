@@ -21,7 +21,4 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(auth.UserMiddleware(srv.Base))
 
 	router.Get("/contests/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
-
-	router.Get("/items/{item_id}/groups/{group_id}/additional-times",
-		service.AppHandler(srv.getGroupAdditionalTimes).ServeHTTP)
 }
