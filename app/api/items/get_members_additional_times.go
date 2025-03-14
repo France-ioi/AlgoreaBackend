@@ -39,9 +39,9 @@ type itemAdditionalTimesInfo struct {
 //							 the service returns their `group_id`, `name`, `type` and `additional_time` & `total_additional_time`.
 //
 //
-//							 * `additional_time` defaults to 0 if no such `groups_contest_items`
+//							 * `additional_time` (in seconds) defaults to 0 if no such `groups_contest_items`
 //
-//							 * `total_additional_time` is the sum of additional times of this group on the item through all its
+//							 * `total_additional_time` (in seconds) is the sum of additional times of this group on the item through all its
 //								 `groups_ancestors` (even from different branches, but each ancestor counted only once), defaulting to 0
 //
 //							 Restrictions:
