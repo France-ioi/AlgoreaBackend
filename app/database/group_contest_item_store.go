@@ -1,6 +1,6 @@
 package database
 
-// GroupContestItemStore implements database operations on `groups_contest_items`.
-type GroupContestItemStore struct {
+// GroupItemAdditionalTimeStore implements database operations on `group_item_additional_times`.
+type GroupItemAdditionalTimeStore struct {
 	*DataStore
 }

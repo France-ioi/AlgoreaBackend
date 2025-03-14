@@ -63,7 +63,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
       | 21       | 60      | content_with_descendants | none                     | none                |
       | 21       | 70      | content_with_descendants | content                  | answer              |
       | 36       | 10      | info                     | none                     | none                |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -95,7 +95,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 200
     And the response should be "updated"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -159,7 +159,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 200
     And the response should be "updated"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -216,7 +216,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     When I send a PUT request to "/items/70/groups/13/additional-times?seconds=0"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should stay unchanged
@@ -227,7 +227,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     When I send a PUT request to "/items/50/groups/14/additional-times?seconds=10000"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -247,7 +247,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     When I send a PUT request to "/items/70/groups/15/additional-times?seconds=-10"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -304,7 +304,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     When I send a PUT request to "/items/70/groups/16/additional-times?seconds=3020399"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -370,7 +370,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 200
     And the response should be "updated"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |

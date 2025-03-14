@@ -184,7 +184,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    Given the database has the following table "groups_contest_items":
+    Given the database has the following table "group_item_additional_times":
       | group_id | item_id |
       | 11       | 60      |
       | 41       | 60      |
@@ -212,7 +212,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 31       | 50      | 02:02:02        |
     And the database has the following table "attempts":
@@ -247,7 +247,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | solution                 |
       | 31       | 60      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 11       | 60      | 02:02:02        |
     And the database has the following table "attempts":

@@ -72,7 +72,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 21       | 50      | solution                 |
       | 31       | 10      | content                  |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
@@ -138,7 +138,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | content                  |
       | 21       | 60      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 11       | 60      | 01:01:01        |
       | 31       | 60      | 02:02:02        |
@@ -205,7 +205,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | solution                 |
       | 31       | 60      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 11       | 60      | 02:02:02        |
     And the database table "attempts" also has the following row:
@@ -275,7 +275,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"
@@ -329,7 +329,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 11       | 50      | 02:02:02        |
     And I am the user with id "31"

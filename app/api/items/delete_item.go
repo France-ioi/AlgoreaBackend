@@ -18,7 +18,7 @@ import (
 //		Removes an item and objects linked to it.
 //
 //
-//		The service deletes `answers`, `groups_contest_items`,
+//		The service deletes `answers`, `group_item_additional_times`,
 //		`item_dependencies` (by `item_id` and `dependent_item_id`),
 //		`items_ancestors` (by `child_item_id`), `items_items` (by `child_item_id`), `items_strings`,
 //		`permissions_generated`, `permissions_granted`, `permissions_propagate`, `results`

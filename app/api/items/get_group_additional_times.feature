@@ -25,7 +25,7 @@ Feature: Get additional times for a group on an item with duration (itemGetAddit
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated |
       | 21       | 50      | content                  | enter                    | result              |
       | 21       | 60      | content_with_descendants | content                  | answer              |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |

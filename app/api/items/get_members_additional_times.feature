@@ -78,7 +78,7 @@ Feature: Get additional times for a group of users/teams on an item with duratio
       | 31       | 70      | content_with_descendants | none                     | none                |
       | 41       | 50      | info                     | none                     | none                |
       | 41       | 70      | content                  | none                     | none                |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |

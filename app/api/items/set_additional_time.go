@@ -16,10 +16,10 @@ import (
 //	---
 //	summary: Set additional time for an item with duration and a group
 //	description: >
-//							 For the input group and item, sets the `groups_contest_items.additional_time` to the `time` value.
-//							 If there is no `groups_contest_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
+//							 For the input group and item, sets the `group_item_additional_times.additional_time` to the `time` value.
+//							 If there is no `group_item_additional_times` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
 //							 (with default values in other columns).
-//							 If no `groups_contest_items` and `seconds` == 0, succeed without doing any change.
+//							 If no `group_item_additional_times` and `seconds` == 0, succeed without doing any change.
 //
 //
 //							 `groups_groups.expires_at` & `attempts.allows_submissions_until` (for the latest attempt) of affected
@@ -142,7 +142,7 @@ func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, 
 func setAdditionalTimeForGroupAndItemWithDuration(
 	store *database.DataStore, groupID, itemID, participantsGroupID, durationInSeconds, additionalTimeInSeconds int64,
 ) {
-	groupContestItemStore := store.GroupContestItems()
+	groupContestItemStore := store.GroupItemAdditionalTimes()
 	scope := groupContestItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
 	found, err := scope.WithExclusiveWriteLock().HasRows()
 	service.MustNotBeError(err)
@@ -151,7 +151,7 @@ func setAdditionalTimeForGroupAndItemWithDuration(
 			gorm.Expr("SEC_TO_TIME(?)", additionalTimeInSeconds)).Error())
 	} else if additionalTimeInSeconds != 0 {
 		service.MustNotBeError(groupContestItemStore.Exec(
-			"INSERT INTO groups_contest_items (group_id, item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
+			"INSERT INTO group_item_additional_times (group_id, item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
 			groupID, itemID, additionalTimeInSeconds).Error())
 	}
 
@@ -192,15 +192,15 @@ func setAdditionalTimeForGroupAndItemWithDuration(
 			// ... we get all the ancestors to calculate the total additional time
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
 			Joins(`
-				JOIN groups_contest_items
-					ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
-						groups_contest_items.item_id = results.item_id`).
+				JOIN group_item_additional_times
+					ON group_item_additional_times.group_id = groups_ancestors_active.ancestor_group_id AND
+						group_item_additional_times.item_id = results.item_id`).
 			Group("groups_groups.child_group_id").
 			Select(`
 				groups_groups.child_group_id,
 				DATE_ADD(
 					MIN(results.started_at),
-					INTERVAL (? + IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)) SECOND
+					INTERVAL (? + IFNULL(SUM(TIME_TO_SEC(group_item_additional_times.additional_time)), 0)) SECOND
 				) AS expires_at`, durationInSeconds).
 			WithExclusiveWriteLock().QueryExpr()).Error())
 

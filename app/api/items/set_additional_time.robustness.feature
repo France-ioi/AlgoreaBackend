@@ -35,7 +35,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
       | 21       | 80      | content                  | enter                    | result              |
       | 21       | 90      | content                  | enter                    | none                |
       | 21       | 95      | info                     | enter                    | result              |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 13       | 50      | 01:00:00        |
       | 13       | 60      | 01:01:00        |
@@ -46,7 +46,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: Wrong group_id
     Given I am the user with id "21"
@@ -54,7 +54,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: Wrong 'seconds'
     Given I am the user with id "21"
@@ -62,7 +62,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 400
     And the response error message should contain "Wrong value for seconds (should be int64)"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: 'seconds' is too big
     Given I am the user with id "21"
@@ -70,7 +70,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 400
     And the response error message should contain "'seconds' should be between -3020399 and 3020399"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: 'seconds' is too small
     Given I am the user with id "21"
@@ -78,7 +78,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 400
     And the response error message should contain "'seconds' should be between -3020399 and 3020399"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: No such item
     Given I am the user with id "21"
@@ -86,7 +86,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: No access to the item
     Given I am the user with id "21"
@@ -94,7 +94,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: The item is not a timed contest
     Given I am the user with id "21"
@@ -102,7 +102,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: The user is not a contest admin (can_view = info)
     Given I am the user with id "21"
@@ -110,7 +110,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: The user is not a contest admin (can_grant_view = none)
     Given I am the user with id "21"
@@ -118,7 +118,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: The user is not a contest admin (can_watch = none)
     Given I am the user with id "21"
@@ -126,7 +126,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: The user cannot grant access to the group
     Given I am the user with id "21"
@@ -134,7 +134,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: The user cannot watch group members
     Given I am the user with id "21"
@@ -142,7 +142,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: No such group
     Given I am the user with id "21"
@@ -150,7 +150,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged
 
   Scenario: Team contest and a user
     Given I am the user with id "21"
@@ -158,4 +158,4 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
-    And the table "groups_contest_items" should stay unchanged
+    And the table "group_item_additional_times" should stay unchanged

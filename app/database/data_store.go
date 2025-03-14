@@ -121,9 +121,9 @@ func (s *DataStore) GroupPendingRequests() *GroupPendingRequestStore {
 	return &GroupPendingRequestStore{NewDataStoreWithTable(s.DB, "group_pending_requests")}
 }
 
-// GroupContestItems returns a GroupContestItemStore.
-func (s *DataStore) GroupContestItems() *GroupContestItemStore {
-	return &GroupContestItemStore{NewDataStoreWithTable(s.DB, "groups_contest_items")}
+// GroupItemAdditionalTimes returns a GroupItemAdditionalTimeStore.
+func (s *DataStore) GroupItemAdditionalTimes() *GroupItemAdditionalTimeStore {
+	return &GroupItemAdditionalTimeStore{NewDataStoreWithTable(s.DB, "group_item_additional_times")}
 }
 
 // GroupManagers returns a GroupManagerStore.
