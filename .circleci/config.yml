@@ -22,8 +22,8 @@ jobs:
   tests:
     docker:
       - image: cimg/go:1.20.2
-      - image: circleci/mysql:8.0.28
-        command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
+      - image: mysql:8.0.34
+        command: --default-authentication-plugin=caching_sha2_password --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:
           MYSQL_USER: algorea
           MYSQL_PASSWORD: dummy_password
@@ -80,8 +80,8 @@ jobs:
   migration-tests:
     docker:
       - image: cimg/go:1.20.2
-      - image: circleci/mysql:8.0.28
-        command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
+      - image: mysql:8.0.34
+        command: --default-authentication-plugin=caching_sha2_password --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:
           MYSQL_USER: algorea
           MYSQL_PASSWORD: dummy_password
@@ -208,8 +208,8 @@ jobs:
   dbdoc-gen:
     docker:
       - image: cimg/go:1.20.2-browsers
-      - image: circleci/mysql:8.0.28
-        command: --default-authentication-plugin=mysql_native_password --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
+      - image: mysql:8.0.34
+        command: --default-authentication-plugin=caching_sha2_password --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:
           MYSQL_USER: algorea
           MYSQL_PASSWORD: dummy_password
