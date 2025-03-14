@@ -75,6 +75,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuth.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
 
 	routerWithAuth.Put("/items/{item_id}/groups/{group_id}/additional-times", service.AppHandler(srv.setAdditionalTime).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/groups/{group_id}/members/additional-times",
+		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,

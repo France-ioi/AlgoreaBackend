@@ -24,6 +24,4 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Get("/contests/{item_id}/groups/{group_id}/additional-times",
 		service.AppHandler(srv.getGroupAdditionalTimes).ServeHTTP)
-	router.Get("/items/{item_id}/groups/{group_id}/members/additional-times",
-		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
 }
