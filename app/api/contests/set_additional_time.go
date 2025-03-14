@@ -11,10 +11,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-// swagger:operation PUT /contests/{item_id}/groups/{group_id}/additional-times contests contestSetAdditionalTime
+// swagger:operation PUT /items/{item_id}/groups/{group_id}/additional-times items itemSetAdditionalTime
 //
 //	---
-//	summary: Set additional time for a contest
+//	summary: Set additional time for an item with duration and a group
 //	description: >
 //							 For the input group and item, sets the `groups_contest_items.additional_time` to the `time` value.
 //							 If there is no `groups_contest_items` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
@@ -28,18 +28,18 @@ import (
 //
 //
 //							 Restrictions:
-//								 * `item_id` should be a timed contest;
+//								 * `item_id` should be an item with duration;
 //								 * the authenticated user should have `can_view` >= 'content' on the input item;
 //								 * the authenticated user should have `can_grant_view` >= 'enter' on the input item;
 //								 * the authenticated user should have `can_watch` >= 'result' on the input item;
 //								 * the authenticated user should be a manager of the `group_id`
 //									 with `can_grant_group_access` and `can_watch_members` permissions;
-//								 * if the contest is team-only (`items.entry_participant_type` = 'Team'), then the group should not be a user.
+//								 * if the item is team-only (`items.entry_participant_type` = 'Team'), then the group should not be a user.
 //
 //							 Otherwise, the "Forbidden" response is returned.
 //	parameters:
 //		- name: item_id
-//			description: "`id` of a timed contest"
+//			description: "`id` of an item with duration"
 //			in: path
 //			type: integer
 //			format: int64
@@ -86,9 +86,9 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 	service.MustNotBeError(err)
 
-	var contestInfo struct {
+	var itemInfo struct {
 		DurationInSeconds   int64
-		IsTeamOnlyContest   bool
+		IsTeamOnlyItem      bool
 		ParticipantsGroupID int64
 	}
 
@@ -96,17 +96,17 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		err = store.Items().ContestManagedByUser(itemID, user).WithExclusiveWriteLock().
 			Select(`
 				TIME_TO_SEC(items.duration) AS duration_in_seconds,
-				items.entry_participant_type = 'Team' AS is_team_only_contest,
+				items.entry_participant_type = 'Team' AS is_team_only_item,
 				items.participants_group_id`).
-			Take(&contestInfo).Error()
-		if gorm.IsRecordNotFoundError(err) || (contestInfo.IsTeamOnlyContest && groupType == "User") {
+			Take(&itemInfo).Error()
+		if gorm.IsRecordNotFoundError(err) || (itemInfo.IsTeamOnlyItem && groupType == "User") {
 			apiError = service.InsufficientAccessRightsError
 			return apiError.Error
 		}
 		service.MustNotBeError(err)
 
-		setAdditionalTimeForGroupInContest(store, groupID, itemID, contestInfo.ParticipantsGroupID,
-			contestInfo.DurationInSeconds, seconds)
+		setAdditionalTimeForGroupAndItemWithDuration(store, groupID, itemID, itemInfo.ParticipantsGroupID,
+			itemInfo.DurationInSeconds, seconds)
 		return nil
 	})
 	if apiError != service.NoError {
@@ -139,7 +139,7 @@ func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, 
 	return itemID, groupID, seconds, service.NoError
 }
 
-func setAdditionalTimeForGroupInContest(
+func setAdditionalTimeForGroupAndItemWithDuration(
 	store *database.DataStore, groupID, itemID, participantsGroupID, durationInSeconds, additionalTimeInSeconds int64,
 ) {
 	groupContestItemStore := store.GroupContestItems()
@@ -169,7 +169,7 @@ func setAdditionalTimeForGroupInContest(
 	}()
 	service.MustNotBeError(store.Exec(`
 		INSERT INTO new_expires_at ?`,
-		// For each of groups participating/participated in the contest ...
+		// For each of the groups participating/participated in solving the item ...
 		store.GroupGroups().
 			Where("groups_groups.parent_group_id = ?", participantsGroupID).
 			// ... that are descendants of `groupID` (so affected by the change) ...
@@ -177,29 +177,29 @@ func setAdditionalTimeForGroupInContest(
 				JOIN groups_ancestors_active AS changed_group_descendants
 					ON changed_group_descendants.child_group_id = groups_groups.child_group_id AND
 						changed_group_descendants.ancestor_group_id = ?`, groupID).
-			// ... and have entered the contest ...
+			// ... and have started solving the item ...
 			Joins(`
-				JOIN results AS contest_participations
-					ON contest_participations.participant_id = groups_groups.child_group_id AND
-						contest_participations.started_at IS NOT NULL AND
-						contest_participations.item_id = ?`, itemID).
+				JOIN results
+					ON results.participant_id = groups_groups.child_group_id AND
+						results.started_at IS NOT NULL AND
+						results.item_id = ?`, itemID).
 			// ... and the attempt is not ended, ...
 			Joins(`
 				JOIN attempts
-					ON attempts.participant_id = contest_participations.participant_id AND
-					   attempts.id = contest_participations.attempt_id AND
+					ON attempts.participant_id = results.participant_id AND
+					   attempts.id = results.attempt_id AND
 					   attempts.ended_at IS NULL`).
 			// ... we get all the ancestors to calculate the total additional time
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups.child_group_id").
 			Joins(`
 				JOIN groups_contest_items
 					ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
-						groups_contest_items.item_id = contest_participations.item_id`).
+						groups_contest_items.item_id = results.item_id`).
 			Group("groups_groups.child_group_id").
 			Select(`
 				groups_groups.child_group_id,
 				DATE_ADD(
-					MIN(contest_participations.started_at),
+					MIN(results.started_at),
 					INTERVAL (? + IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)) SECOND
 				) AS expires_at`, durationInSeconds).
 			WithExclusiveWriteLock().QueryExpr()).Error())
@@ -220,7 +220,7 @@ func setAdditionalTimeForGroupInContest(
 	//
 	//   * a user starts a first attempt at 2:00 which ends at 3:00,
 	//   * the user starts a second attempt at 3:01 which will end at 4:01,
-	//   * at 3:05, an admin adds 15min to the contest -> only the second attempt gets the 15m extra.
+	//   * at 3:05, an admin adds 15min to the item -> only the second attempt gets the 15m extra.
 	//
 	// We only update attempts.allows_submission_until if the participation is active or
 	// if the change makes it active.

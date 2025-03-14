@@ -1,4 +1,4 @@
-Feature: Set additional time in the contest for the group (contestSetAdditionalTime) - robustness
+Feature: Set additional time for an item with duration and a group (itemSetAdditionalTime) - robustness
   Background:
     Given the database has the following table "groups":
       | id | name    | type  |
@@ -42,7 +42,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Wrong item_id
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/abc/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/abc/groups/13/additional-times?seconds=0"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
     And the table "permissions_generated" should stay unchanged
@@ -50,7 +50,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Wrong group_id
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/50/groups/abc/additional-times?seconds=0"
+    When I send a PUT request to "/items/50/groups/abc/additional-times?seconds=0"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
     And the table "permissions_generated" should stay unchanged
@@ -58,7 +58,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Wrong 'seconds'
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=abc"
+    When I send a PUT request to "/items/50/groups/13/additional-times?seconds=abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for seconds (should be int64)"
     And the table "permissions_generated" should stay unchanged
@@ -66,7 +66,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: 'seconds' is too big
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=3020400"
+    When I send a PUT request to "/items/50/groups/13/additional-times?seconds=3020400"
     Then the response code should be 400
     And the response error message should contain "'seconds' should be between -3020399 and 3020399"
     And the table "permissions_generated" should stay unchanged
@@ -74,7 +74,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: 'seconds' is too small
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=-3020400"
+    When I send a PUT request to "/items/50/groups/13/additional-times?seconds=-3020400"
     Then the response code should be 400
     And the response error message should contain "'seconds' should be between -3020399 and 3020399"
     And the table "permissions_generated" should stay unchanged
@@ -82,7 +82,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: No such item
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/404/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/404/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -90,7 +90,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: No access to the item
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/10/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/10/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -98,7 +98,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: The item is not a timed contest
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/60/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/60/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -106,7 +106,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: The user is not a contest admin (can_view = info)
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/95/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/95/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -114,7 +114,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: The user is not a contest admin (can_grant_view = none)
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/50/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -122,7 +122,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: The user is not a contest admin (can_watch = none)
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/90/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/90/groups/13/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -130,7 +130,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: The user cannot grant access to the group
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/12/additional-times?seconds=0"
+    When I send a PUT request to "/items/70/groups/12/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -138,7 +138,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: The user cannot watch group members
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/14/additional-times?seconds=0"
+    When I send a PUT request to "/items/70/groups/14/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -146,7 +146,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: No such group
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/404/additional-times?seconds=0"
+    When I send a PUT request to "/items/70/groups/404/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
@@ -154,7 +154,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Team contest and a user
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/80/groups/31/additional-times?seconds=0"
+    When I send a PUT request to "/items/80/groups/31/additional-times?seconds=0"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "permissions_generated" should stay unchanged
