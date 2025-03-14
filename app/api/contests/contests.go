@@ -20,5 +20,5 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Base))
 
-	router.Get("/contests/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
+	router.Get("/items/time-limited/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
 }
