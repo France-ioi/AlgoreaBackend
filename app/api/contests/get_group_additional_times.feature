@@ -1,4 +1,4 @@
-Feature: Get additional times for a group on a contest (contestGetAdditionalTime)
+Feature: Get additional times for a group on an item with duration (itemGetAdditionalTime)
   Background:
     Given the database has the following table "groups":
       | id | name        | type    |
@@ -32,7 +32,7 @@ Feature: Get additional times for a group on a contest (contestGetAdditionalTime
 
   Scenario: With additional time
     Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/11/additional-times"
+    When I send a GET request to "/items/50/groups/11/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -44,7 +44,7 @@ Feature: Get additional times for a group on a contest (contestGetAdditionalTime
 
   Scenario: Without additional time
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/14/additional-times"
+    When I send a GET request to "/items/60/groups/14/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

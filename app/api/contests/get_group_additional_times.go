@@ -16,12 +16,12 @@ type additionalTimes struct {
 	TotalAdditionalTime int32 `json:"total_additional_time"`
 }
 
-// swagger:operation GET /contests/{item_id}/groups/{group_id}/additional-times contests contestGetAdditionalTime
+// swagger:operation GET /items/{item_id}/groups/{group_id}/additional-times items itemGetAdditionalTime
 //
 //	---
-//	summary: Get additional time for a contest
+//	summary: Get additional time for an item with duration and a group
 //	description: >
-//							 For the given group and the given contest, the service returns `additional_time` & `total_additional_time`:
+//							 For the given group and the given item with duration, the service returns `additional_time` & `total_additional_time`:
 //
 //
 //							 * `additional_time` defaults to 0 if no such `groups_contest_items`
@@ -30,14 +30,14 @@ type additionalTimes struct {
 //								 `groups_ancestors` (even from different branches, but each ancestor counted only once), defaulting to 0.
 //
 //							 Restrictions:
-//								 * `item_id` should be a timed contest;
+//								 * `item_id` should be an item with duration;
 //								 * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
 //									 and `can_watch` >= 'result' on the input item;
 //								 * the authenticated user should be a manager of the `group_id`
 //									 with `can_grant_group_access` and `can_watch_members` permissions.
 //	parameters:
 //		- name: item_id
-//			description: "`id` of a timed contest"
+//			description: "`id` of an item with duration"
 //			in: path
 //			type: integer
 //			format: int64
@@ -49,7 +49,7 @@ type additionalTimes struct {
 //			required: true
 //	responses:
 //		"200":
-//			description: OK. Success response with contests info
+//			description: OK. Success response with item's info
 //			schema:
 //				type: array
 //				items:
