@@ -19,6 +19,4 @@ type Service struct {
 func (srv *Service) SetRoutes(router chi.Router) {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 	router.Use(auth.UserMiddleware(srv.Base))
-
-	router.Get("/items/time-limited/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
 }

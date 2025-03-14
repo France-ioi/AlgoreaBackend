@@ -78,6 +78,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuth.Get("/items/{item_id}/groups/{group_id}/additional-times", service.AppHandler(srv.getGroupAdditionalTimes).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/groups/{group_id}/members/additional-times",
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
+	routerWithAuth.Get("/items/time-limited/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
