@@ -76,7 +76,7 @@ func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Reque
 	}
 
 	store := srv.GetStore(r)
-	found, err := store.Items().ContestManagedByUser(itemID, user).HasRows()
+	found, err := store.Items().WithDurationByIDAndManagedByUser(itemID, user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError

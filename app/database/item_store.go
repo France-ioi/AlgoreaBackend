@@ -305,9 +305,9 @@ func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAcces
 	return true, nil, nil
 }
 
-// ContestManagedByUser returns a composable query
+// WithDurationByIDAndManagedByUser returns a composable query
 // for getting a contest with the given item id managed by the given user.
-func (s *ItemStore) ContestManagedByUser(contestItemID int64, user *User) *DB {
+func (s *ItemStore) WithDurationByIDAndManagedByUser(contestItemID int64, user *User) *DB {
 	return s.ByID(contestItemID).Where("items.duration IS NOT NULL").
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
 		WherePermissionIsAtLeast("grant_view", "enter").

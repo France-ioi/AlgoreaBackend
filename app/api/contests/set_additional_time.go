@@ -93,7 +93,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 
 	err = store.InTransaction(func(store *database.DataStore) error {
-		err = store.Items().ContestManagedByUser(itemID, user).WithExclusiveWriteLock().
+		err = store.Items().WithDurationByIDAndManagedByUser(itemID, user).WithExclusiveWriteLock().
 			Select(`
 				TIME_TO_SEC(items.duration) AS duration_in_seconds,
 				items.entry_participant_type = 'Team' AS is_team_only_item,

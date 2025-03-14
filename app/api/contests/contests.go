@@ -53,7 +53,7 @@ func getParticipantTypeForContestManagedByUser(
 	store *database.DataStore, itemID int64, user *database.User,
 ) (string, error) {
 	var participantType string
-	err := store.Items().ContestManagedByUser(itemID, user).
+	err := store.Items().WithDurationByIDAndManagedByUser(itemID, user).
 		PluckFirst("items.entry_participant_type", &participantType).Error()
 	return participantType, err
 }
