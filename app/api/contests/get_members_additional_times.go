@@ -9,10 +9,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-// swagger:operation GET /contests/{item_id}/groups/{group_id}/members/additional-times contests contestListMembersAdditionalTime
+// swagger:operation GET /items/{item_id}/groups/{group_id}/members/additional-times items itemListMembersAdditionalTime
 //
 //	---
-//	summary: List additional times on a contest
+//	summary: List additional times on an item with duration for a group
 //	description: >
 //							 For all descendant
 //
@@ -27,17 +27,17 @@ import (
 //							 * `additional_time` defaults to 0 if no such `groups_contest_items`
 //
 //							 * `total_additional_time` is the sum of additional times of this group on the item through all its
-//								 `groups_ancestors` (even from different branches, but each ancestors counted only once), defaulting to 0
+//								 `groups_ancestors` (even from different branches, but each ancestor counted only once), defaulting to 0
 //
 //							 Restrictions:
-//								 * `item_id` should be a timed contest;
+//								 * `item_id` should be an item with duration;
 //								 * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
 //									 and `can_watch` >= 'result' on the input item;
 //								 * the authenticated user should be a manager of the `group_id`
 //									 with `can_grant_group_access` and `can_watch_members` permissions.
 //	parameters:
 //		- name: item_id
-//			description: "`id` of a timed contest"
+//			description: "`id` of an item with duration"
 //			in: path
 //			type: integer
 //			format: int64
@@ -67,11 +67,11 @@ import (
 //			default: 500
 //	responses:
 //		"200":
-//			description: OK. Success response with contests info
+//			description: OK. Success response with item's info
 //			schema:
 //				type: array
 //				items:
-//					"$ref": "#/definitions/contestInfo"
+//					"$ref": "#/definitions/itemAdditionalTimesInfo"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
@@ -94,7 +94,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	}
 
 	store := srv.GetStore(r)
-	participantType, err := getParticipantTypeForContestManagedByUser(store, itemID, user)
+	participantType, err := getParticipantTypeForItemWithDurationManagedByUser(store, itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -156,7 +156,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		return apiError
 	}
 
-	var result []contestInfo
+	var result []itemAdditionalTimesInfo
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)

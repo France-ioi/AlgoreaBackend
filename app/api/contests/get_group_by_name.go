@@ -55,7 +55,7 @@ import (
 //		"200":
 //			description: OK. Success response with the `group_id`, `additional_time`, `total_additional_time`
 //			schema:
-//				"$ref": "#/definitions/contestInfo"
+//				"$ref": "#/definitions/itemAdditionalTimesInfo"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
@@ -78,7 +78,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 	}
 
 	store := srv.GetStore(r)
-	participantType, err := getParticipantTypeForContestManagedByUser(store, itemID, user)
+	participantType, err := getParticipantTypeForItemWithDurationManagedByUser(store, itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -134,7 +134,7 @@ func (srv *Service) getGroupByName(w http.ResponseWriter, r *http.Request) servi
 		query = query.Where("groups.name = ? AND LENGTH(groups.name) = LENGTH(?)", groupName, groupName)
 	}
 
-	var result contestInfo
+	var result itemAdditionalTimesInfo
 	if err = query.Take(&result).Error(); gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}

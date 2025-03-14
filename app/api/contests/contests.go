@@ -27,12 +27,12 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Get("/contests/{item_id}/groups/{group_id}/additional-times",
 		service.AppHandler(srv.getGroupAdditionalTimes).ServeHTTP)
-	router.Get("/contests/{item_id}/groups/{group_id}/members/additional-times",
+	router.Get("/items/{item_id}/groups/{group_id}/members/additional-times",
 		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
 }
 
-// swagger:model contestInfo
-type contestInfo struct {
+// swagger:model itemAdditionalTimesInfo
+type itemAdditionalTimesInfo struct {
 	// required: true
 	GroupID int64 `json:"group_id,string"`
 	// required: true
@@ -47,7 +47,7 @@ type contestInfo struct {
 
 const team = "Team"
 
-func getParticipantTypeForContestManagedByUser(
+func getParticipantTypeForItemWithDurationManagedByUser(
 	store *database.DataStore, itemID int64, user *database.User,
 ) (string, error) {
 	var participantType string
