@@ -1,4 +1,4 @@
-package contests
+package items
 
 import (
 	"fmt"
