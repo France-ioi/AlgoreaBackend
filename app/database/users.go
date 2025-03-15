@@ -12,21 +12,21 @@ func (conn *DB) WhereUsersAreDescendantsOfGroup(groupID int64) *DB {
 func (s *DataStore) CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 	teamID, userGroupID int64, withLock bool,
 ) (bool, error) {
-	contestsQuery := s.Attempts().
+	teamAttemptsQuery := s.Attempts().
 		Where("attempts.participant_id = ?", teamID).Where("root_item_id IS NOT NULL").
 		Group("root_item_id")
 	if withLock {
-		contestsQuery = contestsQuery.WithExclusiveWriteLock()
+		teamAttemptsQuery = teamAttemptsQuery.WithExclusiveWriteLock()
 	}
 
 	query := s.ActiveGroupGroups().Where("child_group_id = ?", userGroupID).
 		Where("is_team_membership = 1").
-		Joins("JOIN (?) AS teams_contests", contestsQuery. // all the team's attempts (not only active ones)
+		Joins("JOIN (?) AS team_attempts", teamAttemptsQuery. // all the team's attempts (not only active ones)
 									Select("root_item_id AS item_id, MAX(NOW() < attempts.allows_submissions_until) AS is_active").QueryExpr()).
-		Joins("JOIN items ON items.id = teams_contests.item_id").
+		Joins("JOIN items ON items.id = team_attempts.item_id").
 		Joins("JOIN attempts ON attempts.participant_id = parent_group_id AND attempts.root_item_id = items.id").
 		Where("parent_group_id != ?", teamID).
-		Where("(teams_contests.is_active AND NOW() < attempts.allows_submissions_until) OR NOT items.allows_multiple_attempts")
+		Where("(team_attempts.is_active AND NOW() < attempts.allows_submissions_until) OR NOT items.allows_multiple_attempts")
 	if withLock {
 		query = query.WithExclusiveWriteLock()
 	}

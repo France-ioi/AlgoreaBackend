@@ -14,7 +14,7 @@ import (
 // swagger:operation PUT /items/{item_id}/groups/{group_id}/additional-times items itemSetAdditionalTime
 //
 //	---
-//	summary: Set additional time for an item with duration and a group
+//	summary: Set additional time for a time-limited item and a group
 //	description: >
 //							 For the input group and item, sets the `group_item_additional_times.additional_time` to the `time` value.
 //							 If there is no `group_item_additional_times` for the given `group_id`, `item_id` and the `seconds` != 0, creates it
@@ -28,7 +28,7 @@ import (
 //
 //
 //							 Restrictions:
-//								 * `item_id` should be an item with duration;
+//								 * `item_id` should be a time-limited item (with duration <> NULL);
 //								 * the authenticated user should have `can_view` >= 'content' on the input item;
 //								 * the authenticated user should have `can_grant_view` >= 'enter' on the input item;
 //								 * the authenticated user should have `can_watch` >= 'result' on the input item;
@@ -39,7 +39,7 @@ import (
 //							 Otherwise, the "Forbidden" response is returned.
 //	parameters:
 //		- name: item_id
-//			description: "`id` of an item with duration"
+//			description: "`id` of a time-limited item"
 //			in: path
 //			type: integer
 //			format: int64
@@ -93,7 +93,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	}
 
 	err = store.InTransaction(func(store *database.DataStore) error {
-		err = store.Items().WithDurationByIDAndManagedByUser(itemID, user).WithExclusiveWriteLock().
+		err = store.Items().TimeLimitedByIDManagedByUser(itemID, user).WithExclusiveWriteLock().
 			Select(`
 				TIME_TO_SEC(items.duration) AS duration_in_seconds,
 				items.entry_participant_type = 'Team' AS is_team_only_item,
@@ -105,7 +105,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 		}
 		service.MustNotBeError(err)
 
-		setAdditionalTimeForGroupAndItemWithDuration(store, groupID, itemID, itemInfo.ParticipantsGroupID,
+		setAdditionalTimeForGroupAndTimeLimitedItem(store, groupID, itemID, itemInfo.ParticipantsGroupID,
 			itemInfo.DurationInSeconds, seconds)
 		return nil
 	})
@@ -139,18 +139,18 @@ func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, 
 	return itemID, groupID, seconds, service.NoError
 }
 
-func setAdditionalTimeForGroupAndItemWithDuration(
+func setAdditionalTimeForGroupAndTimeLimitedItem(
 	store *database.DataStore, groupID, itemID, participantsGroupID, durationInSeconds, additionalTimeInSeconds int64,
 ) {
-	groupContestItemStore := store.GroupItemAdditionalTimes()
-	scope := groupContestItemStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
+	groupItemAdditionalTimeStore := store.GroupItemAdditionalTimes()
+	scope := groupItemAdditionalTimeStore.Where("group_id = ?", groupID).Where("item_id = ?", itemID)
 	found, err := scope.WithExclusiveWriteLock().HasRows()
 	service.MustNotBeError(err)
 	if found {
 		service.MustNotBeError(scope.UpdateColumn("additional_time",
 			gorm.Expr("SEC_TO_TIME(?)", additionalTimeInSeconds)).Error())
 	} else if additionalTimeInSeconds != 0 {
-		service.MustNotBeError(groupContestItemStore.Exec(
+		service.MustNotBeError(groupItemAdditionalTimeStore.Exec(
 			"INSERT INTO group_item_additional_times (group_id, item_id, additional_time) VALUES(?, ?, SEC_TO_TIME(?))",
 			groupID, itemID, additionalTimeInSeconds).Error())
 	}

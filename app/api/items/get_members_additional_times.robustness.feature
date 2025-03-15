@@ -1,4 +1,4 @@
-Feature: Get additional times for a group of users/teams on an item with duration (itemListMembersAdditionalTime) - robustness
+Feature: Get additional times for a group of users/teams on a time-limited item (itemListMembersAdditionalTime) - robustness
   Background:
     Given the database has the following table "groups":
       | id | name    |
@@ -47,13 +47,13 @@ Feature: Get additional times for a group of users/teams on an item with duratio
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The item is not a timed contest
+  Scenario: The item is not a time-limited item
     Given I am the user with id "21"
     When I send a GET request to "/items/60/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The user is not a contest admin
+  Scenario: The user cannot administer the time-limited item
     Given I am the user with id "21"
     When I send a GET request to "/items/50/groups/13/members/additional-times"
     Then the response code should be 403

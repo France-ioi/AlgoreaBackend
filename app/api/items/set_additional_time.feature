@@ -1,4 +1,4 @@
-Feature: Set additional time for an item with duration and a group (itemSetAdditionalTime)
+Feature: Set additional time for a time-limited item and a group (itemSetAdditionalTime)
   Background:
     Given the database has the following table "groups":
       | id | name    | type    |

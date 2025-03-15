@@ -1,4 +1,4 @@
-Feature: Set additional time for an item with duration and a group (itemSetAdditionalTime) - robustness
+Feature: Set additional time for a time-limited item and a group (itemSetAdditionalTime) - robustness
   Background:
     Given the database has the following table "groups":
       | id | name    | type  |
@@ -96,7 +96,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     And the table "permissions_generated" should stay unchanged
     And the table "group_item_additional_times" should stay unchanged
 
-  Scenario: The item is not a timed contest
+  Scenario: The item is not a time-limited item
     Given I am the user with id "21"
     When I send a PUT request to "/items/60/groups/13/additional-times?seconds=0"
     Then the response code should be 403
@@ -104,7 +104,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     And the table "permissions_generated" should stay unchanged
     And the table "group_item_additional_times" should stay unchanged
 
-  Scenario: The user is not a contest admin (can_view = info)
+  Scenario: The user cannot administer the time-limited item (can_view = info)
     Given I am the user with id "21"
     When I send a PUT request to "/items/95/groups/13/additional-times?seconds=0"
     Then the response code should be 403
@@ -112,7 +112,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     And the table "permissions_generated" should stay unchanged
     And the table "group_item_additional_times" should stay unchanged
 
-  Scenario: The user is not a contest admin (can_grant_view = none)
+  Scenario: The user cannot administer the time-limited item (can_grant_view = none)
     Given I am the user with id "21"
     When I send a PUT request to "/items/50/groups/13/additional-times?seconds=0"
     Then the response code should be 403
@@ -120,7 +120,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     And the table "permissions_generated" should stay unchanged
     And the table "group_item_additional_times" should stay unchanged
 
-  Scenario: The user is not a contest admin (can_watch = none)
+  Scenario: The user cannot administer the time-limited item (can_watch = none)
     Given I am the user with id "21"
     When I send a PUT request to "/items/90/groups/13/additional-times?seconds=0"
     Then the response code should be 403
@@ -152,7 +152,7 @@ Feature: Set additional time for an item with duration and a group (itemSetAddit
     And the table "permissions_generated" should stay unchanged
     And the table "group_item_additional_times" should stay unchanged
 
-  Scenario: Team contest and a user
+  Scenario: Team item and a user
     Given I am the user with id "21"
     When I send a PUT request to "/items/80/groups/31/additional-times?seconds=0"
     Then the response code should be 403

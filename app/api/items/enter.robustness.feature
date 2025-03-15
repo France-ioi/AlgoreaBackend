@@ -1,4 +1,4 @@
-Feature: Enters a contest as a group (user self or team) (contestEnter) - robustness
+Feature: Enters an item as a group (user self or team) (itemEnter) - robustness
   Background:
     Given the database has the following table "groups":
       | id | name         | type                | root_activity_id |
@@ -92,7 +92,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: The item is visible, but it's not a contest
+  Scenario: The item is visible, but it doesn't require explicit entry
     Given the database has the following table "items":
       | id | default_language_tag |
       | 50 | fr                   |
@@ -171,7 +171,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: The contest is not ready
+  Scenario: The item is not ready for entering
     Given the database has the following table "items":
       | id | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag |
       | 60 | 1                       | Team                   | All                              | 3                   | fr                   |
@@ -197,7 +197,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario Outline: Reenter a non-team contest
+  Scenario Outline: Reenter a non-team item
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
       | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   |
@@ -233,7 +233,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     | 2019-05-30 11:00:00 |
     | 9999-12-31 23:59:59 |
 
-  Scenario: Reenter an already entered (not expired) contest as a team
+  Scenario: Reenter an already entered (not expired) item as a team
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
       | 60 | 01:01:01 | 1                       | Team                   | None                             | 10                  | 99                    | fr                   |

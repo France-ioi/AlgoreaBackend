@@ -59,13 +59,13 @@ Feature: Check if the group code is valid
     {"valid": false, "reason": "<reason>"}
     """
     Examples:
-      | code       | reason                         | description                                             |
-      | abcdef     | no_group                       | no such code                                            |
-      | 456789abcd | no_group                       | expired                                                 |
-      | 5987654abc | conflicting_team_participation | a member of another team participating in same contests |
-      | cba9876543 | already_member                 | already a member of the group                           |
-      | 87654abcde | frozen_membership              | frozen membership                                       |
-      | 3333333333 | no_group                       | the group is a user                                     |
+      | code       | reason                         | description                                                                               |
+      | abcdef     | no_group                       | no such code                                                                              |
+      | 456789abcd | no_group                       | expired                                                                                   |
+      | 5987654abc | conflicting_team_participation | a member of another team participating in solving the same items requiring explicit entry |
+      | cba9876543 | already_member                 | already a member of the group                                                             |
+      | 87654abcde | frozen_membership              | frozen membership                                                                         |
+      | 3333333333 | no_group                       | the group is a user                                                                       |
 
   Scenario: The user is temporary
     Given I am the user with id "22"

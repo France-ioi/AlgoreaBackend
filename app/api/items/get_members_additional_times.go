@@ -27,7 +27,7 @@ type itemAdditionalTimesInfo struct {
 // swagger:operation GET /items/{item_id}/groups/{group_id}/members/additional-times items itemListMembersAdditionalTime
 //
 //	---
-//	summary: List additional times on an item with duration for a group
+//	summary: List additional times on a time-limited item for a group
 //	description: >
 //							 For all descendant
 //
@@ -45,14 +45,14 @@ type itemAdditionalTimesInfo struct {
 //								 `groups_ancestors` (even from different branches, but each ancestor counted only once), defaulting to 0
 //
 //							 Restrictions:
-//								 * `item_id` should be an item with duration;
+//								 * `item_id` should be a time-limited item (with duration <> NULL);
 //								 * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
 //									 and `can_watch` >= 'result' on the input item;
 //								 * the authenticated user should be a manager of the `group_id`
 //									 with `can_grant_group_access` and `can_watch_members` permissions.
 //	parameters:
 //		- name: item_id
-//			description: "`id` of an item with duration"
+//			description: "`id` of a time-limited item"
 //			in: path
 //			type: integer
 //			format: int64
@@ -109,7 +109,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	}
 
 	store := srv.GetStore(r)
-	participantType, err := getParticipantTypeForItemWithDurationManagedByUser(store, itemID, user)
+	participantType, err := getParticipantTypeForTimeLimitedItemManagedByUser(store, itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.InsufficientAccessRightsError
 	}
@@ -178,11 +178,11 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	return service.NoError
 }
 
-func getParticipantTypeForItemWithDurationManagedByUser(
+func getParticipantTypeForTimeLimitedItemManagedByUser(
 	store *database.DataStore, itemID int64, user *database.User,
 ) (string, error) {
 	var participantType string
-	err := store.Items().WithDurationByIDAndManagedByUser(itemID, user).
+	err := store.Items().TimeLimitedByIDManagedByUser(itemID, user).
 		PluckFirst("items.entry_participant_type", &participantType).Error()
 	return participantType, err
 }

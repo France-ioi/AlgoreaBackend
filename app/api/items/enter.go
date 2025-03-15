@@ -15,7 +15,7 @@ import (
 // swagger:operation POST /items/{ids}/enter items itemEnter
 //
 //	---
-//	summary: Enter the item
+//	summary: Enter an item
 //	description: >
 //							 Allows to enter an item requiring explicit entry as a user or as a team (if `as_team_id` is given).
 //

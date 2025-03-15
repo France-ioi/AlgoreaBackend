@@ -1,4 +1,4 @@
-Feature: Get additional times for a group on an item with duration (itemGetAdditionalTime)
+Feature: Get additional times for a group on a time-limited item (itemGetAdditionalTime)
   Background:
     Given the database has the following table "groups":
       | id | name        | type    |

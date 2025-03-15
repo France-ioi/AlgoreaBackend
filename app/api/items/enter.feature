@@ -1,4 +1,4 @@
-Feature: Enters a contest as a group (user self or team) (contestEnter)
+Feature: Enters an item as a group (user self or team) (itemEnter)
   Background:
     Given the database has the following table "groups":
       | id | name         | type                | root_activity_id |
@@ -53,7 +53,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 0          | 31             | 30      | null                |
     And the DB time now is "3019-10-10 10:10:10"
 
-  Scenario: Enter an individual contest
+  Scenario: Enter an item with entry_participant_type=User
     Given the database table "items" also has the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag | entering_time_min   | entering_time_max   |
       | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   | 2007-01-01 00:00:00 | 5000-01-01 00:00:00 |
@@ -121,7 +121,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 99                | 31             | 0       | 3019-10-10 11:11:11 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
-  Scenario: Enter a team-only contest
+  Scenario: Enter an item with entry_participant_type=Team
     Given the database table "items" also has the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
       | 60 | 05:05:05 | 1                       | Team                   | Half                             | 3                   | 98                    | fr                   |
@@ -191,7 +191,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 98                | 98             | 1       | 9999-12-31 23:59:59 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
-  Scenario: Reenter a contest as a team
+  Scenario: Reenter an item as a team
     Given the database table "items" also has the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | allows_multiple_attempts | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
       | 60 | 01:01:01 | 1                       | Team                   | 1                        | None                             | 10                  | 99                    | fr                   |
@@ -263,7 +263,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       | 99                | 11             | 0       | 3019-10-10 13:13:13 |
       | 99                | 99             | 1       | 9999-12-31 23:59:59 |
 
-  Scenario: Enter a contest that doesn't have items.participants_group_id set
+  Scenario: Enter an item that doesn't have items.participants_group_id set
     Given the database table "items" also has the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | default_language_tag |
       | 50 | 01:01:01 | 1                       | User                   | None                             | fr                   |
@@ -311,7 +311,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter)
       items.participants_group_id is not set for the item with id = 50
       """
 
-  Scenario: Enter a contest with empty duration
+  Scenario: Enter an item with empty duration
     Given the database table "items" also has the following row:
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
       | 50 | null     | 1                       | User                   | None                             | 99                    | fr                   |

@@ -19,9 +19,9 @@ type additionalTimes struct {
 // swagger:operation GET /items/{item_id}/groups/{group_id}/additional-times items itemGetAdditionalTime
 //
 //	---
-//	summary: Get additional time for an item with duration and a group
+//	summary: Get additional time for a time-limited item and a group
 //	description: >
-//							 For the given group and the given item with duration, the service returns `additional_time` & `total_additional_time`:
+//							 For the given group and the given time-limited item, the service returns `additional_time` & `total_additional_time`:
 //
 //
 //							 * `additional_time` (in seconds) defaults to 0 if no such `group_item_additional_times`
@@ -30,14 +30,14 @@ type additionalTimes struct {
 //								 `groups_ancestors` (even from different branches, but each ancestor counted only once), defaulting to 0.
 //
 //							 Restrictions:
-//								 * `item_id` should be an item with duration;
+//								 * `item_id` should be a time-limited item (with duration <> NULL);
 //								 * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
 //									 and `can_watch` >= 'result' on the input item;
 //								 * the authenticated user should be a manager of the `group_id`
 //									 with `can_grant_group_access` and `can_watch_members` permissions.
 //	parameters:
 //		- name: item_id
-//			description: "`id` of an item with duration"
+//			description: "`id` of a time-limited item"
 //			in: path
 //			type: integer
 //			format: int64
@@ -76,7 +76,7 @@ func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Reque
 	}
 
 	store := srv.GetStore(r)
-	found, err := store.Items().WithDurationByIDAndManagedByUser(itemID, user).HasRows()
+	found, err := store.Items().TimeLimitedByIDManagedByUser(itemID, user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError

@@ -1,4 +1,4 @@
-Feature: Get additional times for a group on an item with duration (itemGetAdditionalTime) - robustness
+Feature: Get additional times for a group on a time-limited item (itemGetAdditionalTime) - robustness
   Background:
     Given the database has the following table "groups":
       | id | name    |
@@ -53,7 +53,7 @@ Feature: Get additional times for a group on an item with duration (itemGetAddit
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The user cannot administer the item with duration
+  Scenario: The user cannot administer the time-limited item
     Given I am the user with id "21"
     When I send a GET request to "/items/50/groups/13/additional-times"
     Then the response code should be 403

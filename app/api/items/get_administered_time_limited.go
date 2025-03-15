@@ -35,11 +35,11 @@ type itemTimeLimitedAdminList struct {
 // swagger:operation GET /items/time-limited/administered items itemTimeLimitedAdminList
 //
 //	---
-//	summary: List administered items with duration
+//	summary: List administered time-limited items
 //	description: Get time-limited items that the user has administration rights on.
 //
 //
-//							 For all explicit-entry items that are items with duration the user can administer
+//							 For all explicit-entry items that are time-limited items (with duration <> NULL) the user can administer
 //							 (has `can_view` >= 'content', `can_grant_view` >= 'enter', and `can_watch` >= 'result'),
 //							 returns the item info including items' parents.
 //							 Only parents visible to the user are listed.

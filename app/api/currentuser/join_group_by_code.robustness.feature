@@ -89,7 +89,7 @@ Feature: Join a group using a code (groupsJoinByCode) - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Join a team while being a member of another team participating in same contests
+  Scenario: Join a team while being a member of another team participating in solving the same items requiring explicit entry
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-memberships/by-code?code=5987654abc"
     Then the response code should be 422

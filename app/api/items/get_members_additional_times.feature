@@ -1,4 +1,4 @@
-Feature: Get additional times for a group of users/teams on an item with duration (itemListMembersAdditionalTime)
+Feature: Get additional times for a group of users/teams on a time-limited item (itemListMembersAdditionalTime)
   Background:
     Given the database has the following table "groups":
       | id | name        | type    |
