@@ -1,4 +1,4 @@
-Feature: Get the contests that the user has administration rights on (contestAdminList)
+Feature: Get time-limited items that the user has administration rights on (itemTimeLimitedAdminList)
   Background:
     Given the database has the following users:
       | login          | group_id | default_language |
@@ -71,7 +71,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is French (most parents are invisible)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/administered"
+    When I send a GET request to "/items/time-limited/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -85,7 +85,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is English  (most parents are invisible)
     Given I am the user with id "31"
-    When I send a GET request to "/contests/administered"
+    When I send a GET request to "/items/time-limited/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -99,7 +99,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is French (parents are visible)
     Given I am the user with id "41"
-    When I send a GET request to "/contests/administered"
+    When I send a GET request to "/items/time-limited/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -115,7 +115,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is English  (parents are visible)
     Given I am the user with id "51"
-    When I send a GET request to "/contests/administered"
+    When I send a GET request to "/items/time-limited/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -131,7 +131,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: Empty result
     Given I am the user with id "61"
-    When I send a GET request to "/contests/administered"
+    When I send a GET request to "/items/time-limited/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -141,7 +141,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is English  (parents are visible), limit=1
     Given I am the user with id "51"
-    When I send a GET request to "/contests/administered?limit=1"
+    When I send a GET request to "/items/time-limited/administered?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -152,7 +152,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is English  (parents are visible), start from the second row, limit=1
     Given I am the user with id "51"
-    When I send a GET request to "/contests/administered?from.id=50&limit=1"
+    When I send a GET request to "/items/time-limited/administered?from.id=50&limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -164,7 +164,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: User's default language is English  (parents are visible), inverse order
     Given I am the user with id "51"
-    When I send a GET request to "/contests/administered?sort=-title,id"
+    When I send a GET request to "/items/time-limited/administered?sort=-title,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -180,7 +180,7 @@ Feature: Get the contests that the user has administration rights on (contestAdm
 
   Scenario: Keeps parents with nil titles
     Given I am the user with id "71"
-    When I send a GET request to "/contests/administered"
+    When I send a GET request to "/items/time-limited/administered"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

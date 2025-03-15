@@ -90,7 +90,8 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			want:           []int64{10, 11, 12, 13, 14, 15},
 		},
 		{
-			name: "parent group is a team with attempts, but children groups are in teams participating in different contests",
+			name: "parent group is a team with attempts, but children groups are in teams " +
+				"participating in solving different items requiring explicit entry",
 			fixture: `
 				groups:
 					- {id: 1, type: Team}
@@ -115,7 +116,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			want:           []int64{10, 11, 12, 13},
 		},
 		{
-			name: "parent group is a team with attempts and children groups are in teams with attempts for the same contest",
+			name: "parent group is a team with attempts and children groups are in teams with attempts for the same item requiring explicit entry",
 			fixture: `
 				groups:
 					- {id: 1, type: Team}
@@ -140,7 +141,8 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			wantWrongIDs:   []int64{10, 11, 12, 13},
 		},
 		{
-			name: "parent group is a team with expired attempts and children groups are in teams with attempts for the same contest",
+			name: "parent group is a team with expired attempts and children groups are in teams with " +
+				"attempts for the same item requiring explicit entry",
 			fixture: `
 				groups:
 					- {id: 1, type: Team}
@@ -165,7 +167,8 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			wantWrongIDs:   []int64{},
 		},
 		{
-			name: "parent group is a team with ended attempts and children groups are in teams with attempts for the same contest",
+			name: "parent group is a team with ended attempts and children groups are in teams " +
+				"with attempts for the same item requiring explicit entry",
 			fixture: `
 				groups:
 					- {id: 1, type: Team}
@@ -190,7 +193,8 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			wantWrongIDs:   []int64{},
 		},
 		{
-			name: "parent group is a team with attempts and children groups are in teams with expired/ended attempts for the same contest",
+			name: "parent group is a team with attempts and children groups are in teams " +
+				"with expired/ended attempts for the same item requiring explicit entry",
 			fixture: `
 				groups:
 					- {id: 1, type: Team}
@@ -216,7 +220,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 		},
 		{
 			name: "parent group is a team with expired attempts and children groups are in teams with expired/ended attempts " +
-				"for the same contest, but the contest doesn't allow multiple attempts",
+				"for the same item requiring explicit entry, but the item doesn't allow multiple attempts",
 			fixture: `
 				groups:
 					- {id: 1, type: Team}

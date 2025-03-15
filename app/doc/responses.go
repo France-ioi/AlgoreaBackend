@@ -219,7 +219,7 @@ type itemAnswerGetResponse struct {
 	}
 }
 
-// Created. The group has successfully entered the contest.
+// Created. The group has successfully entered the item.
 // swagger:response itemEnterResponse
 type itemEnterResponse struct {
 	// in:body

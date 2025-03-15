@@ -35,7 +35,10 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"GroupGroups", func(store *DataStore) *DB { return store.GroupGroups().Where("") }, "`groups_groups`"},
 		{"ActiveGroupGroups", func(store *DataStore) *DB { return store.ActiveGroupGroups().Where("") }, "`groups_groups_active`"},
 		{"GroupMembershipChanges", func(store *DataStore) *DB { return store.GroupMembershipChanges().Where("") }, "`group_membership_changes`"},
-		{"GroupContestItems", func(store *DataStore) *DB { return store.GroupContestItems().Where("") }, "`groups_contest_items`"},
+		{
+			"GroupItemAdditionalTimes", func(store *DataStore) *DB { return store.GroupItemAdditionalTimes().Where("") },
+			"`group_item_additional_times`",
+		},
 		{"GroupManagers", func(store *DataStore) *DB { return store.GroupManagers().Where("") }, "`group_managers`"},
 		{"GroupPendingRequests", func(store *DataStore) *DB { return store.GroupPendingRequests().Where("") }, "`group_pending_requests`"},
 		{"Permissions", func(store *DataStore) *DB { return store.Permissions().Where("") }, "permissions_generated AS permissions"},
@@ -87,7 +90,10 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"GroupGroups", func(store *DataStore) interface{} { return store.GroupGroups() }, &GroupGroupStore{}},
 		{"ActiveGroupGroups", func(store *DataStore) interface{} { return store.ActiveGroupGroups() }, &GroupGroupStore{}},
 		{"GroupMembershipChanges", func(store *DataStore) interface{} { return store.GroupMembershipChanges() }, &GroupMembershipChangeStore{}},
-		{"GroupContestItems", func(store *DataStore) interface{} { return store.GroupContestItems() }, &GroupContestItemStore{}},
+		{
+			"GroupItemAdditionalTimes", func(store *DataStore) interface{} { return store.GroupItemAdditionalTimes() },
+			&GroupItemAdditionalTimeStore{},
+		},
 		{"GroupManagers", func(store *DataStore) interface{} { return store.GroupManagers() }, &GroupManagerStore{}},
 		{"GroupPendingRequests", func(store *DataStore) interface{} { return store.GroupPendingRequests() }, &GroupPendingRequestStore{}},
 		{"Permissions", func(store *DataStore) interface{} { return store.Permissions() }, &PermissionGeneratedStore{}},

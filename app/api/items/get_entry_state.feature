@@ -35,7 +35,7 @@ Feature: Get entry state (itemGetEntryState)
       | group_id | manager_id |
       | 13       | 14         |
 
-  Scenario Outline: Individual contest without can_enter_from & can_enter_until
+  Scenario Outline: An item with entry_participant_type=User and without can_enter_from & can_enter_until
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | default_language_tag |
       | 50 | 00:00:00 | 1                       | User                   | <entry_min_admitted_members_ratio> | fr                   |
@@ -63,7 +63,7 @@ Feature: Get entry state (itemGetEntryState)
     | Half                             | not_ready      |
     | One                              | not_ready      |
 
-  Scenario Outline: State is ready for an individual contest
+  Scenario Outline: State is ready for an item with entry_participant_type=User
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | default_language_tag |
       | 50 | 00:00:00 | 1                       | User                   | <entry_min_admitted_members_ratio> | fr                   |
@@ -94,7 +94,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             |
       | One                              |
 
-  Scenario Outline: Team-only contest when no one can enter
+  Scenario Outline: Team-only item when no one can enter
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 3                   | fr                   |
@@ -141,7 +141,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             | not_ready      |
       | One                              | not_ready      |
 
-  Scenario Outline: entry_min_admitted_members_ratio is ignored when the team itself can enter the contest (depending on entering_time_* & can_enter_*)
+  Scenario Outline: entry_min_admitted_members_ratio is ignored when the team itself can enter the item (depending on entering_time_* & can_enter_*)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag | entering_time_min   | entering_time_max   |
       | 60 | 00:00:00 | 1                       | Team                   | All                              | 3                   | fr                   | <entering_time_min> | <entering_time_max> |
@@ -192,7 +192,7 @@ Feature: Get entry state (itemGetEntryState)
     | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 5099-12-31 23:59:59 | 9999-12-31 23:59:59 | not_ready      | false           |
     | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 | not_ready      | false           |
 
-  Scenario Outline: Team-only contest when one member can enter
+  Scenario Outline: Team-only item when one member can enter
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 3                   | fr                   |
@@ -244,7 +244,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             | not_ready      |
       | One                              | ready          |
 
-  Scenario Outline: Team-only contest when half of members can enter
+  Scenario Outline: Team-only item when half of members can enter
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 3                   | fr                   |
@@ -295,7 +295,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             | ready          |
       | One                              | ready          |
 
-  Scenario Outline: Team-only contest when all members can enter
+  Scenario Outline: Team-only item when all members can enter
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 3                   | fr                   |
@@ -347,7 +347,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             |
       | One                              |
 
-  Scenario Outline: Team-only contest when all members can enter, but the team is too large
+  Scenario Outline: Team-only item when all members can enter, but the team is too large
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio   | entry_max_team_size | default_language_tag |
       | 60 | 00:00:00 | 1                       | Team                   | <entry_min_admitted_members_ratio> | 2                   | fr                   |
@@ -399,7 +399,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             |
       | One                              |
 
-  Scenario Outline: Team-only contest ignores size of the team when the team itself can enter the contest (depending on entering_time_* & can_enter_*)
+  Scenario Outline: Team-only item ignores size of the team when the team itself can enter the item (depending on entering_time_* & can_enter_*)
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag | entering_time_min   | entering_time_max   |
       | 60 | 00:00:00 | 1                       | Team                   | None                             | 2                   | fr                   | <entering_time_min> | <entering_time_max> |
@@ -453,7 +453,7 @@ Feature: Get entry state (itemGetEntryState)
     | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 5099-12-31 23:59:59 | 9999-12-31 23:59:59 | not_ready      | false           |
     | 2007-01-01 10:21:21 | 3008-01-01 10:21:21 | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 | not_ready      | false           |
 
-  Scenario Outline: State is already_started for an individual contest
+  Scenario Outline: State is already_started for an item with entry_participant_type=User
     Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
@@ -493,7 +493,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             |
       | One                              |
 
-  Scenario Outline: State is already_started for a team-only contest
+  Scenario Outline: State is already_started for a team-only item
     Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
@@ -549,7 +549,7 @@ Feature: Get entry state (itemGetEntryState)
       | Half                             |
       | One                              |
 
-  Scenario: State is not_ready for an individual contest because the participation has expired
+  Scenario: State is not_ready for an item with entry_participant_type=User because the participation has expired
     Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
@@ -583,7 +583,7 @@ Feature: Get entry state (itemGetEntryState)
     }
     """
 
-  Scenario: State is ready for a team-only contest because the participation has expired
+  Scenario: State is ready for a team-only item because the participation has expired
     Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
@@ -633,7 +633,7 @@ Feature: Get entry state (itemGetEntryState)
     }
     """
 
-  Scenario: State is ready for a team-only contest because the all its started attempts has expired
+  Scenario: State is ready for a team-only item because the all its started attempts has expired
     Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
@@ -685,7 +685,7 @@ Feature: Get entry state (itemGetEntryState)
     }
     """
 
-  Scenario: State is not ready for a team-only contest because the team's users have a conflicting participation
+  Scenario: State is not ready for a team-only item because the team's users have a conflicting participation
     Given the database table "groups" also has the following row:
       | id  | type                |
       | 100 | ContestParticipants |
@@ -769,7 +769,7 @@ Feature: Get entry state (itemGetEntryState)
     | 5099-12-31 23:59:59 | 9999-12-31 23:59:59 |
     | 2007-12-31 23:59:59 | 2008-12-31 23:59:59 |
 
-  Scenario: entry_frozen_teams is ignored for non-team contests
+  Scenario: entry_frozen_teams is ignored for non-team items
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | default_language_tag | entry_frozen_teams |
       | 50 | 00:00:00 | 1                       | User                   | None                             | fr                   | 1                  |

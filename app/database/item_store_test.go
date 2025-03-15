@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func TestItemStore_ContestManagedByUser(t *testing.T) {
+func TestItemStore_TimeLimitedByIDManagedByUser(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, dbMock := NewDBMock()
@@ -37,7 +37,7 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 		"(IFNULL(can_watch_generated_value, 1) >= ?) LIMIT 1")+"$").
 		WithArgs(int64(2), 3, int64(123), 2, 2).WillReturnRows(dbMock.NewRows([]string{"id"}).AddRow(123))
 	var id int64
-	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{GroupID: 2}).
+	err := NewDataStore(db).Items().TimeLimitedByIDManagedByUser(123, &User{GroupID: 2}).
 		PluckFirst("items.id", &id).Error()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(123), id)

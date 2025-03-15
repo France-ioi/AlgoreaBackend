@@ -217,7 +217,7 @@ Feature: Accept group requests
     | success | 0                           | 1                        | 0              | 2019-06-03 00:00:00.000 | null                           | 2019-06-03 00:00:00         | null                |
     | success | 0                           | 0                        | 1              | 2019-06-04 00:00:00.000 | null                           | null                        | 2019-06-04 00:00:00 |
 
-  Scenario: Accept requests for a team while skipping members of other teams participating in the same contests
+  Scenario: Accept requests for a team while skipping members of other teams participating in solving the same items requiring explicit entry
     Given I am the user with id "21"
     And the database table "groups" also has the following row:
       | id  | type |

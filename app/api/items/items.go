@@ -73,6 +73,12 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuthAndParticipant.Get("/items/{item_id}/path-from-root", service.AppHandler(srv.getPathFromRoot).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByItemID).ServeHTTP)
 	routerWithAuth.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
+
+	routerWithAuth.Put("/items/{item_id}/groups/{group_id}/additional-times", service.AppHandler(srv.setAdditionalTime).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/groups/{group_id}/additional-times", service.AppHandler(srv.getGroupAdditionalTimes).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/groups/{group_id}/members/additional-times",
+		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
+	routerWithAuth.Get("/items/time-limited/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
 }
 
 func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
@@ -455,11 +461,11 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 		}))
 }
 
-// createContestParticipantsGroup creates a new contest participants group for the given item and
+// createParticipantsGroupForItemRequiringExplicitEntry creates a new contest participants group for the given item and
 // gives "can_manage:content" permission on the item to this new group.
 // The method doesn't update `items.participants_group_id` or run items ancestors recalculation
 // (a caller should do both on their own).
-func createContestParticipantsGroup(store *database.DataStore, itemID int64) int64 {
+func createParticipantsGroupForItemRequiringExplicitEntry(store *database.DataStore, itemID int64) int64 {
 	var participantsGroupID int64
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(store *database.DataStore) error {
 		participantsGroupID = store.NewID()

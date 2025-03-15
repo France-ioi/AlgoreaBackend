@@ -213,7 +213,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 
 func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64, store *database.DataStore, itemID int64) service.APIError {
 	if itemData["requires_explicit_entry"] == true && participantsGroupID == nil {
-		createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
+		createdParticipantsGroupID := createParticipantsGroupForItemRequiringExplicitEntry(store, itemID)
 		itemData["participants_group_id"] = createdParticipantsGroupID
 	}
 

@@ -557,7 +557,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	service.MustNotBeError(err)
 
 	if itemMap["requires_explicit_entry"] == true {
-		participantsGroupID := createContestParticipantsGroup(store, itemID)
+		participantsGroupID := createParticipantsGroupForItemRequiringExplicitEntry(store, itemID)
 		service.MustNotBeError(store.Items().ByID(itemID).
 			UpdateColumn("participants_group_id", participantsGroupID).Error())
 	}

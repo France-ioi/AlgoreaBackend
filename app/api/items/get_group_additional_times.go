@@ -1,4 +1,4 @@
-package contests
+package items
 
 import (
 	"net/http"
@@ -16,28 +16,28 @@ type additionalTimes struct {
 	TotalAdditionalTime int32 `json:"total_additional_time"`
 }
 
-// swagger:operation GET /contests/{item_id}/groups/{group_id}/additional-times contests contestGetAdditionalTime
+// swagger:operation GET /items/{item_id}/groups/{group_id}/additional-times items itemGetAdditionalTime
 //
 //	---
-//	summary: Get additional time for a contest
+//	summary: Get additional time for a time-limited item and a group
 //	description: >
-//							 For the given group and the given contest, the service returns `additional_time` & `total_additional_time`:
+//							 For the given group and the given time-limited item, the service returns `additional_time` & `total_additional_time`:
 //
 //
-//							 * `additional_time` defaults to 0 if no such `groups_contest_items`
+//							 * `additional_time` (in seconds) defaults to 0 if no such `group_item_additional_times`
 //
-//							 * `total_additional_time` is the sum of additional times of this group on the item through all its
+//							 * `total_additional_time` (in seconds) is the sum of additional times of this group on the item through all its
 //								 `groups_ancestors` (even from different branches, but each ancestor counted only once), defaulting to 0.
 //
 //							 Restrictions:
-//								 * `item_id` should be a timed contest;
+//								 * `item_id` should be a time-limited item (with duration <> NULL);
 //								 * the authenticated user should have `can_view` >= 'content', `can_grant_view` >= 'enter',
 //									 and `can_watch` >= 'result' on the input item;
 //								 * the authenticated user should be a manager of the `group_id`
 //									 with `can_grant_group_access` and `can_watch_members` permissions.
 //	parameters:
 //		- name: item_id
-//			description: "`id` of a timed contest"
+//			description: "`id` of a time-limited item"
 //			in: path
 //			type: integer
 //			format: int64
@@ -49,7 +49,7 @@ type additionalTimes struct {
 //			required: true
 //	responses:
 //		"200":
-//			description: OK. Success response with contests info
+//			description: OK. Success response with item's info
 //			schema:
 //				type: array
 //				items:
@@ -76,7 +76,7 @@ func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Reque
 	}
 
 	store := srv.GetStore(r)
-	found, err := store.Items().ContestManagedByUser(itemID, user).HasRows()
+	found, err := store.Items().TimeLimitedByIDManagedByUser(itemID, user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.InsufficientAccessRightsError
@@ -94,14 +94,14 @@ func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Reque
 			JOIN groups_ancestors_active
 				ON groups_ancestors_active.child_group_id = groups.id`).
 		Joins(`
-			LEFT JOIN groups_contest_items ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
-				groups_contest_items.item_id = ?`, itemID).
+			LEFT JOIN group_item_additional_times ON group_item_additional_times.group_id = groups_ancestors_active.ancestor_group_id AND
+				group_item_additional_times.item_id = ?`, itemID).
 		Joins(`
-			LEFT JOIN groups_contest_items AS main_group_contest_item ON main_group_contest_item.group_id = groups.id AND
-				main_group_contest_item.item_id = ?`, itemID).
+			LEFT JOIN group_item_additional_times AS main_group_item_additional_time ON main_group_item_additional_time.group_id = groups.id AND
+				main_group_item_additional_time.item_id = ?`, itemID).
 		Select(`
-				IFNULL(TIME_TO_SEC(MAX(main_group_contest_item.additional_time)), 0) AS additional_time,
-				IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0) AS total_additional_time`).
+				IFNULL(TIME_TO_SEC(MAX(main_group_item_additional_time.additional_time)), 0) AS additional_time,
+				IFNULL(SUM(TIME_TO_SEC(group_item_additional_times.additional_time)), 0) AS total_additional_time`).
 		Group("groups.id")
 
 	var result additionalTimes

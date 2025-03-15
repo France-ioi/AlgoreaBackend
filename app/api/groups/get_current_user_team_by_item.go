@@ -14,7 +14,7 @@ import (
 // swagger:operation GET /current-user/teams/by-item/{item_id} groups teamGetByItemID
 //
 //	---
-//	summary: Get current user's team for a contest
+//	summary: Get the current user's team for an item requiring explicit entry
 //	description: >
 //		The team identified by `{item_id}` i.e. a group which:
 //

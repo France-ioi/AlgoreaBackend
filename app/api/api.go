@@ -7,7 +7,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/answers"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/auth"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/api/contests"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/currentuser"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/items"
@@ -40,7 +39,6 @@ func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig
 
 	ctx := &Ctx{srv}
 	r.Group((&auth.Service{Base: srv}).SetRoutes)
-	r.Group((&contests.Service{Base: srv}).SetRoutes)
 	r.Group((&items.Service{Base: srv}).SetRoutes)
 	r.Group((&threads.Service{Base: srv}).SetRoutes)
 	r.Group((&groups.Service{Base: srv}).SetRoutes)

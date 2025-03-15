@@ -1,4 +1,4 @@
-Feature: Enters a contest as a group (user self or team) (contestEnter) - robustness
+Feature: Enters an item as a group (user self or team) (itemEnter) - robustness
   Background:
     Given the database has the following table "groups":
       | id | name         | type                | root_activity_id |
@@ -92,7 +92,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: The item is visible, but it's not a contest
+  Scenario: The item is visible, but it doesn't require explicit entry
     Given the database has the following table "items":
       | id | default_language_tag |
       | 50 | fr                   |
@@ -171,7 +171,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario: The contest is not ready
+  Scenario: The item is not ready for entering
     Given the database has the following table "items":
       | id | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | default_language_tag |
       | 60 | 1                       | Team                   | All                              | 3                   | fr                   |
@@ -184,7 +184,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | info                     |
       | 21       | 60      | content_with_descendants |
-    Given the database has the following table "groups_contest_items":
+    Given the database has the following table "group_item_additional_times":
       | group_id | item_id |
       | 11       | 60      |
       | 41       | 60      |
@@ -197,7 +197,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     And the table "groups_ancestors" should stay unchanged
     And the table "attempts" should be empty
 
-  Scenario Outline: Reenter a non-team contest
+  Scenario Outline: Reenter a non-team item
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | participants_group_id | default_language_tag |
       | 50 | 01:01:01 | 1                       | User                   | None                             | 99                    | fr                   |
@@ -212,7 +212,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | 11       | 50      | none                     |
       | 21       | 50      | solution                 |
       | 31       | 50      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 31       | 50      | 02:02:02        |
     And the database has the following table "attempts":
@@ -233,7 +233,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
     | 2019-05-30 11:00:00 |
     | 9999-12-31 23:59:59 |
 
-  Scenario: Reenter an already entered (not expired) contest as a team
+  Scenario: Reenter an already entered (not expired) item as a team
     Given the database has the following table "items":
       | id | duration | requires_explicit_entry | entry_participant_type | entry_min_admitted_members_ratio | entry_max_team_size | participants_group_id | default_language_tag |
       | 60 | 01:01:01 | 1                       | Team                   | None                             | 10                  | 99                    | fr                   |
@@ -247,7 +247,7 @@ Feature: Enters a contest as a group (user self or team) (contestEnter) - robust
       | group_id | item_id | can_view_generated       |
       | 11       | 60      | solution                 |
       | 31       | 60      | content_with_descendants |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 11       | 60      | 02:02:02        |
     And the database has the following table "attempts":

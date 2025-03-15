@@ -63,7 +63,7 @@ Feature: User accepts an invitation to join a group - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: User tries to accept an invitation to join a team while being a member of another team participating in same contests
+  Scenario: User tries to accept an invitation to join a team while being a member of another team participating in solving the same items requiring explicit entry
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-invitations/15/accept"
     Then the response code should be 422

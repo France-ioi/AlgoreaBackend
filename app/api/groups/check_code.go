@@ -60,8 +60,8 @@ type groupCodeCheckResponse struct {
 //		* if there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User'
 //			(`reason` = 'no_group');
 //
-//		* if the group is a team and the user is already on a team that has attempts for same contest
-//			while the contest doesn't allow multiple attempts or that has active attempts for the same contest
+//		* if the group is a team and the user is already on a team that has attempts for the same item requiring explicit entry
+//			while the item doesn't allow multiple attempts or that has active attempts for the same item requiring explicit entry
 //			(`reason` = 'conflicting_team_participation'),
 //
 //		* if the group membership is frozen (`reason` = 'frozen_membership');

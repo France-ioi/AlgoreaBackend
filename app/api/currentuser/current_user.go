@@ -222,7 +222,7 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	}
 
 	// If the group is a team, ensure that the current user is not a member of
-	// another team having attempts for the same contests.
+	// another team having attempts for the same item requiring explicit entry.
 	if groupInfo.Type == team {
 		found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(groupID, user.GroupID, true)
 		service.MustNotBeError(err)
