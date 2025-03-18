@@ -1,4 +1,4 @@
-Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime) - robustness
+Feature: Get additional times for a group of users/teams on a time-limited item (itemListMembersAdditionalTime) - robustness
   Background:
     Given the database has the following table "groups":
       | id | name    |
@@ -31,66 +31,66 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
 
   Scenario: Wrong item_id
     Given I am the user with id "21"
-    When I send a GET request to "/contests/abc/groups/13/members/additional-times"
+    When I send a GET request to "/items/abc/groups/13/members/additional-times"
     Then the response code should be 400
     And the response error message should contain "Wrong value for item_id (should be int64)"
 
   Scenario: No such item
     Given I am the user with id "21"
-    When I send a GET request to "/contests/90/groups/13/members/additional-times"
+    When I send a GET request to "/items/90/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: No access to the item
     Given I am the user with id "21"
-    When I send a GET request to "/contests/10/groups/13/members/additional-times"
+    When I send a GET request to "/items/10/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The item is not a timed contest
+  Scenario: The item is not a time-limited item
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/13/members/additional-times"
+    When I send a GET request to "/items/60/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The user is not a contest admin
+  Scenario: The user cannot administer the time-limited item
     Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/13/members/additional-times"
+    When I send a GET request to "/items/50/groups/13/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Wrong group_id
     Given I am the user with id "21"
-    When I send a GET request to "/contests/70/groups/abc/members/additional-times"
+    When I send a GET request to "/items/70/groups/abc/members/additional-times"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
 
   Scenario: The user is not a manager of the group
     Given I am the user with id "21"
-    When I send a GET request to "/contests/70/groups/12/members/additional-times"
+    When I send a GET request to "/items/70/groups/12/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The user cannot watch for members of the group
     Given I am the user with id "21"
-    When I send a GET request to "/contests/70/groups/14/members/additional-times"
+    When I send a GET request to "/items/70/groups/14/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: The user cannot grant access to the group
     Given I am the user with id "21"
-    When I send a GET request to "/contests/70/groups/15/members/additional-times"
+    When I send a GET request to "/items/70/groups/15/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: No such group
     Given I am the user with id "21"
-    When I send a GET request to "/contests/70/groups/404/members/additional-times"
+    When I send a GET request to "/items/70/groups/404/members/additional-times"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
   Scenario: Wrong sort
     Given I am the user with id "21"
-    When I send a GET request to "/contests/70/groups/13/members/additional-times?sort=title"
+    When I send a GET request to "/items/70/groups/13/members/additional-times?sort=title"
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "title""

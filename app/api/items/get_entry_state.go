@@ -240,7 +240,7 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 	return result, service.NoError
 }
 
-func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
+func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamItem bool,
 	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, admittedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired, teamCanEnter bool,
 ) entryState {
@@ -248,7 +248,7 @@ func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTe
 		return alreadyStarted
 	}
 
-	if isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamContest,
+	if isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamItem,
 		maxTeamSize, entryMinAdmittedMembersRatio, membersCount, admittedMembersCount,
 		attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired, teamCanEnter) {
 		return ready
@@ -264,11 +264,11 @@ func isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio string
 		entryMinAdmittedMembersRatio == "One" && admittedMembersCount >= 1
 }
 
-func isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamContest bool,
+func isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamItem bool,
 	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, admittedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired, teamCanEnter bool,
 ) bool {
-	if isTeamContest && (!teamCanEnter && maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
+	if isTeamItem && (!teamCanEnter && maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
 		!teamCanEnter && !isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio, membersCount, admittedMembersCount) {
 		return false
 	}

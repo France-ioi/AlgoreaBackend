@@ -105,7 +105,7 @@ Feature: User sends a request to join a group - robustness
     | 16      |
     | 19      |
 
-  Scenario: User tries to send a request to join a team while being a member of another team participating in same contests
+  Scenario: User tries to send a request to join a team while being a member of another team participating in solving the same items requiring explicit entry
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-requests/14"
     Then the response code should be 422
@@ -122,7 +122,7 @@ Feature: User sends a request to join a group - robustness
     And the table "groups_groups" should stay unchanged
     And the table "groups_ancestors" should stay unchanged
 
-  Scenario: Team owner tries to send a request to join a team while being a member of another team participating in same contests
+  Scenario: Team owner tries to send a request to join a team while being a member of another team participating in solving the same items requiring explicit entry
     Given I am the user with id "21"
     When I send a POST request to "/current-user/group-requests/17"
     Then the response code should be 422
