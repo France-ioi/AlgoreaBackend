@@ -16,8 +16,8 @@ require (
 	github.com/France-ioi/validator v9.29.2-0.20220110032854-1b7299b1a4db+incompatible
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
-	github.com/akrylysov/algnhsa v0.12.1
-	github.com/aws/aws-lambda-go v1.28.0
+	github.com/akrylysov/algnhsa v1.1.0
+	github.com/aws/aws-lambda-go v1.43.0
 	github.com/cucumber/godog v0.14.1
 	github.com/cucumber/messages/go/v21 v21.0.1
 	github.com/go-chi/chi v3.3.3+incompatible
@@ -44,6 +44,7 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
 	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
