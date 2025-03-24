@@ -26,18 +26,21 @@ func TestDB_WhereSearchStringMatches(t *testing.T) {
 		wantArgs      []driver.Value
 	}{
 		{
+			name:          "empty search string",
+			args:          args{field: "title2", fallbackField: "title3", searchString: "  \t\r\n  "},
+			wantCondition: "(FALSE)",
+		},
+		{
 			name: "words with accents",
 			args: args{field: "title2", fallbackField: "title3", searchString: "précédente jusqu'à"},
 			wantCondition: "((title2 IS NOT NULL AND MATCH(title2) AGAINST(? IN BOOLEAN MODE)) OR " +
 				"(title2 IS NULL AND MATCH(title3) AGAINST(? IN BOOLEAN MODE)))",
-			wantArgs: []driver.Value{"+précédente* +jusqu'à*", "+précédente* +jusqu'à*"},
+			wantArgs: []driver.Value{"+précédente* +jusqu* +à*", "+précédente* +jusqu* +à*"},
 		},
 		{
-			name: "no letters",
-			args: args{field: "title", fallbackField: "title2", searchString: "```"},
-			wantCondition: "((title IS NOT NULL AND MATCH(title) AGAINST(? IN BOOLEAN MODE)) OR " +
-				"(title IS NULL AND MATCH(title2) AGAINST(? IN BOOLEAN MODE)))",
-			wantArgs: []driver.Value{"", ""},
+			name:          "no letters",
+			args:          args{field: "title", fallbackField: "title2", searchString: "```"},
+			wantCondition: "(FALSE)",
 		},
 		{
 			name:          "no fallback field",
@@ -49,7 +52,13 @@ func TestDB_WhereSearchStringMatches(t *testing.T) {
 			name:          "filters out special characters",
 			args:          args{field: "title", searchString: "~!@#$%^&*()_+`-=[]\\{}|;':\",./<>?"},
 			wantCondition: "((title IS NOT NULL AND MATCH(title) AGAINST(? IN BOOLEAN MODE)))",
-			wantArgs:      []driver.Value{"+'*"},
+			wantArgs:      []driver.Value{"+_*"},
+		},
+		{
+			name:          "removes special characters, second word",
+			args:          args{field: "title", searchString: "Task #12345"},
+			wantCondition: "((title IS NOT NULL AND MATCH(title) AGAINST(? IN BOOLEAN MODE)))",
+			wantArgs:      []driver.Value{"+Task* +12345*"},
 		},
 	}
 	for _, tt := range tests {

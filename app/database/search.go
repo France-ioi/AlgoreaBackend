@@ -13,15 +13,19 @@ func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString stri
 
 	// Remove all the special characters from the search string.
 	searchString = strings.Map(func(r rune) rune {
-		// Keep only letters (for all the world languages), digits, and apostrophes.
-		if r == '\'' || unicode.IsLetter(r) || unicode.IsDigit(r) {
+		// Keep only letters (for all the world languages), digits, and underscores.
+		if r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) {
 			return r
 		}
 
 		return ' '
 	}, searchString)
 
-	words := strings.Fields(strings.Trim(searchString, " "))
+	words := strings.Fields(strings.TrimSpace(searchString))
+	if len(words) == 0 {
+		// If the search string has no words, we return an empty result.
+		return conn.Where("FALSE")
+	}
 
 	for i := 0; i < len(words); i++ {
 		word := words[i]
