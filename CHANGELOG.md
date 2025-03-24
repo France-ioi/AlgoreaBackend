@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.26.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.0...v2.26.1) - 2025-03-24
+- fix fulltext search
+
 ## [v2.26.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.25.1...v2.26.0) - 2025-03-19
 - upgrade MySQL to 8.0.34
 - get rid of the term "contest" except for the mentioning of "contest participants groups"
