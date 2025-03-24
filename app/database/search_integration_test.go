@@ -25,6 +25,7 @@ func TestDB_WhereSearchStringMatches_Integration(t *testing.T) {
 			- {id: 555, name: 'Task #1'}
 			- {id: 666, name: 'Task #2'}
 			- {id: 777, name: "with'quote"}
+			- {id: 888, name: "with_underscore"}
 		items_strings:
 			- {item_id: 111, language_tag: fr, title: 'précédente'}
 			- {item_id: 222, language_tag: fr, title: 'jusqu''à'}
@@ -33,6 +34,7 @@ func TestDB_WhereSearchStringMatches_Integration(t *testing.T) {
 			- {item_id: 555, language_tag: fr, title: 'Task #1'}
 			- {item_id: 666, language_tag: fr, title: 'Task #2'}
 			- {item_id: 777, language_tag: fr, title: "with'quote"}
+			- {item_id: 888, language_tag: fr, title: "with_underscore"}
 `)
 	defer func() { _ = db.Close() }()
 
@@ -75,6 +77,14 @@ func TestDB_WhereSearchStringMatches_Integration(t *testing.T) {
 		{
 			searchString: "with'quote",
 			expectedIDs:  []int64{777},
+		},
+		{
+			searchString: "with_underscore",
+			expectedIDs:  []int64{888},
+		},
+		{
+			searchString: "underscore",
+			expectedIDs:  []int64{},
 		},
 	} {
 		test := test
