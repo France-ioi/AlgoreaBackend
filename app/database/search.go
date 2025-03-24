@@ -8,6 +8,9 @@ import (
 // WhereSearchStringMatches returns a composable query where {field} matches the search string {searchString}
 // All the words in the search string are matched with "AND".
 // If fallbackField is not empty, it is used as a fallback if the field is NULL.
+//
+// We use the MySQL fulltext search with innodb_ft_min_token_size=1 and an empty stopword list.
+// This method would have to filter out short words and stopwords from the search string if we used different settings.
 func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString string) *DB {
 	query := conn.db
 
