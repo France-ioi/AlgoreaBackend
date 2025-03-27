@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.26.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.2...v2.26.3) - 2025-03-27
+- try closing the DB connection after AWS Lambda gets SIGTERM
+
 ## [v2.26.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.1...v2.26.2) - 2025-03-25
 - use innodb_ft_user_stopword_table instead of innodb_ft_server_stopword_table for fulltext migration
 
