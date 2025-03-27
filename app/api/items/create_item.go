@@ -585,7 +585,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		parentChildSpec := make([]*insertItemItemsSpec, 0, parentChildSpecLength)
 		if formData.IsSet("parent.item_id") {
 			var order int32
-			service.MustNotBeError(store.ItemItems().WithExclusiveWriteLock().
+			service.MustNotBeError(store.ItemItems().WithSharedWriteLock().
 				Where("parent_item_id = ?", newItemRequest.Parent.ItemID).
 				PluckFirst("IFNULL(MAX(`child_order`), 0)+1", &order).Error())
 
