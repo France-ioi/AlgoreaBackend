@@ -277,6 +277,9 @@ workflows:
           requires:
           - deps
       - swagger-gen
+      - dbdoc-gen:
+          requires:
+          - deps
   db-migration-check:
     jobs:
       - deps
