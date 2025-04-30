@@ -131,7 +131,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 		ids[index] = in.Children[index].ItemID
 	}
 	var count int64
-	service.MustNotBeError(store.ItemAncestors().WithExclusiveWriteLock().
+	service.MustNotBeError(store.ItemAncestors().WithSharedWriteLock().
 		Where("child_item_id = ?", in.Parent.ItemID).
 		Where("ancestor_item_id IN (?)", ids).Count(&count).Error())
 	return count == 0
@@ -315,7 +315,7 @@ func constructAsRootOfGroupIDValidator(
 			return true
 		}
 		found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", fl.Field().Interface().(int64)).
-			Where("can_manage = 'memberships_and_group'").WithExclusiveWriteLock().HasRows()
+			Where("can_manage = 'memberships_and_group'").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
 	}
@@ -332,7 +332,7 @@ func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func
 // The validator checks that the language exists.
 func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 	return func(fl validator.FieldLevel) bool {
-		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithExclusiveWriteLock().HasRows()
+		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
 	}
@@ -431,7 +431,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 
 func generateOldPropagationLevelsMap(store *database.DataStore, itemID *int64) map[int64]*itemsRelationData {
 	var oldRelations []itemsRelationData
-	service.MustNotBeError(store.ItemItems().ChildrenOf(*itemID).WithExclusiveWriteLock().
+	service.MustNotBeError(store.ItemItems().ChildrenOf(*itemID).WithSharedWriteLock().
 		Select(`child_item_id AS item_id, category, score_weight,
 				        content_view_propagation_value, upper_view_levels_propagation_value,
 						    grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation`).
@@ -448,7 +448,7 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 	service.MustNotBeError(store.Items().
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
 		Where("items.id IN (?)", ids).
-		WithExclusiveWriteLock().
+		WithSharedWriteLock().
 		Select("permissions.*, items.type").
 		Scan(&childrenInfo).Error())
 
