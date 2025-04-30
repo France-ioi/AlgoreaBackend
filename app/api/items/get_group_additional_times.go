@@ -49,11 +49,9 @@ type additionalTimes struct {
 //			required: true
 //	responses:
 //		"200":
-//			description: OK. Success response with item's info
+//			description: OK. Success response with additional times
 //			schema:
-//				type: array
-//				items:
-//					"$ref": "#/definitions/additionalTimes"
+//				"$ref": "#/definitions/additionalTimes"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
