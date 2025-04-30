@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.26.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.3...v2.26.4) - 2025-04-30
+- make `resultStartPath` and `itemCreate` less locking
+- fix the result type of itemGetAdditionalTime in swagger docs
+- fix dbdoc-gen on CircleCI
+
 ## [v2.26.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.2...v2.26.3) - 2025-03-27
 - try closing the DB connection after AWS Lambda gets SIGTERM
 
