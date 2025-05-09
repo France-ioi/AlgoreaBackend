@@ -98,7 +98,7 @@ type itemRootNodeNotChapterFields struct {
 
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
-	// only if the current can watch the item or grant permissions to both the watched group and the item
+	// only if the current user can watch the item or grant permissions to both the watched group and the item
 	Permissions *getItemItemPermissions `json:"permissions,omitempty"`
 
 	// Average score of all "end-members" within the watched group
