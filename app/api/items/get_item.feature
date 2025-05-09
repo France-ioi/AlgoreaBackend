@@ -59,6 +59,25 @@ Feature: Get item view information
       | 26       | 210     | info                     | none                     | none               | none                | false              |
       | 26       | 220     | info                     | none                     | none               | none                | false              |
       | 28       | 220     | content_with_descendants | solution_with_grant      | all                | answer              | true               |
+    And the database has the following table "permissions_granted":
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
+      | 11       | 200     | 11              | 2019-05-30 12:01:02 | 3019-06-30 13:03:04 |
+      | 11       | 200     | 13              | 2019-05-30 12:01:02 | 2019-06-30 13:03:04 |
+      | 11       | 200     | 26              | 3019-05-30 12:01:02 | 3019-05-30 12:01:02 |
+      | 11       | 200     | 27              | 3019-05-30 12:01:02 | 3019-05-30 12:01:01 |
+      | 11       | 220     | 11              | 2019-06-30 12:01:02 | 3019-07-30 13:03:04 |
+      | 13       | 200     | 13              | 2020-05-30 12:01:02 | 3020-06-30 13:03:04 |
+      | 15       | 200     | 11              | 2019-07-30 12:01:02 | 3019-08-30 13:03:04 |
+      | 15       | 220     | 11              | 2019-07-30 12:01:02 | 3019-08-30 13:03:04 |
+      | 15       | 220     | 13              | 2019-07-30 12:01:02 | 2019-08-30 13:03:04 |
+      | 15       | 220     | 26              | 3019-07-30 12:01:02 | 3019-07-30 12:01:02 |
+      | 15       | 220     | 27              | 3019-07-30 12:01:02 | 3019-07-30 12:01:01 |
+      | 27       | 200     | 26              | 2018-05-30 12:01:02 | 3018-06-30 13:03:04 |
+      | 27       | 200     | 27              | 2018-05-30 12:01:02 | 3019-06-30 13:03:04 |
+      | 27       | 220     | 27              | 2018-06-30 12:01:02 | 3019-07-30 13:03:04 |
+      | 28       | 200     | 26              | 2018-08-30 12:01:02 | 3018-09-30 13:03:04 |
+      | 28       | 220     | 26              | 2018-07-30 12:01:02 | 3018-08-30 13:03:04 |
+      | 28       | 220     | 27              | 2018-07-30 12:01:02 | 3019-08-30 13:03:04 |
     And the database has the following table "languages":
       | tag |
       | fr  |
@@ -133,7 +152,12 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "result",
         "is_owner": true,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": [
+          {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3018-06-30T13:03:04Z"},
+          {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3019-06-30T13:03:04Z"},
+          {"can_enter_from": "2019-05-30T12:01:02Z", "can_enter_until": "3019-06-30T13:03:04Z"}
+        ]
       }
     }
     """
@@ -187,7 +211,8 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": []
       }
     }
     """
@@ -240,7 +265,8 @@ Feature: Get item view information
         "can_view": "content_with_descendants",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": []
       }
     }
     """
@@ -298,7 +324,8 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": []
       }
     }
     """
@@ -356,7 +383,10 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": [
+          {"can_enter_from": "2020-05-30T12:01:02Z", "can_enter_until": "3020-06-30T13:03:04Z"}
+        ]
       }
     }
     """
@@ -409,7 +439,8 @@ Feature: Get item view information
         "can_view": "info",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": []
       }
     }
     """
@@ -467,7 +498,12 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "result",
         "is_owner": true,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": [
+          {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3018-06-30T13:03:04Z"},
+          {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3019-06-30T13:03:04Z"},
+          {"can_enter_from": "2019-05-30T12:01:02Z", "can_enter_until": "3019-06-30T13:03:04Z"}
+        ]
       }
     }
     """
@@ -484,7 +520,15 @@ Feature: Get item view information
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
     And the template constant "permissions" is:
     """
-      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true, "can_request_help": false}
+      "permissions": {
+        "can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants",
+        "can_watch": "answer", "is_owner": true, "can_request_help": false,
+        "entering_time_intervals": [
+          {"can_enter_from": "2018-07-30T12:01:02Z", "can_enter_until": "3018-08-30T13:03:04Z"},
+          {"can_enter_from": "2018-07-30T12:01:02Z", "can_enter_until": "3019-08-30T13:03:04Z"},
+          {"can_enter_from": "2019-07-30T12:01:02Z", "can_enter_until": "3019-08-30T13:03:04Z"}
+        ]
+      }
     """
     And the template constant "average_score" is:
     """
@@ -545,7 +589,17 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "<can_watch_generated>",
         "is_owner": false,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": [
+          {
+            "can_enter_from": "2018-06-30T12:01:02Z",
+            "can_enter_until": "3019-07-30T13:03:04Z"
+          },
+          {
+            "can_enter_from": "2019-06-30T12:01:02Z",
+            "can_enter_until": "3019-07-30T13:03:04Z"
+          }
+        ]
       }
       <expected_watched_group_part>
     }
@@ -571,7 +625,15 @@ Feature: Get item view information
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
     And the template constant "permissions" is:
     """
-      "permissions": {"can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants", "can_watch": "answer", "is_owner": true, "can_request_help": false}
+      "permissions": {
+        "can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants",
+        "can_watch": "answer", "is_owner": true, "can_request_help": false,
+        "entering_time_intervals": [
+          {"can_enter_from": "2018-07-30T12:01:02Z", "can_enter_until": "3018-08-30T13:03:04Z"},
+          {"can_enter_from": "2018-07-30T12:01:02Z", "can_enter_until": "3019-08-30T13:03:04Z"},
+          {"can_enter_from": "2019-07-30T12:01:02Z", "can_enter_until": "3019-08-30T13:03:04Z"}
+        ]
+      }
     """
     And the template constant "average_score" is:
     """
@@ -632,7 +694,8 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false
+        "can_request_help": false,
+        "entering_time_intervals": []
       }
       <expected_watched_group_part>
     }
