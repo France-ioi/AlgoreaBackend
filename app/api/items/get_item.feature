@@ -38,9 +38,9 @@ Feature: Get item view information
       | 28              | 15             |
     And the groups ancestors are computed
     And the database has the following table "items_items":
-      | parent_item_id | child_item_id | child_order | category  | content_view_propagation |
-      | 200            | 210           | 2           | Discovery | as_info                  |
-      | 200            | 220           | 1           | Discovery | as_info                  |
+      | parent_item_id | child_item_id | child_order | category  | content_view_propagation | request_help_propagation |
+      | 200            | 210           | 2           | Discovery | as_info                  | true                     |
+      | 200            | 220           | 1           | Discovery | as_info                  | false                    |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
       | 11       | 200     | solution                 | enter                    | children           | result              | true               |
@@ -60,24 +60,25 @@ Feature: Get item view information
       | 26       | 220     | info                     | none                     | none               | none                | false              |
       | 28       | 220     | content_with_descendants | solution_with_grant      | all                | answer              | true               |
     And the database has the following table "permissions_granted":
-      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     |
-      | 11       | 200     | 11              | 2019-05-30 12:01:02 | 3019-06-30 13:03:04 |
-      | 11       | 200     | 13              | 2019-05-30 12:01:02 | 2019-06-30 13:03:04 |
-      | 11       | 200     | 26              | 3019-05-30 12:01:02 | 3019-05-30 12:01:02 |
-      | 11       | 200     | 27              | 3019-05-30 12:01:02 | 3019-05-30 12:01:01 |
-      | 11       | 220     | 11              | 2019-06-30 12:01:02 | 3019-07-30 13:03:04 |
-      | 13       | 200     | 13              | 2020-05-30 12:01:02 | 3020-06-30 13:03:04 |
-      | 15       | 200     | 11              | 2019-07-30 12:01:02 | 3019-08-30 13:03:04 |
-      | 15       | 220     | 11              | 2019-07-30 12:01:02 | 3019-08-30 13:03:04 |
-      | 15       | 220     | 13              | 2019-07-30 12:01:02 | 2019-08-30 13:03:04 |
-      | 15       | 220     | 26              | 3019-07-30 12:01:02 | 3019-07-30 12:01:02 |
-      | 15       | 220     | 27              | 3019-07-30 12:01:02 | 3019-07-30 12:01:01 |
-      | 27       | 200     | 26              | 2018-05-30 12:01:02 | 3018-06-30 13:03:04 |
-      | 27       | 200     | 27              | 2018-05-30 12:01:02 | 3019-06-30 13:03:04 |
-      | 27       | 220     | 27              | 2018-06-30 12:01:02 | 3019-07-30 13:03:04 |
-      | 28       | 200     | 26              | 2018-08-30 12:01:02 | 3018-09-30 13:03:04 |
-      | 28       | 220     | 26              | 2018-07-30 12:01:02 | 3018-08-30 13:03:04 |
-      | 28       | 220     | 27              | 2018-07-30 12:01:02 | 3019-08-30 13:03:04 |
+      | group_id | item_id | source_group_id | can_enter_from      | can_enter_until     | is_owner | can_request_help_to |
+      | 11       | 200     | 11              | 2019-05-30 12:01:02 | 3019-06-30 13:03:04 | true     | null                |
+      | 11       | 200     | 13              | 2019-05-30 12:01:02 | 2019-06-30 13:03:04 | false    | null                |
+      | 11       | 200     | 26              | 3019-05-30 12:01:02 | 3019-05-30 12:01:02 | false    | null                |
+      | 11       | 200     | 27              | 3019-05-30 12:01:02 | 3019-05-30 12:01:01 | false    | null                |
+      | 11       | 220     | 11              | 2019-06-30 12:01:02 | 3019-07-30 13:03:04 | false    | null                |
+      | 13       | 200     | 13              | 2020-05-30 12:01:02 | 3020-06-30 13:03:04 | false    | 13                  |
+      | 15       | 200     | 11              | 2019-07-30 12:01:02 | 3019-08-30 13:03:04 | false    | null                |
+      | 15       | 220     | 11              | 2019-07-30 12:01:02 | 3019-08-30 13:03:04 | false    | null                |
+      | 15       | 220     | 13              | 2019-07-30 12:01:02 | 2019-08-30 13:03:04 | false    | null                |
+      | 15       | 220     | 26              | 3019-07-30 12:01:02 | 3019-07-30 12:01:02 | false    | null                |
+      | 15       | 220     | 27              | 3019-07-30 12:01:02 | 3019-07-30 12:01:01 | false    | null                |
+      | 17       | 200     | 17              | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 | false    | 17                  |
+      | 27       | 200     | 26              | 2018-05-30 12:01:02 | 3018-06-30 13:03:04 | false    | null                |
+      | 27       | 200     | 27              | 2018-05-30 12:01:02 | 3019-06-30 13:03:04 | false    | null                |
+      | 27       | 220     | 27              | 2018-06-30 12:01:02 | 3019-07-30 13:03:04 | false    | null                |
+      | 28       | 200     | 26              | 2018-08-30 12:01:02 | 3018-09-30 13:03:04 | false    | null                |
+      | 28       | 220     | 26              | 2018-07-30 12:01:02 | 3018-08-30 13:03:04 | false    | null                |
+      | 28       | 220     | 27              | 2018-07-30 12:01:02 | 3019-08-30 13:03:04 | false    | null                |
     And the database has the following table "languages":
       | tag |
       | fr  |
@@ -152,7 +153,7 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "result",
         "is_owner": true,
-        "can_request_help": false,
+        "can_request_help": true,
         "entering_time_intervals": [
           {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3018-06-30T13:03:04Z"},
           {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3019-06-30T13:03:04Z"},
@@ -211,7 +212,7 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false,
+        "can_request_help": true,
         "entering_time_intervals": []
       }
     }
@@ -324,7 +325,7 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false,
+        "can_request_help": true,
         "entering_time_intervals": []
       }
     }
@@ -383,7 +384,7 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "none",
         "is_owner": false,
-        "can_request_help": false,
+        "can_request_help": true,
         "entering_time_intervals": [
           {"can_enter_from": "2020-05-30T12:01:02Z", "can_enter_until": "3020-06-30T13:03:04Z"}
         ]
@@ -498,7 +499,7 @@ Feature: Get item view information
         "can_view": "solution",
         "can_watch": "result",
         "is_owner": true,
-        "can_request_help": false,
+        "can_request_help": true,
         "entering_time_intervals": [
           {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3018-06-30T13:03:04Z"},
           {"can_enter_from": "2018-05-30T12:01:02Z", "can_enter_until": "3019-06-30T13:03:04Z"},
@@ -510,11 +511,14 @@ Feature: Get item view information
 
   Scenario Outline: With watched_group_id
     Given I am the user with id "11"
-    And the database table "group_managers" also has the following row:
+    And the database table "group_managers" also has the following rows:
       | manager_id | group_id | can_watch_members | can_grant_group_access            |
       | 11         | 15       | false             | <can_grant_group_access>          |
       | 27         | 28       | true              | <can_grant_group_access_ancestor> |
-    And the database table "permissions_generated" also has the following row:
+    And the database table "permissions_granted" also has the following row:
+      | group_id | item_id | source_group_id | can_request_help_to |
+      | 28       | 220     | 11              | true                |
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
       | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |
@@ -522,7 +526,7 @@ Feature: Get item view information
     """
       "permissions": {
         "can_edit": "all", "can_grant_view": "solution_with_grant", "can_view": "content_with_descendants",
-        "can_watch": "answer", "is_owner": true, "can_request_help": false,
+        "can_watch": "answer", "is_owner": true, "can_request_help": true,
         "entering_time_intervals": [
           {"can_enter_from": "2018-07-30T12:01:02Z", "can_enter_until": "3018-08-30T13:03:04Z"},
           {"can_enter_from": "2018-07-30T12:01:02Z", "can_enter_until": "3019-08-30T13:03:04Z"},
@@ -615,11 +619,11 @@ Feature: Get item view information
 
   Scenario Outline: With watched_group_id and as_team_id
     Given I am the user with id "11"
-    And the database table "group_managers" also has the following row:
+    And the database table "group_managers" also has the following rows:
       | manager_id | group_id | can_watch_members | can_grant_group_access            |
       | 11         | 15       | false             | <can_grant_group_access>          |
       | 27         | 28       | true              | <can_grant_group_access_ancestor> |
-    And the database table "permissions_generated" also has the following row:
+    And the database table "permissions_generated" also has the following rows:
       | group_id | item_id | can_view_generated | can_grant_view_generated            | can_edit_generated | can_watch_generated   | is_owner_generated |
       | 11       | 220     | solution           | <can_grant_view_generated>          | none               | <can_watch_generated> | false              |
       | 27       | 220     | none               | <can_grant_view_generated_ancestor> | none               | none                  | false              |

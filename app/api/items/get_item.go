@@ -246,28 +246,37 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
-	hasCanRequestHelpTo := store.Items().HasCanRequestHelpTo(itemID, user.GroupID)
-	watchedGroupHasCanRequestHelpTo := false
-	if watchedGroupIDIsSet {
-		watchedGroupHasCanRequestHelpTo = store.Items().HasCanRequestHelpTo(itemID, watchedGroupID)
-	}
-
 	permissionGrantedStore := store.PermissionsGranted()
-	response := constructItemResponseFromDBData(
-		rawData,
-		permissionGrantedStore,
-		watchedGroupIDIsSet,
-		hasCanRequestHelpTo,
-		watchedGroupHasCanRequestHelpTo,
-	)
+	response := constructItemResponseFromDBData(rawData, permissionGrantedStore, watchedGroupIDIsSet)
 
+	response.Permissions.CanRequestHelp = hasCanRequestHelpTo(store, itemID, participantID)
 	getEnteringTimeIntervals(store, participantID, itemID, &response.Permissions.EnteringTimeIntervals)
 	if response.WatchedGroup != nil && response.WatchedGroup.Permissions != nil {
+		response.WatchedGroup.Permissions.CanRequestHelp = hasCanRequestHelpTo(store, itemID, watchedGroupID)
 		getEnteringTimeIntervals(store, watchedGroupID, itemID, &response.WatchedGroup.Permissions.EnteringTimeIntervals)
 	}
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
+}
+
+// hasCanRequestHelpTo checks whether there is a can_request_help_to permission on an item-group.
+// The checks are made on item's ancestor while can_request_help_propagation=1, and on group's ancestors.
+func hasCanRequestHelpTo(s *database.DataStore, itemID, groupID int64) bool {
+	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
+
+	hasCanRequestHelpTo, err := s.Users().
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", groupID).
+		Joins(`JOIN permissions_granted ON
+			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+			permissions_granted.item_id IN (?)`, itemAncestorsRequestHelpPropagationQuery.SubQuery()).
+		Where("permissions_granted.can_request_help_to IS NOT NULL OR permissions_granted.is_owner = 1").
+		Select("1").
+		Limit(1).
+		HasRows()
+	service.MustNotBeError(err)
+
+	return hasCanRequestHelpTo
 }
 
 func getEnteringTimeIntervals(store *database.DataStore, groupID, itemID int64, enteringTimeIntervals *[]enteringTimeInterval) {
@@ -471,14 +480,11 @@ func constructItemResponseFromDBData(
 	rawData *rawItem,
 	permissionGrantedStore *database.PermissionGrantedStore,
 	watchedGroupIDIsSet bool,
-	hasCanRequestHelpTo bool,
-	watchedGroupHasCanRequestHelpTo bool,
 ) *itemResponse {
 	result := &itemResponse{
 		commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
 		Permissions: getItemItemPermissions{
 			ItemPermissions: *rawData.AsItemPermissions(permissionGrantedStore),
-			CanRequestHelp:  hasCanRequestHelpTo,
 		},
 		String: itemStringRoot{
 			itemStringCommon: &itemStringCommon{
@@ -526,7 +532,6 @@ func constructItemResponseFromDBData(
 		if rawData.CanViewWatchedGroupPermissions {
 			result.WatchedGroup.Permissions = &getItemItemPermissions{
 				ItemPermissions: *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
-				CanRequestHelp:  watchedGroupHasCanRequestHelpTo,
 			}
 		}
 	}
