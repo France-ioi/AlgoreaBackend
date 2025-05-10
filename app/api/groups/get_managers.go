@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // GroupManagersViewResponseRowUser contains names of a manager.
@@ -43,16 +44,17 @@ type groupManagersViewResponseRow struct {
 	// only when include_managers_of_ancestor_groups=1
 	*GroupManagersViewResponseRowThroughAncestorGroups
 
+	// null when a manager is not a direct manager of the group
 	// enum: none,memberships,memberships_and_group
 	// required: true
-	CanManage string `json:"can_manage"`
+	CanManage *string `json:"can_manage"`
 	// required: true
 	CanGrantGroupAccess bool `json:"can_grant_group_access"`
 	// required: true
 	CanWatchMembers bool `json:"can_watch_members"`
 
 	Type                                string `json:"-"`
-	CanManageValue                      int    `json:"-"`
+	CanManageValue                      *int   `json:"-"`
 	CanManageThroughAncestorGroupsValue int    `json:"-"`
 }
 
@@ -150,7 +152,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = group_managers.group_id").
 			Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name, users.login,
-			        MAX(IF(groups_ancestors_active.is_self, can_manage_value, 1)) AS can_manage_value,
+			        MAX(IF(groups_ancestors_active.is_self, can_manage_value, NULL)) AS can_manage_value,
 			        MAX(IF(groups_ancestors_active.is_self, can_grant_group_access, 0)) AS can_grant_group_access,
 			        MAX(IF(groups_ancestors_active.is_self, can_watch_members, 0)) AS can_watch_members,
 			        MAX(can_manage_value) AS can_manage_through_ancestor_groups_value,
@@ -183,7 +185,9 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	for index := range result {
-		result[index].CanManage = store.GroupManagers().CanManageNameByIndex(result[index].CanManageValue)
+		if result[index].CanManageValue != nil {
+			result[index].CanManage = golang.Ptr(store.GroupManagers().CanManageNameByIndex(*result[index].CanManageValue))
+		}
 		if result[index].Type != groupTypeUser {
 			result[index].GroupManagersViewResponseRowUser = nil
 		}
