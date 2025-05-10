@@ -70,19 +70,19 @@ type commonItemFields struct {
 	Permissions structures.ItemPermissions `json:"permissions"`
 }
 
-type getItemCommonFields struct {
-	commonItemFields
-
-	// required: true
-	Permissions itemPermissionsWithCanRequestHelpTo `json:"permissions"`
-}
-
-type itemPermissionsWithCanRequestHelpTo struct {
+type getItemItemPermissions struct {
 	structures.ItemPermissions
 
 	// Whether a `can_request_help_to` permission is defined.
 	// required: true
 	CanRequestHelp bool `json:"can_request_help"`
+
+	EnteringTimeIntervals []enteringTimeInterval `json:"entering_time_intervals"`
+}
+
+type enteringTimeInterval struct {
+	CanEnterFrom  database.Time `json:"can_enter_from"`
+	CanEnterUntil database.Time `json:"can_enter_until"`
 }
 
 type itemRootNodeNotChapterFields struct {
@@ -98,8 +98,8 @@ type itemRootNodeNotChapterFields struct {
 
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
-	// only if the current can watch the item or grant permissions to both the watched group and the item
-	Permissions *itemPermissionsWithCanRequestHelpTo `json:"permissions,omitempty"`
+	// only if the current user can watch the item or grant permissions to both the watched group and the item
+	Permissions *getItemItemPermissions `json:"permissions,omitempty"`
 
 	// Average score of all "end-members" within the watched group
 	// (or of the watched group itself if it is a user or a team).
@@ -110,7 +110,10 @@ type itemResponseWatchedGroupItemInfo struct {
 
 // swagger:model itemResponse
 type itemResponse struct {
-	*getItemCommonFields
+	commonItemFields
+
+	// required: true
+	Permissions getItemItemPermissions `json:"permissions"`
 
 	// required: true
 	// enum: All,Half,One,None
@@ -243,23 +246,49 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
-	hasCanRequestHelpTo := store.Items().HasCanRequestHelpTo(itemID, user.GroupID)
-	watchedGroupHasCanRequestHelpTo := false
-	if watchedGroupIDIsSet {
-		watchedGroupHasCanRequestHelpTo = store.Items().HasCanRequestHelpTo(itemID, watchedGroupID)
-	}
-
 	permissionGrantedStore := store.PermissionsGranted()
-	response := constructItemResponseFromDBData(
-		rawData,
-		permissionGrantedStore,
-		watchedGroupIDIsSet,
-		hasCanRequestHelpTo,
-		watchedGroupHasCanRequestHelpTo,
-	)
+	response := constructItemResponseFromDBData(rawData, permissionGrantedStore, watchedGroupIDIsSet)
+
+	response.Permissions.CanRequestHelp = hasCanRequestHelpTo(store, itemID, participantID)
+	getEnteringTimeIntervals(store, participantID, itemID, &response.Permissions.EnteringTimeIntervals)
+	if response.WatchedGroup != nil && response.WatchedGroup.Permissions != nil {
+		response.WatchedGroup.Permissions.CanRequestHelp = hasCanRequestHelpTo(store, itemID, watchedGroupID)
+		getEnteringTimeIntervals(store, watchedGroupID, itemID, &response.WatchedGroup.Permissions.EnteringTimeIntervals)
+	}
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
+}
+
+// hasCanRequestHelpTo checks whether there is a can_request_help_to permission on an item-group.
+// The checks are made on item's ancestor while can_request_help_propagation=1, and on group's ancestors.
+func hasCanRequestHelpTo(s *database.DataStore, itemID, groupID int64) bool {
+	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
+
+	hasCanRequestHelpTo, err := s.Users().
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", groupID).
+		Joins(`JOIN permissions_granted ON
+			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+			permissions_granted.item_id IN (?)`, itemAncestorsRequestHelpPropagationQuery.SubQuery()).
+		Where("permissions_granted.can_request_help_to IS NOT NULL OR permissions_granted.is_owner = 1").
+		Select("1").
+		Limit(1).
+		HasRows()
+	service.MustNotBeError(err)
+
+	return hasCanRequestHelpTo
+}
+
+func getEnteringTimeIntervals(store *database.DataStore, groupID, itemID int64, enteringTimeIntervals *[]enteringTimeInterval) {
+	service.MustNotBeError(store.ActiveGroupAncestors().
+		Select("permissions_granted.can_enter_from, permissions_granted.can_enter_until").
+		Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Joins("JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id").
+		Where("permissions_granted.item_id = ?", itemID).
+		Where("permissions_granted.can_enter_until > NOW()").
+		Where("permissions_granted.can_enter_from < can_enter_until").
+		Order("permissions_granted.can_enter_from, permissions_granted.can_enter_until").
+		Scan(enteringTimeIntervals).Error())
 }
 
 // rawItem represents the getItem service data returned from the DB.
@@ -451,16 +480,11 @@ func constructItemResponseFromDBData(
 	rawData *rawItem,
 	permissionGrantedStore *database.PermissionGrantedStore,
 	watchedGroupIDIsSet bool,
-	hasCanRequestHelpTo bool,
-	watchedGroupHasCanRequestHelpTo bool,
 ) *itemResponse {
 	result := &itemResponse{
-		getItemCommonFields: &getItemCommonFields{
-			commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
-			Permissions: itemPermissionsWithCanRequestHelpTo{
-				ItemPermissions: *rawData.AsItemPermissions(permissionGrantedStore),
-				CanRequestHelp:  hasCanRequestHelpTo,
-			},
+		commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
+		Permissions: getItemItemPermissions{
+			ItemPermissions: *rawData.AsItemPermissions(permissionGrantedStore),
 		},
 		String: itemStringRoot{
 			itemStringCommon: &itemStringCommon{
@@ -506,9 +530,8 @@ func constructItemResponseFromDBData(
 			result.WatchedGroup.AverageScore = &rawData.WatchedGroupAverageScore
 		}
 		if rawData.CanViewWatchedGroupPermissions {
-			result.WatchedGroup.Permissions = &itemPermissionsWithCanRequestHelpTo{
+			result.WatchedGroup.Permissions = &getItemItemPermissions{
 				ItemPermissions: *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
-				CanRequestHelp:  watchedGroupHasCanRequestHelpTo,
 			}
 		}
 	}
