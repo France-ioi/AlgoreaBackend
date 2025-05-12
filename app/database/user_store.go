@@ -15,7 +15,7 @@ func (s *UserStore) ByID(id int64) *DB {
 	return s.Where(s.tableName+".group_id = ?", id)
 }
 
-const deleteWithTrapsBatchSize = 1000
+const deleteWithTrapsBatchSize = 30
 
 // DeleteTemporaryWithTraps deletes temporary users who don't have sessions or whose sessions expired more than `delay` ago.
 // It also removes linked rows in the tables:

@@ -1,4 +1,4 @@
-Feature: Set additional time in the contest for the group (contestSetAdditionalTime)
+Feature: Set additional time for a time-limited item and a group (itemSetAdditionalTime)
   Background:
     Given the database has the following table "groups":
       | id | name    | type    |
@@ -63,7 +63,7 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
       | 21       | 60      | content_with_descendants | none                     | none                |
       | 21       | 70      | content_with_descendants | content                  | answer              |
       | 36       | 10      | info                     | none                     | none                |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -91,11 +91,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Updates an existing row
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/50/groups/13/additional-times?seconds=3020399"
+    When I send a PUT request to "/items/50/groups/13/additional-times?seconds=3020399"
     Then the response code should be 200
     And the response should be "updated"
     And the table "permissions_generated" should remain unchanged
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -155,11 +155,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Creates a new row
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/13/additional-times?seconds=-3020399"
+    When I send a PUT request to "/items/70/groups/13/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"
     And the table "permissions_generated" should remain unchanged
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -213,10 +213,10 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Doesn't create a new row when seconds=0
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/13/additional-times?seconds=0"
+    When I send a PUT request to "/items/70/groups/13/additional-times?seconds=0"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should remain unchanged
+    And the table "group_item_additional_times" should remain unchanged
     And the table "groups_groups" should remain unchanged
     And the table "groups_ancestors" should remain unchanged
     And the table "attempts" should remain unchanged
@@ -224,10 +224,10 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Doesn't update time columns of groups_groups/attempts for ended attempts
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/50/groups/14/additional-times?seconds=10000"
+    When I send a PUT request to "/items/50/groups/14/additional-times?seconds=10000"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -244,10 +244,10 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Doesn't update attempts.allows_submissions_until if both old and new values are in the past
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/15/additional-times?seconds=-10"
+    When I send a PUT request to "/items/70/groups/15/additional-times?seconds=-10"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -301,10 +301,10 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Activates an expired participation
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/16/additional-times?seconds=3020399"
+    When I send a PUT request to "/items/70/groups/16/additional-times?seconds=3020399"
     Then the response code should be 200
     And the response should be "updated"
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -366,11 +366,11 @@ Feature: Set additional time in the contest for the group (contestSetAdditionalT
 
   Scenario: Creates a new row for a user
     Given I am the user with id "21"
-    When I send a PUT request to "/contests/70/groups/31/additional-times?seconds=-3020399"
+    When I send a PUT request to "/items/70/groups/31/additional-times?seconds=-3020399"
     Then the response code should be 200
     And the response should be "updated"
     And the table "permissions_generated" should remain unchanged
-    And the table "groups_contest_items" should be:
+    And the table "group_item_additional_times" should be:
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |

@@ -183,6 +183,10 @@ func (ctx *TestContext) openDB() *sql.DB {
 		var err error
 		config, _ := app.DBConfig(ctx.application.Config)
 		loggingConfig := app.LoggingConfig(ctx.application.Config)
+		if config.Params == nil {
+			config.Params = make(map[string]string, 1)
+		}
+		config.Params["charset"] = utf8mb4
 		ctx.db, err = sql.Open(
 			golang.IfElse(loggingConfig.GetBool("LogRawSQLQueries"), "instrumented-mysql", "mysql"),
 			config.FormatDSN())

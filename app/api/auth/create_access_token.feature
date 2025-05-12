@@ -38,11 +38,11 @@ Feature: Create an access token
       """
       {
         "id":100000001, "login":"mohammed","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
-        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Mohammed",
-        "last_name":"Amrani","real_name_visible":true,"timezone":"Africa\/Algiers","country_code":"DZ",
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Mohammed 🐱",
+        "last_name":"Amrani 🐱","real_name_visible":true,"timezone":"Africa\/Algiers","country_code":"DZ",
         "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
         "role":"student","school_grade":null,"student_id":"123456789","ministry_of_education":null,
-        "ministry_of_education_fr":false,"birthday":"2000-07-02","presentation":"I'm Mohammed Amrani",
+        "ministry_of_education_fr":false,"birthday":"2000-07-02","presentation":"I'm Mohammed Amrani 🐱",
         "website":"http://mohammed.freepages.com","ip":"127.0.0.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
         "gender":"m","graduation_year":2020,"graduation_grade_expire_at":"2020-07-01 00:00:00",
         "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
@@ -59,10 +59,10 @@ Feature: Create an access token
             "data": {"category": "", "round": null},
             "manager": false,
             "badge_info": {
-              "name": "Example #1",
+              "name": "Example #1 🐱",
               "group_path": [
-                {"url": "https:\/\/badges.example.com\/", "name": "Example badges", "manager": true},
-                {"url": "https:\/\/badges.example.com\/parents", "name": "Example badges with multiple parents", "manager": false}
+                {"url": "https:\/\/badges.example.com\/", "name": "Example badges 🐱", "manager": true},
+                {"url": "https:\/\/badges.example.com\/parents", "name": "Example badges with multiple parents 🐱", "manager": false}
               ]
             },
             "last_update": "2022-07-18T16:07:12+0000"
@@ -85,16 +85,16 @@ Feature: Create an access token
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And the table "users" should be:
-      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name  | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text              | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed 🐱 | Amrani 🐱 | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani 🐱 | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
     And the table "groups" should be:
-      | id                  | name                                 | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
-      | 2                   | AllUsers                             | Base  | null        | false                                             | false   | false       | null                                    |
-      | 4                   | TempUsers                            | Base  | null        | false                                             | false   | false       | null                                    |
-      | 4037200794235010051 | Example badges                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
-      | 5577006791947779410 | mohammed                             | User  | mohammed    | true                                              | false   | false       | null                                    |
-      | 6129484611666145821 | Example badges with multiple parents | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
-      | 8674665223082153551 | Example #1                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
+      | id                  | name                                    | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers                                | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers                               | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4037200794235010051 | Example badges 🐱                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
+      | 5577006791947779410 | mohammed                                | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 6129484611666145821 | Example badges with multiple parents 🐱 | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
+      | 8674665223082153551 | Example #1 🐱                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
       | 2                   | 4                   |

@@ -32,10 +32,10 @@ Feature: Create item
       {
         "type": "Task",
         "language_tag": "sl",
-        "title": "my title",
+        "title": "my title 🐱",
         "image_url":"http://bit.ly/1234",
-        "subtitle": "hard task",
-        "description": "the goal of this task is ...",
+        "subtitle": "hard task 🐱",
+        "description": "the goal of this task is ... 🐱",
         "parent": {"item_id": "21"}
       }
       """
@@ -52,8 +52,8 @@ Feature: Create item
       | id                  | type   | url  | options | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | no_score | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
       | 5577006791947779410 | Task   | null | null    | sl                   | 0                  | 0        | null    | 1                 | 0                         | 1        | 0         | default     | List            | 0             | 0           | All             | None                             | 0                   | 0                        | null     | 0                       | 0               | 0        | 0                            | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
-      | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
-      | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
+      | item_id             | language_tag | title       | image_url          | subtitle     | description                     |
+      | 5577006791947779410 | sl           | my title 🐱 | http://bit.ly/1234 | hard task 🐱 | the goal of this task is ... 🐱 |
     And the table "items_items" should be:
       | parent_item_id | child_item_id       | child_order | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation | category  | score_weight |
       | 21             | 5577006791947779410 | 1           | as_info                  | as_is                         | 1                      | 1                 | 1                | 1                        | Undefined | 1            |

@@ -18,7 +18,7 @@ func init() { //nolint:gochecknoinits
 		Use:   "db-migrate-undo [environment]",
 		Short: "undo the last schema-change migration applied to the database",
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
 			// if arg given, replace the env
@@ -43,23 +43,21 @@ func init() { //nolint:gochecknoinits
 				os.Exit(1)
 			}
 
+			defer func() { _ = db.Close() }()
+
 			// migrate
 			var n int
 			n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Down, 1)
 			switch {
 			case err != nil:
-				fmt.Println("Unable to undo a migration:", err)
-				os.Exit(1)
+				return fmt.Errorf("unable to undo a migration: %v", err)
 			case n == 0:
 				fmt.Println("No migrations to undo!")
 			default:
 				fmt.Println("1 migration undone successfully!")
 			}
 
-			if db.Close() != nil {
-				fmt.Println("Cannot close DB connection:", err)
-				os.Exit(1)
-			}
+			return nil
 		},
 	}
 

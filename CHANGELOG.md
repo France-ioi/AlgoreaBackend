@@ -1,6 +1,45 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.26.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.3...v2.26.4) - 2025-04-30
+- make `resultStartPath` and `itemCreate` less locking
+- fix the result type of itemGetAdditionalTime in swagger docs
+- fix dbdoc-gen on CircleCI
+
+## [v2.26.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.2...v2.26.3) - 2025-03-27
+- try closing the DB connection after AWS Lambda gets SIGTERM
+
+## [v2.26.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.1...v2.26.2) - 2025-03-25
+- use innodb_ft_user_stopword_table instead of innodb_ft_server_stopword_table for fulltext migration
+
+## [v2.26.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.0...v2.26.1) - 2025-03-24
+- fix fulltext search
+
+## [v2.26.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.25.1...v2.26.0) - 2025-03-19
+- upgrade MySQL to 8.0.34
+- get rid of the term "contest" except for the mentioning of "contest participants groups"
+- upgrade akrylysov/algnhsa to v1.1.0
+
+## [v2.25.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.25.0...v2.25.1) - 2025-03-13
+- convert all the db tables into the utf8mb4 charset and use it for MySQL connections
+- set deleteWithTrapsBatchSize to 30 instead of 1000 (should decrease locking time during temp user deletion)
+- ensure transactions in auth.CreateNewTempSession() and auth.RefreshTempUserSession()
+
+## [v2.25.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.8...v2.25.0) - 2025-03-11
+- implement a service for getting additional time of a group on a contest
+- remove special characters from search strings in database.DB.WhereSearchStringMatches()
+- docker improvements
+- do not analyze tables or recompute db caches in db-migrate command + always close the DB connection in commands
+- add a test checking that connection resetting restores the default value of FOREIGN_KEY_CHECKS setting
+- rework app.Server.Start() to return errors instead of exiting the app + change the server's port in tests
+
+## [v2.24.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.7...v2.24.8) - 2025-02-10
+- acquire shared row locks instead of exclusive row locks in DB queries causing request timeouts in production
+- add a comment for logRawSQLQueries in config sample files
+
+## [v2.24.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.6...v2.24.7) - 2025-01-29
+- fix MySQL triggers related to sync propagations
+
 ## [v2.24.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.24.5...v2.24.6) - 2025-01-24
 - prevent mutual blocking of concurrent sync propagations
 

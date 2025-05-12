@@ -121,9 +121,9 @@ func (s *DataStore) GroupPendingRequests() *GroupPendingRequestStore {
 	return &GroupPendingRequestStore{NewDataStoreWithTable(s.DB, "group_pending_requests")}
 }
 
-// GroupContestItems returns a GroupContestItemStore.
-func (s *DataStore) GroupContestItems() *GroupContestItemStore {
-	return &GroupContestItemStore{NewDataStoreWithTable(s.DB, "groups_contest_items")}
+// GroupItemAdditionalTimes returns a GroupItemAdditionalTimeStore.
+func (s *DataStore) GroupItemAdditionalTimes() *GroupItemAdditionalTimeStore {
+	return &GroupItemAdditionalTimeStore{NewDataStoreWithTable(s.DB, "group_item_additional_times")}
 }
 
 // GroupManagers returns a GroupManagerStore.
@@ -313,7 +313,7 @@ func (s *DataStore) SetPropagationsModeToSync() (err error) {
 
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.Exec("SET @synchronous_propagations = 1").Error())
+	mustNotBeError(s.Exec("SET @synchronous_propagations_connection_id = CONNECTION_ID()").Error())
 
 	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx, propagationsAreSyncContextKey, true), s.DB)
 	return nil

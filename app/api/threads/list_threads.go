@@ -130,12 +130,14 @@ type listThreadParameters struct {
 //					When provided, from.participant_id should be provided too.
 //				in: query
 //				type: integer
+//				format: int64
 //			- name: from.participant_id
 //				description: >
 //					Start the page from the thread next to the thread with `threads.participant.id`=`{from.participant_id}`.
 //					When provided, from.item_id should be provided too.
 //				in: query
 //				type: integer
+//				format: int64
 //			- name: limit
 //				description: Display the first N threads
 //				in: query

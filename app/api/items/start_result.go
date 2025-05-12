@@ -60,10 +60,12 @@ type updatedStartResultResponse struct { // nolint:unused
 //			- name: attempt_id
 //				in: query
 //				type: integer
+//				format: int64
 //				required: true
 //			- name: as_team_id
 //				in: query
 //				type: integer
+//				format: int64
 //		responses:
 //			"200":
 //				"$ref": "#/responses/updatedStartResultResponse"
@@ -108,7 +110,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		itemID := ids[len(ids)-1]
 		var found bool
 		found, err = store.Items().ByID(itemID).
-			Where("NOT items.requires_explicit_entry").WithExclusiveWriteLock().HasRows()
+			Where("NOT items.requires_explicit_entry").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError

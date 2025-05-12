@@ -1,27 +1,43 @@
 package database
 
-import "strings"
+import (
+	"strings"
+	"unicode"
+)
 
 // WhereSearchStringMatches returns a composable query where {field} matches the search string {searchString}
 // All the words in the search string are matched with "AND".
 // If fallbackField is not empty, it is used as a fallback if the field is NULL.
+//
+// We use the MySQL fulltext search with innodb_ft_min_token_size=1 and an empty stopword list.
+// This method would have to filter out short words and stopwords from the search string if we used different settings.
 func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString string) *DB {
 	query := conn.db
 
-	words := strings.Fields(strings.Trim(searchString, " "))
+	// Remove all the special characters from the search string.
+	searchString = strings.Map(func(r rune) rune {
+		// Keep only letters (for all the world languages), digits, and underscores.
+		if r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) {
+			return r
+		}
+
+		return ' '
+	}, searchString)
+
+	words := strings.Fields(strings.TrimSpace(searchString))
+	if len(words) == 0 {
+		// If the search string has no words, we return an empty result.
+		return conn.Where("FALSE")
+	}
 
 	for i := 0; i < len(words); i++ {
 		word := words[i]
 
 		// The "+" sign means that the word must be present in the result.
-		if word[0] != '+' {
-			word = "+" + word
-		}
+		word = "+" + word
 
 		// The "*" sign means that the word can be a prefix of a word in the result.
-		if word[len(word)-1] != '*' {
-			word += "*"
-		}
+		word += "*"
 
 		words[i] = word
 	}
@@ -32,7 +48,7 @@ func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString stri
 	if fallbackField == "" {
 		query = query.Where(condition, searchPattern)
 	} else {
-		condition += "OR (" + field + " IS NULL AND MATCH(" + fallbackField + ") AGAINST(? IN BOOLEAN MODE))"
+		condition += " OR (" + field + " IS NULL AND MATCH(" + fallbackField + ") AGAINST(? IN BOOLEAN MODE))"
 		query = query.Where(condition, searchPattern, searchPattern)
 	}
 

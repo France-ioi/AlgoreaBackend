@@ -134,6 +134,7 @@ type groupUpdateInput struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: group information
 //			in: body
 //			required: true

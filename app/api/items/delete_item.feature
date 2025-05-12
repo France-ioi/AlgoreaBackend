@@ -47,7 +47,7 @@ Feature: Delete an item
       | 1  | 10      | 21      |
       | 2  | 10      | 22      |
       | 3  | 11      | null    |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id |
       | 10       | 21      |
       | 11       | 22      |
@@ -103,7 +103,7 @@ Feature: Delete an item
     And the table "permissions_granted" should remain unchanged, except that the rows with item_id "22" should be deleted
     And the table "permissions_generated" should remain unchanged, except that the rows with item_id "22" should be deleted
     And the table "item_dependencies" should remain unchanged, except that the rows with item_id,dependent_item_id "22" should be deleted
-    And the table "groups_contest_items" should remain unchanged, except that the rows with item_id "22" should be deleted
+    And the table "group_item_additional_times" should remain unchanged, except that the rows with item_id "22" should be deleted
     And the table "attempts" should remain unchanged, regardless of the rows with id "1"
     And the table "attempts" at id "1" should be:
       | id | participant_id | root_item_id |

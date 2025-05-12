@@ -35,6 +35,7 @@ type userBatch struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [group_prefix,custom_prefix]

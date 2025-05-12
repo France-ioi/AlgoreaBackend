@@ -80,6 +80,7 @@ type groupGroupProgressResponseTableCell struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -87,10 +88,12 @@ type groupGroupProgressResponseTableCell struct {
 //			required: true
 //			items:
 //				type: integer
+//				format: int64
 //		- name: from.id
 //			description: Start the page from the group next to the group with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display results for the first N groups (sorted by `name`)
 //			in: query

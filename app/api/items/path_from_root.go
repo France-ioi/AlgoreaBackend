@@ -45,8 +45,9 @@ type rawItemPath struct {
 //			* Or if it has `requires_explicit_entry=1`,
 //				then the following condition must be fulfilled, except if it is the last item of the path:
 //				the item must have at least one result with `started`=1 AND its attempt must have
-//					(`attempt.ended_at` IS NULL) AND (`NOW()` < `attempt.allows_submissions_until`)).
-//				In other words, we only return a path to a contest's item if the contest has been started and is still open.
+//					(`attempt.ended_at` IS NULL) AND (`NOW()` < `attempt.allows_submissions_until`).
+//				In other words, we only return a path to an item requiring explicit entry if the participant
+//				has started solving it, and it is still open.
 //
 //		If `as_team_id` is given, the attempts/results of the path are linked to the `as_team_id` group instead of
 //		the current user group.
@@ -66,6 +67,7 @@ type rawItemPath struct {
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with the found item path

@@ -10,7 +10,7 @@ Feature: Create a group (groupCreate)
     When I send a POST request to "/groups" with the following body:
     """
     {
-      "name": "some name",
+      "name": "some name 🐱",
       "type": "<group_type>"
     }
     """
@@ -25,8 +25,8 @@ Feature: Create a group (groupCreate)
     """
     And the table "groups" should remain unchanged, regardless of the row with id "5577006791947779410"
     And the table "groups" at id "5577006791947779410" should be:
-      | id                  | name      | type         | TIMESTAMPDIFF(SECOND, NOW(), created_at) < 3 |
-      | 5577006791947779410 | some name | <group_type> | true                                         |
+      | id                  | name         | type         | TIMESTAMPDIFF(SECOND, NOW(), created_at) < 3 |
+      | 5577006791947779410 | some name 🐱 | <group_type> | true                                         |
     And the table "group_managers" should be:
       | manager_id | group_id            | can_manage            | can_grant_group_access | can_watch_members |
       | 21         | 5577006791947779410 | memberships_and_group | 1                      | 1                 |

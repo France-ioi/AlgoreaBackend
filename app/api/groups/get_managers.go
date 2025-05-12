@@ -72,6 +72,7 @@ type groupManagersViewResponseRow struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: include_managers_of_ancestor_groups
 //			description: If equal to 1, the results include managers of all ancestor groups
@@ -90,6 +91,7 @@ type groupManagersViewResponseRow struct {
 //			description: Start the page from the manager next to the manager with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N managers
 //			in: query

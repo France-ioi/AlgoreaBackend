@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
@@ -25,7 +23,7 @@ func init() { //nolint:gochecknoinits
 		Short: "apply propagation to the database",
 		Long:  `runs items, permissions and results propagation`,
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
 			// Set the environment.
@@ -35,8 +33,13 @@ func init() { //nolint:gochecknoinits
 
 			var application *app.Application
 			application, err = app.New()
+			defer func() {
+				if application != nil && application.Database != nil {
+					_ = application.Database.Close()
+				}
+			}()
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			// Propagation.
@@ -51,11 +54,12 @@ func init() { //nolint:gochecknoinits
 					})
 				})
 			if err != nil {
-				fmt.Println("Error while doing propagation: ", err)
-				os.Exit(1)
+				return fmt.Errorf("error while doing propagation: %v", err)
 			}
 
 			fmt.Println("Propagation done.")
+
+			return nil
 		},
 	}
 

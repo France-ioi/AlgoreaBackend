@@ -74,6 +74,10 @@ func (app *Application) Reset(config *viper.Viper) error {
 	logging.SharedLogger.Configure(loggingConfig)
 
 	// Init DB
+	if dbConfig.Params == nil {
+		dbConfig.Params = make(map[string]string, 1)
+	}
+	dbConfig.Params["charset"] = "utf8mb4"
 	db, err := database.Open(dbConfig.FormatDSN())
 	if err != nil {
 		logging.SharedLogger.WithContext(context.Background()).WithField("module", "database").Error(err)

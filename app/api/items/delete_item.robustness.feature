@@ -48,7 +48,7 @@ Feature: Delete an item - robustness
       | 1  | 10      | 21      |
       | 2  | 10      | 22      |
       | 3  | 11      | null    |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id |
       | 10       | 21      |
       | 11       | 22      |
@@ -96,7 +96,7 @@ Feature: Delete an item - robustness
     And the table "permissions_granted" should remain unchanged
     And the table "permissions_generated" should remain unchanged
     And the table "item_dependencies" should remain unchanged
-    And the table "groups_contest_items" should remain unchanged
+    And the table "group_item_additional_times" should remain unchanged
     And the table "attempts" should remain unchanged
     And the table "results" should remain unchanged
     And the table "answers" should remain unchanged
@@ -115,7 +115,7 @@ Feature: Delete an item - robustness
     And the table "permissions_granted" should remain unchanged
     And the table "permissions_generated" should remain unchanged
     And the table "item_dependencies" should remain unchanged
-    And the table "groups_contest_items" should remain unchanged
+    And the table "group_item_additional_times" should remain unchanged
     And the table "attempts" should remain unchanged
     And the table "results" should remain unchanged
     And the table "answers" should remain unchanged
@@ -141,7 +141,7 @@ Feature: Delete an item - robustness
     And the table "permissions_granted" should remain unchanged
     And the table "permissions_generated" should remain unchanged
     And the table "item_dependencies" should remain unchanged
-    And the table "groups_contest_items" should remain unchanged
+    And the table "group_item_additional_times" should remain unchanged
     And the table "attempts" should remain unchanged
     And the table "results" should remain unchanged
     And the table "answers" should remain unchanged

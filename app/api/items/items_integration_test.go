@@ -15,7 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func Test_createContestParticipantsGroup_Duplicate(t *testing.T) {
+func Test_createParticipantsGroupForItemRequiringExplicitEntry_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(`
@@ -31,7 +31,7 @@ func Test_createContestParticipantsGroup_Duplicate(t *testing.T) {
 	defer monkey.UnpatchAll()
 
 	dataStore := database.NewDataStore(db)
-	groupID := createContestParticipantsGroup(dataStore, 123)
+	groupID := createParticipantsGroupForItemRequiringExplicitEntry(dataStore, 123)
 	assert.Equal(t, int64(2), groupID)
 
 	type groupData struct {
@@ -46,5 +46,5 @@ func Test_createContestParticipantsGroup_Duplicate(t *testing.T) {
 	}, group)
 }
 
-//go:linkname createContestParticipantsGroup github.com/France-ioi/AlgoreaBackend/v2/app/api/items.createContestParticipantsGroup
-func createContestParticipantsGroup(*database.DataStore, int64) int64
+//go:linkname createParticipantsGroupForItemRequiringExplicitEntry github.com/France-ioi/AlgoreaBackend/v2/app/api/items.createParticipantsGroupForItemRequiringExplicitEntry
+func createParticipantsGroupForItemRequiringExplicitEntry(*database.DataStore, int64) int64

@@ -15,7 +15,7 @@ import (
 // swagger:operation POST /items/{ids}/enter items itemEnter
 //
 //	---
-//	summary: Enter the item
+//	summary: Enter an item
 //	description: >
 //							 Allows to enter an item requiring explicit entry as a user or as a team (if `as_team_id` is given).
 //
@@ -44,6 +44,7 @@ import (
 //			description: "`id` of an attempt which will be used as a parent attempt for the participation"
 //			in: query
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query
@@ -108,12 +109,12 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		service.MustNotBeError(store.ActiveGroupAncestors().
 			Where("groups_ancestors_active.child_group_id = ?", entryState.groupID).
 			Joins(`
-					LEFT JOIN groups_contest_items
-						ON groups_contest_items.group_id = groups_ancestors_active.ancestor_group_id AND
-							groups_contest_items.item_id = ?`, entryState.itemID).
+					LEFT JOIN group_item_additional_times
+						ON group_item_additional_times.group_id = groups_ancestors_active.ancestor_group_id AND
+							group_item_additional_times.item_id = ?`, entryState.itemID).
 			Group("groups_ancestors_active.child_group_id").
 			WithExclusiveWriteLock().
-			PluckFirst("IFNULL(SUM(TIME_TO_SEC(groups_contest_items.additional_time)), 0)", &totalAdditionalTime).
+			PluckFirst("IFNULL(SUM(TIME_TO_SEC(group_item_additional_times.additional_time)), 0)", &totalAdditionalTime).
 			Error())
 
 		user := srv.GetUser(r)

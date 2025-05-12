@@ -31,8 +31,8 @@ import (
 //
 //
 //		If the `{parent_group_id}` corresponds to a team, the service skips a user
-//		being a member of another team having attempts for the same contest as `{parent_group_id}`
-//		(expired attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
+//		being a member of another team having attempts for the same item requiring explicit entry as `{parent_group_id}`
+//		(expired attempts are ignored for items allowing multiple attempts, result = "in_another_team").
 //
 //
 //		If the `{parent_group_id}` corresponds to a team, the service skips a user with result = "in_another_team"
@@ -65,12 +65,14 @@ import (
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: group_ids
 //			in: query
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //			required: true
 //	responses:
 //		"200":

@@ -1,4 +1,4 @@
-package contests
+package items
 
 import (
 	"net/http"
@@ -16,7 +16,7 @@ type parentTitle struct {
 }
 
 // swagger:model
-type contestAdminListRow struct {
+type itemTimeLimitedAdminList struct {
 	// required: true
 	ItemID int64 `json:"id,string"`
 	// required: true
@@ -32,16 +32,16 @@ type contestAdminListRow struct {
 	Parents []parentTitle `json:"parents"`
 }
 
-// swagger:operation GET /contests/administered contests contestAdminList
+// swagger:operation GET /items/time-limited/administered items itemTimeLimitedAdminList
 //
 //	---
-//	summary: List administered contests
-//	description: Get the contests that the user has administration rights on.
+//	summary: List administered time-limited items
+//	description: Get time-limited items that the user has administration rights on.
 //
 //
-//							 For all explicit-entry items that are timed contests and for that the user is a contest admin
+//							 For all explicit-entry items that are time-limited items (with duration <> NULL) the user can administer
 //							 (has `can_view` >= 'content', `can_grant_view` >= 'enter', and `can_watch` >= 'result'),
-//							 returns item info (`id`, `title`, `team_only_contest`, parents' `title`-s).
+//							 returns the item info including items' parents.
 //							 Only parents visible to the user are listed.
 //
 //
@@ -49,9 +49,10 @@ type contestAdminListRow struct {
 //							 otherwise the item's default language is used.
 //	parameters:
 //		- name: from.id
-//			description: Start the page from the contest next to the contest with `id`=`{from.id}`
+//			description: Start the page from the item next to the item with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [title,id]
@@ -60,18 +61,18 @@ type contestAdminListRow struct {
 //				type: string
 //				enum: [title,-title,id,-id]
 //		- name: limit
-//			description: Display the first N contests
+//			description: Display the first N items
 //			in: query
 //			type: integer
 //			maximum: 1000
 //			default: 500
 //	responses:
 //		"200":
-//			description: OK. Success response with contests info
+//			description: OK. Success response with items info
 //			schema:
 //				type: array
 //				items:
-//					"$ref": "#/definitions/contestAdminListRow"
+//					"$ref": "#/definitions/itemTimeLimitedAdminList"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"408":
@@ -82,7 +83,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	var rows []contestAdminListRow
+	var rows []itemTimeLimitedAdminList
 	query := store.Items().Select(`
 			items.id AS item_id,
 			items.allows_multiple_attempts,

@@ -53,7 +53,7 @@ Feature: Get entry state (itemGetEntryState) - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: The item is visible, but it's not a contest
+  Scenario: The item is visible, but it doesn't require explicit entry
     Given the database has the following table "items":
       | id | default_language_tag |
       | 50 | fr                   |

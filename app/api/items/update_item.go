@@ -72,7 +72,7 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //		If the `children` array is given, the service removes relations between the item and its former children,
 //		inserts relations between the item and its new children into `items_items`, and propagates `permissions_generated`.
 //		(The only allowed parent-child relations are skills-*, chapter-task, chapter-chapter.
-//		Otherwise the "bad request" error is returned.)
+//		Otherwise, the "bad request" error is returned.)
 //
 //
 //		If `requires_explicit_entry` is being set to true and `participants_group_id` is NULL,
@@ -213,7 +213,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) service.A
 
 func updateItemInDB(itemData map[string]interface{}, participantsGroupID *int64, store *database.DataStore, itemID int64) service.APIError {
 	if itemData["requires_explicit_entry"] == true && participantsGroupID == nil {
-		createdParticipantsGroupID := createContestParticipantsGroup(store, itemID)
+		createdParticipantsGroupID := createParticipantsGroupForItemRequiringExplicitEntry(store, itemID)
 		itemData["participants_group_id"] = createdParticipantsGroupID
 	}
 

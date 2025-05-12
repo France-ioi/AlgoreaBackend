@@ -47,7 +47,7 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 			defer func() { _ = db.Close() }()
 
 			store := database.NewDataStore(db)
-			assert.NoError(t, store.Users().DeleteTemporaryWithTraps(test.delay))
+			require.NoError(t, store.Users().DeleteTemporaryWithTraps(test.delay))
 
 			assertUserRelatedTablesAfterDeletingWithTraps(t, db, test.expectDeletedUsers, test.expectDeletedSessions)
 		})

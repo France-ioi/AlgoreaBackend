@@ -1,27 +1,41 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/akrylysov/algnhsa"
 	_ "github.com/aws/aws-lambda-go/events" // force algnhsa dependency
-	_ "github.com/aws/aws-lambda-go/lambda" // force algnhsa dependency
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 var rootCmd = &cobra.Command{
 	Use: "AlgoreaBackend",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		application, err := app.New()
+		closeDB := func() {
+			if application != nil && application.Database != nil {
+				_ = application.Database.Close()
+			}
+		}
+		defer closeDB()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
-		algnhsa.ListenAndServe(application.HTTPHandler, nil)
+		lambdaHandler := algnhsa.New(application.HTTPHandler, nil)
+		lambda.StartWithOptions(lambdaHandler, lambda.WithEnableSIGTERM(func() {
+			log.SharedLogger.WithContext(context.Background()).Info("Got SIGTERM, closing the DB connection")
+			closeDB()
+			log.SharedLogger.WithContext(context.Background()).Info("Closed the DB connection after receiving SIGTERM")
+		}))
+
+		return nil
 	},
 }
 

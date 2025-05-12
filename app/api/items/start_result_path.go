@@ -45,6 +45,7 @@ import (
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"201":
 //			description: "Created. Success response with the attempt id for the last item in the path"
@@ -162,16 +163,16 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
-		Select("root_activity_id, root_skill_id")
+		WithSharedWriteLock()
 	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByGroup(participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-		Select("root_activity_id, root_skill_id")
+		WithSharedWriteLock()
 	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
 		groupsManagedByParticipant.Select("groups.root_activity_id"))
 	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
 		groupsManagedByParticipant.Select("groups.root_skill_id"))
 
-	query := store.Table("items as items0").WithExclusiveWriteLock()
+	query := store.Table("items as items0").WithSharedWriteLock()
 	for i := 0; i < len(ids); i++ {
 		query = query.Where(fmt.Sprintf("items%d.id = ?", i), ids[i])
 	}

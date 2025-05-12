@@ -33,7 +33,7 @@ Feature: Update the 'current' answer
     When I send a PUT request to "/items/50/attempts/1/answers/current" with the following body:
       """
       {
-        "answer": "print 1",
+        "answer": "print 1 # 🐱",
         "state": "some state"
       }
       """
@@ -46,9 +46,9 @@ Feature: Update the 'current' answer
       }
       """
     And the table "answers" should be:
-      | author_id | participant_id | attempt_id | item_id | type       | answer  | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
-      | 101       | 101            | 1          | 50      | Submission | null    | null       | 0                                                 |
-      | 101       | 101            | 1          | 50      | Current    | print 1 | some state | 1                                                 |
+      | author_id | participant_id | attempt_id | item_id | type       | answer       | state      | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 101       | 101            | 1          | 50      | Submission | null         | null       | 0                                                 |
+      | 101       | 101            | 1          | 50      | Current    | print 1 # 🐱 | some state | 1                                                 |
 
   Scenario: User is able to create the 'current' answer for a team attempt
     Given I am the user with id "101"

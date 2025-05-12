@@ -67,9 +67,9 @@ Feature: Update a group (groupEdit)
     """
     {
       "is_public": false,
-      "name": "Team B",
+      "name": "Team B 🐱",
       "grade": 10,
-      "description": "Team B is here",
+      "description": "Team B is here 🐱",
       "is_open": false,
       "code_lifetime": 2147483647,
       "code_expires_at": "2019-12-31T23:59:59Z",
@@ -80,9 +80,9 @@ Feature: Update a group (groupEdit)
       "require_members_to_join_parent": true,
       "frozen_membership": false,
 
-      "organizer": "Association France-ioi",
-      "address_line1": "Chez Jacques-Henri Jourdan,",
-      "address_line2": "42, rue de Cronstadt",
+      "organizer": "Association France-ioi 🐱",
+      "address_line1": "Chez Jacques-Henri Jourdan, 🐱",
+      "address_line2": "42, rue de Cronstadt 🐱",
       "address_postcode": "75015",
       "address_city": "Paris",
       "address_country": "France",
@@ -97,8 +97,8 @@ Feature: Update a group (groupEdit)
     Then the response should be "updated"
     And the table "groups" should remain unchanged, regardless of the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description    | created_at          | type  | root_activity_id   | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_members_to_join_parent | organizer              | address_line1               | address_line2        | address_postcode | address_city | address_country | expected_start      | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
-      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | <root_activity_id> | 4567          | false   | false     | ybabbxnlyo | 2147483647    | 2019-12-31 23:59:59 | false                      | true                           | Association France-ioi | Chez Jacques-Henri Jourdan, | 42, rue de Cronstadt | 75015            | Paris        | France          | 2019-05-03 11:00:00 | view                                  | 2018-05-30 11:00:00                    | true                   | 8                | true                     |
+      | id | name      | grade | description       | created_at          | type  | root_activity_id   | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_members_to_join_parent | organizer                 | address_line1                  | address_line2           | address_postcode | address_city | address_country | expected_start      | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
+      | 13 | Team B 🐱 | 10    | Team B is here 🐱 | 2019-03-06 09:26:40 | Class | <root_activity_id> | 4567          | false   | false     | ybabbxnlyo | 2147483647    | 2019-12-31 23:59:59 | false                      | true                           | Association France-ioi 🐱 | Chez Jacques-Henri Jourdan, 🐱 | 42, rue de Cronstadt 🐱 | 75015            | Paris        | France          | 2019-05-03 11:00:00 | view                                  | 2018-05-30 11:00:00                    | true                   | 8                | true                     |
     And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be:
       | group_id | member_id | type          |

@@ -1,4 +1,4 @@
-Feature: Get additional times for a group of users/teams on a contest (contestListMembersAdditionalTime)
+Feature: Get additional times for a group of users/teams on a time-limited item (itemListMembersAdditionalTime)
   Background:
     Given the database has the following table "groups":
       | id | name        | type    |
@@ -78,7 +78,7 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 31       | 70      | content_with_descendants | none                     | none                |
       | 41       | 50      | info                     | none                     | none                |
       | 41       | 70      | content                  | none                     | none                |
-    And the database has the following table "groups_contest_items":
+    And the database has the following table "group_item_additional_times":
       | group_id | item_id | additional_time |
       | 10       | 50      | 01:00:00        |
       | 11       | 50      | 00:01:00        |
@@ -101,9 +101,9 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
       | 51             | 1  | 50           |
       | 61             | 1  | 50           |
 
-  Scenario: Non-team contest
+  Scenario: Non-team item
     Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/11/members/additional-times"
+    When I send a GET request to "/items/50/groups/11/members/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -132,9 +132,9 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     ]
     """
 
-  Scenario: Team-only contest
+  Scenario: Team-only item
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/11/members/additional-times"
+    When I send a GET request to "/items/60/groups/11/members/additional-times"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -156,9 +156,9 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     ]
     """
 
-  Scenario: Team-only contest (only the first row)
+  Scenario: Team-only item (only the first row)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/11/members/additional-times?limit=1"
+    When I send a GET request to "/items/60/groups/11/members/additional-times?limit=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -173,9 +173,9 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     ]
     """
 
-  Scenario: Non-team contest (only the first row, inverse order)
+  Scenario: Non-team item (only the first row, inverse order)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/50/groups/11/members/additional-times?limit=1&sort=-name,id"
+    When I send a GET request to "/items/50/groups/11/members/additional-times?limit=1&sort=-name,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -190,9 +190,9 @@ Feature: Get additional times for a group of users/teams on a contest (contestLi
     ]
     """
 
-  Scenario: Team-only contest (start from the second row)
+  Scenario: Team-only item (start from the second row)
     Given I am the user with id "21"
-    When I send a GET request to "/contests/60/groups/11/members/additional-times?from.id=13"
+    When I send a GET request to "/items/60/groups/11/members/additional-times?from.id=13"
     Then the response code should be 200
     And the response body should be, in JSON:
     """

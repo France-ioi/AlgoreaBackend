@@ -15,11 +15,11 @@ Feature: Update the local user info cache
       """
       {
         "id":100000001, "login":"jane","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
-        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Jane",
-        "last_name":"Doe","real_name_visible":false,"timezone":"Europe\/London","country_code":"GB",
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Jane 🐱",
+        "last_name":"Doe 🐱","real_name_visible":false,"timezone":"Europe\/London","country_code":"GB",
         "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
         "role":"student","school_grade":null,"student_id":"456789012","ministry_of_education":null,
-        "ministry_of_education_fr":false,"birthday":"2001-08-03","presentation":"I'm Jane Doe",
+        "ministry_of_education_fr":false,"birthday":"2001-08-03","presentation":"I'm Jane Doe 🐱",
         "website":"http://jane.freepages.com","ip":"192.168.11.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
         "gender":"f","graduation_year":2021,"graduation_grade_expire_at":"2020-07-01 00:00:00",
         "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
@@ -78,9 +78,9 @@ Feature: Update the local user info cache
       | group_id | latest_login_at     | latest_activity_at  | latest_profile_sync_at | temp_user | registered_at       | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text   | web_site   | sex   | email_verified   | last_ip     | time_zone   | notify_news   | photo_autoload   | public_first_name   | public_last_name    |
       | 11       | 2019-06-16 21:01:25 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 0         | 2019-05-10 10:42:11 | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | en               | <free_text> | <web_site> | <sex> | <email_verified> | 192.168.0.1 | <time_zone> | <notify_news> | <photo_autoload> | <real_name_visible> | <real_name_visible> |
   Examples:
-    | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | free_text    | web_site                  | sex    | email_verified | time_zone     | notify_news | photo_autoload | real_name_visible |
-    | profile_with_all_fields_set | janedoe@gmail.com | Jane       | Doe       | 456789012  | gb           | 2001-08-03 | 2021            | 0     | I'm Jane Doe | http://jane.freepages.com | Female | true           | Europe/London | true        | true           | true              |
-    | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | null         | null                      | null   | false          | null          | false       | false          | false             |
+    | profile_response_name       | email             | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | free_text       | web_site                  | sex    | email_verified | time_zone     | notify_news | photo_autoload | real_name_visible |
+    | profile_with_all_fields_set | janedoe@gmail.com | Jane 🐱    | Doe 🐱    | 456789012  | gb           | 2001-08-03 | 2021            | 0     | I'm Jane Doe 🐱 | http://jane.freepages.com | Female | true           | Europe/London | true        | true           | true              |
+    | profile_with_null_fields    | null              | null       | null      | null       |              | null       | 0               | null  | null            | null                      | null   | false          | null          | false       | false          | false             |
 
   Scenario: Update an existing user with badges
     Given the server time now is "2019-07-16T22:02:29Z"
@@ -99,11 +99,11 @@ Feature: Update the local user info cache
       """
       {
         "id":100000001, "login":"jane","login_updated_at":"2019-07-16 01:56:25","login_fixed":0,
-        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Jane",
-        "last_name":"Doe","real_name_visible":false,"timezone":"Europe\/London","country_code":"GB",
+        "login_revalidate_required":0,"login_change_required":0,"language":"en","first_name":"Jane 🐱",
+        "last_name":"Doe 🐱","real_name_visible":false,"timezone":"Europe\/London","country_code":"GB",
         "address":null,"city":null,"zipcode":null,"primary_phone":null,"secondary_phone":null,
         "role":"student","school_grade":null,"student_id":"456789012","ministry_of_education":null,
-        "ministry_of_education_fr":false,"birthday":"2001-08-03","presentation":"I'm Jane Doe",
+        "ministry_of_education_fr":false,"birthday":"2001-08-03","presentation":"I'm Jane Doe 🐱",
         "website":"http://jane.freepages.com","ip":"192.168.11.1","picture":"http:\/\/127.0.0.1:8000\/images\/user.png",
         "gender":"f","graduation_year":2021,"graduation_grade_expire_at":"2020-07-01 00:00:00",
         "graduation_grade":0,"created_at":"2019-07-16 01:56:25","last_login":"2019-07-22 14:47:18",
@@ -120,10 +120,10 @@ Feature: Update the local user info cache
             "data": {"category": "", "round": null},
             "manager": false,
             "badge_info": {
-              "name": "Example #1",
+              "name": "Example #1 🐱",
               "group_path": [
-                {"url": "https:\/\/badges.example.com\/", "name": "Example badges", "manager": true},
-                {"url": "https:\/\/badges.example.com\/parents", "name": "Example badges with multiple parents", "manager": false}
+                {"url": "https:\/\/badges.example.com\/", "name": "Example badges 🐱", "manager": true},
+                {"url": "https:\/\/badges.example.com\/parents", "name": "Example badges with multiple parents 🐱", "manager": false}
               ]
             },
             "last_update": "2022-07-18T16:07:12+0000"
@@ -142,12 +142,12 @@ Feature: Update the local user info cache
       }
       """
     And the table "groups" should be:
-      | id                  | name                                 | type  | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
-      | 11                  | mohammed                             | User  | false                                             | false   | false       | null                                    |
-      | 13                  | john                                 | User  | false                                             | false   | false       | null                                    |
-      | 5577006791947779410 | Example #1                           | Other | true                                              | false   | false       | https://badges.example.com/examples/one |
-      | 6129484611666145821 | Example badges                       | Other | true                                              | false   | false       | https://badges.example.com/             |
-      | 8674665223082153551 | Example badges with multiple parents | Other | true                                              | false   | false       | https://badges.example.com/parents      |
+      | id                  | name                                   | type  | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 11                  | mohammed                               | User  | false                                             | false   | false       | null                                    |
+      | 13                  | john                                   | User  | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | Example #1 🐱                          | Other | true                                              | false   | false       | https://badges.example.com/examples/one |
+      | 6129484611666145821 | Example badges 🐱                      | Other | true                                              | false   | false       | https://badges.example.com/             |
+      | 8674665223082153551 | Example badges with multiple parents 🐱| Other | true                                              | false   | false       | https://badges.example.com/parents      |
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
       | 5577006791947779410 | 11                  |
