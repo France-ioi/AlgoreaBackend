@@ -7,6 +7,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation DELETE /groups/{group_id}/managers/{manager_id} groups groupManagerDelete
@@ -66,11 +67,14 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 		//    or have can_manage:memberships_and_group permission on the groupID
 		// 2) there should be a row in group_managers for the given groupID-managerID pair
 		if managerID == user.GroupID {
-			found, err = store.GroupManagers().
+			found, err = store.GroupManagers().WithExclusiveWriteLock().
 				Where("group_id = ?", groupID).
 				Where("manager_id = ?", managerID).HasRows()
 		} else {
-			found, err = store.Groups().ManagedBy(user).WithExclusiveWriteLock().
+			found, err = store.Groups().ManagedBy(user).
+				WithCustomWriteLocks(
+					golang.NewSet("groups", "groups_ancestors_active", "group_managers", "user_ancestors"),
+					golang.NewSet("this_manager")).
 				Where("groups.id = ?", groupID).
 				Joins(`
 				JOIN group_managers AS this_manager
