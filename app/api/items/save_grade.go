@@ -296,8 +296,15 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 			return fmt.Errorf("invalid score_token: %w", err)
 		}
 
-		localItemIDUnsafe, err := strconv.ParseInt(localItemIDUnsafeRaw.(string), 10, 64)
-		service.MustNotBeError(err)
+		localItemIDUnsafeString, ok := localItemIDUnsafeRaw.(string)
+		if !ok {
+			return fmt.Errorf("invalid score_token: invalid idItemLocal: should be a string")
+		}
+
+		localItemIDUnsafe, err := strconv.ParseInt(localItemIDUnsafeString, 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid score_token: invalid idItemLocal: %v", err)
+		}
 
 		hasPlatformKey, err = token.UnmarshalDependingOnItemPlatform(
 			requestData.store,

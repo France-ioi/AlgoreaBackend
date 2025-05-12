@@ -57,6 +57,51 @@ Feature: Save grading result - robustness
     And the table "answers" should stay unchanged
     And the table "attempts" should stay unchanged
 
+  Scenario: Invalid scoreToken: idItemLocal is missing
+    Given "scoreToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idAttempt": "101/0",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
+        "score": "100",
+        "idUserAnswer": "124"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid score_token: invalid idItemLocal: should be a string"
+    And the table "answers" should stay unchanged
+    And the table "attempts" should stay unchanged
+
+  Scenario: Invalid scoreToken: idItemLocal is not a number
+    Given "scoreToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idAttempt": "101/0",
+        "idItemLocal": "abcd",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183937",
+        "score": "100",
+        "idUserAnswer": "124"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 400
+    And the response error message should contain "Invalid score_token: invalid idItemLocal: strconv.ParseInt: parsing "abcd": invalid syntax"
+    And the table "answers" should stay unchanged
+    And the table "attempts" should stay unchanged
+
   Scenario: Expired score_token
     Given the server time now is "2020-01-01T00:00:00Z"
     And "scoreToken" is a token signed by the task platform with the following payload:
