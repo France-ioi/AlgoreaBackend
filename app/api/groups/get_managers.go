@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
@@ -184,9 +185,18 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 	var result []groupManagersViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
+	prepareGetManagersResult(result, store.GroupManagers(), includeManagersOfAncestorGroups)
+
+	render.Respond(w, r, result)
+	return service.NoError
+}
+
+func prepareGetManagersResult(result []groupManagersViewResponseRow, groupManagerStore *database.GroupManagerStore,
+	includeManagersOfAncestorGroups bool,
+) {
 	for index := range result {
 		if result[index].CanManageValue != nil {
-			result[index].CanManage = golang.Ptr(store.GroupManagers().CanManageNameByIndex(*result[index].CanManageValue))
+			result[index].CanManage = golang.Ptr(groupManagerStore.CanManageNameByIndex(*result[index].CanManageValue))
 		}
 		if result[index].Type != groupTypeUser {
 			result[index].GroupManagersViewResponseRowUser = nil
@@ -194,12 +204,8 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) service.
 		if !includeManagersOfAncestorGroups {
 			result[index].GroupManagersViewResponseRowThroughAncestorGroups = nil
 		} else {
-			result[index].CanManageThroughAncestorGroups = store.
-				GroupManagers().
+			result[index].CanManageThroughAncestorGroups = groupManagerStore.
 				CanManageNameByIndex(result[index].CanManageThroughAncestorGroupsValue)
 		}
 	}
-
-	render.Respond(w, r, result)
-	return service.NoError
 }
