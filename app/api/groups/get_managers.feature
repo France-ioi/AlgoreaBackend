@@ -171,7 +171,7 @@ Feature: Get managers of group_id
       },
       {
         "id": "81", "name": "larry", "login": "larry", "first_name": null, "last_name": null,
-        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false,
+        "can_manage": null, "can_grant_group_access": false, "can_watch_members": false,
         "can_manage_through_ancestor_groups": "memberships_and_group", "can_grant_group_access_through_ancestor_groups": true,
         "can_watch_members_through_ancestor_groups": true
       },
@@ -217,7 +217,7 @@ Feature: Get managers of group_id
       },
       {
         "id": "81", "name": "larry", "login": "larry", "first_name": null, "last_name": null,
-        "can_manage": "none", "can_grant_group_access": false, "can_watch_members": false,
+        "can_manage": null, "can_grant_group_access": false, "can_watch_members": false,
         "can_manage_through_ancestor_groups": "memberships_and_group", "can_grant_group_access_through_ancestor_groups": true,
         "can_watch_members_through_ancestor_groups": true
       }
