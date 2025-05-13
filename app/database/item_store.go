@@ -335,15 +335,15 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 // GetAncestorsRequestHelpPropagatedQuery gets all ancestors of an itemID while request_help_propagation = 1.
 func (s *ItemStore) GetAncestorsRequestHelpPropagatedQuery(itemID int64) *DB {
 	return s.Raw(`
-		WITH RECURSIVE items_ancestors_request_help_propagation(item_id) AS
+		WITH RECURSIVE items_ancestors_request_help_propagation(id) AS
 		(
 			SELECT ?
-			UNION ALL
-			SELECT items.id FROM items
-			JOIN items_items ON items_items.parent_item_id = items.id AND	items_items.request_help_propagation = 1
-			JOIN items_ancestors_request_help_propagation ON items_ancestors_request_help_propagation.item_id = items_items.child_item_id
+			UNION
+			SELECT items_items.parent_item_id FROM items_items
+			JOIN items_ancestors_request_help_propagation ON items_ancestors_request_help_propagation.id = items_items.child_item_id
+			WHERE items_items.request_help_propagation = 1
 		)
-		SELECT item_id FROM items_ancestors_request_help_propagation
+		SELECT id FROM items_ancestors_request_help_propagation
 	`, itemID)
 }
 
