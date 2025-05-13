@@ -62,7 +62,7 @@ func recomputeDBCaches(gormDB *database.DB) error {
 		if err := store.ItemItems().CreateNewAncestors(); err != nil {
 			return fmt.Errorf("cannot compute items_items: %v", err)
 		}
-		fmt.Print("Schedule the propagations\n")
+		fmt.Print("Running propagation of permissions and results\n")
 		store.SchedulePermissionsPropagation()
 		store.ScheduleResultsPropagation()
 		return nil
