@@ -212,8 +212,6 @@ func (s *GroupStore) IsVisibleForGroup(groupID, visibleForGroupID int64) bool {
 
 	isVisible, err := s.PickVisibleGroupsForGroup(s.Groups().DB, visibleForGroupID).
 		Where("groups.id = ?", groupID).
-		Select("1").
-		Limit(1).
 		HasRows()
 	mustNotBeError(err)
 
