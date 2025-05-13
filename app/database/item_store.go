@@ -332,8 +332,8 @@ func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 	})
 }
 
-// GetAncestorsRequestHelpPropagatedQuery gets all ancestors of an itemID while request_help_propagation = 1.
-func (s *ItemStore) GetAncestorsRequestHelpPropagatedQuery(itemID int64) *DB {
+// GetAncestorsRequestHelpPropagationQuery gets all ancestors of an itemID while request_help_propagation = 1.
+func (s *ItemStore) GetAncestorsRequestHelpPropagationQuery(itemID int64) *DB {
 	return s.Raw(`
 		WITH RECURSIVE items_ancestors_request_help_propagation(id) AS
 		(

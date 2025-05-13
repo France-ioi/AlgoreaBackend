@@ -263,7 +263,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 // hasCanRequestHelpTo checks whether there is a can_request_help_to permission on an item-group.
 // The checks are made on item's ancestor while can_request_help_propagation=1, and on group's ancestors.
 func hasCanRequestHelpTo(s *database.DataStore, itemID, groupID int64) bool {
-	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
+	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagationQuery(itemID)
 
 	hasCanRequestHelpTo, err := s.Users().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", groupID).

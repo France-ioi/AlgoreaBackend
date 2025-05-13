@@ -442,7 +442,7 @@ func getCanRequestHelpToByOrigin(
 	allUsersGroupID int64,
 	user *database.User,
 ) map[string][]canRequestHelpTo {
-	itemAncestorsRequestHelpPropagationQuery := store.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
+	itemAncestorsRequestHelpPropagationQuery := store.Items().GetAncestorsRequestHelpPropagationQuery(itemID)
 
 	var canRequestHelpToPermissions []canRequestHelpToPermissionsRaw
 	err := ancestorPermissions.
