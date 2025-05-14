@@ -343,7 +343,7 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 		return err
 	}
 	if wrapper.Score == nil {
-		return errors.New("missing score")
+		return errors.New("missing score which is required when the platform does not have a public key")
 	}
 
 	requestData.ScoreToken = &token.Score{
