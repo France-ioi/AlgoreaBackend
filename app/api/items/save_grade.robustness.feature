@@ -170,7 +170,7 @@ Feature: Save grading result - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "Missing answer_token"
+    And the response error message should contain "Missing answer_token which is required when the platform does not have a public key"
     And the table "gradings" should stay unchanged
     And the table "results" should stay unchanged
     And the table "results_propagate" should be empty

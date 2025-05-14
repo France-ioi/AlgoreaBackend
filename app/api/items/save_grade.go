@@ -328,7 +328,7 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 
 func (requestData *saveGradeRequestParsed) unmarshalAnswerToken(wrapper *saveGradeRequest) error {
 	if wrapper.AnswerToken == nil {
-		return errors.New("missing answer_token")
+		return errors.New("missing answer_token which is required when the platform does not have a public key")
 	}
 	requestData.AnswerToken = &token.Answer{PublicKey: requestData.publicKey}
 	if err := requestData.AnswerToken.UnmarshalJSON(wrapper.AnswerToken.Bytes()); err != nil {
