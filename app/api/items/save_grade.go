@@ -36,8 +36,6 @@ import (
 //
 //		Restrictions:
 //
-//	 	* `score_token`/`answer_token` should belong to the current user, otherwise the "bad request"
-//	 		response is returned;
 //		* the answer should exist and should have not been graded, otherwise the "forbidden" response is returned.
 //	parameters:
 //		- in: body

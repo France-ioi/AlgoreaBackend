@@ -46,8 +46,7 @@ Feature: Save grading result
     And the server time is frozen
 
   Scenario: User is able to save the grading result with a high score and attempt_id
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
@@ -103,8 +102,7 @@ Feature: Save grading result
     And the table "results_propagate_sync" should be empty
 
   Scenario: User is able to save the grading result for a team (participant_id is the first integer in idAttempt in the score token)
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 201            |
       | 1  | 201            |
@@ -160,8 +158,7 @@ Feature: Save grading result
     And the table "results_propagate_sync" should be empty
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
@@ -225,8 +222,7 @@ Feature: Save grading result
     | 79    | diff            | 80               | 100            | 50           |
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
@@ -287,8 +283,7 @@ Feature: Save grading result
     And the table "results_propagate_sync" should be empty
 
   Scenario Outline: Should keep previous score if it is greater
-    Given I am the user with id "101"
-    And the database has the following table "answers":
+    Given the database has the following table "answers":
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 10      | 2018-05-29 06:38:38 |
       | 124 | 101       | 101            | 0          | 50      | 2018-05-29 06:38:38 |
@@ -351,8 +346,7 @@ Feature: Save grading result
       | 15    | diff            | -80              |
 
   Scenario: Should keep previous validated_at if it is earlier
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table "results":
@@ -408,8 +402,7 @@ Feature: Save grading result
     And the table "results" should stay unchanged
 
   Scenario: Should set bAccessSolutions=1 if the task has been validated
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table "results":
@@ -449,8 +442,7 @@ Feature: Save grading result
       """
 
   Scenario: Should set bAccessSolutions=1 if the previous task task token had bAccessSolutions=1
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table "results":
@@ -490,8 +482,7 @@ Feature: Save grading result
       """
 
   Scenario: Platform doesn't support tokens
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 1  | 101            |
     And the database has the following table "results":
@@ -535,8 +526,7 @@ Feature: Save grading result
       | 1          | 101            | 70      | 100            | 1           | 1         |
 
   Scenario: Platform doesn't support tokens for team (participant_id is the first integer in idAttempt in the answer token)
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 1  | 201            |
     And the database has the following table "results":
@@ -580,8 +570,7 @@ Feature: Save grading result
     | 1          | 201            | 70      | 100            | 1           | 1         |
 
   Scenario: Should ignore score_token when provided if the platform doesn't have a key. Make sure the right score is used.
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 1  | 101            |
     And the database has the following table "results":
@@ -634,8 +623,7 @@ Feature: Save grading result
       """
 
   Scenario: Unlocks multiple items recursively
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
