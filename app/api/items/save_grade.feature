@@ -538,7 +538,7 @@ Feature: Save grading result
       }
       """
 
-  Scenario: Unlocks multiple items recursively
+  Scenario: Unlocks multiple items recursively (also checks that the score is ignored when score_token is given)
     Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
@@ -586,7 +586,8 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "score_token": "{{scoreToken}}"
+        "score_token": "{{scoreToken}}",
+        "score": 100.0
       }
       """
     Then the response code should be 201
