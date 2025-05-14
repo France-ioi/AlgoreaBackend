@@ -170,7 +170,7 @@ func UnmarshalDependingOnItemPlatform(
 	}
 	mustNotBeError(err)
 
-	if publicKey == "" {
+	if publicKey == nil {
 		return false, nil
 	}
 
@@ -179,7 +179,7 @@ func UnmarshalDependingOnItemPlatform(
 		return true, fmt.Errorf("missing %s", tokenFieldName)
 	}
 
-	parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(publicKey))
+	parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(*publicKey))
 	if err != nil {
 		logging.SharedLogger.WithContext(store.GetContext()).
 			Warnf("cannot parse platform's public key for item with id = %d: %s", itemID, err.Error())

@@ -8,7 +8,7 @@ type PlatformStore struct {
 // GetPublicKeyByItemID returns the public key for a specific item ID.
 // Returns an empty string if there is no public key but the platform exists.
 // Returns an error if the platform doesn't exist.
-func (s PlatformStore) GetPublicKeyByItemID(itemID int64) (string, error) {
+func (s PlatformStore) GetPublicKeyByItemID(itemID int64) (*string, error) {
 	var publicKey *string
 	err := s.Platforms().
 		Select("public_key").
@@ -17,12 +17,8 @@ func (s PlatformStore) GetPublicKeyByItemID(itemID int64) (string, error) {
 		PluckFirst("public_key", &publicKey).
 		Error()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if publicKey == nil {
-		return "", nil
-	}
-
-	return *publicKey, nil
+	return publicKey, nil
 }
