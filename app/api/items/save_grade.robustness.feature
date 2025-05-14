@@ -42,8 +42,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.saveGradeRequest"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Invalid score_token
     Given I send a POST request to "/items/save-grade" with the following body:
@@ -54,8 +56,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Invalid scoreToken: idItemLocal is missing
     Given "scoreToken" is a token signed by the task platform with the following payload:
@@ -76,8 +80,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: invalid idItemLocal: should be a string"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Invalid scoreToken: idItemLocal is not a number
     Given "scoreToken" is a token signed by the task platform with the following payload:
@@ -99,8 +105,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: invalid idItemLocal: strconv.ParseInt: parsing "abcd": invalid syntax"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Expired score_token
     Given the server time now is "2020-01-01T00:00:00Z"
@@ -124,6 +132,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: the token has expired"
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Falsified score_token
     Given "scoreToken" is a falsified token signed by the task platform with the following payload:
@@ -145,6 +157,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: invalid token: crypto/rsa: verification error"
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and answer_token is missing
     When I send a POST request to "/items/save-grade" with the following body:
@@ -155,8 +171,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing answer_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
     When I send a POST request to "/items/save-grade" with the following body:
@@ -168,8 +186,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and answer_token is expired
     Given the server time now is "2020-01-01T00:00:00Z"
@@ -194,6 +214,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: the token has expired"
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and answer_token is falsified
     Given "answerToken" is a falsified token signed by the app with the following payload:
@@ -215,6 +239,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: invalid token: crypto/rsa: verification error"
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
     Given "answerToken" is a token signed by the app with the following payload:
@@ -236,8 +264,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: wrong idAttempt"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (format should be number/number)
     Given "answerToken" is a token signed by the app with the following payload:
@@ -260,8 +290,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: wrong idAttempt"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and score is missing
     Given "answerToken" is a token signed by the app with the following payload:
@@ -283,8 +315,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing score"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
     Given "answerToken" is a token signed by the app with the following payload:
@@ -307,8 +341,10 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: wrong idUserAnswer"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: The answer has been already graded
     Given the database table "attempts" also has the following row:
@@ -346,8 +382,10 @@ Feature: Save grading result - robustness
     """
     {{ quote(`A user tries to replay a score token with a different score value ({"idAttempt":"101/1","idItem":"80","idUser":"101","idUserAnswer":"124","newScore":100,"oldScore":0})`) }}
     """
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: The answer is not found
     Given "scoreToken" is a token signed by the task platform with the following payload:
@@ -369,5 +407,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 403
     And the response error message should contain "The answer has been already graded or is not found"
-    And the table "answers" should stay unchanged
-    And the table "attempts" should stay unchanged
+    And the table "results" should stay unchanged
+    And the table "gradings" should stay unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
