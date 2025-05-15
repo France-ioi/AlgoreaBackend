@@ -88,7 +88,7 @@ func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool 
 		return true
 	}
 
-	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
+	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagationQuery(itemID)
 
 	canRequestHelpTo, err := s.Users().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", u.GroupID).
