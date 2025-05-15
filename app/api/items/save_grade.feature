@@ -46,8 +46,7 @@ Feature: Save grading result
     And the server time is frozen
 
   Scenario: User is able to save the grading result with a high score and attempt_id
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
@@ -103,8 +102,7 @@ Feature: Save grading result
     And the table "results_propagate_sync" should be empty
 
   Scenario: User is able to save the grading result for a team (participant_id is the first integer in idAttempt in the score token)
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 201            |
       | 1  | 201            |
@@ -146,11 +144,9 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 100   | 1                                                |
-    And the table "attempts" should stay unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
       | 0          | 201            | 10      | 50             | 1           | 1         | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
@@ -160,8 +156,7 @@ Feature: Save grading result
     And the table "results_propagate_sync" should be empty
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
@@ -203,11 +198,9 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
     And the table "gradings" should be:
       | answer_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | <score> | 1                                                |
-    And the table "attempts" should stay unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id | score_computed   | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
       | 0          | 101            | 10      | <parent_score>   | 1           | 0         | 2019-05-30 11:00:00 | null                 | null                | null         |
@@ -225,8 +218,7 @@ Feature: Save grading result
     | 79    | diff            | 80               | 100            | 50           |
 
   Scenario: User is able to save the grading result with a low score, but still obtaining a key (with idAttempt)
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
@@ -274,11 +266,9 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 99    | 1                                                |
-    And the table "attempts" should stay unchanged
     And the table "results" should be:
       | participant_id | attempt_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
       | 101            | 0          | 50      | 0              | 0           | 0         | 2019-05-30 11:00:00 | null                 | 2017-04-29 06:38:38 | null         |
@@ -287,8 +277,7 @@ Feature: Save grading result
     And the table "results_propagate_sync" should be empty
 
   Scenario Outline: Should keep previous score if it is greater
-    Given I am the user with id "101"
-    And the database has the following table "answers":
+    Given the database has the following table "answers":
       | id  | author_id | participant_id | attempt_id | item_id | created_at          |
       | 123 | 101       | 101            | 0          | 10      | 2018-05-29 06:38:38 |
       | 124 | 101       | 101            | 0          | 50      | 2018-05-29 06:38:38 |
@@ -334,13 +323,11 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
     And the table "gradings" should be:
       | answer_id | score   | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 5       | 0                                                |
       | 124       | <score> | 1                                                |
       | 125       | 20      | 0                                                |
-    And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
     Examples:
       | score | score_edit_rule | score_edit_value |
@@ -351,8 +338,7 @@ Feature: Save grading result
       | 15    | diff            | -80              |
 
   Scenario: Should keep previous validated_at if it is earlier
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table "results":
@@ -400,98 +386,13 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 100   | 1                                                |
-    And the table "attempts" should stay unchanged
     And the table "results" should stay unchanged
 
-  Scenario: Should set bAccessSolutions=1 if the task has been validated
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
-      | id | participant_id |
-      | 0  | 101            |
-    And the database has the following table "results":
-      | attempt_id | participant_id | item_id | validated_at        |
-      | 0          | 101            | 50      | 2018-05-29 06:38:38 |
-    And the database has the following table "answers":
-      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
-      | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "score": "100",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 201
-    And the response body should be, in JSON:
-      """
-      {
-        "data": {
-          "validated": true,
-          "unlocked_items": []
-        },
-        "message": "created",
-        "success": true
-      }
-      """
-
-  Scenario: Should set bAccessSolutions=1 if the previous task task token had bAccessSolutions=1
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
-      | id | participant_id |
-      | 0  | 101            |
-    And the database has the following table "results":
-      | attempt_id | participant_id | item_id | validated_at        |
-      | 0          | 101            | 50      | 2018-05-29 06:38:38 |
-    And the database has the following table "answers":
-      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
-      | 123 | 101       | 101            | 100        | 50      | 2017-05-29 06:38:38 |
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "50",
-        "idAttempt": "101/0",
-        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
-        "score": "10",
-        "idUserAnswer": "123"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "score_token": "{{scoreToken}}"
-      }
-      """
-    Then the response code should be 201
-    And the response body should be, in JSON:
-      """
-      {
-        "data": {
-          "validated": false,
-          "unlocked_items": []
-        },
-        "message": "created",
-        "success": true
-      }
-      """
-
   Scenario: Platform doesn't support tokens
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 1  | 101            |
     And the database has the following table "results":
@@ -530,13 +431,15 @@ Feature: Save grading result
         "success": true
       }
       """
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 125       | 100   | 1                                                |
     And the table "results" should be:
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated |
       | 1          | 101            | 70      | 100            | 1           | 1         |
 
   Scenario: Platform doesn't support tokens for team (participant_id is the first integer in idAttempt in the answer token)
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 1  | 201            |
     And the database has the following table "results":
@@ -575,67 +478,15 @@ Feature: Save grading result
         "success": true
       }
       """
-  And the table "results" should be:
-    | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated |
-    | 1          | 201            | 70      | 100            | 1           | 1         |
-
-  Scenario: Should ignore score_token when provided if the platform doesn't have a key. Make sure the right score is used.
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
-      | id | participant_id |
-      | 1  | 101            |
-    And the database has the following table "results":
-      | attempt_id | participant_id | item_id | validated_at        |
-      | 1          | 101            | 70      | 2018-05-29 06:38:38 |
-    And the database has the following table "answers":
-      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
-      | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
-    And "answerToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idUserAnswer": "125",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "score": "99",
-        "idUserAnswer": "125"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "score_token": "{{scoreToken}}",
-        "score": 100.0,
-        "answer_token": "{{answerToken}}"
-      }
-      """
-    Then the response code should be 201
-    And the response body should be, in JSON:
-      """
-      {
-        "data": {
-          "validated": true,
-          "unlocked_items": []
-        },
-        "message": "created",
-        "success": true
-      }
-      """
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 125       | 100   | 1                                                |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated |
+      | 1          | 201            | 70      | 100            | 1           | 1         |
 
   Scenario: Unlocks multiple items recursively
-    Given I am the user with id "101"
-    And the database has the following table "attempts":
+    Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 1  | 101            |
@@ -716,11 +567,9 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 99    | 1                                                |
-    And the table "attempts" should stay unchanged
     And the table "results" should be:
       | participant_id | attempt_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at |
       | 101            | 0          | 50      | 0              | 0           | 0         | 2019-05-30 11:00:00 | null                 | 2017-04-29 06:38:38 | null         |

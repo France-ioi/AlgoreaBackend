@@ -254,7 +254,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 	service.MustNotBeError(err)
 
 	if !platformHasKey {
-		return fmt.Errorf("no public key available for item %d", itemID)
+		return fmt.Errorf("no public key available for the platform linked to item %d", itemID)
 	}
 
 	return nil
