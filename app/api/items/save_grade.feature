@@ -485,60 +485,7 @@ Feature: Save grading result
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated |
       | 1          | 201            | 70      | 100            | 1           | 1         |
 
-  Scenario: Should ignore score_token when provided if the platform doesn't have a key. Make sure the right score is used.
-    Given the database has the following table "attempts":
-      | id | participant_id |
-      | 1  | 101            |
-    And the database has the following table "results":
-      | attempt_id | participant_id | item_id | validated_at        |
-      | 1          | 101            | 70      | 2018-05-29 06:38:38 |
-    And the database has the following table "answers":
-      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
-      | 125 | 101       | 101            | 100        | 70      | 2017-05-29 06:38:38 |
-    And "answerToken" is a token signed by the app with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "idUserAnswer": "125",
-        "platformName": "{{app().Config.GetString("token.platformName")}}"
-      }
-      """
-    And "scoreToken" is a token signed by the task platform with the following payload:
-      """
-      {
-        "idUser": "101",
-        "idItemLocal": "70",
-        "idAttempt": "101/1",
-        "itemURL": "http://taskplatform1.mblockelet.info/task.html?taskId=4034495436721839",
-        "score": "99",
-        "idUserAnswer": "125"
-      }
-      """
-    When I send a POST request to "/items/save-grade" with the following body:
-      """
-      {
-        "score_token": "{{scoreToken}}",
-        "score": 100.0,
-        "answer_token": "{{answerToken}}"
-      }
-      """
-    Then the response code should be 201
-    And the response body should be, in JSON:
-      """
-      {
-        "data": {
-          "validated": true,
-          "unlocked_items": []
-        },
-        "message": "created",
-        "success": true
-      }
-      """
-
-  Scenario: Unlocks multiple items recursively (also checks that the score is ignored when score_token is given)
+  Scenario: Unlocks multiple items recursively
     Given the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
@@ -586,8 +533,7 @@ Feature: Save grading result
     When I send a POST request to "/items/save-grade" with the following body:
       """
       {
-        "score_token": "{{scoreToken}}",
-        "score": 100.0
+        "score_token": "{{scoreToken}}"
       }
       """
     Then the response code should be 201
