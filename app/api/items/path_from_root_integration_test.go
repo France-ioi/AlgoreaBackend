@@ -171,7 +171,6 @@ func Test_FindItemPaths(t *testing.T) {
 					- {group_id: 100, item_id: 1, can_view_generated: content}
 					- {group_id: 100, item_id: 2, can_view_generated: content}
 					- {group_id: 100, item_id: 22, can_view_generated: content}
-					- {group_id: 100, item_id: 23, can_view_generated: content}
 				attempts:
 					- {participant_id: 100, id: 1, parent_attempt_id: 0, root_item_id: 22}
 					- {participant_id: 100, id: 2, parent_attempt_id: 1, root_item_id: 22}
@@ -185,8 +184,8 @@ func Test_FindItemPaths(t *testing.T) {
 					- {participant_id: 100, attempt_id: 3, item_id: 22}
 					- {participant_id: 101, attempt_id: 4, item_id: 22}
 			`,
-			args: args{participantID: 100, itemID: 23, limit: 1},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsStarted: false}},
+			args: args{participantID: 100, itemID: 22, limit: 1},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
 			name: "supports paths starting with an item requiring explicit entry",
@@ -194,15 +193,14 @@ func Test_FindItemPaths(t *testing.T) {
 				groups: [{id: 103, root_activity_id: 22}]
 				permissions_generated:
 					- {group_id: 103, item_id: 22, can_view_generated: content}
-					- {group_id: 103, item_id: 23, can_view_generated: content}
 				attempts:
 					- {participant_id: 103, id: 0}
 					- {participant_id: 103, id: 1, parent_attempt_id: 0, root_item_id: 22}
 				results:
 					- {participant_id: 103, attempt_id: 1, item_id: 22}
 			`,
-			args: args{participantID: 103, itemID: 23, limit: 1},
-			want: []items.ItemPath{{Path: []string{"22", "23"}, IsStarted: false}},
+			args: args{participantID: 103, itemID: 22, limit: 1},
+			want: []items.ItemPath{{Path: []string{"22"}, IsStarted: false}},
 		},
 		{
 			name: "can find a path without a result for the first item",
@@ -231,7 +229,6 @@ func Test_FindItemPaths(t *testing.T) {
 					- {group_id: 101, item_id: 2, can_view_generated: content}
 					- {group_id: 101, item_id: 21, can_view_generated: content}
 					- {group_id: 101, item_id: 22, can_view_generated: content}
-					- {group_id: 101, item_id: 23, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1}
 					- {participant_id: 101, id: 2}
@@ -251,8 +248,8 @@ func Test_FindItemPaths(t *testing.T) {
 					- {participant_id: 101, attempt_id: 4, item_id: 22, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23, limit: 1},
-			want: []items.ItemPath{{Path: []string{"1", "21", "22", "23"}, IsStarted: false}},
+			args: args{participantID: 101, itemID: 22, limit: 1},
+			want: []items.ItemPath{{Path: []string{"1", "21", "22"}, IsStarted: true}},
 		},
 		{
 			name: "prefers the path for the attempt chain with the highest score",
@@ -267,7 +264,6 @@ func Test_FindItemPaths(t *testing.T) {
 					- {group_id: 101, item_id: 2, can_view_generated: content}
 					- {group_id: 101, item_id: 21, can_view_generated: content}
 					- {group_id: 101, item_id: 22, can_view_generated: content}
-					- {group_id: 101, item_id: 23, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1}
 					- {participant_id: 101, id: 2}
@@ -286,8 +282,8 @@ func Test_FindItemPaths(t *testing.T) {
 					- {participant_id: 101, attempt_id: 4, item_id: 22}
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23, limit: 1},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsStarted: false}},
+			args: args{participantID: 101, itemID: 22, limit: 1},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: true}},
 		},
 		{
 			name: "prefers the path for the last (by id) attempt chain among all chains with started results for the same items",
@@ -350,6 +346,10 @@ func Test_FindItemPaths(t *testing.T) {
 		{
 			name: "ignores paths whose attempt chains have missing results for items requiring explicit entry for a non-last item",
 			fixture: `
+				items:
+					- {id: 23, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 23, child_order: 1}
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
 					- {group_id: 200, item_id: 2, can_view_generated: content}
@@ -385,10 +385,15 @@ func Test_FindItemPaths(t *testing.T) {
 		{
 			name: "ignores paths whose attempt chains have not started results below an attempt not allowing submissions for non-last item",
 			fixture: `
+				items:
+					- {id: 23, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 23, child_order: 1}
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
 					- {group_id: 200, item_id: 2, can_view_generated: content}
 					- {group_id: 200, item_id: 22, can_view_generated: content}
+					- {group_id: 200, item_id: 23, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1, allows_submissions_until: 2019-05-30 11:00:00}
 					- {participant_id: 101, id: 2, root_item_id: 22, parent_attempt_id: 1}
@@ -420,10 +425,15 @@ func Test_FindItemPaths(t *testing.T) {
 		{
 			name: "ignores paths whose attempt chains have not started results below an ended attempt for non-last item",
 			fixture: `
+				items:
+					- {id: 23, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 23, child_order: 1}
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
 					- {group_id: 200, item_id: 2, can_view_generated: content}
 					- {group_id: 200, item_id: 22, can_view_generated: content}
+					- {group_id: 200, item_id: 23, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1, ended_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, id: 2, root_item_id: 22, parent_attempt_id: 1}
@@ -441,7 +451,6 @@ func Test_FindItemPaths(t *testing.T) {
 					- {group_id: 200, item_id: 1, can_view_generated: content}
 					- {group_id: 200, item_id: 2, can_view_generated: content}
 					- {group_id: 200, item_id: 22, can_view_generated: content}
-					- {group_id: 200, item_id: 23, can_view_generated: content}
 				attempts:
 					- {participant_id: 101, id: 1, ended_at: 2019-05-30 11:00:00, allows_submissions_until: 2019-05-30 11:00:00}
 					- {participant_id: 101, id: 2, root_item_id: 22, parent_attempt_id: 1}
@@ -450,8 +459,8 @@ func Test_FindItemPaths(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
 					- {participant_id: 101, attempt_id: 2, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
-			args: args{participantID: 101, itemID: 23, limit: 1},
-			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsStarted: false}},
+			args: args{participantID: 101, itemID: 22, limit: 1},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: true}},
 		},
 		{
 			name: "get paths whose attempt chains have not started results for an attempt not allowing submissions for the last item",
@@ -572,13 +581,11 @@ func Test_FindItemPaths(t *testing.T) {
 			- {id: 3, default_language_tag: fr}
 			- {id: 4, default_language_tag: fr}
 			- {id: 22, default_language_tag: fr, requires_explicit_entry: true}
-			- {id: 23, default_language_tag: fr}
 		items_items:
 			- {parent_item_id: 1, child_item_id: 2, child_order: 1}
 			- {parent_item_id: 2, child_item_id: 3, child_order: 1}
 			- {parent_item_id: 2, child_item_id: 22, child_order: 2}
 			- {parent_item_id: 3, child_item_id: 4, child_order: 1}
-			- {parent_item_id: 22, child_item_id: 23, child_order: 1}
 		attempts:
 			- {participant_id: 100, id: 0}
 			- {participant_id: 101, id: 0}
