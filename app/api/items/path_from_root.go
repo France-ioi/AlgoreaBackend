@@ -100,7 +100,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	itemPaths := FindItemPaths(srv.GetStore(r), srv.GetUser(r), participantID, itemID, PathRootParticipant, 0)
+	itemPaths := FindItemPaths(srv.GetStore(r), participantID, itemID, 1)
 	if itemPaths == nil {
 		return service.InsufficientAccessRightsError
 	}
@@ -112,27 +112,10 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 // It allows finding the roots either by participant, or by user.
 type PathRootType int
 
-const (
-	// PathRootParticipant is used by FindItemPaths() to specify that we want to get root items from groups managed by the participant.
-	PathRootParticipant PathRootType = iota
-	// PathRootUser is used by FindItemPaths() to specify that we want to get root items from groups managed by the user.
-	// The only service using this is itemBreadcrumbsFromRootsByTextIdGet which seems to be a mistake.
-	PathRootUser
-)
-
-// FindItemPaths gets the paths to an item for a participant.
-//
-// The root items are determined either by participant: PathRootParticipant, or by user PathRootUser.
-// This comes from the initial distinction between `path_from_root`: participant, and `breadcrumbs_from_root`: user.
+// FindItemPaths gets the paths from root items to the given item for the given participant.
 //
 // When {limit}=0, return all the paths.
-func FindItemPaths(
-	store *database.DataStore,
-	user *database.User,
-	participantID, itemID int64,
-	pathRootBy PathRootType,
-	limit int,
-) []ItemPath {
+func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit int) []ItemPath {
 	limitStatement := ""
 	if limit > 0 {
 		limitStatement = " LIMIT " + strconv.Itoa(limit)
@@ -142,37 +125,17 @@ func FindItemPaths(
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("groups.id, root_activity_id, root_skill_id")
 
-	var groupsManagedByParticipant *database.DB
-	if pathRootBy == PathRootParticipant {
-		// Used for path_from_root.
-		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByGroup(participantID).
-			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-			Select("groups.id, root_activity_id, root_skill_id")
-	} else {
-		// Used for breadcrumbs_from_roots.
-		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByUser(user).
-			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-			Select("groups.id, root_activity_id, root_skill_id")
-	}
+	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByGroup(participantID).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+		Select("groups.id, root_activity_id, root_skill_id")
 
 	groupsWithRootItems := participantAncestors.Union(groupsManagedByParticipant)
 
-	var visibleItems *database.DB
-	if pathRootBy == PathRootParticipant {
-		// Used for path_from_root.
-		visibleItems = store.Permissions().MatchingGroupAncestors(participantID).
-			WherePermissionIsAtLeast("view", "info").
-			Joins("JOIN items ON items.id = permissions.item_id").
-			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
-			Group("items.id")
-	} else {
-		// Used for breadcrumbs_from_roots.
-		visibleItems = store.Permissions().MatchingUserAncestors(user).
-			WherePermissionIsAtLeast("view", "info").
-			Joins("JOIN items ON items.id = permissions.item_id").
-			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
-			Group("items.id")
-	}
+	visibleItems := store.Permissions().MatchingGroupAncestors(participantID).
+		WherePermissionIsAtLeast("view", "info").
+		Joins("JOIN items ON items.id = permissions.item_id").
+		Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
+		Group("items.id")
 
 	canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 

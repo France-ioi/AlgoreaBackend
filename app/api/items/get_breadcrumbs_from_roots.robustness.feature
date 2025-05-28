@@ -41,9 +41,9 @@ Feature: Find all breadcrumbs to an item - robustness
       | 60               | 70            |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
-      | 102      | 60      | info               |
+      | 102      | 60      | none               |
       | 111      | 10      | info               |
-      | 111      | 60      | none               |
+      | 111      | 60      | info               |
       | 111      | 70      | none               |
     And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |

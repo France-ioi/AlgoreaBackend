@@ -61,15 +61,16 @@ Feature: Find all breadcrumbs to an item
       | 100              | 101           |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
+      | 90       | 60      | content                  |
+      | 102      | 10      | content_with_descendants |
       | 102      | 60      | none                     |
+      | 102      | 70      | info                     |
+      | 102      | 100     | content                  |
+      | 102      | 101     | content                  |
       | 111      | 10      | content_with_descendants |
-      | 111      | 60      | content                  |
-      | 111      | 70      | info                     |
       | 111      | 50      | content_with_descendants |
       | 111      | 80      | content                  |
       | 111      | 90      | info                     |
-      | 111      | 100     | content                  |
-      | 111      | 101     | content                  |
     And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |
       | 0  | 101            | null         | null              |

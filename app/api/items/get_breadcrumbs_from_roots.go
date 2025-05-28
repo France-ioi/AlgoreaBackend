@@ -177,7 +177,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 }
 
 func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *database.User, itemID int64) []breadcrumbPath {
-	itemPaths := FindItemPaths(store, user, participantID, itemID, PathRootUser, 0)
+	itemPaths := FindItemPaths(store, participantID, itemID, 0)
 	if len(itemPaths) == 0 {
 		return nil
 	}
