@@ -21,8 +21,9 @@ type ItemPath struct {
 }
 
 type rawItemPath struct {
-	Path      string `json:"path"`
-	IsStarted bool   `json:"is_started"`
+	Path      string
+	IsStarted bool
+	Sorting   string
 }
 
 // swagger:operation GET /items/{item_id}/path-from-root items itemPathFromRootFind
@@ -195,10 +196,13 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit
 				)
 			)
 		))
-		SELECT path, is_started
+		SELECT
+			path, MAX(is_started) AS is_started,
+			MAX(CONCAT(last_attempt_id IS NOT NULL, ':', LPAD(1000000000000000000000000000000000000000-score, 40, 0), ':', attempts)) AS sorting
 		FROM paths
 		WHERE paths.last_item_id = ?
-		ORDER BY last_attempt_id IS NULL, score, attempts DESC
+		GROUP BY path
+		ORDER BY sorting DESC
 		`+limitStatement,
 		groupsWithRootItems.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, itemID, canViewContentIndex,
 		participantID, itemID, itemID, canViewContentIndex, itemID).
@@ -208,21 +212,12 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit
 		return nil
 	}
 
-	// The SQL can return the same path multiple times, for example, with different attempts, but we need them only once.
-	pathAdded := map[string]bool{}
-
-	var itemPaths []ItemPath
+	itemPaths := make([]ItemPath, 0, len(rawItemPaths))
 	for _, itemPathRow := range rawItemPaths {
-		if _, ok := pathAdded[itemPathRow.Path]; ok {
-			continue
-		}
-
 		itemPaths = append(itemPaths, ItemPath{
 			Path:      strings.Split(itemPathRow.Path, "/"),
 			IsStarted: itemPathRow.IsStarted,
 		})
-
-		pathAdded[itemPathRow.Path] = true
 	}
 
 	return itemPaths
