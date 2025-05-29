@@ -108,10 +108,6 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 	return service.NoError
 }
 
-// PathRootType is used for FindItemPaths.
-// It allows finding the roots either by participant, or by user.
-type PathRootType int
-
 // FindItemPaths gets the paths from root items to the given item for the given participant.
 //
 // When {limit}=0, return all the paths.
