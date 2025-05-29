@@ -168,7 +168,6 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit
 			LEFT JOIN results ON results.participant_id = attempts.participant_id AND
 				attempts.id = results.attempt_id AND results.item_id = root_ancestors.id
 			WHERE root_ancestors.id = ? OR (
-				attempts.id IS NOT NULL AND
 				root_ancestors.can_view_generated_value >= ? AND
 				(NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
 				(results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until) AND
