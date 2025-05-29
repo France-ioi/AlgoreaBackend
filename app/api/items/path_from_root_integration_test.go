@@ -328,6 +328,32 @@ func Test_FindItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "21", "22"}, IsStarted: false}},
 		},
 		{
+			name: "prefers the path having an attempt for the last item",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 1}
+					- {parent_item_id: 21, child_item_id: 22, child_order: 1}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 2, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 22, can_view_generated: content}
+				attempts:
+					- {participant_id: 101, id: 1}
+					- {participant_id: 101, id: 3, parent_attempt_id: 1, root_item_id: 22}
+					- {participant_id: 101, id: 4, parent_attempt_id: 1, root_item_id: 21}
+				results:
+					- {participant_id: 101, attempt_id: 1, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 1, item_id: 2, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 3, item_id: 22}
+					- {participant_id: 101, attempt_id: 4, item_id: 21, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 101, itemID: 22, limit: 1},
+			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
+		},
+		{
 			name: "get paths whose attempt chains have missing results for last item requiring explicit entry",
 			fixture: `
 				permissions_generated:

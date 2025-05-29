@@ -36,6 +36,7 @@ type rawItemPath struct {
 //		(`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
 //
 //		Of all possible paths, the service chooses the one having:
+//			* an attempt linked to the last item if such a path exists,
 //			* missing/not-started results located closer to the end of the path,
 //			* preferring paths having less missing/not-started results,
 //			* and having higher values of `attempt_id`.
@@ -197,7 +198,7 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit
 		SELECT path, is_started
 		FROM paths
 		WHERE paths.last_item_id = ?
-		ORDER BY score, attempts DESC
+		ORDER BY last_attempt_id IS NULL, score, attempts DESC
 		`+limitStatement,
 		groupsWithRootItems.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, itemID, canViewContentIndex,
 		participantID, itemID, itemID, canViewContentIndex, itemID).
