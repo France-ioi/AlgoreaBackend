@@ -38,6 +38,12 @@ type rawItemPath struct {
 //		The chain of attempts in the path cannot have missing results for non-final items that require explicit entry.
 //		It also cannot have not-started results within or below ended or non-submission-allowing attempts for non-final items.
 //
+//
+//		Note that the path may contain items without results for its final item or non-final items not requiring explicit entry.
+//		Also, the path may contain not-started results for its final item even within or below ended or non-submission-allowing attempts.
+//		It is even possible that the final item has no linked attempt at all while the final item requires explicit entry.
+//
+//
 //		Of all possible paths, the service chooses the one having:
 //			* an attempt linked to the final item if such a path exists,
 //			* missing/not-started results located closer to the end of the path,
