@@ -4,6 +4,7 @@ package items_test
 
 import (
 	"testing"
+	_ "unsafe"
 
 	"github.com/stretchr/testify/assert"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func Test_FindItemPaths(t *testing.T) {
+func Test_findItemPaths(t *testing.T) {
 	type args struct {
 		participantID int64
 		itemID        int64
@@ -703,8 +704,11 @@ func Test_FindItemPaths(t *testing.T) {
 				s.ScheduleResultsPropagation()
 				return nil
 			}))
-			got := items.FindItemPaths(store, tt.args.participantID, tt.args.itemID, tt.args.limit)
+			got := findItemPaths(store, tt.args.participantID, tt.args.itemID, tt.args.limit)
 			assert.Equal(t, tt.want, got)
 		})
 	}
 }
+
+//go:linkname findItemPaths github.com/France-ioi/AlgoreaBackend/v2/app/api/items.findItemPaths
+func findItemPaths(store *database.DataStore, participantID, itemID int64, limit int) []items.ItemPath

@@ -102,7 +102,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	itemPaths := FindItemPaths(srv.GetStore(r), participantID, itemID, 1)
+	itemPaths := findItemPaths(srv.GetStore(r), participantID, itemID, 1)
 	if itemPaths == nil {
 		return service.InsufficientAccessRightsError
 	}
@@ -110,10 +110,10 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 	return service.NoError
 }
 
-// FindItemPaths gets the paths from root items to the given item for the given participant.
+// findItemPaths gets the paths from root items to the given item for the given participant.
 //
 // When {limit}=0, return all the paths.
-func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit int) []ItemPath {
+func findItemPaths(store *database.DataStore, participantID, itemID int64, limit int) []ItemPath {
 	var limitStatement string
 	if limit > 0 {
 		limitStatement = " LIMIT " + strconv.Itoa(limit)
