@@ -11,6 +11,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:model breadcrumbPath
@@ -49,7 +50,7 @@ type breadcrumbElement struct {
 //		The participant is `participant_id` (if given) or the current user (otherwise).
 //
 //
-//		Paths can contain only items visible to the participant
+//		Paths can contain only items visible to both the participant and the current user
 //		(`can_view`>='content' on every item on the path but the final one and `can_view`>='info' for the final one).
 //		The item info (`title` and `language_tag`) in the paths is in the current user's language,
 //		or the item's default language (if not available).
@@ -170,7 +171,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 	}
 
 	breadcrumbs := findItemBreadcrumbs(store, participantID, user, itemID)
-	if breadcrumbs == nil {
+	if len(breadcrumbs) == 0 {
 		return service.InsufficientAccessRightsError
 	}
 	render.Respond(w, r, breadcrumbs)
@@ -183,58 +184,77 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 		return nil
 	}
 
-	itemIDsMap := make(map[int64]bool, len(itemPaths))
-	breadcrumbs := make([]breadcrumbPath, 0, len(itemPaths))
+	itemIDsSet := golang.NewSet[int64]()
+	breadcrumbPaths := make([]breadcrumbPath, 0, len(itemPaths))
 	for _, itemPath := range itemPaths {
 		breadcrumb := make([]breadcrumbElement, 0, len(itemPath.Path))
 		for _, id := range itemPath.Path {
 			idInt64, _ := strconv.ParseInt(id, 10, 64)
-			itemIDsMap[idInt64] = true
+			itemIDsSet.Add(idInt64)
 			breadcrumb = append(breadcrumb, breadcrumbElement{ID: idInt64})
 		}
-		breadcrumbs = append(breadcrumbs, breadcrumbPath{
+		breadcrumbPaths = append(breadcrumbPaths, breadcrumbPath{
 			IsStarted: itemPath.IsStarted,
 			Path:      breadcrumb,
 		})
 	}
 
-	idsList := make([]int64, 0, len(itemIDsMap))
-	for id := range itemIDsMap {
-		idsList = append(idsList, id)
+	itemInfoMap := getItemInfoMapForVisibleItems(store, itemIDsSet.Values(), user, participantID)
+
+	contentViewPermissionIndex := store.PermissionsGranted().ViewIndexByName("content")
+
+	for breadcrumbPathsIndex := 0; breadcrumbPathsIndex < len(breadcrumbPaths); breadcrumbPathsIndex++ {
+		bcPath := &breadcrumbPaths[breadcrumbPathsIndex]
+		for pathIndex := range bcPath.Path {
+			id := bcPath.Path[pathIndex].ID
+			if participantID != user.GroupID &&
+				(itemInfoMap[id] == nil || // if the item is not visible to the current user
+					// or a non-final item's content is not visible to the current user
+					pathIndex != len(bcPath.Path)-1 && itemInfoMap[id].CanViewGeneratedValue < contentViewPermissionIndex) {
+				// remove the path
+				breadcrumbPaths = append(breadcrumbPaths[:breadcrumbPathsIndex], breadcrumbPaths[breadcrumbPathsIndex+1:]...)
+				breadcrumbPathsIndex--
+				break
+			}
+			bcPath.Path[pathIndex].Title = itemInfoMap[id].Title
+			bcPath.Path[pathIndex].LanguageTag = itemInfoMap[id].LanguageTag
+			bcPath.Path[pathIndex].Type = itemInfoMap[id].Type
+		}
 	}
 
-	var itemsInfo []struct {
-		ID          int64
-		Title       *string
-		Type        string
-		LanguageTag string
-	}
-	service.MustNotBeError(store.Items().Where("id IN(?)", idsList).
-		JoinsUserAndDefaultItemStrings(user).
-		Select(`
+	return breadcrumbPaths
+}
+
+type itemInfo struct {
+	ID                    int64
+	Title                 *string
+	Type                  string
+	LanguageTag           string
+	CanViewGeneratedValue int
+}
+
+func getItemInfoMapForVisibleItems(
+	store *database.DataStore, idsList []int64, user *database.User, participantID int64,
+) map[int64]*itemInfo {
+	fieldsToSelect := `
 			id,
 			COALESCE(user_strings.title, default_strings.title) AS title,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
-			type
-		`).
-		Scan(&itemsInfo).Error())
-
-	itemTitles := make(map[int64]*string, len(itemsInfo))
-	itemLanguageTags := make(map[int64]string, len(itemsInfo))
-	itemType := make(map[int64]string, len(itemsInfo))
-	for _, itemInfo := range itemsInfo {
-		itemTitles[itemInfo.ID] = itemInfo.Title
-		itemLanguageTags[itemInfo.ID] = itemInfo.LanguageTag
-		itemType[itemInfo.ID] = itemInfo.Type
+			type`
+	itemInfoQuery := store.Items().Where("id IN(?)", idsList).JoinsUserAndDefaultItemStrings(user)
+	if participantID != user.GroupID {
+		fieldsToSelect += `,
+			can_view_generated_value`
+		itemInfoQuery = itemInfoQuery.JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info")
 	}
 
-	for breadcrumbsIndex := range breadcrumbs {
-		for pathIndex := range breadcrumbs[breadcrumbsIndex].Path {
-			id := breadcrumbs[breadcrumbsIndex].Path[pathIndex].ID
-			breadcrumbs[breadcrumbsIndex].Path[pathIndex].Title = itemTitles[id]
-			breadcrumbs[breadcrumbsIndex].Path[pathIndex].LanguageTag = itemLanguageTags[id]
-			breadcrumbs[breadcrumbsIndex].Path[pathIndex].Type = itemType[id]
-		}
+	var itemInfos []itemInfo
+	service.MustNotBeError(itemInfoQuery.Select(fieldsToSelect).Scan(&itemInfos).Error())
+
+	itemInfoMap := make(map[int64]*itemInfo, len(itemInfos))
+	for index, itemInfo := range itemInfos {
+		itemInfoMap[itemInfo.ID] = &itemInfos[index]
 	}
-	return breadcrumbs
+
+	return itemInfoMap
 }

@@ -67,10 +67,6 @@ Feature: Find all breadcrumbs to an item
       | 102      | 70      | info                     |
       | 102      | 100     | content                  |
       | 102      | 101     | content                  |
-      | 111      | 10      | content_with_descendants |
-      | 111      | 50      | content_with_descendants |
-      | 111      | 80      | content                  |
-      | 111      | 90      | info                     |
     And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |
       | 0  | 101            | null         | null              |
@@ -94,6 +90,12 @@ Feature: Find all breadcrumbs to an item
 
   Scenario Outline: Find breadcrumbs for the current user
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | content_with_descendants |
+      | 111      | 50      | content_with_descendants |
+      | 111      | 80      | content                  |
+      | 111      | 90      | info                     |
     When I send a GET request to "<service_url>"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -177,6 +179,10 @@ Feature: Find all breadcrumbs to an item
 
   Scenario Outline: Find breadcrumbs for a team
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | content_with_descendants |
+      | 111      | 70      | info                     |
     When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -206,6 +212,9 @@ Feature: Find all breadcrumbs to an item
 
   Scenario Outline: Find breadcrumbs for a team for another item
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | content_with_descendants |
     When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -231,8 +240,36 @@ Feature: Find all breadcrumbs to an item
       | /items/60/breadcrumbs-from-roots              |
       | /items/by-text-id/id60/breadcrumbs-from-roots |
 
+  Scenario Outline: Find breadcrumbs for a team, some paths are not visible to the current user (content of the first item is not visible)
+    Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | info                     |
+      | 111      | 60      | content_with_descendants |
+    When I send a GET request to "<service_url>?participant_id=102"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      [
+        {
+          "is_started": true,
+          "path": [
+            {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}
+          ]
+        }
+      ]
+      """
+    Examples:
+      | service_url                                   |
+      | /items/60/breadcrumbs-from-roots              |
+      | /items/by-text-id/id60/breadcrumbs-from-roots |
+
   Scenario Outline: Should return not started paths
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 100     | content                  |
+      | 111      | 101     | info                     |
     When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
