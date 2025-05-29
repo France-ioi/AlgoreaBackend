@@ -17,9 +17,10 @@ import (
 type breadcrumbPath struct {
 	// required: true
 	Path []breadcrumbElement `json:"path"`
-	// Whether the path is already started by the participant.
+	// Whether the path is already started by the participant
+	// (true when the participant has at least one result with `started_at` set for each item in the path).
 	// required: true
-	StartedByParticipant bool `json:"started_by_participant"`
+	IsStarted bool `json:"is_started"`
 }
 
 // swagger:model breadcrumbElement
@@ -192,8 +193,8 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 			breadcrumb = append(breadcrumb, breadcrumbElement{ID: idInt64})
 		}
 		breadcrumbs = append(breadcrumbs, breadcrumbPath{
-			StartedByParticipant: itemPath.IsStarted,
-			Path:                 breadcrumb,
+			IsStarted: itemPath.IsStarted,
+			Path:      breadcrumb,
 		})
 	}
 

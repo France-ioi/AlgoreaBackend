@@ -101,13 +101,13 @@ Feature: Find all breadcrumbs to an item
       <expected_output>
       """
   Examples:
-    | service_url                                                                                                   | expected_output                                                                                                                                                                                                                                                                                                       |
-    | /items/50/breadcrumbs-from-roots                                                                              | [{"started_by_participant": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                                      |
-    | /items/by-text-id/-_%20%27%23%26%3F%3A%3D%2F%5C.%2C%2B%25%C2%A4%E2%82%ACa%C3%A9%C3%A0d/breadcrumbs-from-roots | [{"started_by_participant": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                                      |
-    | /items/10/breadcrumbs-from-roots                                                                              | [{"started_by_participant": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                                      |
-    | /items/by-text-id/id10/breadcrumbs-from-roots                                                                 | [{"started_by_participant": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                                      |
-    | /items/90/breadcrumbs-from-roots                                                                              | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
-    | /items/by-text-id/id90/breadcrumbs-from-roots                                                                 | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
+    | service_url                                                                                                   | expected_output                                                                                                                                                                                                                                                                               |
+    | /items/50/breadcrumbs-from-roots                                                                              | [{"is_started": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                          |
+    | /items/by-text-id/-_%20%27%23%26%3F%3A%3D%2F%5C.%2C%2B%25%C2%A4%E2%82%ACa%C3%A9%C3%A0d/breadcrumbs-from-roots | [{"is_started": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                          |
+    | /items/10/breadcrumbs-from-roots                                                                              | [{"is_started": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                          |
+    | /items/by-text-id/id10/breadcrumbs-from-roots                                                                 | [{"is_started": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                          |
+    | /items/90/breadcrumbs-from-roots                                                                              | [{"is_started": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"is_started": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
+    | /items/by-text-id/id90/breadcrumbs-from-roots                                                                 | [{"is_started": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"is_started": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
 
   Scenario: Should return a breadcrumb when there are missing results, like path-from-root
     Given the database has the following user:
@@ -164,7 +164,7 @@ Feature: Find all breadcrumbs to an item
       """
       [
         {
-          "started_by_participant": false,
+          "is_started": false,
           "path": [
             {"id": "1010", "title": "Chapter 1", "language_tag": "en", "type": "Chapter"},
             {"id": "1011", "title": "Chapter 2", "language_tag": "en", "type": "Chapter"},
@@ -183,14 +183,14 @@ Feature: Find all breadcrumbs to an item
       """
       [
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"},
             {"id": "70","title": null, "language_tag": "fr", "type": "Task"}
           ]
         },
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"},
@@ -212,13 +212,13 @@ Feature: Find all breadcrumbs to an item
       """
       [
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}
           ]
         },
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}
@@ -239,7 +239,7 @@ Feature: Find all breadcrumbs to an item
       """
       [
         {
-          "started_by_participant": false,
+          "is_started": false,
           "path": [
             {"id": "100", "title": "Chapter Containing Explicit Entry Not Started", "language_tag": "en", "type": "Chapter"},
             {"id": "101", "title": "Explicit Entry Not Started", "language_tag": "en", "type": "Task"}
