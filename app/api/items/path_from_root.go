@@ -35,6 +35,8 @@ type rawItemPath struct {
 //
 //		The path consists only of the items visible to the participant
 //		(`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
+//		The chain of attempts in the path cannot have missing results for non-final items that require explicit entry.
+//		It also cannot have not-started results within or below ended or non-submission-allowing attempts for non-final items.
 //
 //		Of all possible paths, the service chooses the one having:
 //			* an attempt linked to the last item if such a path exists,
@@ -42,24 +44,15 @@ type rawItemPath struct {
 //			* preferring paths having less missing/not-started results,
 //			* and having higher values of `attempt_id`.
 //
-//		For a path to be returned, each of its items must:
-//			* Either have `requires_explicit_entry`=0 ,
-//			* Or if it has `requires_explicit_entry=1`,
-//				then the following condition must be fulfilled, except if it is the last item of the path:
-//				the item must have at least one result with `started`=1 AND its attempt must have
-//					(`attempt.ended_at` IS NULL) AND (`NOW()` < `attempt.allows_submissions_until`).
-//				In other words, we only return a path to an item requiring explicit entry if the participant
-//				has started solving it, and it is still open.
-//
 //		If `as_team_id` is given, the attempts/results of the path are linked to the `as_team_id` group instead of
-//		the current user group.
+//		the current user's self group, the participant becomes the given team group.
 //
 //		Restrictions:
 //
 //			* if `as_team_id` is given, it should be a user's parent team group,
 //			* at least one path should exist,
 //
-//			Otherwise the 'forbidden' error is returned.
+//			otherwise, the 'forbidden' error is returned.
 //	parameters:
 //		- name: item_id
 //			in: path
