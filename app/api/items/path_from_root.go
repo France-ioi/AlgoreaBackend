@@ -112,7 +112,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 //
 // When {limit}=0, return all the paths.
 func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit int) []ItemPath {
-	limitStatement := ""
+	var limitStatement string
 	if limit > 0 {
 		limitStatement = " LIMIT " + strconv.Itoa(limit)
 	}
