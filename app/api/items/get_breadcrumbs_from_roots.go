@@ -48,7 +48,7 @@ type breadcrumbElement struct {
 //		The participant is `participant_id` (if given) or the current user (otherwise).
 //
 //
-//		Paths can contain only items visible to the current user
+//		Paths can contain only items visible to the participant
 //		(`can_view`>='content' on every item on the path but the last one and `can_view`>='info' for the last one).
 //		The item info (`title` and `language_tag`) in the paths is in the current user's language,
 //		or the item's default language (if not available).
