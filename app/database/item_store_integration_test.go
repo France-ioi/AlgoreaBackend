@@ -391,10 +391,10 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 	}))
 
 	type args struct {
-		ids                               []int64
-		groupID                           int64
-		parentAttemptID                   int64
-		requireContentAccessToTheLastItem bool
+		ids                                []int64
+		groupID                            int64
+		parentAttemptID                    int64
+		requireContentAccessToTheFinalItem bool
 	}
 	tests := []struct {
 		name                 string
@@ -467,32 +467,32 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			args: args{ids: []int64{6, 8}, groupID: 101, parentAttemptID: 201},
 		},
 		{
-			name:                 "no content access to the final item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name:                 "no content access to the final item when requireContentAccessToTheFinalItem = true",
+			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name: "no access to the final item when requireContentAccessToTheLastItem = false",
-			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheLastItem: false},
+			name: "no access to the final item when requireContentAccessToTheFinalItem = false",
+			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheFinalItem: false},
 		},
 		{
-			name:                 "content access to the final item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{4, 6}, groupID: 101, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name:                 "content access to the final item when requireContentAccessToTheFinalItem = true",
+			args:                 args{ids: []int64{4, 6}, groupID: 101, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 			want:                 true,
 			wantAttemptIDMap:     map[int64]int64{4: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "info access to the final item when requireContentAccessToTheLastItem = false",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheLastItem: false},
+			name:                 "info access to the final item when requireContentAccessToTheFinalItem = false",
+			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheFinalItem: false},
 			want:                 true,
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name: "no access to the final item when requireContentAccessToTheLastItem = true",
-			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name: "no access to the final item when requireContentAccessToTheFinalItem = true",
+			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 		},
 		{name: "no content access to the second to the final item", args: args{ids: []int64{2, 4, 6}, groupID: 105, parentAttemptID: 201}},
 		{name: "no content access to the first item", args: args{ids: []int64{2, 4, 6}, groupID: 106, parentAttemptID: 201}},
@@ -576,7 +576,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
-						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheLastItem, writeLock)
+						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheFinalItem, writeLock)
 					assert.Equal(t, tt.want, got)
 					assert.NoError(t, err)
 					return nil

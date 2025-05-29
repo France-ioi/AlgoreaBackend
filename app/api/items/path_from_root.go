@@ -132,7 +132,7 @@ func findItemPaths(store *database.DataStore, participantID, itemID int64, limit
 
 	var rawItemPaths []rawItemPath
 	service.MustNotBeError(store.Raw(`
-		WITH RECURSIVE paths (path, last_item_id, last_attempt_id, score, attempts, is_started, is_active) AS (
+		WITH RECURSIVE paths (path, final_item_id, final_attempt_id, score, attempts, is_started, is_active) AS (
 			WITH
 				groups_with_root_items AS ?,
 				visible_items AS ?,
@@ -174,14 +174,14 @@ func findItemPaths(store *database.DataStore, participantID, itemID int64, limit
 			        paths.is_started AND results.started_at IS NOT NULL,
 			        paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 			FROM paths
-			JOIN items_items ON items_items.parent_item_id = paths.last_item_id
+			JOIN items_items ON items_items.parent_item_id = paths.final_item_id
 			JOIN item_ancestors ON item_ancestors.id = items_items.child_item_id
 			LEFT JOIN attempts ON attempts.participant_id = ? AND
 				(NOT item_ancestors.requires_explicit_entry OR attempts.root_item_id = item_ancestors.id) AND
-				IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.last_attempt_id
+				IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.final_attempt_id
 			LEFT JOIN results ON results.participant_id = attempts.participant_id AND
 				attempts.id = results.attempt_id AND results.item_id = item_ancestors.id
-			WHERE paths.last_item_id <> ? AND (
+			WHERE paths.final_item_id <> ? AND (
 				item_ancestors.id = ? OR (
 					item_ancestors.can_view_generated_value >= ? AND
 					(NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
@@ -191,9 +191,9 @@ func findItemPaths(store *database.DataStore, participantID, itemID int64, limit
 		))
 		SELECT
 			path, MAX(is_started) AS is_started,
-			MAX(CONCAT(last_attempt_id IS NOT NULL, ':', LPAD(1000000000000000000000000000000000000000-score, 40, 0), ':', attempts)) AS sorting
+			MAX(CONCAT(final_attempt_id IS NOT NULL, ':', LPAD(1000000000000000000000000000000000000000-score, 40, 0), ':', attempts)) AS sorting
 		FROM paths
-		WHERE paths.last_item_id = ?
+		WHERE paths.final_item_id = ?
 		GROUP BY path
 		ORDER BY sorting DESC
 		`+limitStatement,
