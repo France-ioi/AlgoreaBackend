@@ -34,12 +34,12 @@ type rawItemPath struct {
 //		Finds a path from any of root items to a given item.
 //
 //		The path consists only of the items visible to the participant
-//		(`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
+//		(`can_view`>='content' for all the items except for the final one and `can_view`>='info' for the final one).
 //		The chain of attempts in the path cannot have missing results for non-final items that require explicit entry.
 //		It also cannot have not-started results within or below ended or non-submission-allowing attempts for non-final items.
 //
 //		Of all possible paths, the service chooses the one having:
-//			* an attempt linked to the last item if such a path exists,
+//			* an attempt linked to the final item if such a path exists,
 //			* missing/not-started results located closer to the end of the path,
 //			* preferring paths having less missing/not-started results,
 //			* and having higher values of `attempt_id`.

@@ -145,13 +145,13 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 }
 
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
-// for the given list of item ids (but the last item) if it is a valid participation hierarchy
+// for the given list of item ids (but the final item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
 //   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
 //     of a group the `groupID` is a descendant of or manages,
 //   - `ids` is an ordered list of parent-child items,
-//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//     at least 'info' access on the last one,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
+//     at least 'info' access on the final one,
 //   - the `groupID` group has a started result for each item but the last,
 //     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //   - if `ids` consists of only one item, the `parentAttemptID` is zero.
@@ -183,8 +183,8 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 //   - the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
 //     the `groupID` is a descendant of or manages,
 //   - `ids` is an ordered list of parent-child items,
-//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//     at least 'info' access on the last one,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
+//     at least 'info' access on the final one,
 //   - the `groupID` group has a started result for each item,
 //     with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
 func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (

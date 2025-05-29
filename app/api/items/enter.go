@@ -21,17 +21,17 @@ import (
 //
 //
 //							 Restrictions:
-//								 * the last item in `{ids}` should require explicit entry;
+//								 * the final item in `{ids}` should require explicit entry;
 //								 * `as_team_id` (if given) should be the current user's team;
 //								 * the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id)
 //									 of a group the participant is a descendant of or manages;
 //								 * `{ids}` should be an ordered list of parent-child items;
 //								 * the group (the user or his team) should have at least 'content' access
-//									 on each of the items in `{ids}` except the last one and at least 'info' access for the last one;
+//									 on each of the items in `{ids}` except the final one and at least 'info' access for the final one;
 //								 * the group should have a started, allowing submission, not ended result for each item but the last,
 //									 with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt;
 //								 * if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero;
-//								 * the group (the user or his team) must be qualified for the last item in `{ids}` (itemGetEntryState returns "ready").
+//								 * the group (the user or his team) must be qualified for the final item in `{ids}` (itemGetEntryState returns "ready").
 //
 //							 Otherwise, the "Forbidden" response is returned.
 //	parameters:

@@ -327,7 +327,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "21", "22"}, IsStarted: false}},
 		},
 		{
-			name: "prefers the path having an attempt for the last item",
+			name: "prefers the path having an attempt for the final item",
 			fixture: `
 				items:
 					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
@@ -353,7 +353,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
-			name: "supports paths whose attempt chains do not have results for the last item requiring explicit entry",
+			name: "supports paths whose attempt chains do not have results for the final item requiring explicit entry",
 			fixture: `
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
@@ -369,7 +369,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
-			name: "ignores paths whose attempt chains do not have results for a non-last item requiring explicit entry",
+			name: "ignores paths whose attempt chains do not have results for a non-final item requiring explicit entry",
 			fixture: `
 				items:
 					- {id: 23, default_language_tag: fr}
@@ -390,7 +390,7 @@ func Test_findItemPaths(t *testing.T) {
 			args: args{participantID: 101, itemID: 23, limit: 1},
 		},
 		{
-			name: "supports paths whose attempt chains do not have started results for the last item requiring explicit entry",
+			name: "supports paths whose attempt chains do not have started results for the final item requiring explicit entry",
 			fixture: `
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
@@ -407,7 +407,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
-			name: "supports paths whose attempt chains do not have started results for a non-last item requiring explicit entry",
+			name: "supports paths whose attempt chains do not have started results for a non-final item requiring explicit entry",
 			fixture: `
 				items:
 					- {id: 23, default_language_tag: fr}
@@ -430,7 +430,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "2", "22", "23"}, IsStarted: false}},
 		},
 		{
-			name: "supports paths whose attempt chains do not have started results for the last item while its attempts do not allow submissions",
+			name: "supports paths whose attempt chains do not have started results for the final item while its attempts do not allow submissions",
 			fixture: `
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
@@ -448,7 +448,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
-			name: "ignores paths whose attempt chains do not have started results for a non-last item while its attempts do not allow submissions",
+			name: "ignores paths whose attempt chains do not have started results for a non-final item while its attempts do not allow submissions",
 			fixture: `
 				items:
 					- {id: 23, default_language_tag: fr}
@@ -470,7 +470,7 @@ func Test_findItemPaths(t *testing.T) {
 			args: args{participantID: 101, itemID: 23, limit: 1},
 		},
 		{
-			name: "supports paths whose attempt chains do not have started results for the last item while its attempts are ended",
+			name: "supports paths whose attempt chains do not have started results for the final item while its attempts are ended",
 			fixture: `
 				permissions_generated:
 					- {group_id: 200, item_id: 1, can_view_generated: content}
@@ -488,7 +488,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1", "2", "22"}, IsStarted: false}},
 		},
 		{
-			name: "ignores paths whose attempt chains do not have started results for a non-last item while its attempts are ended",
+			name: "ignores paths whose attempt chains do not have started results for a non-final item while its attempts are ended",
 			fixture: `
 				items:
 					- {id: 23, default_language_tag: fr}
@@ -542,7 +542,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1"}, IsStarted: false}},
 		},
 		{
-			name: "supports paths whose attempt chains do not have started results for the last item while its attempts do not allow submissions",
+			name: "supports paths whose attempt chains do not have started results for the final item while its attempts do not allow submissions",
 			fixture: `
 				groups: [{id: 103, root_activity_id: 2}]
 				permissions_generated:
@@ -558,7 +558,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"2", "22"}, IsStarted: false}},
 		},
 		{
-			name: "ignores paths whose attempt chains do not have started results for a non-last item while its attempts do not allow submissions",
+			name: "ignores paths whose attempt chains do not have started results for a non-final item while its attempts do not allow submissions",
 			fixture: `
 				groups: [{id: 103, root_activity_id: 1}]
 				permissions_generated:
@@ -587,7 +587,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"1"}, IsStarted: false}},
 		},
 		{
-			name: "supports paths whose attempt chains do not have started results for an ended attempt of the last item",
+			name: "supports paths whose attempt chains do not have started results for an ended attempt of the final item",
 			fixture: `
 				groups: [{id: 103, root_activity_id: 2}]
 				permissions_generated:
@@ -603,7 +603,7 @@ func Test_findItemPaths(t *testing.T) {
 			want: []items.ItemPath{{Path: []string{"2", "22"}, IsStarted: false}},
 		},
 		{
-			name: "ignores paths whose attempt chains do not have started results for an ended attempt of non-last item",
+			name: "ignores paths whose attempt chains do not have started results for an ended attempt of non-final item",
 			fixture: `
 				groups: [{id: 103, root_activity_id: 1}]
 				permissions_generated:

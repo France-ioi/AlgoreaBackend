@@ -50,7 +50,7 @@ type breadcrumbElement struct {
 //
 //
 //		Paths can contain only items visible to the participant
-//		(`can_view`>='content' on every item on the path but the last one and `can_view`>='info' for the last one).
+//		(`can_view`>='content' on every item on the path but the final one and `can_view`>='info' for the final one).
 //		The item info (`title` and `language_tag`) in the paths is in the current user's language,
 //		or the item's default language (if not available).
 //

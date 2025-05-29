@@ -109,7 +109,7 @@ Feature: Create an attempt for an item - robustness
     And the response error message should contain "The item doesn't allow multiple attempts"
     And the table "attempts" should stay unchanged
 
-  Scenario: Not enough permissions for the last item in the path
+  Scenario: Not enough permissions for the final item in the path
     Given I am the user with id "101"
     And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated |
