@@ -160,7 +160,7 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit
 					JOIN root_items ON root_items.id = item_ancestors.id
 				)
 			(SELECT CAST(root_ancestors.id AS CHAR(1024)), root_ancestors.id, attempts.id, results.started_at IS NULL,
-			        CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)), results.started_at IS NOT NULL,
+			        CAST(LPAD(IFNULL(attempts.id, '!'), 20, 0) AS CHAR(1024)), results.started_at IS NOT NULL,
 			        attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 			FROM root_ancestors
 			LEFT JOIN attempts ON attempts.participant_id = ? AND
@@ -176,7 +176,7 @@ func FindItemPaths(store *database.DataStore, participantID, itemID int64, limit
 			))
 			UNION
 			(SELECT CONCAT(paths.path, '/', item_ancestors.id), item_ancestors.id, attempts.id, (paths.score << 1) + (results.started_at IS NULL),
-			        CONCAT(paths.attempts, '/', LPAD(attempts.id, 20, 0)),
+			        CONCAT(paths.attempts, '/', LPAD(IFNULL(attempts.id, '!'), 20, 0)),
 			        paths.is_started AND results.started_at IS NOT NULL,
 			        paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 			FROM paths
