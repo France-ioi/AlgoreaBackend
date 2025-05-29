@@ -43,15 +43,29 @@ type breadcrumbElement struct {
 //	summary: List all possible breadcrumbs for an item using `item_id`
 //	description: >
 //		Lists all paths from a root (`root_activity_id`|`root_skill_id` of groups the participant is descendant of or manages)
-//		to the given item that the participant may have used to access this item,
-//		so path for which the participant has a started attempt (possibly ended/not-allowing-submissions) on every item.
+//		to the given item that the participant may have used to access this item.
 //
+//
+//		Each path consists only of the items visible to both the participant and the current user
+//		(`can_view`>='content' for all the items except for the final one and `can_view`>='info' for the final one).
+//		The chain of attempts in the path cannot have missing results for non-final items that require explicit entry.
+//		It also cannot have not-started results within or below ended or non-submission-allowing attempts for non-final items.
+//
+//
+//		Note that paths may contain items without results for final items or non-final items not requiring explicit entry.
+//		Also, paths may contain not-started results for final items even within or below ended or non-submission-allowing attempts.
+//		It is even possible that the final item has no linked attempt at all while the final item requires explicit entry.
+//
+//
+//		The service sorts the paths in the following order:
+//			* Paths with an attempt linked to the final item come first.
+//			* Paths where missing or not-started results are closer to the end of the path are prioritized.
+//			* Paths with fewer missing or not-started results are preferred.
+//			* Paths with higher `attempt_id` values are ranked higher.
 //
 //		The participant is `participant_id` (if given) or the current user (otherwise).
 //
 //
-//		Paths can contain only items visible to both the participant and the current user
-//		(`can_view`>='content' on every item on the path but the final one and `can_view`>='info' for the final one).
 //		The item info (`title` and `language_tag`) in the paths is in the current user's language,
 //		or the item's default language (if not available).
 //
