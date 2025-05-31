@@ -516,7 +516,7 @@ const (
 	content           = "content"
 	solution          = "solution"
 	solutionWithGrant = "solution_with_grant"
-	answer            = "answer" //nolint:unused
+	answer            = "answer"
 	answerWithGrant   = "answer_with_grant"
 	allWithGrant      = "all_with_grant"
 )

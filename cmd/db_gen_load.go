@@ -19,7 +19,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 )
 
-//nolint:gosec
 func init() { //nolint:gochecknoinits,gocyclo,gocognit
 	dbGenLoadCmd := &cobra.Command{
 		Use:   "db-gen-load  [environment]",

@@ -32,7 +32,7 @@ func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
 	return nil
 }
 
-func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *godog.DocString) error { // nolint
+func (ctx *TestContext) ISendrequestToWithBody(method, path string, body *godog.DocString) error { //nolint
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 

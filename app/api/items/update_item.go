@@ -288,7 +288,7 @@ func updateChildrenAndRunListeners(
 // if a child's type is not 'Skill' when the items's type is not 'Skill'.
 func constructUpdateItemChildTypeNonSkillValidator(itemType string,
 	childrenInfoMap *map[int64]permissionAndType,
-) validator.Func { // nolint:gocritic
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 		if itemType == skill {
@@ -299,7 +299,7 @@ func constructUpdateItemChildTypeNonSkillValidator(itemType string,
 }
 
 // constructUpdateItemCannotBeSetForSkillsValidator constructs a validator checking that the fields is not set for skill items.
-func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator.Func { // nolint:gocritic
+func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		return fl.Field().IsZero() || itemType != skill
 	}
@@ -310,7 +310,7 @@ func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator
 // the field is true.
 func constructUpdateItemDurationRequiresExplicitEntryValidator(
 	formData *formdata.FormData, duration *string, requiresExplicitEntry bool,
-) validator.Func { // nolint:gocritic
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		data := fl.Parent().Addr().Interface().(*Item)
 		var changed bool

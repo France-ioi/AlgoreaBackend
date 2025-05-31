@@ -465,7 +465,6 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 		service.MustNotBeError(err)
 	}
 
-	// nolint:gosec
 	query = query.Select(columnsBuffer.String(), columnValues...)
 
 	err := query.Scan(&result).Error()

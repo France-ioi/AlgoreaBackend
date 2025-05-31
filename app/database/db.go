@@ -488,7 +488,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 		valuesPointers[index] = reflect.New(reflSlice.Type().Elem()).Interface()
 	}
 
-	rows, err := conn.toQuery().Rows() //nolint:rowserrcheck rows.Err() is checked before return.
+	rows, err := conn.toQuery().Rows()
 	if rows != nil {
 		defer func() {
 			_ = conn.db.AddError(rows.Close())
@@ -499,7 +499,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 	}
 
 	for rows.Next() {
-		if err := rows.Scan(valuesPointers...); conn.db.AddError(err) != nil { //nolint:gocritic Err is checked with AddError.
+		if err := rows.Scan(valuesPointers...); conn.db.AddError(err) != nil {
 			return conn
 		}
 		for index, valuePointer := range valuesPointers {
@@ -527,7 +527,7 @@ func (conn *DB) ScanAndHandleMaps(handler func(map[string]interface{}) error) *D
 		return conn
 	}
 
-	rows, err := conn.toQuery().Rows() //nolint:rowserrcheck rows.Err() is checked before return.
+	rows, err := conn.toQuery().Rows()
 	if rows != nil {
 		defer func() {
 			_ = conn.db.AddError(rows.Close())
@@ -562,7 +562,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interfa
 		columnPointers[i] = &columns[i]
 	}
 
-	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil { //nolint:gocritic Err is checked with AddError.
+	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil {
 		return nil
 	}
 
@@ -624,7 +624,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 		return result
 	}
 	if valuesReflValue.Len() == 0 {
-		_ = result.db.AddError(gorm.ErrRecordNotFound) // nolint:gosec
+		_ = result.db.AddError(gorm.ErrRecordNotFound)
 		return result
 	}
 	reflect.ValueOf(value).Elem().Set(valuesReflValue.Index(0))
@@ -706,7 +706,6 @@ func (conn *DB) constructInsertMapsStatement(
 	if ignore {
 		ignoreString = "IGNORE "
 	}
-	// nolint:gosec
 	_, _ = builder.WriteString(fmt.Sprintf("INSERT %sINTO `%s` (%s) VALUES ", ignoreString, tableName, strings.Join(escapedKeys, ", ")))
 	for index, dataMap := range dataMaps {
 		_, _ = builder.WriteRune('(')

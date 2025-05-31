@@ -46,7 +46,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 		if len(data.Rows) > 2 {
 			finalMarksString = strings.Repeat(marksString+", ", len(data.Rows)-2) + finalMarksString
 		}
-		query := "INSERT INTO " + database.QuoteName(tableName) + // nolint: gosec
+		query := "INSERT INTO " + database.QuoteName(tableName) +
 			" (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
@@ -391,7 +391,7 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 
 // TableShouldBeEmpty verifies that the DB table is empty.
 func (ctx *TestContext) TableShouldBeEmpty(tableName string) error {
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName)) //nolint:gosec
+	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName))
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,7 @@ func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(tableName, columnName, v
 	values := parseMultipleValuesString(valuesStr)
 
 	where, parameters := constructWhereForColumnValues([]string{columnName}, values, true)
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...) //nolint:gosec
+	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...)
 	if err != nil {
 		return err
 	}

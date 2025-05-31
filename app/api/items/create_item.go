@@ -376,7 +376,7 @@ func constructItemOptionsValidator() validator.Func {
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
 func constructChildrenValidator(store *database.DataStore, user *database.User,
-	childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData,
 	itemID *int64,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
@@ -462,7 +462,7 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 // constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task).
 func constructChildrenAllowedValidator(
 	defaultItemType string, childrenInfoMap *map[int64]permissionAndType,
-) validator.Func { // nolint:gocritic
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		if len(*childrenInfoMap) == 0 {
 			return true
@@ -480,7 +480,7 @@ func constructChildrenAllowedValidator(
 
 // constructChildTypeNonSkillValidator constructs a validator for the Children field that check
 // if a child's type is not 'Skill' when the item's type is not 'Skill'.
-func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAndType) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 
@@ -498,7 +498,7 @@ type parentItemInfo struct {
 
 func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User,
 	parentInfo *parentItemInfo, childrenInfoMap *map[int64]permissionAndType,
-) { // nolint:gocritic
+) {
 	formData.RegisterValidation("parent_item_id",
 		formData.ValidatorSkippingUnsetFields(constructParentItemIDValidator(store, user, parentInfo)))
 	formData.RegisterTranslation("parent_item_id",
@@ -529,7 +529,7 @@ func registerLanguageTagValidator(formData *formdata.FormData, store *database.D
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	itemType string, childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	itemType string, childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData,
 	itemID *int64,
 ) {
 	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenInfoMap, oldPropagationLevelsMap, itemID))

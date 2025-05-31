@@ -13,7 +13,7 @@ import (
 
 // The request has successfully updated the object
 // swagger:response updatedStartResultResponse
-type updatedStartResultResponse struct { // nolint:unused
+type updatedStartResultResponse struct { //nolint:unused
 	// in: body
 	Body struct {
 		// "updated"

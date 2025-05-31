@@ -193,7 +193,6 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64, requir
 		externalColumnList += ", "
 	}
 
-	// nolint:gosec
 	itemsQuery := filterAttemptsFunc(dataStore.Raw(`
 			SELECT items.*, `+externalColumnList+`results.attempt_id,
 				results.score_computed, results.validated, results.started_at, results.latest_activity_at,

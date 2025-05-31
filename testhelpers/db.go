@@ -222,7 +222,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 	}
 }
 
-// nolint: gosec
+//nolint:gosec
 func emptyDB(db *sql.DB, dbName string) error {
 	appenv.ForceTestEnv()
 

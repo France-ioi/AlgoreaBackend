@@ -44,7 +44,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if apiErr != NoError { // apiErr is an APIError, not builtin.error
-			_ = render.Render(w, r, apiErr.httpResponse()) // nolint, never fails
+			_ = render.Render(w, r, apiErr.httpResponse()) // never fails
 		}
 	}()
 	apiErr = fn(w, r)

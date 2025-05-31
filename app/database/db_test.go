@@ -1631,7 +1631,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 		_ = func() (err error) {
 			defer recoverPanics(&err)
 			var a []int
-			a[0]++ // nolint:govet // runtime error
+			a[0]++ // runtime error
 			return nil
 		}()
 

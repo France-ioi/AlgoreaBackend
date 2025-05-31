@@ -203,7 +203,7 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(err *error) { // nolint:gocritic
+func recoverPanics(err *error) {
 	if r := recover(); r != nil {
 		*err = &UnexpectedError{err: r.(error)}
 	}

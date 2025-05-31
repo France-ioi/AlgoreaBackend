@@ -115,7 +115,7 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 	// remove all tables from DB
 	var rows *sql.Rows
 	var err error
-	// nolint:gosec
+	//nolint:gosec
 	rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
 	                      FROM   information_schema.tables
 	                      WHERE  table_type   = 'BASE TABLE'

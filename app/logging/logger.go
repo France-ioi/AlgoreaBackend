@@ -70,7 +70,7 @@ func (l *Logger) Configure(config *viper.Viper) {
 		}
 		_, codeFilePath, _, _ := runtime.Caller(0)
 		codeDir := filepath.Dir(codeFilePath)
-		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600) //nolint:gosec,gosec No user input.
+		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600) //nolint:gosec,gosec // No user input.
 		if err != nil {
 			l.logrusLogger.SetOutput(os.Stdout)
 			l.logrusLogger.Errorf("Unable to open file for logs, fallback to stdout: %v\n", err)
@@ -108,6 +108,6 @@ func (l *Logger) WithContext(ctx context.Context) *logrus.Entry {
 	return entry
 }
 
-func createLogger() *Logger { //nolint:gosec
+func createLogger() *Logger {
 	return &Logger{logrus.New(), nil}
 }

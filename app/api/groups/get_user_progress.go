@@ -173,7 +173,6 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 	userIDsList := strings.Join(userIDs, ", ")
 	var result []*groupUserProgressResponseTableCell
 	scanAndBuildProgressResults(
-		// nolint:gosec
 		joinUserProgressResults(
 			store.Raw(`
 				SELECT STRAIGHT_JOIN
