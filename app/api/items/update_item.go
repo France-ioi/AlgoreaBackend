@@ -15,7 +15,7 @@ import (
 
 // ItemWithDefaultLanguageTag represents common item fields plus 'default_language_tag'.
 type ItemWithDefaultLanguageTag struct {
-	Item `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	Item `json:"item,squash"`
 	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
 	// minLength: 1
@@ -26,8 +26,8 @@ type ItemWithDefaultLanguageTag struct {
 // updateItemRequest is the expected input for item updating
 // swagger:model itemEditRequest
 type updateItemRequest struct {
-	ItemWithDefaultLanguageTag `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
-	Children                   []itemChild          `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
+	ItemWithDefaultLanguageTag `json:"item,squash"`
+	Children                   []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 
 	childrenIDsCache []int64
 }

@@ -130,7 +130,7 @@ issues:
     - text: "has too many statements"
       linters:
         - funlen
-    - text: "unknown JSON option" # requires update of package "mapstructure"
+    - text: unknown JSON option "squash" # an option provided by the mapstructure library and the formdata package
       linters:
         - staticcheck
     - text: "function has more than 5 results, consider to simplify the function"
