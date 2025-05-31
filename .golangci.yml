@@ -153,7 +153,7 @@ issues:
     - text: "type .answerSubmitResponse. is unused"
       linters:
         - unused
-    - text: "timeCmpSimplify:"
+    - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
       linters:
         - gocritic
 
