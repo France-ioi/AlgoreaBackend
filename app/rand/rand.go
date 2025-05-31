@@ -40,20 +40,6 @@ func Float64() float64 {
 	return globalRand.Float64()
 }
 
-// String returns a random string of n characters.
-func String(n int) string {
-	globalLock.Lock()
-	defer globalLock.Unlock()
-
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	s := make([]rune, n)
-	for i := range s {
-		s[i] = letters[globalRand.Intn(len(letters))]
-	}
-	return string(s)
-}
-
 const rngLen = 607
 
 type rngSource struct {
