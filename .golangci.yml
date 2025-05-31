@@ -141,9 +141,6 @@ issues:
     - text: "SA1019:" # io/util has been deprecated since Go 1.19
       linters:
         - staticcheck
-    - text: "ptrToRefParam:"
-      linters:
-        - gocritic
     - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
       linters:
         - gocritic
