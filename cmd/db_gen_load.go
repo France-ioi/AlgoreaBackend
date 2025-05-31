@@ -300,13 +300,13 @@ func init() { //nolint:gochecknoinits,gocyclo,gocognit
 						groupsQueryValues = append(groupsQueryValues, fmt.Sprintf("(%d, 'UserSelf'), (%d, 'UserAdmin')", id, id+1000000))
 						groupsGroupsQueryValues = append(groupsGroupsQueryValues, fmt.Sprintf("(2, %d, 'direct'), (3, %d, 'direct')", id, id+1000000))
 
-						isInTeam := rand.Float32() < 0.9
+						isInTeam := rand.Float32() < 0.9 //nolint:gosec // math.rand is okay for test data generation
 						parentGroupID := int64(11)
-						if rand.Float32() < 0.5 {
+						if rand.Float32() < 0.5 { //nolint:gosec // math.rand is okay for test data generation
 							parentGroupID = 12
 						}
 						if isInTeam {
-							parentGroupID = teams[int(rand.Float32()*float32(teamsNumber))]
+							parentGroupID = teams[int(rand.Float32()*float32(teamsNumber))] //nolint:gosec // math.rand is okay for test data generation
 						}
 						groupsGroupsQueryValues = append(groupsGroupsQueryValues, fmt.Sprintf("(%d, %d, 'requestAccepted')", parentGroupID, id))
 
@@ -320,16 +320,17 @@ func init() { //nolint:gochecknoinits,gocyclo,gocognit
 							311, 312, 313, 314, 315, 316, 317, 318, 319,
 							411, 412, 413, 414, 415, 416, 417, 418, 419,
 						} {
-							attemptsNumber := int(rand.Float32() * 2)
+							attemptsNumber := int(rand.Float32() * 2) //nolint:gosec // math.rand is okay for test data generation
 							for attempt := 0; attempt < attemptsNumber; attempt++ {
-								score := int(rand.Float32() * 101)
+								score := int(rand.Float32() * 101) //nolint:gosec // math.rand is okay for test data generation
 								groupsAttemptsQueryValues = append(groupsAttemptsQueryValues, fmt.Sprintf(
 									"(%d, %d, FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))), "+
 										"%d, %d, FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))), "+
 										"%d, %d, %d, "+
 										"FROM_UNIXTIME(UNIX_TIMESTAMP('2010-04-30 14:53:27') + FLOOR(0 + (RAND() * 630720000))))",
-									attemptGroupID, itemID, score, -score, int(rand.Float32()*11), int(rand.Float32()*11),
-									int(rand.Float32()*2)))
+									attemptGroupID, itemID, score, -score,
+									int(rand.Float32()*11), int(rand.Float32()*11), //nolint:gosec // math.rand is okay for test data generation
+									int(rand.Float32()*2))) //nolint:gosec // math.rand is okay for test data generation
 							}
 						}
 					}

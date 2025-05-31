@@ -144,9 +144,6 @@ issues:
     - text: "ptrToRefParam:"
       linters:
         - gocritic
-    - text: "G404:" # Use of weak random number generator (math/rang instead of crypto/rand)
-      linters:
-        - gosec
     - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
       linters:
         - gocritic

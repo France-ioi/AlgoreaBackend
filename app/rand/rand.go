@@ -1,4 +1,4 @@
-// Package rand provides utilities to generate random data.
+// Package rand provides utilities to generate insecure random numbers like ids and delays.
 package rand
 
 import (
@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	globalRand = mr.New(mr.NewSource(1))
+	globalRand = mr.New(mr.NewSource(1)) //nolint:gosec // math/rand is okay as the package is not used for security purposes
 	globalLock sync.Mutex
 )
 
