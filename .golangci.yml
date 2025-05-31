@@ -150,9 +150,6 @@ issues:
     - text: "deferInLoop:" # Possible resource leak, 'defer' is called in the 'for' loop.
       linters:
         - gocritic
-    - text: "type .answerSubmitResponse. is unused"
-      linters:
-        - unused
     - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
       linters:
         - gocritic
