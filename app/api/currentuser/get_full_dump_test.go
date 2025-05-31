@@ -38,7 +38,7 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 	assert.Equal(t, "application/json; charset=utf-8", response.Header.Get("Content-Type"))
 	body, _ := ioutil.ReadAll(response.Body)
 	_ = response.Body.Close()
-	assert.Equal(t, `{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
+	assert.Equal(t, `{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`+"\n",
 		string(body)) // Note that the response is a malformed JSON in case of error
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

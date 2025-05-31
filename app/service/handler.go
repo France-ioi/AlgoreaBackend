@@ -20,6 +20,7 @@ type AppHandler func(http.ResponseWriter, *http.Request) APIError
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	apiErr := NoError
 	var shouldLogError bool
+	var errorToLog string
 	defer func() {
 		if p := recover(); p != nil {
 			switch err := p.(type) {
@@ -29,15 +30,17 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				if errors.Is(err, context.DeadlineExceeded) {
 					apiErr = ErrRequestTimeout()
 				} else {
-					apiErr = ErrUnexpected(err)
+					apiErr = ErrUnexpected(fmt.Errorf("unknown error"))
 					shouldLogError = true
+					errorToLog = err.Error()
 				}
 			default:
-				apiErr = ErrUnexpected(fmt.Errorf("unknown error: %+v", err))
+				apiErr = ErrUnexpected(fmt.Errorf("unknown error"))
+				errorToLog = fmt.Sprintf("%+v", err)
 				shouldLogError = true
 			}
 			if shouldLogError {
-				logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", apiErr.Error, debug.Stack())
+				logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", errorToLog, debug.Stack())
 			}
 		}
 		if apiErr != NoError { // apiErr is an APIError, not builtin.error
