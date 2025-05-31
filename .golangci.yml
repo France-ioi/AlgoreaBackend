@@ -153,9 +153,6 @@ issues:
     - text: "type .answerSubmitResponse. is unused"
       linters:
         - unused
-    - text: "uncheckedInlineErr: err error is unchecked, maybe intended to check it instead of conn.db.AddError.err."
-      linters:
-        - gocritic
     - text: "timeCmpSimplify:"
       linters:
         - gocritic

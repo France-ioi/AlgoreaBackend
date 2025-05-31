@@ -499,7 +499,7 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 	}
 
 	for rows.Next() {
-		if err := rows.Scan(valuesPointers...); conn.db.AddError(err) != nil {
+		if err := rows.Scan(valuesPointers...); conn.db.AddError(err) != nil { //nolint:gocritic // conn.db.AddError(err) returns err
 			return conn
 		}
 		for index, valuePointer := range valuesPointers {
@@ -562,7 +562,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interfa
 		columnPointers[i] = &columns[i]
 	}
 
-	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil {
+	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil { //nolint:gocritic // conn.db.AddError(err) returns err
 		return nil
 	}
 
