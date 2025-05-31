@@ -147,9 +147,6 @@ issues:
     - text: "G404:" # Use of weak random number generator (math/rang instead of crypto/rand)
       linters:
         - gosec
-    - text: "deferInLoop:" # Possible resource leak, 'defer' is called in the 'for' loop.
-      linters:
-        - gocritic
     - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
       linters:
         - gocritic
