@@ -2,7 +2,7 @@ package auth
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -118,7 +118,7 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 			assert.Contains(t, logs, "The request is canceled: context deadline exceeded")
 		} else {
 			assert.Equal(t, 201, response.StatusCode)
-			body, _ := ioutil.ReadAll(response.Body)
+			body, _ := io.ReadAll(response.Body)
 			assert.Equal(t,
 				`{"success":true,"message":"created","data":{"access_token":"newaccesstoken","expires_in":78901234}}`+"\n",
 				string(body))

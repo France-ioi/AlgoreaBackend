@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"regexp"
@@ -62,7 +61,7 @@ func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	if config.GetString(keyType+"KeyFile") == "" {
 		return nil, fmt.Errorf("missing %s key in the token config (%sKey or %sKeyFile)", keyType, keyType, keyType)
 	}
-	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
+	return os.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
 }
 
 var tokenPathTestRegexp = regexp.MustCompile(`.*([/\\]app(?:[/\\][a-z]+)*?)$`)

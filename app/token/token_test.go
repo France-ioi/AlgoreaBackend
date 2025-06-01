@@ -3,7 +3,6 @@ package token
 import (
 	"crypto/rsa"
 	"errors"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"strconv"
@@ -378,7 +377,7 @@ func Test_prepareFileName_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
 }
 
 func createTmpPublicKeyFile(key []byte) (*os.File, error) {
-	tmpFilePublic, err := ioutil.TempFile("", "testPublicKey.pem")
+	tmpFilePublic, err := os.CreateTemp("", "testPublicKey.pem")
 	if err != nil {
 		return tmpFilePublic, err
 	}
@@ -388,7 +387,7 @@ func createTmpPublicKeyFile(key []byte) (*os.File, error) {
 }
 
 func createTmpPrivateKeyFile(key []byte) (*os.File, error) {
-	tmpFilePrivate, err := ioutil.TempFile("", "testPrivateKey.pem")
+	tmpFilePrivate, err := os.CreateTemp("", "testPrivateKey.pem")
 	if err != nil {
 		return tmpFilePrivate, err
 	}

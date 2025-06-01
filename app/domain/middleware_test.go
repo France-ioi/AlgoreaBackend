@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -121,7 +121,7 @@ func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string,
 	response, err := client.Do(mainRequest)
 	var body string
 	if err == nil {
-		bodyData, _ := ioutil.ReadAll(response.Body)
+		bodyData, _ := io.ReadAll(response.Body)
 		_ = response.Body.Close()
 		body = string(bodyData)
 	}

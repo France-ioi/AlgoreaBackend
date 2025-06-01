@@ -6,7 +6,6 @@ package testhelpers
 import (
 	"context"
 	"flag"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -83,7 +82,7 @@ func RunGodogTests(t *testing.T, tags string) {
 }
 
 func featureFilesInCurrentDir() []string {
-	files, err := ioutil.ReadDir(".")
+	files, err := os.ReadDir(".")
 	if err != nil {
 		panic(err)
 	}

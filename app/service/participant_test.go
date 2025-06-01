@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -79,7 +79,7 @@ func TestParticipantMiddleware(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			middlewareWasCalled, serviceWasCalled, actualUserID, resp, mock := callThroughParticipantMiddleware(tt.userID, tt.asTeamID, tt.apiError)
 			defer func() { _ = resp.Body.Close() }()
-			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			bodyBytes, _ := io.ReadAll(resp.Body)
 			assert.Equal(t, tt.expectedStatusCode, resp.StatusCode)
 			assert.Equal(t, "application/json; charset=utf-8", resp.Header.Get("Content-Type"))
 			assert.True(t, middlewareWasCalled)

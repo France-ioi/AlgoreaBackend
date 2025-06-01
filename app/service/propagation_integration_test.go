@@ -87,7 +87,7 @@ func TestSchedulePropagation(t *testing.T) {
 
 			if tt.args.endpoint != "" {
 				if tt.endpointCallErr == nil {
-					httpmock.RegisterStubRequest(
+					httpmock.RegisterStubRequests(
 						httpmock.NewStubRequest(
 							"GET",
 							tt.args.endpoint+"?types=permissions",
@@ -95,7 +95,7 @@ func TestSchedulePropagation(t *testing.T) {
 						),
 					)
 				} else {
-					httpmock.RegisterStubRequest(
+					httpmock.RegisterStubRequests(
 						httpmock.NewStubRequest(
 							"GET",
 							tt.args.endpoint+"?types=permissions",
