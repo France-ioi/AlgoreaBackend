@@ -286,8 +286,9 @@ func updateChildrenAndRunListeners(
 
 // constructUpdateItemChildTypeNonSkillValidator constructs a validator for the Children field that checks
 // if a child's type is not 'Skill' when the items's type is not 'Skill'.
-func constructUpdateItemChildTypeNonSkillValidator(itemType string,
-	childrenInfoMap *map[int64]permissionAndType,
+func constructUpdateItemChildTypeNonSkillValidator(
+	itemType string,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)

@@ -202,7 +202,9 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(err *error) {
+func recoverPanics(
+	err *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
+) {
 	if r := recover(); r != nil {
 		*err = &UnexpectedError{err: r.(error)}
 	}

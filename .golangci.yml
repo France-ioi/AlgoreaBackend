@@ -135,9 +135,6 @@ issues:
     - text: "function has more than 5 results, consider to simplify the function"
       linters:
         - gocritic
-    - text: "to be of non-pointer type"
-      linters:
-        - gocritic
     - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
       linters:
         - gocritic

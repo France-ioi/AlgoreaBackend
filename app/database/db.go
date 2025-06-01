@@ -243,7 +243,8 @@ func gormDBBeginTxReplacement(ctx context.Context, db *gorm.DB, txOpts *sql.TxOp
 }
 
 func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
-	returnErr *error, txOptions ...*sql.TxOptions,
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace the value of returnErr in some cases
+	txOptions ...*sql.TxOptions,
 ) (shouldIgnoreInitialError bool) {
 	errToHandleError, _ := errToHandle.(error)
 
@@ -907,7 +908,9 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(returnErr *error) {
+func recoverPanics(
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
+) {
 	if p := recover(); p != nil {
 		switch e := p.(type) {
 		case runtime.Error:
