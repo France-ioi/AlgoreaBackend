@@ -15,7 +15,7 @@ import (
 
 // ItemWithDefaultLanguageTag represents common item fields plus 'default_language_tag'.
 type ItemWithDefaultLanguageTag struct {
-	Item `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	Item `json:"item,squash"`
 	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
 	// minLength: 1
@@ -26,8 +26,8 @@ type ItemWithDefaultLanguageTag struct {
 // updateItemRequest is the expected input for item updating
 // swagger:model itemEditRequest
 type updateItemRequest struct {
-	ItemWithDefaultLanguageTag `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
-	Children                   []itemChild          `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
+	ItemWithDefaultLanguageTag `json:"item,squash"`
+	Children                   []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 
 	childrenIDsCache []int64
 }
@@ -286,9 +286,10 @@ func updateChildrenAndRunListeners(
 
 // constructUpdateItemChildTypeNonSkillValidator constructs a validator for the Children field that checks
 // if a child's type is not 'Skill' when the items's type is not 'Skill'.
-func constructUpdateItemChildTypeNonSkillValidator(itemType string,
-	childrenInfoMap *map[int64]permissionAndType,
-) validator.Func { // nolint:gocritic
+func constructUpdateItemChildTypeNonSkillValidator(
+	itemType string,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 		if itemType == skill {
@@ -299,7 +300,7 @@ func constructUpdateItemChildTypeNonSkillValidator(itemType string,
 }
 
 // constructUpdateItemCannotBeSetForSkillsValidator constructs a validator checking that the fields is not set for skill items.
-func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator.Func { // nolint:gocritic
+func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		return fl.Field().IsZero() || itemType != skill
 	}
@@ -310,7 +311,7 @@ func constructUpdateItemCannotBeSetForSkillsValidator(itemType string) validator
 // the field is true.
 func constructUpdateItemDurationRequiresExplicitEntryValidator(
 	formData *formdata.FormData, duration *string, requiresExplicitEntry bool,
-) validator.Func { // nolint:gocritic
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		data := fl.Parent().Addr().Interface().(*Item)
 		var changed bool

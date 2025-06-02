@@ -207,9 +207,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 		requestData.ScoreToken.Converted.LocalItemID,
 	)
 	service.MustNotBeError(
-		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+ // nolint:gosec
+		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+
 			updateExpr+" WHERE results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", values...).
-			Error()) // nolint:gosec
+			Error())
 	resultStore := store.Results()
 	service.MustNotBeError(resultStore.MarkAsToBePropagated(
 		requestData.ScoreToken.Converted.ParticipantID, requestData.ScoreToken.Converted.AttemptID,

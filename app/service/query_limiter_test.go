@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestQueryLimiter_Apply(t *testing.T) {
@@ -72,6 +73,8 @@ func TestQueryLimiter_Apply(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			r := chi.NewRouter()
 			called := false
 			handler := func(w http.ResponseWriter, r *http.Request) {

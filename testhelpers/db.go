@@ -6,7 +6,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -113,14 +112,18 @@ func OpenRawDBConnection() (*sql.DB, error) {
 func LoadFixture(db *sql.DB, fileName string) {
 	appenv.ForceTestEnv()
 
-	var files []os.FileInfo
+	var filenames []string
 	var err error
 	filePath := filepath.Join(fixtureDir, fileName)
 	stat, err := os.Stat(filePath)
 	if err == nil && stat.IsDir() {
-		files, err = ioutil.ReadDir(filePath)
+		files, err := os.ReadDir(filePath)
 		if err != nil {
 			panic(fmt.Errorf("unable to load fixture dir: %s", err.Error()))
+		}
+		filenames = make([]string, 0, len(files))
+		for _, f := range files {
+			filenames = append(filenames, f.Name())
 		}
 	} else {
 		file, err := os.Lstat(filePath)
@@ -128,13 +131,12 @@ func LoadFixture(db *sql.DB, fileName string) {
 			panic(fmt.Errorf("unable to load fixture file: %s", err.Error()))
 		}
 		filePath = filepath.Dir(filePath)
-		files = []os.FileInfo{file}
+		filenames = []string{file.Name()}
 	}
-	for _, f := range files {
+	for _, filename := range filenames {
 		var err error
 		var data []byte
-		filename := f.Name()
-		data, err = ioutil.ReadFile(filepath.Join(filePath, filename)) //nolint: gosec
+		data, err = os.ReadFile(filepath.Join(filePath, filename)) //nolint: gosec
 		if err != nil {
 			panic(err)
 		}
@@ -222,7 +224,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 	}
 }
 
-// nolint: gosec
+//nolint:gosec
 func emptyDB(db *sql.DB, dbName string) error {
 	appenv.ForceTestEnv()
 

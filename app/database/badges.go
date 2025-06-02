@@ -153,7 +153,6 @@ func (s *GroupStore) makeUserManagerOfBadgeGroups(badgeGroupIDsMap map[int64]str
 		badgeGroupIDs = append(badgeGroupIDs, strconv.FormatInt(badgeGroupID, 10))
 	}
 	badgeGroupIDsList := strings.Join(badgeGroupIDs, ", ")
-	// nolint:gosec
 	mustNotBeError(s.Exec(`
 		INSERT IGNORE INTO group_managers (group_id, manager_id, can_manage, can_grant_group_access, can_watch_members)
 		SELECT badge_groups.group_id, ?, "memberships", 1, 1

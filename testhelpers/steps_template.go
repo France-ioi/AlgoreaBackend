@@ -16,7 +16,7 @@ func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { 
 	return nil
 }
 
-func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *godog.DocString) error { // nolint
+func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *godog.DocString) error { //nolint
 	preprocessedValue, err := ctx.preprocessString(value.Content)
 	if err != nil {
 		return err

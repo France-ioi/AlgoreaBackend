@@ -13,8 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
-// nolint:gosec
-func init() { //nolint:gochecknoinits,gocyclo
+func init() { //nolint:gochecknoinits
 	var delay time.Duration
 
 	deleteTempUsersCmd := &cobra.Command{

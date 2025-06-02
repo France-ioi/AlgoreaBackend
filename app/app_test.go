@@ -4,7 +4,7 @@ import (
 	crand "crypto/rand"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -148,7 +148,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	if err != nil {
 		return
 	}
-	respBody, _ := ioutil.ReadAll(response.Body)
+	respBody, _ := io.ReadAll(response.Body)
 	_ = response.Body.Close()
 
 	// check that the error has been handled by the recover
@@ -229,7 +229,7 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 		return
 	}
 	defer func() { _ = response.Body.Close() }()
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Contains(string(body), "Types of profiles available:")
 }
@@ -283,7 +283,7 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 			if err != nil {
 				return
 			}
-			_, _ = ioutil.ReadAll(response.Body)
+			_, _ = io.ReadAll(response.Body)
 			_ = response.Body.Close()
 		})
 	}

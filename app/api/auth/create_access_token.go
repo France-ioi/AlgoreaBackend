@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -375,7 +374,7 @@ func parseJSONParams(r *http.Request, requestData map[string]interface{}) servic
 		CookieSecure   *bool   `json:"cookie_secure"`
 		CookieSameSite *bool   `json:"cookie_same_site"`
 	}
-	defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
+	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&jsonPayload)
 	if err != nil {
 		return service.ErrInvalidRequest(err)

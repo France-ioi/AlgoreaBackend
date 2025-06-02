@@ -31,7 +31,7 @@ func GetResponseForRouteWithMockedDBAndUser(
 	defer restoreFunc()
 
 	db, mock := database.NewDBMock()
-	defer func() { _ = db.Close() }() // nolint: gosec
+	defer func() { _ = db.Close() }()
 
 	setMockExpectationsFunc(mock)
 

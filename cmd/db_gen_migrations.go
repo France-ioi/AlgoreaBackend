@@ -21,7 +21,6 @@ const (
 	migrateStatementEnd   = "-- +migrate StatementEnd\n"
 )
 
-// nolint:gosec
 func init() { //nolint:gochecknoinits,gocyclo,gocognit
 	dbGenMigrationsCmd := &cobra.Command{
 		Use:   "db-gen-migrations  [environment]",

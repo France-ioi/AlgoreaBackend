@@ -157,7 +157,6 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 		userIDsList := strings.Join(userIDs[startFromUser:batchBoundary], ", ")
 		userNumber := startFromUser
 		service.MustNotBeError(
-			// nolint:gosec
 			joinUserProgressResultsForCSV(
 				store.Raw(`
 				SELECT STRAIGHT_JOIN

@@ -64,7 +64,6 @@ linters:
     - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
     - wsl              # Requires whitelines between blocks. requires many changes, enable it later
-    - nolintlint       # Requires explanation for each "nolint" directive. requires many changes
     - gomnd            # Flags all "magic numbers" in the code. requires many changes
     - goerr113         # Don't allow dynamic errors, requires wrapped static errors. requires many changes
     - nestif           # Doesn't allow too long nested if. requires complex changes
@@ -129,34 +128,13 @@ issues:
     - text: "has too many statements"
       linters:
         - funlen
-    - text: "unknown JSON option" # requires update of package "mapstructure"
+    - text: unknown JSON option "squash" # an option provided by the mapstructure library and the formdata package
       linters:
         - staticcheck
     - text: "function has more than 5 results, consider to simplify the function"
       linters:
         - gocritic
-    - text: "to be of non-pointer type"
-      linters:
-        - gocritic
-    - text: "SA1019:" # io/util has been deprecated since Go 1.19
-      linters:
-        - staticcheck
-    - text: "ptrToRefParam:"
-      linters:
-        - gocritic
-    - text: "G404:" # Use of weak random number generator (math/rang instead of crypto/rand)
-      linters:
-        - gosec
-    - text: "deferInLoop:" # Possible resource leak, 'defer' is called in the 'for' loop.
-      linters:
-        - gocritic
-    - text: "type .answerSubmitResponse. is unused"
-      linters:
-        - unused
-    - text: "uncheckedInlineErr: err error is unchecked, maybe intended to check it instead of conn.db.AddError.err."
-      linters:
-        - gocritic
-    - text: "timeCmpSimplify:"
+    - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
       linters:
         - gocritic
 

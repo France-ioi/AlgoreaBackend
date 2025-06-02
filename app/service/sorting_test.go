@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestApplySorting(t *testing.T) {
@@ -472,6 +473,8 @@ func TestApplySorting(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			defer func() {
 				if p := recover(); p != nil {
 					if tt.shouldPanic == nil {

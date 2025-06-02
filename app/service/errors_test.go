@@ -121,7 +121,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)
-	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
+	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 	assert.Contains(hook.GetAllLogs(), "unexpected error: some error")
@@ -152,10 +152,10 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)
-	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error: `+expectedMessage+`"}`+"\n",
+	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`+"\n",
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
-	assert.Contains(hook.GetAllLogs(), "unexpected error: unknown error: some error")
+	assert.Contains(hook.GetAllLogs(), "unexpected error: some error")
 }
 
 func TestRendersErrRequestTimeoutOnPanicContextDeadlineExceeded(t *testing.T) {

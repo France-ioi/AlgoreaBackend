@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -219,7 +218,7 @@ var (
 
 func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	var rawData map[string]interface{}
-	defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
+	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawData)
 	if err != nil {
 		return fmt.Errorf("invalid input JSON: %v", err)

@@ -145,6 +145,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		recomputeAncestors[i], err = s.Prepare(recomputeQueries[i])
 		mustNotBeError(err)
 
+		//nolint:gocritic // here we schedule closing of each statement, so the defer should be inside the loop
 		defer func(i int) { mustNotBeError(recomputeAncestors[i].Close()) }(i)
 	}
 

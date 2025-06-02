@@ -12,8 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database/configdb"
 )
 
-// nolint:gosec
-func init() { //nolint:gochecknoinits,gocyclo
+func init() { //nolint:gochecknoinits
 	installCmd := &cobra.Command{
 		Use:   "install [environment]",
 		Short: "fill the database with required data",

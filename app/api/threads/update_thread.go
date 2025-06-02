@@ -28,7 +28,7 @@ type threadUpdateFields struct {
 // updateThreadRequest is the expected input for thread updating
 // swagger:model threadEditRequest
 type updateThreadRequest struct {
-	threadUpdateFields `json:"thread,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	threadUpdateFields `json:"thread,squash"`
 
 	// Used to increment the message count when we are not sure of the exact total message count. Can be negative.
 	// Optional

@@ -63,7 +63,7 @@ type Item struct {
 
 // ItemWithRequiredType represents common item fields plus the required type field.
 type ItemWithRequiredType struct {
-	Item `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	Item `json:"item,squash"`
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
 	// enum: Chapter,Task,Skill
@@ -108,13 +108,13 @@ type itemParent struct {
 type NewItemRequest struct {
 	// `default_language_tag` of the item
 	// required: true
-	LanguageTag   string                 `json:"language_tag" validate:"set,language_tag"`
-	newItemString `json:"string,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	LanguageTag   string `json:"language_tag" validate:"set,language_tag"`
+	newItemString `json:"string,squash"`
 
 	Parent          itemParent `json:"parent"`
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
-	ItemWithRequiredType `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	ItemWithRequiredType `json:"item,squash"`
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
@@ -376,7 +376,8 @@ func constructItemOptionsValidator() validator.Func {
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
 func constructChildrenValidator(store *database.DataStore, user *database.User,
-	childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the map is created by the returned validator
+	oldPropagationLevelsMap *map[int64]*itemsRelationData, //nolint:gocritic // and here we need the pointer for the same reason
 	itemID *int64,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
@@ -396,10 +397,10 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 			return false
 		}
 
-		(*childrenInfoMap) = generateChildrenInfoMap(store, user, ids)
+		*childrenInfoMap = generateChildrenInfoMap(store, user, ids)
 
 		if oldPropagationLevelsMap != nil || itemID != nil {
-			(*oldPropagationLevelsMap) = generateOldPropagationLevelsMap(store, itemID)
+			*oldPropagationLevelsMap = generateOldPropagationLevelsMap(store, itemID)
 		}
 
 		for _, id := range ids {
@@ -461,8 +462,9 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 
 // constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task).
 func constructChildrenAllowedValidator(
-	defaultItemType string, childrenInfoMap *map[int64]permissionAndType,
-) validator.Func { // nolint:gocritic
+	defaultItemType string,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		if len(*childrenInfoMap) == 0 {
 			return true
@@ -480,7 +482,9 @@ func constructChildrenAllowedValidator(
 
 // constructChildTypeNonSkillValidator constructs a validator for the Children field that check
 // if a child's type is not 'Skill' when the item's type is not 'Skill'.
-func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+func constructChildTypeNonSkillValidator(
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 
@@ -497,8 +501,9 @@ type parentItemInfo struct {
 }
 
 func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	parentInfo *parentItemInfo, childrenInfoMap *map[int64]permissionAndType,
-) { // nolint:gocritic
+	parentInfo *parentItemInfo,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the map is created later, during validation
+) {
 	formData.RegisterValidation("parent_item_id",
 		formData.ValidatorSkippingUnsetFields(constructParentItemIDValidator(store, user, parentInfo)))
 	formData.RegisterTranslation("parent_item_id",
@@ -529,7 +534,9 @@ func registerLanguageTagValidator(formData *formdata.FormData, store *database.D
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	itemType string, childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	itemType string,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the map has not been created yet
+	oldPropagationLevelsMap *map[int64]*itemsRelationData, //nolint:gocritic // and here we need the pointer for the same reason
 	itemID *int64,
 ) {
 	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenInfoMap, oldPropagationLevelsMap, itemID))

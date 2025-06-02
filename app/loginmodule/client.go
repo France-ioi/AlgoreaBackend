@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -41,7 +40,7 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	request = request.WithContext(ctx)
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
-	body, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
+	body, err := io.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
@@ -183,7 +182,7 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	request.Header.Add("Content-Type", "application/json")
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
-	responseBody, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
+	responseBody, err := io.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
@@ -355,7 +354,9 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(returnErr *error) { // nolint:gocritic
+func recoverPanics(
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
+) {
 	if p := recover(); p != nil {
 		switch e := p.(type) {
 		case runtime.Error:

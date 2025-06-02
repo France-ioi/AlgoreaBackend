@@ -76,7 +76,9 @@ func getSQLExecutionPlanLoggingFunc(
 }
 
 func getSQLQueryLoggingFunc(
-	ctx context.Context, rowsAffectedFunc func() *int64, err *error, startTime time.Time, query string, args ...interface{},
+	ctx context.Context, rowsAffectedFunc func() *int64,
+	err *error, //nolint:gocritic // we need the pointer as the constructor is called before the error is set
+	startTime time.Time, query string, args ...interface{},
 ) func(logConfig *LogConfig) {
 	return func(logConfig *LogConfig) {
 		if *err != nil {

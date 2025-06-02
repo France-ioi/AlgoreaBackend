@@ -175,7 +175,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}()
 	service.MustNotBeError(err)
 	if !result {
-		panic(errors.New("login module failed"))
+		panic(service.ErrUnexpected(errors.New("login module failed")))
 	}
 
 	users := createBatchUsersInDB(store, input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)

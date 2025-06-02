@@ -338,11 +338,11 @@ func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint
 	return nil
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *godog.DocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *godog.DocString) (err error) { //nolint
 	return ctx.TheResponseDecodedBodyShouldBeJSON("", body)
 }
 
-func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *godog.DocString) (err error) { // nolint
+func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *godog.DocString) (err error) { //nolint
 	// verify the content type
 	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
 		return

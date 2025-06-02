@@ -138,7 +138,6 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 		}
 		teamIDsList := strings.Join(teamIDs[startFromTeam:batchBoundary], ", ")
 		teamNumber := startFromTeam
-		// nolint:gosec
 		service.MustNotBeError(store.Raw(`
 				SELECT
 				items.id AS item_id,

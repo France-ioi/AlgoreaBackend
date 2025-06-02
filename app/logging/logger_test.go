@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -115,7 +114,7 @@ func TestLogger_Configure_OutputFile(t *testing.T) {
 	logger2.WithContext(context.Background()).Warnf("logexec2 %d", timestamp)
 
 	// check the resulting file
-	content, _ := ioutil.ReadFile("../../log/all.log")
+	content, _ := os.ReadFile("../../log/all.log")
 	assert.Contains(string(content), fmt.Sprintf("logexec1 %d", timestamp))
 	assert.Contains(string(content), fmt.Sprintf("logexec2 %d", timestamp))
 }
