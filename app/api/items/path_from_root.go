@@ -21,8 +21,9 @@ type ItemPath struct {
 }
 
 type rawItemPath struct {
-	Path      string `json:"path"`
-	IsStarted bool   `json:"is_started"`
+	Path      string
+	IsStarted bool
+	Sorting   string
 }
 
 // swagger:operation GET /items/{item_id}/path-from-root items itemPathFromRootFind
@@ -33,31 +34,31 @@ type rawItemPath struct {
 //		Finds a path from any of root items to a given item.
 //
 //		The path consists only of the items visible to the participant
-//		(`can_view`>='content' for all the items except for the last one and `can_view`>='info' for the last one).
+//		(`can_view`>='content' for all the items except for the final one and `can_view`>='info' for the final one).
+//		The chain of attempts in the path cannot have missing results for non-final items that require explicit entry.
+//		It also cannot have not-started results within or below ended or non-submission-allowing attempts for non-final items.
+//
+//
+//		Note that the path may contain items without results for its final item or non-final items not requiring explicit entry.
+//		Also, the path may contain not-started results for its final item even within or below ended or non-submission-allowing attempts.
+//		It is even possible that the final item has no linked attempt at all while the final item requires explicit entry.
+//
 //
 //		Of all possible paths, the service chooses the one having:
+//			* an attempt linked to the final item if such a path exists,
 //			* missing/not-started results located closer to the end of the path,
 //			* preferring paths having less missing/not-started results,
 //			* and having higher values of `attempt_id`.
 //
-//		For a path to be returned, each of its items must:
-//			* Either have `requires_explicit_entry`=0 ,
-//			* Or if it has `requires_explicit_entry=1`,
-//				then the following condition must be fulfilled, except if it is the last item of the path:
-//				the item must have at least one result with `started`=1 AND its attempt must have
-//					(`attempt.ended_at` IS NULL) AND (`NOW()` < `attempt.allows_submissions_until`).
-//				In other words, we only return a path to an item requiring explicit entry if the participant
-//				has started solving it, and it is still open.
-//
 //		If `as_team_id` is given, the attempts/results of the path are linked to the `as_team_id` group instead of
-//		the current user group.
+//		the current user's self group, the participant becomes the given team group.
 //
 //		Restrictions:
 //
 //			* if `as_team_id` is given, it should be a user's parent team group,
 //			* at least one path should exist,
 //
-//			Otherwise the 'forbidden' error is returned.
+//			otherwise, the 'forbidden' error is returned.
 //	parameters:
 //		- name: item_id
 //			in: path
@@ -100,7 +101,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	itemPaths := FindItemPaths(srv.GetStore(r), srv.GetUser(r), participantID, itemID, PathRootParticipant, 0)
+	itemPaths := findItemPaths(srv.GetStore(r), participantID, itemID, 1)
 	if itemPaths == nil {
 		return service.InsufficientAccessRightsError
 	}
@@ -108,32 +109,11 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 	return service.NoError
 }
 
-// PathRootType is used for FindItemPaths.
-// It allows finding the roots either by participant, or by user.
-type PathRootType int
-
-const (
-	// PathRootParticipant is used by FindItemPaths() to specify that we want to get root items from groups managed by the participant.
-	PathRootParticipant PathRootType = iota
-	// PathRootUser is used by FindItemPaths() to specify that we want to get root items from groups managed by the user.
-	// The only service using this is itemBreadcrumbsFromRootsByTextIdGet which seems to be a mistake.
-	PathRootUser
-)
-
-// FindItemPaths gets the paths to an item for a participant.
-//
-// The root items are determined either by participant: PathRootParticipant, or by user PathRootUser.
-// This comes from the initial distinction between `path_from_root`: participant, and `breadcrumbs_from_root`: user.
+// findItemPaths gets the paths from root items to the given item for the given participant.
 //
 // When {limit}=0, return all the paths.
-func FindItemPaths(
-	store *database.DataStore,
-	user *database.User,
-	participantID, itemID int64,
-	pathRootBy PathRootType,
-	limit int,
-) []ItemPath {
-	limitStatement := ""
+func findItemPaths(store *database.DataStore, participantID, itemID int64, limit int) []ItemPath {
+	var limitStatement string
 	if limit > 0 {
 		limitStatement = " LIMIT " + strconv.Itoa(limit)
 	}
@@ -142,162 +122,101 @@ func FindItemPaths(
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
 		Select("groups.id, root_activity_id, root_skill_id")
 
-	var groupsManagedByParticipant *database.DB
-	if pathRootBy == PathRootParticipant {
-		// Used for path_from_root.
-		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByGroup(participantID).
-			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-			Select("groups.id, root_activity_id, root_skill_id")
-	} else {
-		// Used for breadcrumbs_from_roots.
-		groupsManagedByParticipant = store.ActiveGroupAncestors().ManagedByUser(user).
-			Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-			Select("groups.id, root_activity_id, root_skill_id")
-	}
+	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByGroup(participantID).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
+		Select("groups.id, root_activity_id, root_skill_id")
 
 	groupsWithRootItems := participantAncestors.Union(groupsManagedByParticipant)
 
-	var visibleItems *database.DB
-	if pathRootBy == PathRootParticipant {
-		// Used for path_from_root.
-		visibleItems = store.Permissions().MatchingGroupAncestors(participantID).
-			WherePermissionIsAtLeast("view", "info").
-			Joins("JOIN items ON items.id = permissions.item_id").
-			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
-			Group("items.id")
-	} else {
-		// Used for breadcrumbs_from_roots.
-		visibleItems = store.Permissions().MatchingUserAncestors(user).
-			WherePermissionIsAtLeast("view", "info").
-			Joins("JOIN items ON items.id = permissions.item_id").
-			Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
-			Group("items.id")
-	}
+	visibleItems := store.Permissions().MatchingGroupAncestors(participantID).
+		WherePermissionIsAtLeast("view", "info").
+		Joins("JOIN items ON items.id = permissions.item_id").
+		Select("items.id, requires_explicit_entry, MAX(can_view_generated_value) AS can_view_generated_value").
+		Group("items.id")
 
 	canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 
 	var rawItemPaths []rawItemPath
-	service.MustNotBeError(store.Raw(
-		`
-			WITH RECURSIVE
+	service.MustNotBeError(store.Raw(`
+		WITH RECURSIVE paths (path, final_item_id, final_attempt_id, score, attempts, is_started, is_active) AS (
+			WITH
 				groups_with_root_items AS ?,
 				visible_items AS ?,
 				root_items AS (
-					(SELECT visible_items.id AS id
-						 FROM groups_with_root_items
-									JOIN visible_items
-									ON (visible_items.id = root_activity_id OR visible_items.id = root_skill_id))
+					SELECT visible_items.id AS id FROM groups_with_root_items JOIN visible_items ON visible_items.id = root_activity_id
+					UNION
+					SELECT visible_items.id FROM groups_with_root_items JOIN visible_items ON visible_items.id = root_skill_id
 				),
 				item_ancestors AS (
-					(SELECT visible_items.id, requires_explicit_entry, can_view_generated_value
-						 FROM items_ancestors
-									JOIN visible_items ON visible_items.id = items_ancestors.ancestor_item_id
-						WHERE child_item_id = ?)
+					SELECT visible_items.id, requires_explicit_entry, can_view_generated_value
+					FROM items_ancestors
+					JOIN visible_items ON visible_items.id = items_ancestors.ancestor_item_id
+					WHERE child_item_id = ?
 					UNION
-					(SELECT id,	requires_explicit_entry, can_view_generated_value
-						 FROM visible_items
-						WHERE id = ?)
+					SELECT id, requires_explicit_entry, can_view_generated_value FROM visible_items WHERE id = ?
 				),
 				root_ancestors AS (
-					(SELECT item_ancestors.id, requires_explicit_entry, can_view_generated_value
-						 FROM item_ancestors
-									JOIN root_items ON root_items.id = item_ancestors.id)
-				),
-				paths (path, last_item_id, last_attempt_id, score, attempts, is_started, is_active) AS (
-					(SELECT CAST(root_ancestors.id AS CHAR(1024)),
-								  root_ancestors.id,
-							 	  attempts.id,
-								  results.started_at IS NULL,
-								  CAST(LPAD(attempts.id, 20, 0) AS CHAR(1024)),
-								  results.started_at IS NOT NULL,
-								  attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
-						 FROM root_ancestors
-								  LEFT JOIN attempts
-									ON attempts.participant_id = ?
-									   AND (NOT root_ancestors.requires_explicit_entry OR attempts.root_item_id = root_ancestors.id)
-								  LEFT JOIN results
-									ON results.participant_id = attempts.participant_id
-									   AND attempts.id = results.attempt_id
-										 AND results.item_id = root_ancestors.id
-						WHERE root_ancestors.id = ?
-					     OR (
-										attempts.id IS NOT NULL
-								AND	root_ancestors.can_view_generated_value >= ?
-						  	AND (NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
-						  	AND (results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until)
-						  	AND (results.attempt_id IS NOT NULL OR attempts.id = 0)
-							 )
-					)
-				 	UNION
-				 	(SELECT CONCAT(paths.path, '/', item_ancestors.id),
-								  item_ancestors.id,
-								  attempts.id,
-								  (paths.score << 1) + (results.started_at IS NULL),
-								  CONCAT(paths.attempts, '/', LPAD(attempts.id, 20, 0)),
-								  paths.is_started AND results.started_at IS NOT NULL,
-								  paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
-						 FROM paths
-								  JOIN items_items ON items_items.parent_item_id = paths.last_item_id
-								  JOIN item_ancestors ON item_ancestors.id = items_items.child_item_id
-								  LEFT JOIN attempts
-									ON attempts.participant_id = ?
-									   AND (NOT item_ancestors.requires_explicit_entry OR attempts.root_item_id = item_ancestors.id)
-									   AND IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.last_attempt_id
-								  LEFT JOIN results
-									ON results.participant_id = attempts.participant_id
-									   AND attempts.id = results.attempt_id
-										 AND results.item_id = item_ancestors.id
-					 	WHERE paths.last_item_id <> ?
-						 AND (
-									item_ancestors.id = ?
-									OR (
-											 item_ancestors.can_view_generated_value >= ?
-									 AND (NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL)
-									 AND (   results.started_at IS NOT NULL
-												OR (attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until AND paths.is_active)
-									 )
-									)
-						 )
-				  )
+					SELECT item_ancestors.id, requires_explicit_entry, can_view_generated_value
+					FROM item_ancestors
+					JOIN root_items ON root_items.id = item_ancestors.id
 				)
-			SELECT path, is_started FROM paths
-			 WHERE paths.last_item_id = ?
-			 ORDER BY score, attempts DESC
-			 `+limitStatement,
-		groupsWithRootItems.SubQuery(),
-		visibleItems.SubQuery(),
-		itemID,
-		itemID,
-		participantID,
-		itemID,
-		canViewContentIndex,
-		participantID,
-		itemID,
-		itemID,
-		canViewContentIndex,
-		itemID,
-	).
+			(SELECT CAST(root_ancestors.id AS CHAR(1024)), root_ancestors.id, attempts.id, results.started_at IS NULL,
+			        CAST(LPAD(IFNULL(attempts.id, '!'), 20, 0) AS CHAR(1024)), results.started_at IS NOT NULL,
+			        attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
+			FROM root_ancestors
+			LEFT JOIN attempts ON attempts.participant_id = ? AND
+				(NOT root_ancestors.requires_explicit_entry OR attempts.root_item_id = root_ancestors.id)
+			LEFT JOIN results ON results.participant_id = attempts.participant_id AND
+				attempts.id = results.attempt_id AND results.item_id = root_ancestors.id
+			WHERE root_ancestors.id = ? OR (
+				root_ancestors.can_view_generated_value >= ? AND
+				(NOT root_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
+				(results.started_at IS NOT NULL OR attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until) AND
+				(results.attempt_id IS NOT NULL OR attempts.id = 0)
+			))
+			UNION
+			(SELECT CONCAT(paths.path, '/', item_ancestors.id), item_ancestors.id, attempts.id, (paths.score << 1) + (results.started_at IS NULL),
+			        CONCAT(paths.attempts, '/', LPAD(IFNULL(attempts.id, '!'), 20, 0)),
+			        paths.is_started AND results.started_at IS NOT NULL,
+			        paths.is_active AND attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
+			FROM paths
+			JOIN items_items ON items_items.parent_item_id = paths.final_item_id
+			JOIN item_ancestors ON item_ancestors.id = items_items.child_item_id
+			LEFT JOIN attempts ON attempts.participant_id = ? AND
+				(NOT item_ancestors.requires_explicit_entry OR attempts.root_item_id = item_ancestors.id) AND
+				IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.final_attempt_id
+			LEFT JOIN results ON results.participant_id = attempts.participant_id AND
+				attempts.id = results.attempt_id AND results.item_id = item_ancestors.id
+			WHERE paths.final_item_id <> ? AND (
+				item_ancestors.id = ? OR (
+					item_ancestors.can_view_generated_value >= ? AND
+					(NOT item_ancestors.requires_explicit_entry OR results.attempt_id IS NOT NULL) AND
+					(results.started_at IS NOT NULL OR (attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until AND paths.is_active))
+				)
+			)
+		))
+		SELECT
+			path, MAX(is_started) AS is_started,
+			MAX(CONCAT(final_attempt_id IS NOT NULL, ':', LPAD(1000000000000000000000000000000000000000-score, 40, 0), ':', attempts)) AS sorting
+		FROM paths
+		WHERE paths.final_item_id = ?
+		GROUP BY path
+		ORDER BY sorting DESC
+		`+limitStatement,
+		groupsWithRootItems.SubQuery(), visibleItems.SubQuery(), itemID, itemID, participantID, itemID, canViewContentIndex,
+		participantID, itemID, itemID, canViewContentIndex, itemID).
 		Scan(&rawItemPaths).Error())
 
 	if len(rawItemPaths) == 0 {
 		return nil
 	}
 
-	// The SQL can return the same path multiple times, for example, with different attempts, but we need them only once.
-	pathAdded := map[string]bool{}
-
-	var itemPaths []ItemPath
+	itemPaths := make([]ItemPath, 0, len(rawItemPaths))
 	for _, itemPathRow := range rawItemPaths {
-		if _, ok := pathAdded[itemPathRow.Path]; ok {
-			continue
-		}
-
 		itemPaths = append(itemPaths, ItemPath{
 			Path:      strings.Split(itemPathRow.Path, "/"),
 			IsStarted: itemPathRow.IsStarted,
 		})
-
-		pathAdded[itemPathRow.Path] = true
 	}
 
 	return itemPaths

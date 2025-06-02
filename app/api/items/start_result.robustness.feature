@@ -92,7 +92,7 @@ Feature: Start a result for an item - robustness
     And the response error message should contain "Can't use given as_team_id as a user's team"
     And the table "attempts" should stay unchanged
 
-  Scenario: Not enough permissions for the last item in the path
+  Scenario: Not enough permissions for the final item in the path
     Given I am the user with id "101"
     And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated |
