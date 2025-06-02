@@ -93,18 +93,22 @@ func ancestorsOfUserQuery(store *database.DataStore, user *database.User) *datab
 // ancestorsOfManagedGroupsQuery returns a query to get the ancestors of the groups (excluding users) managed by
 // the given user (as ancestor_group_id).
 func ancestorsOfManagedGroupsQuery(store *database.DataStore, user *database.User) *database.DB {
-	return store.ActiveGroupAncestors().ManagedByUser(user).
+	managedNonUserGroupsQuery := store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type != 'User'").
+		Select("DISTINCT groups.id")
+
+	return store.With("managed_non_user_groups", managedNonUserGroupsQuery).
+		Table("managed_non_user_groups").
 		Joins(`
 			JOIN groups_ancestors_active AS ancestors_of_managed
-				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id`).
+				ON ancestors_of_managed.child_group_id = managed_non_user_groups.id`).
 		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
 		Where("ancestor_group.type != 'ContestParticipants'").
-		Select("ancestors_of_managed.ancestor_group_id")
+		Select("DISTINCT ancestors_of_managed.ancestor_group_id")
 }
 
 // currentUserMembershipSQLColumn returns an SQL column expression to get the current user membership
-// (direct/descendant/none)in the group. The column name is `current_user_membership`.
+// (direct/descendant/none) in the group. The column name is `current_user_membership`.
 func currentUserMembershipSQLColumn(currentUser *database.User) string {
 	return fmt.Sprintf(`
 		IF(
