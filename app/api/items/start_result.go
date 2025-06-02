@@ -43,7 +43,7 @@ type updatedStartResultResponse struct { //nolint:unused
 //			* if `as_team_id` is given, it should be a user's parent team group,
 //			* the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id) of a group
 //				the participant is a descendant of or manages,
-//			* the last item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
+//			* the final item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
 //			* `{ids}` should be an ordered list of parent-child items,
 //			* the group starting the result should have at least 'content' access on each of the items in `{ids}`,
 //			* the participant should have a started, allowing submission, not ended result for each item but the last,

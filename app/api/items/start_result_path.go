@@ -48,7 +48,7 @@ import (
 //			format: int64
 //	responses:
 //		"201":
-//			description: "Created. Success response with the attempt id for the last item in the path"
+//			description: "Created. Success response with the attempt id for the final item in the path"
 //			schema:
 //					type: object
 //					required: [success, message, data]
@@ -66,7 +66,7 @@ import (
 //							required: [attempt_id]
 //							properties:
 //								attempt_id:
-//									description: The attempt linked to the last item in the path
+//									description: The attempt linked to the final item in the path
 //									type: integer
 //									format: string
 //		"400":

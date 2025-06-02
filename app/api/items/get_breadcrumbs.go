@@ -26,10 +26,10 @@ import (
 //		* the list of item IDs should be a valid path from a root item
 //		 (`items.id`=`groups.root_activity_id|root_skill_id` for one of the participant's ancestor groups or managed groups),
 //		* `as_team_id` (if given) should be the current user's team,
-//		* the participant should have at least 'content' access on each listed item except the last one through that path,
-//			and at least 'info' access on the last item,
+//		* the participant should have at least 'content' access on each listed item except the final one through that path,
+//			and at least 'info' access on the final item,
 //		* all the results within the ancestry of `attempt_id`/`parent_attempt_id` on the items' path
-//			(except for the last item if `parent_attempt_id` is given) should be started (`started_at` is not null),
+//			(except for the final item if `parent_attempt_id` is given) should be started (`started_at` is not null),
 //
 //		otherwise the 'forbidden' error is returned.
 //	parameters:
@@ -39,13 +39,13 @@ import (
 //			description: slash-separated list of IDs
 //			required: true
 //		- name: parent_attempt_id
-//			description: "`id` of an attempt for the second to the last item in the path.
+//			description: "`id` of an attempt for the second to the final item in the path.
 //								This parameter is incompatible with `attempt_id`."
 //			in: query
 //			type: integer
 //			format: int64
 //		- name: attempt_id
-//			description: "`id` of an attempt for the last item in the path.
+//			description: "`id` of an attempt for the final item in the path.
 //								This parameter is incompatible with `parent_attempt_id`."
 //			in: query
 //			type: integer
@@ -75,14 +75,14 @@ import (
 //							type: string
 //						attempt_id:
 //							description: the attempt for this item (result) within ancestry of `attempt_id` or `parent_attempt_id`
-//				 	                 (skipped for the last item if `parent_attempt_id` is used)
+//				 	                 (skipped for the final item if `parent_attempt_id` is used)
 //							type: string
 //							format: int64
 //						attempt_number:
 //							description: the order of this attempt result among the other results (within the parent attempt)
 //													 sorted by `started_at`
 //													 (only for items allowing multiple submissions;
-//													 skipped for the last item if `parent_attempt_id` is used)
+//													 skipped for the final item if `parent_attempt_id` is used)
 //							type: string
 //							format: int64
 //					required: [item_id, type, title, language_tag]

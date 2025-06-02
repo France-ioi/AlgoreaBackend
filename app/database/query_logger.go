@@ -192,7 +192,7 @@ func formatTime(v time.Time) string {
 
 func fillSQLPlaceholders(query string, values []interface{}) string {
 	var sql string
-	var formattedValues []string
+	formattedValues := make([]string, 0, len(values))
 
 	query = strings.TrimSpace(spacesRegexp.ReplaceAllString(query, " "))
 	for _, value := range values {

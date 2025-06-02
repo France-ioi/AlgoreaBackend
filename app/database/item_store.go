@@ -48,14 +48,14 @@ func (s *ItemStore) GetSearchQuery(user *User, searchString string, typesList []
 //     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //   - if `ids` consists of only one item, the `parentAttemptID` is zero.
 func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
-	ids []int64, groupID, parentAttemptID int64, requireContentAccessToTheLastItem, withWriteLock bool,
+	ids []int64, groupID, parentAttemptID int64, requireContentAccessToTheFinalItem, withWriteLock bool,
 ) (bool, error) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
 		return false, nil
 	}
 
 	return s.participationHierarchyForParentAttempt(
-		ids, groupID, parentAttemptID, true, requireContentAccessToTheLastItem, "1", withWriteLock).HasRows()
+		ids, groupID, parentAttemptID, true, requireContentAccessToTheFinalItem, "1", withWriteLock).HasRows()
 }
 
 // visibleItemsFromListForGroupQuery returns a query for selecting visible items from a list of item ids for a group.
@@ -73,11 +73,11 @@ func (s *ItemStore) visibleItemsFromListForGroupQuery(itemIDs []int64, groupID i
 }
 
 func (s *ItemStore) participationHierarchyForParentAttempt(
-	ids []int64, groupID, parentAttemptID int64, requireAttemptsToBeActive, requireContentAccessToTheLastItem bool,
+	ids []int64, groupID, parentAttemptID int64, requireAttemptsToBeActive, requireContentAccessToTheFinalItem bool,
 	columnsList string, withWriteLock bool,
 ) *DB {
 	subQuery := s.itemAttemptChainWithoutAttemptForTail(
-		ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock)
+		ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheFinalItem, withWriteLock)
 
 	if len(ids) > 1 {
 		subQuery = subQuery.
@@ -89,7 +89,7 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 }
 
 func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID int64,
-	requireAttemptsToBeActive, requireContentAccessToTheLastItem, withWriteLock bool,
+	requireAttemptsToBeActive, requireContentAccessToTheFinalItem, withWriteLock bool,
 ) *DB {
 	participantAncestors := s.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
@@ -136,7 +136,7 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 		}
 	}
 
-	if requireContentAccessToTheLastItem {
+	if requireContentAccessToTheFinalItem {
 		subQuery = subQuery.Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", len(ids)-1),
 			s.PermissionsGranted().ViewIndexByName("content"))
 	}
@@ -145,13 +145,13 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 }
 
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
-// for the given list of item ids (but the last item) if it is a valid participation hierarchy
+// for the given list of item ids (but the final item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
 //   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
 //     of a group the `groupID` is a descendant of or manages,
 //   - `ids` is an ordered list of parent-child items,
-//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//     at least 'info' access on the last one,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
+//     at least 'info' access on the final one,
 //   - the `groupID` group has a started result for each item but the last,
 //     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //   - if `ids` consists of only one item, the `parentAttemptID` is zero.
@@ -183,8 +183,8 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 //   - the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
 //     the `groupID` is a descendant of or manages,
 //   - `ids` is an ordered list of parent-child items,
-//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the last one and
-//     at least 'info' access on the last one,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
+//     at least 'info' access on the final one,
 //   - the `groupID` group has a started result for each item,
 //     with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
 func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (
@@ -251,25 +251,25 @@ func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
 }
 
 func (s *ItemStore) breadcrumbsHierarchyForAttempt(
-	ids []int64, groupID, attemptID int64, requireContentAccessToTheLastItem bool,
+	ids []int64, groupID, attemptID int64, requireContentAccessToTheFinalItem bool,
 	columnsList string, withWriteLock bool,
 ) *DB {
-	lastItemIndex := len(ids) - 1
+	finalItemIndex := len(ids) - 1
 	subQuery := s.
-		itemAttemptChainWithoutAttemptForTail(ids, groupID, false, requireContentAccessToTheLastItem, withWriteLock).
-		Where(fmt.Sprintf("attempts%d.id = ?", lastItemIndex), attemptID)
+		itemAttemptChainWithoutAttemptForTail(ids, groupID, false, requireContentAccessToTheFinalItem, withWriteLock).
+		Where(fmt.Sprintf("attempts%d.id = ?", finalItemIndex), attemptID)
 	subQuery = subQuery.
 		Joins(fmt.Sprintf(`
 				JOIN results AS results%d ON results%d.participant_id = ? AND
 					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`,
-			lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex), groupID).
+			finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex), groupID).
 		Joins(fmt.Sprintf(`
 				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
-					attempts%d.id = results%d.attempt_id`, lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex))
+					attempts%d.id = results%d.attempt_id`, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex))
 	if len(ids) > 1 {
 		subQuery = subQuery.Where(fmt.Sprintf(
 			"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
-			lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex, lastItemIndex-1))
+			finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex-1))
 	}
 
 	subQuery = subQuery.Select(columnsList)

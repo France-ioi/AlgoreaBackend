@@ -93,7 +93,9 @@ func (s *GroupStore) storeBadge(
 		if !groupCreated && !newUser {
 			var err error
 			alreadyMember, err = s.ActiveGroupGroups().
-				Where("parent_group_id = ? AND child_group_id = ?", badgeGroupID, userID).HasRows()
+				Where("parent_group_id = ? AND child_group_id = ?", badgeGroupID, userID).
+				WithExclusiveWriteLock().
+				HasRows()
 			mustNotBeError(err)
 		}
 		if !alreadyMember {

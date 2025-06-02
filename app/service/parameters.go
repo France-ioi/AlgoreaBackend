@@ -19,12 +19,12 @@ func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]i
 		return nil, err
 	}
 
-	var ids []int64
 	paramValue := req.URL.Query().Get(paramName)
 	if paramValue == "" {
-		return ids, nil
+		return []int64(nil), nil
 	}
 	idsStr := strings.Split(paramValue, ",")
+	ids := make([]int64, 0, len(idsStr))
 	for _, idStr := range idsStr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
@@ -186,11 +186,11 @@ func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
 func ResolveURLQueryPathInt64SliceField(req *http.Request, paramName string) ([]int64, error) {
 	paramValue := chi.URLParam(req, paramName)
 	paramValue = strings.Trim(paramValue, "/")
-	var ids []int64
 	if paramValue == "" {
-		return ids, nil
+		return []int64(nil), nil
 	}
 	idsStr := strings.Split(paramValue, "/")
+	ids := make([]int64, 0, len(idsStr))
 	for _, idStr := range idsStr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
