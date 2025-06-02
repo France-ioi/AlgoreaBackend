@@ -61,7 +61,6 @@ linters:
     - scopelint        # Deprecated.
     - structcheck      # Deprecated.
     - varcheck         # Deprecated.
-    - prealloc         # Note from authors: For most programs usage of prealloc will be a premature optimization.
     - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
     - wsl              # Requires whitelines between blocks. requires many changes, enable it later
