@@ -108,7 +108,7 @@ func ancestorsOfManagedGroupsQuery(store *database.DataStore, user *database.Use
 }
 
 // currentUserMembershipSQLColumn returns an SQL column expression to get the current user membership
-// (direct/descendant/none)in the group. The column name is `current_user_membership`.
+// (direct/descendant/none) in the group. The column name is `current_user_membership`.
 func currentUserMembershipSQLColumn(currentUser *database.User) string {
 	return fmt.Sprintf(`
 		IF(
