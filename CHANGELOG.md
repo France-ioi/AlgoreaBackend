@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.27.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.27.0...2.27.1) - 2025-06-04
+- lock the `groups_groups` row `FOR UPDATE` when checking if a user is already a member of a badge group in GroupStore.storeBadge
+- rework `itemPathFromRootFind` & `itemBreadcrumbsFromRootsGet`: prefer paths having attempts for final items + require items visibility correctly
+- try to speed up the main SQL query of groupsRootView
+- restore 'prealloc' linter, partially restore disabled linters + do not expose unexpected errors to end-clients
+
 ## [v2.27.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.26.4...v2.27.0) - 2025-05-15
 - add (`can_enter_from`, `can_enter_until`) intervals in `itemView`, fix calculation of `can_request_help` for teams there
 - `saveGrade`: handle the situation when `idItemLocal` of `score_token` is not given or is not a numeric string
