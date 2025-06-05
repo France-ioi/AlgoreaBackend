@@ -24,7 +24,6 @@ func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
 		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
 	)
-	s.Step(`allUsersGroup is defined as the group (@\w+)$`, ctx.AllUsersGroupIsDefinedAsTheGroup)
 
 	s.Step(`^the field "([^"]*)" of the group (@\w+) should be "([^"]*)"$`, ctx.TheFieldOfTheGroupShouldBe)
 	s.Step(`^(@\w+) should not be a member of the group (@\w+)$`, ctx.UserShouldNotBeAMemberOfTheGroup)
@@ -197,32 +196,6 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 	}
 
 	ctx.addPersonalInfoViewApprovedFor(user, group)
-
-	return nil
-}
-
-// AllUsersGroupIsDefinedAsTheGroup creates and sets the allUsersGroup.
-func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) (err error) {
-	defer recoverPanics(&err)
-
-	ctx.addGroup(group, "Base")
-
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getIDOfReference(group))
-	ctx.setGroupFieldInDatabase(groupPrimaryKey, "name", "AllUsers")
-
-	err = ctx.TheApplicationConfigIs(&godog.DocString{
-		Content: `
-domains:
-  -
-    domains: [127.0.0.1]
-    allUsersGroup: ` + group + `
-`,
-	})
-	if err != nil {
-		return err
-	}
-
-	ctx.allUsersGroup = group
 
 	return nil
 }
