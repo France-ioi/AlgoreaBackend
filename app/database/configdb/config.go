@@ -19,6 +19,7 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 			id   int64
 		}{
 			{name: "AllUsers", id: domainConfig.AllUsersGroup},
+			{name: "NonTempUsers", id: domainConfig.NonTempUsersGroup},
 			{name: "TempUsers", id: domainConfig.TempUsersGroup},
 		} {
 			hasRows, err := groupStore.ByID(spec.id).HasRows()
@@ -35,6 +36,7 @@ func CheckConfig(datastore *database.DataStore, domainsConfig []domain.ConfigIte
 			parentID   int64
 			childID    int64
 		}{
+			{parentName: "AllUsers", childName: "NonTempUsers", parentID: domainConfig.AllUsersGroup, childID: domainConfig.NonTempUsersGroup},
 			{parentName: "AllUsers", childName: "TempUsers", parentID: domainConfig.AllUsersGroup, childID: domainConfig.TempUsersGroup},
 		} {
 			hasRows, err := groupGroupStore.
@@ -68,6 +70,7 @@ func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []dom
 		domainConfig := domainConfig
 		insertRootGroups(groupStore, &domainConfig)
 		for _, spec := range []map[string]interface{}{
+			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.NonTempUsersGroup},
 			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.TempUsersGroup},
 		} {
 			found, err := groupGroupStore.
@@ -97,6 +100,7 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 		id   int64
 	}{
 		{name: "AllUsers", id: domainConfig.AllUsersGroup},
+		{name: "NonTempUsers", id: domainConfig.NonTempUsersGroup},
 		{name: "TempUsers", id: domainConfig.TempUsersGroup},
 	} {
 		found, err := groupStore.

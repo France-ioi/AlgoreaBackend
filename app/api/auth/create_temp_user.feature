@@ -6,14 +6,17 @@ Feature: Create a temporary user
         -
           domains: [127.0.0.1]
           allUsersGroup: 2
+          nonTempUsersGroup: 3
           tempUsersGroup: 4
       """
     And the database has the following table "groups":
-      | id | name      | type | text_id   |
-      | 2  | AllUsers  | Base | AllUsers  |
-      | 4  | TempUsers | User | TempUsers |
+      | id | name         | type | text_id      |
+      | 2  | AllUsers     | Base | AllUsers     |
+      | 3  | NonTempUsers | Base | NonTempUsers |
+      | 4  | TempUsers    | Base | TempUsers    |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
+      | 2               | 3              |
       | 2               | 4              |
     And the time now is "2020-07-16T22:02:28Z"
 
@@ -49,8 +52,10 @@ Feature: Create a temporary user
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
       | 4                   | 4                   | true    |
       | 4                   | 5577006791947779410 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |
