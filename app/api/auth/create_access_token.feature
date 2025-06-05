@@ -904,6 +904,21 @@ Feature: Create an access token
     And the table "users" at group_id "5577006791947779410" should be:
       | group_id            | login_id | login        | temp_user | default_language            | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | <expected_default_language> | true                                                 | 127.0.0.1 |
+    And the table "groups_groups" should be:
+      | parent_group_id     | child_group_id      |
+      | 2                   | 3                   |
+      | 2                   | 4                   |
+      | 4                   | 5577006791947779410 |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
+      | 2                   | 4                   | false   |
+      | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 4                   | 4                   | true    |
+      | 4                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
     Examples:
       | query                                                     | expected_default_language |
       | ?create_temp_user_if_not_authorized=1                     | fr                        |
@@ -921,3 +936,18 @@ Feature: Create an access token
     And the table "users" at group_id "5577006791947779410" should be:
       | group_id            | login_id | login        | temp_user | default_language | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | fr                | true                                                 | 127.0.0.1 |
+    And the table "groups_groups" should be:
+      | parent_group_id     | child_group_id      |
+      | 2                   | 3                   |
+      | 2                   | 4                   |
+      | 4                   | 5577006791947779410 |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
+      | 2                   | 4                   | false   |
+      | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 4                   | 4                   | true    |
+      | 4                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
