@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.28.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.27.2...2.28.0) - 2025-06-06
+- add support for the NonTempUsers group in the code, add the nonTempUsers group config parameters, move non-temporary users into this group from AllUsers
+
 ## [v2.27.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.27.1...2.27.2) - 2025-06-06
 - create non-temp user group in preparation for the next version
 
