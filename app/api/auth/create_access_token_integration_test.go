@@ -33,7 +33,7 @@ func Test_createGroupFromLogin_Duplicate(t *testing.T) {
 	dataStore := database.NewDataStore(db)
 	var selfGroupID int64
 	require.NoError(t, dataStore.InTransaction(func(dataStore *database.DataStore) error {
-		selfGroupID = createGroupFromLogin(dataStore.Groups(), "test", &domain.CtxConfig{AllUsersGroupID: 100})
+		selfGroupID = createGroupFromLogin(dataStore.Groups(), "test", &domain.CtxConfig{NonTempUsersGroupID: 100})
 		return nil
 	}))
 	assert.Equal(t, int64(2), selfGroupID)

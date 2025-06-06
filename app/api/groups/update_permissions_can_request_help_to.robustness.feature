@@ -9,14 +9,21 @@
 #          If those permissions definitions get fixed, then this file can be merged with them.
 Feature: Change item access rights for a group - can_request_help_to
   Background:
-    Given allUsersGroup is defined as the group @AllUsers
+    Given the application config is:
+      """
+      domains:
+        -
+          domains: [127.0.0.1]
+          allUsersGroup: @AllUsers
+      """
     And there are the following groups:
-      | group        | parent       | members  |
-      | @AllUsers    |              |          |
-      | @School      |              | @Teacher |
-      | @Class       | @ClassParent |          |
-      | @HelperGroup |              |          |
+      | group        | parent       | members                  |
+      | @AllUsers    |              | @NonTempUsers,@TempUsers |
+      | @School      |              | @Teacher                 |
+      | @Class       | @ClassParent |                          |
+      | @HelperGroup |              |                          |
     And the group @Teacher is a manager of the group @ClassParent and can grant group access
+    And the group @Teacher is a child of the group @NonTempUsers
     And there are the following tasks:
       | item  |
       | @Item |

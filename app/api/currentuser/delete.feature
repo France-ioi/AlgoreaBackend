@@ -1,16 +1,18 @@
 Feature: Delete the current user
   Background:
     Given the database has the following table "groups":
-      | id  | type  | name       | require_lock_membership_approval_until |
-      | 2   | Base  | AllUsers   | 9999-12-31 23:59:59                    |
-      | 4   | Base  | TempUsers  | null                                   |
-      | 21  | User  | user       | null                                   |
-      | 31  | User  | tmp-1234   | null                                   |
-      | 100 | Class | Some class | null                                   |
+      | id  | type  | name         | require_lock_membership_approval_until |
+      | 2   | Base  | AllUsers     | 9999-12-31 23:59:59                    |
+      | 3   | Base  | NonTempUsers | null                                   |
+      | 4   | Base  | TempUsers    | null                                   |
+      | 21  | User  | user         | null                                   |
+      | 31  | User  | tmp-1234     | null                                   |
+      | 100 | Class | Some class   | null                                   |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
+      | 2               | 3              |
       | 2               | 4              |
-      | 2               | 21             |
+      | 3               | 21             |
       | 4               | 31             |
     And the groups ancestors are computed
     And the database has the following table "group_pending_requests":
@@ -52,13 +54,15 @@ Feature: Delete the current user
       | temp_user | login    | group_id |
       | 1         | tmp-1234 | 31       |
     And the table "groups" should be:
-      | id  | type  | name       |
-      | 2   | Base  | AllUsers   |
-      | 4   | Base  | TempUsers  |
-      | 31  | User  | tmp-1234   |
-      | 100 | Class | Some class |
+      | id  | type  | name         |
+      | 2   | Base  | AllUsers     |
+      | 3   | Base  | NonTempUsers |
+      | 4   | Base  | TempUsers    |
+      | 31  | User  | tmp-1234     |
+      | 100 | Class | Some class   |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
+      | 2               | 3              |
       | 2               | 4              |
       | 4               | 31             |
     And the table "group_pending_requests" should be:
@@ -70,8 +74,10 @@ Feature: Delete the current user
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |
+      | 2                 | 3              | false   |
       | 2                 | 4              | false   |
       | 2                 | 31             | false   |
+      | 3                 | 3              | true    |
       | 4                 | 4              | true    |
       | 4                 | 31             | false   |
       | 31                | 31             | true    |
@@ -92,15 +98,17 @@ Feature: Delete the current user
       | temp_user | login | group_id |
       | 0         | user  | 21       |
     And the table "groups" should be:
-      | id  | type  | name       |
-      | 2   | Base  | AllUsers   |
-      | 4   | Base  | TempUsers  |
-      | 21  | User  | user       |
-      | 100 | Class | Some class |
+      | id  | type  | name         |
+      | 2   | Base  | AllUsers     |
+      | 3   | Base  | NonTempUsers |
+      | 4   | Base  | TempUsers    |
+      | 21  | User  | user         |
+      | 100 | Class | Some class   |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
+      | 2               | 3              |
       | 2               | 4              |
-      | 2               | 21             |
+      | 3               | 21             |
     And the table "group_pending_requests" should be:
       | group_id | member_id |
       | 100      | 21        |
@@ -110,8 +118,11 @@ Feature: Delete the current user
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |
+      | 2                 | 3              | false   |
       | 2                 | 4              | false   |
       | 2                 | 21             | false   |
+      | 3                 | 3              | true    |
+      | 3                 | 21             | false   |
       | 4                 | 4              | true    |
       | 21                | 21             | true    |
       | 100               | 100            | true    |

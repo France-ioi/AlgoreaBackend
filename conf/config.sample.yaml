@@ -35,4 +35,5 @@ domains:
   -
     domains: [default] # of a list of domains
     allUsersGroup: 3
+    nonTempUsersGroup: 4
     tempUsersGroup: 2

@@ -102,7 +102,7 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.AP
 	store := srv.GetStore(r)
 	userIDToCheck := user.GroupID
 	if user.IsTempUser {
-		userIDToCheck = domain.ConfigFromContext(r.Context()).AllUsersGroupID
+		userIDToCheck = domain.ConfigFromContext(r.Context()).NonTempUsersGroupID
 	}
 
 	valid, reason, groupID := checkGroupCodeForUser(store, userIDToCheck, code)

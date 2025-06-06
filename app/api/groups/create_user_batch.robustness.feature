@@ -1,10 +1,10 @@
 Feature: Create a user batch - robustness
   Background:
     Given the database has the following table "groups":
-      | id | type    | name     | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
-      | 2  | Base    | AllUsers | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
-      | 3  | Club    | Club     | 2017-08-10 12:34:55 | view                                  | 3030-01-01 00:00:00                    | 1                      |
-      | 4  | Friends | Friends  | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
+      | id | type    | name         | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
+      | 2  | Base    | NonTempUsers | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
+      | 3  | Club    | Club         | 2017-08-10 12:34:55 | view                                  | 3030-01-01 00:00:00                    | 1                      |
+      | 4  | Friends | Friends      | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
     And the database has the following user:
       | group_id | login | first_name  | last_name |
       | 21       | owner | Jean-Michel | Blanquer  |
@@ -35,7 +35,7 @@ Feature: Create a user batch - robustness
       domains:
         -
           domains: [127.0.0.1]
-          allUsersGroup: 2
+          nonTempUsersGroup: 2
       """
 
   Scenario: Missing required fields

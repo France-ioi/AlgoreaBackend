@@ -38,7 +38,8 @@ jobs:
       env:
         ALL: ${{ secrets.ALL_USERS_GROUP }}
         TMP: ${{ secrets.TMP_USERS_GROUP }}
-      run: sed "s/ALLUSERS/$ALL/" .github/conf/config.lambda.yaml | sed -e "s/TMPUSERS/$TMP/" > lambda-archive/conf/config.yaml
+        NONTMP: ${{ secrets.NONTMP_USERS_GROUP }}
+      run: sed "s/ALLUSERS/$ALL/" .github/conf/config.lambda.yaml | sed -e "s/TMPUSERS/$TMP/" | sed -e "s/NONTMPUSERS/$NONTMP/" > lambda-archive/conf/config.yaml
     - run: cd lambda-archive; zip -r ../lambda.zip .; cd ..
 
     - name: Configure AWS credential
