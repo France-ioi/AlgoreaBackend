@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.27.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.27.1...2.27.2) - 2025-06-06
+- create non-temp user group in preparation for the next version
+
 ## [v2.27.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.27.0...2.27.1) - 2025-06-04
 - lock the `groups_groups` row `FOR UPDATE` when checking if a user is already a member of a badge group in GroupStore.storeBadge
 - rework `itemPathFromRootFind` & `itemBreadcrumbsFromRootsGet`: prefer paths having attempts for final items + require items visibility correctly
