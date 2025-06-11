@@ -168,7 +168,7 @@ func (s *GroupStore) AncestorsOfJoinedGroupsForGroup(store *DataStore, groupID i
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
-// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of of groups joined by the given user.
+// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of groups joined by the given user.
 func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
 	return s.AncestorsOfJoinedGroupsForGroup(store, user.GroupID)
 }
