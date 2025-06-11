@@ -1,7 +1,6 @@
 package groups
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -85,11 +84,6 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	return service.NoError
 }
 
-// ancestorsOfUserQuery returns a query to get the ancestors of the given user (as ancestor_group_id).
-func ancestorsOfUserQuery(store *database.DataStore, user *database.User) *database.DB {
-	return store.ActiveGroupAncestors().Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
-}
-
 // ancestorsOfManagedGroupsQuery returns a query to get the ancestors of the groups (excluding users) managed by
 // the given user (as ancestor_group_id).
 func ancestorsOfManagedGroupsQuery(store *database.DataStore, user *database.User) *database.DB {
@@ -106,67 +100,3 @@ func ancestorsOfManagedGroupsQuery(store *database.DataStore, user *database.Use
 		Where("ancestor_group.type != 'ContestParticipants'").
 		Select("DISTINCT ancestors_of_managed.ancestor_group_id")
 }
-
-// currentUserMembershipSQLColumn returns an SQL column expression to get the current user membership
-// (direct/descendant/none) in the group. The column name is `current_user_membership`.
-func currentUserMembershipSQLColumn(currentUser *database.User) string {
-	return fmt.Sprintf(`
-		IF(
-			EXISTS(
-				SELECT 1 FROM groups_groups_active
-				WHERE groups_groups_active.parent_group_id = groups.id AND
-				      groups_groups_active.child_group_id = %d
-			),
-			'direct',
-			IF(
-				EXISTS(
-					SELECT 1 FROM groups_groups_active
-					JOIN groups_ancestors_active AS group_descendants
-						ON group_descendants.ancestor_group_id = groups.id AND
-						   group_descendants.child_group_id = groups_groups_active.parent_group_id
-					WHERE groups_groups_active.child_group_id = %d
-				),
-				'descendant',
-				'none'
-			)
-		) AS 'current_user_membership'`, currentUser.GroupID, currentUser.GroupID)
-}
-
-// currentUserManagershipSQLColumn is an SQL column expression to get the current user managership
-// (direct/ancestor/descendant/none) of the group. The column name is `current_user_managership`.
-const currentUserManagershipSQLColumn = `
-		IF(
-			EXISTS(
-				SELECT 1 FROM user_ancestors
-				JOIN group_managers
-					ON group_managers.group_id = groups.id AND
-					   group_managers.manager_id = user_ancestors.ancestor_group_id
-			),
-			'direct',
-			IF(
-				EXISTS(
-					SELECT 1 FROM user_ancestors
-					JOIN groups_ancestors_active AS group_ancestors ON group_ancestors.child_group_id = groups.id
-					JOIN group_managers
-						ON group_managers.group_id = group_ancestors.ancestor_group_id AND
-						   group_managers.manager_id = user_ancestors.ancestor_group_id
-				),
-				'ancestor',
-				IF(
-					EXISTS(
-						SELECT 1 FROM user_ancestors
-						JOIN group_managers ON group_managers.manager_id = user_ancestors.ancestor_group_id
-						JOIN groups_ancestors_active AS managed_groups
-							ON managed_groups.ancestor_group_id = group_managers.group_id
-						JOIN ` + "`groups`" + ` AS managed_descendant
-							ON managed_descendant.id = managed_groups.child_group_id AND
-							   managed_descendant.type != 'User'
-						JOIN groups_ancestors_active AS group_descendants
-							ON group_descendants.ancestor_group_id = groups.id AND
-							   group_descendants.child_group_id = managed_descendant.id
-					),
-					'descendant',
-					'none'
-				)
-			)
-		) AS 'current_user_managership'`
