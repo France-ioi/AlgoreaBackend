@@ -36,7 +36,12 @@ type groupRootsViewResponseRow struct {
 //	summary: List root groups
 //	description: >
 //		Returns groups which are ancestors of joined groups or managed non-user groups
-//		and do not have parents. Groups of type "Base" or "User" are ignored.
+//		and do not have parents (except for parents of type "Base").
+//		Groups of type "Base", "ContestParticipants" are ignored.
+//
+//
+//		(Note that it's impossible for the service to return groups of type "User" because a user group cannot be joined,
+//		and managed user groups are skipped as well.)
 //	responses:
 //		"200":
 //			description: OK. Success response with an array of root groups
