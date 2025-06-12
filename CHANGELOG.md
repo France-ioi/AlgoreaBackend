@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.28.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.0...2.28.1) - 2025-06-12
+- temporarily disable after_insert_groups_groups trigger when parent_group_id=4 (non-temp user group) in order to speed up the migration on large db (prod)
+
 ## [v2.28.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.27.2...2.28.0) - 2025-06-06
 - add support for the NonTempUsers group in the code, add the nonTempUsers group config parameters, move non-temporary users into this group from AllUsers
 
