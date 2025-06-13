@@ -115,7 +115,6 @@ issues:
     - path: _test\.go
       linters:
         - gosec
-        - gocognit
     - text: "is too long"
       linters:
         - funlen
