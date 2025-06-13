@@ -15,6 +15,8 @@ const (
 	PropagationStepSanityCheck database.PropagationStep = "sanity check"
 	// PropagationStepAfterAllPropagations is a fake propagation step which is called by PropagationVerifier after all propagations.
 	PropagationStepAfterAllPropagations database.PropagationStep = "after all propagations"
+
+	maxAllowedNumberOfCallsForPropagationStep = 10 // maximum number of calls to each propagation step to detect infinite loops
 )
 
 type (
@@ -118,7 +120,7 @@ func (pv *PropagationVerifier) Run(
 		}
 		calledPropagationSteps[step]++
 
-		if calledPropagationSteps[step] > 10 {
+		if calledPropagationSteps[step] > maxAllowedNumberOfCallsForPropagationStep {
 			_ = application.Database.Close() // stop all the app's API handlers
 			t.Errorf("looks like an infinite loop in propagation step %q, called %d times", step, calledPropagationSteps[step])
 			return

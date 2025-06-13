@@ -346,6 +346,7 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 	safeColumnNames = make([]string, usedFieldsNumber)
 	conditions = make([]string, 0, usedFieldsNumber)
 	queryValuesPart := make([]interface{}, 0, usedFieldsNumber)
+	//nolint:gomnd // sum of 1..usedFieldsNumber = usedFieldsNumber*(usedFieldsNumber+1)/2
 	queryValues = make([]interface{}, 0, (usedFieldsNumber+1)*usedFieldsNumber/2)
 	var conditionPrefix string
 

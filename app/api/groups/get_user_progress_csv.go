@@ -197,7 +197,7 @@ func printTableHeader(
 	for i := range items {
 		itemTitlesMap[items[i].ID] = items[i].Title
 	}
-	itemTitles := make([]string, 0, len(orderedItemIDListWithDuplicates)+3)
+	itemTitles := make([]string, 0, len(firstColumns)+len(orderedItemIDListWithDuplicates))
 	itemTitles = append(itemTitles, firstColumns...)
 	for i, itemID := range orderedItemIDListWithDuplicates {
 		title := itemTitlesMap[itemID.(int64)]

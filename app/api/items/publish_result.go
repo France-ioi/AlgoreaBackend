@@ -91,11 +91,12 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 		service.MustNotBeError(err)
 	}
 
+	const maxScore = 100.0
 	result, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).SendLTIResult(
 		r.Context(),
 		srv.AuthConfig.GetString("clientID"),
 		srv.AuthConfig.GetString("clientSecret"),
-		*user.LoginID, itemID, score/100.0,
+		*user.LoginID, itemID, score/maxScore,
 	)
 	service.MustNotBeError(err)
 

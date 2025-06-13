@@ -14,6 +14,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
+const threadTokenLifetime = 2 * time.Hour
+
 // swagger:model threadGetResponse
 type threadGetResponse struct {
 	// required:true
@@ -135,7 +137,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 }
 
 func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo *threadInfo, user *database.User) (string, error) {
-	twoHoursLater := time.Now().Add(time.Hour * 2)
+	expirationTime := time.Now().Add(threadTokenLifetime)
 
 	threadToken, err := (&token.Thread{
 		ItemID:        strconv.FormatInt(itemID, 10),
@@ -144,7 +146,7 @@ func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo 
 		IsMine:        participantID == user.GroupID,
 		CanWatch:      userCanWatchForThread(threadInfo),
 		CanWrite:      userCanWriteInThread(user, participantID, threadInfo),
-		Exp:           strconv.FormatInt(twoHoursLater.Unix(), 10),
+		Exp:           strconv.FormatInt(expirationTime.Unix(), 10),
 	}).Sign(srv.TokenConfig.PrivateKey)
 
 	return threadToken, err

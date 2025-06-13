@@ -43,7 +43,8 @@ func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 
 		marksString := "(" + strings.Join(marks, ", ") + ")"
 		finalMarksString := marksString
-		if len(data.Rows) > 2 {
+		if len(data.Rows) > 2 { //nolint:gomnd // finalMarksString = marksString when data is a header plus one row (two rows in total)
+			//nolint:gomnd // -2 = minus one row for the table's header, and minus one more row for a set of question marks in '+ finalMarksString'
 			finalMarksString = strings.Repeat(marksString+", ", len(data.Rows)-2) + finalMarksString
 		}
 		query := "INSERT INTO " + database.QuoteName(tableName) +

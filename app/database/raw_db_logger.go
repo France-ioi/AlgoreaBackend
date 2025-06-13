@@ -33,7 +33,7 @@ func NewRawDBLogger() instrumentedsql.Logger {
 }
 
 func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
-	valuesMap := make(map[string]interface{}, len(keyvals)/2)
+	valuesMap := make(map[string]interface{}, len(keyvals)/2) //nolint:gomnd // keyvals are key-value pairs
 	for index := 0; index < len(keyvals); index += 2 {
 		valuesMap[keyvals[index].(string)] = keyvals[index+1]
 	}

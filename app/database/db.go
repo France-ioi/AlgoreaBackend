@@ -203,7 +203,7 @@ func isRetryableError(err error) bool {
 
 func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
 	if count > 0 && conn.ctx.Value(retryEachTransactionContextKey) == nil {
-		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) // ±5%
+		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:gomnd // ±5%
 	}
 }
 
@@ -938,22 +938,14 @@ func Default() interface{} {
 // by adding the escape character before percent signs (%), and underscore signs (_).
 func EscapeLikeString(v string, escapeCharacter byte) string {
 	pos := 0
-	buf := make([]byte, len(v)*3)
+	buf := make([]byte, len(v)*2) //nolint:gomnd // in the worst case, where every character is escaped, we need twice as many bytes
 
 	for i := 0; i < len(v); i++ {
 		c := v[i]
 		switch c {
-		case escapeCharacter:
+		case '%', '_', escapeCharacter:
 			buf[pos] = escapeCharacter
-			buf[pos+1] = escapeCharacter
-			pos += 2
-		case '%':
-			buf[pos] = escapeCharacter
-			buf[pos+1] = '%'
-			pos += 2
-		case '_':
-			buf[pos] = escapeCharacter
-			buf[pos+1] = '_'
+			buf[pos+1] = c
 			pos += 2
 		default:
 			buf[pos] = c

@@ -17,6 +17,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
+const profileEditTokenLifetime = 30 * time.Minute
+
 // swagger:model generateProfileEditTokenResponse
 type generateProfileEditTokenResponse struct {
 	// The ProfileEditToken encoded as hex.
@@ -114,12 +116,12 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 }
 
 func (srv *Service) getProfileEditToken(requesterLoginID, targetLoginID int64) (token, algorithm string) {
-	thirtyMinutesLater := time.Now().Add(time.Minute * 30)
+	expirationTime := time.Now().Add(profileEditTokenLifetime)
 
 	profileEditToken := ProfileEditToken{
 		RequesterID: strconv.FormatInt(requesterLoginID, 10),
 		TargetID:    strconv.FormatInt(targetLoginID, 10),
-		Exp:         thirtyMinutesLater.Unix(),
+		Exp:         expirationTime.Unix(),
 	}
 
 	jsonToken, err := json.Marshal(profileEditToken)

@@ -91,7 +91,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	}
 
 	// For every object marked as processing, we compute all its ancestors
-	recomputeQueries := make([]string, 0, 3)
+	recomputeQueries := make([]string, 0, 3) //nolint:gomnd // we expect recomputeQueries to contain three elements
 	recomputeQueries = append(recomputeQueries, `
 		DELETE `+objectName+`_ancestors
 		FROM `+objectName+`_ancestors

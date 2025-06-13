@@ -330,7 +330,7 @@ func (approvals *GroupApprovals) FromString(s string) {
 
 // ToArray converts GroupApprovals to a list of approvals.
 func (approvals *GroupApprovals) ToArray() []string {
-	approvalsList := make([]string, 0, 3)
+	approvalsList := make([]string, 0, 3) //nolint:gomnd // 3 possible approvals
 	if approvals.PersonalInfoViewApproval {
 		approvalsList = append(approvalsList, "personal_info_view")
 	}
@@ -493,7 +493,7 @@ func insertRelations(dataStore *DataStore, idsToInsertRelation *golang.Set[int64
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertRelation)-1) +
 			valuesTemplate // #nosec
 		insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
-		values := make([]interface{}, 0, len(idsToInsertRelation)*6)
+		values := make([]interface{}, 0, len(idsToInsertRelation)*5) //nolint:gomnd // 5 values per row
 		for _, id := range idsToInsertRelation {
 			personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt := resolveApprovalTimesForGroupsGroups(
 				oldActionsMap, id, approvals,
@@ -581,7 +581,7 @@ func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int
 		insertQuery += " VALUES " +
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertPending)-1) +
 			valuesTemplate // #nosec
-		values := make([]interface{}, 0, len(idsToInsertPending)*6)
+		values := make([]interface{}, 0, len(idsToInsertPending)*6) //nolint:gomnd // 6 values per row
 		for id, groupMembershipAction := range idsToInsertPending {
 			values = append(values, parentGroupID, id, groupMembershipAction.PendingType(),
 				approvals[id].PersonalInfoViewApproval, approvals[id].LockMembershipApproval,

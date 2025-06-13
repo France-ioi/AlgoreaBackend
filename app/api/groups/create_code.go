@@ -14,6 +14,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
+const maxNumberOfRetriesForCodeGenerator = 3
+
 // swagger:operation POST /groups/{group_id}/code groups groupCodeCreate
 //
 //	---
@@ -69,7 +71,7 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.A
 	var newCode string
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		for retryCount := 1; ; retryCount++ {
-			if retryCount > 3 {
+			if retryCount > maxNumberOfRetriesForCodeGenerator {
 				generatorErr := errors.New("the code generator is broken")
 				logging.GetLogEntry(r).Error(generatorErr)
 				return generatorErr

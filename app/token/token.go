@@ -105,8 +105,9 @@ func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interf
 	}
 
 	today := time.Now().UTC()
-	yesterday := today.Add(-24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
+	const oneDay = 24 * time.Hour
+	yesterday := today.Add(-oneDay)
+	tomorrow := today.Add(oneDay)
 
 	const dateLayout = "02-01-2006" // 'd-m-Y' in PHP
 	todayStr := today.Format(dateLayout)

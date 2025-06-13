@@ -10,6 +10,12 @@ import (
 	"time"
 )
 
+const (
+	defaultServerPort                  = 8080
+	defaultServerReadTimeoutInSeconds  = 60
+	defaultServerWriteTimeoutInSeconds = 60
+)
+
 // Server provides an http.Server.
 type Server struct {
 	*http.Server
@@ -19,9 +25,9 @@ type Server struct {
 func NewServer(app *Application) (*Server, error) {
 	log.Println("Configuring server...")
 	serverConfig := ServerConfig(app.Config)
-	serverConfig.SetDefault("port", 8080)
-	serverConfig.SetDefault("readTimeout", 60)
-	serverConfig.SetDefault("writeTimeout", 60)
+	serverConfig.SetDefault("port", defaultServerPort)
+	serverConfig.SetDefault("readTimeout", defaultServerReadTimeoutInSeconds)
+	serverConfig.SetDefault("writeTimeout", defaultServerWriteTimeoutInSeconds)
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", serverConfig.GetInt("Port")),

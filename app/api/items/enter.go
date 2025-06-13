@@ -38,7 +38,7 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of item IDs
+//			description: slash-separated list of item IDs (no more than 10 IDs)
 //			required: true
 //		- name: parent_attempt_id
 //			description: "`id` of an attempt which will be used as a parent attempt for the participation"

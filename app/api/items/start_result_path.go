@@ -40,7 +40,7 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of item IDs
+//			description: slash-separated list of item IDs (no more than 10 IDs)
 //			required: true
 //		- name: as_team_id
 //			in: query

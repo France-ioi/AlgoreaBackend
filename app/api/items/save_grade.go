@@ -159,7 +159,8 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 ) {
 	score := requestData.ScoreToken.Converted.Score
 
-	gotFullScore := score == 100
+	const maxScore = 100
+	gotFullScore := score == maxScore
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
 	if !saveNewScoreIntoGradings(store, requestData, score) {
 		return validated, false, golang.NewSet[int64]()

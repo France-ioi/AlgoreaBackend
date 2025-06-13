@@ -260,6 +260,14 @@ func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Req
 func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) service.APIError {
 	user := srv.GetUser(r)
 
+	const (
+		resultStarted = iota + 1
+		submission
+		resultValidate
+		savedAnswer
+		currentAnswer
+	)
+
 	// check and patch from.activity_type to make it integer
 	urlParams := r.URL.Query()
 	if len(urlParams["from.activity_type"]) > 0 {
@@ -267,7 +275,11 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		var intValue int
 		var ok bool
 		if intValue, ok = map[string]int{
-			"result_started": 1, "submission": 2, "result_validated": 3, "saved_answer": 4, "current_answer": 5,
+			"result_started":   resultStarted,
+			"submission":       submission,
+			"result_validated": resultValidate,
+			"saved_answer":     savedAnswer,
+			"current_answer":   currentAnswer,
 		}[stringValue]; !ok {
 			return service.ErrInvalidRequest(
 				errors.New(

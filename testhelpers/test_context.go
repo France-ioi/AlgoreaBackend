@@ -95,7 +95,8 @@ func (ctx *TestContext) initReferences(sc *godog.Scenario) {
 	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
 	ctx.idToReferenceMap = make(map[int64]string, len(collectedReferences))
 	for index, reference := range collectedReferences {
-		id := int64(1000000000000000000) + int64(index)
+		const minReferenceID = int64(1000000000000000000) // a large number to avoid conflicts with other IDs in tests
+		id := minReferenceID + int64(index)
 		ctx.referenceToIDMap[reference] = id
 		ctx.idToReferenceMap[id] = reference
 	}

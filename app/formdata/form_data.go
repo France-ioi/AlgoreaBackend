@@ -343,7 +343,7 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 					return false // skip this field
 				}
 				var value string
-				if len(v) >= 2 {
+				if len(v) > 1 {
 					value = strings.Join(v[1:], ":")
 				} else {
 					value = key

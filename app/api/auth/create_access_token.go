@@ -26,7 +26,10 @@ import (
 
 type ctxKey int
 
-const parsedRequestData ctxKey = iota
+const (
+	parsedRequestData             ctxKey = iota
+	maxNumberOfUserSessionsToKeep        = 10
+)
 
 // swagger:operation POST /auth/token auth accessTokenCreate
 //
@@ -262,7 +265,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
 	service.MustNotBeError(err)
-	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
+	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0] //nolint:gomnd // cut off the port
 
 	domainConfig := domain.ConfigFromContext(r.Context())
 
@@ -281,8 +284,8 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 			int32(time.Until(token.Expiry)/time.Second),
 		))
 
-		// Delete the oldest sessions of the user to keep a maximum of 10 sessions.
-		store.Sessions().DeleteOldSessionsToKeepMaximum(userID, 10)
+		// Delete the oldest sessions of the user keeping up to maxNumberOfUserSessionsToKeep sessions.
+		store.Sessions().DeleteOldSessionsToKeepMaximum(userID, maxNumberOfUserSessionsToKeep)
 
 		return nil
 	}))
@@ -341,13 +344,14 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]int
 		"code", "code_verifier", "redirect_uri",
 		"use_cookie", "cookie_secure", "cookie_same_site",
 	}
-	requestData := make(map[string]interface{}, 2)
+	requestData := make(map[string]interface{}, len(allowedParameters))
 	query := r.URL.Query()
 	for _, parameterName := range allowedParameters {
 		extractOptionalParameter(query, parameterName, requestData)
 	}
 
-	contentType := strings.ToLower(strings.TrimSpace(strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0]))
+	contentType := strings.ToLower(strings.TrimSpace(
+		strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0])) //nolint:gomnd // cut off the parameters, keep only the media type
 	switch contentType {
 	case "application/json":
 		if apiError := parseJSONParams(r, requestData); apiError != service.NoError {

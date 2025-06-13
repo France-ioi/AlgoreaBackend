@@ -14,6 +14,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
+const (
+	defaultGroupProgressLimit    = 10
+	maxAllowedGroupProgressLimit = 20
+)
+
 // swagger:model groupGroupProgressResponseTableCell
 type groupGroupProgressResponseTableCell struct {
 	// The child’s `group_id`
@@ -172,7 +177,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		return apiError
 	}
 	ancestorGroupIDQuery = service.NewQueryLimiter().
-		SetDefaultLimit(10).SetMaxAllowedLimit(20).
+		SetDefaultLimit(defaultGroupProgressLimit).SetMaxAllowedLimit(maxAllowedGroupProgressLimit).
 		Apply(r, ancestorGroupIDQuery)
 	service.MustNotBeError(ancestorGroupIDQuery.
 		Pluck("group_child.id", &ancestorGroupIDs).Error())

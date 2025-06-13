@@ -10,6 +10,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
+const maxNumberOfIDsInGroupPath = 10
+
 // swagger:model groupBreadcrumbsViewResponseRow
 type groupBreadcrumbsViewResponseRow struct {
 	// required:true
@@ -63,7 +65,7 @@ type groupBreadcrumbsViewResponseRow struct {
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
-	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", 10)
+	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", maxNumberOfIDsInGroupPath)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}

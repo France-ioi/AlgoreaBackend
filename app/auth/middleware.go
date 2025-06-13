@@ -63,8 +63,8 @@ func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *ht
 	accessToken, cookieAttributes := ParseSessionCookie(r)
 
 	for _, authValue := range r.Header["Authorization"] {
+		//nolint:gomnd // credentials = "Bearer" 1*SP b64token (see https://tools.ietf.org/html/rfc6750#section-2.1)
 		parsedAuthValue := strings.SplitN(authValue, " ", 3)
-		// credentials = "Bearer" 1*SP b64token (see https://tools.ietf.org/html/rfc6750#section-2.1)
 		if len(parsedAuthValue) == 2 && parsedAuthValue[0] == "Bearer" {
 			accessToken = parsedAuthValue[1]
 			// Delete the cookie since the Authorization header is given

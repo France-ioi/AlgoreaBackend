@@ -58,7 +58,6 @@ linters:
     - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
     - wsl              # Requires whitelines between blocks. requires many changes, enable it later
-    - gomnd            # Flags all "magic numbers" in the code. requires many changes
     - goerr113         # Don't allow dynamic errors, requires wrapped static errors. requires many changes
     - nestif           # Doesn't allow too long nested if. requires complex changes
     - forbidigo        # For update to go1.20

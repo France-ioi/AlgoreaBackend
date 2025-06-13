@@ -145,6 +145,7 @@ func checkThatUserHasRightsForDirectRelation(
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 
+	//nolint:gomnd // one row for the parent group, one for the child group
 	if len(groupData) < 2 {
 		return service.InsufficientAccessRightsError
 	}

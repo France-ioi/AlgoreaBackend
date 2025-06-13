@@ -36,7 +36,7 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of IDs
+//			description: slash-separated list of IDs (no more than 10 IDs)
 //			required: true
 //		- name: parent_attempt_id
 //			description: "`id` of an attempt for the second to the final item in the path.
@@ -200,6 +200,8 @@ func attemptIDOrParentAttemptID(r *http.Request) (
 	return attemptID, parentAttemptID, attemptIDSet, service.NoError
 }
 
+const maxNumberOfIDsInItemPath = 10
+
 func idsFromRequest(r *http.Request) ([]int64, error) {
-	return service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", 10)
+	return service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", maxNumberOfIDsInItemPath)
 }

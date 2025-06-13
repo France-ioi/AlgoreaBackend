@@ -75,7 +75,8 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 	defaultLanguage := database.Default()
 	if len(r.URL.Query()["default_language"]) != 0 {
 		defaultLanguage = r.URL.Query().Get("default_language")
-		if utf8.RuneCountInString(defaultLanguage.(string)) > 3 {
+		const maxLanguageLength = 3
+		if utf8.RuneCountInString(defaultLanguage.(string)) > maxLanguageLength {
 			return service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
 		}
 	}
@@ -85,7 +86,8 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		userID := createTempUserGroup(store)
-		login := createTempUser(store, userID, defaultLanguage, strings.SplitN(r.RemoteAddr, ":", 2)[0])
+		login := createTempUser(store, userID, defaultLanguage,
+			strings.SplitN(r.RemoteAddr, ":", 2)[0]) //nolint:gomnd // cut off the port
 
 		service.MustNotBeError(store.Groups().ByID(userID).UpdateColumn(map[string]interface{}{
 			"name":        login,
@@ -116,7 +118,9 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 func createTempUser(store *database.DataStore, userID int64, defaultLanguage interface{}, lastIP string) string {
 	var login string
 	service.MustNotBeError(store.RetryOnDuplicateKeyError("users", "login", "login", func(retryLoginStore *database.DataStore) error {
-		login = fmt.Sprintf("tmp-%d", rand.Int31n(99999999-10000000+1)+10000000)
+		const minLogin = int32(10000000)
+		const maxLogin = int32(99999999)
+		login = fmt.Sprintf("tmp-%d", rand.Int31n(maxLogin-minLogin+1)+minLogin)
 		return retryLoginStore.Users().InsertMap(map[string]interface{}{
 			"login_id":         0,
 			"login":            login,
@@ -159,7 +163,7 @@ func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.S
 
 func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, service.APIError) {
 	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
-	requestData := make(map[string]interface{}, 2)
+	requestData := make(map[string]interface{}, len(allowedParameters))
 	query := r.URL.Query()
 	for _, parameterName := range allowedParameters {
 		extractOptionalParameter(query, parameterName, requestData)

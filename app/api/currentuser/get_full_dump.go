@@ -67,7 +67,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	store := srv.GetStore(r)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("Content-Disposition", "attachment; filename=user_data.json")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 
 	_, err := w.Write([]byte("{"))
 	service.MustNotBeError(err)
