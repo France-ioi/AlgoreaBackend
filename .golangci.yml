@@ -116,12 +116,6 @@ issues:
       linters:
         - gosec
         - gocognit
-    - text: "weak cryptographic primitive"
-      linters:
-        - gosec
-    - text: "should have a package comment, unless it's in another file for this package"
-      linters:
-        - golint
     - text: "is too long"
       linters:
         - funlen
