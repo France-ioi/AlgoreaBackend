@@ -266,7 +266,9 @@ func Test_Deadline(t *testing.T) {
 
 			err := test.funcToCall(dataStore, func() {
 				cancel()
+				//nolint:gosec // access the context directly to set the error
 				(*cancelCtxInterface)(unsafe.Pointer(&ctx)).p.err = context.DeadlineExceeded
+				//nolint:gosec // access the context directly to set the cause to nil
 				(*cancelCtxInterface)(unsafe.Pointer(&ctx)).p.cause = nil
 			})
 

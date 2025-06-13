@@ -44,7 +44,7 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 				func(m *sessionIDsInProgressMap, sessionID int64, r *http.Request, f func() error) error {
 					cancelFunc()
 					ctx := r.Context()
-					(*valueCtxInterface)(unsafe.Pointer(&ctx)).p.timerCtx.err = context.DeadlineExceeded
+					(*valueCtxInterface)(unsafe.Pointer(&ctx)).p.timerCtx.err = context.DeadlineExceeded //nolint:gosec // imitate a timeout
 					patchGuard.Unpatch()
 					defer patchGuard.Restore()
 					return m.WithLock(sessionID, r, f)

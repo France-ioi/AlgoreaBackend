@@ -730,6 +730,7 @@ func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
 	assert.Equal(t, db.logConfig, dbWrapper.logConfig)
 	assert.Equal(t, db.db.CommonDB().(*sqlDBWrapper).sqlDB, dbWrapper.sqlDB)
 	dialect := dataStore.DB.db.Dialect()
+	//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
 	assert.Equal(t, dbWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
 
 	assert.Nil(t, mock.ExpectationsWereMet())
@@ -757,6 +758,7 @@ func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
 		assert.Equal(t, ctx, txWrapper.ctx)
 		assert.Equal(t, db.db.CommonDB().(*sqlTxWrapper).sqlTx, txWrapper.sqlTx)
 		dialect := dataStore.DB.db.Dialect()
+		//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
 		assert.Equal(t, txWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
 
 		return nil

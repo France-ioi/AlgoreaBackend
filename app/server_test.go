@@ -69,23 +69,27 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 
 	shutdownCalledCh := make(chan struct{})
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "ListenAndServe", func(srv *http.Server) error {
-		err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-		assert.NoError(t, err)
-		select {
-		case <-shutdownCalledCh:
-		case <-time.After(3 * time.Second):
-			assert.Fail(t, "Timeout on waiting for server to call Shutdown()")
-		}
-		return expectedError
-	})
+	monkey.PatchInstanceMethod(
+		reflect.TypeOf(&http.Server{}), //nolint:gosec // the instance of http.Server will never be used
+		"ListenAndServe", func(srv *http.Server) error {
+			err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+			assert.NoError(t, err)
+			select {
+			case <-shutdownCalledCh:
+			case <-time.After(3 * time.Second):
+				assert.Fail(t, "Timeout on waiting for server to call Shutdown()")
+			}
+			return expectedError
+		})
 	var shutdownGuard *monkey.PatchGuard
-	shutdownGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "Shutdown", func(srv *http.Server, ctx context.Context) error {
-		close(shutdownCalledCh)
-		shutdownGuard.Unpatch()
-		defer shutdownGuard.Restore()
-		return srv.Shutdown(ctx)
-	})
+	shutdownGuard = monkey.PatchInstanceMethod(
+		reflect.TypeOf(&http.Server{}), //nolint:gosec // the instance of http.Server will never be used
+		"Shutdown", func(srv *http.Server, ctx context.Context) error {
+			close(shutdownCalledCh)
+			shutdownGuard.Unpatch()
+			defer shutdownGuard.Restore()
+			return srv.Shutdown(ctx)
+		})
 	defer monkey.UnpatchAll()
 
 	doneChannel := srv.Start()
@@ -127,7 +131,9 @@ func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
 
 	expectedError := errors.New("some error")
 	var patchGuard *monkey.PatchGuard
-	patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&http.Server{}), "Shutdown",
+	patchGuard = monkey.PatchInstanceMethod(
+		reflect.TypeOf(&http.Server{}), //nolint:gosec // the instance of http.Server will never be used
+		"Shutdown",
 		func(server *http.Server, ctx context.Context) error {
 			patchGuard.Unpatch()
 			defer patchGuard.Restore()

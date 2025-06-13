@@ -111,10 +111,6 @@ run:
 issues:
   exclude-use-default: false
   exclude-rules:
-    # Exclude some linters from running on tests files.
-    - path: _test\.go
-      linters:
-        - gosec
     - text: "is too long"
       linters:
         - funlen
