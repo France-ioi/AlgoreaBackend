@@ -98,7 +98,7 @@ import (
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
 	// Get IDs from request and validate it.
-	ids, groupID, attemptID, parentAttemptID, attemptIDSet, user, apiError := srv.parametersForGetBreadcrumbs(r)
+	params, apiError := srv.parametersForGetBreadcrumbs(r)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -107,18 +107,20 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	var attemptNumberMap map[int64]int
 	var err error
 	store := srv.GetStore(r)
-	if attemptIDSet {
-		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForAttempt(ids, groupID, attemptID, false)
+	if params.attemptIDIsSet {
+		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForAttempt(
+			params.ids, params.participantID, params.attemptID, false)
 	} else {
-		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForParentAttempt(ids, groupID, parentAttemptID, false)
+		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForParentAttempt(
+			params.ids, params.participantID, params.parentAttemptID, false)
 	}
 	service.MustNotBeError(err)
 	if attemptIDMap == nil {
 		return service.ErrForbidden(errors.New("item ids hierarchy is invalid or insufficient access rights"))
 	}
 
-	idsInterface := make([]interface{}, 0, len(ids))
-	for _, id := range ids {
+	idsInterface := make([]interface{}, 0, len(params.ids))
+	for _, id := range params.ids {
 		idsInterface = append(idsInterface, id)
 	}
 	var result []map[string]interface{}
@@ -127,8 +129,8 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 			items.type,
 			COALESCE(user_strings.title, default_strings.title) AS title,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag`).
-		JoinsUserAndDefaultItemStrings(user).
-		Where("items.id IN (?)", ids).
+		JoinsUserAndDefaultItemStrings(params.user).
+		Where("items.id IN (?)", params.ids).
 		Order(gorm.Expr("FIELD(items.id"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
 		ScanIntoSliceOfMaps(&result).Error())
 
@@ -144,23 +146,31 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 	return service.NoError
 }
 
-func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
-	ids []int64, participantID, attemptID, parentAttemptID int64, attemptIDSet bool, user *database.User, apiError service.APIError,
-) {
+type getBreadcrumbsParameters struct {
+	ids             []int64
+	participantID   int64
+	attemptID       int64
+	parentAttemptID int64
+	attemptIDIsSet  bool
+	user            *database.User
+}
+
+func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (parameters *getBreadcrumbsParameters, apiError service.APIError) {
 	var err error
-	ids, err = idsFromRequest(r)
+	var params getBreadcrumbsParameters
+	params.ids, err = idsFromRequest(r)
 	if err != nil {
-		return nil, 0, 0, 0, false, nil, service.ErrInvalidRequest(err)
+		return nil, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, apiError = attemptIDOrParentAttemptID(r)
+	params.attemptID, params.parentAttemptID, params.attemptIDIsSet, apiError = attemptIDOrParentAttemptID(r)
 	if apiError != service.NoError {
-		return nil, 0, 0, 0, false, nil, apiError
+		return nil, apiError
 	}
 
-	user = srv.GetUser(r)
-	participantID = service.ParticipantIDFromContext(r.Context())
-	return ids, participantID, attemptID, parentAttemptID, attemptIDSet, user, service.NoError
+	params.user = srv.GetUser(r)
+	params.participantID = service.ParticipantIDFromContext(r.Context())
+	return &params, service.NoError
 }
 
 func attemptIDOrParentAttemptID(r *http.Request) (

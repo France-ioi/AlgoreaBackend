@@ -216,19 +216,17 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 		Scan(&participationInfo).Error()
 	service.MustNotBeError(err)
 
-	membersCount, otherMembers, teamCanEnter, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound := getEntryStateInfo(
-		groupID, itemID, user, store, lock,
-	)
+	entryStateInfo := getEntryStateInfo(groupID, itemID, user, store, lock)
 	state := computeEntryState(
 		participationInfo.IsStarted, participationInfo.IsActive, itemInfo.AllowsMultipleAttempts, itemInfo.IsTeamItem,
-		itemInfo.EntryMaxTeamSize, itemInfo.EntryMinAdmittedMembersRatio, membersCount, admittedMembersCount, attemptsViolationsFound,
-		currentTeamHasFrozenMembership, itemInfo.EntryFrozenTeams, teamCanEnter)
+		itemInfo.EntryMaxTeamSize, itemInfo.EntryMinAdmittedMembersRatio, entryStateInfo.membersCount, entryStateInfo.admittedMembersCount,
+		entryStateInfo.attemptsViolationsFound, currentTeamHasFrozenMembership, itemInfo.EntryFrozenTeams, entryStateInfo.teamCanEnter)
 
 	result := &itemGetEntryStateResponse{
 		State:                        string(state),
 		EntryMinAdmittedMembersRatio: itemInfo.EntryMinAdmittedMembersRatio,
-		CurrentUserCanEnter:          currentUserCanEnter,
-		OtherMembers:                 otherMembers,
+		CurrentUserCanEnter:          entryStateInfo.currentUserCanEnter,
+		OtherMembers:                 entryStateInfo.otherMembers,
 		CurrentTeamIsFrozen:          currentTeamHasFrozenMembership,
 		FrozenTeamsRequired:          itemInfo.EntryFrozenTeams,
 		groupID:                      groupID,
@@ -276,12 +274,19 @@ func isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamItem bool,
 	return !attemptsViolationsFound && (!hasAlreadyStarted || allowsMultipleAttempts)
 }
 
-func getEntryStateInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (
-	membersCount int32, otherMembers []itemGetEntryStateOtherMember, teamCanEnter, currentUserCanEnter bool, admittedMembersCount int32,
-	attemptsViolationsFound bool,
-) {
+type entryStateInfo struct {
+	membersCount            int32
+	otherMembers            []itemGetEntryStateOtherMember
+	teamCanEnter            bool
+	currentUserCanEnter     bool
+	admittedMembersCount    int32
+	attemptsViolationsFound bool
+}
+
+func getEntryStateInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) *entryStateInfo {
+	var result entryStateInfo
 	if groupID != user.GroupID {
-		teamCanEnter = discoverIfTeamCanEnter(groupID, itemID, store, lock)
+		result.teamCanEnter = discoverIfTeamCanEnter(groupID, itemID, store, lock)
 
 		canEnterQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = groups_groups_active.child_group_id").
@@ -299,13 +304,13 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 				IF(MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name,
         users.group_id AS group_id, users.login,
 				(? OR IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0)) AND
-				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, teamCanEnter).
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, result.teamCanEnter).
 			WithPersonalInfoViewApprovals(user)
 		if lock {
 			canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
 		}
-		service.MustNotBeError(canEnterQuery.Scan(&otherMembers).Error())
-		membersCount = int32(len(otherMembers))
+		service.MustNotBeError(canEnterQuery.Scan(&result.otherMembers).Error())
+		result.membersCount = int32(len(result.otherMembers))
 
 		participatingSomewhereElseQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			Joins(`
@@ -329,26 +334,26 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 			violationsMap[userID] = true
 		}
 
-		attemptsViolationsFound = len(usersViolatingAttemptsRestriction) > 0
+		result.attemptsViolationsFound = len(usersViolatingAttemptsRestriction) > 0
 
 		var currentUserIndex int
-		for index := range otherMembers {
-			otherMembers[index].AttemptsRestrictionViolated = violationsMap[otherMembers[index].GroupID]
-			if otherMembers[index].GroupID == user.GroupID {
-				currentUserCanEnter = otherMembers[index].CanEnter
+		for index := range result.otherMembers {
+			result.otherMembers[index].AttemptsRestrictionViolated = violationsMap[result.otherMembers[index].GroupID]
+			if result.otherMembers[index].GroupID == user.GroupID {
+				result.currentUserCanEnter = result.otherMembers[index].CanEnter
 				currentUserIndex = index
 			}
-			if otherMembers[index].CanEnter {
-				admittedMembersCount++
+			if result.otherMembers[index].CanEnter {
+				result.admittedMembersCount++
 			}
-			nilOtherMemberPersonalInfoIfNeeded(&otherMembers[index])
+			nilOtherMemberPersonalInfoIfNeeded(&result.otherMembers[index])
 		}
 
 		// remove the current user from the members list
-		otherMembers = append(otherMembers[:currentUserIndex], otherMembers[currentUserIndex+1:]...)
+		result.otherMembers = append(result.otherMembers[:currentUserIndex], result.otherMembers[currentUserIndex+1:]...)
 	} else {
-		membersCount = 1
-		otherMembers = []itemGetEntryStateOtherMember{}
+		result.membersCount = 1
+		result.otherMembers = []itemGetEntryStateOtherMember{}
 		canEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Joins("JOIN items ON items.id = ?", itemID).
 			Joins(`
@@ -364,14 +369,14 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 				IFNULL(
 					MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
 				) AND
-				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &result.currentUserCanEnter).
 			Error())
-		if currentUserCanEnter {
-			admittedMembersCount = 1
+		if result.currentUserCanEnter {
+			result.admittedMembersCount = 1
 		}
 	}
 
-	return membersCount, otherMembers, teamCanEnter, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound
+	return &result
 }
 
 func nilOtherMemberPersonalInfoIfNeeded(otherMember *itemGetEntryStateOtherMember) {

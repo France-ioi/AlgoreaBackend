@@ -218,9 +218,7 @@ type rawListChildItem struct {
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDIsSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(
-		httpReq,
-	)
+	params, apiError := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
 	if apiError != service.NoError {
 		return apiError
 	}
@@ -238,11 +236,11 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 
 	store := srv.GetStore(httpReq)
 	found, err := store.Permissions().
-		MatchingGroupAncestors(participantID).
+		MatchingGroupAncestors(params.participantID).
 		WherePermissionIsAtLeast("view", "content").
-		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", participantID).
-		Where("permissions.item_id = ?", itemID).
-		Where("results.attempt_id = ?", attemptID).
+		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", params.participantID).
+		Where("permissions.item_id = ?", params.itemID).
+		Where("results.attempt_id = ?", params.attemptID).
 		Where("results.started").
 		HasRows()
 	service.MustNotBeError(err)
@@ -254,12 +252,12 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 	service.MustNotBeError(
 		constructItemChildrenQuery(
 			store,
-			itemID,
-			participantID,
+			params.itemID,
+			params.participantID,
 			requiredViewPermissionOnItems,
-			attemptID,
-			watchedGroupIDIsSet,
-			watchedGroupID,
+			params.attemptID,
+			params.watchedGroupIDIsSet,
+			params.watchedGroupID,
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
@@ -275,19 +273,19 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
 				child_order,
 				EXISTS(SELECT 1 FROM item_dependencies WHERE item_id = items.id AND grant_content_view) AS grants_access_to_items`,
-			[]interface{}{participantID},
+			[]interface{}{params.participantID},
 			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
 			func(db *database.DB) *database.DB {
-				return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", itemID)
+				return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", params.itemID)
 			},
 		).
-			JoinsUserAndDefaultItemStrings(user).
+			JoinsUserAndDefaultItemStrings(params.user).
 			Scan(&rawData).Error())
 
-	response := childItemsFromRawData(rawData, watchedGroupIDIsSet, store.PermissionsGranted())
+	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
 	return service.NoError
