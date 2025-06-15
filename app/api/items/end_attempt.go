@@ -46,7 +46,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) *service.APIError {
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -70,7 +70,7 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.ErrForbidden(errors.New("active attempt not found"))
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		// End this and descendant attempts, expire participations

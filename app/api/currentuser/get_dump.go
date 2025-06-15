@@ -35,6 +35,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.getDumpCommon(r, w, false)
 }

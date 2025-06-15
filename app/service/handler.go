@@ -15,7 +15,7 @@ import (
 // AppHandler is a type that implements http.Handler and makes handling
 // errors easier. When its method returns an error, it prints it to the logs
 // and shows a JSON formatted error to the user.
-type AppHandler func(http.ResponseWriter, *http.Request) APIError
+type AppHandler func(http.ResponseWriter, *http.Request) *APIError
 
 func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	apiErr := NoError
@@ -24,7 +24,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if p := recover(); p != nil {
 			switch err := p.(type) {
-			case APIError:
+			case *APIError:
 				apiErr = err
 			case error:
 				if errors.Is(err, context.DeadlineExceeded) {

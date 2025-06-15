@@ -62,7 +62,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) *service.APIError {
 	cookieAttributes, apiError := srv.resolveCookieAttributesFromRequest(r)
 	if apiError != service.NoError {
 		return apiError
@@ -149,7 +149,7 @@ func createTempUserGroup(store *database.DataStore) int64 {
 	return userID
 }
 
-func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, service.APIError) {
+func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, *service.APIError) {
 	requestData, apiError := parseCookieAttributesForCreateTempUser(r)
 	if apiError != service.NoError {
 		return nil, apiError
@@ -161,7 +161,7 @@ func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.S
 	return cookieAttributes, service.NoError
 }
 
-func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, service.APIError) {
+func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, *service.APIError) {
 	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
 	requestData := make(map[string]interface{}, len(allowedParameters))
 	query := r.URL.Query()

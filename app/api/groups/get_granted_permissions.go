@@ -132,7 +132,7 @@ type grantedPermissionsViewResultRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) *service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

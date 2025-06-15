@@ -13,7 +13,7 @@ import (
 // RenderGroupGroupTransitionResult renders database.GroupGroupTransitionResult as a response or returns an APIError.
 func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, result database.GroupGroupTransitionResult,
 	approvalsToRequest database.GroupApprovals, action userGroupRelationAction,
-) service.APIError {
+) *service.APIError {
 	isCreateAction := map[userGroupRelationAction]bool{
 		createGroupJoinRequestAction:         true,
 		joinGroupByCodeAction:                true,

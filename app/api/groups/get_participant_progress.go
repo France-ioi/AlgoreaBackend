@@ -172,7 +172,7 @@ type participantProgressParameters struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 	params, apiError := srv.parseParticipantProgressParameters(r, store, user)
@@ -304,7 +304,7 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 }
 
 func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *database.DataStore, user *database.User) (
-	params participantProgressParameters, apiError service.APIError,
+	params participantProgressParameters, apiError *service.APIError,
 ) {
 	var err error
 	params.ItemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")

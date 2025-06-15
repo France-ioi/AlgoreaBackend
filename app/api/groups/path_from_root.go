@@ -59,7 +59,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {

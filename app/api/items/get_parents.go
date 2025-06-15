@@ -91,7 +91,7 @@ type parentItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	params, apiError := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
 	if apiError != service.NoError {
 		return apiError
@@ -130,7 +130,7 @@ type getParentsOrChildrenServiceParams struct {
 }
 
 func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Request) (
-	parameters *getParentsOrChildrenServiceParams, apiError service.APIError,
+	parameters *getParentsOrChildrenServiceParams, apiError *service.APIError,
 ) {
 	var params getParentsOrChildrenServiceParams
 	var err error

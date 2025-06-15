@@ -96,7 +96,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) *service.APIError {
 	// Get IDs from request and validate it.
 	params, apiError := srv.parametersForGetBreadcrumbs(r)
 	if apiError != service.NoError {
@@ -155,7 +155,7 @@ type getBreadcrumbsParameters struct {
 	user            *database.User
 }
 
-func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (parameters *getBreadcrumbsParameters, apiError service.APIError) {
+func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (parameters *getBreadcrumbsParameters, apiError *service.APIError) {
 	var err error
 	var params getBreadcrumbsParameters
 	params.ids, err = idsFromRequest(r)
@@ -174,7 +174,7 @@ func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (parameters *ge
 }
 
 func attemptIDOrParentAttemptID(r *http.Request) (
-	attemptID, parentAttemptID int64, attemptIDSet bool, apiError service.APIError,
+	attemptID, parentAttemptID int64, attemptIDSet bool, apiError *service.APIError,
 ) {
 	var err error
 	attemptIDSet = len(r.URL.Query()["attempt_id"]) != 0

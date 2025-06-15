@@ -42,7 +42,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -63,7 +63,7 @@ func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Reque
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 		return store.ItemDependencies().
 			Delete("item_id = ? AND dependent_item_id = ?", prerequisiteItemID, dependentItemID).Error()

@@ -191,7 +191,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 	if user.IsTempUser {
 		return service.InsufficientAccessRightsError
@@ -211,7 +211,7 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.A
 	return service.NoError
 }
 
-func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError service.APIError, err error) {
+func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError *service.APIError, err error) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -242,25 +242,25 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			if formData.IsSet("parent") && !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
 				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
-				return apiError.Error
+				return apiError.EmbeddedError
 			}
 
 			apiError = validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, nil, lockedStore)
 			if apiError != service.NoError {
-				return apiError.Error
+				return apiError.EmbeddedError
 			}
 
 			// insertion
 			itemID, apiError = srv.insertItem(lockedStore, user, formData, &input)
 			if apiError != service.NoError {
-				return apiError.Error
+				return apiError.EmbeddedError
 			}
 
 			return nil
 		})
 
 		if apiError != service.NoError {
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -549,7 +549,7 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
 	newItemRequest *NewItemRequest,
-) (itemID int64, apiError service.APIError) {
+) (itemID int64, apiError *service.APIError) {
 	itemMap := formData.ConstructPartialMapForDB("ItemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 

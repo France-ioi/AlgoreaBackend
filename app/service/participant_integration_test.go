@@ -37,7 +37,7 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 		name           string
 		query          string
 		expectedResult int64
-		expectedError  service.APIError
+		expectedError  *service.APIError
 	}{
 		{
 			name:          "no team",

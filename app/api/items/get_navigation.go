@@ -131,7 +131,7 @@ type itemWatchedGroupStat struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -171,7 +171,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	return service.NoError
 }
 
-func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.Request, groupID, itemID int64) (int64, service.APIError) {
+func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.Request, groupID, itemID int64) (int64, *service.APIError) {
 	attemptIDSet := len(httpReq.URL.Query()["attempt_id"]) != 0
 	childAttemptIDSet := len(httpReq.URL.Query()["child_attempt_id"]) != 0
 	var attemptID, childAttemptID int64

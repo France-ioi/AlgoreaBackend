@@ -14,7 +14,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		url                     string
 		wantWatchedGroupID      int64
 		wantWatchedGroupIDIsSet bool
-		wantAPIError            APIError
+		wantAPIError            *APIError
 	}{
 		{name: "no watched_group_id", url: "/dummy", wantWatchedGroupID: 0, wantWatchedGroupIDIsSet: false, wantAPIError: NoError},
 		{

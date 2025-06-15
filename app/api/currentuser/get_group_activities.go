@@ -131,11 +131,11 @@ type rootItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.getRootItems(w, r, true)
 }
 
-func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) service.APIError {
+func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) *service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 

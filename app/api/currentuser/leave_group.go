@@ -50,6 +50,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) leaveGroup(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) leaveGroup(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.performGroupRelationAction(w, r, leaveGroupAction)
 }

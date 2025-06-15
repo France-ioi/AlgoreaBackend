@@ -216,7 +216,7 @@ func ResolveURLQueryPathInt64SliceFieldWithLimit(r *http.Request, paramName stri
 
 // ResolveJSONBodyIntoMap reads the request body and parses it as JSON into a map.
 // As it reads out the body, it can only be called once.
-func ResolveJSONBodyIntoMap(r *http.Request) (map[string]interface{}, APIError) {
+func ResolveJSONBodyIntoMap(r *http.Request) (map[string]interface{}, *APIError) {
 	var rawRequestData map[string]interface{}
 	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawRequestData)

@@ -60,7 +60,7 @@ type additionalTimes struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")

@@ -48,6 +48,6 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupLeaveRequest(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroupLeaveRequest(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.performGroupRelationAction(w, r, createGroupLeaveRequestAction)
 }

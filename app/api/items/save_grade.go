@@ -102,7 +102,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) *service.APIError {
 	store := srv.GetStore(r)
 	requestData := saveGradeRequestParsed{store: store, publicKey: srv.TokenConfig.PublicKey}
 

@@ -69,7 +69,7 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -93,13 +93,13 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		service.MustNotBeError(err)
 		if !ok {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		itemID := ids[len(ids)-1]
 		apiError = checkIfAttemptCreationIsPossible(store, itemID, participantID)
 		if apiError != service.NoError {
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		attemptID, err = store.Attempts().CreateNew(participantID, parentAttemptID, itemID, user.GroupID)
@@ -119,7 +119,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	return service.NoError
 }
 
-func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID int64) service.APIError {
+func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID int64) *service.APIError {
 	var allowsMultipleAttempts bool
 	err := store.Items().ByID(itemID).
 		Where("items.type IN('Task','Chapter')").

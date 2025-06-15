@@ -162,7 +162,7 @@ type itemActivityLogResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "ancestor_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -253,11 +253,11 @@ func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.getActivityLog(w, r, nil)
 }
 
-func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) service.APIError {
+func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) *service.APIError {
 	user := srv.GetUser(r)
 
 	const (
@@ -335,7 +335,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 
 func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http.Request, itemID *int64,
 	user *database.User, fromValues map[string]interface{},
-) (*database.DB, service.APIError) {
+) (*database.DB, *service.APIError) {
 	participantID := service.ParticipantIDFromContext(r.Context())
 	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {

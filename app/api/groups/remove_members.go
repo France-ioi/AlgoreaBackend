@@ -73,7 +73,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) *service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

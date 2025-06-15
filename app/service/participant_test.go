@@ -44,7 +44,7 @@ func TestParticipantMiddleware(t *testing.T) {
 		name                     string
 		asTeamID                 int64
 		userID                   int64
-		apiError                 APIError
+		apiError                 *APIError
 		expectedServiceWasCalled bool
 		expectedStatusCode       int
 		expectedBody             string
@@ -91,7 +91,7 @@ func TestParticipantMiddleware(t *testing.T) {
 	}
 }
 
-func callThroughParticipantMiddleware(userID, asTeamID int64, apiError APIError) (
+func callThroughParticipantMiddleware(userID, asTeamID int64, apiError *APIError) (
 	called, enteredService bool, actualUserID int64, resp *http.Response, mock sqlmock.Sqlmock,
 ) {
 	dbmock, mock := database.NewDBMock()
@@ -101,7 +101,7 @@ func callThroughParticipantMiddleware(userID, asTeamID int64, apiError APIError)
 	})
 	defer userGuard.Unpatch()
 
-	guard := monkey.Patch(GetParticipantIDFromRequest, func(_ *http.Request, user *database.User, _ *database.DataStore) (int64, APIError) {
+	guard := monkey.Patch(GetParticipantIDFromRequest, func(_ *http.Request, user *database.User, _ *database.DataStore) (int64, *APIError) {
 		actualUserID = user.GroupID
 		called = true
 		if asTeamID != 0 {

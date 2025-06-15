@@ -19,7 +19,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 	tests := []struct {
 		name         string
 		fixture      string
-		wantAPIError service.APIError
+		wantAPIError *service.APIError
 	}{
 		{
 			name: "parent group is not a team",
@@ -191,7 +191,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			defer func() { _ = db.Close() }()
 
 			store := database.NewDataStore(db)
-			var apiError service.APIError
+			var apiError *service.APIError
 			assert.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
 				apiError = currentuser.CheckPreconditionsForGroupRequests(transactionStore,
 					&database.User{GroupID: 10}, 1, "createJoinRequest")

@@ -62,11 +62,11 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) answerCreate(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) answerCreate(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	return srv.saveAnswerWithType(rw, httpReq, false)
 }
 
-func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Request, isCurrent bool) service.APIError {
+func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Request, isCurrent bool) *service.APIError {
 	attemptID, err := service.ResolveURLQueryPathInt64Field(httpReq, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

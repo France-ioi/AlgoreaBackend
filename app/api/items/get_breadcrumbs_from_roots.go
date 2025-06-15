@@ -103,7 +103,7 @@ type breadcrumbElement struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -152,7 +152,7 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *http.Request) *service.APIError {
 	textID := chi.URLParam(r, "text_id")
 
 	// we wouldn't be here if the url weren't valid.
@@ -167,7 +167,7 @@ func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *ht
 	return srv.getBreadcrumbsFromRoots(w, r, itemID)
 }
 
-func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Request, itemID int64) service.APIError {
+func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Request, itemID int64) *service.APIError {
 	store := srv.GetStore(r)
 	user := srv.GetUser(r)
 

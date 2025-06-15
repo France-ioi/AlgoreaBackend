@@ -53,6 +53,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) rejectJoinRequests(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) rejectJoinRequests(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.performBulkMembershipAction(w, r, rejectJoinRequestsAction)
 }

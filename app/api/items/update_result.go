@@ -64,7 +64,7 @@ type resultUpdateRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -97,7 +97,7 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		data := formData.ConstructMapForDB()

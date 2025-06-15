@@ -38,7 +38,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 	user := srv.GetUser(r)
 

@@ -128,7 +128,7 @@ type groupGroupProgressResponseTableCell struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -399,7 +399,7 @@ func scanAndBuildProgressResults(
 	appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 }
 
-func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *database.User) ([]int64, service.APIError) {
+func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *database.User) ([]int64, *service.APIError) {
 	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
 	if err != nil {
 		return nil, service.ErrInvalidRequest(err)

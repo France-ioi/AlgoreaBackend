@@ -128,7 +128,7 @@ type groupUserRequestsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) *service.APIError {
 	store := srv.GetStore(r)
 	groupID, groupIDSet, includeDescendantGroups, types, apiError := srv.resolveParametersForGetUserRequests(store, r)
 	if apiError != service.NoError {
@@ -204,7 +204,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 }
 
 func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, r *http.Request) (
-	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, apiError service.APIError,
+	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, apiError *service.APIError,
 ) {
 	user := srv.GetUser(r)
 
@@ -237,7 +237,7 @@ func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStor
 	return groupID, groupIDSet, includeDescendantGroups, types, apiError
 }
 
-func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, service.APIError) {
+func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, *service.APIError) {
 	types := []string{"join_request"}
 	urlQuery := r.URL.Query()
 	if len(urlQuery["types"]) > 0 {

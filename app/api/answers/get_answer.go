@@ -51,7 +51,7 @@ import (
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	answerID, err := service.ResolveURLQueryPathInt64Field(httpReq, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

@@ -75,7 +75,7 @@ type idName struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 

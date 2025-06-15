@@ -67,7 +67,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -101,7 +101,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) || (itemInfo.IsTeamOnlyItem && groupType == "User") {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error
+			return apiError.EmbeddedError
 		}
 		service.MustNotBeError(err)
 
@@ -118,7 +118,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) se
 	return service.NoError
 }
 
-func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, groupID, seconds int64, apiError service.APIError) {
+func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, groupID, seconds int64, apiError *service.APIError) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)

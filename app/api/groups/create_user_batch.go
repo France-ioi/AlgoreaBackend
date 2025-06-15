@@ -122,7 +122,7 @@ type subgroupApproval struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -185,7 +185,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 }
 
 func checkCreateUserBatchRequestParameters(store *database.DataStore, user *database.User, input createUserBatchRequest) (
-	numberOfUsersToBeCreated int, subgroupsApprovals []subgroupApproval, apiError service.APIError,
+	numberOfUsersToBeCreated int, subgroupsApprovals []subgroupApproval, apiError *service.APIError,
 ) {
 	var prefixInfo struct {
 		GroupID  int64

@@ -10,7 +10,7 @@ import (
 )
 
 func httpResponseForResponse(renderer render.Renderer) *httptest.ResponseRecorder {
-	var fn AppHandler = func(respW http.ResponseWriter, req *http.Request) APIError {
+	var fn AppHandler = func(respW http.ResponseWriter, req *http.Request) *APIError {
 		_ = render.Render(respW, req, renderer)
 		return NoError
 	}

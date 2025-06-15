@@ -84,7 +84,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/user-batch-prefixes", service.AppHandler(srv.getUserBatchPrefixes).ServeHTTP)
 }
 
-func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
+func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.User, groupID int64) *service.APIError {
 	found, err := store.GroupAncestors().ManagedByUser(user).
 		Where("groups_ancestors.child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
@@ -94,7 +94,7 @@ func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.Us
 	return service.NoError
 }
 
-func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *database.User, groupID int64) service.APIError {
+func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *database.User, groupID int64) *service.APIError {
 	found, err := store.GroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id").
 		Where("groups_ancestors.child_group_id = ?", groupID).
@@ -122,7 +122,7 @@ const (
 func checkThatUserHasRightsForDirectRelation(
 	store *database.DataStore, user *database.User,
 	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation,
-) service.APIError {
+) *service.APIError {
 	groupStore := store.Groups()
 
 	var groupData []struct {
@@ -178,7 +178,7 @@ const (
 
 func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.Request,
 	action bulkMembershipAction,
-) service.APIError {
+) *service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -197,7 +197,7 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 			var groupType string
 			groupType, apiError = checkPreconditionsForBulkMembershipAction(action, user, store, parentGroupID, groupIDs)
 			if apiError != service.NoError {
-				return apiError.Error // rollback
+				return apiError.EmbeddedError // rollback
 			}
 
 			results, err = performBulkMembershipActionTransition(store, action, parentGroupID, groupIDs, groupType, user)
@@ -246,7 +246,7 @@ func performBulkMembershipActionTransition(store *database.DataStore, action bul
 
 func checkPreconditionsForBulkMembershipAction(action bulkMembershipAction, user *database.User, store *database.DataStore,
 	parentGroupID int64, groupIDs []int64,
-) (groupType string, apiError service.APIError) {
+) (groupType string, apiError *service.APIError) {
 	if apiError = checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiError != service.NoError {
 		return "", apiError
 	}

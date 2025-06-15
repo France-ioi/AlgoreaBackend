@@ -120,7 +120,7 @@ type attemptsListResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) *service.APIError {
 	itemID, participantID, parentAttemptID, apiError := srv.resolveParametersForListAttempts(r)
 	if apiError != service.NoError {
 		return apiError
@@ -176,7 +176,7 @@ func constructQueryForGettingAttemptsList(store *database.DataStore, participant
 }
 
 func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
-	itemID, participantID, parentAttemptID int64, apiError service.APIError,
+	itemID, participantID, parentAttemptID int64, apiError *service.APIError,
 ) {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
