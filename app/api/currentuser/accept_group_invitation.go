@@ -63,6 +63,6 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) acceptGroupInvitation(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) acceptGroupInvitation(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.performGroupRelationAction(w, r, acceptInvitationAction)
 }

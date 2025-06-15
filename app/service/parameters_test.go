@@ -645,7 +645,7 @@ func TestResolveJSONBodyIntoMap(t *testing.T) {
 		name             string
 		body             string
 		expectedMap      map[string]interface{}
-		expectedAPIError APIError
+		expectedAPIError *APIError
 	}{
 		{
 			name:             "empty body",

@@ -95,6 +95,6 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupJoinRequest(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroupJoinRequest(w http.ResponseWriter, r *http.Request) *service.APIError {
 	return srv.performGroupRelationAction(w, r, createGroupJoinRequestAction)
 }

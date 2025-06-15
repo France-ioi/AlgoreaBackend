@@ -24,7 +24,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) logout(w http.ResponseWriter, r *http.Request) *service.APIError {
 	sessionID := srv.GetSessionID(r)
 
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {

@@ -116,7 +116,7 @@ type userViewResponse struct {
 //			"$ref": "#/responses/notFoundResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) *service.APIError {
 	user := srv.GetUser(r)
 
 	var scope *database.DB

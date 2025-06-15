@@ -70,7 +70,7 @@ type itemDependencyCreateRequest struct {
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) *service.APIError {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(r, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -94,7 +94,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		if !user.CanViewItemInfo(store.WithExclusiveWriteLock(), prerequisiteItemID) {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		permissionsQuery := store.Permissions().
@@ -110,7 +110,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		err = store.ItemDependencies().InsertMap(map[string]interface{}{
@@ -121,7 +121,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 		})
 		if err != nil && database.IsDuplicateEntryError(err) {
 			apiError = service.ErrUnprocessableEntity(errors.New("the dependency already exists"))
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		return err

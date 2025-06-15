@@ -56,6 +56,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemDependencies(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemDependencies(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	return srv.getItemPrerequisitesOrDependencies(rw, httpReq, "item_id", "dependent_item_id")
 }

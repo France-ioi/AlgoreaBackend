@@ -53,7 +53,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

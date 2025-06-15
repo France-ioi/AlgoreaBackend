@@ -67,7 +67,7 @@ type itemStringUpdateRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 	user := srv.GetUser(r)
 
@@ -101,7 +101,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.ErrForbidden(errors.New("no access rights to edit the item"))
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		if useDefaultLanguage {
@@ -111,7 +111,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 			service.MustNotBeError(err)
 			if !found {
 				apiError = service.ErrInvalidRequest(errors.New("no such language"))
-				return apiError.Error // rollback
+				return apiError.EmbeddedError // rollback
 			}
 		}
 		updateItemStringData(store, itemID, languageTag, data.ConstructMapForDB())

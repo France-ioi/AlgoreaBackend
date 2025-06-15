@@ -84,7 +84,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string,
-) service.APIError {
+) *service.APIError {
 	if taskToken.Converted.UserID != otherTokenConvertedUserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in %s doesn't correspond to user session: got idUser=%d, expected %d",
@@ -232,7 +232,7 @@ type itemsRelationData struct {
 
 func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permissionAndType, children []itemChild,
 	formData *formdata.FormData, oldRelationsMap map[int64]*itemsRelationData, store *database.DataStore,
-) service.APIError {
+) *service.APIError {
 	for index := range children {
 		childRelation := childrenInfoMap[children[index].ItemID]
 		oldChildRelation := oldRelationsMap[children[index].ItemID]
@@ -302,7 +302,7 @@ func applyScoreWeightDefaultValue(formData *formdata.FormData, prefix string, ch
 
 func validateChildBooleanPropagationAndApplyDefaultValue(formData *formdata.FormData, fieldName, prefix string,
 	propagationValue, oldPropagationValue *bool, permissionValue, requiredPermissionValue int,
-) service.APIError {
+) *service.APIError {
 	switch {
 	case formData.IsSet(prefix + fieldName):
 		// allow setting the propagation to the same or a lower value
@@ -322,7 +322,7 @@ func validateChildBooleanPropagationAndApplyDefaultValue(formData *formdata.Form
 
 func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) *service.APIError {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.EditPropagation
@@ -334,7 +334,7 @@ func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormDat
 
 func validateChildRequestHelpPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) *service.APIError {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.RequestHelpPropagation
@@ -347,7 +347,7 @@ func validateChildRequestHelpPropagationAndApplyDefaultValue(formData *formdata.
 
 func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) *service.APIError {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.WatchPropagation
@@ -359,7 +359,7 @@ func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormDa
 
 func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) *service.APIError {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.GrantViewPropagation
@@ -372,7 +372,7 @@ func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.Fo
 //nolint:dupl
 func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) *service.APIError {
 	switch {
 	case formData.IsSet(prefix + "upper_view_levels_propagation"):
 		if oldRelationData != nil &&
@@ -405,7 +405,7 @@ func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formd
 //nolint:dupl
 func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) *service.APIError {
 	switch {
 	case formData.IsSet(prefix + "content_view_propagation"):
 		if oldRelationData != nil &&

@@ -47,7 +47,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 	user := srv.GetUser(r)
 
@@ -84,7 +84,7 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		return store.GroupManagers().

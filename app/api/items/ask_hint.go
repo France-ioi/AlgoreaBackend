@@ -84,7 +84,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) *service.APIError {
 	store := srv.GetStore(r)
 	requestData := AskHintRequest{store: store, publicKey: srv.TokenConfig.PublicKey}
 
@@ -93,7 +93,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(err)
 	}
 
-	var apiError service.APIError
+	var apiError *service.APIError
 	if apiError = checkHintOrScoreTokenRequiredFields(requestData.TaskToken,
 		"hint_requested",
 		requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
@@ -112,7 +112,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 
 		if !hasAccess {
 			apiError = service.ErrForbidden(reason)
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		// Get the previous hints requested JSON data
@@ -120,7 +120,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, r)
 		if gorm.IsRecordNotFoundError(err) {
 			apiError = service.ErrNotFound(errors.New("no result or the attempt is expired"))
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 		service.MustNotBeError(err)
 

@@ -99,14 +99,14 @@ type rawPrerequisiteOrDependencyItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	return srv.getItemPrerequisitesOrDependencies(rw, httpReq, "dependent_item_id", "item_id")
 }
 
 func (srv *Service) getItemPrerequisitesOrDependencies(
 	rw http.ResponseWriter, httpReq *http.Request,
 	givenColumn, joinToColumn string,
-) service.APIError {
+) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

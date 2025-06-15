@@ -26,7 +26,7 @@ func TestApplySorting(t *testing.T) {
 		args             args
 		wantSQL          string
 		wantSQLArguments []driver.Value
-		wantAPIError     APIError
+		wantAPIError     *APIError
 		shouldPanic      error
 	}{
 		{

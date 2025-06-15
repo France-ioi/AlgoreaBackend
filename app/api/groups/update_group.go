@@ -153,7 +153,7 @@ type groupUpdateInput struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) *service.APIError {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -183,7 +183,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			Where("groups.id = ?", groupID).Group("groups.id").Scan(&currentGroupData).Error()
 		if gorm.IsRecordNotFoundError(err) {
 			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -195,7 +195,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		formData, err = validateUpdateGroupInput(rawRequestData, groupHasParticipants, &currentGroupData, s)
 		if err != nil {
 			apiErr = service.ErrInvalidRequest(err)
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 
 		dbMap := formData.ConstructMapForDB()
@@ -208,11 +208,11 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
 		if apiErr != service.NoError {
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 		apiErr = validateRootSkillID(s, user, currentGroupData.RootSkillID, dbMap)
 		if apiErr != service.NoError {
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 
 		if approvalChangeAction != "" {
@@ -251,7 +251,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 func validateRootActivityIDAndIsOfficial(
 	store *database.DataStore, user *database.User, oldRootActivityID *int64, oldIsOfficialSession bool,
 	dbMap map[string]interface{},
-) service.APIError {
+) *service.APIError {
 	rootActivityIDToCheck := oldRootActivityID
 	rootActivityID, rootActivityIDSet := dbMap["root_activity_id"]
 	rootActivityIDChanged := rootActivityIDSet && !int64PtrEqualValues(oldRootActivityID, rootActivityID.(*int64))
@@ -284,7 +284,7 @@ func validateRootActivityIDAndIsOfficial(
 	return service.NoError
 }
 
-func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) service.APIError {
+func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) *service.APIError {
 	if rootActivityIDToCheck != nil {
 		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithExclusiveWriteLock().
 			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
@@ -298,7 +298,7 @@ func validateRootActivityID(store *database.DataStore, user *database.User, root
 
 func validateRootSkillID(store *database.DataStore, user *database.User, oldRootSkillID *int64,
 	dbMap map[string]interface{},
-) service.APIError {
+) *service.APIError {
 	newRootSkillIDInterface, newRootSkillIDSet := dbMap["root_skill_id"]
 	if newRootSkillIDSet && newRootSkillIDInterface != nil {
 		newRootSkillID := newRootSkillIDInterface.(*int64)

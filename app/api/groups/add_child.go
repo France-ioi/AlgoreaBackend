@@ -53,7 +53,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) *service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -74,7 +74,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 		var errInTransaction error
 		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation)
 		if apiErr != service.NoError {
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 
 		errInTransaction = s.GroupGroups().CreateRelation(parentGroupID, childGroupID)

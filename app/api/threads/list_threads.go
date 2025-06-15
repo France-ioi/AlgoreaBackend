@@ -161,7 +161,7 @@ type listThreadParameters struct {
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) *service.APIError {
 	params, apiError := srv.resolveListThreadParameters(r)
 	if apiError != service.NoError {
 		return apiError
@@ -187,7 +187,7 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	return service.NoError
 }
 
-func (srv *Service) constructListThreadsQuery(r *http.Request, params listThreadParameters) (*database.DB, service.APIError) {
+func (srv *Service) constructListThreadsQuery(r *http.Request, params listThreadParameters) (*database.DB, *service.APIError) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -290,7 +290,7 @@ func (srv *Service) constructListThreadsQuery(r *http.Request, params listThread
 			threads.latest_update_at AS latest_update_at
 		`, user.GroupID, user.GroupID, user.GroupID)
 
-	var apiError service.APIError
+	var apiError *service.APIError
 	queryDB, apiError = applySortingAndPaging(r, queryDB)
 	if apiError != service.NoError {
 		return queryDB, apiError
@@ -299,10 +299,10 @@ func (srv *Service) constructListThreadsQuery(r *http.Request, params listThread
 	return queryDB, service.NoError
 }
 
-func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB, service.APIError) {
+func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB, *service.APIError) {
 	queryDB = service.NewQueryLimiter().Apply(r, queryDB)
 
-	var apiError service.APIError
+	var apiError *service.APIError
 	queryDB, apiError = service.ApplySortingAndPaging(r, queryDB, &service.SortingAndPagingParameters{
 		Fields: service.SortingAndPagingFields{
 			"latest_update_at": {ColumnName: "threads.latest_update_at"},
@@ -319,7 +319,7 @@ func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB,
 	return queryDB, apiError
 }
 
-func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThreadParameters, apiError service.APIError) {
+func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThreadParameters, apiError *service.APIError) {
 	var watchedGroupOK bool
 	params.WatchedGroupID, watchedGroupOK, apiError = srv.ResolveWatchedGroupID(r)
 	if apiError != service.NoError {
@@ -364,7 +364,7 @@ func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThr
 	return params, service.NoError
 }
 
-func resolveFilterParameters(r *http.Request, params listThreadParameters) (listThreadParameters, service.APIError) {
+func resolveFilterParameters(r *http.Request, params listThreadParameters) (listThreadParameters, *service.APIError) {
 	var err error
 
 	params.Status, err = service.ResolveURLQueryGetStringField(r, "status")

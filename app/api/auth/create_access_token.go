@@ -202,7 +202,7 @@ const (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) *service.APIError {
 	requestData, apiError := parseRequestParametersForCreateAccessToken(r)
 	if apiError != service.NoError {
 		return apiError
@@ -234,9 +234,9 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		}
 
 		if !createTempUser {
-			return service.APIError{
+			return &service.APIError{
 				HTTPStatusCode: http.StatusUnauthorized,
-				Error:          errors.New(reason),
+				EmbeddedError:  errors.New(reason),
 			}
 		}
 
@@ -319,7 +319,7 @@ func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWr
 }
 
 func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[string]interface{}) (
-	cookieAttributes *auth.SessionCookieAttributes, apiError service.APIError,
+	cookieAttributes *auth.SessionCookieAttributes, apiError *service.APIError,
 ) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
 	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
@@ -339,7 +339,7 @@ func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[str
 	return cookieAttributes, service.NoError
 }
 
-func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]interface{}, service.APIError) {
+func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]interface{}, *service.APIError) {
 	allowedParameters := []string{
 		"code", "code_verifier", "redirect_uri",
 		"use_cookie", "cookie_secure", "cookie_same_site",
@@ -369,7 +369,7 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]int
 	return preprocessBooleanCookieAttributes(requestData)
 }
 
-func parseJSONParams(r *http.Request, requestData map[string]interface{}) service.APIError {
+func parseJSONParams(r *http.Request, requestData map[string]interface{}) *service.APIError {
 	var jsonPayload struct {
 		Code           *string `json:"code"`
 		CodeVerifier   *string `json:"code_verifier"`
@@ -405,7 +405,7 @@ func parseJSONParams(r *http.Request, requestData map[string]interface{}) servic
 	return service.NoError
 }
 
-func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, service.APIError) {
+func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, *service.APIError) {
 	for _, flagName := range []string{"use_cookie", "cookie_secure", "cookie_same_site"} {
 		if stringValue, ok := requestData[flagName]; ok {
 			if _, ok = map[string]bool{"0": false, "1": true}[stringValue.(string)]; !ok {

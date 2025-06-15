@@ -37,7 +37,7 @@ func (m *sessionIDsInProgressMap) WithLock(sessionID int64, r *http.Request, f f
 
 var sessionIDsInProgress sessionIDsInProgressMap
 
-func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) *service.APIError {
 	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
 	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
 
@@ -92,7 +92,7 @@ func (srv *Service) refreshTokens(
 	store *database.DataStore,
 	user *database.User,
 	sessionID int64,
-) (newToken string, expiresIn int32, apiError service.APIError) {
+) (newToken string, expiresIn int32, apiError *service.APIError) {
 	var refreshToken string
 	err := store.Sessions().Where("session_id = ?", sessionID).
 		PluckFirst("refresh_token", &refreshToken).Error()

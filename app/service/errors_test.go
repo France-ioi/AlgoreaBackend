@@ -15,8 +15,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
 )
 
-func responseForError(e service.APIError) *httptest.ResponseRecorder {
-	return responseForHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+func responseForError(e *service.APIError) *httptest.ResponseRecorder {
+	return responseForHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
 		return e
 	})
 }
@@ -35,7 +35,7 @@ func responseForHandler(appHandler service.AppHandler) *httptest.ResponseRecorde
 
 func TestNoErrorWithAPIError(t *testing.T) {
 	assert := assertlib.New(t)
-	recorder := responseForError(service.APIError{HTTPStatusCode: http.StatusConflict, Error: nil})
+	recorder := responseForError(&service.APIError{HTTPStatusCode: http.StatusConflict, EmbeddedError: nil})
 	assert.Equal(`{"success":false,"message":"Conflict"}`+"\n", recorder.Body.String())
 	assert.Equal(http.StatusConflict, recorder.Code)
 }
@@ -115,7 +115,7 @@ func TestConflict(t *testing.T) {
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
-		service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
 			panic(errors.New("some error"))
 		}))
 	defer restoreFunc()
@@ -130,7 +130,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 func TestRendersRecoveredAPIErrorOnPanicWithAPIError(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
-		service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
 			panic(service.InsufficientAccessRightsError)
 		}))
 	defer restoreFunc()
@@ -146,7 +146,7 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
 	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
-		service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
+		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
 			panic(expectedMessage)
 		}))
 	defer restoreFunc()
@@ -160,9 +160,10 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 
 func TestRendersErrRequestTimeoutOnPanicContextDeadlineExceeded(t *testing.T) {
 	assert := assertlib.New(t)
-	handler, _, restoreFunc := servicetest.WithLoggingMiddleware(service.AppHandler(func(http.ResponseWriter, *http.Request) service.APIError {
-		panic(context.DeadlineExceeded)
-	}))
+	handler, _, restoreFunc := servicetest.WithLoggingMiddleware(
+		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
+			panic(context.DeadlineExceeded)
+		}))
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)

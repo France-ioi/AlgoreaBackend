@@ -61,7 +61,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) enter(w http.ResponseWriter, r *http.Request) *service.APIError {
 	ids, err := idsFromRequest(r)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -88,17 +88,17 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		service.MustNotBeError(err)
 		if !ok {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		entryState, apiError = getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
 		if apiError != service.NoError {
-			return apiError.Error
+			return apiError.EmbeddedError
 		}
 
 		if entryState.State != string(ready) {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error
+			return apiError.EmbeddedError
 		}
 
 		service.MustNotBeError(store.Items().ByID(entryState.itemID).

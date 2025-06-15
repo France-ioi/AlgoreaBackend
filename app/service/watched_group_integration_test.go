@@ -49,7 +49,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		url                     string
 		wantWatchedGroupID      int64
 		wantWatchedGroupIDIsSet bool
-		wantAPIError            service.APIError
+		wantAPIError            *service.APIError
 	}{
 		{name: "watched_group_id is not managed by the user", url: "?watched_group_id=4", wantAPIError: forbiddenError},
 		{name: "no can_watch_members permission", url: "?watched_group_id=2", wantAPIError: forbiddenError},

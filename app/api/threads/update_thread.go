@@ -107,7 +107,7 @@ type updateThreadRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -166,12 +166,12 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
 			apiError = service.ErrInvalidRequest(err)
-			return apiError.Error
+			return apiError.EmbeddedError
 		}
 
 		apiError = checkUpdateThreadPermissions(user, oldThreadInfo.ThreadStatus, input, participantID, &oldThreadInfo)
 		if apiError != service.NoError {
-			return apiError.Error
+			return apiError.EmbeddedError
 		}
 
 		threadData := computeNewThreadData(
@@ -224,7 +224,7 @@ func checkUpdateThreadPermissions(
 	input updateThreadRequest,
 	participantID int64,
 	threadInfo *threadInfo,
-) service.APIError {
+) *service.APIError {
 	if input.Status == "" {
 		if input.HelperGroupID == nil && input.MessageCount == nil && input.MessageCountIncrement == nil {
 			return service.ErrInvalidRequest(

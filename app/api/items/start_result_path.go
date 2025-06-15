@@ -79,7 +79,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -96,7 +96,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error
+			return apiError.EmbeddedError
 		}
 
 		data := result[0]

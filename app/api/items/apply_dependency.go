@@ -50,7 +50,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -72,7 +72,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.ErrNotFound(errors.New("no such dependency"))
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 		found, err = store.Permissions().AggregatedPermissionsForItemsOnWhichGroupHasPermission(user.GroupID, "edit", "all").
 			HavingMaxPermissionAtLeast("grant_view", "content").
@@ -80,7 +80,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 		canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 		result := store.Exec(`

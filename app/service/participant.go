@@ -49,7 +49,7 @@ func ParticipantIDFromContext(ctx context.Context) int64 {
 // GetParticipantIDFromRequest returns `as_team_id` parameter value if it is given or the user's `group_id` otherwise.
 // If `as_team_id` is given, it should be an id of a team and the user should be a member of this team, otherwise
 // the 'forbidden' error is returned.
-func GetParticipantIDFromRequest(httpReq *http.Request, user *database.User, store *database.DataStore) (int64, APIError) {
+func GetParticipantIDFromRequest(httpReq *http.Request, user *database.User, store *database.DataStore) (int64, *APIError) {
 	groupID := user.GroupID
 	var err error
 	if len(httpReq.URL.Query()["as_team_id"]) != 0 {

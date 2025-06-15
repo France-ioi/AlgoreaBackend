@@ -67,7 +67,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) *service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -91,7 +91,7 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, deleteRelation)
 		if apiErr != service.NoError {
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 
 		// Check that the relation exists
@@ -102,7 +102,7 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.
 			Take(&result).Error())
 		if len(result) == 0 {
 			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 
 		return s.GroupGroups().DeleteRelation(parentGroupID, childGroupID, shouldDeleteOrphans)

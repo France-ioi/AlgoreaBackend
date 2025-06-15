@@ -83,7 +83,7 @@ type threadGetResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

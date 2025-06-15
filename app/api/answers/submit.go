@@ -84,7 +84,7 @@ type answerSubmitResponse struct { //nolint:unused
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	requestData := SubmitRequest{PublicKey: srv.TokenConfig.PublicKey}
 
 	var err error
@@ -107,7 +107,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 		if !hasAccess {
 			apiError = service.ErrForbidden(reason)
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		hintsInfo, err = store.Results().GetHintsInfoForActiveAttempt(
@@ -115,7 +115,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 		if gorm.IsRecordNotFoundError(err) {
 			apiError = service.ErrForbidden(errors.New("no active attempt found"))
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 		service.MustNotBeError(err)
 

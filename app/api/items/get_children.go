@@ -217,7 +217,7 @@ type rawListChildItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
 	params, apiError := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
 	if apiError != service.NoError {
 		return apiError

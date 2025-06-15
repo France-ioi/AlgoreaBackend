@@ -109,7 +109,7 @@ const maxAllowedLoginsToInvite = 100
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) *service.APIError {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)

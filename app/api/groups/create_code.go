@@ -54,7 +54,7 @@ const maxNumberOfRetriesForCodeGenerator = 3
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)

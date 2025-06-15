@@ -67,7 +67,7 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) *service.APIError {
 	groupPrefix := chi.URLParam(r, "group_prefix")
 	customPrefix := chi.URLParam(r, "custom_prefix")
 

@@ -135,7 +135,7 @@ type itemGetEntryStateResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -163,7 +163,7 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) servic
 }
 
 func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store *database.DataStore, lock bool) (
-	*itemGetEntryStateResponse, service.APIError,
+	*itemGetEntryStateResponse, *service.APIError,
 ) {
 	var itemInfo struct {
 		IsTeamItem                   bool

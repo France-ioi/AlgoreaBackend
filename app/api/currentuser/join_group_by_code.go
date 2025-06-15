@@ -76,7 +76,7 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) *service.APIError {
 	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -96,16 +96,16 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 		if info == nil {
 			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		if info.FrozenMembership {
 			apiError = service.ErrUnprocessableEntity(errors.New("group membership is frozen"))
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		if apiError = checkPossibilityToJoinTeam(store, info, user); apiError != service.NoError {
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		if info.CodeExpiresAtIsNull && !info.CodeLifetimeIsNull {
@@ -128,7 +128,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) serv
 	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], approvalsToRequest[user.GroupID], joinGroupByCodeAction)
 }
 
-func checkPossibilityToJoinTeam(store *database.DataStore, info *database.GroupJoiningByCodeInfo, user *database.User) service.APIError {
+func checkPossibilityToJoinTeam(store *database.DataStore, info *database.GroupJoiningByCodeInfo, user *database.User) *service.APIError {
 	var err error
 	if info.Type == "Team" {
 		var found bool

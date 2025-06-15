@@ -49,7 +49,7 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) *service.APIError {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -65,14 +65,14 @@ func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) service.A
 		service.MustNotBeError(err)
 		if !found {
 			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 
 		found, err = s.ItemItems().ChildrenOf(itemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			apiErr = service.ErrUnprocessableEntity(errors.New("the item must not have children"))
-			return apiErr.Error // rollback
+			return apiErr.EmbeddedError // rollback
 		}
 
 		return s.Items().DeleteItem(itemID)

@@ -79,7 +79,7 @@ type updatedStartResultResponse struct { //nolint:unused
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) *service.APIError {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -102,7 +102,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(err)
 		if !ok {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		onBeforeInsertingResultInResultStartHook.Load().(func())()
@@ -114,7 +114,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		service.MustNotBeError(err)
 		if !found {
 			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return apiError.EmbeddedError // rollback
 		}
 
 		result := store.Exec(`
