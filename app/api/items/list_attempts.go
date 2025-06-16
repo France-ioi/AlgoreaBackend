@@ -120,18 +120,17 @@ type attemptsListResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) *service.APIError {
-	itemID, participantID, parentAttemptID, apiError := srv.resolveParametersForListAttempts(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) error {
+	itemID, participantID, parentAttemptID, err := srv.resolveParametersForListAttempts(r)
+	service.MustNotBeError(err)
+
 	user := srv.GetUser(r)
 
 	query := constructQueryForGettingAttemptsList(srv.GetStore(r), participantID, itemID, user).
 		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError = service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -140,9 +139,8 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) *servic
 			DefaultRules: "id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
+
 	var result []attemptsListResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
@@ -155,7 +153,7 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) *servic
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func constructQueryForGettingAttemptsList(store *database.DataStore, participantID, itemID int64, user *database.User) *database.DB {
@@ -176,16 +174,16 @@ func constructQueryForGettingAttemptsList(store *database.DataStore, participant
 }
 
 func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
-	itemID, participantID, parentAttemptID int64, apiError *service.APIError,
+	itemID, participantID, parentAttemptID int64, err error,
 ) {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, apiError := attemptIDOrParentAttemptID(r)
-	if apiError != service.NoError {
-		return 0, 0, 0, apiError
+	attemptID, parentAttemptID, attemptIDSet, err := attemptIDOrParentAttemptID(r)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
 	participantID = service.ParticipantIDFromContext(r.Context())
@@ -214,5 +212,5 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
 	if !found {
 		return 0, 0, 0, service.InsufficientAccessRightsError
 	}
-	return itemID, participantID, parentAttemptID, service.NoError
+	return itemID, participantID, parentAttemptID, nil
 }

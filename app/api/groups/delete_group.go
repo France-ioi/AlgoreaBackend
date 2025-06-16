@@ -55,14 +55,13 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) error {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(r)
-	apiErr := service.NoError
 
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		var found bool
@@ -73,14 +72,12 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) *service
 			Where("groups.type != 'User'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiErr = service.InsufficientAccessRightsError
-			return apiErr.EmbeddedError // rollback
+			return service.InsufficientAccessRightsError // rollback
 		}
 		found, err = s.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
-			apiErr = service.ErrNotFound(errors.New("the group must be empty"))
-			return apiErr.EmbeddedError // rollback
+			return service.ErrNotFound(errors.New("the group must be empty")) // rollback
 		}
 
 		// Updates all threads where helper_group_id was the deleted groupID to the AllUsers group.
@@ -90,11 +87,7 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) *service
 		return s.Groups().DeleteGroup(groupID)
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

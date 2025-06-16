@@ -135,7 +135,7 @@ type itemGetEntryStateResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -153,17 +153,15 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) *servi
 		}
 	}
 
-	result, apiError := getItemInfoAndEntryState(itemID, groupID, user, store, false)
-	if apiError != service.NoError {
-		return apiError
-	}
+	result, err := getItemInfoAndEntryState(itemID, groupID, user, store, false)
+	service.MustNotBeError(err)
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store *database.DataStore, lock bool) (
-	*itemGetEntryStateResponse, *service.APIError,
+	*itemGetEntryStateResponse, error,
 ) {
 	var itemInfo struct {
 		IsTeamItem                   bool
@@ -235,7 +233,7 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 	if itemInfo.IsTeamItem {
 		result.MaxTeamSize = &itemInfo.EntryMaxTeamSize
 	}
-	return result, service.NoError
+	return result, nil
 }
 
 func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamItem bool,

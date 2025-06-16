@@ -102,7 +102,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) error {
 	store := srv.GetStore(r)
 	requestData := saveGradeRequestParsed{store: store, publicKey: srv.TokenConfig.PublicKey}
 
@@ -151,7 +151,7 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) *service.A
 		"validated":      validated,
 		"unlocked_items": service.ConvertSliceOfMapsFromDBToJSON(unlockedItems),
 	})))
-	return service.NoError
+	return nil
 }
 
 func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeRequestParsed) (

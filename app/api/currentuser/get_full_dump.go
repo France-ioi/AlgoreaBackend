@@ -58,11 +58,11 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getFullDump(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getFullDump(w http.ResponseWriter, r *http.Request) error {
 	return srv.getDumpCommon(r, w, true)
 }
 
-func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full bool) *service.APIError {
+func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full bool) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -191,7 +191,7 @@ func (srv *Service) getDumpCommon(r *http.Request, w http.ResponseWriter, full b
 	_, err = w.Write([]byte("}"))
 	service.MustNotBeError(err)
 
-	return service.NoError
+	return nil
 }
 
 func getColumnsList(store *database.DataStore, tableName string, excludeColumns []string) string {

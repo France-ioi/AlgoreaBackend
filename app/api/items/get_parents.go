@@ -91,11 +91,9 @@ type parentItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
-	params, apiError := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) error {
+	params, err := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
+	service.MustNotBeError(err)
 
 	store := srv.GetStore(httpReq)
 	found, err := store.Permissions().
@@ -117,7 +115,7 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 	response := parentItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
 
 	render.Respond(rw, httpReq, response)
-	return service.NoError
+	return nil
 }
 
 type getParentsOrChildrenServiceParams struct {
@@ -130,10 +128,9 @@ type getParentsOrChildrenServiceParams struct {
 }
 
 func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Request) (
-	parameters *getParentsOrChildrenServiceParams, apiError *service.APIError,
+	parameters *getParentsOrChildrenServiceParams, err error,
 ) {
 	var params getParentsOrChildrenServiceParams
-	var err error
 	params.itemID, err = service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return nil, service.ErrInvalidRequest(err)
@@ -147,8 +144,8 @@ func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Reque
 	params.user = srv.GetUser(httpReq)
 	params.participantID = service.ParticipantIDFromContext(httpReq.Context())
 
-	params.watchedGroupID, params.watchedGroupIDIsSet, apiError = srv.ResolveWatchedGroupID(httpReq)
-	return &params, apiError
+	params.watchedGroupID, params.watchedGroupIDIsSet, err = srv.ResolveWatchedGroupID(httpReq)
+	return &params, err
 }
 
 func constructItemParentsQuery(dataStore *database.DataStore, childItemID, groupID, attemptID int64,

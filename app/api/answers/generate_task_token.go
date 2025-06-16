@@ -77,7 +77,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) error {
 	answerID, err := service.ResolveURLQueryPathInt64Field(r, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -197,5 +197,5 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) *s
 	render.Respond(w, r, service.CreationSuccess(map[string]interface{}{
 		"task_token": signedTaskToken,
 	}))
-	return service.NoError
+	return nil
 }

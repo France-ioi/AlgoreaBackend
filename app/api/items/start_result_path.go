@@ -79,7 +79,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -90,13 +90,11 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) *ser
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var result []map[string]interface{}
-	apiError := service.NoError
 	var attemptID int64
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.EmbeddedError
+			return service.InsufficientAccessRightsError // rollback
 		}
 
 		data := result[0]
@@ -131,15 +129,12 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) *ser
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
 		"attempt_id": strconv.FormatInt(attemptID, 10),
 	})))
-	return service.NoError
+	return nil
 }
 
 func hasAccessToItemPath(store *database.DataStore, participantID int64, ids []int64) bool {

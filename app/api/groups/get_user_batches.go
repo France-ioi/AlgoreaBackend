@@ -74,7 +74,7 @@ type userBatch struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -96,7 +96,7 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) *serv
 		Where(`user_batch_prefixes.group_id IN(?)`, prefixAncestors.QueryExpr()).
 		Select("user_batches_v2.group_prefix, user_batches_v2.custom_prefix, user_batches_v2.size, user_batches_v2.creator_id")
 
-	query, apiErr := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -110,13 +110,11 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) *serv
 				"custom_prefix": service.FieldTypeString,
 			},
 		})
-	if apiErr != service.NoError {
-		return apiErr
-	}
+	service.MustNotBeError(err)
 
 	var result []userBatch
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

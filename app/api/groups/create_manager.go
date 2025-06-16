@@ -61,7 +61,7 @@ type createGroupManagerRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 
@@ -81,7 +81,6 @@ func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) *
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		// managerID should exist and the authenticated user should have
@@ -92,8 +91,7 @@ func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) *
 			Where("can_manage = 'memberships_and_group'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.EmbeddedError // rollback
+			return service.InsufficientAccessRightsError // rollback
 		}
 
 		values := formData.ConstructMapForDB()
@@ -102,11 +100,8 @@ func (srv *Service) createGroupManager(w http.ResponseWriter, r *http.Request) *
 		return store.GroupManagers().InsertMap(values)
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

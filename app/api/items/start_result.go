@@ -79,7 +79,7 @@ type updatedStartResultResponse struct { //nolint:unused
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -95,14 +95,12 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) *service
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var attemptInfo attemptsListResponseRow
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, attemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.EmbeddedError // rollback
+			return service.InsufficientAccessRightsError // rollback
 		}
 
 		onBeforeInsertingResultInResultStartHook.Load().(func())()
@@ -113,8 +111,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) *service
 			Where("NOT items.requires_explicit_entry").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.EmbeddedError // rollback
+			return service.InsufficientAccessRightsError // rollback
 		}
 
 		result := store.Exec(`
@@ -144,13 +141,10 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) *service
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(&attemptInfo)))
-	return service.NoError
+	return nil
 }
 
 var onBeforeInsertingResultInResultStartHook atomic.Value

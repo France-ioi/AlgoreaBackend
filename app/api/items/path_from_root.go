@@ -93,7 +93,7 @@ type rawItemPath struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -106,7 +106,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) *ser
 		return service.InsufficientAccessRightsError
 	}
 	render.Respond(w, r, map[string]interface{}{"path": itemPaths[0].Path})
-	return service.NoError
+	return nil
 }
 
 // findItemPaths gets the paths from root items to the given item for the given participant.

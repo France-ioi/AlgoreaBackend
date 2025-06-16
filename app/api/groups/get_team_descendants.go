@@ -62,7 +62,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -71,9 +71,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) *
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroup(store, user, groupID))
 
 	query := store.Groups().
 		Select("groups.id, groups.name, groups.grade").
@@ -83,7 +81,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) *
 				groups_ancestors_active.ancestor_group_id = ?`, groupID).
 		Where("groups.type = 'Team'")
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -93,9 +91,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) *
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []teamDescendant
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -152,7 +148,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) *
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 type teamDescendantMember struct {

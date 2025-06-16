@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /current-user/group-requests/{group_id} group-memberships groupJoinRequestCreate
@@ -95,6 +93,6 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupJoinRequest(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) createGroupJoinRequest(w http.ResponseWriter, r *http.Request) error {
 	return srv.performGroupRelationAction(w, r, createGroupJoinRequestAction)
 }

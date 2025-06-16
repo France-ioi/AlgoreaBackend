@@ -2,8 +2,6 @@ package groups
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /groups/{parent_group_id}/join-requests/accept group-memberships groupJoinRequestsAccept
@@ -87,6 +85,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) acceptJoinRequests(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) acceptJoinRequests(w http.ResponseWriter, r *http.Request) error {
 	return srv.performBulkMembershipAction(w, r, acceptJoinRequestsAction)
 }

@@ -51,7 +51,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) delete(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) delete(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -87,5 +87,5 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) *service.APIE
 
 	render.Respond(w, r, service.DeletionSuccess[*struct{}](nil))
 
-	return service.NoError
+	return nil
 }

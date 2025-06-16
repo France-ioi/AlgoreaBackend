@@ -62,11 +62,9 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) *service.APIError {
-	cookieAttributes, apiError := srv.resolveCookieAttributesFromRequest(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error {
+	cookieAttributes, err := srv.resolveCookieAttributesFromRequest(r)
+	service.MustNotBeError(err)
 
 	if len(r.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("the 'Authorization' header must not be present"))
@@ -112,7 +110,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) *serv
 
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}],
 		token, time.Now().Add(time.Duration(expiresIn)*time.Second), cookieAttributes)
-	return service.NoError
+	return nil
 }
 
 func createTempUser(store *database.DataStore, userID int64, defaultLanguage interface{}, lastIP string) string {
@@ -149,19 +147,21 @@ func createTempUserGroup(store *database.DataStore) int64 {
 	return userID
 }
 
-func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, *service.APIError) {
-	requestData, apiError := parseCookieAttributesForCreateTempUser(r)
-	if apiError != service.NoError {
-		return nil, apiError
+func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, error) {
+	requestData, err := parseCookieAttributesForCreateTempUser(r)
+	if err != nil {
+		return nil, err
 	}
-	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
-	if apiError != service.NoError {
-		return nil, apiError
+
+	cookieAttributes, err := srv.resolveCookieAttributes(r, requestData)
+	if err != nil {
+		return nil, err
 	}
-	return cookieAttributes, service.NoError
+
+	return cookieAttributes, nil
 }
 
-func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, *service.APIError) {
+func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, error) {
 	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
 	requestData := make(map[string]interface{}, len(allowedParameters))
 	query := r.URL.Query()

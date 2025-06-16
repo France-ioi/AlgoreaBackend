@@ -642,43 +642,41 @@ func TestResolveURLQueryPathInt64SliceFieldWithLimit(t *testing.T) {
 
 func TestResolveJSONBodyIntoMap(t *testing.T) {
 	testCases := []struct {
-		name             string
-		body             string
-		expectedMap      map[string]interface{}
-		expectedAPIError *APIError
+		name          string
+		body          string
+		expectedMap   map[string]interface{}
+		expectedError error
 	}{
 		{
-			name:             "empty body",
-			body:             "",
-			expectedMap:      nil,
-			expectedAPIError: ErrInvalidRequest(errors.New("invalid input JSON: EOF")),
+			name:          "empty body",
+			body:          "",
+			expectedMap:   nil,
+			expectedError: ErrInvalidRequest(errors.New("invalid input JSON: EOF")),
 		},
 		{
-			name:             "empty json",
-			body:             "{}",
-			expectedMap:      map[string]interface{}{},
-			expectedAPIError: NoError,
+			name:        "empty json",
+			body:        "{}",
+			expectedMap: map[string]interface{}{},
 		},
 		{
-			name:             "simple json",
-			body:             `{"key":"value"}`,
-			expectedMap:      map[string]interface{}{"key": "value"},
-			expectedAPIError: NoError,
+			name:        "simple json",
+			body:        `{"key":"value"}`,
+			expectedMap: map[string]interface{}{"key": "value"},
 		},
 		{
-			name:             "invalid json",
-			body:             `{"key":"value"`,
-			expectedMap:      nil,
-			expectedAPIError: ErrInvalidRequest(errors.New("invalid input JSON: unexpected EOF")),
+			name:          "invalid json",
+			body:          `{"key":"value"`,
+			expectedMap:   nil,
+			expectedError: ErrInvalidRequest(errors.New("invalid input JSON: unexpected EOF")),
 		},
 	}
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			r, _ := http.NewRequest("PUT", "/", strings.NewReader(testCase.body))
-			list, apiErr := ResolveJSONBodyIntoMap(r)
+			list, err := ResolveJSONBodyIntoMap(r)
 			assert.Equal(t, testCase.expectedMap, list)
-			assert.Equal(t, testCase.expectedAPIError, apiErr)
+			assert.Equal(t, testCase.expectedError, err)
 		})
 	}
 }

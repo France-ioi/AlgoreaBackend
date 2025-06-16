@@ -54,7 +54,7 @@ const maxNumberOfRetriesForCodeGenerator = 3
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -64,9 +64,7 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) *service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 	var newCode string
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
@@ -95,7 +93,7 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) *service.
 		Code string `json:"code"`
 	}{newCode})
 
-	return service.NoError
+	return nil
 }
 
 // GenerateGroupCode generate a random code for a group.

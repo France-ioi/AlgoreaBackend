@@ -2,8 +2,6 @@ package items
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /items/{item_id}/dependencies items itemDependenciesView
@@ -56,6 +54,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemDependencies(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
+func (srv *Service) getItemDependencies(rw http.ResponseWriter, httpReq *http.Request) error {
 	return srv.getItemPrerequisitesOrDependencies(rw, httpReq, "item_id", "dependent_item_id")
 }

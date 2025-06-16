@@ -37,7 +37,7 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 		name           string
 		query          string
 		expectedResult int64
-		expectedError  *service.APIError
+		expectedError  error
 	}{
 		{
 			name:          "no team",
@@ -58,16 +58,15 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 			name:           "okay",
 			query:          "param&as_team_id=3",
 			expectedResult: 3,
-			expectedError:  service.NoError,
 		},
 	}
 	for _, test := range tests {
 		testoutput.SuppressIfPasses(t)
 
 		test := test
-		participantID, apiError := service.GetParticipantIDFromRequest(
+		participantID, err := service.GetParticipantIDFromRequest(
 			&http.Request{URL: &url.URL{RawQuery: test.query}}, &database.User{GroupID: 4}, store)
 		assert.Equal(t, test.expectedResult, participantID)
-		assert.Equal(t, test.expectedError, apiError)
+		assert.Equal(t, test.expectedError, err)
 	}
 }

@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /current-user/group-leave-requests/{group_id}/withdraw group-memberships groupLeaveRequestWithdraw
@@ -45,6 +43,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) withdrawGroupLeaveRequest(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) withdrawGroupLeaveRequest(w http.ResponseWriter, r *http.Request) error {
 	return srv.performGroupRelationAction(w, r, withdrawGroupLeaveRequestAction)
 }

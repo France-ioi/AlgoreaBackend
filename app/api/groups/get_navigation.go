@@ -85,7 +85,7 @@ type groupNavigationViewResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) error {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -119,5 +119,5 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) *servi
 	service.MustNotBeError(query.Scan(&result.Children).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

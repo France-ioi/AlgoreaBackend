@@ -14,15 +14,15 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		url                     string
 		wantWatchedGroupID      int64
 		wantWatchedGroupIDIsSet bool
-		wantAPIError            *APIError
+		wantError               error
 	}{
-		{name: "no watched_group_id", url: "/dummy", wantWatchedGroupID: 0, wantWatchedGroupIDIsSet: false, wantAPIError: NoError},
+		{name: "no watched_group_id", url: "/dummy", wantWatchedGroupID: 0, wantWatchedGroupIDIsSet: false},
 		{
 			name:                    "invalid watched_group_id",
 			url:                     "/dummy?watched_group_id=abc",
 			wantWatchedGroupID:      0,
 			wantWatchedGroupIDIsSet: false,
-			wantAPIError:            ErrInvalidRequest(errors.New("wrong value for watched_group_id (should be int64)")),
+			wantError:               ErrInvalidRequest(errors.New("wrong value for watched_group_id (should be int64)")),
 		},
 	}
 
@@ -30,11 +30,11 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			req, _ := http.NewRequest("GET", tt.url, http.NoBody)
-			watchedGroupID, watchedGroupIDIsSet, apiError := (&Base{}).ResolveWatchedGroupID(req)
+			watchedGroupID, watchedGroupIDIsSet, gotError := (&Base{}).ResolveWatchedGroupID(req)
 
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)
 			assert.Equal(t, tt.wantWatchedGroupIDIsSet, watchedGroupIDIsSet)
-			assert.Equal(t, tt.wantAPIError, apiError)
+			assert.Equal(t, tt.wantError, gotError)
 		})
 	}
 }

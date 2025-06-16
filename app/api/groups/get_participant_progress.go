@@ -172,13 +172,11 @@ type participantProgressParameters struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
-	params, apiError := srv.parseParticipantProgressParameters(r, store, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	params, err := srv.parseParticipantProgressParameters(r, store, user)
+	service.MustNotBeError(err)
 
 	itemIDQuery := store.Items().
 		Select(`
@@ -300,13 +298,12 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *database.DataStore, user *database.User) (
-	params participantProgressParameters, apiError *service.APIError,
+	params participantProgressParameters, err error,
 ) {
-	var err error
 	params.ItemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return params, service.ErrInvalidRequest(err)
@@ -319,9 +316,9 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 	}
 	params.CheckPermissionsForGroupID = params.ParticipantID
 
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return params, apiError
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	if err != nil {
+		return params, err
 	}
 
 	if watchedGroupIDIsSet {
@@ -351,5 +348,5 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 
 	params.GetChildren = user.HasStartedResultOnItem(store, params.ItemID)
 
-	return params, service.NoError
+	return params, nil
 }

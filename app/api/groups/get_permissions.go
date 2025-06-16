@@ -173,7 +173,7 @@ type canRequestHelpToPermissionsRaw struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) error {
 	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(r, "source_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -192,10 +192,8 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) *serv
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	apiErr := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(store, user, sourceGroupID, groupID)
-	if apiErr != service.NoError {
-		return apiErr
-	}
+	err = checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(store, user, sourceGroupID, groupID)
+	service.MustNotBeError(err)
 
 	found, err := store.Permissions().MatchingUserAncestors(user).
 		Where("? OR can_watch_generated = 'answer_with_grant' OR can_edit_generated = 'all_with_grant'",
@@ -429,7 +427,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) *serv
 
 	render.Respond(w, r, &response)
 
-	return service.NoError
+	return nil
 }
 
 // getCanRequestHelpToByOrigin returns a map of canRequestHelpTo permissions by origin.

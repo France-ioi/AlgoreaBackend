@@ -50,7 +50,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
+func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Request) error {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -62,7 +62,6 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 
 	user := srv.GetUser(httpReq)
 
-	apiError := service.NoError
 	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.ItemDependencies().
@@ -71,16 +70,14 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 			Where("grant_content_view").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.ErrNotFound(errors.New("no such dependency"))
-			return apiError.EmbeddedError // rollback
+			return service.ErrNotFound(errors.New("no such dependency")) // rollback
 		}
 		found, err = store.Permissions().AggregatedPermissionsForItemsOnWhichGroupHasPermission(user.GroupID, "edit", "all").
 			HavingMaxPermissionAtLeast("grant_view", "content").
 			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.EmbeddedError // rollback
+			return service.InsufficientAccessRightsError // rollback
 		}
 		canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 		result := store.Exec(`
@@ -124,12 +121,9 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 		return err
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	// response
 	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

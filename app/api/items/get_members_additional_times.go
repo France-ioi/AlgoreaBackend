@@ -95,7 +95,7 @@ type itemAdditionalTimesInfo struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -157,7 +157,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 			store.PermissionsGranted().ViewIndexByName("info"))
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -167,15 +167,13 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []itemAdditionalTimesInfo
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func getParticipantTypeForTimeLimitedItemManagedByUser(

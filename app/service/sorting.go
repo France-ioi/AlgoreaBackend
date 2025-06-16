@@ -103,7 +103,7 @@ type SortingAndPagingParameters struct {
 // When `parameters.IgnoreSortParameter` is true, the 'sort' request parameter is ignored.
 //
 // When `parameters.StartFromRowSubQuery` is set, the 'from.*' request parameters are ignored.
-func ApplySortingAndPaging(r *http.Request, query *database.DB, parameters *SortingAndPagingParameters) (*database.DB, *APIError) {
+func ApplySortingAndPaging(r *http.Request, query *database.DB, parameters *SortingAndPagingParameters) (*database.DB, error) {
 	mustHaveValidTieBreakerFieldsList(parameters.Fields, parameters.TieBreakers)
 	sortingRules := chooseSortingRules(r, parameters.DefaultRules, parameters.IgnoreSortParameter)
 
@@ -123,7 +123,7 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, parameters *Sort
 	}
 
 	query = applyPagingConditions(query, usedFields, fieldsSortingTypes, parameters.Fields, fromValues, parameters.StartFromRowSubQuery)
-	return query, NoError
+	return query, nil
 }
 
 // chooseSortingRules chooses which sorting rules to use.

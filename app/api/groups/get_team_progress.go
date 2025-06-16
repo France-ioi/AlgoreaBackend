@@ -109,7 +109,7 @@ type groupTeamProgressResponseTableCell struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -122,13 +122,12 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) *ser
 		return service.InsufficientAccessRightsError
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	service.MustNotBeError(err)
+
 	if len(itemParentIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -141,7 +140,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) *ser
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
-	teamIDQuery, apiError = service.ApplySortingAndPaging(
+	teamIDQuery, err = service.ApplySortingAndPaging(
 		r, teamIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -151,16 +150,15 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) *ser
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
+
 	teamIDQuery = service.NewQueryLimiter().Apply(r, teamIDQuery)
 	service.MustNotBeError(teamIDQuery.
 		Pluck("groups.id", &teamIDs).Error())
 
 	if len(teamIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		return nil
 	}
 
 	var result []*groupTeamProgressResponseTableCell
@@ -201,5 +199,5 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) *ser
 	)
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

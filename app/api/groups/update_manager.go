@@ -52,7 +52,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 
@@ -72,7 +72,6 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) *
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		// 1) the authenticated user should have can_manage:memberships_and_group permission on the groupID
@@ -85,8 +84,7 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) *
 			Where("group_managers.can_manage = 'memberships_and_group'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.EmbeddedError // rollback
+			return service.InsufficientAccessRightsError // rollback
 		}
 
 		values := formData.ConstructMapForDB()
@@ -96,11 +94,8 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) *
 			UpdateColumn(values).Error()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

@@ -53,7 +53,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) error {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -68,28 +68,20 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) *service.AP
 	}
 
 	user := srv.GetUser(r)
-	apiErr := service.NoError
 
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		var errInTransaction error
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation)
-		if apiErr != service.NoError {
-			return apiErr.EmbeddedError // rollback
-		}
+		service.MustNotBeError(checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation))
 
 		errInTransaction = s.GroupGroups().CreateRelation(parentGroupID, childGroupID)
 		if errInTransaction == database.ErrRelationCycle {
-			apiErr = service.ErrForbidden(errInTransaction)
+			return service.ErrForbidden(errInTransaction) // rollback
 		}
 		return errInTransaction
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
 
-	return service.NoError
+	return nil
 }

@@ -67,7 +67,7 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) error {
 	groupPrefix := chi.URLParam(r, "group_prefix")
 	customPrefix := chi.URLParam(r, "custom_prefix")
 
@@ -129,5 +129,5 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) *ser
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

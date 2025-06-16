@@ -128,12 +128,10 @@ type groupUserRequestsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) error {
 	store := srv.GetStore(r)
-	groupID, groupIDSet, includeDescendantGroups, types, apiError := srv.resolveParametersForGetUserRequests(store, r)
-	if apiError != service.NoError {
-		return apiError
-	}
+	groupID, groupIDSet, includeDescendantGroups, types, err := srv.resolveParametersForGetUserRequests(store, r)
+	service.MustNotBeError(err)
 
 	user := srv.GetUser(r)
 	query := store.GroupPendingRequests().
@@ -171,7 +169,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) *ser
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError = service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -184,10 +182,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) *ser
 			DefaultRules: "group.id,-at,user.group_id",
 			TieBreakers:  tieBreakers,
 		})
-
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	query = attachUsersWithApproval(query, user)
 	var result []groupUserRequestsViewResponseRow
@@ -200,15 +195,13 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) *ser
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, r *http.Request) (
-	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, apiError *service.APIError,
+	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, err error,
 ) {
 	user := srv.GetUser(r)
-
-	var err error
 
 	urlQuery := r.URL.Query()
 	if len(urlQuery["group_id"]) > 0 {
@@ -218,13 +211,12 @@ func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStor
 			return 0, false, false, nil, service.ErrInvalidRequest(err)
 		}
 
-		if apiError = checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-			return 0, false, false, nil, apiError
+		if err1 := checkThatUserCanManageTheGroupMemberships(store, user, groupID); err1 != nil {
+			return 0, false, false, nil, err1
 		}
 
 		if len(urlQuery["include_descendant_groups"]) > 0 {
-			includeDescendantGroups, err = service.ResolveURLQueryGetBoolField(r, "include_descendant_groups")
-			if err != nil {
+			if includeDescendantGroups, err = service.ResolveURLQueryGetBoolField(r, "include_descendant_groups"); err != nil {
 				return 0, false, false, nil, service.ErrInvalidRequest(err)
 			}
 		}
@@ -233,11 +225,11 @@ func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStor
 			service.ErrInvalidRequest(errors.New("'include_descendant_groups' should not be given when 'group_id' is not given"))
 	}
 
-	types, apiError = resolveTypesParameterForGetUserRequests(r)
-	return groupID, groupIDSet, includeDescendantGroups, types, apiError
+	types, err = resolveTypesParameterForGetUserRequests(r)
+	return groupID, groupIDSet, includeDescendantGroups, types, err
 }
 
-func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, *service.APIError) {
+func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, error) {
 	types := []string{"join_request"}
 	urlQuery := r.URL.Query()
 	if len(urlQuery["types"]) > 0 {
@@ -248,5 +240,5 @@ func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, *servic
 			}
 		}
 	}
-	return types, service.NoError
+	return types, nil
 }

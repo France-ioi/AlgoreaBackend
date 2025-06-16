@@ -86,7 +86,7 @@ type ProfileEditToken struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Request) error {
 	targetUserID, err := service.ResolveURLQueryPathInt64Field(r, "target_user_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -112,7 +112,7 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 
 	render.Respond(rw, r, response)
 
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) getProfileEditToken(requesterLoginID, targetLoginID int64) (token, algorithm string) {

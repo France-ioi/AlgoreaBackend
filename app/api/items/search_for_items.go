@@ -96,7 +96,7 @@ type itemSearchResponseRowRaw struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) error {
 	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -136,5 +136,5 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) *serv
 		})
 	}
 	render.Respond(w, r, convertedResult)
-	return service.NoError
+	return nil
 }

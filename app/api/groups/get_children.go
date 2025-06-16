@@ -116,7 +116,7 @@ type groupChildrenViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -182,7 +182,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) *service
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -194,9 +194,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) *service
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []groupChildrenViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -212,5 +210,5 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) *service
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

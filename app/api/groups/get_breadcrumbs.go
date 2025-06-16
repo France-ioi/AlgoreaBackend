@@ -64,7 +64,7 @@ type groupBreadcrumbsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error {
 	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", maxNumberOfIDsInGroupPath)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -88,5 +88,5 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) *serv
 	service.MustNotBeError(err)
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

@@ -55,7 +55,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -105,5 +105,5 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) *servi
 		message = "failed"
 	}
 	render.Respond(w, r, &service.Response[*struct{}]{Success: result, Message: message})
-	return service.NoError
+	return nil
 }

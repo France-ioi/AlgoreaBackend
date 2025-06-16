@@ -107,7 +107,7 @@ type groupWithApprovals struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -145,7 +145,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		Where("group_pending_requests.type='invitation'")
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -158,9 +158,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 				"at":       service.FieldTypeTime,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []invitationsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -172,5 +170,5 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

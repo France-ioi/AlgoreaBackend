@@ -67,17 +67,15 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	itemID, groupID, seconds, apiError := srv.getParametersForSetAdditionalTime(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemID, groupID, seconds, err := srv.getParametersForSetAdditionalTime(r)
+	service.MustNotBeError(err)
 
 	var groupType string
-	err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
+	err = store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").
 		Group("groups.id").
 		PluckFirst("groups.type", &groupType).Error()
@@ -100,8 +98,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) *s
 				items.participants_group_id`).
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) || (itemInfo.IsTeamOnlyItem && groupType == "User") {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.EmbeddedError
+			return service.InsufficientAccessRightsError // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -109,17 +106,14 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) *s
 			itemInfo.DurationInSeconds, seconds)
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	render.Respond(w, r, service.UpdateSuccess[*struct{}](nil))
-	return service.NoError
+	return nil
 }
 
-func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, groupID, seconds int64, apiError *service.APIError) {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, groupID, seconds int64, err error) {
+	itemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}
@@ -136,7 +130,7 @@ func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, 
 	if seconds < -maxSeconds || maxSeconds < seconds {
 		return 0, 0, 0, service.ErrInvalidRequest(fmt.Errorf("'seconds' should be between %d and %d", -maxSeconds, maxSeconds))
 	}
-	return itemID, groupID, seconds, service.NoError
+	return itemID, groupID, seconds, nil
 }
 
 func setAdditionalTimeForGroupAndTimeLimitedItem(

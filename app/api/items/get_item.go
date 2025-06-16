@@ -219,7 +219,7 @@ type itemResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
+func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -228,10 +228,8 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) *serv
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpReq)
+	service.MustNotBeError(err)
 
 	var languageTag string
 	var languageTagSet bool
@@ -257,7 +255,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) *serv
 	}
 
 	render.Respond(rw, httpReq, response)
-	return service.NoError
+	return nil
 }
 
 // hasCanRequestHelpTo checks whether there is a can_request_help_to permission on an item-group.

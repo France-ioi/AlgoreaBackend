@@ -116,7 +116,7 @@ type userViewResponse struct {
 //			"$ref": "#/responses/notFoundResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	var scope *database.DB
@@ -175,7 +175,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) *service.API
 	userInfo.IsCurrentUser = userInfo.GroupID == user.GroupID
 
 	render.Respond(w, r, &userInfo)
-	return service.NoError
+	return nil
 }
 
 type groupInfo struct {

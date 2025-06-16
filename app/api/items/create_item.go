@@ -191,16 +191,13 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	if user.IsTempUser {
 		return service.InsufficientAccessRightsError
 	}
 
-	itemID, apiError, err := validateAndInsertItem(srv, r)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemID, err := validateAndInsertItem(srv, r)
 	service.MustNotBeError(err)
 
 	// response
@@ -208,16 +205,15 @@ func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) *service.
 		ItemID int64 `json:"id,string"`
 	}{ItemID: itemID}
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
-	return service.NoError
+	return nil
 }
 
-func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError *service.APIError, err error) {
+func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, err error) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	var rawRequestData map[string]interface{}
-	rawRequestData, apiError = service.ResolveJSONBodyIntoMap(r)
-	service.MustBeNoError(apiError)
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	service.MustNotBeError(err)
 
 	err = store.InTransaction(func(store *database.DataStore) error {
 		input := NewItemRequest{}
@@ -229,39 +225,27 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 
 		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
 		if !formData.IsSet("parent") && !formData.IsSet("as_root_of_group_id") {
 			err = errors.New("at least one of parent and as_root_of_group_id should be given")
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			if formData.IsSet("parent") && !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
-				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
-				return apiError.EmbeddedError
+				return service.ErrForbidden(errors.New("an item cannot become an ancestor of itself")) // rollback
 			}
 
-			apiError = validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, nil, lockedStore)
-			if apiError != service.NoError {
-				return apiError.EmbeddedError
-			}
+			service.MustNotBeError(validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, nil, lockedStore))
 
 			// insertion
-			itemID, apiError = srv.insertItem(lockedStore, user, formData, &input)
-			if apiError != service.NoError {
-				return apiError.EmbeddedError
-			}
+			itemID, err = srv.insertItem(lockedStore, user, formData, &input)
 
-			return nil
+			return err
 		})
 
-		if apiError != service.NoError {
-			return apiError.EmbeddedError // rollback
-		}
 		service.MustNotBeError(err)
 
 		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
@@ -272,7 +256,7 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
 	}
 
-	return itemID, apiError, err
+	return itemID, err
 }
 
 func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formdata.FormData, input *NewItemRequest, itemID int64) {
@@ -549,13 +533,13 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
 	newItemRequest *NewItemRequest,
-) (itemID int64, apiError *service.APIError) {
+) (itemID int64, err error) {
 	itemMap := formData.ConstructPartialMapForDB("ItemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
 	itemMap["default_language_tag"] = newItemRequest.LanguageTag
 
-	itemID, err := insertItemRow(store, itemMap)
+	itemID, err = insertItemRow(store, itemMap)
 	if err != nil && database.IsDuplicateEntryError(err) {
 		return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
 			"text_id must be unique",
@@ -622,7 +606,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		service.MustNotBeError(store.ItemItems().CreateNewAncestors())
 	}
 
-	return itemID, service.NoError
+	return itemID, nil
 }
 
 func insertItemRow(store *database.DataStore, itemMap map[string]interface{}) (int64, error) {

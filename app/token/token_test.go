@@ -153,8 +153,8 @@ func TestParseAndValidate(t *testing.T) {
 			defer monkey.UnpatchAll()
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
-			payload, apiErr := ParseAndValidate(tt.token, publicKey)
-			assert.Equal(t, tt.wantError, apiErr)
+			payload, err := ParseAndValidate(tt.token, publicKey)
+			assert.Equal(t, tt.wantError, err)
 			assert.Equal(t, tt.wantPayload, payload)
 		})
 	}

@@ -7,12 +7,11 @@ import (
 
 // ResolveWatchedGroupID returns the watched_group_id parameter (if given) and checks if the current user has rights
 // to watch for its members.
-func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID int64, watchedGroupIDIsSet bool, apiError *APIError) {
+func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID int64, watchedGroupIDIsSet bool, err error) {
 	if len(httpReq.URL.Query()["watched_group_id"]) == 0 {
-		return 0, false, NoError
+		return 0, false, nil
 	}
 
-	var err error
 	watchedGroupID, err = ResolveURLQueryGetInt64Field(httpReq, "watched_group_id")
 	if err != nil {
 		return 0, false, ErrInvalidRequest(err)
@@ -23,5 +22,5 @@ func (srv *Base) ResolveWatchedGroupID(httpReq *http.Request) (watchedGroupID in
 		return 0, false, ErrForbidden(errors.New("no rights to watch for watched_group_id"))
 	}
 
-	return watchedGroupID, true, NoError
+	return watchedGroupID, true, nil
 }

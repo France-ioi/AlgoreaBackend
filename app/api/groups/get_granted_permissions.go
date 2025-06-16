@@ -132,7 +132,7 @@ type grantedPermissionsViewResultRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) error {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -229,7 +229,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			can_enter_until AS permissions__can_enter_until`)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -250,11 +250,9 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 				"item.id":         service.FieldTypeInt64,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	service.MustNotBeError(query.Scan(&permissions).Error())
 	render.Respond(w, r, permissions)
-	return service.NoError
+	return nil
 }

@@ -112,7 +112,7 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -122,8 +122,8 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) *service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	rawRequestData, apiError := service.ResolveJSONBodyIntoMap(r)
-	service.MustBeNoError(apiError)
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	service.MustNotBeError(err)
 
 	var propagationsToRun []string
 
@@ -149,8 +149,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) *service.
 			Scan(&itemInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.ErrForbidden(errors.New("no access rights to edit the item"))
-			return apiError.EmbeddedError // rollback
+			return service.ErrForbidden(errors.New("no access rights to edit the item")) // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -170,8 +169,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) *service.
 
 		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
 		itemData := formData.ConstructPartialMapForDB("ItemWithDefaultLanguageTag")
@@ -181,16 +179,15 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) *service.
 
 		if len(itemData) > 0 &&
 			itemInfo.CanEditGeneratedValue < store.PermissionsGranted().PermissionIndexByKindAndName("edit", "all") {
-			apiError = service.ErrForbidden(errors.New("no access rights to edit the item's properties"))
-			return apiError.EmbeddedError // rollback
+			return service.ErrForbidden(errors.New("no access rights to edit the item's properties")) // rollback
 		}
 
-		apiError = updateItemInDB(itemData, itemInfo.ParticipantsGroupID, store, itemID)
-		if apiError != service.NoError {
-			return apiError.EmbeddedError // rollback
+		err = updateItemInDB(itemData, itemInfo.ParticipantsGroupID, store, itemID)
+		if err != nil {
+			return err // rollback
 		}
 
-		propagationsToRun, apiError, err = updateChildrenAndRunListeners(
+		propagationsToRun, err = updateChildrenAndRunListeners(
 			formData,
 			store,
 			itemID,
@@ -201,19 +198,18 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) *service.
 		return err
 	})
 
-	service.MustBeNoError(apiError)
 	service.MustNotBeError(err)
 
 	service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)
 
 	// response
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }
 
 func updateItemInDB(
 	itemData map[string]interface{}, participantsGroupID *int64, store *database.DataStore, itemID int64,
-) *service.APIError {
+) error {
 	if itemData["requires_explicit_entry"] == true && participantsGroupID == nil {
 		createdParticipantsGroupID := createParticipantsGroupForItemRequiringExplicitEntry(store, itemID)
 		itemData["participants_group_id"] = createdParticipantsGroupID
@@ -233,7 +229,7 @@ func updateItemInDB(
 	}
 	service.MustNotBeError(err)
 
-	return service.NoError
+	return nil
 }
 
 func updateChildrenAndRunListeners(
@@ -243,7 +239,7 @@ func updateChildrenAndRunListeners(
 	input *updateItemRequest,
 	childrenPermissionMap map[int64]permissionAndType,
 	oldPropagationLevelsMap map[int64]*itemsRelationData,
-) (propagationsToRun []string, apiError *service.APIError, err error) {
+) (propagationsToRun []string, err error) {
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			deleteStatement := lockedStore.ItemItems().DB.
@@ -255,14 +251,11 @@ func updateChildrenAndRunListeners(
 			service.MustNotBeError(deleteStatement.Delete().Error())
 
 			if !input.checkItemsRelationsCycles(lockedStore, itemID) {
-				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
-				return apiError.EmbeddedError // rollback
+				return service.ErrForbidden(errors.New("an item cannot become an ancestor of itself")) // rollback
 			}
 
-			apiError = validateChildrenFieldsAndApplyDefaults(childrenPermissionMap, input.Children, formData, oldPropagationLevelsMap, lockedStore)
-			if apiError != service.NoError {
-				return apiError.EmbeddedError // rollback
-			}
+			service.MustNotBeError(validateChildrenFieldsAndApplyDefaults(
+				childrenPermissionMap, input.Children, formData, oldPropagationLevelsMap, lockedStore))
 
 			parentChildSpec := constructItemsItemsForChildren(input.Children, itemID)
 			insertItemItems(lockedStore, parentChildSpec)
@@ -283,7 +276,7 @@ func updateChildrenAndRunListeners(
 		propagationsToRun = []string{"results"}
 	}
 
-	return propagationsToRun, apiError, err
+	return propagationsToRun, err
 }
 
 // constructUpdateItemChildTypeNonSkillValidator constructs a validator for the Children field that checks

@@ -15,8 +15,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
 )
 
-func responseForError(e *service.APIError) *httptest.ResponseRecorder {
-	return responseForHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
+func responseForError(e error) *httptest.ResponseRecorder {
+	return responseForHandler(func(http.ResponseWriter, *http.Request) error {
 		return e
 	})
 }
@@ -115,7 +115,7 @@ func TestConflict(t *testing.T) {
 func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
-		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
+		service.AppHandler(func(http.ResponseWriter, *http.Request) error {
 			panic(errors.New("some error"))
 		}))
 	defer restoreFunc()
@@ -130,7 +130,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 func TestRendersRecoveredAPIErrorOnPanicWithAPIError(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
-		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
+		service.AppHandler(func(http.ResponseWriter, *http.Request) error {
 			panic(service.InsufficientAccessRightsError)
 		}))
 	defer restoreFunc()
@@ -146,7 +146,7 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	assert := assertlib.New(t)
 	expectedMessage := "some error"
 	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
-		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
+		service.AppHandler(func(http.ResponseWriter, *http.Request) error {
 			panic(expectedMessage)
 		}))
 	defer restoreFunc()
@@ -161,7 +161,7 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 func TestRendersErrRequestTimeoutOnPanicContextDeadlineExceeded(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, _, restoreFunc := servicetest.WithLoggingMiddleware(
-		service.AppHandler(func(http.ResponseWriter, *http.Request) *service.APIError {
+		service.AppHandler(func(http.ResponseWriter, *http.Request) error {
 			panic(context.DeadlineExceeded)
 		}))
 	defer restoreFunc()
@@ -181,18 +181,5 @@ func TestMustNotBeError_PanicsOnError(t *testing.T) {
 func TestMustNotBeError_NotPanicsIfNoError(t *testing.T) {
 	assertlib.NotPanics(t, func() {
 		service.MustNotBeError(nil)
-	})
-}
-
-func TestMustBeNoError_PanicsOnAPIError(t *testing.T) {
-	expectedError := service.InsufficientAccessRightsError
-	assertlib.PanicsWithValue(t, expectedError, func() {
-		service.MustBeNoError(expectedError)
-	})
-}
-
-func TestMustBeNoError_NotPanicsIfNoError(t *testing.T) {
-	assertlib.NotPanics(t, func() {
-		service.MustBeNoError(service.NoError)
 	})
 }

@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /current-user/group-invitations/{group_id}/accept group-memberships groupInvitationAccept
@@ -63,6 +61,6 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) acceptGroupInvitation(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) acceptGroupInvitation(w http.ResponseWriter, r *http.Request) error {
 	return srv.performGroupRelationAction(w, r, acceptInvitationAction)
 }

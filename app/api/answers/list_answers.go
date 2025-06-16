@@ -81,7 +81,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) *service.APIError {
+func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) error {
 	user := srv.GetUser(httpReq)
 	store := srv.GetStore(httpReq)
 
@@ -118,20 +118,20 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) *
 			return service.ErrInvalidRequest(fmt.Errorf("either author_id or attempt_id must be present"))
 		}
 
-		if result := srv.checkAccessRightsForGetAnswersByAttemptID(store, attemptID, user); result != service.NoError {
+		if result := srv.checkAccessRightsForGetAnswersByAttemptID(store, attemptID, user); result != nil {
 			return result
 		}
 
 		dataQuery = dataQuery.Where("answers.attempt_id = ?", attemptID)
 	} else { // author_id
-		if result := srv.checkAccessRightsForGetAnswersByAuthorID(store, authorID, user); result != service.NoError {
+		if result := srv.checkAccessRightsForGetAnswersByAuthorID(store, authorID, user); result != nil {
 			return result
 		}
 
 		dataQuery = dataQuery.Where("author_id = ?", authorID)
 	}
 
-	dataQuery, apiError := service.ApplySortingAndPaging(
+	dataQuery, err = service.ApplySortingAndPaging(
 		httpReq, dataQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -141,9 +141,8 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) *
 			DefaultRules: "-created_at,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
+
 	dataQuery = service.NewQueryLimiter().Apply(httpReq, dataQuery)
 
 	var result []rawAnswersData
@@ -152,7 +151,7 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) *
 	responseData := srv.convertDBDataToResponse(result)
 
 	render.Respond(rw, httpReq, responseData)
-	return service.NoError
+	return nil
 }
 
 // swagger:ignore
@@ -215,7 +214,7 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
 	store *database.DataStore, attemptID int64, user *database.User,
-) *service.APIError {
+) error {
 	var count int64
 	groupsManagedByUser := store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
 	groupsWhereUserIsMember := store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
@@ -229,12 +228,12 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
 	if count == 0 {
 		return service.InsufficientAccessRightsError
 	}
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(
 	store *database.DataStore, authorID int64, user *database.User,
-) *service.APIError {
+) error {
 	if authorID != user.GroupID {
 		found, err := store.GroupAncestors().ManagedByUser(user).
 			Where("groups_ancestors.child_group_id=?", authorID).HasRows()
@@ -244,5 +243,5 @@ func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(
 		}
 	}
 
-	return service.NoError
+	return nil
 }

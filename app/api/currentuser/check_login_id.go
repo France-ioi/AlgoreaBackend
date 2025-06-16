@@ -37,7 +37,7 @@ type loginIDCheckData struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) checkLoginID(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) checkLoginID(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	loginID, err := service.ResolveURLQueryGetInt64Field(r, "login_id")
@@ -48,5 +48,5 @@ func (srv *Service) checkLoginID(w http.ResponseWriter, r *http.Request) *servic
 	render.Respond(w, r, &loginIDCheckData{
 		LoginIDMatched: user.LoginID != nil && *user.LoginID == loginID,
 	})
-	return service.NoError
+	return nil
 }

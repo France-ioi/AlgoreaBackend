@@ -71,7 +71,7 @@ type managedGroupsGetResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -89,7 +89,7 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) *se
 		Group("groups.id")
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -100,9 +100,7 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) *se
 			DefaultRules: "type,name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []managedGroupsGetResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -113,5 +111,5 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) *se
 	}
 
 	render.Respond(w, r, &result)
-	return service.NoError
+	return nil
 }

@@ -68,7 +68,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -81,10 +81,8 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) *
 		return service.InsufficientAccessRightsError
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	service.MustNotBeError(err)
 
 	w.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
@@ -97,7 +95,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) *
 	if len(itemParentIDs) == 0 {
 		_, err := w.Write([]byte("Team name\n"))
 		service.MustNotBeError(err)
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -124,7 +122,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) *
 		Scan(&teams).Error())
 
 	if len(teams) == 0 {
-		return service.NoError
+		return nil
 	}
 	teamIDs := make([]string, len(teams))
 	for i := range teams {
@@ -163,5 +161,5 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) *
 					}, csvWriter)).Error())
 	}
 
-	return service.NoError
+	return nil
 }

@@ -115,7 +115,7 @@ type groupUserProgressResponseTableCell struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -128,13 +128,12 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) *ser
 		return service.InsufficientAccessRightsError
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	service.MustNotBeError(err)
+
 	if len(itemParentIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -148,7 +147,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) *ser
 		Joins("JOIN `groups` ON groups.id = groups_groups_active.child_group_id AND groups.type = 'User'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Group("groups.id")
-	userIDQuery, apiError = service.ApplySortingAndPaging(
+	userIDQuery, err = service.ApplySortingAndPaging(
 		r, userIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -158,16 +157,15 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) *ser
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
+
 	userIDQuery = service.NewQueryLimiter().Apply(r, userIDQuery)
 	service.MustNotBeError(userIDQuery.
 		Pluck("groups.id", &userIDs).Error())
 
 	if len(userIDs) == 0 {
 		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		return nil
 	}
 
 	userIDsList := strings.Join(userIDs, ", ")
@@ -188,7 +186,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) *ser
 	)
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 const userProgressFields = `

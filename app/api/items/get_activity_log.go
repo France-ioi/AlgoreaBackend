@@ -162,7 +162,7 @@ type itemActivityLogResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "ancestor_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -253,11 +253,11 @@ func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) error {
 	return srv.getActivityLog(w, r, nil)
 }
 
-func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) *service.APIError {
+func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) error {
 	user := srv.GetUser(r)
 
 	const (
@@ -301,10 +301,8 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		return service.ErrInvalidRequest(err)
 	}
 
-	query, apiError := srv.constructActivityLogQuery(srv.GetStore(r), r, itemID, user, fromValues)
-	if apiError != service.NoError {
-		return apiError
-	}
+	query, err := srv.constructActivityLogQuery(srv.GetStore(r), r, itemID, user, fromValues)
+	service.MustNotBeError(err)
 
 	var result []itemActivityLogResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -330,16 +328,16 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http.Request, itemID *int64,
 	user *database.User, fromValues map[string]interface{},
-) (*database.DB, *service.APIError) {
+) (*database.DB, error) {
 	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return nil, apiError
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	if err != nil {
+		return nil, err
 	}
 	participantsQuery := store.Raw("SELECT ? AS id", participantID)
 
@@ -556,7 +554,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		query = query.JoinsPermissionsForGroupToItems(participantID)
 	}
 
-	return query, service.NoError
+	return query, nil
 }
 
 func applyMandatoryAnswersConditions(answersQuery *database.DB) *database.DB {

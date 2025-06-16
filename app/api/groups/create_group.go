@@ -53,7 +53,7 @@ type createGroupRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 
@@ -87,5 +87,5 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) *service
 		GroupID int64 `json:"id,string"`
 	}{GroupID: groupID}
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
-	return service.NoError
+	return nil
 }

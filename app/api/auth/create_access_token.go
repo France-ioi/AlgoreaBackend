@@ -202,14 +202,12 @@ const (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) *service.APIError {
-	requestData, apiError := parseRequestParametersForCreateAccessToken(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) error {
+	requestData, err := parseRequestParametersForCreateAccessToken(r)
+	service.MustNotBeError(err)
 
-	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
-	service.MustBeNoError(apiError)
+	cookieAttributes, err := srv.resolveCookieAttributes(r, requestData)
+	service.MustNotBeError(err)
 
 	code, codeGiven := requestData["code"]
 	if codeGiven {
@@ -218,17 +216,23 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) *s
 				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
 		}
 	} else {
+		var (
+			requestContext context.Context
+			authorized     bool
+			reason         string
+		)
 		// The code is not given, requesting a new token from the given token.
-		requestContext, authorized, reason, err := auth.ValidatesUserAuthentication(srv.Base, w, r)
+		requestContext, authorized, reason, err = auth.ValidatesUserAuthentication(srv.Base, w, r)
 		service.MustNotBeError(err)
 
 		if authorized {
 			service.AppHandler(srv.refreshAccessToken).
 				ServeHTTP(w, r.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
-			return service.NoError
+			return nil
 		}
 
-		createTempUser, err := service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
+		var createTempUser bool
+		createTempUser, err = service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -248,7 +252,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) *s
 
 		service.AppHandler(srv.createTempUser).ServeHTTP(w, r)
 
-		return service.NoError
+		return nil
 	}
 
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
@@ -291,7 +295,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) *s
 	}))
 
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], token.AccessToken, token.Expiry, cookieAttributes)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
@@ -319,7 +323,7 @@ func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWr
 }
 
 func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[string]interface{}) (
-	cookieAttributes *auth.SessionCookieAttributes, apiError *service.APIError,
+	cookieAttributes *auth.SessionCookieAttributes, err error,
 ) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
 	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
@@ -336,10 +340,10 @@ func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[str
 			return nil, service.ErrInvalidRequest(errors.New("one of cookie_secure and cookie_same_site must be true when use_cookie is true"))
 		}
 	}
-	return cookieAttributes, service.NoError
+	return cookieAttributes, nil
 }
 
-func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]interface{}, *service.APIError) {
+func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]interface{}, error) {
 	allowedParameters := []string{
 		"code", "code_verifier", "redirect_uri",
 		"use_cookie", "cookie_secure", "cookie_same_site",
@@ -354,8 +358,8 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]int
 		strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0])) //nolint:gomnd // cut off the parameters, keep only the media type
 	switch contentType {
 	case "application/json":
-		if apiError := parseJSONParams(r, requestData); apiError != service.NoError {
-			return nil, apiError
+		if err := parseJSONParams(r, requestData); err != nil {
+			return nil, err
 		}
 	case "application/x-www-form-urlencoded":
 		err := r.ParseForm()
@@ -369,7 +373,7 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]int
 	return preprocessBooleanCookieAttributes(requestData)
 }
 
-func parseJSONParams(r *http.Request, requestData map[string]interface{}) *service.APIError {
+func parseJSONParams(r *http.Request, requestData map[string]interface{}) error {
 	var jsonPayload struct {
 		Code           *string `json:"code"`
 		CodeVerifier   *string `json:"code_verifier"`
@@ -402,10 +406,10 @@ func parseJSONParams(r *http.Request, requestData map[string]interface{}) *servi
 	if jsonPayload.CookieSameSite != nil {
 		requestData["cookie_same_site"] = bool2String[*jsonPayload.CookieSameSite]
 	}
-	return service.NoError
+	return nil
 }
 
-func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, *service.APIError) {
+func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, error) {
 	for _, flagName := range []string{"use_cookie", "cookie_secure", "cookie_same_site"} {
 		if stringValue, ok := requestData[flagName]; ok {
 			if _, ok = map[string]bool{"0": false, "1": true}[stringValue.(string)]; !ok {
@@ -417,7 +421,7 @@ func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[
 			}
 		}
 	}
-	return requestData, service.NoError
+	return requestData, nil
 }
 
 func extractOptionalParameter(query url.Values, paramName string, requestData map[string]interface{}) {

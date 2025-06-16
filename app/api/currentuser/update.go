@@ -34,7 +34,7 @@ type userDataUpdateRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) update(w http.ResponseWriter, r *http.Request) *service.APIError {
+func (srv *Service) update(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	var requestData userDataUpdateRequest
@@ -50,5 +50,5 @@ func (srv *Service) update(w http.ResponseWriter, r *http.Request) *service.APIE
 	response := service.Response[*struct{}]{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
-	return service.NoError
+	return nil
 }

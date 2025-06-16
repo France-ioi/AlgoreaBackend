@@ -26,9 +26,6 @@ type APIError struct {
 
 var _ error = &APIError{}
 
-// NoError is an APIError to be returned when there is no error.
-var NoError = (*APIError)(nil)
-
 // InsufficientAccessRightsError is an APIError to be returned when the has no access rights to perform an action.
 var InsufficientAccessRightsError = ErrForbidden(errors.New("insufficient access rights"))
 
@@ -105,12 +102,5 @@ func ErrUnexpected(err error) *APIError {
 func MustNotBeError(err error) {
 	if err != nil {
 		panic(err)
-	}
-}
-
-// MustBeNoError panics if the *APIError is not NoError.
-func MustBeNoError(apiError *APIError) {
-	if apiError != NoError {
-		panic(apiError)
 	}
 }

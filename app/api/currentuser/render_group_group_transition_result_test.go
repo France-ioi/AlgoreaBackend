@@ -116,7 +116,7 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 		for _, action := range tt.actions {
 			action := action
 			t.Run(tt.name+": "+string(action), func(t *testing.T) {
-				var fn service.AppHandler = func(respW http.ResponseWriter, req *http.Request) *service.APIError {
+				var fn service.AppHandler = func(respW http.ResponseWriter, req *http.Request) error {
 					return RenderGroupGroupTransitionResult(respW, req, tt.result, tt.approvalsToRequest, action)
 				}
 				handler := http.HandlerFunc(fn.ServeHTTP)
