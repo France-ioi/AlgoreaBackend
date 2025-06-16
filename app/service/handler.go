@@ -39,9 +39,9 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				errorToLog = fmt.Sprintf("%+v", err)
 				shouldLogError = true
 			}
-			if shouldLogError {
-				logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", errorToLog, debug.Stack())
-			}
+		}
+		if shouldLogError {
+			logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", errorToLog, debug.Stack())
 		}
 		if apiErr != nil { // apiErr is an APIError, not builtin.error
 			_ = render.Render(w, r, apiErr.httpResponse()) // never fails
