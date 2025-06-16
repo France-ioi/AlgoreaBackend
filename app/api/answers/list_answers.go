@@ -110,23 +110,29 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) e
 		Where("answers.item_id = ?", itemID).
 		WithPersonalInfoViewApprovals(user)
 
-	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
+	authorIDIsSet := len(httpReq.URL.Query()["author_id"]) > 0
 
-	if authorIDError != nil { // attempt_id
-		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
-		if attemptIDError != nil {
+	if !authorIDIsSet { // attempt_id
+		attemptIDIsSet := len(httpReq.URL.Query()["attempt_id"]) > 0
+		if !attemptIDIsSet {
 			return service.ErrInvalidRequest(fmt.Errorf("either author_id or attempt_id must be present"))
 		}
 
-		if result := srv.checkAccessRightsForGetAnswersByAttemptID(store, attemptID, user); result != nil {
-			return result
+		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
+		if attemptIDError != nil {
+			return service.ErrInvalidRequest(attemptIDError)
 		}
+
+		service.MustNotBeError(srv.checkAccessRightsForGetAnswersByAttemptID(store, attemptID, user))
 
 		dataQuery = dataQuery.Where("answers.attempt_id = ?", attemptID)
 	} else { // author_id
-		if result := srv.checkAccessRightsForGetAnswersByAuthorID(store, authorID, user); result != nil {
-			return result
+		authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
+		if authorIDError != nil {
+			return service.ErrInvalidRequest(authorIDError)
 		}
+
+		service.MustNotBeError(srv.checkAccessRightsForGetAnswersByAuthorID(store, authorID, user))
 
 		dataQuery = dataQuery.Where("author_id = ?", authorID)
 	}

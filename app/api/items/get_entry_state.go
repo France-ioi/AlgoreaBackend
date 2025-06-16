@@ -349,29 +349,31 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 
 		// remove the current user from the members list
 		result.otherMembers = append(result.otherMembers[:currentUserIndex], result.otherMembers[currentUserIndex+1:]...)
-	} else {
-		result.membersCount = 1
-		result.otherMembers = []itemGetEntryStateOtherMember{}
-		canEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
-			Joins("JOIN items ON items.id = ?", itemID).
-			Joins(`
+
+		return &result
+	}
+
+	result.membersCount = 1
+	result.otherMembers = []itemGetEntryStateOtherMember{}
+	canEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Joins("JOIN items ON items.id = ?", itemID).
+		Joins(`
 				LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id
 					AND permissions_granted.item_id = items.id`).
-			Group("groups_ancestors_active.child_group_id")
-		if lock {
-			canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
-		}
+		Group("groups_ancestors_active.child_group_id")
+	if lock {
+		canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
+	}
 
-		service.MustNotBeError(canEnterQuery.
-			PluckFirst(`
+	service.MustNotBeError(canEnterQuery.
+		PluckFirst(`
 				IFNULL(
 					MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
 				) AND
 				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &result.currentUserCanEnter).
-			Error())
-		if result.currentUserCanEnter {
-			result.admittedMembersCount = 1
-		}
+		Error())
+	if result.currentUserCanEnter {
+		result.admittedMembersCount = 1
 	}
 
 	return &result

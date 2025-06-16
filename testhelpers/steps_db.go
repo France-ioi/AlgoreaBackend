@@ -182,35 +182,33 @@ func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primar
 }
 
 func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
-	if ctx.inScenario {
-		tx, err := ctx.db.Begin()
-		if err != nil {
-			return err
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		_, err = tx.Exec(query, vals...)
-		if err != nil {
-			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-			_ = tx.Rollback()
-			return err
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		err = tx.Commit()
-		if err != nil {
-			return err
-		}
-	} else {
+	if !ctx.inScenario {
 		ctx.featureQueries = append(ctx.featureQueries, dbquery{query, vals})
+		return nil
 	}
-	return nil
+
+	tx, err := ctx.db.Begin()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	_, err = tx.Exec(query, vals...)
+	if err != nil {
+		_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+		_ = tx.Rollback()
+		return err
+	}
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
+	return err
 }
 
 func getColumnIndex(table *godog.Table, columnName string) int {

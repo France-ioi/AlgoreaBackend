@@ -204,23 +204,24 @@ func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStor
 	user := srv.GetUser(r)
 
 	urlQuery := r.URL.Query()
-	if len(urlQuery["group_id"]) > 0 {
-		groupIDSet = true
+	groupIDSet = len(urlQuery["group_id"]) > 0
+	includeDescendantGroupsSet := len(urlQuery["include_descendant_groups"]) > 0
+	if groupIDSet {
 		groupID, err = service.ResolveURLQueryGetInt64Field(r, "group_id")
 		if err != nil {
 			return 0, false, false, nil, service.ErrInvalidRequest(err)
 		}
 
-		if err1 := checkThatUserCanManageTheGroupMemberships(store, user, groupID); err1 != nil {
-			return 0, false, false, nil, err1
-		}
+		service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
-		if len(urlQuery["include_descendant_groups"]) > 0 {
+		if includeDescendantGroupsSet {
 			if includeDescendantGroups, err = service.ResolveURLQueryGetBoolField(r, "include_descendant_groups"); err != nil {
 				return 0, false, false, nil, service.ErrInvalidRequest(err)
 			}
 		}
-	} else if len(urlQuery["include_descendant_groups"]) > 0 {
+	}
+
+	if !groupIDSet && includeDescendantGroupsSet {
 		return 0, false, false, nil,
 			service.ErrInvalidRequest(errors.New("'include_descendant_groups' should not be given when 'group_id' is not given"))
 	}

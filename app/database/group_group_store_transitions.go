@@ -668,55 +668,69 @@ func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results Gr
 
 		oldState := oldStatesMap[id]
 
-		if toAction, toActionOK := groupGroupTransitionRules[action].Transitions[oldState.Action]; toActionOK {
-			if toAction.isActive() && !oldState.Action.isActive() || toAction.hasApprovals() {
-				if ok, approvalsNeeded := approvalsOK(oldState, groupRequiredApprovals, approvals[id]); !ok {
-					if groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo != NoRelation {
-						toAction = groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo
-					} else {
-						results[id] = ApprovalsMissing
-						if approvalsNeeded != (GroupApprovals{}) {
-							approvalsToRequest[id] = approvalsNeeded
-						}
-						continue
-					}
-				}
-			}
-
-			buildOneTransition(id, oldState.Action, toAction, results, tp)
+		toAction, toActionOK := groupGroupTransitionRules[action].Transitions[oldState.Action]
+		if !toActionOK || !checkIfApprovalsAreOK(
+			oldState, &toAction, results, groupRequiredApprovals, approvals, approvalsToRequest, action, id) {
+			continue
 		}
+
+		buildOneTransition(id, oldState.Action, toAction, results, tp)
 	}
 	return tp
+}
+
+func checkIfApprovalsAreOK(oldState stateInfo, toAction *GroupMembershipAction,
+	results GroupGroupTransitionResults,
+	groupRequiredApprovals *requiredApprovalsAndLimits, approvals, approvalsToRequest map[int64]GroupApprovals,
+	action GroupGroupTransitionAction, childGroupID int64,
+) bool {
+	if (!toAction.isActive() || oldState.Action.isActive()) && !toAction.hasApprovals() {
+		return true
+	}
+	ok, approvalsNeeded := approvalsOK(oldState, groupRequiredApprovals, approvals[childGroupID])
+	if ok {
+		return true
+	}
+	if groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo != NoRelation {
+		*toAction = groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo
+		return true
+	}
+
+	results[childGroupID] = ApprovalsMissing
+	if approvalsNeeded != (GroupApprovals{}) {
+		approvalsToRequest[childGroupID] = approvalsNeeded
+	}
+	return false
 }
 
 func buildOneTransition(id int64, oldAction, toAction GroupMembershipAction,
 	results GroupGroupTransitionResults, tp *transitionsPlan,
 ) {
-	if toAction != oldAction {
-		if toAction != NoRelation {
-			tp.idsChanged[id] = toAction
-		}
-		results[id] = Success
-		if oldAction.isActive() {
-			if !toAction.isActive() {
-				tp.idsToDeleteRelation.Add(id)
-			}
-		} else {
-			if toAction.isActive() {
-				tp.idsToInsertRelation.Add(id)
-			}
-			if toAction.isActive() || toAction.isPending() {
-				tp.idsToCheckCycle.Add(id)
-			}
-		}
-		if oldAction.isPending() {
-			tp.idsToDeletePending.Add(id)
-		}
-		if toAction.isPending() {
-			tp.idsToInsertPending[id] = toAction
+	if toAction == oldAction {
+		results[id] = Unchanged
+		return
+	}
+	if toAction != NoRelation {
+		tp.idsChanged[id] = toAction
+	}
+	results[id] = Success
+	if oldAction.isActive() {
+		if !toAction.isActive() {
+			tp.idsToDeleteRelation.Add(id)
 		}
 	} else {
-		results[id] = Unchanged
+		if toAction.isActive() {
+			tp.idsToInsertRelation.Add(id)
+		}
+		if toAction.isActive() || toAction.isPending() {
+			tp.idsToCheckCycle.Add(id)
+		}
+	}
+	if oldAction.isPending() {
+		tp.idsToDeletePending.Add(id)
+	}
+	if toAction.isPending() {
+		tp.idsToInsertPending[id] = toAction
 	}
 }
 

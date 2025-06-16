@@ -289,48 +289,43 @@ func (requestData *saveGradeRequestParsed) UnmarshalJSON(raw []byte) error {
 }
 
 func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGradeRequest) error {
-	var hasPlatformKey bool
-	if wrapper.ScoreToken != nil {
-		// We need the `idItemLocal` to get the platform's public key, and verify the signature of the token.
-		// So we need to extract it before we can unmarshal (which also verifies the signature) the token.
-		localItemIDUnsafeRaw, err := token.GetUnsafeFromToken(wrapper.ScoreToken.Bytes(), "idItemLocal")
-		if err != nil {
-			return fmt.Errorf("invalid score_token: %w", err)
-		}
-
-		localItemIDUnsafeString, ok := localItemIDUnsafeRaw.(string)
-		if !ok {
-			return fmt.Errorf("invalid score_token: invalid idItemLocal: should be a string")
-		}
-
-		localItemIDUnsafe, err := strconv.ParseInt(localItemIDUnsafeString, 10, 64)
-		if err != nil {
-			return fmt.Errorf("invalid score_token: invalid idItemLocal: %v", err)
-		}
-
-		hasPlatformKey, err = token.UnmarshalDependingOnItemPlatform(
-			requestData.store,
-			localItemIDUnsafe,
-			&requestData.ScoreToken,
-			wrapper.ScoreToken.Bytes(),
-			"score_token",
-		)
-		if err != nil && !token.IsUnexpectedError(err) {
-			return err
-		}
-		service.MustNotBeError(err)
-
-		if !hasPlatformKey {
-			return errors.New("the platform does not have a public key, but the score_token is given")
-		}
+	if wrapper.ScoreToken == nil {
+		return requestData.reconstructScoreTokenData(wrapper)
 	}
+
+	// We need the `idItemLocal` to get the platform's public key, and verify the signature of the token.
+	// So we need to extract it before we can unmarshal (which also verifies the signature) the token.
+	localItemIDUnsafeRaw, err := token.GetUnsafeFromToken(wrapper.ScoreToken.Bytes(), "idItemLocal")
+	if err != nil {
+		return fmt.Errorf("invalid score_token: %w", err)
+	}
+
+	localItemIDUnsafeString, ok := localItemIDUnsafeRaw.(string)
+	if !ok {
+		return fmt.Errorf("invalid score_token: invalid idItemLocal: should be a string")
+	}
+
+	localItemIDUnsafe, err := strconv.ParseInt(localItemIDUnsafeString, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid score_token: invalid idItemLocal: %v", err)
+	}
+
+	hasPlatformKey, err := token.UnmarshalDependingOnItemPlatform(
+		requestData.store,
+		localItemIDUnsafe,
+		&requestData.ScoreToken,
+		wrapper.ScoreToken.Bytes(),
+		"score_token",
+	)
+	if err != nil && !token.IsUnexpectedError(err) {
+		return err
+	}
+	service.MustNotBeError(err)
 
 	if !hasPlatformKey {
-		err := requestData.reconstructScoreTokenData(wrapper)
-		if err != nil {
-			return err
-		}
+		return errors.New("the platform does not have a public key, but the score_token is given")
 	}
+
 	return nil
 }
 

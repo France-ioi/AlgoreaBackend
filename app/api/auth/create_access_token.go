@@ -210,12 +210,12 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 	service.MustNotBeError(err)
 
 	code, codeGiven := requestData["code"]
-	if codeGiven {
-		if len(r.Header["Authorization"]) != 0 {
-			return service.ErrInvalidRequest(
-				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
-		}
-	} else {
+	if codeGiven && len(r.Header["Authorization"]) != 0 {
+		return service.ErrInvalidRequest(
+			errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
+	}
+
+	if !codeGiven {
 		var (
 			requestContext context.Context
 			authorized     bool
