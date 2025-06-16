@@ -261,11 +261,11 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	user := srv.GetUser(r)
 
 	const (
-		resultStarted = iota + 1
-		submission
-		resultValidate
-		savedAnswer
-		currentAnswer
+		resultStarted  = 1
+		submission     = 2
+		resultValidate = 3
+		savedAnswer    = 4
+		currentAnswer  = 5
 	)
 
 	// check and patch from.activity_type to make it integer
