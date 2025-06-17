@@ -22,12 +22,12 @@ func init() { //nolint:gochecknoinits
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if delay < 0 {
-				fmt.Println("delay must be positive or equal to 0")
+				cmd.Println("delay must be positive or equal to 0")
 				os.Exit(1)
 			}
 
 			if delay > 100*365*24*time.Hour {
-				fmt.Println("delay must be less than 100 years")
+				cmd.Println("delay must be less than 100 years")
 				os.Exit(1)
 			}
 
@@ -56,7 +56,7 @@ func init() { //nolint:gochecknoinits
 			}
 
 			// Success
-			fmt.Println("DONE")
+			cmd.Println("DONE")
 
 			return nil
 		},

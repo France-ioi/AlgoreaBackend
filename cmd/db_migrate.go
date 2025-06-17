@@ -34,13 +34,13 @@ func init() { //nolint:gochecknoinits
 			var db *sql.DB
 			databaseConfig, err := app.DBConfig(app.LoadConfig())
 			if err != nil {
-				fmt.Println("Unable to load the database config: ", err)
+				cmd.Println("Unable to load the database config: ", err)
 				os.Exit(1)
 			}
 			databaseConfig.ParseTime = true
 			db, err = sql.Open("mysql", databaseConfig.FormatDSN())
 			if err != nil {
-				fmt.Println("Unable to connect to the database: ", err)
+				cmd.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
 			}
 
@@ -58,14 +58,14 @@ func init() { //nolint:gochecknoinits
 				if n == 0 {
 					break
 				}
-				fmt.Print(".")
+				cmd.Print(".")
 			}
-			fmt.Print("\n")
+			cmd.Print("\n")
 			switch {
 			case applied == 0:
-				fmt.Println("No migrations to apply!")
+				cmd.Println("No migrations to apply!")
 			default:
-				fmt.Printf("%d migration(s) applied successfully!\n", applied)
+				cmd.Printf("%d migration(s) applied successfully!\n", applied)
 			}
 
 			return nil

@@ -30,14 +30,14 @@ func init() { //nolint:gochecknoinits
 
 			appenv.SetDefaultEnvToTest()
 			if appenv.IsEnvProd() {
-				fmt.Println("'db-restore' must not be run in 'prod' env!")
+				cmd.Println("'db-restore' must not be run in 'prod' env!")
 				os.Exit(1)
 			}
 
 			// load config
 			dbConf, err := app.DBConfig(app.LoadConfig())
 			if err != nil {
-				fmt.Println("Unable to load the database config: ", err)
+				cmd.Println("Unable to load the database config: ", err)
 				os.Exit(1)
 			}
 
@@ -63,7 +63,7 @@ func init() { //nolint:gochecknoinits
 				"--protocol=TCP",
 				"-e"+"source db/schema/schema.sql",
 			)
-			fmt.Println("mysql importing dump...")
+			cmd.Println("mysql importing dump...")
 			var output []byte
 			output, err = command.CombinedOutput()
 			if err != nil {
@@ -71,7 +71,7 @@ func init() { //nolint:gochecknoinits
 			}
 
 			// Success
-			fmt.Println("DONE")
+			cmd.Println("DONE")
 
 			return nil
 		},

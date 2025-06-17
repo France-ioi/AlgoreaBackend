@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"os"
 	"runtime"
 	"sort"
 
@@ -82,8 +81,7 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 
 	err := ctx.initDB()
 	if err != nil {
-		fmt.Println("Unable to empty db")
-		panic(err)
+		panic(fmt.Errorf("unable to empty the DB: %w", err))
 	}
 }
 
@@ -149,8 +147,7 @@ func (ctx *TestContext) setupApp() {
 	ctx.tearDownApp()
 	ctx.application, err = app.New()
 	if err != nil {
-		fmt.Println("Unable to load app")
-		panic(err)
+		panic(fmt.Errorf("unable to load the app: %w", err))
 	}
 }
 
@@ -191,8 +188,7 @@ func (ctx *TestContext) openDB() *sql.DB {
 			golang.IfElse(loggingConfig.GetBool("LogRawSQLQueries"), "instrumented-mysql", "mysql"),
 			config.FormatDSN())
 		if err != nil {
-			fmt.Println("Unable to connect to the database: ", err)
-			os.Exit(1)
+			panic(fmt.Errorf("unable to connect to the database: %w", err))
 		}
 	}
 

@@ -57,7 +57,7 @@ func init() { //nolint:gochecknoinits
 				return fmt.Errorf("error while doing propagation: %v", err)
 			}
 
-			fmt.Println("Propagation done.")
+			cmd.Println("Propagation done.")
 
 			return nil
 		},

@@ -56,7 +56,7 @@ func init() { //nolint:gochecknoinits
 				return fmt.Errorf("error while recomputing results: %v", err)
 			}
 
-			fmt.Println("Done.")
+			cmd.Println("Done.")
 
 			return nil
 		},
