@@ -202,36 +202,6 @@ func (ctx *TestContext) emptyDB() error {
 
 func (ctx *TestContext) initDB() error {
 	err := ctx.emptyDB()
-	if err != nil {
-		return err
-	}
-
-	if len(ctx.featureQueries) == 0 {
-		return nil
-	}
-
-	tx, err := ctx.db.Begin()
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	for _, query := range ctx.featureQueries {
-		_, err = tx.Exec(query.sql, query.values)
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-	}
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	err = tx.Commit()
 	return err
 }
 
