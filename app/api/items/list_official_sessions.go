@@ -190,7 +190,8 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 
 	var rawData []rawOfficialSession
 	if len(ids) > 0 {
-		service.MustNotBeError(store.Groups().Where("groups.id IN (?)", ids).
+		service.MustNotBeError(store.Groups().
+			Where("groups.id IN (?)", ids). //nolint:asasalint // ids is a single argument
 			Select(`
 				groups.id AS group_id, groups.name, groups.description, groups.open_activity_when_joining,
 				groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until,

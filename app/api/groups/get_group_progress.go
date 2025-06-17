@@ -189,7 +189,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) err
 		Joins(`
 			JOIN groups_ancestors_active
 			ON groups_ancestors_active.ancestor_group_id IN (?) AND
-				groups_ancestors_active.child_group_id = groups.id`, ancestorGroupIDs).
+				groups_ancestors_active.child_group_id = groups.id`, ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
 		Where("groups.type = 'Team' OR groups.type = 'User'").
 		Group("groups.id")
 
@@ -236,7 +236,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) err
 				AVG(member_stats.submissions) AS avg_submissions,
 				AVG(member_stats.time_spent) AS avg_time_spent`).
 			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors_active.child_group_id", endMembersStats.SubQuery()).
-			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs).
+			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
 			Group("groups_ancestors_active.ancestor_group_id, member_stats.item_id").
 			Order(gorm.Expr(
 				"FIELD(groups_ancestors_active.ancestor_group_id"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",

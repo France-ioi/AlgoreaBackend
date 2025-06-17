@@ -215,7 +215,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 	service.MustNotBeError(store.Groups().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id").
 		Where("ancestor_group_id = ?", prefixInfo.GroupID).
-		Where("groups.id IN(?)", subgroupIDs).
+		Where("groups.id IN(?)", subgroupIDs). //nolint:asasalint // subgroupIDs is a single argument
 		Where("groups.type != 'User'").
 		Select(`
 			require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,

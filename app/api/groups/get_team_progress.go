@@ -191,7 +191,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) erro
 				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
 			) AS result_with_best_score ON 1`).
-		Where("groups.id IN (?)", teamIDs).
+		Where("groups.id IN (?)", teamIDs). //nolint:asasalint // teamIDs is a single argument
 		Order(gorm.Expr(
 			"FIELD(groups.id"+strings.Repeat(", ?", len(teamIDs))+")",
 			teamIDs...)),
