@@ -32,6 +32,11 @@ ifdef DIRECTORY
 else
 	TEST_DIR=./app/...
 endif
+ifdef DIRECTORY
+	TEST_BDD_DIR=$(DIRECTORY)
+else
+	TEST_BDD_DIR=./app/api/...
+endif
 ifdef TAGS
 	TEST_TAGS=--godog.tags=$(TAGS)
 endif
@@ -92,7 +97,7 @@ test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
-	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
+	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_BDD_DIR) -p 1 -parallel 1 $(TEST_TAGS)
 lint:
 	@[ -e $(GOLANGCILINT) ] && \
 		($(GOLANGCILINT) --version | grep -F "version $(GOLANGCILINT_VERSION) built" > /dev/null || rm $(GOLANGCILINT)) || true

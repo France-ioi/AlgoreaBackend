@@ -228,7 +228,7 @@ var (
 	onForcefulRetryOfTransactionHook              atomic.Value
 )
 
-func init() {
+func init() { //nolint:gochecknoinits // this is an initialization function to store the default hooks
 	onStartOfTransactionToBeRetriedForcefullyHook.Store(func() {})
 	onForcefulRetryOfTransactionHook.Store(func() {})
 }

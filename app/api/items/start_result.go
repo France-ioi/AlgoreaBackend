@@ -149,6 +149,6 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 
 var onBeforeInsertingResultInResultStartHook atomic.Value
 
-func init() {
+func init() { //nolint:gochecknoinits // this is an initialization function to store the default hook
 	onBeforeInsertingResultInResultStartHook.Store(func() {})
 }
