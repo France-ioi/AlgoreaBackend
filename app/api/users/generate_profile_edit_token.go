@@ -7,13 +7,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/encrypt"
-
-	"github.com/go-chi/render"
-
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 

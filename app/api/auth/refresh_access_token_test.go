@@ -14,19 +14,17 @@ import (
 	"unsafe"
 
 	"bou.ke/monkey"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
-
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
