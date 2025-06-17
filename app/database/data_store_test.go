@@ -722,12 +722,12 @@ func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
 	dataStore := NewDataStoreWithContext(ctx, db)
 
 	assert.Equal(t, db.ctes, dataStore.ctes)
-	assert.Equal(t, db.logConfig, dataStore.logConfig)
+	assert.Equal(t, db.logConfig(), dataStore.logConfig())
 	assert.Equal(t, ctx, dataStore.ctx())
 
 	dbWrapper := dataStore.DB.db.CommonDB().(*sqlDBWrapper)
 	assert.Equal(t, ctx, dbWrapper.ctx)
-	assert.Equal(t, db.logConfig, dbWrapper.logConfig)
+	assert.Equal(t, db.logConfig(), dbWrapper.logConfig)
 	assert.Equal(t, db.db.CommonDB().(*sqlDBWrapper).sqlDB, dbWrapper.sqlDB)
 	dialect := dataStore.DB.db.Dialect()
 	//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
@@ -750,11 +750,11 @@ func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
 		dataStore := NewDataStoreWithContext(ctx, db)
 
 		assert.Equal(t, db.ctes, dataStore.ctes)
-		assert.Equal(t, db.logConfig, dataStore.logConfig)
+		assert.Equal(t, db.logConfig(), dataStore.logConfig())
 		assert.Equal(t, ctx, dataStore.ctx())
 
 		txWrapper := dataStore.DB.db.CommonDB().(*sqlTxWrapper)
-		assert.Equal(t, db.logConfig, txWrapper.logConfig)
+		assert.Equal(t, db.logConfig(), txWrapper.logConfig)
 		assert.Equal(t, ctx, txWrapper.ctx)
 		assert.Equal(t, db.db.CommonDB().(*sqlTxWrapper).sqlTx, txWrapper.sqlTx)
 		dialect := dataStore.DB.db.Dialect()

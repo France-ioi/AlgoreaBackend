@@ -653,14 +653,14 @@ func TestDB_QueryConstructors(t *testing.T) {
 			resultDB, oldDBObjects := testCase.funcToCall(db)
 			assert.NotEqual(t, resultDB, db)
 			assert.Equal(t, db.ctx(), resultDB.ctx())
-			assert.Equal(t, db.logConfig, resultDB.logConfig)
+			assert.Equal(t, db.logConfig(), resultDB.logConfig())
 			if !testCase.skipCTEsChecking {
 				assert.Equal(t, db.ctes, resultDB.ctes)
 			}
 			for _, oldDBObject := range oldDBObjects {
 				assert.NotEqual(t, oldDBObject, db)
 				assert.Equal(t, db.ctx(), oldDBObject.ctx())
-				assert.Equal(t, db.logConfig, oldDBObject.logConfig)
+				assert.Equal(t, db.logConfig(), oldDBObject.logConfig())
 				if !testCase.skipCTEsChecking {
 					assert.Equal(t, db.ctes, oldDBObject.ctes)
 				}
@@ -706,7 +706,7 @@ func TestDB_Count(t *testing.T) {
 	assert.NoError(t, countDB.Error())
 	assert.Equal(t, db.ctx(), countDB.ctx())
 	assert.Nil(t, countDB.ctes)
-	assert.Equal(t, db.logConfig, countDB.logConfig)
+	assert.Equal(t, db.logConfig(), countDB.logConfig())
 
 	assert.Equal(t, 1, result)
 
@@ -754,7 +754,7 @@ func TestDB_Take(t *testing.T) {
 	assert.NoError(t, takeDB.Error())
 	assert.Equal(t, db.ctx(), takeDB.ctx())
 	assert.Nil(t, takeDB.ctes)
-	assert.Equal(t, db.logConfig, takeDB.logConfig)
+	assert.Equal(t, db.logConfig(), takeDB.logConfig())
 
 	assert.Equal(t, resultType{1}, result)
 
@@ -839,7 +839,7 @@ func TestDB_Pluck(t *testing.T) {
 	assert.NoError(t, pluckDB.Error())
 	assert.Equal(t, db.ctx(), pluckDB.ctx())
 	assert.Nil(t, pluckDB.ctes)
-	assert.Equal(t, db.logConfig, pluckDB.logConfig)
+	assert.Equal(t, db.logConfig(), pluckDB.logConfig())
 
 	assert.Equal(t, []int64{1}, result)
 
@@ -927,7 +927,7 @@ func TestDB_PluckFirst(t *testing.T) {
 	assert.NoError(t, pluckFirstDB.Error())
 	assert.Equal(t, db.ctx(), pluckFirstDB.ctx())
 	assert.Nil(t, pluckFirstDB.ctes)
-	assert.Equal(t, db.logConfig, pluckFirstDB.logConfig)
+	assert.Equal(t, db.logConfig(), pluckFirstDB.logConfig())
 
 	assert.Equal(t, int64(1), result)
 
@@ -999,7 +999,7 @@ func TestDB_Scan(t *testing.T) {
 	assert.NoError(t, scanDB.Error())
 	assert.Equal(t, db.ctx(), scanDB.ctx())
 	assert.Nil(t, scanDB.ctes)
-	assert.Equal(t, db.logConfig, scanDB.logConfig)
+	assert.Equal(t, db.logConfig(), scanDB.logConfig())
 
 	assert.Equal(t, []resultType{{ID: 1, Value: "value"}}, result)
 
@@ -1096,7 +1096,7 @@ func TestDB_Delete(t *testing.T) {
 	assert.NotEqual(t, deleteDB, db)
 	assert.Equal(t, db.ctx(), deleteDB.ctx())
 	assert.Nil(t, deleteDB.ctes)
-	assert.Equal(t, db.logConfig, deleteDB.logConfig)
+	assert.Equal(t, db.logConfig(), deleteDB.logConfig())
 
 	assert.NoError(t, deleteDB.Error())
 
@@ -1123,7 +1123,7 @@ func TestDB_Exec(t *testing.T) {
 	assert.NoError(t, execDB.Error())
 	assert.Equal(t, db.ctx(), execDB.ctx())
 	assert.Nil(t, execDB.ctes)
-	assert.Equal(t, db.logConfig, execDB.logConfig)
+	assert.Equal(t, db.logConfig(), execDB.logConfig())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1512,7 +1512,7 @@ func TestDB_UpdateColumn(t *testing.T) {
 	assert.NoError(t, updateDB.Error())
 	assert.Equal(t, db.ctx(), updateDB.ctx())
 	assert.Nil(t, updateDB.ctes)
-	assert.Equal(t, db.logConfig, updateDB.logConfig)
+	assert.Equal(t, db.logConfig(), updateDB.logConfig())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1535,7 +1535,7 @@ func TestDB_Set(t *testing.T) {
 	assert.NoError(t, setDB.Error())
 	assert.Equal(t, db.ctx(), setDB.ctx())
 	assert.Equal(t, db.ctes, setDB.ctes)
-	assert.Equal(t, db.logConfig, setDB.logConfig)
+	assert.Equal(t, db.logConfig(), setDB.logConfig())
 
 	var result []interface{}
 	assert.NoError(t, setDB.Scan(&result).Error())

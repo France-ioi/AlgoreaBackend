@@ -162,3 +162,9 @@ func (sqlTX *sqlTxWrapper) getContext() context.Context {
 }
 
 var _ contextGetter = &sqlTxWrapper{}
+
+func (sqlTX *sqlTxWrapper) getLogConfig() *LogConfig {
+	return sqlTX.logConfig
+}
+
+var _ logConfigGetter = &sqlTxWrapper{}

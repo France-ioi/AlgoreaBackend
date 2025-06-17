@@ -154,6 +154,16 @@ func (sqlDB *sqlDBWrapper) getContext() context.Context {
 
 var _ contextGetter = &sqlDBWrapper{}
 
+type logConfigGetter interface {
+	getLogConfig() *LogConfig
+}
+
+func (sqlDB *sqlDBWrapper) getLogConfig() *LogConfig {
+	return sqlDB.logConfig
+}
+
+var _ logConfigGetter = &sqlDBWrapper{}
+
 func (sqlDB *sqlDBWrapper) Close() error {
 	return sqlDB.sqlDB.Close()
 }
