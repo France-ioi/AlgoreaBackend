@@ -652,14 +652,14 @@ func TestDB_QueryConstructors(t *testing.T) {
 
 			resultDB, oldDBObjects := testCase.funcToCall(db)
 			assert.NotEqual(t, resultDB, db)
-			assert.Equal(t, db.ctx, resultDB.ctx)
+			assert.Equal(t, db.ctx(), resultDB.ctx())
 			assert.Equal(t, db.logConfig, resultDB.logConfig)
 			if !testCase.skipCTEsChecking {
 				assert.Equal(t, db.ctes, resultDB.ctes)
 			}
 			for _, oldDBObject := range oldDBObjects {
 				assert.NotEqual(t, oldDBObject, db)
-				assert.Equal(t, db.ctx, oldDBObject.ctx)
+				assert.Equal(t, db.ctx(), oldDBObject.ctx())
 				assert.Equal(t, db.logConfig, oldDBObject.logConfig)
 				if !testCase.skipCTEsChecking {
 					assert.Equal(t, db.ctes, oldDBObject.ctes)
@@ -704,7 +704,7 @@ func TestDB_Count(t *testing.T) {
 
 	assert.NotEqual(t, countDB, db)
 	assert.NoError(t, countDB.Error())
-	assert.Equal(t, db.ctx, countDB.ctx)
+	assert.Equal(t, db.ctx(), countDB.ctx())
 	assert.Nil(t, countDB.ctes)
 	assert.Equal(t, db.logConfig, countDB.logConfig)
 
@@ -752,7 +752,7 @@ func TestDB_Take(t *testing.T) {
 
 	assert.NotEqual(t, takeDB, db)
 	assert.NoError(t, takeDB.Error())
-	assert.Equal(t, db.ctx, takeDB.ctx)
+	assert.Equal(t, db.ctx(), takeDB.ctx())
 	assert.Nil(t, takeDB.ctes)
 	assert.Equal(t, db.logConfig, takeDB.logConfig)
 
@@ -837,7 +837,7 @@ func TestDB_Pluck(t *testing.T) {
 
 	assert.NotEqual(t, pluckDB, db)
 	assert.NoError(t, pluckDB.Error())
-	assert.Equal(t, db.ctx, pluckDB.ctx)
+	assert.Equal(t, db.ctx(), pluckDB.ctx())
 	assert.Nil(t, pluckDB.ctes)
 	assert.Equal(t, db.logConfig, pluckDB.logConfig)
 
@@ -925,7 +925,7 @@ func TestDB_PluckFirst(t *testing.T) {
 
 	assert.NotEqual(t, pluckFirstDB, db)
 	assert.NoError(t, pluckFirstDB.Error())
-	assert.Equal(t, db.ctx, pluckFirstDB.ctx)
+	assert.Equal(t, db.ctx(), pluckFirstDB.ctx())
 	assert.Nil(t, pluckFirstDB.ctes)
 	assert.Equal(t, db.logConfig, pluckFirstDB.logConfig)
 
@@ -997,7 +997,7 @@ func TestDB_Scan(t *testing.T) {
 
 	assert.NotEqual(t, scanDB, db)
 	assert.NoError(t, scanDB.Error())
-	assert.Equal(t, db.ctx, scanDB.ctx)
+	assert.Equal(t, db.ctx(), scanDB.ctx())
 	assert.Nil(t, scanDB.ctes)
 	assert.Equal(t, db.logConfig, scanDB.logConfig)
 
@@ -1094,7 +1094,7 @@ func TestDB_Delete(t *testing.T) {
 	deleteDB := db.Delete("id = 1")
 
 	assert.NotEqual(t, deleteDB, db)
-	assert.Equal(t, db.ctx, deleteDB.ctx)
+	assert.Equal(t, db.ctx(), deleteDB.ctx())
 	assert.Nil(t, deleteDB.ctes)
 	assert.Equal(t, db.logConfig, deleteDB.logConfig)
 
@@ -1121,7 +1121,7 @@ func TestDB_Exec(t *testing.T) {
 
 	assert.NotEqual(t, execDB, db)
 	assert.NoError(t, execDB.Error())
-	assert.Equal(t, db.ctx, execDB.ctx)
+	assert.Equal(t, db.ctx(), execDB.ctx())
 	assert.Nil(t, execDB.ctes)
 	assert.Equal(t, db.logConfig, execDB.logConfig)
 
@@ -1510,7 +1510,7 @@ func TestDB_UpdateColumn(t *testing.T) {
 	updateDB := db.UpdateColumn("name", someName)
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
-	assert.Equal(t, db.ctx, updateDB.ctx)
+	assert.Equal(t, db.ctx(), updateDB.ctx())
 	assert.Nil(t, updateDB.ctes)
 	assert.Equal(t, db.logConfig, updateDB.logConfig)
 
@@ -1533,7 +1533,7 @@ func TestDB_Set(t *testing.T) {
 	setDB := db.Set("gorm:query_option", "FOR UPDATE")
 	assert.NotEqual(t, setDB, db)
 	assert.NoError(t, setDB.Error())
-	assert.Equal(t, db.ctx, setDB.ctx)
+	assert.Equal(t, db.ctx(), setDB.ctx())
 	assert.Equal(t, db.ctes, setDB.ctes)
 	assert.Equal(t, db.logConfig, setDB.logConfig)
 
@@ -2069,7 +2069,21 @@ func Test_gormDBBeginTxReplacement_ErrsWhenDBIsNotSQLDBWrapper(t *testing.T) {
 }
 
 func TestDB_GetContext(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
 	expectedContext := context.WithValue(context.Background(), testContextKey("key"), "value")
-	conn := &DB{ctx: expectedContext}
-	assert.Equal(t, expectedContext, conn.GetContext())
+	db = cloneDBWithNewContext(expectedContext, db)
+
+	assert.Equal(t, expectedContext, db.GetContext())
+
+	assert.NoError(t, db.inTransaction(func(db *DB) error {
+		assert.Equal(t, expectedContext, db.GetContext())
+		return nil
+	}))
 }

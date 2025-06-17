@@ -163,7 +163,7 @@ func Test_Deadline(t *testing.T) {
 					mustNotBeError(err)
 					defer func() { _ = stmt.Close() }()
 					cancel()
-					_, err = stmt.ExecContext(s.ctx)
+					_, err = stmt.ExecContext(s.ctx())
 					return err
 				})
 			},
@@ -181,7 +181,7 @@ func Test_Deadline(t *testing.T) {
 					mustNotBeError(err)
 					defer func() { _ = stmt.Close() }()
 					cancel()
-					rows, err := stmt.QueryContext(s.ctx)
+					rows, err := stmt.QueryContext(s.ctx())
 					if rows != nil {
 						_ = rows.Err() // ignore the error as err is expected to be non-nil
 						_ = rows.Close()
@@ -203,7 +203,7 @@ func Test_Deadline(t *testing.T) {
 					mustNotBeError(err)
 					defer func() { _ = stmt.Close() }()
 					cancel()
-					row := stmt.QueryRowContext(s.ctx)
+					row := stmt.QueryRowContext(s.ctx())
 					return row.Err()
 				})
 			},

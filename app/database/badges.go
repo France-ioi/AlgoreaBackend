@@ -138,7 +138,7 @@ func (s *GroupStore) storeBadgeGroupPath(
 func (s *GroupStore) createBadgeGroupRelation(badgeGroupID, childBadgeGroupID int64, badgeURL string) bool {
 	err := s.GroupGroups().CreateRelation(badgeGroupID, childBadgeGroupID)
 	if err == ErrRelationCycle {
-		logging.SharedLogger.WithContext(s.ctx).
+		logging.SharedLogger.WithContext(s.ctx()).
 			Warnf("Cannot add badge group %d into badge group %d (%s) because it would create a cycle",
 				childBadgeGroupID, badgeGroupID, badgeURL)
 		return false
@@ -166,7 +166,7 @@ func (s *GroupStore) makeUserMemberOfBadgeGroup(badgeGroupID, userID int64, badg
 	mustNotBeError(err)
 
 	if results[userID] != Success {
-		logging.SharedLogger.WithContext(s.ctx).
+		logging.SharedLogger.WithContext(s.ctx()).
 			Warnf("Cannot add the user %d into a badge group %d (%s), reason: %s",
 				userID, badgeGroupID, badgeURL, results[userID])
 	}

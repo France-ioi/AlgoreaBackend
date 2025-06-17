@@ -39,7 +39,6 @@ type cte struct {
 // DB contains information for current db connection (wraps *gorm.DB).
 type DB struct {
 	db        *gorm.DB
-	ctx       context.Context
 	ctes      []cte
 	logConfig *LogConfig
 }
@@ -48,8 +47,8 @@ type DB struct {
 var ErrNamedLockWaitTimeoutExceeded = errors.New("named lock wait timeout exceeded")
 
 // newDB wraps *gorm.DB.
-func newDB(ctx context.Context, db *gorm.DB, ctes []cte, logConfig *LogConfig) *DB {
-	return &DB{db: db, ctx: ctx, ctes: ctes, logConfig: logConfig}
+func newDB(db *gorm.DB, ctes []cte, logConfig *LogConfig) *DB {
+	return &DB{db: db, ctes: ctes, logConfig: logConfig}
 }
 
 // cloneDBWithNewContext clones the current db connection replacing the context with the given one.
@@ -57,7 +56,7 @@ func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
 	newSQLDB := conn.db.CommonDB().(withContexter).withContext(ctx)
 	newGormDB := cloneGormDB(conn.db)
 	replaceDBInGormDB(newGormDB, newSQLDB)
-	return newDB(ctx, newGormDB, conn.ctes, conn.logConfig)
+	return newDB(newGormDB, conn.ctes, conn.logConfig)
 }
 
 // Open connects to the database and tests the connection.
@@ -105,7 +104,7 @@ func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEna
 	// we log queries and errors ourselves
 	dbConn.LogMode(false)
 
-	return newDB(ctx, dbConn, nil, &lc), err
+	return newDB(dbConn, nil, &lc), err
 }
 
 // OpenRawDBConnection creates a new DB connection.
@@ -139,9 +138,13 @@ func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB,
 	return sql.Open(golang.IfElse(enableRawLevelLogging, "instrumented-mysql", "wrapped-mysql"), sourceDSN)
 }
 
+func (conn *DB) ctx() context.Context {
+	return conn.db.CommonDB().(contextGetter).getContext()
+}
+
 // New clones a new db connection without search conditions.
 func (conn *DB) New() *DB {
-	return newDB(conn.ctx, conn.db.New(), nil, conn.logConfig)
+	return newDB(conn.db.New(), nil, conn.logConfig)
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
@@ -161,7 +164,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		txOpts = txOptions[0]
 	}
 
-	txDB := gormDBBeginTxReplacement(conn.ctx, conn.db, txOpts)
+	txDB := gormDBBeginTxReplacement(conn.ctx(), conn.db, txOpts)
 	if txDB.Error != nil {
 		return txDB.Error
 	}
@@ -193,7 +196,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 	}()
 	txLogConfig := txDB.CommonDB().(*sqlTxWrapper).logConfig
 	txLogConfig.LogRetryableErrorsAsInfo = true
-	err = txFunc(newDB(conn.ctx, txDB, nil, txLogConfig))
+	err = txFunc(newDB(txDB, nil, txLogConfig))
 	return err
 }
 
@@ -202,7 +205,7 @@ func isRetryableError(err error) bool {
 }
 
 func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
-	if count > 0 && conn.ctx.Value(retryEachTransactionContextKey) == nil {
+	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
 		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:gomnd // ±5%
 	}
 }
@@ -257,12 +260,12 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 		}
 		// retry
 		if count == transactionRetriesLimit {
-			logDBError(conn.ctx, conn.logConfig,
+			logDBError(conn.ctx(), conn.logConfig,
 				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %w", errToHandleError))
 			*returnErr = errors.New("transaction retries limit exceeded")
 			return true
 		}
-		log.SharedLogger.WithContext(conn.ctx).WithField("type", "db").
+		log.SharedLogger.WithContext(conn.ctx()).WithField("type", "db").
 			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
 		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
 		return true
@@ -289,10 +292,10 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	} else {
 		sqlDB = conn.db.CommonDB().(*sqlDBWrapper).sqlDB
 	}
-	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx, logConfig: conn.logConfig}
+	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig}
 
 	var shouldDiscardNamedLockDBConnection bool
-	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx)
+	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx())
 	if err != nil {
 		return err
 	}
@@ -303,7 +306,7 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	}()
 
 	var getLockResult *int64
-	err = namedLockDBConnection.QueryRowContext(conn.ctx, "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
+	err = namedLockDBConnection.QueryRowContext(conn.ctx(), "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
 	if err != nil {
 		return err
 	}
@@ -320,12 +323,12 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 			// on error we just close the connection to release the lock
 			shouldDiscardNamedLockDBConnection = true
 			// do not return an error, it should not affect the result
-			logDBError(conn.ctx, conn.logConfig,
+			logDBError(conn.ctx(), conn.logConfig,
 				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
 		}
 	}()
 
-	log.SharedLogger.WithContext(conn.ctx).WithField("type", "db").
+	log.SharedLogger.WithContext(conn.ctx()).WithField("type", "db").
 		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
 
 	return funcToCall(conn)
@@ -338,41 +341,41 @@ func (conn *DB) Close() error {
 
 // Limit specifies the number of records to be retrieved.
 func (conn *DB) Limit(limit interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Limit(limit), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Limit(limit), conn.ctes, conn.logConfig)
 }
 
 // Offset specifies the offset of the records to be retrieved.
 func (conn *DB) Offset(offset interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Offset(offset), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Offset(offset), conn.ctes, conn.logConfig)
 }
 
 // Where returns a new relation, filters records with given conditions, accepts `map`,
 // `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
 func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Where(query, args...), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Where(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Joins specifies Joins conditions
 //
 //	db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
 func (conn *DB) Joins(query string, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Joins(query, args...), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Joins(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
 // When creating/updating, specify fields that you want to save to database.
 func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Select(query, args...), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Select(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Table specifies the table you would like to run db operations.
 func (conn *DB) Table(name string) *DB {
-	return newDB(conn.ctx, conn.db.Table(name), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Table(name), conn.ctes, conn.logConfig)
 }
 
 // Group specifies the group method on the find.
 func (conn *DB) Group(query string) *DB {
-	return newDB(conn.ctx, conn.db.Group(query), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Group(query), conn.ctes, conn.logConfig)
 }
 
 // Order specifies order when retrieve records from database, set reorder to `true` to overwrite defined conditions
@@ -381,12 +384,12 @@ func (conn *DB) Group(query string) *DB {
 //	db.Order("name DESC", true) // reorder
 //	db.Order(gorm.SqlExpr("name = ? DESC", "first")) // sql expression
 func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
-	return newDB(conn.ctx, conn.db.Order(value, reorder...), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Order(value, reorder...), conn.ctes, conn.logConfig)
 }
 
 // Having specifies HAVING conditions for GROUP BY.
 func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Having(query, args...), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Having(query, args...), conn.ctes, conn.logConfig)
 }
 
 // Union specifies UNION of two queries (receiver UNION query).
@@ -412,7 +415,7 @@ func (conn *DB) With(name string, query *DB) *DB {
 	newCTEs := make([]cte, 0, len(conn.ctes)+1)
 	newCTEs = append(newCTEs, conn.ctes...)
 	newCTEs = append(newCTEs, cte{name: name, subQuery: query.SubQuery()})
-	return newDB(conn.ctx, conn.db, newCTEs, conn.logConfig)
+	return newDB(conn.db, newCTEs, conn.logConfig)
 }
 
 // Raw uses raw sql as conditions
@@ -420,7 +423,7 @@ func (conn *DB) With(name string, query *DB) *DB {
 //	db.Raw("SELECT name, age FROM users WHERE name = ?", 3).Scan(&result)
 func (conn *DB) Raw(query string, args ...interface{}) *DB {
 	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
-	return newDB(conn.ctx,
+	return newDB(
 		conn.db.New().Set("gorm:query_option", "").
 			Raw("").Joins(query, args...), nil, conn.logConfig)
 }
@@ -432,7 +435,7 @@ func (conn *DB) UpdateColumns(attrs ...interface{}) *DB {
 
 // UpdateColumn updates attributes without callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
 func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().UpdateColumn(attrs...), nil, conn.logConfig)
+	return newDB(conn.toQuery().UpdateColumn(attrs...), nil, conn.logConfig)
 }
 
 // SubQuery returns the query as sub query.
@@ -471,7 +474,7 @@ func (conn *DB) toQuery() *gorm.DB {
 
 // Scan scans value to a struct.
 func (conn *DB) Scan(dest interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().Scan(dest), nil, conn.logConfig)
+	return newDB(conn.toQuery().Scan(dest), nil, conn.logConfig)
 }
 
 // ScanIntoSlices scans multiple columns into slices.
@@ -582,7 +585,7 @@ func (conn *DB) Count(dest interface{}) *DB {
 	if conn.Error() != nil {
 		return conn
 	}
-	return newDB(conn.ctx, conn.toQuery().Count(dest), nil, conn.logConfig)
+	return newDB(conn.toQuery().Count(dest), nil, conn.logConfig)
 }
 
 // Pluck is used to query a single column into a slice of values
@@ -605,7 +608,7 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 	if reflectValue.Kind() != reflect.Slice {
 		panic(fmt.Sprintf("values should be a pointer to a slice, not a pointer to %s", reflectValue.Kind()))
 	}
-	return newDB(conn.ctx, conn.toQuery().Pluck(column, values), nil, conn.logConfig)
+	return newDB(conn.toQuery().Pluck(column, values), nil, conn.logConfig)
 }
 
 // PluckFirst is used to query a single column and take the first value
@@ -620,7 +623,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 	valuesPtrReflValue.Elem().Set(valuesReflValue)
 	valuesReflValue = valuesPtrReflValue.Elem()
 	values := valuesPtrReflValue.Interface()
-	result := newDB(conn.ctx, conn.Limit(1).toQuery().Pluck(column, values), nil, conn.logConfig)
+	result := newDB(conn.Limit(1).toQuery().Pluck(column, values), nil, conn.logConfig)
 	if result.Error() != nil {
 		return result
 	}
@@ -634,7 +637,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 
 // Take returns a record that match given conditions, the order will depend on the database implementation.
 func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().Take(out, where...), nil, conn.logConfig)
+	return newDB(conn.toQuery().Take(out, where...), nil, conn.logConfig)
 }
 
 // HasRows returns true if at least one row is found.
@@ -649,7 +652,7 @@ func (conn *DB) HasRows() (bool, error) {
 
 // Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition.
 func (conn *DB) Delete(where ...interface{}) *DB {
-	return newDB(conn.ctx, conn.toQuery().Delete(nil, where...), nil, conn.logConfig)
+	return newDB(conn.toQuery().Delete(nil, where...), nil, conn.logConfig)
 }
 
 // RowsAffected returns the number of rows affected by the last INSERT/UPDATE/DELETE statement.
@@ -664,7 +667,7 @@ func (conn *DB) Error() error {
 
 // Exec executes raw sql.
 func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Exec(sqlQuery, values...), nil, conn.logConfig)
+	return newDB(conn.db.Exec(sqlQuery, values...), nil, conn.logConfig)
 }
 
 // insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
@@ -762,7 +765,7 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 
 // Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting.
 func (conn *DB) Set(name string, value interface{}) *DB {
-	return newDB(conn.ctx, conn.db.Set(name, value), conn.ctes, conn.logConfig)
+	return newDB(conn.db.Set(name, value), conn.ctes, conn.logConfig)
 }
 
 // ErrNoTransaction means that a called method/function cannot work outside of a transaction.
@@ -839,7 +842,7 @@ func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
 
 // GetContext returns the context of the DB connection.
 func (conn *DB) GetContext() context.Context {
-	return conn.ctx
+	return conn.ctx()
 }
 
 const keyTriesCount = 10
@@ -850,8 +853,8 @@ func (conn *DB) retryOnDuplicatePrimaryKeyError(tableName string, f func(db *DB)
 
 func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string, f func(db *DB) error) error {
 	i := 0
-	outerCtx := conn.ctx
-	innerCtx := context.WithValue(conn.ctx, logErrorAsInfoFuncContextKey, func(err error) bool {
+	outerCtx := conn.ctx()
+	innerCtx := context.WithValue(conn.ctx(), logErrorAsInfoFuncContextKey, func(err error) bool {
 		if IsDuplicateEntryErrorForKey(err, tableName, keyName) {
 			return true
 		}
@@ -873,7 +876,7 @@ func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string,
 		return nil
 	}
 	err := fmt.Errorf("cannot generate a new %s", nameInError)
-	logDBError(conn.ctx, conn.logConfig, err)
+	logDBError(conn.ctx(), conn.logConfig, err)
 	return err
 }
 

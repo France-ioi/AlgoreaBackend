@@ -156,3 +156,9 @@ func (sqlTX *sqlTxWrapper) withContext(ctx context.Context) gorm.SQLCommon {
 }
 
 var _ withContexter = &sqlTxWrapper{}
+
+func (sqlTX *sqlTxWrapper) getContext() context.Context {
+	return sqlTX.ctx
+}
+
+var _ contextGetter = &sqlTxWrapper{}

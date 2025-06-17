@@ -144,6 +144,16 @@ func (sqlDB *sqlDBWrapper) withContext(ctx context.Context) gorm.SQLCommon {
 
 var _ withContexter = &sqlDBWrapper{}
 
+type contextGetter interface {
+	getContext() context.Context
+}
+
+func (sqlDB *sqlDBWrapper) getContext() context.Context {
+	return sqlDB.ctx
+}
+
+var _ contextGetter = &sqlDBWrapper{}
+
 func (sqlDB *sqlDBWrapper) Close() error {
 	return sqlDB.sqlDB.Close()
 }
