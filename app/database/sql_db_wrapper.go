@@ -8,7 +8,9 @@ import (
 )
 
 type sqlDBWrapper struct {
-	sqlDB     *sql.DB
+	sqlDB *sql.DB
+	//nolint:containedctx // We store the context here because Gorm v1 does not support contexts
+	//                    // as arguments for Exec, Query, and QueryRow methods.
 	ctx       context.Context
 	logConfig *LogConfig
 }
