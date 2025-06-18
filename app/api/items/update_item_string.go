@@ -20,7 +20,7 @@ type itemStringUpdateRequest struct {
 	// maxLength: 2048
 	ImageURL *string `json:"image_url" validate:"omitempty,max=2048"`
 	// maxLength: 200
-	Subtitle    *string `json:"subtitle" validate:"omitempty,max=200"`
+	Subtitle    *string `json:"subtitle"    validate:"omitempty,max=200"`
 	Description *string `json:"description"`
 }
 

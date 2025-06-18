@@ -152,9 +152,9 @@ type userDescendant struct {
 	// required:true
 	Name string `json:"name"`
 	// required:true
-	User userDescendantUser `json:"user" gorm:"embedded"`
+	User userDescendantUser `gorm:"embedded" json:"user"`
 
 	// User's parent groups among the input group's descendants
 	// required:true
-	Parents []descendantParent `sql:"-" json:"parents"`
+	Parents []descendantParent `json:"parents" sql:"-"`
 }

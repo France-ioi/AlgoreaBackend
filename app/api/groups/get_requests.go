@@ -50,7 +50,7 @@ type groupRequestsViewResponseRow struct {
 		FirstName *string `json:"first_name"`
 		// required: true
 		LastName *string `json:"last_name"`
-	} `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+	} `gorm:"embedded;embedded_prefix:inviting_user__" json:"inviting_user"`
 }
 
 // swagger:operation GET /groups/{group_id}/requests group-memberships groupRequestsView

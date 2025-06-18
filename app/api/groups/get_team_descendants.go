@@ -178,8 +178,8 @@ type teamDescendant struct {
 
 	// Team's parent groups among the input group's descendants
 	// required:true
-	Parents []descendantParent `sql:"-" json:"parents"`
+	Parents []descendantParent `json:"parents" sql:"-"`
 	// Team's member users
 	// required:true
-	Members []teamDescendantMember `sql:"-" json:"members"`
+	Members []teamDescendantMember `json:"members" sql:"-"`
 }

@@ -32,7 +32,7 @@ type Item struct {
 	// enum: List,Grid
 	ChildrenLayout string `json:"children_layout"`
 	// enum: forceYes,forceNo,default
-	FullScreen   string `json:"full_screen" validate:"oneof=forceYes forceNo default"`
+	FullScreen   string `json:"full_screen"   validate:"oneof=forceYes forceNo default"`
 	HintsAllowed bool   `json:"hints_allowed"`
 	FixedRanks   bool   `json:"fixed_ranks"`
 
@@ -55,7 +55,7 @@ type Item struct {
 	// example: 838:59:59
 	Duration *string `json:"duration" validate:"omitempty,duration,cannot_be_set_for_skills,duration_requires_explicit_entry"`
 	// should be true when the duration is not null, cannot be set for skill items
-	RequiresExplicitEntry   bool `json:"requires_explicit_entry" validate:"cannot_be_set_for_skills,duration_requires_explicit_entry"`
+	RequiresExplicitEntry   bool `json:"requires_explicit_entry"      validate:"cannot_be_set_for_skills,duration_requires_explicit_entry"`
 	ShowUserInfos           bool `json:"show_user_infos"`
 	UsesAPI                 bool `json:"uses_api"`
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
@@ -73,7 +73,7 @@ type ItemWithRequiredType struct {
 // swagger:ignore
 type newItemString struct {
 	// required: true
-	Title       string  `json:"title" validate:"set"`
+	Title       string  `json:"title"       validate:"set"`
 	ImageURL    *string `json:"image_url"`
 	Subtitle    *string `json:"subtitle"`
 	Description *string `json:"description"`
@@ -108,7 +108,7 @@ type itemParent struct {
 type NewItemRequest struct {
 	// `default_language_tag` of the item
 	// required: true
-	LanguageTag   string `json:"language_tag" validate:"set,language_tag"`
+	LanguageTag   string `json:"language_tag"  validate:"set,language_tag"`
 	newItemString `json:"string,squash"`
 
 	Parent          itemParent `json:"parent"`

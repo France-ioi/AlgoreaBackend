@@ -21,10 +21,10 @@ type invitationsViewResponseRow struct {
 
 	// the user who invited
 	// required: true
-	InvitingUser *invitingUser `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+	InvitingUser *invitingUser `gorm:"embedded;embedded_prefix:inviting_user__" json:"inviting_user"`
 
 	// required: true
-	Group groupWithApprovals `json:"group" gorm:"embedded;embedded_prefix:group__"`
+	Group groupWithApprovals `gorm:"embedded;embedded_prefix:group__" json:"group"`
 }
 
 type invitingUser struct {

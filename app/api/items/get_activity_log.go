@@ -49,7 +49,7 @@ type itemActivityLogResponseRow struct {
 
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
-	} `json:"user,omitempty" gorm:"embedded;embedded_prefix:user__"`
+	} `gorm:"embedded;embedded_prefix:user__" json:"user,omitempty"`
 	// required: true
 	Item struct {
 		// required: true

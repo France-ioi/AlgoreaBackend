@@ -10,20 +10,20 @@ import (
 // BadgeGroupPathElement represents an element of a badge's group path.
 type BadgeGroupPathElement struct {
 	Manager bool   `json:"manager" validate:"set"`
-	Name    string `json:"name" validate:"set"`
-	URL     string `json:"url" validate:"min=1"` // length >= 1
+	Name    string `json:"name"    validate:"set"`
+	URL     string `json:"url"     validate:"min=1"` // length >= 1
 }
 
 // BadgeInfo contains a name and group path of a badge.
 type BadgeInfo struct {
-	Name      string                  `json:"name" validate:"set"`
+	Name      string                  `json:"name"       validate:"set"`
 	GroupPath []BadgeGroupPathElement `json:"group_path"`
 }
 
 // Badge represents a badge from the login module.
 type Badge struct {
-	Manager   bool      `json:"manager" validate:"set"`
-	URL       string    `json:"url" validate:"min=1"` // length >= 1
+	Manager   bool      `json:"manager"    validate:"set"`
+	URL       string    `json:"url"        validate:"min=1"` // length >= 1
 	BadgeInfo BadgeInfo `json:"badge_info"`
 }
 

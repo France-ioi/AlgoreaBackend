@@ -32,9 +32,9 @@ type grantedPermissionsViewResultPermissions struct {
 // swagger:model grantedPermissionsViewResultRow
 type grantedPermissionsViewResultRow struct {
 	// required: true
-	SourceGroup grantedPermissionsViewResultRowGroup `json:"source_group" gorm:"embedded;embedded_prefix:source_group__"`
+	SourceGroup grantedPermissionsViewResultRowGroup `gorm:"embedded;embedded_prefix:source_group__" json:"source_group"`
 	// required: true
-	Group grantedPermissionsViewResultRowGroup `json:"group" gorm:"embedded;embedded_prefix:group__"`
+	Group grantedPermissionsViewResultRowGroup `gorm:"embedded;embedded_prefix:group__" json:"group"`
 	// required: true
 	Item struct {
 		// required: true
@@ -50,7 +50,7 @@ type grantedPermissionsViewResultRow struct {
 		RequiresExplicitEntry bool `json:"requires_explicit_entry"`
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
 	// required: true
-	Permissions grantedPermissionsViewResultPermissions `json:"permissions" gorm:"embedded;embedded_prefix:permissions__"`
+	Permissions grantedPermissionsViewResultPermissions `gorm:"embedded;embedded_prefix:permissions__" json:"permissions"`
 }
 
 // swagger:operation GET /groups/{group_id}/granted_permissions groups grantedPermissionsView

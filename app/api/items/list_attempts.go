@@ -41,7 +41,7 @@ type attemptsListResponseRow struct {
 
 		// required: true
 		GroupID *int64 `json:"group_id,string"`
-	} `json:"user_creator" gorm:"embedded;embedded_prefix:user_creator__"`
+	} `gorm:"embedded;embedded_prefix:user_creator__" json:"user_creator"`
 }
 
 // swagger:operation GET /items/{item_id}/attempts items attemptsList

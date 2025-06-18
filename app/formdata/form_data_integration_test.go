@@ -14,7 +14,7 @@ import (
 )
 
 type NamedStruct struct {
-	ID   *int64  `json:"id" validate:"min=1"`
+	ID   *int64  `json:"id"   validate:"min=1"`
 	Name *string `json:"name" validate:"min=1"` // length >= 1
 }
 
@@ -77,7 +77,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"field ignored by json",
 			&struct {
-				Name string `json:"-" gorm:"column:sName"`
+				Name string `gorm:"column:sName" json:"-"`
 			}{},
 			`{"Name":"test"}`,
 			"invalid input data",
@@ -200,7 +200,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"ignores errors in fields that are not given",
 			&struct {
-				ID   *int64  `json:"id" validate:"min=1"`
+				ID   *int64  `json:"id"   validate:"min=1"`
 				Name *string `json:"name" validate:"min=1"` // length >= 1
 			}{},
 			`{}`,
@@ -210,7 +210,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"ignores errors related to scalar fields that are not given, but should be set",
 			&struct {
-				ID   int64  `json:"id" validate:"set,min=1"`
+				ID   int64  `json:"id"   validate:"set,min=1"`
 				Name string `json:"name" validate:"set,min=1"` // length >= 1
 			}{},
 			`{}`,
@@ -223,7 +223,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"validates fields with empty values",
 			&struct {
-				ID   int64  `json:"id" validate:"set,min=1"`
+				ID   int64  `json:"id"   validate:"set,min=1"`
 				Name string `json:"name" validate:"set,min=1"` // length >= 1
 			}{},
 			`{"id":0, "name":""}`,
@@ -236,7 +236,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"validates pointer fields with empty values",
 			&struct {
-				ID   *int64  `json:"id" validate:"set,min=1"`
+				ID   *int64  `json:"id"   validate:"set,min=1"`
 				Name *string `json:"name" validate:"set,min=1"` // length >= 1
 			}{},
 			`{"id":0, "name":""}`,
@@ -249,7 +249,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"validates pointer fields with null values",
 			&struct {
-				ID   *int64  `json:"id" validate:"set,min=1"`
+				ID   *int64  `json:"id"   validate:"set,min=1"`
 				Name *string `json:"name" validate:"set,min=1"` // length >= 1
 			}{},
 			`{"id":null, "name":null}`,
@@ -310,7 +310,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		{
 			"custom error messages",
 			&struct {
-				Date     string `json:"date" validate:"dmy-date"`
+				Date     string `json:"date"     validate:"dmy-date"`
 				Duration string `json:"duration" validate:"duration"`
 			}{},
 			`{"date":"value","duration":"another value"}`,
@@ -392,7 +392,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 		{
 			"field ignored by json",
 			&struct {
-				Name string `json:"-" gorm:"column:sName"`
+				Name string `gorm:"column:sName" json:"-"`
 			}{},
 			map[string]interface{}{"Name": "test"},
 			"invalid input data",
@@ -473,7 +473,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 		{
 			"ignores errors in fields that are not given",
 			&struct {
-				ID   *int64  `json:"id" validate:"min=1"`
+				ID   *int64  `json:"id"   validate:"min=1"`
 				Name *string `json:"name" validate:"min=1"` // length >= 1
 			}{},
 			map[string]interface{}{},
@@ -483,7 +483,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 		{
 			"runs validators for pointers",
 			&struct {
-				ID   *int64  `json:"id" validate:"min=1"`
+				ID   *int64  `json:"id"   validate:"min=1"`
 				Name *string `json:"name" validate:"min=1"` // length >= 1
 			}{},
 			map[string]interface{}{"id": 0, "name": ""},
@@ -546,10 +546,10 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"sql and gorm tags",
 			&struct {
-				ID    int64  `json:"id" sql:"column:id"`
-				Name  string `json:"name" gorm:"column:sName"`
-				Skip  string `json:"skip1" gorm:"-"`
-				Skip2 string `json:"skip2" sql:"-"`
+				ID    int64  `json:"id"           sql:"column:id"`
+				Name  string `gorm:"column:sName" json:"name"`
+				Skip  string `gorm:"-"            json:"skip1"`
+				Skip2 string `json:"skip2"        sql:"-"`
 			}{},
 			`{"id":123, "name":"John", "skip1":"skip", "skip2":"skip"}`,
 			map[string]interface{}{"id": int64(123), "sName": "John"},
@@ -557,8 +557,8 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"skips missing fields",
 			&struct {
-				Name        string `json:"name" gorm:"column:sName"`
-				Description string `json:"description" gorm:"column:sDescription"`
+				Name        string `gorm:"column:sName"        json:"name"`
+				Description string `gorm:"column:sDescription" json:"description"`
 			}{},
 			`{}`,
 			map[string]interface{}{},
@@ -574,7 +574,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"skips unexported attributes",
 			&struct {
-				name string `json:"name" gorm:"column:name"` //nolint:govet
+				name string `gorm:"column:name" json:"name"` //nolint:govet
 			}{},
 			`{"name":"Test"}`,
 			map[string]interface{}{},
@@ -582,7 +582,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"skips fields ignored by json",
 			&struct {
-				Name        string `json:"-" sql:"column:sName"`
+				Name        string `json:"-"                  sql:"column:sName"`
 				Description string `sql:"column:sDescription"`
 			}{},
 			`{}`,
@@ -591,10 +591,10 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"keeps nulls",
 			&struct {
-				Description *string `json:"description" gorm:"column:sDescription"`
-				Text        *string `json:"text" gorm:"column:sText"`
-				Number2     *int64  `json:"number2" gorm:"column:iNumber2"`
-				Number3     *int64  `json:"number3" gorm:"column:iNumber3"`
+				Description *string `gorm:"column:sDescription" json:"description"`
+				Text        *string `gorm:"column:sText"        json:"text"`
+				Number2     *int64  `gorm:"column:iNumber2"     json:"number2"`
+				Number3     *int64  `gorm:"column:iNumber3"     json:"number3"`
 			}{},
 			`{"description": null, "text": "", "number2": null, "number3": 0}`,
 			map[string]interface{}{
@@ -606,9 +606,9 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			"nested structure",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
+					Name        string `json:"name" sql:"column:structs.sName" validate:"set"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+						Name string `json:"name" sql:"column:structs.otherStructs.sName" validate:"set"`
 					} `json:"other_struct" validate:"set"`
 				} `json:"struct" validate:"set"`
 			}{},
@@ -629,9 +629,9 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 			"structure with squash",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
+					Name        string `json:"name" sql:"column:structs.sName" validate:"set"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+						Name string `json:"name" sql:"column:structs.otherStructs.sName" validate:"set"`
 					} `json:"other_struct" validate:"set"`
 				} `json:"struct,squash"`
 			}{},
@@ -641,7 +641,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"sql vs gorm: the last gorm column name wins",
 			&struct {
-				Name string `json:"name" sql:"column:name_sql1;column:name_sql2" gorm:"column:name_gorm1;column:name_gorm2"`
+				Name string `gorm:"column:name_gorm1;column:name_gorm2" json:"name" sql:"column:name_sql1;column:name_sql2"`
 			}{},
 			`{"name":"John"}`,
 			map[string]interface{}{"name_gorm2": "John"},
@@ -649,7 +649,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"sql vs gorm: gorm '-' skips the field",
 			&struct {
-				Name string `json:"name" sql:"column:name_sql" gorm:"-"`
+				Name string `gorm:"-" json:"name" sql:"column:name_sql"`
 			}{},
 			`{"name":"John"}`,
 			map[string]interface{}{},
@@ -657,7 +657,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"sql vs gorm: sql '-' skips the field",
 			&struct {
-				Name string `json:"name" sql:"-" gorm:"column:name_gorm"`
+				Name string `gorm:"column:name_gorm" json:"name" sql:"-"`
 			}{},
 			`{"name":"John"}`,
 			map[string]interface{}{},
@@ -696,9 +696,9 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 			"structure",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
+					Name        string `json:"name" sql:"column:structs.sName" validate:"set"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+						Name string `json:"name" sql:"column:structs.otherStructs.sName" validate:"set"`
 					} `json:"other_struct" validate:"set"`
 				} `json:"struct" validate:"set"`
 			}{},
@@ -709,9 +709,9 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 			"pointer to structure",
 			&struct {
 				Struct *struct {
-					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
+					Name        string `json:"name" sql:"column:structs.sName" validate:"set"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+						Name string `json:"name" sql:"column:structs.otherStructs.sName" validate:"set"`
 					} `json:"other_struct" validate:"set"`
 				} `json:"struct" validate:"set"`
 			}{},
@@ -722,9 +722,9 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 			"structure with squash",
 			&struct {
 				Struct struct {
-					Name        string `json:"name" validate:"set" sql:"column:structs.sName"`
+					Name        string `json:"name" sql:"column:structs.sName" validate:"set"`
 					OtherStruct struct {
-						Name string `json:"name" validate:"set" sql:"column:structs.otherStructs.sName"`
+						Name string `json:"name" sql:"column:structs.otherStructs.sName" validate:"set"`
 					} `json:"other_struct" validate:"set"`
 				} `json:"struct,squash"`
 			}{},

@@ -27,7 +27,7 @@ type ItemWithDefaultLanguageTag struct {
 // swagger:model itemEditRequest
 type updateItemRequest struct {
 	ItemWithDefaultLanguageTag `json:"item,squash"`
-	Children                   []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
+	Children                   []itemChild `json:"children"    validate:"children,children_allowed,dive,child_type_non_skill"`
 
 	childrenIDsCache []int64
 }

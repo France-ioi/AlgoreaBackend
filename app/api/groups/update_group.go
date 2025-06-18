@@ -24,20 +24,20 @@ const (
 // Information of the group to be modified
 // swagger:model
 type groupUpdateInput struct {
-	Name        string  `json:"name" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	Grade       int32   `json:"grade" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Name        string  `json:"name"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Grade       int32   `json:"grade"       validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	Description *string `json:"description" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	IsOpen      bool    `json:"is_open" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	IsOpen      bool    `json:"is_open"     validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// If changed from true to false, is automatically switches all requests to join this group from requestSent to requestRefused
 	IsPublic bool `json:"is_public" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Duration after the first use of the code when it will expire (in seconds)
-	CodeLifetime   *int32         `json:"code_lifetime" validate:"changing_requires_can_manage_at_least=memberships,null|gte=0"`
-	CodeExpiresAt  *database.Time `json:"code_expires_at" validate:"changing_requires_can_manage_at_least=memberships"`
+	CodeLifetime   *int32         `json:"code_lifetime"    validate:"changing_requires_can_manage_at_least=memberships,null|gte=0"`
+	CodeExpiresAt  *database.Time `json:"code_expires_at"  validate:"changing_requires_can_manage_at_least=memberships"`
 	RootActivityID *int64         `json:"root_activity_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	RootSkillID    *int64         `json:"root_skill_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	RootSkillID    *int64         `json:"root_skill_id"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Can be set only if root_activity_id is set and
 	// the current user has the 'can_make_session_official' permission on the activity item
-	IsOfficialSession       bool `json:"is_official_session" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	IsOfficialSession       bool `json:"is_official_session"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	OpenActivityWhenJoining bool `json:"open_activity_when_joining" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
 	// Can be changed only from false to true
@@ -68,8 +68,8 @@ type groupUpdateInput struct {
 	// Not considered strengthened if the group doesn't have any participants.
 	//
 	// If it is strengthened, `approval_change_action` must be set.
-	RequireWatchApproval       bool `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
-	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                       //nolint:lll
+	RequireWatchApproval       bool `json:"require_watch_approval"         validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                               //nolint:lll
 
 	// Must be present only if a `require_*` field is strengthened.
 	//
@@ -86,13 +86,13 @@ type groupUpdateInput struct {
 	// enum: empty,reinvite
 	ApprovalChangeAction string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
 
-	Organizer       *string        `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressLine1    *string        `json:"address_line1" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressLine2    *string        `json:"address_line2" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Organizer       *string        `json:"organizer"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressLine1    *string        `json:"address_line1"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressLine2    *string        `json:"address_line2"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	AddressPostcode *string        `json:"address_postcode" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressCity     *string        `json:"address_city" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressCountry  *string        `json:"address_country" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	ExpectedStart   *database.Time `json:"expected_start" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressCity     *string        `json:"address_city"     validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressCountry  *string        `json:"address_country"  validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	ExpectedStart   *database.Time `json:"expected_start"   validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
 	CanManageValue int `json:"-"`
 }

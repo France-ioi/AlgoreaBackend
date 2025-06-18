@@ -338,14 +338,16 @@ func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint
 	return nil
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *godog.DocString) (err error) { //nolint
+// TheResponseBodyShouldBeJSON checks that the response body is a valid JSON and matches the given JSON.
+func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *godog.DocString) (err error) {
 	return ctx.TheResponseDecodedBodyShouldBeJSON("", body)
 }
 
-func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *godog.DocString) (err error) { //nolint
+// TheResponseDecodedBodyShouldBeJSON checks that the response body, after being decoded, is a valid JSON and matches the given JSON.
+func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *godog.DocString) error {
 	// verify the content type
-	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
-		return
+	if err := ValidateJSONContentType(ctx.lastResponse); err != nil {
+		return err
 	}
 
 	expectedBody, err := ctx.preprocessString(body.Content)
@@ -381,7 +383,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	}
 	actual, err := json.MarshalIndent(act, "", "\t")
 	if err != nil {
-		return
+		return err
 	}
 
 	return compareStrings(string(expected), string(actual))

@@ -13,7 +13,7 @@ import (
 // swagger:model createGroupManagerRequest
 type createGroupManagerRequest struct {
 	// enum: none,memberships,memberships_and_group
-	CanManage           string `json:"can_manage" validate:"oneof=none memberships memberships_and_group"`
+	CanManage           string `json:"can_manage"             validate:"oneof=none memberships memberships_and_group"`
 	CanGrantGroupAccess bool   `json:"can_grant_group_access"`
 	CanWatchMembers     bool   `json:"can_watch_members"`
 }
