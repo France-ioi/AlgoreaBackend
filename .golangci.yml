@@ -76,9 +76,9 @@ linters:
     - varcheck         # Deprecated.
     - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
-    - wsl              # Requires whitelines between blocks. requires many changes, enable it later
-    - goerr113         # Don't allow dynamic errors, requires wrapped static errors. requires many changes
-    - contextcheck     # For update to go1.20
+    - wsl              # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+    - goerr113         # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
+    - contextcheck     # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
     - execinquery      # For update to go1.20
     - exhaustive       # For update to go1.20
     - forcetypeassert  # For update to go1.20
