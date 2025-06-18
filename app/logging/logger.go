@@ -59,6 +59,19 @@ func (l *Logger) Configure(config *viper.Viper) {
 	}
 
 	// Output
+	l.setOutput(config)
+
+	// Level
+	if level, err := logrus.ParseLevel(config.GetString("level")); err != nil {
+		l.logrusLogger.Errorf("Unable to parse logging level config, use default (%s)", l.logrusLogger.GetLevel().String())
+	} else {
+		l.logrusLogger.SetLevel(level)
+	}
+
+	log.SetOutput(l.logrusLogger.Writer())
+}
+
+func (l *Logger) setOutput(config *viper.Viper) {
 	switch config.GetString("output") {
 	case outputStdout:
 		l.logrusLogger.SetOutput(os.Stdout)
@@ -82,15 +95,6 @@ func (l *Logger) Configure(config *viper.Viper) {
 	default:
 		panic("Logging output must be either 'stdout', 'stderr' or 'file'. Got: " + config.GetString("output"))
 	}
-
-	// Level
-	if level, err := logrus.ParseLevel(config.GetString("level")); err != nil {
-		l.logrusLogger.Errorf("Unable to parse logging level config, use default (%s)", l.logrusLogger.GetLevel().String())
-	} else {
-		l.logrusLogger.SetLevel(level)
-	}
-
-	log.SetOutput(l.logrusLogger.Writer())
 }
 
 // ResetShared reset the global logger to its default settings before its configuration.

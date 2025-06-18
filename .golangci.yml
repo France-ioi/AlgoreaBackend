@@ -88,7 +88,6 @@ linters:
     - wsl              # Requires whitelines between blocks. requires many changes, enable it later
     - goerr113         # Don't allow dynamic errors, requires wrapped static errors. requires many changes
     - contextcheck     # For update to go1.20
-    - cyclop           # For update to go1.20
     - dupword          # For update to go1.20
     - errchkjson       # For update to go1.20
     - errorlint        # For update to go1.20
