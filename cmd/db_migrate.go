@@ -52,7 +52,7 @@ func init() { //nolint:gochecknoinits
 				var n int
 				n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Up, 1)
 				if err != nil {
-					return fmt.Errorf("unable to apply migration: %v", err)
+					return fmt.Errorf("unable to apply migration: %w", err)
 				}
 				applied += n
 				if n == 0 {

@@ -53,7 +53,7 @@ func init() { //nolint:gochecknoinits
 					})
 				}).Error()
 			if err != nil {
-				return fmt.Errorf("error while recomputing results: %v", err)
+				return fmt.Errorf("error while recomputing results: %w", err)
 			}
 
 			cmd.Println("Done.")

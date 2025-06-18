@@ -52,7 +52,7 @@ func init() { //nolint:gochecknoinits
 
 			err = database.NewDataStore(application.Database).Users().DeleteTemporaryWithTraps(delay)
 			if err != nil {
-				return fmt.Errorf("cannot delete temporary users: %v", err)
+				return fmt.Errorf("cannot delete temporary users: %w", err)
 			}
 
 			// Success

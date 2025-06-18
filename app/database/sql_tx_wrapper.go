@@ -147,7 +147,7 @@ func (sqlTX *sqlTxWrapper) handleError(err error) error {
 
 func (sqlTX *sqlTxWrapper) handleCommitOrRollbackError(err error) error {
 	newErr := sqlTX.handleError(err)
-	errorWasPatched := newErr != err
+	errorWasPatched := newErr != err //nolint:errorlint // here we want to check if the error was patched by handleError
 	err = newErr
 	if err != nil {
 		errString := err.Error()

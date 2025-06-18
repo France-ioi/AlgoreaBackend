@@ -154,7 +154,11 @@ func TestParseAndValidate(t *testing.T) {
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
 			payload, err := ParseAndValidate(tt.token, publicKey)
-			assert.Equal(t, tt.wantError, err)
+			if tt.wantError == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.wantError.Error())
+			}
 			assert.Equal(t, tt.wantPayload, payload)
 		})
 	}

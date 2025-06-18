@@ -39,7 +39,7 @@ func init() { //nolint:gochecknoinits
 			}
 
 			if err := recomputeDBCaches(cmd, application.Database); err != nil {
-				return fmt.Errorf("cannot recompute db caches: %v", err)
+				return fmt.Errorf("cannot recompute db caches: %w", err)
 			}
 
 			// Success
@@ -56,11 +56,11 @@ func recomputeDBCaches(cmd *cobra.Command, gormDB *database.DB) error {
 	return database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
 		cmd.Print("Recalculating groups ancestors\n")
 		if err := store.GroupGroups().CreateNewAncestors(); err != nil {
-			return fmt.Errorf("cannot compute groups_groups: %v", err)
+			return fmt.Errorf("cannot compute groups_groups: %w", err)
 		}
 		cmd.Print("Recalculating items ancestors\n")
 		if err := store.ItemItems().CreateNewAncestors(); err != nil {
-			return fmt.Errorf("cannot compute items_items: %v", err)
+			return fmt.Errorf("cannot compute items_items: %w", err)
 		}
 		cmd.Print("Running propagation of permissions and results\n")
 		store.SchedulePermissionsPropagation()

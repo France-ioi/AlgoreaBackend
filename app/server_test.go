@@ -52,7 +52,7 @@ func TestServer_Start_HandlesListenerError(t *testing.T) {
 
 	select {
 	case err = <-doneChannel:
-		assert.Equal(t, errors.New("server returned an error: listen tcp: address -1: invalid port"), err)
+		assert.EqualError(t, err, "server returned an error: listen tcp: address -1: invalid port")
 	case <-time.After(3 * time.Second):
 		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		assert.Fail(t, "Timeout on waiting for server to stop")
@@ -97,7 +97,7 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 
 	select {
 	case err = <-doneChannel:
-		assert.Equal(t, errors.New("server returned an error: some error"), err)
+		assert.EqualError(t, err, "server returned an error: some error")
 	case <-time.After(3 * time.Second):
 		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		assert.Fail(t, "Timeout on waiting for server to stop")
@@ -150,7 +150,7 @@ func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
 
 	select {
 	case err := <-doneChannel:
-		assert.Equal(t, fmt.Errorf("can't shut down the server: %v", expectedError), err)
+		assert.Equal(t, fmt.Errorf("can't shut down the server: %w", expectedError), err)
 	case <-time.After(3 * time.Second):
 		assert.Fail(t, "Timeout on waiting for server to stop")
 	}

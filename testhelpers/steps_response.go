@@ -28,7 +28,7 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	var objmap []map[string]*json.RawMessage
 
 	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &objmap); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w\nData:%v", err, ctx.lastResponseBody)
 	}
 
 	if count != len(objmap) {
@@ -43,7 +43,7 @@ func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, err
 	var JSONResponse interface{}
 	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
 	if err != nil {
-		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %v", err)
+		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %w", err)
 	}
 
 	return jsonpath.Get(jsonPath, JSONResponse)
@@ -58,7 +58,7 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 			return nil
 		}
 
-		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %v", jsonPath, value, err)
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %w", jsonPath, value, err)
 	}
 
 	value = ctx.replaceReferencesWithIDs(value)
@@ -375,7 +375,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 
 	// re-encode actual response too
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), act); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)
 	}
 
 	if responseType != "" {
@@ -485,7 +485,7 @@ func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err erro
 	errorResp := service.ErrorResponse[interface{}]{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)
 	}
 	if !strings.Contains(errorResp.ErrorText, s) {
 		return fmt.Errorf("cannot find expected `%s` in error text: `%s`", s, errorResp.ErrorText)

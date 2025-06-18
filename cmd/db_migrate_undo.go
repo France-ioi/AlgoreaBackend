@@ -50,7 +50,7 @@ func init() { //nolint:gochecknoinits
 			n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Down, 1)
 			switch {
 			case err != nil:
-				return fmt.Errorf("unable to undo a migration: %v", err)
+				return fmt.Errorf("unable to undo a migration: %w", err)
 			case n == 0:
 				cmd.Println("No migrations to undo!")
 			default:

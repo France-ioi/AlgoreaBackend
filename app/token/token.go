@@ -101,7 +101,7 @@ func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interf
 
 	// Validate token
 	if err = jwt.Validate(publicKey, crypto.SigningMethodRS512); err != nil {
-		return nil, fmt.Errorf("invalid token: %s", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	today := time.Now().UTC()
@@ -145,10 +145,8 @@ func (ue *UnexpectedError) Error() string {
 
 // IsUnexpectedError returns true if its argument is an unexpected error.
 func IsUnexpectedError(err error) bool {
-	if _, unexpected := err.(*UnexpectedError); unexpected {
-		return true
-	}
-	return false
+	var unexpectedError *UnexpectedError
+	return errors.As(err, &unexpectedError)
 }
 
 // UnmarshalDependingOnItemPlatform unmarshals a token from JSON representation

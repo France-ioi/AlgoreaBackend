@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -137,7 +138,7 @@ func (s *GroupStore) storeBadgeGroupPath(
 
 func (s *GroupStore) createBadgeGroupRelation(badgeGroupID, childBadgeGroupID int64, badgeURL string) bool {
 	err := s.GroupGroups().CreateRelation(badgeGroupID, childBadgeGroupID)
-	if err == ErrRelationCycle {
+	if errors.Is(err, ErrRelationCycle) {
 		logging.SharedLogger.WithContext(s.ctx()).
 			Warnf("Cannot add badge group %d into badge group %d (%s) because it would create a cycle",
 				childBadgeGroupID, badgeGroupID, badgeURL)

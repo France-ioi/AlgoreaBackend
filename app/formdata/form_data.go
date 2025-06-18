@@ -3,6 +3,7 @@ package formdata
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -221,7 +222,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawData)
 	if err != nil {
-		return fmt.Errorf("invalid input JSON: %v", err)
+		return fmt.Errorf("invalid input JSON: %w", err)
 	}
 	f.decodeMapIntoStruct(rawData)
 	return nil
@@ -253,7 +254,8 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 	}
 
 	if err = decoder.Decode(m); err != nil {
-		mapstructureErr := err.(*mapstructure.Error)
+		var mapstructureErr *mapstructure.Error
+		errors.As(err, &mapstructureErr)
 		for _, fieldErrorString := range mapstructureErr.Errors { // Convert mapstructure's errors to our format
 			if matches := mapstructTypeErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
 				key := make([]byte, len(matches[1]))
@@ -283,7 +285,8 @@ func (f *FormData) validateFieldValues() {
 }
 
 func (f *FormData) processValidatorErrors(err error) {
-	validatorErrors := err.(validator.ValidationErrors)
+	var validatorErrors validator.ValidationErrors
+	errors.As(err, &validatorErrors)
 	for _, validatorError := range validatorErrors {
 		path := validatorError.Namespace()
 		path = f.getUsedKeysPathFromValidatorPath(path)

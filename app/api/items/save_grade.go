@@ -308,7 +308,7 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 
 	localItemIDUnsafe, err := strconv.ParseInt(localItemIDUnsafeString, 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid score_token: invalid idItemLocal: %v", err)
+		return fmt.Errorf("invalid score_token: invalid idItemLocal: %w", err)
 	}
 
 	hasPlatformKey, err := token.UnmarshalDependingOnItemPlatform(

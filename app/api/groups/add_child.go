@@ -74,7 +74,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) error {
 		service.MustNotBeError(checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation))
 
 		errInTransaction = s.GroupGroups().CreateRelation(parentGroupID, childGroupID)
-		if errInTransaction == database.ErrRelationCycle {
+		if errors.Is(errInTransaction, database.ErrRelationCycle) {
 			return service.ErrForbidden(errInTransaction) // rollback
 		}
 		return errInTransaction

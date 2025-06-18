@@ -54,7 +54,7 @@ func init() { //nolint:gochecknoinits
 					})
 				})
 			if err != nil {
-				return fmt.Errorf("error while doing propagation: %v", err)
+				return fmt.Errorf("error while doing propagation: %w", err)
 			}
 
 			cmd.Println("Propagation done.")

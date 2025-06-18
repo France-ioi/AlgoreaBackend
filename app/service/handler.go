@@ -49,8 +49,7 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 	err := fn(w, r)
 	if err != nil {
-		var ok bool
-		if apiErr, ok = err.(*APIError); !ok {
+		if !errors.As(err, &apiErr) {
 			apiErr = ErrUnexpected(fmt.Errorf("unknown error"))
 			shouldLogError = true
 			errorToLog = err.Error()

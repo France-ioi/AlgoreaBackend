@@ -676,7 +676,11 @@ func TestResolveJSONBodyIntoMap(t *testing.T) {
 			r, _ := http.NewRequest("PUT", "/", strings.NewReader(testCase.body))
 			list, err := ResolveJSONBodyIntoMap(r)
 			assert.Equal(t, testCase.expectedMap, list)
-			assert.Equal(t, testCase.expectedError, err)
+			if testCase.expectedError == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, testCase.expectedError.Error())
+			}
 		})
 	}
 }

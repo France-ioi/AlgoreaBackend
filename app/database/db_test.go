@@ -103,7 +103,7 @@ func TestDB_inTransaction_Panic(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback()
 
-	assert.PanicsWithValue(t, expectedError.(interface{}), func() {
+	assert.PanicsWithValue(t, expectedError, func() {
 		_ = db.inTransaction(func(db *DB) error {
 			var result []interface{}
 			db.Raw("SELECT 1").Scan(&result)

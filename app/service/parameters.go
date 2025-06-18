@@ -221,7 +221,7 @@ func ResolveJSONBodyIntoMap(r *http.Request) (map[string]interface{}, error) {
 	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawRequestData)
 	if err != nil {
-		return nil, ErrInvalidRequest(fmt.Errorf("invalid input JSON: %v", err))
+		return nil, ErrInvalidRequest(fmt.Errorf("invalid input JSON: %w", err))
 	}
 	return rawRequestData, nil
 }

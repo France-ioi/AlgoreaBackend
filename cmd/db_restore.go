@@ -67,7 +67,7 @@ func init() { //nolint:gochecknoinits
 			var output []byte
 			output, err = command.CombinedOutput()
 			if err != nil {
-				return fmt.Errorf("command finished with error: %v\nOutput:\n%s", err, output)
+				return fmt.Errorf("command finished with error: %w\nOutput:\n%s", err, output)
 			}
 
 			// Success
@@ -86,18 +86,18 @@ func dropAllDBTablesWithForeignKeysChecksDisabled(dbConf *mysql.Config) error {
 	var err error
 	db, err = sql.Open("mysql", dbConf.FormatDSN())
 	if err != nil {
-		return fmt.Errorf("unable to connect to the database: %v", err)
+		return fmt.Errorf("unable to connect to the database: %w", err)
 	}
 	defer func() { _ = db.Close() }()
 
 	tx, err := db.Begin()
 	if err != nil {
-		return fmt.Errorf("unable to start a transaction: %v", err)
+		return fmt.Errorf("unable to start a transaction: %w", err)
 	}
 
 	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0")
 	if err != nil {
-		return fmt.Errorf("unable to query the database: %v", err)
+		return fmt.Errorf("unable to query the database: %w", err)
 	}
 
 	err = dropAllDBTables(dbConf, db, tx)
@@ -121,7 +121,7 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 	                      WHERE  table_type   = 'BASE TABLE'
 	                      AND  table_schema = '` + dbConf.DBName + "'")
 	if err != nil {
-		return fmt.Errorf("unable to query the database: %v", err)
+		return fmt.Errorf("unable to query the database: %w", err)
 	}
 
 	defer func() {
@@ -136,11 +136,11 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 		var tableName string
 		err = rows.Scan(&tableName)
 		if err != nil {
-			return fmt.Errorf("unable to parse the database result: %v", err)
+			return fmt.Errorf("unable to parse the database result: %w", err)
 		}
 		_, err = tx.Exec("DROP TABLE " + tableName)
 		if err != nil {
-			return fmt.Errorf("unable to drop table: %v", err)
+			return fmt.Errorf("unable to drop table: %w", err)
 		}
 	}
 	return nil

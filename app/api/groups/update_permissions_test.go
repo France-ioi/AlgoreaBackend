@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -654,7 +655,8 @@ func Test_IsOwnerValidator_AllowsSettingIsOwnerToFalseOrSameValue(t *testing.T) 
 	_, _, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
 		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
 	require.IsType(t, (*service.APIError)(nil), err)
-	apiError := err.(*service.APIError)
+	var apiError *service.APIError
+	assert.True(t, errors.As(err, &apiError))
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -670,7 +672,8 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 		&managerGeneratedPermissions{IsOwnerGenerated: false}, currentPermissions,
 		&database.User{}, 0, map[string]interface{}{"is_owner": true})
 	require.IsType(t, (*service.APIError)(nil), err)
-	apiError := err.(*service.APIError)
+	var apiError *service.APIError
+	assert.True(t, errors.As(err, &apiError))
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	currentPermissions = &userPermissions{}
@@ -751,7 +754,8 @@ func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string
 	_, _, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, &userPermissions{}, &database.User{}, 0, parsedBody)
 	require.IsType(t, (*service.APIError)(nil), err)
-	apiError := err.(*service.APIError)
+	var apiError *service.APIError
+	assert.True(t, errors.As(err, &apiError))
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())

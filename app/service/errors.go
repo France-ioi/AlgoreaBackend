@@ -40,7 +40,8 @@ func (e *APIError) httpResponse() render.Renderer {
 		return &result
 	}
 
-	if fieldErrors, ok := e.EmbeddedError.(formdata.FieldErrors); ok {
+	var fieldErrors formdata.FieldErrors
+	if errors.As(e.EmbeddedError, &fieldErrors) {
 		result.Errors = fieldErrors
 	}
 
