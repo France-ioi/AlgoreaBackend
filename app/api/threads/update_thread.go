@@ -130,7 +130,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) error {
 		HasRows()
 	service.MustNotBeError(err)
 	if !userCanViewItemContent {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	err = store.InTransaction(func(store *database.DataStore) error {
@@ -227,10 +227,10 @@ func checkUpdateThreadPermissions(
 
 		// the current-user must be allowed to write
 		if !userCanWriteInThread(user, participantID, threadInfo) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 	} else if !userCanChangeThreadStatus(user, oldThreadStatus, input.Status, participantID, threadInfo) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	return nil

@@ -68,7 +68,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) erro
 
 	ids := findGroupPath(srv.GetStore(r), groupID, user)
 	if ids == nil {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	render.Respond(w, r, map[string]interface{}{"path": ids})
 	return nil

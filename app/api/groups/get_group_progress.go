@@ -138,7 +138,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) err
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
@@ -409,7 +409,7 @@ func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *
 			WherePermissionIsAtLeast("watch", "result").Where("item_id IN(?)", itemParentIDs).
 			PluckFirst("COUNT(DISTINCT item_id)", &cnt).Error())
 		if cnt != len(itemParentIDs) {
-			return nil, service.InsufficientAccessRightsError
+			return nil, service.ErrAPIInsufficientAccessRights
 		}
 	}
 	return itemParentIDs, nil

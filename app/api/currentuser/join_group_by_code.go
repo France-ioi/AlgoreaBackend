@@ -84,7 +84,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) erro
 
 	user := srv.GetUser(r)
 	if user.IsTempUser {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var results database.GroupGroupTransitionResults
@@ -94,7 +94,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) erro
 		service.MustNotBeError(errInTransaction)
 		if info == nil {
 			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		if info.FrozenMembership {

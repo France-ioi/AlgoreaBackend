@@ -196,7 +196,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 		Select("user_batch_prefixes.group_id, user_batch_prefixes.max_users").
 		Scan(&prefixInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return 0, nil, service.InsufficientAccessRightsError
+		return 0, nil, service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -224,7 +224,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 		Order(gorm.Expr("FIELD(groups.id"+strings.Repeat(", ?", len(subgroupIDs))+")", subgroupIDs...)).
 		Scan(&subgroupsApprovals).Error())
 	if len(subgroupsApprovals) != len(subgroupIDs) {
-		return 0, nil, service.InsufficientAccessRightsError
+		return 0, nil, service.ErrAPIInsufficientAccessRights
 	}
 
 	var currentSumSize int

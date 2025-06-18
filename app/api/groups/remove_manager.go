@@ -82,7 +82,7 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) e
 		}
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		return store.GroupManagers().

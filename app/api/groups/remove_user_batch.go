@@ -87,7 +87,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) erro
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	// There should not be users with locked membership in the groups the current user cannot manage

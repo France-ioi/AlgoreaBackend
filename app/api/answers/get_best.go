@@ -77,7 +77,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 
 		// check 'can_watch'>='answer' permission on the answers.item_id
 		if !user.CanWatchItemAnswer(store, itemID) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 
 		bestAnswerQuery = bestAnswerQuery.
@@ -85,7 +85,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 	} else {
 		// check 'can_view'>='content' permission on the answers.item_id
 		if !user.CanViewItemContent(store, itemID) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 
 		bestAnswerQuery = bestAnswerQuery.

@@ -87,7 +87,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) e
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)

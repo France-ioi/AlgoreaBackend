@@ -201,7 +201,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) error
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var permissions []map[string]interface{}

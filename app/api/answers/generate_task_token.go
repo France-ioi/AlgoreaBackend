@@ -164,7 +164,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) er
 		Take(&answerInfos).Error()
 
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

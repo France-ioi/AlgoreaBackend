@@ -90,7 +90,7 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 	found, err := store.Results().ByID(participantID, attemptID, itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	err = store.InTransaction(func(store *database.DataStore) error {

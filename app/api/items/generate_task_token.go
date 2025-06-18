@@ -131,7 +131,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) er
 				store.PermissionsGranted().ViewIndexByName("solution")).
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -149,7 +149,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) er
 			Take(&resultInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 

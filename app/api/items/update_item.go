@@ -218,11 +218,11 @@ func updateItemInDB(
 	err := store.Items().Where("id = ?", itemID).UpdateColumn(itemData).Error()
 	if err != nil {
 		if database.IsDuplicateEntryError(err) {
-			return service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
+			return service.ErrForbidden(formdata.FieldErrorsError{"text_id": []string{
 				"text_id must be unique",
 			}})
 		} else if database.IsForeignConstraintError(err) {
-			return service.ErrInvalidRequest(formdata.FieldErrors{"default_language_tag": []string{
+			return service.ErrInvalidRequest(formdata.FieldErrorsError{"default_language_tag": []string{
 				"default language should exist and there should be item's strings in this language",
 			}})
 		}

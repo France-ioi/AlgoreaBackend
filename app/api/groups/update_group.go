@@ -182,7 +182,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) error {
 				MAX(can_manage_value) AS can_manage_value`).WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).Group("groups.id").Scan(&currentGroupData).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 

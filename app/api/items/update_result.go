@@ -95,7 +95,7 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) error {
 		found, err = resultScope.WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		data := formData.ConstructMapForDB()

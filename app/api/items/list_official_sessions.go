@@ -164,7 +164,7 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 		WherePermissionIsAtLeast("view", "info").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	idsQuery := store.Groups().Where("type = 'Session'").

@@ -177,12 +177,12 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 			items.entry_max_team_size, items.entry_min_admitted_members_ratio, items.entry_frozen_teams`).
 		Take(&itemInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return nil, service.InsufficientAccessRightsError
+		return nil, service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
 	if (groupID != user.GroupID) != itemInfo.IsTeamItem {
-		return nil, service.InsufficientAccessRightsError
+		return nil, service.ErrAPIInsufficientAccessRights
 	}
 
 	var currentTeamHasFrozenMembership bool
@@ -190,7 +190,7 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 		err = store.Groups().TeamGroupForUser(groupID, user).
 			PluckFirst("frozen_membership", &currentTeamHasFrozenMembership).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			return nil, service.InsufficientAccessRightsError
+			return nil, service.ErrAPIInsufficientAccessRights
 		}
 		service.MustNotBeError(err)
 	} else {

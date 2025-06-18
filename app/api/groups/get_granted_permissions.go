@@ -153,7 +153,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 		Where("groups.type != 'User'").Where("can_grant_group_access").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	itemsQuery := store.Permissions().MatchingUserAncestors(user).

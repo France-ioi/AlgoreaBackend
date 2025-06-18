@@ -84,7 +84,7 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) e
 			Where("group_managers.can_manage = 'memberships_and_group'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		values := formData.ConstructMapForDB()

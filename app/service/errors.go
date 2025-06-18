@@ -26,8 +26,8 @@ type APIError struct {
 
 var _ error = &APIError{}
 
-// InsufficientAccessRightsError is an APIError to be returned when the has no access rights to perform an action.
-var InsufficientAccessRightsError = ErrForbidden(errors.New("insufficient access rights"))
+// ErrAPIInsufficientAccessRights is an APIError to be returned when the has no access rights to perform an action.
+var ErrAPIInsufficientAccessRights = ErrForbidden(errors.New("insufficient access rights"))
 
 func (e *APIError) httpResponse() render.Renderer {
 	response := Response[*struct{}]{
@@ -40,7 +40,7 @@ func (e *APIError) httpResponse() render.Renderer {
 		return &result
 	}
 
-	var fieldErrors formdata.FieldErrors
+	var fieldErrors formdata.FieldErrorsError
 	if errors.As(e.EmbeddedError, &fieldErrors) {
 		result.Errors = fieldErrors
 	}

@@ -94,7 +94,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) erro
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		data := result[0]

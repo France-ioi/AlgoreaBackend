@@ -122,7 +122,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) error {
 		Take(&threadInfo).Error()
 
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

@@ -80,7 +80,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) er
 		Group("groups.id").
 		PluckFirst("groups.type", &groupType).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -98,7 +98,7 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) er
 				items.participants_group_id`).
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) || (itemInfo.IsTeamOnlyItem && groupType == "User") {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 

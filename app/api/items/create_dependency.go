@@ -92,7 +92,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) err
 
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		if !user.CanViewItemInfo(store.WithExclusiveWriteLock(), prerequisiteItemID) {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		permissionsQuery := store.Permissions().
@@ -107,7 +107,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) err
 		found, err = permissionsQuery.HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		err = store.ItemDependencies().InsertMap(map[string]interface{}{

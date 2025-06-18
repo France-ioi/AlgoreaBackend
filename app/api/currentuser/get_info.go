@@ -121,7 +121,7 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) error {
 
 	// This is very unlikely since the user middleware has already checked that the user exists
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

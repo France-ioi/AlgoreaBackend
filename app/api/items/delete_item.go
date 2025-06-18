@@ -63,7 +63,7 @@ func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) error {
 			Where("is_owner_generated").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		found, err = s.ItemItems().ChildrenOf(itemID).WithExclusiveWriteLock().HasRows()

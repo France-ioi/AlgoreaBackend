@@ -72,7 +72,7 @@ func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) error {
 			Where("groups.type != 'User'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		found, err = s.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)

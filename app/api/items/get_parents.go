@@ -102,7 +102,7 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 		Where("permissions.item_id = ?", params.itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var rawData []RawListItem

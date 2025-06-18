@@ -244,7 +244,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var rawData []rawListChildItem

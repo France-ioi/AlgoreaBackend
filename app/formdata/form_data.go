@@ -26,7 +26,7 @@ import (
 // FormData can parse JSON, validate it and construct a map for updating DB.
 type FormData struct {
 	definitionStructure interface{}
-	fieldErrors         FieldErrors
+	fieldErrors         FieldErrorsError
 	metadata            mapstructure.Metadata
 	usedKeys            map[string]bool
 	decodeErrors        map[string]bool
@@ -229,7 +229,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 }
 
 func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
-	f.fieldErrors = make(FieldErrors)
+	f.fieldErrors = make(FieldErrorsError)
 	f.usedKeys = make(map[string]bool)
 	f.decodeErrors = make(map[string]bool)
 	f.metadata = mapstructure.Metadata{}

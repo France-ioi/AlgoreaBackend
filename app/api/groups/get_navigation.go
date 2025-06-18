@@ -99,7 +99,7 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) error 
 		Where("groups.type != 'User'").
 		Select("id, name, type").Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

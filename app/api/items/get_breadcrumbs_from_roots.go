@@ -180,13 +180,13 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 		}
 
 		if !user.CanWatchGroupMembers(store, participantID) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 	}
 
 	breadcrumbs := findItemBreadcrumbs(store, participantID, user, itemID)
 	if len(breadcrumbs) == 0 {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	render.Respond(w, r, breadcrumbs)
 	return nil

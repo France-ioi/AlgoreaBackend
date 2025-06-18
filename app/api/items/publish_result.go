@@ -65,7 +65,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) error 
 
 	user := srv.GetUser(r)
 	if user.LoginID == nil {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	store := srv.GetStore(r)
 
@@ -73,7 +73,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) error 
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")

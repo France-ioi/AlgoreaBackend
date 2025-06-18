@@ -111,7 +111,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	store := srv.GetStore(r)
 	participantType, err := getParticipantTypeForTimeLimitedItemManagedByUser(store, itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -119,7 +119,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").HasRows()
 	service.MustNotBeError(err)
 	if !ok {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	query := store.ActiveGroupAncestors().Where("groups_ancestors_active.ancestor_group_id = ?", groupID).

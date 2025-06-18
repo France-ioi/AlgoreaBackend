@@ -125,7 +125,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) erro
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)

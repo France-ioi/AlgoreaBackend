@@ -141,7 +141,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) error {
 	).Having("found").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	query := store.GroupManagers().

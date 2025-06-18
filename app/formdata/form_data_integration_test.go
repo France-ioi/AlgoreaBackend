@@ -24,7 +24,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		definitionStructure interface{}
 		json                string
 		wantErr             string
-		wantFieldErrors     formdata.FieldErrors
+		wantFieldErrors     formdata.FieldErrorsError
 	}{
 		{
 			"simple",
@@ -50,7 +50,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":"123"}`,
 			"invalid input data",
-			formdata.FieldErrors{"id": {"expected type 'int32', got unconvertible type 'string'"}},
+			formdata.FieldErrorsError{"id": {"expected type 'int32', got unconvertible type 'string'"}},
 		},
 		{
 			"null value for a not-null field",
@@ -60,7 +60,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":null, "name":null}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   {"should not be null (expected type: int64)"},
 				"name": {"should not be null (expected type: string)"},
 			},
@@ -72,7 +72,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"my_id":"123"}`,
 			"invalid input data",
-			formdata.FieldErrors{"my_id": {"unexpected field"}},
+			formdata.FieldErrorsError{"my_id": {"unexpected field"}},
 		},
 		{
 			"field ignored by json",
@@ -81,7 +81,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"Name":"test"}`,
 			"invalid input data",
-			formdata.FieldErrors{"Name": {"unexpected field"}},
+			formdata.FieldErrorsError{"Name": {"unexpected field"}},
 		},
 		{
 			"decoder error for a field",
@@ -90,7 +90,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"time":"123"}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"time": {"decoding error: parsing time \"123\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"123\" as \"2006\""},
 			},
 		},
@@ -101,7 +101,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"my_id":1, "id":null}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"my_id": {"unexpected field"},
 			},
 		},
@@ -120,7 +120,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":null, "struct":{"other_struct":null, "OtherStruct2": null}}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":          {"unexpected field"},
 				"struct.name": {"missing field"},
 			},
@@ -140,7 +140,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":null, "struct":{"name1": "my name"}}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":           {"unexpected field"},
 				"struct.name":  {"missing field"},
 				"struct.name2": {"missing field"},
@@ -155,7 +155,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"name": ""}}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"name": {"name must be at least 1 character in length"},
 			},
 		},
@@ -174,7 +174,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":null, "struct":{"name":null, "other_struct":{}, "other_struct2":{}}}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":                        {"unexpected field"},
 				"struct.other_struct.name":  {"missing field"},
 				"struct.other_struct2.name": {"missing field"},
@@ -215,7 +215,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   {"missing field"},
 				"name": {"missing field"},
 			},
@@ -228,7 +228,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":0, "name":""}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   {"id must be 1 or greater"},
 				"name": {"name must be at least 1 character in length"},
 			},
@@ -241,7 +241,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":0, "name":""}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   {"id must be 1 or greater"},
 				"name": {"name must be at least 1 character in length"},
 			},
@@ -254,7 +254,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":null, "name":null}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   {"id must be 1 or greater"},
 				"name": {"name must be at least 1 character in length"},
 			},
@@ -275,7 +275,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"id":1234}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id": {"should be null"},
 			},
 		},
@@ -293,7 +293,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			&NamedStruct{},
 			`{"id":0,"name":""}`,
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   {"id must be 1 or greater"},
 				"name": {"name must be at least 1 character in length"},
 			},
@@ -305,7 +305,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"field":"value"}`,
 			"invalid input data",
-			formdata.FieldErrors{"": {"field: unsupported type: chan"}},
+			formdata.FieldErrorsError{"": {"field: unsupported type: chan"}},
 		},
 		{
 			"custom error messages",
@@ -315,7 +315,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			}{},
 			`{"date":"value","duration":"another value"}`,
 			"invalid input data",
-			formdata.FieldErrors{"date": {"should be dd-mm-yyyy"}, "duration": {"invalid duration"}},
+			formdata.FieldErrorsError{"date": {"should be dd-mm-yyyy"}, "duration": {"invalid duration"}},
 		},
 	}
 	for _, tt := range tests {
@@ -333,7 +333,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 				assert.Nil(t, err)
 			}
 			if tt.wantFieldErrors != nil {
-				assert.IsType(t, formdata.FieldErrors{}, err)
+				assert.IsType(t, formdata.FieldErrorsError{}, err)
 				assert.Equal(t, tt.wantFieldErrors, err)
 			}
 		})
@@ -346,7 +346,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 		definitionStructure interface{}
 		sourceMap           map[string]interface{}
 		wantErr             string
-		wantFieldErrors     formdata.FieldErrors
+		wantFieldErrors     formdata.FieldErrorsError
 	}{
 		{
 			"simple",
@@ -365,7 +365,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"id": "123"},
 			"invalid input data",
-			formdata.FieldErrors{"id": {"expected type 'int32', got unconvertible type 'string'"}},
+			formdata.FieldErrorsError{"id": {"expected type 'int32', got unconvertible type 'string'"}},
 		},
 		{
 			"null value for a not-null field",
@@ -375,7 +375,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"id": nil, "name": nil},
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   {"should not be null (expected type: int64)"},
 				"name": {"should not be null (expected type: string)"},
 			},
@@ -387,7 +387,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"my_id": "123"},
 			"invalid input data",
-			formdata.FieldErrors{"my_id": {"unexpected field"}},
+			formdata.FieldErrorsError{"my_id": {"unexpected field"}},
 		},
 		{
 			"field ignored by json",
@@ -396,7 +396,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"Name": "test"},
 			"invalid input data",
-			formdata.FieldErrors{"Name": {"unexpected field"}},
+			formdata.FieldErrorsError{"Name": {"unexpected field"}},
 		},
 		{
 			"decoder error for a field",
@@ -405,7 +405,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"time": "123"},
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"time": {"decoding error: parsing time \"123\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"123\" as \"2006\""},
 			},
 		},
@@ -416,7 +416,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"my_id": 1, "id": nil},
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"my_id": {"unexpected field"},
 			},
 		},
@@ -435,7 +435,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"id": nil, "struct": map[string]interface{}{"other_struct": nil, "other_struct2": nil}},
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":          {"unexpected field"},
 				"struct.name": {"missing field"},
 			},
@@ -466,7 +466,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 				},
 			},
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id": {"unexpected field"},
 			},
 		},
@@ -488,7 +488,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"id": 0, "name": ""},
 			"invalid input data",
-			formdata.FieldErrors{
+			formdata.FieldErrorsError{
 				"id":   []string{"id must be 1 or greater"},
 				"name": []string{"name must be at least 1 character in length"},
 			},
@@ -500,7 +500,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			}{},
 			map[string]interface{}{"field": "value"},
 			"invalid input data",
-			formdata.FieldErrors{"": {"field: unsupported type: chan"}},
+			formdata.FieldErrorsError{"": {"field: unsupported type: chan"}},
 		},
 	}
 	for _, tt := range tests {
@@ -517,7 +517,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 				assert.Nil(t, err)
 			}
 			if tt.wantFieldErrors != nil {
-				assert.IsType(t, formdata.FieldErrors{}, err)
+				assert.IsType(t, formdata.FieldErrorsError{}, err)
 				assert.Equal(t, tt.wantFieldErrors, err)
 			}
 		})

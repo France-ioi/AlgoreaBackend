@@ -328,7 +328,7 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 
 		params.ParticipantID = watchedGroupID
 		if !user.CanWatchItemResult(store, params.ItemID) {
-			return params, service.InsufficientAccessRightsError
+			return params, service.ErrAPIInsufficientAccessRights
 		}
 
 		service.MustNotBeError(store.Groups().ByID(watchedGroupID).PluckFirst("type", &params.ParticipantType).Error())
@@ -343,7 +343,7 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 		"view",
 		"content",
 	) {
-		return params, service.InsufficientAccessRightsError
+		return params, service.ErrAPIInsufficientAccessRights
 	}
 
 	params.GetChildren = user.HasStartedResultOnItem(store, params.ItemID)

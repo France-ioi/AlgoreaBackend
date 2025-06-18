@@ -69,7 +69,7 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 	user := srv.GetUser(httpReq)
 
 	if !user.CanSeeAnswer(store, participantID, itemID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	answer, hasAnswer := store.Answers().GetCurrentAnswer(participantID, itemID, attemptID)

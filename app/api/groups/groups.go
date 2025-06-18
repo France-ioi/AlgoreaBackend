@@ -89,7 +89,7 @@ func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.Us
 		Where("groups_ancestors.child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	return nil
 }
@@ -102,7 +102,7 @@ func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *
 		Where("groups.type != 'User'").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	return nil
 }
@@ -147,14 +147,14 @@ func checkThatUserHasRightsForDirectRelation(
 
 	//nolint:gomnd // one row for the parent group, one for the child group
 	if len(groupData) < 2 {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	for _, groupRow := range groupData {
 		if (groupRow.ID == parentGroupID && map[string]bool{"User": true, "Team": true}[groupRow.Type]) ||
 			(groupRow.ID == childGroupID &&
 				map[string]bool{"Base": true, "User": true}[groupRow.Type]) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 	}
 	return nil

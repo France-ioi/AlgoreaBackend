@@ -203,7 +203,7 @@ func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.
 			PluckFirst("IF(child_attempt.root_item_id = child_result.item_id, child_attempt.parent_attempt_id, child_attempt.id)", &attemptID).
 			Error()
 		if gorm.IsRecordNotFoundError(err) {
-			return 0, service.InsufficientAccessRightsError
+			return 0, service.ErrAPIInsufficientAccessRights
 		}
 		service.MustNotBeError(err)
 	}

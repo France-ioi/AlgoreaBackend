@@ -194,7 +194,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	if user.IsTempUser {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	itemID, err := validateAndInsertItem(srv, r)
@@ -541,7 +541,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 
 	itemID, err = insertItemRow(store, itemMap)
 	if err != nil && database.IsDuplicateEntryError(err) {
-		return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
+		return 0, service.ErrForbidden(formdata.FieldErrorsError{"text_id": []string{
 			"text_id must be unique",
 		}})
 	}

@@ -126,7 +126,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var rawData []rawPrerequisiteOrDependencyItem

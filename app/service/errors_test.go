@@ -67,7 +67,7 @@ func TestUnprocessableEntityRequest(t *testing.T) {
 func TestInvalidRequest_WithFormErrors(t *testing.T) {
 	assert := assertlib.New(t)
 
-	formErrors := make(formdata.FieldErrors)
+	formErrors := make(formdata.FieldErrorsError)
 	formErrors["name"] = []string{"is required"}
 	formErrors["phone"] = []string{"is required", "must be a phone number"}
 
@@ -141,7 +141,7 @@ func TestRendersRecoveredAPIErrorOnPanicWithAPIError(t *testing.T) {
 	assert := assertlib.New(t)
 	handler, hook, restoreFunc := servicetest.WithLoggingMiddleware(
 		service.AppHandler(func(http.ResponseWriter, *http.Request) error {
-			panic(service.InsufficientAccessRightsError)
+			panic(service.ErrAPIInsufficientAccessRights)
 		}))
 	defer restoreFunc()
 

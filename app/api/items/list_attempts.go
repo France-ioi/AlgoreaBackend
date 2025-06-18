@@ -197,7 +197,7 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
 				Select("IF(attempts.root_item_id = ?, attempts.parent_attempt_id, attempts.id) AS parent_attempt_id", itemID).
 				Take(&result).Error()
 			if gorm.IsRecordNotFoundError(err) {
-				return 0, 0, 0, service.InsufficientAccessRightsError
+				return 0, 0, 0, service.ErrAPIInsufficientAccessRights
 			}
 			service.MustNotBeError(err)
 			parentAttemptID = result.ParentAttemptID
@@ -210,7 +210,7 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
 
 	service.MustNotBeError(err)
 	if !found {
-		return 0, 0, 0, service.InsufficientAccessRightsError
+		return 0, 0, 0, service.ErrAPIInsufficientAccessRights
 	}
 	return itemID, participantID, parentAttemptID, nil
 }

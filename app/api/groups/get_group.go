@@ -195,7 +195,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) error {
 	var result groupGetResponse
 	err = query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

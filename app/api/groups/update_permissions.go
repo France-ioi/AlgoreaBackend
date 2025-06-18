@@ -538,7 +538,7 @@ func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	return nil
 }
@@ -564,7 +564,7 @@ func checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(s *database.DataSt
 				Where("root_activity_id = ? OR root_skill_id = ?", itemID, itemID).HasRows()
 			service.MustNotBeError(err)
 			if !found {
-				return service.InsufficientAccessRightsError
+				return service.ErrAPIInsufficientAccessRights
 			}
 		}
 	}

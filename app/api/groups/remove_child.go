@@ -97,7 +97,7 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) error {
 			Where("child_group_id = ?", childGroupID).
 			Take(&result).Error())
 		if len(result) == 0 {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		return s.GroupGroups().DeleteRelation(parentGroupID, childGroupID, shouldDeleteOrphans)

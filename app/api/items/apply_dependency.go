@@ -77,7 +77,7 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 		result := store.Exec(`

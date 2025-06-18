@@ -83,7 +83,7 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error
 		Scan(&result).Error()
 
 	if gorm.IsRecordNotFoundError(err) || len(result) != len(ids) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

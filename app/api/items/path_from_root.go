@@ -103,7 +103,7 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) erro
 
 	itemPaths := findItemPaths(srv.GetStore(r), participantID, itemID, 1)
 	if itemPaths == nil {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	render.Respond(w, r, map[string]interface{}{"path": itemPaths[0].Path})
 	return nil

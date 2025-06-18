@@ -95,7 +95,7 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) e
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	dataQuery := store.Answers().WithUsers().WithResults().
@@ -232,7 +232,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
 			user.GroupID).
 		Count(&count).Error())
 	if count == 0 {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	return nil
 }
@@ -245,7 +245,7 @@ func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(
 			Where("groups_ancestors.child_group_id=?", authorID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 	}
 

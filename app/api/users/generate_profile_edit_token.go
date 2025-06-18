@@ -101,7 +101,7 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 
 	// Checks rights.
 	if targetUserLoginID == nil {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	response := new(generateProfileEditTokenResponse)

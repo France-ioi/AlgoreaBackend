@@ -121,7 +121,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 		var approvals database.GroupApprovals
 		if map[userGroupRelationAction]bool{createGroupJoinRequestAction: true, acceptInvitationAction: true}[action] {
 			if user.IsTempUser {
-				return service.InsufficientAccessRightsError // rollback
+				return service.ErrAPIInsufficientAccessRights // rollback
 			}
 
 			approvals.FromString(r.URL.Query().Get("approvals"))
@@ -202,7 +202,7 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	}
 	err := query.Take(&groupInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

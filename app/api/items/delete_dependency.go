@@ -61,7 +61,7 @@ func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Reque
 			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		return store.ItemDependencies().
 			Delete("item_id = ? AND dependent_item_id = ?", prerequisiteItemID, dependentItemID).Error()

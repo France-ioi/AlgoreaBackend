@@ -86,14 +86,14 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) error {
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, false, true)
 		service.MustNotBeError(err)
 		if !ok {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		entryState, err = getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
 		service.MustNotBeError(err)
 
 		if entryState.State != string(ready) {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		service.MustNotBeError(store.Items().ByID(entryState.itemID).

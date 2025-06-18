@@ -65,7 +65,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	if user.IsTempUser {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var groupID int64

@@ -91,7 +91,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) error 
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		itemID := ids[len(ids)-1]
@@ -118,7 +118,7 @@ func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID
 		Where("items.type IN('Task','Chapter')").
 		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).WithExclusiveWriteLock().Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 

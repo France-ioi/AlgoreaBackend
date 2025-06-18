@@ -100,7 +100,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, attemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		onBeforeInsertingResultInResultStartHook.Load().(func())()
@@ -111,7 +111,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 			Where("NOT items.requires_explicit_entry").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		result := store.Exec(`
