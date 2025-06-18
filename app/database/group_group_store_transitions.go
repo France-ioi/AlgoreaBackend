@@ -59,16 +59,18 @@ func (groupMembershipAction GroupMembershipAction) isActive() bool {
 	case JoinedByBadge, InvitationAccepted, JoinRequestAccepted, JoinedByCode, IsMember,
 		LeaveRequestCreated, LeaveRequestWithdrawn, LeaveRequestRefused:
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 func (groupMembershipAction GroupMembershipAction) isPending() bool {
 	switch groupMembershipAction {
 	case InvitationCreated, JoinRequestCreated, LeaveRequestCreated, LeaveRequestExpired:
 		return true
+	default:
+		return false
 	}
-	return false
 }
 
 func (groupMembershipAction GroupMembershipAction) hasApprovals() bool {
@@ -84,8 +86,9 @@ func (groupMembershipAction GroupMembershipAction) PendingType() string {
 		return "join_request"
 	case LeaveRequestCreated:
 		return "leave_request"
+	default:
+		panic("groupMembershipAction should be of pending kind in PendingType()")
 	}
-	panic("groupMembershipAction should be of pending kind in PendingType()")
 }
 
 // GroupGroupTransitionAction represents a groups_groups relation transition action.

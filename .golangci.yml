@@ -61,6 +61,10 @@ linters-settings:
   errchkjson:
     check-error-free-encoding: true
     report-no-exported: true
+  exhaustive:
+    default-signifies-exhaustive: true
+    package-scope-only: false
+
 linters:
   enable-all: true
   disable:
@@ -79,7 +83,6 @@ linters:
     - wsl              # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
     - goerr113         # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
     - contextcheck     # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
-    - exhaustive       # For update to go1.20
     - forcetypeassert  # For update to go1.20
     - ireturn          # For update to go1.20
     - maintidx         # For update to go1.20
