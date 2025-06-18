@@ -223,11 +223,9 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 // EncodeBody forms a request body with the given parameters for the login module: `{"client_id": ..., "data": _encoded_}`.
 func EncodeBody(requestParams map[string]string, clientID, clientKey string) (result []byte, err error) {
 	defer recoverPanics(&err)
-	paramsJSON, err := json.Marshal(requestParams)
-	mustNotBeError(err)
+	paramsJSON, _ := json.Marshal(requestParams)
 	encodedParams := Encode(paramsJSON, clientKey)
-	params, err := json.Marshal(map[string]string{"client_id": clientID, "data": encodedParams})
-	mustNotBeError(err)
+	params, _ := json.Marshal(map[string]string{"client_id": clientID, "data": encodedParams})
 	return params, err
 }
 

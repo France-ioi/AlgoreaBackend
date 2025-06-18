@@ -122,8 +122,7 @@ func (srv *Service) getProfileEditToken(requesterLoginID, targetLoginID int64) (
 		Exp:         expirationTime.Unix(),
 	}
 
-	jsonToken, err := json.Marshal(profileEditToken)
-	service.MustNotBeError(err)
+	jsonToken, _ := json.Marshal(profileEditToken)
 
 	key := []byte(srv.AuthConfig.GetString("clientSecret")[0:32])
 	cipherText := encrypt.AES256GCM(key, jsonToken)

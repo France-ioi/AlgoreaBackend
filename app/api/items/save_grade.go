@@ -242,6 +242,7 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 			Where("answer_id = ?", answerID).PluckFirst("score", &oldScore).Error())
 		if oldScore != nil {
 			if *oldScore != score {
+				//nolint:errchkjson // no error: only strings and floats previously decoded from JSON
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
 					"idAttempt":    requestData.ScoreToken.AttemptID,
 					"idItem":       requestData.ScoreToken.LocalItemID,

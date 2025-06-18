@@ -172,7 +172,7 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 		hintsErr := json.Unmarshal([]byte(*hintsInfo.HintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
-			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
+			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]string{
 				"idUser":      taskToken.UserID,
 				"idItemLocal": taskToken.LocalItemID,
 				"idAttempt":   taskToken.AttemptID,
