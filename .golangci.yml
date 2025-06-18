@@ -79,7 +79,6 @@ linters:
     - wsl              # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
     - goerr113         # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
     - contextcheck     # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
-    - execinquery      # For update to go1.20
     - exhaustive       # For update to go1.20
     - forcetypeassert  # For update to go1.20
     - ireturn          # For update to go1.20
