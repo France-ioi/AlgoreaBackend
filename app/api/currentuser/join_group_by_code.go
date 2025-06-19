@@ -90,9 +90,9 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) erro
 	var results database.GroupGroupTransitionResults
 	var approvalsToRequest map[int64]database.GroupApprovals
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		info, errInTransaction := store.GetGroupJoiningByCodeInfoByCode(code, true)
+		info, ok, errInTransaction := store.GetGroupJoiningByCodeInfoByCode(code, true)
 		service.MustNotBeError(errInTransaction)
-		if info == nil {
+		if !ok {
 			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
 			return service.ErrAPIInsufficientAccessRights // rollback
 		}
@@ -120,7 +120,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) erro
 	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], approvalsToRequest[user.GroupID], joinGroupByCodeAction)
 }
 
-func checkPossibilityToJoinTeam(store *database.DataStore, info *database.GroupJoiningByCodeInfo, user *database.User) error {
+func checkPossibilityToJoinTeam(store *database.DataStore, info database.GroupJoiningByCodeInfo, user *database.User) error {
 	var err error
 	if info.Type == "Team" {
 		var found bool

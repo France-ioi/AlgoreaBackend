@@ -142,9 +142,9 @@ const (
 func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code string) (
 	valid bool, reason groupCodeFailReason, groupID int64,
 ) {
-	info, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
+	info, ok, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
 	service.MustNotBeError(err)
-	if info == nil {
+	if !ok {
 		return false, noGroupReason, 0
 	}
 	if info.FrozenMembership {
@@ -169,7 +169,7 @@ func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code 
 		return false, conflictingTeamParticipationReason, info.GroupID
 	}
 
-	ok, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
+	ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
 	service.MustNotBeError(err)
 	if !ok {
 		return false, teamConditionsNotMetReason, info.GroupID
