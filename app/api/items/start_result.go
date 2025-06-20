@@ -95,7 +95,9 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var attemptInfo attemptsListResponseRow
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	var shouldSchedulePropagation bool
+	store := srv.GetStore(r)
+	err = store.InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, attemptID, true, true)
 		service.MustNotBeError(err)
@@ -126,8 +128,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 		if result.RowsAffected() != 0 {
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.MarkAsToBePropagated(participantID, attemptID, itemID, false))
-
-			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+			shouldSchedulePropagation = true
 		}
 
 		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(r)).
@@ -142,6 +143,10 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	})
 	service.MustNotBeError(err)
+
+	if shouldSchedulePropagation {
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+	}
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(&attemptInfo)))
 	return nil

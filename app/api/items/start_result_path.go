@@ -91,7 +91,9 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) erro
 
 	var result []map[string]interface{}
 	var attemptID int64
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	var shouldSchedulePropagation bool
+	store := srv.GetStore(r)
+	err = store.InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
 			return service.ErrAPIInsufficientAccessRights // rollback
@@ -123,13 +125,16 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) erro
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert, []string{"started_at", "latest_activity_at"}))
 			service.MustNotBeError(resultStore.InsertIgnoreMaps("results_propagate", rowsToInsertPropagate))
-
-			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+			shouldSchedulePropagation = true
 		}
 
 		return nil
 	})
 	service.MustNotBeError(err)
+
+	if shouldSchedulePropagation {
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+	}
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
 		"attempt_id": strconv.FormatInt(attemptID, 10),
