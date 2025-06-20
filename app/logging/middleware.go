@@ -78,7 +78,7 @@ func (l *StructuredLoggerEntry) Write(status, bytes int, elapsed time.Duration) 
 	l.Logger = l.Logger.WithFields(logrus.Fields{
 		"resp_status":       status,
 		"resp_bytes_length": bytes,
-		"resp_elapsed_ms":   float64(elapsed.Nanoseconds()) / 1000000.0,
+		"resp_elapsed_ms":   float64(elapsed.Nanoseconds()) / float64(time.Millisecond),
 	})
 
 	l.Logger.Infoln("request complete")

@@ -158,6 +158,7 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 				Where("groups_ancestors_active.ancestor_group_id = ?", watchedGroupID).SubQuery()).SubQuery()
 	}
 
+	//nolint:gomnd // in the end, we append 4 more values
 	values := make([]interface{}, len(columnListValues), len(columnListValues)+4)
 	copy(values, columnListValues)
 	canWatchResultEnumIndex := dataStore.PermissionsGranted().WatchIndexByName("result")

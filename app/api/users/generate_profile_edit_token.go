@@ -7,15 +7,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/encrypt"
-
-	"github.com/go-chi/render"
-
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
+
+const profileEditTokenLifetime = 30 * time.Minute
 
 // swagger:model generateProfileEditTokenResponse
 type generateProfileEditTokenResponse struct {
@@ -84,7 +84,7 @@ type ProfileEditToken struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Request) error {
 	targetUserID, err := service.ResolveURLQueryPathInt64Field(r, "target_user_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -93,37 +93,36 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	var targetUserLoginID *int64
+	var targetUserLoginID int64
+	var ok bool
 	if user.LoginID != nil {
-		targetUserLoginID, err = getLoginIDForProfileEditing(store, user, targetUserID)
-		service.MustNotBeError(err)
+		targetUserLoginID, ok = getLoginIDForProfileEditing(store, user, targetUserID)
 	}
 
 	// Checks rights.
-	if targetUserLoginID == nil {
-		return service.InsufficientAccessRightsError
+	if !ok {
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	response := new(generateProfileEditTokenResponse)
 
-	response.ProfileEditToken, response.Alg = srv.getProfileEditToken(*user.LoginID, *targetUserLoginID)
+	response.ProfileEditToken, response.Alg = srv.getProfileEditToken(*user.LoginID, targetUserLoginID)
 
 	render.Respond(rw, r, response)
 
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) getProfileEditToken(requesterLoginID, targetLoginID int64) (token, algorithm string) {
-	thirtyMinutesLater := time.Now().Add(time.Minute * 30)
+	expirationTime := time.Now().Add(profileEditTokenLifetime)
 
 	profileEditToken := ProfileEditToken{
 		RequesterID: strconv.FormatInt(requesterLoginID, 10),
 		TargetID:    strconv.FormatInt(targetLoginID, 10),
-		Exp:         thirtyMinutesLater.Unix(),
+		Exp:         expirationTime.Unix(),
 	}
 
-	jsonToken, err := json.Marshal(profileEditToken)
-	service.MustNotBeError(err)
+	jsonToken, _ := json.Marshal(profileEditToken)
 
 	key := []byte(srv.AuthConfig.GetString("clientSecret")[0:32])
 	cipherText := encrypt.AES256GCM(key, jsonToken)
@@ -137,10 +136,8 @@ func (srv *Service) getProfileEditToken(requesterLoginID, targetLoginID int64) (
 // if the requesting user can edit the profile of the target user:
 //  1. the requesting user needs to be a manager of a group to which the target user is a descendant, and
 //  2. this group must have `require_personal_info_access_approval` set to `edit`, and
-//  3. the target user must be a user,
-//
-// otherwise, it returns nil.
-func getLoginIDForProfileEditing(s *database.DataStore, requestingUser *database.User, targetUserID int64) (*int64, error) {
+//  3. the target user must be a user.
+func getLoginIDForProfileEditing(s *database.DataStore, requestingUser *database.User, targetUserID int64) (loginID int64, found bool) {
 	var targetUserLoginID *int64
 
 	err := s.ActiveGroupAncestors().
@@ -155,8 +152,13 @@ func getLoginIDForProfileEditing(s *database.DataStore, requestingUser *database
 		Error()
 
 	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
+		return 0, false
+	}
+	service.MustNotBeError(err)
+
+	if targetUserLoginID == nil {
+		return 0, false
 	}
 
-	return targetUserLoginID, err
+	return *targetUserLoginID, true
 }

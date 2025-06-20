@@ -33,13 +33,13 @@ func init() { //nolint:gochecknoinits
 			var db *sql.DB
 			databaseConfig, err := app.DBConfig(app.LoadConfig())
 			if err != nil {
-				fmt.Println("Unable to load the database config: ", err)
+				cmd.Println("Unable to load the database config: ", err)
 				os.Exit(1)
 			}
 			databaseConfig.ParseTime = true
 			db, err = sql.Open("mysql", databaseConfig.FormatDSN())
 			if err != nil {
-				fmt.Println("Unable to connect to the database: ", err)
+				cmd.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
 			}
 
@@ -50,11 +50,11 @@ func init() { //nolint:gochecknoinits
 			n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Down, 1)
 			switch {
 			case err != nil:
-				return fmt.Errorf("unable to undo a migration: %v", err)
+				return fmt.Errorf("unable to undo a migration: %w", err)
 			case n == 0:
-				fmt.Println("No migrations to undo!")
+				cmd.Println("No migrations to undo!")
 			default:
-				fmt.Println("1 migration undone successfully!")
+				cmd.Println("1 migration undone successfully!")
 			}
 
 			return nil

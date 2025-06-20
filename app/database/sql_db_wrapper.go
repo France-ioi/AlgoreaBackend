@@ -8,7 +8,9 @@ import (
 )
 
 type sqlDBWrapper struct {
-	sqlDB     *sql.DB
+	sqlDB *sql.DB
+	//nolint:containedctx // We store the context here because Gorm v1 does not support contexts
+	//                    // as arguments for Exec, Query, and QueryRow methods.
 	ctx       context.Context
 	logConfig *LogConfig
 }
@@ -143,6 +145,26 @@ func (sqlDB *sqlDBWrapper) withContext(ctx context.Context) gorm.SQLCommon {
 }
 
 var _ withContexter = &sqlDBWrapper{}
+
+type contextGetter interface {
+	getContext() context.Context
+}
+
+func (sqlDB *sqlDBWrapper) getContext() context.Context {
+	return sqlDB.ctx
+}
+
+var _ contextGetter = &sqlDBWrapper{}
+
+type logConfigGetter interface {
+	getLogConfig() *LogConfig
+}
+
+func (sqlDB *sqlDBWrapper) getLogConfig() *LogConfig {
+	return sqlDB.logConfig
+}
+
+var _ logConfigGetter = &sqlDBWrapper{}
 
 func (sqlDB *sqlDBWrapper) Close() error {
 	return sqlDB.sqlDB.Close()

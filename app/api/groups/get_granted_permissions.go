@@ -32,9 +32,9 @@ type grantedPermissionsViewResultPermissions struct {
 // swagger:model grantedPermissionsViewResultRow
 type grantedPermissionsViewResultRow struct {
 	// required: true
-	SourceGroup grantedPermissionsViewResultRowGroup `json:"source_group" gorm:"embedded;embedded_prefix:source_group__"`
+	SourceGroup grantedPermissionsViewResultRowGroup `gorm:"embedded;embedded_prefix:source_group__" json:"source_group"`
 	// required: true
-	Group grantedPermissionsViewResultRowGroup `json:"group" gorm:"embedded;embedded_prefix:group__"`
+	Group grantedPermissionsViewResultRowGroup `gorm:"embedded;embedded_prefix:group__" json:"group"`
 	// required: true
 	Item struct {
 		// required: true
@@ -50,7 +50,7 @@ type grantedPermissionsViewResultRow struct {
 		RequiresExplicitEntry bool `json:"requires_explicit_entry"`
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
 	// required: true
-	Permissions grantedPermissionsViewResultPermissions `json:"permissions" gorm:"embedded;embedded_prefix:permissions__"`
+	Permissions grantedPermissionsViewResultPermissions `gorm:"embedded;embedded_prefix:permissions__" json:"permissions"`
 }
 
 // swagger:operation GET /groups/{group_id}/granted_permissions groups grantedPermissionsView
@@ -132,7 +132,7 @@ type grantedPermissionsViewResultRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) error {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -153,7 +153,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 		Where("groups.type != 'User'").Where("can_grant_group_access").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	itemsQuery := store.Permissions().MatchingUserAncestors(user).
@@ -229,7 +229,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			can_enter_until AS permissions__can_enter_until`)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -250,11 +250,9 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 				"item.id":         service.FieldTypeInt64,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	service.MustNotBeError(query.Scan(&permissions).Error())
 	render.Respond(w, r, permissions)
-	return service.NoError
+	return nil
 }

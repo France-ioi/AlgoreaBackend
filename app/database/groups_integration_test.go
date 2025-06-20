@@ -19,7 +19,8 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 		name     string
 		code     string
 		withLock bool
-		want     *database.GroupJoiningByCodeInfo
+		wantOk   bool
+		want     database.GroupJoiningByCodeInfo
 	}{
 		{name: "wrong code", code: "bcd"},
 		{name: "wrong code (the check is case-sensitive)", code: "UVWX"},
@@ -29,7 +30,8 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			name:     "group is not a team",
 			code:     "abcd",
 			withLock: true,
-			want: &database.GroupJoiningByCodeInfo{
+			wantOk:   true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             1,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  true,
@@ -37,9 +39,10 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			},
 		},
 		{
-			name: "group is not public",
-			code: "efgh",
-			want: &database.GroupJoiningByCodeInfo{
+			name:   "group is not public",
+			code:   "efgh",
+			wantOk: true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             2,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  true,
@@ -51,7 +54,8 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			name:     "ok",
 			code:     "mnop",
 			withLock: true,
-			want: &database.GroupJoiningByCodeInfo{
+			wantOk:   true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             4,
 				CodeExpiresAtIsNull: false,
 				CodeLifetimeIsNull:  true,
@@ -60,9 +64,10 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			},
 		},
 		{
-			name: "ok (expires at is null)",
-			code: "qrst",
-			want: &database.GroupJoiningByCodeInfo{
+			name:   "ok (expires at is null)",
+			code:   "qrst",
+			wantOk: true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             5,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  false,
@@ -74,7 +79,8 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			name:     "ok (frozen membership)",
 			code:     "uvwx",
 			withLock: true,
-			want: &database.GroupJoiningByCodeInfo{
+			wantOk:   true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             6,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  true,
@@ -102,17 +108,19 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			store := database.NewDataStore(db)
-			var got *database.GroupJoiningByCodeInfo
+			var got database.GroupJoiningByCodeInfo
+			var ok bool
 			var err error
 			if tt.withLock {
 				assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-					got, err = trStore.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
+					got, ok, err = trStore.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 					return err
 				}))
 			} else {
-				got, err = store.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
+				got, ok, err = store.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 			}
 			assert.NoError(t, err)
+			assert.Equal(t, tt.wantOk, ok)
 			assert.Equal(t, tt.want, got)
 		})
 	}

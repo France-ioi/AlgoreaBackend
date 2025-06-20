@@ -55,7 +55,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -65,7 +65,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 
 	user := srv.GetUser(r)
 	if user.LoginID == nil {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	store := srv.GetStore(r)
 
@@ -73,7 +73,7 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
@@ -91,11 +91,12 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 		service.MustNotBeError(err)
 	}
 
+	const maxScore = 100.0
 	result, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).SendLTIResult(
 		r.Context(),
 		srv.AuthConfig.GetString("clientID"),
 		srv.AuthConfig.GetString("clientSecret"),
-		*user.LoginID, itemID, score/100.0,
+		*user.LoginID, itemID, score/maxScore,
 	)
 	service.MustNotBeError(err)
 
@@ -104,5 +105,5 @@ func (srv *Service) publishResult(w http.ResponseWriter, r *http.Request) servic
 		message = "failed"
 	}
 	render.Respond(w, r, &service.Response[*struct{}]{Success: result, Message: message})
-	return service.NoError
+	return nil
 }

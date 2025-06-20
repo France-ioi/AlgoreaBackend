@@ -67,7 +67,7 @@ func unmarshalSessionCookieValue(cookieValue string) (token string, attributes S
 	// | 0      | 1         | 1    |
 	// | 1      | 0         | 2    |
 	// | 1      | 1         | 3    |
-	attributes.Secure = (kind & 2) == 2
+	attributes.Secure = (kind & (1 << 1)) == 1<<1
 	attributes.SameSite = (kind & 1) == 1
 	token = parts[1]
 	attributes.Domain = parts[2]

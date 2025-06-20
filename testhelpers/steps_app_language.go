@@ -121,7 +121,7 @@ func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroup, parentGroup s
 	ctx.setDBTableRowColumnValue(groupGroupTable, key, "personal_info_view_approved_at", time.Now().UTC().Format(time.DateTime))
 }
 
-// getGroupGroupKey gets a group group unique key for the groupgroup's map.
+// getGroupGroupKey constructs a key for a searching a group-group pair in the groups_groups table.
 func (ctx *TestContext) getGroupGroupKey(parentGroupID, childGroupID int64) map[string]string {
 	return map[string]string{
 		"parent_group_id": strconv.FormatInt(parentGroupID, 10),

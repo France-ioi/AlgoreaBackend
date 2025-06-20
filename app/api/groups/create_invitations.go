@@ -109,7 +109,7 @@ const maxAllowedLoginsToInvite = 100
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) error {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -131,9 +131,7 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
-	if apiErr := checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiErr != service.NoError {
-		return apiErr
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID))
 
 	results := make(map[string]string, len(requestData.Logins))
 	for _, login := range requestData.Logins {
@@ -175,7 +173,7 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(results)))
 
-	return service.NoError
+	return nil
 }
 
 func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupID int64, groupsToCheck []int64,

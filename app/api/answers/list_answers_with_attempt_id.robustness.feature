@@ -49,6 +49,12 @@ Background:
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
+  Scenario: Should fail when attempt_id is invalid
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/answers?attempt_id=abc"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for attempt_id (should be int64)"
+
   Scenario: Should fail when the attempt doesn't exist
     Given I am the user with id "11"
     When I send a GET request to "/items/190/answers?attempt_id=400"

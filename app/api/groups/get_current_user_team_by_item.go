@@ -49,7 +49,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getCurrentUserTeamByItem(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getCurrentUserTeamByItem(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -65,5 +65,5 @@ func (srv *Service) getCurrentUserTeamByItem(w http.ResponseWriter, r *http.Requ
 	service.MustNotBeError(err)
 
 	render.Respond(w, r, &map[string]string{"group_id": strconv.FormatInt(teamID, 10)})
-	return service.NoError
+	return nil
 }

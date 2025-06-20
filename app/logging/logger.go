@@ -59,6 +59,19 @@ func (l *Logger) Configure(config *viper.Viper) {
 	}
 
 	// Output
+	l.setOutput(config)
+
+	// Level
+	if level, err := logrus.ParseLevel(config.GetString("level")); err != nil {
+		l.logrusLogger.Errorf("Unable to parse logging level config, use default (%s)", l.logrusLogger.GetLevel().String())
+	} else {
+		l.logrusLogger.SetLevel(level)
+	}
+
+	log.SetOutput(l.logrusLogger.Writer())
+}
+
+func (l *Logger) setOutput(config *viper.Viper) {
 	switch config.GetString("output") {
 	case outputStdout:
 		l.logrusLogger.SetOutput(os.Stdout)
@@ -70,7 +83,9 @@ func (l *Logger) Configure(config *viper.Viper) {
 		}
 		_, codeFilePath, _, _ := runtime.Caller(0)
 		codeDir := filepath.Dir(codeFilePath)
-		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o600) //nolint:gosec,gosec // No user input.
+		const logFilePermissions = 0o600
+		//nolint:gosec,gosec // No user input
+		f, err := os.OpenFile(codeDir+"/../../log/all.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, logFilePermissions)
 		if err != nil {
 			l.logrusLogger.SetOutput(os.Stdout)
 			l.logrusLogger.Errorf("Unable to open file for logs, fallback to stdout: %v\n", err)
@@ -80,15 +95,6 @@ func (l *Logger) Configure(config *viper.Viper) {
 	default:
 		panic("Logging output must be either 'stdout', 'stderr' or 'file'. Got: " + config.GetString("output"))
 	}
-
-	// Level
-	if level, err := logrus.ParseLevel(config.GetString("level")); err != nil {
-		l.logrusLogger.Errorf("Unable to parse logging level config, use default (%s)", l.logrusLogger.GetLevel().String())
-	} else {
-		l.logrusLogger.SetLevel(level)
-	}
-
-	log.SetOutput(l.logrusLogger.Writer())
 }
 
 // ResetShared reset the global logger to its default settings before its configuration.

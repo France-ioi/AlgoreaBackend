@@ -12,7 +12,7 @@ LOCAL_BIN_DIR=./bin
 
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
-GOLANGCILINT_VERSION=1.52.2
+GOLANGCILINT_VERSION=1.53.3
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
@@ -31,6 +31,11 @@ ifdef DIRECTORY
 	TEST_DIR=$(DIRECTORY)
 else
 	TEST_DIR=./app/...
+endif
+ifdef DIRECTORY
+	TEST_BDD_DIR=$(DIRECTORY)
+else
+	TEST_BDD_DIR=./app/api/...
 endif
 ifdef TAGS
 	TEST_TAGS=--godog.tags=$(TAGS)
@@ -92,7 +97,7 @@ test-unit:
 	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
-	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
+	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_BDD_DIR) -p 1 -parallel 1 $(TEST_TAGS)
 lint:
 	@[ -e $(GOLANGCILINT) ] && \
 		($(GOLANGCILINT) --version | grep -F "version $(GOLANGCILINT_VERSION) built" > /dev/null || rm $(GOLANGCILINT)) || true

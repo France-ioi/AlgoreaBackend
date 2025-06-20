@@ -276,8 +276,8 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes))
-		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))
+		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes)) //nolint:errchkjson // the test data is always valid
+		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))                      //nolint:errchkjson // the test data is always valid
 		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string) +
 			"\nCookieAttributes:" + string(cookieAttributes) + "\nUser:" + string(userAttributes)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")

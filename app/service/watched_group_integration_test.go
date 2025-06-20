@@ -49,10 +49,10 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		url                     string
 		wantWatchedGroupID      int64
 		wantWatchedGroupIDIsSet bool
-		wantAPIError            service.APIError
+		wantError               error
 	}{
-		{name: "watched_group_id is not managed by the user", url: "?watched_group_id=4", wantAPIError: forbiddenError},
-		{name: "no can_watch_members permission", url: "?watched_group_id=2", wantAPIError: forbiddenError},
+		{name: "watched_group_id is not managed by the user", url: "?watched_group_id=4", wantError: forbiddenError},
+		{name: "no can_watch_members permission", url: "?watched_group_id=2", wantError: forbiddenError},
 		{name: "managed by an ancestor", url: "?watched_group_id=3", wantWatchedGroupID: 3, wantWatchedGroupIDIsSet: true},
 		{name: "managed by the user", url: "?watched_group_id=5", wantWatchedGroupID: 5, wantWatchedGroupIDIsSet: true},
 		{name: "an ancestor is managed", url: "?watched_group_id=6", wantWatchedGroupID: 6, wantWatchedGroupIDIsSet: true},
@@ -64,10 +64,10 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			req, _ := http.NewRequest("GET", tt.url, http.NoBody)
-			watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(req)
+			watchedGroupID, watchedGroupIDIsSet, gotError := srv.ResolveWatchedGroupID(req)
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)
 			assert.Equal(t, tt.wantWatchedGroupIDIsSet, watchedGroupIDIsSet)
-			assert.Equal(t, tt.wantAPIError, apiError)
+			assert.Equal(t, tt.wantError, gotError)
 		})
 	}
 }

@@ -42,17 +42,19 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 	for i := 0; i < fieldsNumber; i++ {
 		field := sourceType.Field(i)
 		jsonName, omitEmpty := getJSONFieldNameAndOmitEmpty(&field)
-		if jsonName != "-" {
-			fieldValue := sourceValue.Field(i)
-			if fieldValue.CanInterface() { // skip unexported fields
-				fieldValue = resolvePointer(fieldValue)
-				if !omitEmpty || fieldValue.Type().Kind() != reflect.Ptr || !fieldValue.IsNil() {
-					if shouldConvert(fieldValue) {
-						out[jsonName] = ConvertIntoMap(fieldValue.Addr().Interface())
-					} else {
-						out[jsonName] = fieldValue.Interface()
-					}
-				}
+		if jsonName == "-" {
+			continue
+		}
+		fieldValue := sourceValue.Field(i)
+		if !fieldValue.CanInterface() { // skip unexported fields
+			continue
+		}
+		fieldValue = resolvePointer(fieldValue)
+		if !omitEmpty || fieldValue.Type().Kind() != reflect.Ptr || !fieldValue.IsNil() {
+			if shouldConvert(fieldValue) {
+				out[jsonName] = ConvertIntoMap(fieldValue.Addr().Interface())
+			} else {
+				out[jsonName] = fieldValue.Interface()
 			}
 		}
 	}

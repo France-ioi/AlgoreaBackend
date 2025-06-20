@@ -1,7 +1,5 @@
 package database
 
-import "github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
-
 // SessionStore implements database operations on `sessions`.
 type SessionStore struct {
 	*DataStore
@@ -61,11 +59,12 @@ func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
 		Where("sessions.user_id = ?", userID).
 		Group("access_tokens.session_id")
 
+	const infinity = 1000000000 // A large number to ensure we can delete all sessions if needed.
 	sessionToDeleteQuery := sessionsWithoutAccessTokensQuery.
 		UnionAll(sessionsWithAccessTokensQuery).
 		Select("session_id").
 		Order("issued_at DESC, session_id").
-		Limit(mysqldb.MaxRowsReturned). // Offset requires a limit in MySQL.
+		Limit(infinity). // Offset requires a limit in MySQL.
 		Offset(max).
 		SubQuery()
 

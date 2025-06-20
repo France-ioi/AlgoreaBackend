@@ -131,19 +131,18 @@ type rootItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) error {
 	return srv.getRootItems(w, r, true)
 }
 
-func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) service.APIError {
+func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
 	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	service.MustNotBeError(err)
+
 	if watchedGroupIDIsSet && len(r.URL.Query()["as_team_id"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 	}
@@ -156,7 +155,7 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 	} else {
 		render.Respond(w, r, skillsResult)
 	}
-	return service.NoError
+	return nil
 }
 
 func generateRootItemListFromRawData(

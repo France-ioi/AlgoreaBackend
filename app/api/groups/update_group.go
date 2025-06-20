@@ -24,20 +24,20 @@ const (
 // Information of the group to be modified
 // swagger:model
 type groupUpdateInput struct {
-	Name        string  `json:"name" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	Grade       int32   `json:"grade" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Name        string  `json:"name"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Grade       int32   `json:"grade"       validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	Description *string `json:"description" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	IsOpen      bool    `json:"is_open" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	IsOpen      bool    `json:"is_open"     validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// If changed from true to false, is automatically switches all requests to join this group from requestSent to requestRefused
 	IsPublic bool `json:"is_public" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Duration after the first use of the code when it will expire (in seconds)
-	CodeLifetime   *int32         `json:"code_lifetime" validate:"changing_requires_can_manage_at_least=memberships,null|gte=0"`
-	CodeExpiresAt  *database.Time `json:"code_expires_at" validate:"changing_requires_can_manage_at_least=memberships"`
+	CodeLifetime   *int32         `json:"code_lifetime"    validate:"changing_requires_can_manage_at_least=memberships,null|gte=0"`
+	CodeExpiresAt  *database.Time `json:"code_expires_at"  validate:"changing_requires_can_manage_at_least=memberships"`
 	RootActivityID *int64         `json:"root_activity_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	RootSkillID    *int64         `json:"root_skill_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	RootSkillID    *int64         `json:"root_skill_id"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Can be set only if root_activity_id is set and
 	// the current user has the 'can_make_session_official' permission on the activity item
-	IsOfficialSession       bool `json:"is_official_session" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	IsOfficialSession       bool `json:"is_official_session"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	OpenActivityWhenJoining bool `json:"open_activity_when_joining" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
 	// Can be changed only from false to true
@@ -68,8 +68,8 @@ type groupUpdateInput struct {
 	// Not considered strengthened if the group doesn't have any participants.
 	//
 	// If it is strengthened, `approval_change_action` must be set.
-	RequireWatchApproval       bool `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
-	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                       //nolint:lll
+	RequireWatchApproval       bool `json:"require_watch_approval"         validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                               //nolint:lll
 
 	// Must be present only if a `require_*` field is strengthened.
 	//
@@ -86,13 +86,13 @@ type groupUpdateInput struct {
 	// enum: empty,reinvite
 	ApprovalChangeAction string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
 
-	Organizer       *string        `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressLine1    *string        `json:"address_line1" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressLine2    *string        `json:"address_line2" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Organizer       *string        `json:"organizer"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressLine1    *string        `json:"address_line1"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressLine2    *string        `json:"address_line2"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	AddressPostcode *string        `json:"address_postcode" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressCity     *string        `json:"address_city" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	AddressCountry  *string        `json:"address_country" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	ExpectedStart   *database.Time `json:"expected_start" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressCity     *string        `json:"address_city"     validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressCountry  *string        `json:"address_country"  validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	ExpectedStart   *database.Time `json:"expected_start"   validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
 	CanManageValue int `json:"-"`
 }
@@ -153,7 +153,7 @@ type groupUpdateInput struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) error {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -161,8 +161,8 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 
 	user := srv.GetUser(r)
 
-	rawRequestData, apiErr := service.ResolveJSONBodyIntoMap(r)
-	service.MustBeNoError(apiErr)
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	service.MustNotBeError(err)
 
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		groupStore := s.Groups()
@@ -182,8 +182,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 				MAX(can_manage_value) AS can_manage_value`).WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).Group("groups.id").Scan(&currentGroupData).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -194,8 +193,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		var formData *formdata.FormData
 		formData, err = validateUpdateGroupInput(rawRequestData, groupHasParticipants, &currentGroupData, s)
 		if err != nil {
-			apiErr = service.ErrInvalidRequest(err)
-			return apiErr.Error // rollback
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
 		dbMap := formData.ConstructMapForDB()
@@ -206,14 +204,11 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			delete(dbMap, "approval_change_action")
 		}
 
-		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
-		apiErr = validateRootSkillID(s, user, currentGroupData.RootSkillID, dbMap)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
+		err = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
+		service.MustNotBeError(err)
+
+		err = validateRootSkillID(s, user, currentGroupData.RootSkillID, dbMap)
+		service.MustNotBeError(err)
 
 		if approvalChangeAction != "" {
 			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
@@ -237,30 +232,27 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 		return nil // commit
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
 	service.MustNotBeError(err)
 
 	response := service.Response[*struct{}]{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
-	return service.NoError
+	return nil
 }
 
 func validateRootActivityIDAndIsOfficial(
 	store *database.DataStore, user *database.User, oldRootActivityID *int64, oldIsOfficialSession bool,
 	dbMap map[string]interface{},
-) service.APIError {
+) error {
 	rootActivityIDToCheck := oldRootActivityID
 	rootActivityID, rootActivityIDSet := dbMap["root_activity_id"]
 	rootActivityIDChanged := rootActivityIDSet && !int64PtrEqualValues(oldRootActivityID, rootActivityID.(*int64))
 	if rootActivityIDChanged {
 		rootActivityIDToCheck = rootActivityID.(*int64)
 		if rootActivityIDToCheck != nil {
-			apiError := validateRootActivityID(store, user, rootActivityIDToCheck)
-			if apiError != service.NoError {
-				return apiError
+			err := validateRootActivityID(store, user, rootActivityIDToCheck)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -281,10 +273,10 @@ func validateRootActivityIDAndIsOfficial(
 			return service.ErrForbidden(errors.New("not enough permissions for attaching the group to the activity as an official session"))
 		}
 	}
-	return service.NoError
+	return nil
 }
 
-func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) service.APIError {
+func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) error {
 	if rootActivityIDToCheck != nil {
 		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithExclusiveWriteLock().
 			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
@@ -293,12 +285,12 @@ func validateRootActivityID(store *database.DataStore, user *database.User, root
 			return service.ErrForbidden(errors.New("no access to the root activity or it is a skill"))
 		}
 	}
-	return service.NoError
+	return nil
 }
 
 func validateRootSkillID(store *database.DataStore, user *database.User, oldRootSkillID *int64,
 	dbMap map[string]interface{},
-) service.APIError {
+) error {
 	newRootSkillIDInterface, newRootSkillIDSet := dbMap["root_skill_id"]
 	if newRootSkillIDSet && newRootSkillIDInterface != nil {
 		newRootSkillID := newRootSkillIDInterface.(*int64)
@@ -318,7 +310,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 		}
 	}
 
-	return service.NoError
+	return nil
 }
 
 // refuseSentGroupRequestsIfNeeded automatically refuses all requests to join this group

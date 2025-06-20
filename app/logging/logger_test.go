@@ -97,7 +97,7 @@ func TestLogger_Configure_OutputFile(t *testing.T) {
 	patchGuard = monkey.Patch(os.OpenFile, func(name string, flag int, perm os.FileMode) (*os.File, error) {
 		patchGuard.Unpatch()
 		defer patchGuard.Restore()
-		return os.OpenFile(name+".test", flag, perm)
+		return os.OpenFile(name+".test", flag, perm) //nolint:gosec // No user input
 	})
 	defer patchGuard.Unpatch()
 

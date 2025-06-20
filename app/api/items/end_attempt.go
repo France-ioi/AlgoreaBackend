@@ -46,7 +46,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) error {
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -58,7 +58,6 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Attempts().
@@ -69,8 +68,7 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 			WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.ErrForbidden(errors.New("active attempt not found"))
-			return apiError.Error // rollback
+			return service.ErrForbidden(errors.New("active attempt not found")) // rollback
 		}
 
 		// End this and descendant attempts, expire participations
@@ -96,11 +94,8 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 		return store.GroupGroups().CreateNewAncestors()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

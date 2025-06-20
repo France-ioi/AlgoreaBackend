@@ -11,7 +11,7 @@ import (
 
 // HintToken represents data inside a hint token.
 type HintToken struct {
-	Date        string            `json:"date" validate:"dmy-date"` // dd-mm-yyyy
+	Date        string            `json:"date"             validate:"dmy-date"` // dd-mm-yyyy
 	UserID      string            `json:"idUser,omitempty"`
 	ItemID      *string           `json:"idItem,omitempty"`
 	LocalItemID string            `json:"idItemLocal"`

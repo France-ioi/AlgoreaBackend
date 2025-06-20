@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"bou.ke/monkey"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -134,22 +135,13 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			defer func() { _ = db.Close() }()
 
 			if tt.mockDB {
-				mockQuery := mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT public_key "+
-					"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?) LIMIT 1") + "$").
-					WithArgs(tt.itemID)
-
+				var publicKeyPtr *string
 				if tt.platform != nil {
-					publicKey := &tt.platform.publicKey
-					if tt.platform.publicKey == "" {
-						publicKey = nil
-					}
-					mockQuery.
-						WillReturnRows(mock.NewRows([]string{"public_key"}).AddRow(publicKey))
-				} else {
-					mockQuery.
-						WillReturnRows(mock.NewRows([]string{"public_key"}))
+					publicKeyPtr = &tt.platform.publicKey
 				}
+				mockPlatformPublicKeyLoading(mock, tt.itemID, publicKeyPtr)
 			}
+
 			r := &AskHintRequest{
 				store:     database.NewDataStore(db),
 				publicKey: tokentest.AlgoreaPlatformPublicKeyParsed,
@@ -177,6 +169,23 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			}
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
+	}
+}
+
+func mockPlatformPublicKeyLoading(mock sqlmock.Sqlmock, itemID int64, publicKey *string) {
+	mockQuery := mock.ExpectQuery("^" + regexp.QuoteMeta("SELECT public_key "+
+		"FROM `platforms` JOIN items ON items.platform_id = platforms.id WHERE (items.id = ?) LIMIT 1") + "$").
+		WithArgs(itemID)
+
+	if publicKey != nil {
+		if *publicKey == "" {
+			publicKey = nil
+		}
+		mockQuery.
+			WillReturnRows(mock.NewRows([]string{"public_key"}).AddRow(publicKey))
+	} else {
+		mockQuery.
+			WillReturnRows(mock.NewRows([]string{"public_key"}))
 	}
 }
 

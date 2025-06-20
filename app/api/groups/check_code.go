@@ -92,7 +92,7 @@ type groupCodeCheckResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) error {
 	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -125,7 +125,7 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	render.Respond(w, r, &response)
-	return service.NoError
+	return nil
 }
 
 type groupCodeFailReason string
@@ -142,9 +142,9 @@ const (
 func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code string) (
 	valid bool, reason groupCodeFailReason, groupID int64,
 ) {
-	info, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
+	info, ok, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
 	service.MustNotBeError(err)
-	if info == nil {
+	if !ok {
 		return false, noGroupReason, 0
 	}
 	if info.FrozenMembership {
@@ -169,7 +169,7 @@ func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code 
 		return false, conflictingTeamParticipationReason, info.GroupID
 	}
 
-	ok, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
+	ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
 	service.MustNotBeError(err)
 	if !ok {
 		return false, teamConditionsNotMetReason, info.GroupID

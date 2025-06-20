@@ -15,9 +15,9 @@ import (
 // swagger:model thread
 type thread struct {
 	// required:true
-	Item item `json:"item" gorm:"embedded;embedded_prefix:item__"`
+	Item item `gorm:"embedded;embedded_prefix:item__" json:"item"`
 	// required:true
-	Participant participant `json:"participant" gorm:"embedded;embedded_prefix:participant__"`
+	Participant participant `gorm:"embedded;embedded_prefix:participant__" json:"participant"`
 
 	// required:true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
@@ -161,20 +161,15 @@ type listThreadParameters struct {
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service.APIError {
-	params, apiError := srv.resolveListThreadParameters(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) error {
+	params, err := srv.resolveListThreadParameters(r)
+	service.MustNotBeError(err)
 
-	var queryDB *database.DB
-	queryDB, apiError = srv.constructListThreadsQuery(r, params)
-	if apiError != service.NoError {
-		return apiError
-	}
+	queryDB, err := srv.constructListThreadsQuery(r, params)
+	service.MustNotBeError(err)
 
 	var threads []thread
-	err := queryDB.Scan(&threads).Error()
+	err = queryDB.Scan(&threads).Error()
 	service.MustNotBeError(err)
 
 	for index := range threads {
@@ -184,10 +179,10 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) service
 	}
 
 	render.Respond(rw, r, threads)
-	return service.NoError
+	return nil
 }
 
-func (srv *Service) constructListThreadsQuery(r *http.Request, params listThreadParameters) (*database.DB, service.APIError) {
+func (srv *Service) constructListThreadsQuery(r *http.Request, params listThreadParameters) (*database.DB, error) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -290,20 +285,13 @@ func (srv *Service) constructListThreadsQuery(r *http.Request, params listThread
 			threads.latest_update_at AS latest_update_at
 		`, user.GroupID, user.GroupID, user.GroupID)
 
-	var apiError service.APIError
-	queryDB, apiError = applySortingAndPaging(r, queryDB)
-	if apiError != service.NoError {
-		return queryDB, apiError
-	}
-
-	return queryDB, service.NoError
+	return applySortingAndPaging(r, queryDB)
 }
 
-func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB, service.APIError) {
+func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB, error) {
 	queryDB = service.NewQueryLimiter().Apply(r, queryDB)
 
-	var apiError service.APIError
-	queryDB, apiError = service.ApplySortingAndPaging(r, queryDB, &service.SortingAndPagingParameters{
+	return service.ApplySortingAndPaging(r, queryDB, &service.SortingAndPagingParameters{
 		Fields: service.SortingAndPagingFields{
 			"latest_update_at": {ColumnName: "threads.latest_update_at"},
 			"item_id":          {ColumnName: "items.id"},
@@ -315,15 +303,13 @@ func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB,
 			"participant_id": service.FieldTypeInt64,
 		},
 	})
-
-	return queryDB, apiError
 }
 
-func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThreadParameters, apiError service.APIError) {
+func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThreadParameters, err error) {
 	var watchedGroupOK bool
-	params.WatchedGroupID, watchedGroupOK, apiError = srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return params, apiError
+	params.WatchedGroupID, watchedGroupOK, err = srv.ResolveWatchedGroupID(r)
+	if err != nil {
+		return params, err
 	}
 
 	var isMineError error
@@ -335,8 +321,6 @@ func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThr
 	if !watchedGroupOK && isMineError != nil {
 		return params, service.ErrInvalidRequest(errors.New("one of watched_group_id or is_mine must be given"))
 	}
-
-	var err error
 
 	if service.URLQueryPathHasField(r, "item_id") {
 		params.ItemID, err = service.ResolveURLQueryGetInt64Field(r, "item_id")
@@ -356,15 +340,10 @@ func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThr
 		}
 	}
 
-	params, apiError = resolveFilterParameters(r, params)
-	if apiError != service.NoError {
-		return params, apiError
-	}
-
-	return params, service.NoError
+	return resolveFilterParameters(r, params)
 }
 
-func resolveFilterParameters(r *http.Request, params listThreadParameters) (listThreadParameters, service.APIError) {
+func resolveFilterParameters(r *http.Request, params listThreadParameters) (listThreadParameters, error) {
 	var err error
 
 	params.Status, err = service.ResolveURLQueryGetStringField(r, "status")
@@ -381,5 +360,5 @@ func resolveFilterParameters(r *http.Request, params listThreadParameters) (list
 		params.LatestUpdateGt = &latestUpdateGt
 	}
 
-	return params, service.NoError
+	return params, nil
 }

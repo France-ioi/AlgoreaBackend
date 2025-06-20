@@ -1,6 +1,7 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -105,7 +106,7 @@ type getInfoData struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	var userInfo getInfoData
@@ -119,11 +120,11 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 		Scan(&userInfo).Error()
 
 	// This is very unlikely since the user middleware has already checked that the user exists
-	if err == gorm.ErrRecordNotFound {
-		return service.InsufficientAccessRightsError
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
 	render.Respond(w, r, &userInfo)
-	return service.NoError
+	return nil
 }

@@ -2,12 +2,19 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
+)
+
+const (
+	defaultServerPort                  = 8080
+	defaultServerReadTimeoutInSeconds  = 60
+	defaultServerWriteTimeoutInSeconds = 60
 )
 
 // Server provides an http.Server.
@@ -19,9 +26,9 @@ type Server struct {
 func NewServer(app *Application) (*Server, error) {
 	log.Println("Configuring server...")
 	serverConfig := ServerConfig(app.Config)
-	serverConfig.SetDefault("port", 8080)
-	serverConfig.SetDefault("readTimeout", 60)
-	serverConfig.SetDefault("writeTimeout", 60)
+	serverConfig.SetDefault("port", defaultServerPort)
+	serverConfig.SetDefault("readTimeout", defaultServerReadTimeoutInSeconds)
+	serverConfig.SetDefault("writeTimeout", defaultServerWriteTimeoutInSeconds)
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf(":%d", serverConfig.GetInt("Port")),
@@ -42,7 +49,7 @@ func (srv *Server) Start() chan error {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	go func() {
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			serverErrChannel <- err
 		} else {
 			serverErrChannel <- nil
@@ -55,7 +62,7 @@ func (srv *Server) Start() chan error {
 		select {
 		case err := <-serverErrChannel:
 			if err != nil {
-				doneChannel <- fmt.Errorf("server returned an error: %v", err)
+				doneChannel <- fmt.Errorf("server returned an error: %w", err)
 			} else {
 				doneChannel <- nil
 			}
@@ -63,9 +70,9 @@ func (srv *Server) Start() chan error {
 			log.Println("Shutting down server... Reason:", sig)
 			shutdownErr := srv.Shutdown(context.Background())
 			if serverErr := <-serverErrChannel; serverErr != nil {
-				doneChannel <- fmt.Errorf("server returned an error: %v", serverErr)
+				doneChannel <- fmt.Errorf("server returned an error: %w", serverErr)
 			} else if shutdownErr != nil {
-				doneChannel <- fmt.Errorf("can't shut down the server: %v", shutdownErr)
+				doneChannel <- fmt.Errorf("can't shut down the server: %w", shutdownErr)
 			} else {
 				doneChannel <- nil
 			}

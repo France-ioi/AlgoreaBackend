@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"os"
 	"reflect"
 	"testing"
 
@@ -40,17 +39,11 @@ func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
 						reflect.ValueOf(someError),
 					}
 				}).Interface())
-
-			var exitCode int
-			var exitCalled bool
-			monkey.Patch(os.Exit, func(code int) { exitCalled = true; exitCode = code; panic(someError) })
 			defer monkey.UnpatchAll()
 
-			assert.PanicsWithValue(t, someError, func() {
+			assert.PanicsWithError(t, "unable to create the mock db: some error", func() {
 				test.f()
 			})
-			assert.True(t, exitCalled)
-			assert.Equal(t, 1, exitCode)
 		})
 	}
 }
@@ -70,16 +63,11 @@ func TestNewDBMock_ExitsOnGettingErrorFromOpen(t *testing.T) {
 			someError := errors.New("some error")
 
 			monkey.Patch(OpenWithLogConfig, func(interface{}, LogConfig, bool) (*DB, error) { return nil, someError })
-			var exitCode int
-			var exitCalled bool
-			monkey.Patch(os.Exit, func(code int) { exitCalled = true; exitCode = code; panic(someError) })
 			defer monkey.UnpatchAll()
 
-			assert.PanicsWithValue(t, someError, func() {
+			assert.PanicsWithError(t, "unable to create the gorm connection to the mock: some error", func() {
 				test.f()
 			})
-			assert.True(t, exitCalled)
-			assert.Equal(t, 1, exitCode)
 		})
 	}
 }

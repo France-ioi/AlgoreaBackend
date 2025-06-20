@@ -62,11 +62,11 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) answerCreate(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) answerCreate(rw http.ResponseWriter, httpReq *http.Request) error {
 	return srv.saveAnswerWithType(rw, httpReq, false)
 }
 
-func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Request, isCurrent bool) service.APIError {
+func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Request, isCurrent bool) error {
 	attemptID, err := service.ResolveURLQueryPathInt64Field(httpReq, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -90,7 +90,7 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 	found, err := store.Results().ByID(participantID, attemptID, itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	err = store.InTransaction(func(store *database.DataStore) error {
@@ -121,5 +121,5 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 	}
 
 	service.MustNotBeError(render.Render(rw, httpReq, result))
-	return service.NoError
+	return nil
 }

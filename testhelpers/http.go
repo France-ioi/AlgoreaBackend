@@ -21,7 +21,8 @@ import (
 func SendTestHTTPRequest(ts *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (
 	response *http.Response, responseBody string, err error,
 ) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	const httpRequestTimeout = 5 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), httpRequestTimeout)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, method, ts.URL+path, body)
 	if err != nil {

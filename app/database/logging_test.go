@@ -222,7 +222,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
@@ -249,7 +249,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
@@ -276,7 +276,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
@@ -302,7 +302,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
@@ -331,7 +331,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
@@ -356,7 +356,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
@@ -382,7 +382,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			result, err := txWrapper.Exec(expectedQuery)
 			assert.Equal(t, expectedError, err)
 			assert.Nil(t, result)
@@ -406,7 +406,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			result, err := txWrapper.Exec(expectedQuery)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
@@ -429,7 +429,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			rows, err := txWrapper.Query(expectedQuery)
 			assert.Equal(t, expectedError, err)
 			assert.Nil(t, rows)
@@ -452,7 +452,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			rows, err := txWrapper.Query(expectedQuery)
 			require.NoError(t, err)
 			if rows != nil {
@@ -477,7 +477,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			row := txWrapper.QueryRow(expectedQuery)
 			assert.Equal(t, expectedError, row.Err())
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -499,7 +499,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			row := txWrapper.QueryRow(expectedQuery)
 			require.NoError(t, row.Err())
 			_ = row.Scan()
@@ -519,7 +519,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			err = txWrapper.Commit()
 			assert.Equal(t, expectedError, err)
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -538,7 +538,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			err = txWrapper.Commit()
 			require.NoError(t, err)
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -558,7 +558,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			err = txWrapper.Rollback()
 			assert.Equal(t, expectedError, err)
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -577,7 +577,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
 			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			err = txWrapper.Rollback()
 			require.NoError(t, err)
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -675,8 +675,8 @@ func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sql
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	db.logConfig.LogSQLQueries = logSQLQueries
-	db.logConfig.AnalyzeSQLQueries = analyzeSQLQueries
+	db.logConfig().LogSQLQueries = logSQLQueries
+	db.logConfig().AnalyzeSQLQueries = analyzeSQLQueries
 
 	expectedQuery, expectedAffectedRows, expectedError := test.funcToRun(t, db, mock, analyzeSQLQueries)
 

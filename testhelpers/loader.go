@@ -23,15 +23,13 @@ var defaultGodogOptions = godog.Options{
 	Strict: true,
 }
 
-var godogFlagsBound bool
+func init() { //nolint:gochecknoinits // bind Godog flags only once before running tests
+	bindGodogCmdFlags()
+}
 
-// BindGodogCmdFlags binds the command arguments into the Godog options.
-func BindGodogCmdFlags() {
-	if godogFlagsBound {
-		return
-	}
+// bindGodogCmdFlags binds the command arguments into the Godog options.
+func bindGodogCmdFlags() {
 	godog.BindFlags("godog.", flag.CommandLine, &defaultGodogOptions)
-	godogFlagsBound = true
 }
 
 type contextKey string

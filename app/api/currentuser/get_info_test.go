@@ -25,7 +25,7 @@ func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
 	defer patch.Unpatch()
 	request, _ := http.NewRequest("GET", "", http.NoBody)
 	result := srv.getInfo(nil, request)
-	assert.Equal(t, service.InsufficientAccessRightsError, result)
+	assert.Equal(t, service.ErrAPIInsufficientAccessRights, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -3,8 +3,8 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
-	"os"
 	"regexp"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -12,33 +12,31 @@ import (
 
 // NewDBMock generate a DB mock the database engine with logging configuration read from the config file.
 func NewDBMock() (*DB, sqlmock.Sqlmock) {
-	dbMock, mock, err := sqlmock.New()
-	if err != nil {
-		fmt.Println("Unable to create the mock db: ", err)
-		os.Exit(1)
-	}
+	dbMock, mock := createSQLMock()
 
 	db, err := Open(dbMock)
 	if err != nil {
-		fmt.Println("Unable to create the gorm connection to the mock: ", err)
-		os.Exit(1)
+		panic(fmt.Errorf("unable to create the gorm connection to the mock: %w", err))
 	}
 
 	return db, mock
 }
 
-// NewDBMockWithLogConfig generate a DB mock the database engine with the given logging configuration.
-func NewDBMockWithLogConfig(logConfig LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, sqlmock.Sqlmock) {
+func createSQLMock() (*sql.DB, sqlmock.Sqlmock) {
 	dbMock, mock, err := sqlmock.New()
 	if err != nil {
-		fmt.Println("Unable to create the mock db: ", err)
-		os.Exit(1)
+		panic(fmt.Errorf("unable to create the mock db: %w", err))
 	}
+	return dbMock, mock
+}
+
+// NewDBMockWithLogConfig generate a DB mock the database engine with the given logging configuration.
+func NewDBMockWithLogConfig(logConfig LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, sqlmock.Sqlmock) {
+	dbMock, mock := createSQLMock()
 
 	db, err := OpenWithLogConfig(dbMock, logConfig, rawSQLQueriesLoggingEnabled)
 	if err != nil {
-		fmt.Println("Unable to create the gorm connection to the mock: ", err)
-		os.Exit(1)
+		panic(fmt.Errorf("unable to create the gorm connection to the mock: %w", err))
 	}
 
 	return db, mock

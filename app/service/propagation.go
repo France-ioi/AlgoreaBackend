@@ -15,7 +15,6 @@ const PropagationEndpointTimeout = 3 * time.Second
 // SchedulePropagation schedules asynchronous propagation of the given types.
 // If endpoint is an empty string, it will be done synchronously.
 func SchedulePropagation(store *database.DataStore, endpoint string, types []string) {
-	endpointFailed := false
 	if endpoint != "" {
 		// Async.
 		client := http.Client{
@@ -23,14 +22,13 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 		}
 
 		callTime := time.Now()
-		response, err := client.Get(endpoint + "?types=" + strings.Join(types, ","))
+		req, _ := http.NewRequestWithContext(store.GetContext(), "GET", endpoint+"?types="+strings.Join(types, ","), http.NoBody)
+		response, err := client.Do(req)
 		logging.SharedLogger.WithContext(store.GetContext()).
 			Infof("Propagation endpoint called: %v, types=%v, duration=%v", endpoint, types, time.Since(callTime))
 
 		if err != nil {
 			logging.SharedLogger.WithContext(store.GetContext()).Errorf("Propagation endpoint error: %v", err)
-
-			endpointFailed = true
 		} else {
 			defer func(response *http.Response) {
 				_ = response.Body.Close()
@@ -39,25 +37,16 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 			if response.StatusCode != http.StatusOK {
 				logging.SharedLogger.WithContext(store.GetContext()).
 					Errorf("Propagation endpoint error: status=%v", response.StatusCode)
-
-				endpointFailed = true
 			}
 		}
+		return
 	}
 
-	if endpoint == "" || endpointFailed {
-		// Sync.
-		if store.IsInTransaction() {
-			store.SchedulePermissionsPropagation()
-			store.ScheduleResultsPropagation()
-		} else {
-			err := store.InTransaction(func(store *database.DataStore) error {
-				store.SchedulePermissionsPropagation()
-				store.ScheduleResultsPropagation()
+	// Sync.
+	MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
+		store.SchedulePermissionsPropagation()
+		store.ScheduleResultsPropagation()
 
-				return nil
-			})
-			MustNotBeError(err)
-		}
-	}
+		return nil
+	}))
 }

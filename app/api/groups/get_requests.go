@@ -50,7 +50,7 @@ type groupRequestsViewResponseRow struct {
 		FirstName *string `json:"first_name"`
 		// required: true
 		LastName *string `json:"last_name"`
-	} `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+	} `gorm:"embedded;embedded_prefix:inviting_user__" json:"inviting_user"`
 }
 
 // swagger:operation GET /groups/{group_id}/requests group-memberships groupRequestsView
@@ -133,7 +133,7 @@ type groupRequestsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -142,9 +142,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 	query := store.GroupMembershipChanges().
 		Select(`
@@ -180,7 +178,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		Where("group_membership_changes.group_id = ?", groupID)
 
 	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
-		oldRejectionsWeeks, err := service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
+		var oldRejectionsWeeks int64
+		oldRejectionsWeeks, err = service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -190,7 +189,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -205,10 +204,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 				"member_id": service.FieldTypeInt64,
 			},
 		})
-
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	query = attachUsersWithApproval(
 		query.Joins(
@@ -227,7 +223,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func attachUsersWithApproval(conn *database.DB, user *database.User) *database.DB {

@@ -33,18 +33,18 @@ func ConvertMapFromDBToJSON(dbMap map[string]interface{}) map[string]interface{}
 		for subKeyIndex, subKey := range subKeys {
 			if subKeyIndex == len(subKeys)-1 {
 				setConvertedValueToJSONMap(subKey, value, currentMap)
-			} else {
-				shouldCreateSubMap := true
-				if subMap, hasSubMap := currentMap[subKey]; hasSubMap {
-					if subMap, ok := subMap.(map[string]interface{}); ok {
-						currentMap = subMap
-						shouldCreateSubMap = false
-					}
+				continue
+			}
+			shouldCreateSubMap := true
+			if subMap, hasSubMap := currentMap[subKey]; hasSubMap {
+				if subMap, ok := subMap.(map[string]interface{}); ok {
+					currentMap = subMap
+					shouldCreateSubMap = false
 				}
-				if shouldCreateSubMap {
-					currentMap[subKey] = map[string]interface{}{}
-					currentMap = currentMap[subKey].(map[string]interface{})
-				}
+			}
+			if shouldCreateSubMap {
+				currentMap[subKey] = map[string]interface{}{}
+				currentMap = currentMap[subKey].(map[string]interface{})
 			}
 		}
 	}

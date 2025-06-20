@@ -54,7 +54,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -69,7 +69,7 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 	user := srv.GetUser(httpReq)
 
 	if !user.CanSeeAnswer(store, participantID, itemID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	answer, hasAnswer := store.Answers().GetCurrentAnswer(participantID, itemID, attemptID)
@@ -81,5 +81,5 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 	convertedResult := service.ConvertMapFromDBToJSON(answer)
 
 	render.Respond(rw, httpReq, convertedResult)
-	return service.NoError
+	return nil
 }
