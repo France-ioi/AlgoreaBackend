@@ -67,6 +67,8 @@ linters-settings:
   nilnil:
     only-two: false
     detect-opposite: true
+  paralleltest:
+    ignore-missing: true
 
 linters:
   enable-all: true
@@ -91,7 +93,6 @@ linters:
     - maintidx         # For update to go1.20
     - nlreturn         # For update to go1.20
     - nonamedreturns   # For update to go1.20
-    - paralleltest     # For update to go1.20
     - sqlclosecheck    # For update to go1.20
     - tagliatelle      # For update to go1.20
     - tenv             # For update to go1.20
