@@ -532,7 +532,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 114, parentAttemptID: 201},
 		},
 		{
-			name: "the first item's attempt is not the same as the the second items's attempt " +
+			name: "the first item's attempt is not the same as the second items's attempt " +
 				"while the second item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 115, parentAttemptID: 200},
 		},
@@ -973,7 +973,7 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 114, attemptID: 202},
 		},
 		{
-			name: "the first item's attempt is not the same as the the second items's attempt " +
+			name: "the first item's attempt is not the same as the second items's attempt " +
 				"while the second item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 115, attemptID: 200},
 		},

@@ -2,8 +2,6 @@ package answers
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation PUT /items/{item_id}/attempts/{attempt_id}/answers/current answers currentAnswerUpdate
@@ -53,6 +51,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateCurrentAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) updateCurrentAnswer(rw http.ResponseWriter, httpReq *http.Request) error {
 	return srv.saveAnswerWithType(rw, httpReq, true)
 }

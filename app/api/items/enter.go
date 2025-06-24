@@ -38,7 +38,7 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of item IDs
+//			description: slash-separated list of item IDs (no more than 10 IDs)
 //			required: true
 //		- name: parent_attempt_id
 //			description: "`id` of an attempt which will be used as a parent attempt for the participation"
@@ -61,7 +61,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) enter(w http.ResponseWriter, r *http.Request) error {
 	ids, err := idsFromRequest(r)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -75,7 +75,6 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 	user := srv.GetUser(r)
 	participantID := service.ParticipantIDFromContext(r.Context())
 
-	apiError := service.NoError
 	var entryState *itemGetEntryStateResponse
 	var itemInfo struct {
 		Now                 *database.Time
@@ -87,18 +86,14 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, false, true)
 		service.MustNotBeError(err)
 		if !ok {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		entryState, apiError = getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
-		if apiError != service.NoError {
-			return apiError.Error
-		}
+		entryState, err = getItemInfoAndEntryState(ids[len(ids)-1], participantID, user, store, true)
+		service.MustNotBeError(err)
 
 		if entryState.State != string(ready) {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		service.MustNotBeError(store.Items().ByID(entryState.itemID).
@@ -155,14 +150,11 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) service.APIErr
 		return nil
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
 		"duration":   itemInfo.Duration,
 		"entered_at": itemInfo.Now,
 	})))
-	return service.NoError
+	return nil
 }

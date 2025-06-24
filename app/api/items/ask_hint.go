@@ -84,7 +84,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) error {
 	store := srv.GetStore(r)
 	requestData := AskHintRequest{store: store, publicKey: srv.TokenConfig.PublicKey}
 
@@ -93,13 +93,11 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		return service.ErrInvalidRequest(err)
 	}
 
-	var apiError service.APIError
-	if apiError = checkHintOrScoreTokenRequiredFields(requestData.TaskToken,
-		"hint_requested",
-		requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
-		requestData.HintToken.ItemURL, requestData.HintToken.AttemptID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(
+		checkHintOrScoreTokenRequiredFields(requestData.TaskToken,
+			"hint_requested",
+			requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
+			requestData.HintToken.ItemURL, requestData.HintToken.AttemptID))
 
 	logging.LogEntrySetField(r, "user_id", requestData.TaskToken.Converted.UserID)
 
@@ -111,16 +109,14 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 		service.MustNotBeError(err)
 
 		if !hasAccess {
-			apiError = service.ErrForbidden(reason)
-			return apiError.Error // rollback
+			return service.ErrForbidden(reason) // rollback
 		}
 
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []formdata.Anything
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, r)
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.ErrNotFound(errors.New("no result or the attempt is expired"))
-			return apiError.Error // rollback
+			return service.ErrNotFound(errors.New("no result or the attempt is expired")) // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -154,9 +150,6 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	requestData.TaskToken.PlatformName = srv.TokenConfig.PlatformName
@@ -166,7 +159,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) service.APIE
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
 		"task_token": newTaskToken,
 	})))
-	return service.NoError
+	return nil
 }
 
 func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
@@ -179,7 +172,7 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 		hintsErr := json.Unmarshal([]byte(*hintsInfo.HintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
-			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
+			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]string{
 				"idUser":      taskToken.UserID,
 				"idItemLocal": taskToken.LocalItemID,
 				"idAttempt":   taskToken.AttemptID,

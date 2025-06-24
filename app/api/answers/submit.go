@@ -84,7 +84,7 @@ type answerSubmitResponse struct { //nolint:unused
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) error {
 	requestData := SubmitRequest{PublicKey: srv.TokenConfig.PublicKey}
 
 	var err error
@@ -94,7 +94,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 	var answerID int64
 	var hintsInfo *database.HintsInfo
-	apiError := service.NoError
 
 	logging.LogEntrySetField(httpReq, "user_id", requestData.TaskToken.Converted.UserID)
 
@@ -106,16 +105,14 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		service.MustNotBeError(err)
 
 		if !hasAccess {
-			apiError = service.ErrForbidden(reason)
-			return apiError.Error // rollback
+			return service.ErrForbidden(reason) // rollback
 		}
 
 		hintsInfo, err = store.Results().GetHintsInfoForActiveAttempt(
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID, requestData.TaskToken.Converted.LocalItemID)
 
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.ErrForbidden(errors.New("no active attempt found"))
-			return apiError.Error // rollback
+			return service.ErrForbidden(errors.New("no active attempt found")) // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -139,9 +136,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		return nil
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	answerToken, err := (&token.Answer{
@@ -162,7 +156,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	service.MustNotBeError(render.Render(rw, httpReq, service.CreationSuccess(map[string]interface{}{
 		"answer_token": answerToken,
 	})))
-	return service.NoError
+	return nil
 }
 
 // UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken.

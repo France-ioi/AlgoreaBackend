@@ -6,6 +6,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
+const (
+	defaultLimit    = 500
+	maxAllowedLimit = 1000
+)
+
 // QueryLimiter applies the limit parameter from an HTTP request to a given DB query (see QueryLimiter.Apply()).
 type QueryLimiter struct {
 	defaultLimit    int64
@@ -17,8 +22,8 @@ type QueryLimiter struct {
 //   - maximum allowed limit is 1000.
 func NewQueryLimiter() *QueryLimiter {
 	return &QueryLimiter{
-		defaultLimit:    500,
-		maxAllowedLimit: 1000,
+		defaultLimit:    defaultLimit,
+		maxAllowedLimit: maxAllowedLimit,
 	}
 }
 

@@ -81,7 +81,7 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 
 	if len(ids) > 1 {
 		subQuery = subQuery.
-			Where(fmt.Sprintf("attempts%d.id = ?", len(ids)-2), parentAttemptID)
+			Where(fmt.Sprintf("attempts%d.id = ?", len(ids)-2), parentAttemptID) //nolint:gomnd // the second last item is the parent of the last one
 	}
 
 	return subQuery.Select(columnsList).

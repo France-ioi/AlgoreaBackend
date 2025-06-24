@@ -47,7 +47,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 
@@ -60,7 +60,6 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		// 1) the authenticated user should be the manager represented by managerID
@@ -83,8 +82,7 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 		}
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		return store.GroupManagers().
@@ -93,11 +91,8 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 			Delete().Error()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

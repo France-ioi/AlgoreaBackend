@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
@@ -48,7 +46,7 @@ do not exist or have missing relations, creates them all
 			}
 
 			// Success
-			fmt.Println("DONE")
+			cmd.Println("DONE")
 
 			return nil
 		},

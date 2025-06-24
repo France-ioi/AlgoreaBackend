@@ -14,6 +14,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
+const threadTokenLifetime = 2 * time.Hour
+
 // swagger:model threadGetResponse
 type threadGetResponse struct {
 	// required:true
@@ -81,7 +83,7 @@ type threadGetResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -120,7 +122,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 		Take(&threadInfo).Error()
 
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -131,11 +133,11 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) service.A
 
 	render.Respond(rw, r, threadGetResponse)
 
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo *threadInfo, user *database.User) (string, error) {
-	twoHoursLater := time.Now().Add(time.Hour * 2)
+	expirationTime := time.Now().Add(threadTokenLifetime)
 
 	threadToken, err := (&token.Thread{
 		ItemID:        strconv.FormatInt(itemID, 10),
@@ -144,7 +146,7 @@ func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo 
 		IsMine:        participantID == user.GroupID,
 		CanWatch:      userCanWatchForThread(threadInfo),
 		CanWrite:      userCanWriteInThread(user, participantID, threadInfo),
-		Exp:           strconv.FormatInt(twoHoursLater.Unix(), 10),
+		Exp:           strconv.FormatInt(expirationTime.Unix(), 10),
 	}).Sign(srv.TokenConfig.PrivateKey)
 
 	return threadToken, err

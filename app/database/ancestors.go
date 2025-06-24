@@ -91,7 +91,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	}
 
 	// For every object marked as processing, we compute all its ancestors
-	recomputeQueries := make([]string, 0, 3)
+	recomputeQueries := make([]string, 0, 3) //nolint:gomnd // we expect recomputeQueries to contain three elements
 	recomputeQueries = append(recomputeQueries, `
 		DELETE `+objectName+`_ancestors
 		FROM `+objectName+`_ancestors
@@ -163,15 +163,15 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	defer func() { mustNotBeError(dropTemporaryTable.Close()) }()
 
 	for {
-		_, err = markAsProcessing.ExecContext(s.ctx)
+		_, err = markAsProcessing.ExecContext(s.ctx())
 		mustNotBeError(err)
 		for i := 0; i < len(recomputeAncestors); i++ {
-			_, err = recomputeAncestors[i].ExecContext(s.ctx)
+			_, err = recomputeAncestors[i].ExecContext(s.ctx())
 			mustNotBeError(err)
 		}
 
 		var result sql.Result
-		result, err = markAsDone.ExecContext(s.ctx)
+		result, err = markAsDone.ExecContext(s.ctx())
 		mustNotBeError(err)
 		var rowsAffected int64
 		rowsAffected, err = result.RowsAffected()
@@ -180,10 +180,10 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 			break
 		}
 
-		_, err = dropTemporaryTable.ExecContext(s.ctx)
+		_, err = dropTemporaryTable.ExecContext(s.ctx())
 		mustNotBeError(err)
 
-		_, err = createTemporaryTable.ExecContext(s.ctx)
+		_, err = createTemporaryTable.ExecContext(s.ctx())
 		mustNotBeError(err)
 	}
 }

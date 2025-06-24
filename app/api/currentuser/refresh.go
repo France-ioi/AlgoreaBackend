@@ -26,7 +26,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	accessToken := auth.BearerTokenFromContext(r.Context())
 
@@ -47,5 +47,5 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) service.APIE
 	response := service.UpdateSuccess[*struct{}](nil)
 	render.Respond(w, r, &response)
 
-	return service.NoError
+	return nil
 }

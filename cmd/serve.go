@@ -50,11 +50,11 @@ func init() { //nolint:gochecknoinits
 				var domainConfig []domain.ConfigItem
 				domainConfig, err = app.DomainsConfig(application.Config)
 				if err != nil {
-					return fmt.Errorf("cannot load domain config: %s", err)
+					return fmt.Errorf("cannot load domain config: %w", err)
 				}
 				err = configdb.CheckConfig(database.NewDataStore(application.Database), domainConfig)
 				if err != nil {
-					return fmt.Errorf("integrity check failed: %s\nUse --skip-checks to bypass the integrity check", err)
+					return fmt.Errorf("integrity check failed: %w\nUse --skip-checks to bypass the integrity check", err)
 				}
 			}
 

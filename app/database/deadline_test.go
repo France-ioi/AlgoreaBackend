@@ -18,12 +18,12 @@ import (
 )
 
 type cancelCtx struct {
-	context.Context
-	_     sync.Mutex
-	_     atomic.Value
-	_     map[interface{}]struct{}
-	err   error
-	cause error
+	context.Context //nolint:containedctx // it is not us who store the context in the structure
+	_               sync.Mutex
+	_               atomic.Value
+	_               map[interface{}]struct{}
+	err             error
+	cause           error
 }
 
 type timerCtx struct {
@@ -163,7 +163,7 @@ func Test_Deadline(t *testing.T) {
 					mustNotBeError(err)
 					defer func() { _ = stmt.Close() }()
 					cancel()
-					_, err = stmt.ExecContext(s.ctx)
+					_, err = stmt.ExecContext(s.ctx())
 					return err
 				})
 			},
@@ -181,7 +181,7 @@ func Test_Deadline(t *testing.T) {
 					mustNotBeError(err)
 					defer func() { _ = stmt.Close() }()
 					cancel()
-					rows, err := stmt.QueryContext(s.ctx)
+					rows, err := stmt.QueryContext(s.ctx())
 					if rows != nil {
 						_ = rows.Err() // ignore the error as err is expected to be non-nil
 						_ = rows.Close()
@@ -203,7 +203,7 @@ func Test_Deadline(t *testing.T) {
 					mustNotBeError(err)
 					defer func() { _ = stmt.Close() }()
 					cancel()
-					row := stmt.QueryRowContext(s.ctx)
+					row := stmt.QueryRowContext(s.ctx())
 					return row.Err()
 				})
 			},
@@ -266,7 +266,9 @@ func Test_Deadline(t *testing.T) {
 
 			err := test.funcToCall(dataStore, func() {
 				cancel()
+				//nolint:gosec // access the context directly to set the error
 				(*cancelCtxInterface)(unsafe.Pointer(&ctx)).p.err = context.DeadlineExceeded
+				//nolint:gosec // access the context directly to set the cause to nil
 				(*cancelCtxInterface)(unsafe.Pointer(&ctx)).p.cause = nil
 			})
 

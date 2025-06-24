@@ -36,14 +36,14 @@ func NewDataStoreWithTable(conn *DB, tableName string) *DataStore {
 
 // ProhibitResultsPropagation marks the context inside the DB connection as prohibiting the propagation of results.
 func ProhibitResultsPropagation(conn *DB) {
-	prohibitedPropagations := getProhibitedPropagationsFromContext(conn.ctx)
+	prohibitedPropagations := getProhibitedPropagationsFromContext(conn.ctx())
 	prohibitedPropagations.Results = true
-	conn.ctx = context.WithValue(conn.ctx, prohibitedPropagationsContextKey, prohibitedPropagations)
+	conn.db = cloneDBWithNewContext(context.WithValue(conn.ctx(), prohibitedPropagationsContextKey, prohibitedPropagations), conn).db
 }
 
 // IsResultsPropagationProhibited returns true if the propagation of results is prohibited in the context of the current DB connection.
 func (s *DataStore) IsResultsPropagationProhibited() bool {
-	return getProhibitedPropagationsFromContext(s.DB.ctx).Results
+	return getProhibitedPropagationsFromContext(s.DB.ctx()).Results
 }
 
 func getProhibitedPropagationsFromContext(ctx context.Context) propagationsBitField {
@@ -57,7 +57,7 @@ func getProhibitedPropagationsFromContext(ctx context.Context) propagationsBitFi
 // MergeContext returns a new context based on the given one, with DB-related values copied
 // from the context of the current DB connection.
 func (s *DataStore) MergeContext(ctx context.Context) context.Context {
-	prohibitedPropagations := getProhibitedPropagationsFromContext(s.DB.ctx)
+	prohibitedPropagations := getProhibitedPropagationsFromContext(s.DB.ctx())
 	return context.WithValue(ctx, prohibitedPropagationsContextKey, prohibitedPropagations)
 }
 
@@ -228,7 +228,7 @@ var (
 	onForcefulRetryOfTransactionHook              atomic.Value
 )
 
-func init() {
+func init() { //nolint:gochecknoinits // this is an initialization function to store the default hooks
 	onStartOfTransactionToBeRetriedForcefullyHook.Store(func() {})
 	onForcefulRetryOfTransactionHook.Store(func() {})
 }
@@ -240,11 +240,11 @@ func init() {
 // For testing purposes, it is possible to force this method to retry the transaction once
 // by providing a context created with ContextWithTransactionRetrying.
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
-	s.DB.ctx = context.WithValue(s.DB.ctx, awaitingPropagationsContextKey, &propagationsBitField{})
+	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx(), awaitingPropagationsContextKey, &propagationsBitField{}), s.DB)
 	var retried bool
 
 	err := s.inTransaction(func(db *DB) error {
-		shouldForceTransactionRetry := s.DB.ctx.Value(retryEachTransactionContextKey) != nil && !retried
+		shouldForceTransactionRetry := s.DB.ctx().Value(retryEachTransactionContextKey) != nil && !retried
 
 		dataStore := NewDataStoreWithTable(db, s.tableName)
 		if shouldForceTransactionRetry {
@@ -267,8 +267,8 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 		return err
 	}
 
-	propagationsToRun := s.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
-	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx)
+	propagationsToRun := s.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx())
 
 	if propagationsToRun.Permissions && !prohibitedPropagations.Permissions {
 		propagationsToRun.Permissions = false
@@ -315,7 +315,7 @@ func (s *DataStore) SetPropagationsModeToSync() (err error) {
 
 	mustNotBeError(s.Exec("SET @synchronous_propagations_connection_id = CONNECTION_ID()").Error())
 
-	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx, propagationsAreSyncContextKey, true), s.DB)
+	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx(), propagationsAreSyncContextKey, true), s.DB)
 	return nil
 }
 
@@ -323,7 +323,7 @@ func (s *DataStore) SetPropagationsModeToSync() (err error) {
 func (s *DataStore) ScheduleResultsPropagation() {
 	s.mustBeInTransaction()
 
-	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun := s.DB.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	propagationsToRun.Results = true
 }
 
@@ -331,7 +331,7 @@ func (s *DataStore) ScheduleResultsPropagation() {
 func (s *DataStore) SchedulePermissionsPropagation() {
 	s.mustBeInTransaction()
 
-	propagationsToRun := s.DB.ctx.Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun := s.DB.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	propagationsToRun.Permissions = true
 }
 
@@ -435,6 +435,6 @@ func ContextWithTransactionRetrying(ctx context.Context) context.Context {
 }
 
 func (s *DataStore) arePropagationsSync() bool {
-	propagationsAreSync, _ := s.ctx.Value(propagationsAreSyncContextKey).(bool)
+	propagationsAreSync, _ := s.ctx().Value(propagationsAreSyncContextKey).(bool)
 	return propagationsAreSync
 }

@@ -131,7 +131,7 @@ type itemWatchedGroupStat struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -141,15 +141,11 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 	store := srv.GetStore(httpReq)
 
-	attemptID, apiError := resolveAttemptIDForNavigationData(store, httpReq, participantID, itemID)
-	if apiError != service.NoError {
-		return apiError
-	}
+	attemptID, err := resolveAttemptIDForNavigationData(store, httpReq, participantID, itemID)
+	service.MustNotBeError(err)
 
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpReq)
+	service.MustNotBeError(err)
 
 	rawData := getRawNavigationData(store, itemID, participantID, attemptID, user, watchedGroupID, watchedGroupIDIsSet)
 
@@ -168,10 +164,10 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	fillNavigationWithChildren(store, rawData, watchedGroupIDIsSet, &response.Children)
 
 	render.Respond(rw, httpReq, response)
-	return service.NoError
+	return nil
 }
 
-func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.Request, groupID, itemID int64) (int64, service.APIError) {
+func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.Request, groupID, itemID int64) (int64, error) {
 	attemptIDSet := len(httpReq.URL.Query()["attempt_id"]) != 0
 	childAttemptIDSet := len(httpReq.URL.Query()["child_attempt_id"]) != 0
 	var attemptID, childAttemptID int64
@@ -207,11 +203,11 @@ func resolveAttemptIDForNavigationData(store *database.DataStore, httpReq *http.
 			PluckFirst("IF(child_attempt.root_item_id = child_result.item_id, child_attempt.parent_attempt_id, child_attempt.id)", &attemptID).
 			Error()
 		if gorm.IsRecordNotFoundError(err) {
-			return 0, service.InsufficientAccessRightsError
+			return 0, service.ErrAPIInsufficientAccessRights
 		}
 		service.MustNotBeError(err)
 	}
-	return attemptID, service.NoError
+	return attemptID, nil
 }
 
 func fillNavigationWithChildren(

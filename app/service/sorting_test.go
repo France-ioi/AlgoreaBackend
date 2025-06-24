@@ -26,7 +26,7 @@ func TestApplySorting(t *testing.T) {
 		args             args
 		wantSQL          string
 		wantSQLArguments []driver.Value
-		wantAPIError     APIError
+		wantError        error
 		shouldPanic      error
 	}{
 		{
@@ -42,8 +42,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantSQL:      "SELECT id FROM `users` ORDER BY name DESC, id ASC",
-			wantAPIError: NoError,
+			wantSQL: "SELECT id FROM `users` ORDER BY name DESC, id ASC",
 		},
 		{
 			name: "sorting (request rules)",
@@ -57,8 +56,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers: SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantSQL:      "SELECT id FROM `users` ORDER BY name ASC, id DESC",
-			wantAPIError: NoError,
+			wantSQL: "SELECT id FROM `users` ORDER BY name ASC, id DESC",
 		},
 		{
 			name: "sorting (request rules are skipped)",
@@ -74,8 +72,7 @@ func TestApplySorting(t *testing.T) {
 					DefaultRules:        "id",
 				},
 			},
-			wantSQL:      "SELECT id FROM `users` ORDER BY id ASC",
-			wantAPIError: NoError,
+			wantSQL: "SELECT id FROM `users` ORDER BY id ASC",
 		},
 		{
 			name: "repeated field",
@@ -90,7 +87,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`a field cannot be a sorting parameter more than once: "name"`)),
+			wantError: ErrInvalidRequest(errors.New(`a field cannot be a sorting parameter more than once: "name"`)),
 		},
 		{
 			name: "unallowed field",
@@ -105,7 +102,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`unallowed field in sorting parameters: "class"`)),
+			wantError: ErrInvalidRequest(errors.New(`unallowed field in sorting parameters: "class"`)),
 		},
 		{
 			name: "'null last' for a non-nullable field",
@@ -120,7 +117,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`'null last' sorting cannot be applied to a non-nullable field: "name"`)),
+			wantError: ErrInvalidRequest(errors.New(`'null last' sorting cannot be applied to a non-nullable field: "name"`)),
 		},
 		{
 			name: "applies default null sorting for nullable fields",
@@ -134,8 +131,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantSQL:      "SELECT id FROM `users` ORDER BY name IS NOT NULL, name DESC, id ASC",
-			wantAPIError: NoError,
+			wantSQL: "SELECT id FROM `users` ORDER BY name IS NOT NULL, name DESC, id ASC",
 		},
 		{
 			name: "'null last'",
@@ -149,8 +145,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantSQL:      "SELECT id FROM `users` ORDER BY id ASC, name IS NULL, name DESC",
-			wantAPIError: NoError,
+			wantSQL: "SELECT id FROM `users` ORDER BY id ASC, name IS NULL, name DESC",
 		},
 		{
 			name: "add a tie-breaker field",
@@ -167,7 +162,6 @@ func TestApplySorting(t *testing.T) {
 			},
 			wantSQL:          "SELECT id FROM `users` ORDER BY name DESC, id ASC",
 			wantSQLArguments: nil,
-			wantAPIError:     NoError,
 		},
 		{
 			name: "add multiple tie-breaker fields",
@@ -185,7 +179,6 @@ func TestApplySorting(t *testing.T) {
 			},
 			wantSQL:          "SELECT id FROM `users` ORDER BY name DESC, group_id ASC, item_id ASC",
 			wantSQLArguments: nil,
-			wantAPIError:     NoError,
 		},
 		{
 			name: "add some of tie-breaker fields",
@@ -203,7 +196,6 @@ func TestApplySorting(t *testing.T) {
 			},
 			wantSQL:          "SELECT id FROM `users` ORDER BY name DESC, item_id ASC, group_id ASC",
 			wantSQLArguments: nil,
-			wantAPIError:     NoError,
 		},
 		{
 			name: "sorting + paging",
@@ -227,7 +219,6 @@ func TestApplySorting(t *testing.T) {
 				"WHERE ((name < ?) OR (name = ? AND id > ?) OR (name = ? AND id = ? AND bFlag > ?)) " +
 				"ORDER BY name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{"Joe", "Joe", 1, "Joe", 1, true},
-			wantAPIError:     NoError,
 		},
 		{
 			name: "sorting + paging with a nullable field",
@@ -251,7 +242,6 @@ func TestApplySorting(t *testing.T) {
 				"  (name <=> from_page.name AND id <=> from_page.id AND bFlag > from_page.flag)) " +
 				"ORDER BY name IS NOT NULL, name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{1},
-			wantAPIError:     NoError,
 		},
 		{
 			name: "sorting + paging with a nullable field (null last)",
@@ -275,7 +265,6 @@ func TestApplySorting(t *testing.T) {
 				"  (name <=> from_page.name AND id <=> from_page.id AND bFlag > from_page.flag)) " +
 				"ORDER BY name IS NULL, name DESC, id ASC, bFlag ASC",
 			wantSQLArguments: []driver.Value{1},
-			wantAPIError:     NoError,
 		},
 		{
 			name: "sorting + paging with a nullable field (null last, nullable field is in the middle)",
@@ -299,7 +288,6 @@ func TestApplySorting(t *testing.T) {
 				"  (bFlag <=> from_page.flag AND name <=> from_page.name AND id > from_page.id)) " +
 				"ORDER BY bFlag ASC, name IS NULL, name DESC, id ASC",
 			wantSQLArguments: []driver.Value{1},
-			wantAPIError:     NoError,
 		},
 		{
 			name: "does not do paging when StartFromRowQuery = FromFirstRow",
@@ -318,7 +306,6 @@ func TestApplySorting(t *testing.T) {
 			},
 			wantSQL: "SELECT id FROM `users` " +
 				"ORDER BY bFlag ASC, name IS NULL, name DESC, id ASC",
-			wantAPIError: NoError,
 		},
 		{
 			name: "uses a custom sub-query for the first row if StartFromRowQuery is given",
@@ -341,7 +328,6 @@ func TestApplySorting(t *testing.T) {
 				"  (bFlag <=> from_page.flag AND IF(from_page.name IS NULL, FALSE, name IS NULL OR name < from_page.name)) OR " +
 				"  (bFlag <=> from_page.flag AND name <=> from_page.name AND id > from_page.id)) " +
 				"ORDER BY bFlag ASC, name IS NULL, name DESC, id ASC",
-			wantAPIError: NoError,
 		},
 		{
 			name: "wrong value in from.id field",
@@ -356,7 +342,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64},
 				},
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`wrong value for from.id (should be int64)`)),
+			wantError: ErrInvalidRequest(errors.New(`wrong value for from.id (should be int64)`)),
 		},
 		{
 			name: "one of the 'from.*' fields is skipped",
@@ -372,7 +358,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64, "name": FieldTypeString},
 				},
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`all 'from' parameters (from.id, from.name) or none of them must be present`)),
+			wantError: ErrInvalidRequest(errors.New(`all 'from' parameters (from.id, from.name) or none of them must be present`)),
 		},
 		{
 			name: "unsupported field type",
@@ -430,7 +416,7 @@ func TestApplySorting(t *testing.T) {
 					TieBreakers:  SortingAndPagingTieBreakers{"id": FieldTypeInt64, "name": FieldTypeString},
 				},
 			},
-			wantAPIError: ErrInvalidRequest(errors.New(`unallowed paging parameters (from.field, from.version)`)),
+			wantError: ErrInvalidRequest(errors.New(`unallowed paging parameters (from.field, from.version)`)),
 		},
 		{
 			name: "paging by time",
@@ -448,7 +434,6 @@ func TestApplySorting(t *testing.T) {
 			wantSQL: "SELECT id FROM `users`  WHERE ((submitted_at > ?) OR (submitted_at = ? AND id > ?)) " +
 				"ORDER BY submitted_at ASC, id ASC",
 			wantSQLArguments: []driver.Value{"2006-01-02 12:04:05", "2006-01-02 12:04:05", 1},
-			wantAPIError:     NoError,
 		},
 		{
 			name: "paging by time with milliseconds",
@@ -466,7 +451,6 @@ func TestApplySorting(t *testing.T) {
 			wantSQL: "SELECT id FROM `users`  WHERE ((submitted_at > ?) OR (submitted_at = ? AND id > ?)) " +
 				"ORDER BY submitted_at ASC, id ASC",
 			wantSQLArguments: []driver.Value{"2006-01-02 12:04:05.001", "2006-01-02 12:04:05.001", 1},
-			wantAPIError:     NoError,
 		},
 	}
 
@@ -496,10 +480,10 @@ func TestApplySorting(t *testing.T) {
 			request, _ := http.NewRequest("GET", "/"+tt.args.urlParameters, http.NoBody)
 			query := db.Table("users").Select("id")
 
-			query, gotAPIError := ApplySortingAndPaging(request, query, tt.args.sortingAndPagingParameters)
-			assert.Equal(t, tt.wantAPIError, gotAPIError)
+			query, gotError := ApplySortingAndPaging(request, query, tt.args.sortingAndPagingParameters)
+			assert.Equal(t, tt.wantError, gotError)
 
-			if gotAPIError == NoError {
+			if gotError == nil {
 				var result []struct{}
 				query.Scan(&result)
 			}

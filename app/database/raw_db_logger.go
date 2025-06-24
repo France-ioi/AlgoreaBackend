@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql/driver"
+	"errors"
 	"regexp"
 	"strconv"
 	"time"
@@ -18,7 +19,7 @@ var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[(?:<n
 func NewRawDBLogger() instrumentedsql.Logger {
 	return instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
 		valuesMap := prepareRawDBLoggerValuesMap(keyvals)
-		if valuesMap["err"] != nil && valuesMap["err"] == driver.ErrSkip { // duplicated message
+		if err, ok := valuesMap["err"].(error); ok && errors.Is(err, driver.ErrSkip) { // duplicated message
 			return
 		}
 
@@ -33,7 +34,7 @@ func NewRawDBLogger() instrumentedsql.Logger {
 }
 
 func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
-	valuesMap := make(map[string]interface{}, len(keyvals)/2)
+	valuesMap := make(map[string]interface{}, len(keyvals)/2) //nolint:gomnd // keyvals are key-value pairs
 	for index := 0; index < len(keyvals); index += 2 {
 		valuesMap[keyvals[index].(string)] = keyvals[index+1]
 	}

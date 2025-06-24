@@ -135,7 +135,7 @@ type groupGetResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) error {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -195,7 +195,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	var result groupGetResponse
 	err = query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -259,7 +259,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	}
 	render.Respond(w, r, result)
 
-	return service.NoError
+	return nil
 }
 
 // currentUserMembershipSQLColumn returns an SQL column expression to get the current user membership

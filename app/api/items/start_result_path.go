@@ -40,7 +40,7 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of item IDs
+//			description: slash-separated list of item IDs (no more than 10 IDs)
 //			required: true
 //		- name: as_team_id
 //			in: query
@@ -79,7 +79,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -90,13 +90,13 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var result []map[string]interface{}
-	apiError := service.NoError
 	var attemptID int64
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	var shouldSchedulePropagation bool
+	store := srv.GetStore(r)
+	err = store.InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		data := result[0]
@@ -125,21 +125,21 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert, []string{"started_at", "latest_activity_at"}))
 			service.MustNotBeError(resultStore.InsertIgnoreMaps("results_propagate", rowsToInsertPropagate))
-
-			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+			shouldSchedulePropagation = true
 		}
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
+
+	if shouldSchedulePropagation {
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+	}
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
 		"attempt_id": strconv.FormatInt(attemptID, 10),
 	})))
-	return service.NoError
+	return nil
 }
 
 func hasAccessToItemPath(store *database.DataStore, participantID int64, ids []int64) bool {

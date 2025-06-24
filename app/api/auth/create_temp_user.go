@@ -62,11 +62,9 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) service.APIError {
-	cookieAttributes, apiError := srv.resolveCookieAttributesFromRequest(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error {
+	cookieAttributes, err := srv.resolveCookieAttributesFromRequest(r)
+	service.MustNotBeError(err)
 
 	if len(r.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("the 'Authorization' header must not be present"))
@@ -75,7 +73,8 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 	defaultLanguage := database.Default()
 	if len(r.URL.Query()["default_language"]) != 0 {
 		defaultLanguage = r.URL.Query().Get("default_language")
-		if utf8.RuneCountInString(defaultLanguage.(string)) > 3 {
+		const maxLanguageLength = 3
+		if utf8.RuneCountInString(defaultLanguage.(string)) > maxLanguageLength {
 			return service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
 		}
 	}
@@ -85,7 +84,8 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		userID := createTempUserGroup(store)
-		login := createTempUser(store, userID, defaultLanguage, strings.SplitN(r.RemoteAddr, ":", 2)[0])
+		login := createTempUser(store, userID, defaultLanguage,
+			strings.SplitN(r.RemoteAddr, ":", 2)[0]) //nolint:gomnd // cut off the port
 
 		service.MustNotBeError(store.Groups().ByID(userID).UpdateColumn(map[string]interface{}{
 			"name":        login,
@@ -110,13 +110,15 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) servi
 
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}],
 		token, time.Now().Add(time.Duration(expiresIn)*time.Second), cookieAttributes)
-	return service.NoError
+	return nil
 }
 
 func createTempUser(store *database.DataStore, userID int64, defaultLanguage interface{}, lastIP string) string {
 	var login string
 	service.MustNotBeError(store.RetryOnDuplicateKeyError("users", "login", "login", func(retryLoginStore *database.DataStore) error {
-		login = fmt.Sprintf("tmp-%d", rand.Int31n(99999999-10000000+1)+10000000)
+		const minLogin = int32(10000000)
+		const maxLogin = int32(99999999)
+		login = fmt.Sprintf("tmp-%d", rand.Int31n(maxLogin-minLogin+1)+minLogin)
 		return retryLoginStore.Users().InsertMap(map[string]interface{}{
 			"login_id":         0,
 			"login":            login,
@@ -145,21 +147,23 @@ func createTempUserGroup(store *database.DataStore) int64 {
 	return userID
 }
 
-func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, service.APIError) {
-	requestData, apiError := parseCookieAttributesForCreateTempUser(r)
-	if apiError != service.NoError {
-		return nil, apiError
+func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, error) {
+	requestData, err := parseCookieAttributesForCreateTempUser(r)
+	if err != nil {
+		return nil, err
 	}
-	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
-	if apiError != service.NoError {
-		return nil, apiError
+
+	cookieAttributes, err := srv.resolveCookieAttributes(r, requestData)
+	if err != nil {
+		return nil, err
 	}
-	return cookieAttributes, service.NoError
+
+	return cookieAttributes, nil
 }
 
-func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, service.APIError) {
+func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, error) {
 	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
-	requestData := make(map[string]interface{}, 2)
+	requestData := make(map[string]interface{}, len(allowedParameters))
 	query := r.URL.Query()
 	for _, parameterName := range allowedParameters {
 		extractOptionalParameter(query, parameterName, requestData)

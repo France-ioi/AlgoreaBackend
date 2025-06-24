@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /current-user/dump users currentUserDataExport
@@ -35,6 +33,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) error {
 	return srv.getDumpCommon(r, w, false)
 }

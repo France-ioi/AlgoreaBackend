@@ -221,7 +221,7 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	db.ctx = context.WithValue(context.Background(), ctxKey("key"), "value")
+	db = cloneDBWithNewContext(context.WithValue(context.Background(), ctxKey("key"), "value"), db)
 
 	mock.ExpectBegin()
 	mock.ExpectCommit()
@@ -722,14 +722,15 @@ func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
 	dataStore := NewDataStoreWithContext(ctx, db)
 
 	assert.Equal(t, db.ctes, dataStore.ctes)
-	assert.Equal(t, db.logConfig, dataStore.logConfig)
-	assert.Equal(t, ctx, dataStore.ctx)
+	assert.Equal(t, db.logConfig(), dataStore.logConfig())
+	assert.Equal(t, ctx, dataStore.ctx())
 
 	dbWrapper := dataStore.DB.db.CommonDB().(*sqlDBWrapper)
 	assert.Equal(t, ctx, dbWrapper.ctx)
-	assert.Equal(t, db.logConfig, dbWrapper.logConfig)
+	assert.Equal(t, db.logConfig(), dbWrapper.logConfig)
 	assert.Equal(t, db.db.CommonDB().(*sqlDBWrapper).sqlDB, dbWrapper.sqlDB)
 	dialect := dataStore.DB.db.Dialect()
+	//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
 	assert.Equal(t, dbWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
 
 	assert.Nil(t, mock.ExpectationsWereMet())
@@ -749,14 +750,15 @@ func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
 		dataStore := NewDataStoreWithContext(ctx, db)
 
 		assert.Equal(t, db.ctes, dataStore.ctes)
-		assert.Equal(t, db.logConfig, dataStore.logConfig)
-		assert.Equal(t, ctx, dataStore.ctx)
+		assert.Equal(t, db.logConfig(), dataStore.logConfig())
+		assert.Equal(t, ctx, dataStore.ctx())
 
 		txWrapper := dataStore.DB.db.CommonDB().(*sqlTxWrapper)
-		assert.Equal(t, db.logConfig, txWrapper.logConfig)
+		assert.Equal(t, db.logConfig(), txWrapper.logConfig)
 		assert.Equal(t, ctx, txWrapper.ctx)
 		assert.Equal(t, db.db.CommonDB().(*sqlTxWrapper).sqlTx, txWrapper.sqlTx)
 		dialect := dataStore.DB.db.Dialect()
+		//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
 		assert.Equal(t, txWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
 
 		return nil
@@ -811,11 +813,11 @@ func TestDataStore_SetPropagationsModeToSync(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(-1, 0))
 	mock.ExpectCommit()
 
-	require.Nil(t, db.ctx.Value(propagationsAreSyncContextKey))
+	require.Nil(t, db.ctx().Value(propagationsAreSyncContextKey))
 
 	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
 		require.NoError(t, store.SetPropagationsModeToSync())
-		assert.Equal(t, store.DB.ctx.Value(propagationsAreSyncContextKey), true)
+		assert.Equal(t, store.DB.ctx().Value(propagationsAreSyncContextKey), true)
 		assert.Equal(t, store.DB.db.CommonDB().(*sqlTxWrapper).ctx.Value(propagationsAreSyncContextKey), true)
 		return nil
 	}))

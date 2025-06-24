@@ -72,7 +72,7 @@ func Test_getSQLExecutionPlanLoggingFunc_DoesNothingDependingOnParameters(t *tes
 				AnalyzeSQLQueries: tt.analyzeSQLQueries,
 			}
 
-			getSQLExecutionPlanLoggingFunc(db.ctx, db.db.CommonDB().(*sqlDBWrapper), logConfig, tt.query)()
+			getSQLExecutionPlanLoggingFunc(db.ctx(), db.db.CommonDB().(*sqlDBWrapper), logConfig, tt.query)()
 			assert.True(t, called)
 
 			assert.NoError(t, mock.ExpectationsWereMet())
@@ -110,7 +110,7 @@ func Test_getSQLExecutionPlanLoggingFunc_RunsExplainAnalyzeForSuitableQueries(t 
 
 			mock.ExpectQuery("^" + regexp.QuoteMeta("EXPLAIN ANALYZE "+query) + "$").
 				WillReturnRows(mock.NewRows([]string{"plan"}).AddRow("plan"))
-			getSQLExecutionPlanLoggingFunc(db.ctx, db.db.CommonDB().(*sqlDBWrapper), logConfig, query)()
+			getSQLExecutionPlanLoggingFunc(db.ctx(), db.db.CommonDB().(*sqlDBWrapper), logConfig, query)()
 			require.NoError(t, mock.ExpectationsWereMet())
 
 			printsCalled := loggerHook.AllEntries()

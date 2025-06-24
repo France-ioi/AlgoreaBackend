@@ -37,7 +37,7 @@ func (m *sessionIDsInProgressMap) WithLock(sessionID int64, r *http.Request, f f
 
 var sessionIDsInProgress sessionIDsInProgressMap
 
-func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) error {
 	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
 	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
 
@@ -48,7 +48,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 
 	var newToken string
 	var expiresIn int32
-	apiError := service.NoError
+	var err error
 
 	sessionMostRecentToken, err := store.
 		AccessTokens().
@@ -69,13 +69,9 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
 			service.MustNotBeError(sessionIDsInProgress.WithLock(sessionID, r, func() error {
-				newToken, expiresIn, apiError = srv.refreshTokens(r.Context(), store, user, sessionID)
-				return nil
+				newToken, expiresIn, err = srv.refreshTokens(r.Context(), store, user, sessionID)
+				return err
 			}))
-		}
-
-		if apiError != service.NoError {
-			return apiError
 		}
 
 		service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
@@ -84,7 +80,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) s
 	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], newToken,
 		time.Now().Add(time.Duration(expiresIn)*time.Second),
 		cookieAttributes)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) refreshTokens(
@@ -92,9 +88,9 @@ func (srv *Service) refreshTokens(
 	store *database.DataStore,
 	user *database.User,
 	sessionID int64,
-) (newToken string, expiresIn int32, apiError service.APIError) {
+) (newToken string, expiresIn int32, err error) {
 	var refreshToken string
-	err := store.Sessions().Where("session_id = ?", sessionID).
+	err = store.Sessions().Where("session_id = ?", sessionID).
 		PluckFirst("refresh_token", &refreshToken).Error()
 	if refreshToken == "" {
 		logging.SharedLogger.WithContext(ctx).
@@ -127,5 +123,5 @@ func (srv *Service) refreshTokens(
 
 		return nil
 	}))
-	return newToken, expiresIn, service.NoError
+	return newToken, expiresIn, nil
 }

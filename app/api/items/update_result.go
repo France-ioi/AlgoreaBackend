@@ -64,7 +64,7 @@ type resultUpdateRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -86,7 +86,6 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		resultScope := store.Results().
 			Where("participant_id = ?", participantID).
@@ -96,8 +95,7 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 		found, err = resultScope.WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		data := formData.ConstructMapForDB()
@@ -106,11 +104,8 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 		}
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

@@ -55,7 +55,7 @@ type groupRootsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -109,7 +109,7 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) service.API
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 // ancestorsOfJoinedGroupsQuery returns a query selecting all ancestors of groups joined by the given user

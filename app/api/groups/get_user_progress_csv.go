@@ -77,7 +77,7 @@ const csvExportBatchSize = 500
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -87,13 +87,11 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	service.MustNotBeError(err)
 
 	w.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
@@ -106,7 +104,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 	if len(itemParentIDs) == 0 {
 		_, err := w.Write([]byte("Login;First name;Last name\n"))
 		service.MustNotBeError(err)
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -142,7 +140,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 		Scan(&users).Error())
 
 	if len(users) == 0 {
-		return service.NoError
+		return nil
 	}
 	userIDs := make([]string, len(users))
 	for i := range users {
@@ -176,7 +174,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 						}, csvWriter)).Error())
 	}
 
-	return service.NoError
+	return nil
 }
 
 func printTableHeader(
@@ -197,7 +195,7 @@ func printTableHeader(
 	for i := range items {
 		itemTitlesMap[items[i].ID] = items[i].Title
 	}
-	itemTitles := make([]string, 0, len(orderedItemIDListWithDuplicates)+3)
+	itemTitles := make([]string, 0, len(firstColumns)+len(orderedItemIDListWithDuplicates))
 	itemTitles = append(itemTitles, firstColumns...)
 	for i, itemID := range orderedItemIDListWithDuplicates {
 		title := itemTitlesMap[itemID.(int64)]
