@@ -133,7 +133,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 
 		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(r)).
 			Where("attempts.id = ?", attemptID).
-			WithCustomWriteLocks(golang.NewSet("attempts"), golang.NewSet("results")).
+			WithCustomWriteLocks(golang.NewSet("results"), golang.NewSet[string]()).
 			Scan(&attemptInfo).Error())
 
 		if attemptInfo.UserCreator.GroupID == nil {
