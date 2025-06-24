@@ -18,7 +18,9 @@ func TestSQLTxWrapper_Prepare_Panics(t *testing.T) {
 
 	assert.NoError(t, db.inTransaction(func(db *DB) error {
 		sqlTxWrapper := db.db.CommonDB().(*sqlTxWrapper)
-		assert.Panics(t, func() { _, _ = sqlTxWrapper.Prepare("SELECT 1") })
+		assert.Panics(t, func() {
+			_, _ = sqlTxWrapper.Prepare("SELECT 1") //nolint:sqlclosecheck // there is no statement to close as the Prepare should panic
+		})
 		return nil
 	}))
 

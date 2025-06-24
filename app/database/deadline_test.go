@@ -184,7 +184,7 @@ func Test_Deadline(t *testing.T) {
 					rows, err := stmt.QueryContext(s.ctx())
 					if rows != nil {
 						_ = rows.Err() // ignore the error as err is expected to be non-nil
-						_ = rows.Close()
+						defer func() { _ = rows.Close() }()
 					}
 					return err
 				})
