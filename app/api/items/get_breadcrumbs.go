@@ -26,26 +26,26 @@ import (
 //		* the list of item IDs should be a valid path from a root item
 //		 (`items.id`=`groups.root_activity_id|root_skill_id` for one of the participant's ancestor groups or managed groups),
 //		* `as_team_id` (if given) should be the current user's team,
-//		* the participant should have at least 'content' access on each listed item except the last one through that path,
-//			and at least 'info' access on the last item,
+//		* the participant should have at least 'content' access on each listed item except the final one through that path,
+//			and at least 'info' access on the final item,
 //		* all the results within the ancestry of `attempt_id`/`parent_attempt_id` on the items' path
-//			(except for the last item if `parent_attempt_id` is given) should be started (`started_at` is not null),
+//			(except for the final item if `parent_attempt_id` is given) should be started (`started_at` is not null),
 //
 //		otherwise the 'forbidden' error is returned.
 //	parameters:
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of IDs
+//			description: slash-separated list of IDs (no more than 10 IDs)
 //			required: true
 //		- name: parent_attempt_id
-//			description: "`id` of an attempt for the second to the last item in the path.
+//			description: "`id` of an attempt for the second to the final item in the path.
 //								This parameter is incompatible with `attempt_id`."
 //			in: query
 //			type: integer
 //			format: int64
 //		- name: attempt_id
-//			description: "`id` of an attempt for the last item in the path.
+//			description: "`id` of an attempt for the final item in the path.
 //								This parameter is incompatible with `parent_attempt_id`."
 //			in: query
 //			type: integer
@@ -75,14 +75,14 @@ import (
 //							type: string
 //						attempt_id:
 //							description: the attempt for this item (result) within ancestry of `attempt_id` or `parent_attempt_id`
-//				 	                 (skipped for the last item if `parent_attempt_id` is used)
+//				 	                 (skipped for the final item if `parent_attempt_id` is used)
 //							type: string
 //							format: int64
 //						attempt_number:
 //							description: the order of this attempt result among the other results (within the parent attempt)
 //													 sorted by `started_at`
 //													 (only for items allowing multiple submissions;
-//													 skipped for the last item if `parent_attempt_id` is used)
+//													 skipped for the final item if `parent_attempt_id` is used)
 //							type: string
 //							format: int64
 //					required: [item_id, type, title, language_tag]
@@ -96,29 +96,28 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error {
 	// Get IDs from request and validate it.
-	ids, groupID, attemptID, parentAttemptID, attemptIDSet, user, apiError := srv.parametersForGetBreadcrumbs(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+	params, err := srv.parametersForGetBreadcrumbs(r)
+	service.MustNotBeError(err)
 
 	var attemptIDMap map[int64]int64
 	var attemptNumberMap map[int64]int
-	var err error
 	store := srv.GetStore(r)
-	if attemptIDSet {
-		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForAttempt(ids, groupID, attemptID, false)
+	if params.attemptIDIsSet {
+		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForAttempt(
+			params.ids, params.participantID, params.attemptID, false)
 	} else {
-		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForParentAttempt(ids, groupID, parentAttemptID, false)
+		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForParentAttempt(
+			params.ids, params.participantID, params.parentAttemptID, false)
 	}
 	service.MustNotBeError(err)
 	if attemptIDMap == nil {
 		return service.ErrForbidden(errors.New("item ids hierarchy is invalid or insufficient access rights"))
 	}
 
-	idsInterface := make([]interface{}, 0, len(ids))
-	for _, id := range ids {
+	idsInterface := make([]interface{}, 0, len(params.ids))
+	for _, id := range params.ids {
 		idsInterface = append(idsInterface, id)
 	}
 	var result []map[string]interface{}
@@ -127,8 +126,8 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 			items.type,
 			COALESCE(user_strings.title, default_strings.title) AS title,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag`).
-		JoinsUserAndDefaultItemStrings(user).
-		Where("items.id IN (?)", ids).
+		JoinsUserAndDefaultItemStrings(params.user).
+		Where("items.id IN (?)", params.ids).
 		Order(gorm.Expr("FIELD(items.id"+strings.Repeat(", ?", len(idsInterface))+")", idsInterface...)).
 		ScanIntoSliceOfMaps(&result).Error())
 
@@ -141,32 +140,38 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 		}
 	}
 	render.Respond(w, r, service.ConvertSliceOfMapsFromDBToJSON(result))
-	return service.NoError
+	return nil
 }
 
-func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (
-	ids []int64, participantID, attemptID, parentAttemptID int64, attemptIDSet bool, user *database.User, apiError service.APIError,
-) {
-	var err error
-	ids, err = idsFromRequest(r)
+type getBreadcrumbsParameters struct {
+	ids             []int64
+	participantID   int64
+	attemptID       int64
+	parentAttemptID int64
+	attemptIDIsSet  bool
+	user            *database.User
+}
+
+func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (parameters *getBreadcrumbsParameters, err error) {
+	var params getBreadcrumbsParameters
+	params.ids, err = idsFromRequest(r)
 	if err != nil {
-		return nil, 0, 0, 0, false, nil, service.ErrInvalidRequest(err)
+		return nil, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, apiError = attemptIDOrParentAttemptID(r)
-	if apiError != service.NoError {
-		return nil, 0, 0, 0, false, nil, apiError
+	params.attemptID, params.parentAttemptID, params.attemptIDIsSet, err = attemptIDOrParentAttemptID(r)
+	if err != nil {
+		return nil, err
 	}
 
-	user = srv.GetUser(r)
-	participantID = service.ParticipantIDFromContext(r.Context())
-	return ids, participantID, attemptID, parentAttemptID, attemptIDSet, user, service.NoError
+	params.user = srv.GetUser(r)
+	params.participantID = service.ParticipantIDFromContext(r.Context())
+	return &params, nil
 }
 
 func attemptIDOrParentAttemptID(r *http.Request) (
-	attemptID, parentAttemptID int64, attemptIDSet bool, apiError service.APIError,
+	attemptID, parentAttemptID int64, attemptIDSet bool, err error,
 ) {
-	var err error
 	attemptIDSet = len(r.URL.Query()["attempt_id"]) != 0
 	parentAttemptIDSet := len(r.URL.Query()["parent_attempt_id"]) != 0
 	if attemptIDSet {
@@ -187,9 +192,11 @@ func attemptIDOrParentAttemptID(r *http.Request) (
 	if !attemptIDSet && !parentAttemptIDSet {
 		return 0, 0, false, service.ErrInvalidRequest(errors.New("one of attempt_id and parent_attempt_id should be given"))
 	}
-	return attemptID, parentAttemptID, attemptIDSet, service.NoError
+	return attemptID, parentAttemptID, attemptIDSet, nil
 }
 
+const maxNumberOfIDsInItemPath = 10
+
 func idsFromRequest(r *http.Request) ([]int64, error) {
-	return service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", 10)
+	return service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", maxNumberOfIDsInItemPath)
 }

@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /current-user/group-memberships/{group_id} group-memberships groupLeave
@@ -50,6 +48,6 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) leaveGroup(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) leaveGroup(w http.ResponseWriter, r *http.Request) error {
 	return srv.performGroupRelationAction(w, r, leaveGroupAction)
 }

@@ -67,7 +67,11 @@ Feature: Create a new code for the given group - robustness
     And the generated group codes are "ybqybxnlyo","ybqybxnlyo","ybqybxnlyo"
     When I send a POST request to "/groups/13/code"
     Then the response code should be 500
-    And the response error message should contain "The code generator is broken"
+    And the response error message should contain "Unknown error"
+    And logs should contain:
+    """
+    the code generator is broken
+    """
     And the table "groups" should remain unchanged
 
   Scenario: The group id is not a number

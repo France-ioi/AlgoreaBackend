@@ -27,35 +27,29 @@ const (
 // DBHasTable inserts the data from the Godog table into the database table.
 func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 	if len(data.Rows) > 1 {
-		referenceColumnIndex := -1
 		head := data.Rows[0].Cells
 		fields := make([]string, 0, len(head))
 		marks := make([]string, 0, len(head))
 
-		for i, cell := range head {
-			if cell.Value == "@reference" {
-				referenceColumnIndex = i
-			}
-
+		for _, cell := range head {
 			fields = append(fields, database.QuoteName(cell.Value))
 			marks = append(marks, "?")
 		}
 
 		marksString := "(" + strings.Join(marks, ", ") + ")"
 		finalMarksString := marksString
-		if len(data.Rows) > 2 {
+		if len(data.Rows) > 2 { //nolint:gomnd // finalMarksString = marksString when data is a header plus one row (two rows in total)
+			//nolint:gomnd // -2 = minus one row for the table's header, and minus one more row for a set of question marks in '+ finalMarksString'
 			finalMarksString = strings.Repeat(marksString+", ", len(data.Rows)-2) + finalMarksString
 		}
-		query := "INSERT INTO " + database.QuoteName(tableName) + // nolint: gosec
+		query := "INSERT INTO " + database.QuoteName(tableName) +
 			" (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
-			for j, cell := range data.Rows[i].Cells {
-				if j != referenceColumnIndex {
-					var err error
-					if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
-						return err
-					}
+			for _, cell := range data.Rows[i].Cells {
+				var err error
+				if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
+					return err
 				}
 				vals = append(vals, dbDataTableValue(cell.Value))
 			}
@@ -188,35 +182,33 @@ func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primar
 }
 
 func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
-	if ctx.inScenario {
-		tx, err := ctx.db.Begin()
-		if err != nil {
-			return err
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		_, err = tx.Exec(query, vals...)
-		if err != nil {
-			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-			_ = tx.Rollback()
-			return err
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		err = tx.Commit()
-		if err != nil {
-			return err
-		}
-	} else {
+	if !ctx.inScenario {
 		ctx.featureQueries = append(ctx.featureQueries, dbquery{query, vals})
+		return nil
 	}
-	return nil
+
+	tx, err := ctx.db.Begin()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	_, err = tx.Exec(query, vals...)
+	if err != nil {
+		_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+		_ = tx.Rollback()
+		return err
+	}
+	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+	err = tx.Commit()
+	return err
 }
 
 func getColumnIndex(table *godog.Table, columnName string) int {
@@ -391,7 +383,7 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 
 // TableShouldBeEmpty verifies that the DB table is empty.
 func (ctx *TestContext) TableShouldBeEmpty(tableName string) error {
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName)) //nolint:gosec
+	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName))
 	if err != nil {
 		return err
 	}
@@ -415,7 +407,7 @@ func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(tableName, columnName, v
 	values := parseMultipleValuesString(valuesStr)
 
 	where, parameters := constructWhereForColumnValues([]string{columnName}, values, true)
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...) //nolint:gosec
+	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...)
 	if err != nil {
 		return err
 	}

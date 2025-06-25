@@ -76,7 +76,9 @@ func getSQLExecutionPlanLoggingFunc(
 }
 
 func getSQLQueryLoggingFunc(
-	ctx context.Context, rowsAffectedFunc func() *int64, err *error, startTime time.Time, query string, args ...interface{},
+	ctx context.Context, rowsAffectedFunc func() *int64,
+	err *error, //nolint:gocritic // we need the pointer as the constructor is called before the error is set
+	startTime time.Time, query string, args ...interface{},
 ) func(logConfig *LogConfig) {
 	return func(logConfig *LogConfig) {
 		if *err != nil {
@@ -190,7 +192,7 @@ func formatTime(v time.Time) string {
 
 func fillSQLPlaceholders(query string, values []interface{}) string {
 	var sql string
-	var formattedValues []string
+	formattedValues := make([]string, 0, len(values))
 
 	query = strings.TrimSpace(spacesRegexp.ReplaceAllString(query, " "))
 	for _, value := range values {

@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -213,7 +213,7 @@ func TestUserMiddleware(t *testing.T) {
 			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.cookieHeaders,
 				tt.userIDReturnedByDB, tt.dbError)
 			defer func() { _ = resp.Body.Close() }()
-			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			bodyBytes, _ := io.ReadAll(resp.Body)
 			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
 			assert.Equal("application/json; charset=utf-8", resp.Header.Get("Content-Type"))
 			assert.Equal(tt.expectedServiceWasCalled, serviceWasCalled)
@@ -276,8 +276,8 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes))
-		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))
+		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes)) //nolint:errchkjson // the test data is always valid
+		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))                      //nolint:errchkjson // the test data is always valid
 		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string) +
 			"\nCookieAttributes:" + string(cookieAttributes) + "\nUser:" + string(userAttributes)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")

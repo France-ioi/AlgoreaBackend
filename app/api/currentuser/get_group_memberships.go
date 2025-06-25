@@ -82,7 +82,7 @@ type membershipsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -119,7 +119,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 		Where("groups.type != 'ContestParticipants'")
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -129,13 +129,11 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 			DefaultRules: "-member_since,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []membershipsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

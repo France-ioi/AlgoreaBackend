@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -98,7 +97,7 @@ func TestLogger_Configure_OutputFile(t *testing.T) {
 	patchGuard = monkey.Patch(os.OpenFile, func(name string, flag int, perm os.FileMode) (*os.File, error) {
 		patchGuard.Unpatch()
 		defer patchGuard.Restore()
-		return os.OpenFile(name+".test", flag, perm)
+		return os.OpenFile(name+".test", flag, perm) //nolint:gosec // No user input
 	})
 	defer patchGuard.Unpatch()
 
@@ -115,7 +114,7 @@ func TestLogger_Configure_OutputFile(t *testing.T) {
 	logger2.WithContext(context.Background()).Warnf("logexec2 %d", timestamp)
 
 	// check the resulting file
-	content, _ := ioutil.ReadFile("../../log/all.log")
+	content, _ := os.ReadFile("../../log/all.log")
 	assert.Contains(string(content), fmt.Sprintf("logexec1 %d", timestamp))
 	assert.Contains(string(content), fmt.Sprintf("logexec2 %d", timestamp))
 }

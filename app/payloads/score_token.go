@@ -10,7 +10,7 @@ import (
 // ScoreToken represents data inside a score token.
 type ScoreToken struct {
 	// Nullable fields are of pointer types
-	Date         string  `json:"date" validate:"dmy-date"` // dd-mm-yyyy
+	Date         string  `json:"date"             validate:"dmy-date"` // dd-mm-yyyy
 	UserID       string  `json:"idUser"`
 	ItemID       *string `json:"idItem,omitempty"`
 	LocalItemID  string  `json:"idItemLocal"`

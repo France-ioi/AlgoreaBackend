@@ -10,14 +10,17 @@ Feature: Create an access token
         -
           domains: [127.0.0.1]
           allUsersGroup: 2
-          TempUsersGroup: 4
+          nonTempUsersGroup: 3
+          tempUsersGroup: 4
       """
     And the database has the following table "groups":
-      | id | name      | type | created_at          |
-      | 2  | AllUsers  | Base | 2020-01-01 00:00:00 |
-      | 4  | TempUsers | Base | 2020-01-01 00:00:00 |
+      | id | name         | type | created_at          |
+      | 2  | AllUsers     | Base | 2020-01-01 00:00:00 |
+      | 3  | NonTempUsers | Base | 2020-01-01 00:00:00 |
+      | 4  | TempUsers    | Base | 2020-01-01 00:00:00 |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
+      | 2               | 3              |
       | 2               | 4              |
 
   Scenario Outline: Create a new user
@@ -90,6 +93,7 @@ Feature: Create an access token
     And the table "groups" should be:
       | id                  | name                                    | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
       | 2                   | AllUsers                                | Base  | null        | false                                             | false   | false       | null                                    |
+      | 3                   | NonTempUsers                            | Base  | null        | false                                             | false   | false       | null                                    |
       | 4                   | TempUsers                               | Base  | null        | false                                             | false   | false       | null                                    |
       | 4037200794235010051 | Example badges 🐱                       | Other | null        | true                                              | false   | false       | https://badges.example.com/             |
       | 5577006791947779410 | mohammed                                | User  | mohammed    | true                                              | false   | false       | null                                    |
@@ -97,16 +101,20 @@ Feature: Create an access token
       | 8674665223082153551 | Example #1 🐱                           | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
+      | 2                   | 3                   |
       | 2                   | 4                   |
-      | 2                   | 5577006791947779410 |
+      | 3                   | 5577006791947779410 |
       | 4037200794235010051 | 6129484611666145821 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 3                   | 5577006791947779410 | false   |
       | 4                   | 4                   | true    |
       | 4037200794235010051 | 4037200794235010051 | true    |
       | 4037200794235010051 | 5577006791947779410 | false   |
@@ -192,8 +200,8 @@ Feature: Create an access token
       | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 | null          | true        | false          | false             | false            |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
-      | 2               | 11             |
-      | 2               | 13             |
+      | 3               | 11             |
+      | 3               | 13             |
     And the groups ancestors are computed
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token         |
@@ -308,13 +316,17 @@ Feature: Create an access token
     And the table "groups" should remain unchanged
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id |
+      | 2               | 3              |
       | 2               | 4              |
-      | 2               | 11             |
+      | 3               | 11             |
     And the table "groups_ancestors" should be:
       | ancestor_group_id | child_group_id | is_self |
       | 2                 | 2              | true    |
+      | 2                 | 3              | false   |
       | 2                 | 4              | false   |
       | 2                 | 11             | false   |
+      | 3                 | 3              | true    |
+      | 3                 | 11             | false   |
       | 4                 | 4              | true    |
       | 11                | 11             | true    |
     And the table "group_membership_changes" should be empty
@@ -399,8 +411,8 @@ Feature: Create an access token
       | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
-      | 2               | 11             |
-      | 2               | 13             |
+      | 3               | 11             |
+      | 3               | 13             |
     And the groups ancestors are computed
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token         |
@@ -651,23 +663,28 @@ Feature: Create an access token
       | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
       | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
     And the table "groups" should be:
-      | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
-      | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
-      | 4                   | TempUsers  | Base  | null        | false                                             | false   | false       | null                                    |
-      | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
-      | 6129484611666145821 | Example #2 | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
-      | 8674665223082153551 | Example #1 | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
+      | id                  | name         | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers     | Base  | null        | false                                             | false   | false       | null                                    |
+      | 3                   | NonTempUsers | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers    | Base  | null        | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | mohammed     | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 6129484611666145821 | Example #2   | Other | null        | true                                              | false   | false       | https://badges.example.com/parents      |
+      | 8674665223082153551 | Example #1   | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
       | parent_group_id     | child_group_id      |
+      | 2                   | 3                   |
       | 2                   | 4                   |
-      | 2                   | 5577006791947779410 |
+      | 3                   | 5577006791947779410 |
       | 6129484611666145821 | 8674665223082153551 |
       | 8674665223082153551 | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 3                   | 5577006791947779410 | false   |
       | 4                   | 4                   | true    |
       | 5577006791947779410 | 5577006791947779410 | true    |
       | 6129484611666145821 | 5577006791947779410 | false   |
@@ -749,20 +766,25 @@ Feature: Create an access token
       | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
       | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
     And the table "groups" should be:
-      | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
-      | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
-      | 4                   | TempUsers  | Base  | null        | false                                             | false   | false       | null                                    |
-      | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
-      | 8674665223082153551 | Example #1 | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
+      | id                  | name         | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers     | Base  | null        | false                                             | false   | false       | null                                    |
+      | 3                   | NonTempUsers | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers    | Base  | null        | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | mohammed     | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 8674665223082153551 | Example #1   | Other | null        | true                                              | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id      |
+      | 2               | 3                   |
       | 2               | 4                   |
-      | 2               | 5577006791947779410 |
+      | 3               | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 3                   | 5577006791947779410 | false   |
       | 4                   | 4                   | true    |
       | 5577006791947779410 | 5577006791947779410 | true    |
       | 8674665223082153551 | 8674665223082153551 | true    |
@@ -845,20 +867,25 @@ Feature: Create an access token
       | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
       | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
     And the table "groups" should be:
-      | id                  | name       | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
-      | 2                   | AllUsers   | Base  | null        | false                                             | false   | false       | null                                    |
-      | 4                   | TempUsers  | Base  | null        | false                                             | false   | false       | null                                    |
-      | 5577006791947779410 | mohammed   | User  | mohammed    | true                                              | false   | false       | null                                    |
-      | 8674665223082153551 | Example #1 | Other | null        | false                                             | false   | false       | https://badges.example.com/examples/one |
+      | id                  | name         | type  | description | ABS(TIMESTAMPDIFF(SECOND, NOW(), created_at)) < 3 | is_open | send_emails | text_id                                 |
+      | 2                   | AllUsers     | Base  | null        | false                                             | false   | false       | null                                    |
+      | 3                   | NonTempUsers | Base  | null        | false                                             | false   | false       | null                                    |
+      | 4                   | TempUsers    | Base  | null        | false                                             | false   | false       | null                                    |
+      | 5577006791947779410 | mohammed     | User  | mohammed    | true                                              | false   | false       | null                                    |
+      | 8674665223082153551 | Example #1   | Other | null        | false                                             | false   | false       | https://badges.example.com/examples/one |
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id      |
+      | 2               | 3                   |
       | 2               | 4                   |
-      | 2               | 5577006791947779410 |
+      | 3               | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 3                   | 5577006791947779410 | false   |
       | 4                   | 4                   | true    |
       | 5577006791947779410 | 5577006791947779410 | true    |
       | 8674665223082153551 | 8674665223082153551 | true    |
@@ -877,6 +904,21 @@ Feature: Create an access token
     And the table "users" at group_id "5577006791947779410" should be:
       | group_id            | login_id | login        | temp_user | default_language            | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | <expected_default_language> | true                                                 | 127.0.0.1 |
+    And the table "groups_groups" should be:
+      | parent_group_id     | child_group_id      |
+      | 2                   | 3                   |
+      | 2                   | 4                   |
+      | 4                   | 5577006791947779410 |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
+      | 2                   | 4                   | false   |
+      | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 4                   | 4                   | true    |
+      | 4                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |
     Examples:
       | query                                                     | expected_default_language |
       | ?create_temp_user_if_not_authorized=1                     | fr                        |
@@ -894,3 +936,18 @@ Feature: Create an access token
     And the table "users" at group_id "5577006791947779410" should be:
       | group_id            | login_id | login        | temp_user | default_language | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | fr                | true                                                 | 127.0.0.1 |
+    And the table "groups_groups" should be:
+      | parent_group_id     | child_group_id      |
+      | 2                   | 3                   |
+      | 2                   | 4                   |
+      | 4                   | 5577006791947779410 |
+    And the table "groups_ancestors" should be:
+      | ancestor_group_id   | child_group_id      | is_self |
+      | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
+      | 2                   | 4                   | false   |
+      | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
+      | 4                   | 4                   | true    |
+      | 4                   | 5577006791947779410 | false   |
+      | 5577006791947779410 | 5577006791947779410 | true    |

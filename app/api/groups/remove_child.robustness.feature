@@ -84,7 +84,7 @@ Feature: Remove a direct parent-child relation between two groups - robustness
     And the table "groups_groups" should remain unchanged
     And the table "groups_ancestors" should remain unchanged
 
-  Scenario: Child group is AllUsers group
+  Scenario: Child group is of type Base
     Given I am the user with id "21"
     When I send a DELETE request to "/groups/13/relations/53"
     Then the response code should be 403

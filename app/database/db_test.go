@@ -103,7 +103,7 @@ func TestDB_inTransaction_Panic(t *testing.T) {
 	mock.ExpectQuery("SELECT 1").WillReturnError(expectedError)
 	mock.ExpectRollback()
 
-	assert.PanicsWithValue(t, expectedError.(interface{}), func() {
+	assert.PanicsWithValue(t, expectedError, func() {
 		_ = db.inTransaction(func(db *DB) error {
 			var result []interface{}
 			db.Raw("SELECT 1").Scan(&result)
@@ -652,15 +652,15 @@ func TestDB_QueryConstructors(t *testing.T) {
 
 			resultDB, oldDBObjects := testCase.funcToCall(db)
 			assert.NotEqual(t, resultDB, db)
-			assert.Equal(t, db.ctx, resultDB.ctx)
-			assert.Equal(t, db.logConfig, resultDB.logConfig)
+			assert.Equal(t, db.ctx(), resultDB.ctx())
+			assert.Equal(t, db.logConfig(), resultDB.logConfig())
 			if !testCase.skipCTEsChecking {
 				assert.Equal(t, db.ctes, resultDB.ctes)
 			}
 			for _, oldDBObject := range oldDBObjects {
 				assert.NotEqual(t, oldDBObject, db)
-				assert.Equal(t, db.ctx, oldDBObject.ctx)
-				assert.Equal(t, db.logConfig, oldDBObject.logConfig)
+				assert.Equal(t, db.ctx(), oldDBObject.ctx())
+				assert.Equal(t, db.logConfig(), oldDBObject.logConfig())
 				if !testCase.skipCTEsChecking {
 					assert.Equal(t, db.ctes, oldDBObject.ctes)
 				}
@@ -704,9 +704,9 @@ func TestDB_Count(t *testing.T) {
 
 	assert.NotEqual(t, countDB, db)
 	assert.NoError(t, countDB.Error())
-	assert.Equal(t, db.ctx, countDB.ctx)
+	assert.Equal(t, db.ctx(), countDB.ctx())
 	assert.Nil(t, countDB.ctes)
-	assert.Equal(t, db.logConfig, countDB.logConfig)
+	assert.Equal(t, db.logConfig(), countDB.logConfig())
 
 	assert.Equal(t, 1, result)
 
@@ -752,9 +752,9 @@ func TestDB_Take(t *testing.T) {
 
 	assert.NotEqual(t, takeDB, db)
 	assert.NoError(t, takeDB.Error())
-	assert.Equal(t, db.ctx, takeDB.ctx)
+	assert.Equal(t, db.ctx(), takeDB.ctx())
 	assert.Nil(t, takeDB.ctes)
-	assert.Equal(t, db.logConfig, takeDB.logConfig)
+	assert.Equal(t, db.logConfig(), takeDB.logConfig())
 
 	assert.Equal(t, resultType{1}, result)
 
@@ -837,9 +837,9 @@ func TestDB_Pluck(t *testing.T) {
 
 	assert.NotEqual(t, pluckDB, db)
 	assert.NoError(t, pluckDB.Error())
-	assert.Equal(t, db.ctx, pluckDB.ctx)
+	assert.Equal(t, db.ctx(), pluckDB.ctx())
 	assert.Nil(t, pluckDB.ctes)
-	assert.Equal(t, db.logConfig, pluckDB.logConfig)
+	assert.Equal(t, db.logConfig(), pluckDB.logConfig())
 
 	assert.Equal(t, []int64{1}, result)
 
@@ -925,9 +925,9 @@ func TestDB_PluckFirst(t *testing.T) {
 
 	assert.NotEqual(t, pluckFirstDB, db)
 	assert.NoError(t, pluckFirstDB.Error())
-	assert.Equal(t, db.ctx, pluckFirstDB.ctx)
+	assert.Equal(t, db.ctx(), pluckFirstDB.ctx())
 	assert.Nil(t, pluckFirstDB.ctes)
-	assert.Equal(t, db.logConfig, pluckFirstDB.logConfig)
+	assert.Equal(t, db.logConfig(), pluckFirstDB.logConfig())
 
 	assert.Equal(t, int64(1), result)
 
@@ -997,9 +997,9 @@ func TestDB_Scan(t *testing.T) {
 
 	assert.NotEqual(t, scanDB, db)
 	assert.NoError(t, scanDB.Error())
-	assert.Equal(t, db.ctx, scanDB.ctx)
+	assert.Equal(t, db.ctx(), scanDB.ctx())
 	assert.Nil(t, scanDB.ctes)
-	assert.Equal(t, db.logConfig, scanDB.logConfig)
+	assert.Equal(t, db.logConfig(), scanDB.logConfig())
 
 	assert.Equal(t, []resultType{{ID: 1, Value: "value"}}, result)
 
@@ -1094,9 +1094,9 @@ func TestDB_Delete(t *testing.T) {
 	deleteDB := db.Delete("id = 1")
 
 	assert.NotEqual(t, deleteDB, db)
-	assert.Equal(t, db.ctx, deleteDB.ctx)
+	assert.Equal(t, db.ctx(), deleteDB.ctx())
 	assert.Nil(t, deleteDB.ctes)
-	assert.Equal(t, db.logConfig, deleteDB.logConfig)
+	assert.Equal(t, db.logConfig(), deleteDB.logConfig())
 
 	assert.NoError(t, deleteDB.Error())
 
@@ -1121,9 +1121,9 @@ func TestDB_Exec(t *testing.T) {
 
 	assert.NotEqual(t, execDB, db)
 	assert.NoError(t, execDB.Error())
-	assert.Equal(t, db.ctx, execDB.ctx)
+	assert.Equal(t, db.ctx(), execDB.ctx())
 	assert.Nil(t, execDB.ctes)
-	assert.Equal(t, db.logConfig, execDB.logConfig)
+	assert.Equal(t, db.logConfig(), execDB.logConfig())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1510,9 +1510,9 @@ func TestDB_UpdateColumn(t *testing.T) {
 	updateDB := db.UpdateColumn("name", someName)
 	assert.NotEqual(t, updateDB, db)
 	assert.NoError(t, updateDB.Error())
-	assert.Equal(t, db.ctx, updateDB.ctx)
+	assert.Equal(t, db.ctx(), updateDB.ctx())
 	assert.Nil(t, updateDB.ctes)
-	assert.Equal(t, db.logConfig, updateDB.logConfig)
+	assert.Equal(t, db.logConfig(), updateDB.logConfig())
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1533,9 +1533,9 @@ func TestDB_Set(t *testing.T) {
 	setDB := db.Set("gorm:query_option", "FOR UPDATE")
 	assert.NotEqual(t, setDB, db)
 	assert.NoError(t, setDB.Error())
-	assert.Equal(t, db.ctx, setDB.ctx)
+	assert.Equal(t, db.ctx(), setDB.ctx())
 	assert.Equal(t, db.ctes, setDB.ctes)
-	assert.Equal(t, db.logConfig, setDB.logConfig)
+	assert.Equal(t, db.logConfig(), setDB.logConfig())
 
 	var result []interface{}
 	assert.NoError(t, setDB.Scan(&result).Error())
@@ -1631,7 +1631,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 		_ = func() (err error) {
 			defer recoverPanics(&err)
 			var a []int
-			a[0]++ // nolint:govet // runtime error
+			a[0]++ // runtime error
 			return nil
 		}()
 
@@ -2069,7 +2069,21 @@ func Test_gormDBBeginTxReplacement_ErrsWhenDBIsNotSQLDBWrapper(t *testing.T) {
 }
 
 func TestDB_GetContext(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
 	expectedContext := context.WithValue(context.Background(), testContextKey("key"), "value")
-	conn := &DB{ctx: expectedContext}
-	assert.Equal(t, expectedContext, conn.GetContext())
+	db = cloneDBWithNewContext(expectedContext, db)
+
+	assert.Equal(t, expectedContext, db.GetContext())
+
+	assert.NoError(t, db.inTransaction(func(db *DB) error {
+		assert.Equal(t, expectedContext, db.GetContext())
+		return nil
+	}))
 }

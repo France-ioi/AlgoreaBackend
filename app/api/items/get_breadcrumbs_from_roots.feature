@@ -61,15 +61,12 @@ Feature: Find all breadcrumbs to an item
       | 100              | 101           |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
+      | 90       | 60      | content                  |
+      | 102      | 10      | content_with_descendants |
       | 102      | 60      | none                     |
-      | 111      | 10      | content_with_descendants |
-      | 111      | 60      | content                  |
-      | 111      | 70      | info                     |
-      | 111      | 50      | content_with_descendants |
-      | 111      | 80      | content                  |
-      | 111      | 90      | info                     |
-      | 111      | 100     | content                  |
-      | 111      | 101     | content                  |
+      | 102      | 70      | info                     |
+      | 102      | 100     | content                  |
+      | 102      | 101     | content                  |
     And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |
       | 0  | 101            | null         | null              |
@@ -93,6 +90,12 @@ Feature: Find all breadcrumbs to an item
 
   Scenario Outline: Find breadcrumbs for the current user
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | content_with_descendants |
+      | 111      | 50      | content_with_descendants |
+      | 111      | 80      | content                  |
+      | 111      | 90      | info                     |
     When I send a GET request to "<service_url>"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -100,13 +103,13 @@ Feature: Find all breadcrumbs to an item
       <expected_output>
       """
   Examples:
-    | service_url                                                                                                   | expected_output                                                                                                                                                                                                                                                                                                       |
-    | /items/50/breadcrumbs-from-roots                                                                              | [{"started_by_participant": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                                      |
-    | /items/by-text-id/-_%20%27%23%26%3F%3A%3D%2F%5C.%2C%2B%25%C2%A4%E2%82%ACa%C3%A9%C3%A0d/breadcrumbs-from-roots | [{"started_by_participant": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                                      |
-    | /items/10/breadcrumbs-from-roots                                                                              | [{"started_by_participant": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                                      |
-    | /items/by-text-id/id10/breadcrumbs-from-roots                                                                 | [{"started_by_participant": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                                      |
-    | /items/90/breadcrumbs-from-roots                                                                              | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
-    | /items/by-text-id/id90/breadcrumbs-from-roots                                                                 | [{"started_by_participant": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"started_by_participant": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
+    | service_url                                                                                                   | expected_output                                                                                                                                                                                                                                                                               |
+    | /items/50/breadcrumbs-from-roots                                                                              | [{"is_started": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                          |
+    | /items/by-text-id/-_%20%27%23%26%3F%3A%3D%2F%5C.%2C%2B%25%C2%A4%E2%82%ACa%C3%A9%C3%A0d/breadcrumbs-from-roots | [{"is_started": true, "path": [{"id": "50", "title": "DFS", "language_tag": "en", "type": "Task"}]}]                                                                                                                                                                                          |
+    | /items/10/breadcrumbs-from-roots                                                                              | [{"is_started": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                          |
+    | /items/by-text-id/id10/breadcrumbs-from-roots                                                                 | [{"is_started": true, "path": [{"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"}]}]                                                                                                                                                                          |
+    | /items/90/breadcrumbs-from-roots                                                                              | [{"is_started": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"is_started": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
+    | /items/by-text-id/id90/breadcrumbs-from-roots                                                                 | [{"is_started": true, "path": [{"id": "80", "title": "Trees", "language_tag": "en", "type": "Chapter"}, {"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}, {"is_started": true, "path": [{"id": "90", "title": "Queues", "language_tag": "en", "type": "Chapter"}]}] |
 
   Scenario: Should return a breadcrumb when there are missing results, like path-from-root
     Given the database has the following user:
@@ -163,7 +166,7 @@ Feature: Find all breadcrumbs to an item
       """
       [
         {
-          "started_by_participant": false,
+          "is_started": false,
           "path": [
             {"id": "1010", "title": "Chapter 1", "language_tag": "en", "type": "Chapter"},
             {"id": "1011", "title": "Chapter 2", "language_tag": "en", "type": "Chapter"},
@@ -176,20 +179,24 @@ Feature: Find all breadcrumbs to an item
 
   Scenario Outline: Find breadcrumbs for a team
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | content_with_descendants |
+      | 111      | 70      | info                     |
     When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       [
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"},
             {"id": "70","title": null, "language_tag": "fr", "type": "Task"}
           ]
         },
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"},
@@ -205,19 +212,22 @@ Feature: Find all breadcrumbs to an item
 
   Scenario Outline: Find breadcrumbs for a team for another item
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | content_with_descendants |
     When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       [
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}
           ]
         },
         {
-          "started_by_participant": true,
+          "is_started": true,
           "path": [
             {"id": "10", "title": "Graphe: Methodes", "language_tag": "fr", "type": "Chapter"},
             {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}
@@ -230,15 +240,43 @@ Feature: Find all breadcrumbs to an item
       | /items/60/breadcrumbs-from-roots              |
       | /items/by-text-id/id60/breadcrumbs-from-roots |
 
-  Scenario Outline: Should return not started paths
+  Scenario Outline: Find breadcrumbs for a team, some paths are not visible to the current user (content of the first item is not visible)
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 10      | info                     |
+      | 111      | 60      | content_with_descendants |
     When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
       """
       [
         {
-          "started_by_participant": false,
+          "is_started": true,
+          "path": [
+            {"id": "60", "title": "Reduce Graph", "language_tag": "en", "type": "Task"}
+          ]
+        }
+      ]
+      """
+    Examples:
+      | service_url                                   |
+      | /items/60/breadcrumbs-from-roots              |
+      | /items/by-text-id/id60/breadcrumbs-from-roots |
+
+  Scenario Outline: Should return not started paths
+    Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated       |
+      | 111      | 100     | content                  |
+      | 111      | 101     | info                     |
+    When I send a GET request to "<service_url>?participant_id=102"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      [
+        {
+          "is_started": false,
           "path": [
             {"id": "100", "title": "Chapter Containing Explicit Entry Not Started", "language_tag": "en", "type": "Chapter"},
             {"id": "101", "title": "Explicit Entry Not Started", "language_tag": "en", "type": "Task"}

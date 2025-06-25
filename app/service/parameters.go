@@ -19,12 +19,12 @@ func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]i
 		return nil, err
 	}
 
-	var ids []int64
 	paramValue := req.URL.Query().Get(paramName)
 	if paramValue == "" {
-		return ids, nil
+		return []int64(nil), nil
 	}
 	idsStr := strings.Split(paramValue, ",")
+	ids := make([]int64, 0, len(idsStr))
 	for _, idStr := range idsStr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
@@ -186,11 +186,11 @@ func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
 func ResolveURLQueryPathInt64SliceField(req *http.Request, paramName string) ([]int64, error) {
 	paramValue := chi.URLParam(req, paramName)
 	paramValue = strings.Trim(paramValue, "/")
-	var ids []int64
 	if paramValue == "" {
-		return ids, nil
+		return []int64(nil), nil
 	}
 	idsStr := strings.Split(paramValue, "/")
+	ids := make([]int64, 0, len(idsStr))
 	for _, idStr := range idsStr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
@@ -216,12 +216,12 @@ func ResolveURLQueryPathInt64SliceFieldWithLimit(r *http.Request, paramName stri
 
 // ResolveJSONBodyIntoMap reads the request body and parses it as JSON into a map.
 // As it reads out the body, it can only be called once.
-func ResolveJSONBodyIntoMap(r *http.Request) (map[string]interface{}, APIError) {
+func ResolveJSONBodyIntoMap(r *http.Request) (map[string]interface{}, error) {
 	var rawRequestData map[string]interface{}
 	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawRequestData)
 	if err != nil {
-		return nil, ErrInvalidRequest(fmt.Errorf("invalid input JSON: %v", err))
+		return nil, ErrInvalidRequest(fmt.Errorf("invalid input JSON: %w", err))
 	}
-	return rawRequestData, NoError
+	return rawRequestData, nil
 }

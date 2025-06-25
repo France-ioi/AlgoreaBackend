@@ -158,7 +158,7 @@ func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
 	return nil
 }
 
-// AncestorsOfJoinedGroupsForGroup returns a query selecting all group ancestors ids of a group.
+// AncestorsOfJoinedGroupsForGroup returns a query selecting all group ancestors ids of groups joined by the given group.
 func (s *GroupStore) AncestorsOfJoinedGroupsForGroup(store *DataStore, groupID int64) *DB {
 	return store.ActiveGroupGroups().
 		Where("groups_groups_active.child_group_id = ?", groupID).
@@ -168,7 +168,7 @@ func (s *GroupStore) AncestorsOfJoinedGroupsForGroup(store *DataStore, groupID i
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
-// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of a user.
+// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of groups joined by the given user.
 func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
 	return s.AncestorsOfJoinedGroupsForGroup(store, user.GroupID)
 }
@@ -212,8 +212,6 @@ func (s *GroupStore) IsVisibleForGroup(groupID, visibleForGroupID int64) bool {
 
 	isVisible, err := s.PickVisibleGroupsForGroup(s.Groups().DB, visibleForGroupID).
 		Where("groups.id = ?", groupID).
-		Select("1").
-		Limit(1).
 		HasRows()
 	mustNotBeError(err)
 

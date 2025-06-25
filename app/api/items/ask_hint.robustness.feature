@@ -6,7 +6,7 @@ Feature: Ask for a hint - robustness
     And the database has the following table "platforms":
       | id | regexp                     | public_key                | priority |
       | 10 | https://platformwithkey    | {{taskPlatformPublicKey}} | 0        |
-      | 11 | https://nokeyplatform.test |                           | 1        |
+      | 11 | https://nokeyplatform.test | null                      | 1        |
     And the database has the following table "items":
       | id | platform_id | url                           | read_only | default_language_tag |
       | 50 | 10          | https://platformwithkey/50    | 1         | fr                   |
@@ -415,4 +415,4 @@ Feature: Ask for a hint - robustness
       }
       """
     Then the response code should be 400
-    And the response error message should contain "No public key available for item 51"
+    And the response error message should contain "No public key available for the platform linked to item 51"

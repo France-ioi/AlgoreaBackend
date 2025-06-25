@@ -74,7 +74,7 @@ Feature: Check if the group code is valid
       domains:
         -
           domains: [127.0.0.1]
-          allUsersGroup: 3
+          nonTempUsersGroup: 3
       """
     When I send a GET request to "/groups/is-code-valid?code=3456789abc"
     Then the response code should be 200
@@ -111,7 +111,7 @@ Feature: Check if the group code is valid
       domains:
         -
           domains: [127.0.0.1]
-          allUsersGroup: 3
+          nonTempUsersGroup: 3
       """
     When I send a GET request to "/groups/is-code-valid?code=3456789abc"
     Then the response code should be 200

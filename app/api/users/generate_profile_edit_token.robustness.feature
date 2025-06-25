@@ -22,6 +22,7 @@ Feature: Generate Profile Edit Token - robustness
       | @Manager | null     |
       | @User    | 2        |
     And I am @Manager
+    And I am a manager of the group @School
     When I send a POST request to "/users/@User/generate-profile-edit-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -37,6 +38,7 @@ Feature: Generate Profile Edit Token - robustness
       | @Manager | 1        |
       | @User    | null     |
     And I am @Manager
+    And I am a manager of the group @School
     When I send a POST request to "/users/@User/generate-profile-edit-token"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -52,9 +54,9 @@ Feature: Generate Profile Edit Token - robustness
 
   Scenario: Should be forbidden when the current-user is not a manager of a group of which the target user is a member
     Given there are the following groups:
-      | group     | parent | members           |
-      | @AllUsers |        | @NotManager,@User |
-      | @Class    |        | @User             |
+      | group     | parent | members           | require_personal_info_access_approval |
+      | @AllUsers |        | @NotManager,@User |                                       |
+      | @Class    |        | @User             | edit                                  |
     And there are the following users:
       | user        | login_id |
       | @NotManager | 1        |

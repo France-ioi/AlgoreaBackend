@@ -12,7 +12,27 @@ import (
 )
 
 type sqlTxWrapper struct {
-	sqlTx     *sql.Tx
+	sqlTx *sql.Tx
+	//nolint:containedctx // We store the context here because Gorm v1 does not support contexts
+	//                    // as arguments for Exec, Query, and QueryRow methods.
+	//                    //
+	//                    // Actually, sql.Tx already has a context inside it, and the transaction gets rolled back
+	//                    // when the context of sql.Tx is done (canceled or timed out). And it is the only purpose
+	//                    // of the context inside sql.Tx.
+	//                    //
+	//                    // Our context is a copy of the sql.Tx context. We need this copy to be able to
+	//                    // add some fields not related to the deadline in the context, but sql.Tx
+	//                    // does not allow to change the context after it has been created.
+	//                    //
+	//                    // When a new sqlTxWrapper is created with different context for the same sql.Tx,
+	//                    // (e.g., in withContext), the sqlTxWrapper.ctx is set to the new context,
+	//                    // but the sqlTx.sqlTx still has the original context.
+	//                    //
+	//                    // At the same time, the sqlTxWrapper.ctx is used by Exec, Query, and QueryRow methods
+	//                    // to provide deadline for each query execution.
+	//                    //
+	//                    // As we normally do not want to have different deadlines for the transaction and the queries,
+	//                    // it doesn't seem to be a good idea to set a new deadline in the sqlTxWrapper.ctx.
 	ctx       context.Context
 	logConfig *LogConfig
 }
@@ -127,7 +147,7 @@ func (sqlTX *sqlTxWrapper) handleError(err error) error {
 
 func (sqlTX *sqlTxWrapper) handleCommitOrRollbackError(err error) error {
 	newErr := sqlTX.handleError(err)
-	errorWasPatched := newErr != err
+	errorWasPatched := newErr != err //nolint:errorlint // here we want to check if the error was patched by handleError
 	err = newErr
 	if err != nil {
 		errString := err.Error()
@@ -156,3 +176,15 @@ func (sqlTX *sqlTxWrapper) withContext(ctx context.Context) gorm.SQLCommon {
 }
 
 var _ withContexter = &sqlTxWrapper{}
+
+func (sqlTX *sqlTxWrapper) getContext() context.Context {
+	return sqlTX.ctx
+}
+
+var _ contextGetter = &sqlTxWrapper{}
+
+func (sqlTX *sqlTxWrapper) getLogConfig() *LogConfig {
+	return sqlTX.logConfig
+}
+
+var _ logConfigGetter = &sqlTxWrapper{}

@@ -15,28 +15,6 @@ func (ctx *TestContext) registerFeaturesForUsers(s *godog.ScenarioContext) {
 	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 }
 
-// addUsersIntoAllUsersGroup adds all users in the AllUsers group if it is defined.
-func (ctx *TestContext) addUsersIntoAllUsersGroup() error {
-	if ctx.allUsersGroup == "" {
-		return nil
-	}
-
-	idColumnIndex := getDBTableColumnIndex(ctx.dbTableData["users"], "group_id")
-	if idColumnIndex == -1 {
-		panic("The users table does not have group_id column")
-	}
-
-	for rowIndex := 1; rowIndex < len(ctx.dbTableData["users"].Rows); rowIndex++ {
-		userID := ctx.dbTableData["users"].Rows[rowIndex].Cells[idColumnIndex].Value
-		err := ctx.UserIsAMemberOfTheGroup(userID, ctx.allUsersGroup)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // getUserPrimaryKey returns the primary key of a group.
 func (ctx *TestContext) getUserPrimaryKey(groupID int64) map[string]string {
 	return map[string]string{"group_id": strconv.FormatInt(groupID, 10)}

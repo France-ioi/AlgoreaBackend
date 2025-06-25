@@ -13,7 +13,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
-const minSearchStringLength = 3
+const (
+	minSearchStringLength = 3
+	searchResultLimit     = 20
+)
 
 // swagger:model itemSearchResponseRow
 type itemSearchResponseRow struct {
@@ -93,7 +96,7 @@ type itemSearchResponseRowRaw struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) error {
 	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -118,7 +121,7 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) servi
 	query := store.Items().GetSearchQuery(user, searchString, typesList)
 
 	query = service.NewQueryLimiter().
-		SetDefaultLimit(20).SetMaxAllowedLimit(20).Apply(r, query)
+		SetDefaultLimit(searchResultLimit).SetMaxAllowedLimit(searchResultLimit).Apply(r, query)
 
 	var result []itemSearchResponseRowRaw
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -133,5 +136,5 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) servi
 		})
 	}
 	render.Respond(w, r, convertedResult)
-	return service.NoError
+	return nil
 }

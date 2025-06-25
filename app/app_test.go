@@ -4,7 +4,7 @@ import (
 	crand "crypto/rand"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,11 +16,10 @@ import (
 	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 )
 
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
@@ -148,7 +147,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	if err != nil {
 		return
 	}
-	respBody, _ := ioutil.ReadAll(response.Body)
+	respBody, _ := io.ReadAll(response.Body)
 	_ = response.Body.Close()
 
 	// check that the error has been handled by the recover
@@ -229,7 +228,7 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 		return
 	}
 	defer func() { _ = response.Body.Close() }()
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Contains(string(body), "Types of profiles available:")
 }
@@ -283,7 +282,7 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 			if err != nil {
 				return
 			}
-			_, _ = ioutil.ReadAll(response.Body)
+			_, _ = io.ReadAll(response.Body)
 			_ = response.Body.Close()
 		})
 	}

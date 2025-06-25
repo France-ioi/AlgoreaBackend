@@ -7,6 +7,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation DELETE /groups/{group_id}/managers/{manager_id} groups groupManagerDelete
@@ -46,7 +47,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 
@@ -59,18 +60,20 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		// 1) the authenticated user should be the manager represented by managerID
 		//    or have can_manage:memberships_and_group permission on the groupID
 		// 2) there should be a row in group_managers for the given groupID-managerID pair
 		if managerID == user.GroupID {
-			found, err = store.GroupManagers().
+			found, err = store.GroupManagers().WithExclusiveWriteLock().
 				Where("group_id = ?", groupID).
 				Where("manager_id = ?", managerID).HasRows()
 		} else {
-			found, err = store.Groups().ManagedBy(user).WithExclusiveWriteLock().
+			found, err = store.Groups().ManagedBy(user).
+				WithCustomWriteLocks(
+					golang.NewSet("groups", "groups_ancestors_active", "group_managers", "user_ancestors"),
+					golang.NewSet("this_manager")).
 				Where("groups.id = ?", groupID).
 				Joins(`
 				JOIN group_managers AS this_manager
@@ -79,8 +82,7 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 		}
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		return store.GroupManagers().
@@ -89,11 +91,8 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) s
 			Delete().Error()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

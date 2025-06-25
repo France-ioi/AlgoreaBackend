@@ -67,7 +67,7 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) error {
 	groupPrefix := chi.URLParam(r, "group_prefix")
 	customPrefix := chi.URLParam(r, "custom_prefix")
 
@@ -87,7 +87,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	// There should not be users with locked membership in the groups the current user cannot manage
@@ -129,5 +129,5 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 
 	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }

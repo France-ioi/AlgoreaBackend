@@ -11,7 +11,6 @@ import (
 	"github.com/cucumber/godog"
 	messages "github.com/cucumber/messages/go/v21"
 
-	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
@@ -96,28 +95,7 @@ func (ctx *TestContext) populateDatabase() error {
 		return nil
 	}
 
-	db, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-
-	// add all the defined table rows in the database.
-	err = database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		store.Exec("SET FOREIGN_KEY_CHECKS=0")
-		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-
-		err = ctx.addUsersIntoAllUsersGroup()
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	err = ctx.DBItemsAncestorsAndPermissionsAreComputed()
+	err := ctx.DBItemsAncestorsAndPermissionsAreComputed()
 	if err != nil {
 		return err
 	}
@@ -143,7 +121,7 @@ func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroup, parentGroup s
 	ctx.setDBTableRowColumnValue(groupGroupTable, key, "personal_info_view_approved_at", time.Now().UTC().Format(time.DateTime))
 }
 
-// getGroupGroupKey gets a group group unique key for the groupgroup's map.
+// getGroupGroupKey constructs a key for a searching a group-group pair in the groups_groups table.
 func (ctx *TestContext) getGroupGroupKey(parentGroupID, childGroupID int64) map[string]string {
 	return map[string]string{
 		"parent_group_id": strconv.FormatInt(parentGroupID, 10),

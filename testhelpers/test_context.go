@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"os"
 	"runtime"
 	"sort"
 
@@ -47,7 +46,6 @@ type TestContext struct {
 	referenceToIDMap                map[string]int64
 	idToReferenceMap                map[int64]string
 	currentThreadKey                map[string]string
-	allUsersGroup                   string
 	needPopulateDatabase            bool
 	previousRandSource              interface{}
 	previousGeneratedGroupCodeIndex int
@@ -83,8 +81,7 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 
 	err := ctx.initDB()
 	if err != nil {
-		fmt.Println("Unable to empty db")
-		panic(err)
+		panic(fmt.Errorf("unable to empty the DB: %w", err))
 	}
 }
 
@@ -96,7 +93,8 @@ func (ctx *TestContext) initReferences(sc *godog.Scenario) {
 	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
 	ctx.idToReferenceMap = make(map[int64]string, len(collectedReferences))
 	for index, reference := range collectedReferences {
-		id := int64(1000000000000000000) + int64(index)
+		const minReferenceID = int64(1000000000000000000) // a large number to avoid conflicts with other IDs in tests
+		id := minReferenceID + int64(index)
 		ctx.referenceToIDMap[reference] = id
 		ctx.idToReferenceMap[id] = reference
 	}
@@ -149,8 +147,7 @@ func (ctx *TestContext) setupApp() {
 	ctx.tearDownApp()
 	ctx.application, err = app.New()
 	if err != nil {
-		fmt.Println("Unable to load app")
-		panic(err)
+		panic(fmt.Errorf("unable to load the app: %w", err))
 	}
 }
 
@@ -191,8 +188,7 @@ func (ctx *TestContext) openDB() *sql.DB {
 			golang.IfElse(loggingConfig.GetBool("LogRawSQLQueries"), "instrumented-mysql", "mysql"),
 			config.FormatDSN())
 		if err != nil {
-			fmt.Println("Unable to connect to the database: ", err)
-			os.Exit(1)
+			panic(fmt.Errorf("unable to connect to the database: %w", err))
 		}
 	}
 
@@ -206,39 +202,7 @@ func (ctx *TestContext) emptyDB() error {
 
 func (ctx *TestContext) initDB() error {
 	err := ctx.emptyDB()
-	if err != nil {
-		return err
-	}
-
-	if len(ctx.featureQueries) > 0 {
-		tx, err := ctx.db.Begin()
-		if err != nil {
-			return err
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		for _, query := range ctx.featureQueries {
-			_, err = tx.Exec(query.sql, query.values)
-			if err != nil {
-				_ = tx.Rollback()
-				return err
-			}
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		err = tx.Commit()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return err
 }
 
 func mustNotBeError(err error) {
@@ -247,7 +211,9 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(returnErr *error) {
+func recoverPanics(
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace returnErr with a panic
+) {
 	if p := recover(); p != nil {
 		switch e := p.(type) {
 		case runtime.Error:

@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
@@ -12,8 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database/configdb"
 )
 
-// nolint:gosec
-func init() { //nolint:gochecknoinits,gocyclo
+func init() { //nolint:gochecknoinits
 	installCmd := &cobra.Command{
 		Use:   "install [environment]",
 		Short: "fill the database with required data",
@@ -49,7 +46,7 @@ do not exist or have missing relations, creates them all
 			}
 
 			// Success
-			fmt.Println("DONE")
+			cmd.Println("DONE")
 
 			return nil
 		},

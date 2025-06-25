@@ -84,7 +84,7 @@ const minSearchStringLength = 3
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Request) error {
 	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -103,21 +103,19 @@ func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Re
 	query := store.Groups().PossibleSubgroupsBySearchString(user, searchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields:       service.SortingAndPagingFields{"id": {ColumnName: "groups.id"}},
 			DefaultRules: "id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
 	render.Respond(w, r, convertedResult)
-	return service.NoError
+	return nil
 }

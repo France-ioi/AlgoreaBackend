@@ -151,7 +151,7 @@ type rawOfficialSession struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -164,7 +164,7 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 		WherePermissionIsAtLeast("view", "info").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	idsQuery := store.Groups().Where("type = 'Session'").
@@ -172,7 +172,7 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 		Where("is_public").
 		Where("root_activity_id = ?", itemID)
 	idsQuery = service.NewQueryLimiter().Apply(r, idsQuery)
-	idsQuery, apiError := service.ApplySortingAndPaging(
+	idsQuery, err = service.ApplySortingAndPaging(
 		r, idsQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -183,16 +183,15 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 			DefaultRules: "expected_start$,name,group_id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"group_id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var ids []interface{}
 	service.MustNotBeError(idsQuery.Pluck("groups.id", &ids).Error())
 
 	var rawData []rawOfficialSession
 	if len(ids) > 0 {
-		service.MustNotBeError(store.Groups().Where("groups.id IN (?)", ids).
+		service.MustNotBeError(store.Groups().
+			Where("groups.id IN (?)", ids). //nolint:asasalint // ids is a single argument
 			Select(`
 				groups.id AS group_id, groups.name, groups.description, groups.open_activity_when_joining,
 				groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until,
@@ -221,7 +220,7 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 	srv.fillOfficialSessionsWithParents(rawData, &result)
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) fillOfficialSessionsWithParents(

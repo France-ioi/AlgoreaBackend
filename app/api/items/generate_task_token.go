@@ -87,7 +87,7 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
@@ -115,7 +115,6 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		HintsCachedCount int32 `gorm:"column:hints_cached"`
 		Validated        bool
 	}
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		// the group should have can_view >= 'content' permission on the item
 		err = store.Items().ByID(itemID).
@@ -132,8 +131,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 				store.PermissionsGranted().ViewIndexByName("solution")).
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -151,8 +149,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 			Take(&resultInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.InsufficientAccessRightsError
-			return err // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -162,9 +159,6 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	fullAttemptID := fmt.Sprintf("%d/%d", participantID, attemptID)
@@ -196,5 +190,5 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 	render.Respond(w, r, service.UpdateSuccess(map[string]interface{}{
 		"task_token": signedTaskToken,
 	}))
-	return service.NoError
+	return nil
 }

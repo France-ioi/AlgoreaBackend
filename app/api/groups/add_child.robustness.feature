@@ -89,7 +89,7 @@ Feature: Add a parent-child relation between two groups - robustness
     And the table "groups_groups" should remain unchanged
     And the table "groups_ancestors" should remain unchanged
 
-  Scenario: Child group is AllUsers groups
+  Scenario: Child group is of type Base
     Given I am the user with id "27"
     When I send a POST request to "/groups/13/relations/16"
     Then the response code should be 403

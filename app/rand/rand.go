@@ -1,4 +1,4 @@
-// Package rand provides utilities to generate random data.
+// Package rand provides utilities to generate insecure random numbers like ids and delays.
 package rand
 
 import (
@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	globalRand = mr.New(mr.NewSource(1))
+	globalRand = mr.New(mr.NewSource(1)) //nolint:gosec // math/rand is okay as the package is not used for security purposes
 	globalLock sync.Mutex
 )
 
@@ -38,20 +38,6 @@ func Float64() float64 {
 	globalLock.Lock()
 	defer globalLock.Unlock()
 	return globalRand.Float64()
-}
-
-// String returns a random string of n characters.
-func String(n int) string {
-	globalLock.Lock()
-	defer globalLock.Unlock()
-
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-
-	s := make([]rune, n)
-	for i := range s {
-		s[i] = letters[globalRand.Intn(len(letters))]
-	}
-	return string(s)
 }
 
 const rngLen = 607

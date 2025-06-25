@@ -60,7 +60,8 @@ func (ctx *TestContext) preprocessString(str string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+	const kilobyte = 1024
+	buffer := bytes.NewBuffer(make([]byte, 0, kilobyte))
 	err = tmpl.Execute(buffer, nil, nil)
 	if err != nil {
 		return "", err
@@ -89,6 +90,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	})
 
 	set.AddGlobalFunc("generateToken", func(a jet.Arguments) reflect.Value {
+		//nolint:gomnd // we require exactly two arguments: the payload and the private key
 		a.RequireNumOfArguments("generateToken", 2, 2)
 		var privateKey *rsa.PrivateKey
 		privateKeyRefl := a.Get(1)

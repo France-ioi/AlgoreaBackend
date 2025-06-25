@@ -13,7 +13,7 @@ import (
 // RenderGroupGroupTransitionResult renders database.GroupGroupTransitionResult as a response or returns an APIError.
 func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, result database.GroupGroupTransitionResult,
 	approvalsToRequest database.GroupApprovals, action userGroupRelationAction,
-) service.APIError {
+) error {
 	isCreateAction := map[userGroupRelationAction]bool{
 		createGroupJoinRequestAction:         true,
 		joinGroupByCodeAction:                true,
@@ -44,7 +44,7 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 			errorResponse.Data = map[string]interface{}{"missing_approvals": approvalsToRequest.ToArray()}
 		}
 		service.MustNotBeError(render.Render(w, r, errorResponse))
-		return service.NoError
+		return nil
 	case database.Unchanged:
 		statusCode := 200
 		if isCreateAction {
@@ -57,7 +57,7 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 				leaveGroupAction: true,
 			}[action], w, r)
 	}
-	return service.NoError
+	return nil
 }
 
 func renderGroupGroupTransitionSuccess(isCreateAction, isDeleteAction bool, w http.ResponseWriter, r *http.Request) {

@@ -391,10 +391,10 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 	}))
 
 	type args struct {
-		ids                               []int64
-		groupID                           int64
-		parentAttemptID                   int64
-		requireContentAccessToTheLastItem bool
+		ids                                []int64
+		groupID                            int64
+		parentAttemptID                    int64
+		requireContentAccessToTheFinalItem bool
 	}
 	tests := []struct {
 		name                 string
@@ -467,37 +467,37 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			args: args{ids: []int64{6, 8}, groupID: 101, parentAttemptID: 201},
 		},
 		{
-			name:                 "no content access to the last item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name:                 "no content access to the final item when requireContentAccessToTheFinalItem = true",
+			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name: "no access to the last item when requireContentAccessToTheLastItem = false",
-			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheLastItem: false},
+			name: "no access to the final item when requireContentAccessToTheFinalItem = false",
+			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheFinalItem: false},
 		},
 		{
-			name:                 "content access to the last item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{4, 6}, groupID: 101, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name:                 "content access to the final item when requireContentAccessToTheFinalItem = true",
+			args:                 args{ids: []int64{4, 6}, groupID: 101, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 			want:                 true,
 			wantAttemptIDMap:     map[int64]int64{4: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "info access to the last item when requireContentAccessToTheLastItem = false",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheLastItem: false},
+			name:                 "info access to the final item when requireContentAccessToTheFinalItem = false",
+			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheFinalItem: false},
 			want:                 true,
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name: "no access to the last item when requireContentAccessToTheLastItem = true",
-			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name: "no access to the final item when requireContentAccessToTheFinalItem = true",
+			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 		},
-		{name: "no content access to the second to the last item", args: args{ids: []int64{2, 4, 6}, groupID: 105, parentAttemptID: 201}},
+		{name: "no content access to the second to the final item", args: args{ids: []int64{2, 4, 6}, groupID: 105, parentAttemptID: 201}},
 		{name: "no content access to the first item", args: args{ids: []int64{2, 4, 6}, groupID: 106, parentAttemptID: 201}},
 		{name: "result of the first item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 107, parentAttemptID: 201}},
-		{name: "result of the second to the last item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, parentAttemptID: 201}},
+		{name: "result of the second to the final item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, parentAttemptID: 201}},
 		{
 			name:                 "attempt of the first item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 109, parentAttemptID: 201},
@@ -505,7 +505,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is expired",
+			name:                 "attempt of the second to the final item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 110, parentAttemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
@@ -517,14 +517,14 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is ended",
+			name:                 "attempt of the second to the final item is ended",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 112, parentAttemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{name: "the first item is not a parent of the second item", args: args{ids: []int64{4, 4, 6}, groupID: 113, parentAttemptID: 200}},
 		{
-			name: "the second to the last item is not a parent of the last item",
+			name: "the second to the final item is not a parent of the final item",
 			args: args{ids: []int64{2, 4, 4}, groupID: 113, parentAttemptID: 200},
 		},
 		{
@@ -532,18 +532,18 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 114, parentAttemptID: 201},
 		},
 		{
-			name: "the first item's attempt is not the same as the the second items's attempt " +
+			name: "the first item's attempt is not the same as the second items's attempt " +
 				"while the second item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 115, parentAttemptID: 200},
 		},
 		{
-			name: "the third from the end item's attempt is not a parent for the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is set",
+			name: "the third from the end item's attempt is not a parent for the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 116, parentAttemptID: 201},
 		},
 		{
-			name: "the third from the end item's attempt is not the same as the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is not set",
+			name: "the third from the end item's attempt is not the same as the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 117, parentAttemptID: 200},
 		},
 		{
@@ -576,7 +576,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
-						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheLastItem, writeLock)
+						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheFinalItem, writeLock)
 					assert.Equal(t, tt.want, got)
 					assert.NoError(t, err)
 					return nil
@@ -910,26 +910,26 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			args: args{ids: []int64{6, 8}, groupID: 101, attemptID: 202},
 		},
 		{
-			name: "no access to the last item",
+			name: "no access to the final item",
 			args: args{ids: []int64{2, 4}, groupID: 104, attemptID: 201},
 		},
 		{
-			name:                 "content access to the last item",
+			name:                 "content access to the final item",
 			args:                 args{ids: []int64{4, 6}, groupID: 101, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{4: 200, 6: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "info access to the last item",
+			name:                 "info access to the final item",
 			args:                 args{ids: []int64{2, 4}, groupID: 103, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
-		{name: "no content access to the second to the last item", args: args{ids: []int64{2, 4, 6}, groupID: 105, attemptID: 202}},
+		{name: "no content access to the second to the final item", args: args{ids: []int64{2, 4, 6}, groupID: 105, attemptID: 202}},
 		{name: "no content access to the first item", args: args{ids: []int64{2, 4, 6}, groupID: 106, attemptID: 202}},
 		{name: "result of the first item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 107, attemptID: 202}},
-		{name: "result of the second to the last item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, attemptID: 202}},
-		{name: "result of the last item is not started", args: args{ids: []int64{2, 4}, groupID: 108, attemptID: 201}},
+		{name: "result of the second to the final item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, attemptID: 202}},
+		{name: "result of the final item is not started", args: args{ids: []int64{2, 4}, groupID: 108, attemptID: 201}},
 		{
 			name:                 "attempt of the first item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 109, attemptID: 202},
@@ -937,13 +937,13 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is expired",
+			name:                 "attempt of the second to the final item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 110, attemptID: 202},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201, 6: 202},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the last item is expired",
+			name:                 "attempt of the final item is expired",
 			args:                 args{ids: []int64{2, 4}, groupID: 110, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
@@ -955,46 +955,46 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is ended",
+			name:                 "attempt of the second to the final item is ended",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 112, attemptID: 202},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201, 6: 202},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the last item is ended",
+			name:                 "attempt of the final item is ended",
 			args:                 args{ids: []int64{2, 4}, groupID: 112, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{name: "the first item is not a parent of the second item", args: args{ids: []int64{4, 4, 6}, groupID: 113, attemptID: 200}},
-		{name: "the second to the last item is not a parent of the last item", args: args{ids: []int64{2, 4, 4}, groupID: 113, attemptID: 200}},
+		{name: "the second to the final item is not a parent of the final item", args: args{ids: []int64{2, 4, 4}, groupID: 113, attemptID: 200}},
 		{
 			name: "the first item's attempt is not a parent for the second items's attempt while the second item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 114, attemptID: 202},
 		},
 		{
-			name: "the first item's attempt is not the same as the the second items's attempt " +
+			name: "the first item's attempt is not the same as the second items's attempt " +
 				"while the second item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 115, attemptID: 200},
 		},
 		{
-			name: "the third to the end item's attempt is not a parent for the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is set",
+			name: "the third to the end item's attempt is not a parent for the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 116, attemptID: 201},
 		},
 		{
-			name: "the second to the last item's attempt is not a parent for the last items's attempt " +
-				"while the last item's attempt root_item_id is set",
+			name: "the second to the final item's attempt is not a parent for the final items's attempt " +
+				"while the final item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6}, groupID: 116, attemptID: 201},
 		},
 		{
-			name: "the third from the end item's attempt is not the same as the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is not set",
+			name: "the third from the end item's attempt is not the same as the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 117, attemptID: 200},
 		},
 		{
-			name: "the second the last item's attempt is not the same as the last items's attempt " +
-				"while the last item's attempt root_item_id is not set",
+			name: "the second the final item's attempt is not the same as the final items's attempt " +
+				"while the final item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6}, groupID: 117, attemptID: 200},
 		},
 		{

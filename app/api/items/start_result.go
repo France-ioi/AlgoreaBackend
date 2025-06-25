@@ -13,7 +13,7 @@ import (
 
 // The request has successfully updated the object
 // swagger:response updatedStartResultResponse
-type updatedStartResultResponse struct { // nolint:unused
+type updatedStartResultResponse struct { //nolint:unused
 	// in: body
 	Body struct {
 		// "updated"
@@ -43,7 +43,7 @@ type updatedStartResultResponse struct { // nolint:unused
 //			* if `as_team_id` is given, it should be a user's parent team group,
 //			* the first item in `{ids}` should be a root activity/skill (groups.root_activity_id/root_skill_id) of a group
 //				the participant is a descendant of or manages,
-//			* the last item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
+//			* the final item in `{ids}` should not require explicit entry (`items.requires_explicit_entry` should be false),
 //			* `{ids}` should be an ordered list of parent-child items,
 //			* the group starting the result should have at least 'content' access on each of the items in `{ids}`,
 //			* the participant should have a started, allowing submission, not ended result for each item but the last,
@@ -55,7 +55,7 @@ type updatedStartResultResponse struct { // nolint:unused
 //			- name: ids
 //				in: path
 //				type: string
-//				description: slash-separated list of item IDs
+//				description: slash-separated list of item IDs (no more than 10 IDs)
 //				required: true
 //			- name: attempt_id
 //				in: query
@@ -79,7 +79,7 @@ type updatedStartResultResponse struct { // nolint:unused
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -95,14 +95,14 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var attemptInfo attemptsListResponseRow
-	apiError := service.NoError
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	var shouldSchedulePropagation bool
+	store := srv.GetStore(r)
+	err = store.InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, attemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		onBeforeInsertingResultInResultStartHook.Load().(func())()
@@ -113,8 +113,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 			Where("NOT items.requires_explicit_entry").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		result := store.Exec(`
@@ -129,13 +128,12 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 		if result.RowsAffected() != 0 {
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.MarkAsToBePropagated(participantID, attemptID, itemID, false))
-
-			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+			shouldSchedulePropagation = true
 		}
 
 		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(r)).
 			Where("attempts.id = ?", attemptID).
-			WithCustomWriteLocks(golang.NewSet("attempts"), golang.NewSet("results")).
+			WithCustomWriteLocks(golang.NewSet("results"), golang.NewSet[string]()).
 			Scan(&attemptInfo).Error())
 
 		if attemptInfo.UserCreator.GroupID == nil {
@@ -144,17 +142,18 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) service.
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
+	if shouldSchedulePropagation {
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+	}
+
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(&attemptInfo)))
-	return service.NoError
+	return nil
 }
 
 var onBeforeInsertingResultInResultStartHook atomic.Value
 
-func init() {
+func init() { //nolint:gochecknoinits // this is an initialization function to store the default hook
 	onBeforeInsertingResultInResultStartHook.Store(func() {})
 }

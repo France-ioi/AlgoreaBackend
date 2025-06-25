@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -10,20 +11,20 @@ import (
 // BadgeGroupPathElement represents an element of a badge's group path.
 type BadgeGroupPathElement struct {
 	Manager bool   `json:"manager" validate:"set"`
-	Name    string `json:"name" validate:"set"`
-	URL     string `json:"url" validate:"min=1"` // length >= 1
+	Name    string `json:"name"    validate:"set"`
+	URL     string `json:"url"     validate:"min=1"` // length >= 1
 }
 
 // BadgeInfo contains a name and group path of a badge.
 type BadgeInfo struct {
-	Name      string                  `json:"name" validate:"set"`
+	Name      string                  `json:"name"       validate:"set"`
 	GroupPath []BadgeGroupPathElement `json:"group_path"`
 }
 
 // Badge represents a badge from the login module.
 type Badge struct {
-	Manager   bool      `json:"manager" validate:"set"`
-	URL       string    `json:"url" validate:"min=1"` // length >= 1
+	Manager   bool      `json:"manager"    validate:"set"`
+	URL       string    `json:"url"        validate:"min=1"` // length >= 1
 	BadgeInfo BadgeInfo `json:"badge_info"`
 }
 
@@ -93,7 +94,9 @@ func (s *GroupStore) storeBadge(
 		if !groupCreated && !newUser {
 			var err error
 			alreadyMember, err = s.ActiveGroupGroups().
-				Where("parent_group_id = ? AND child_group_id = ?", badgeGroupID, userID).HasRows()
+				Where("parent_group_id = ? AND child_group_id = ?", badgeGroupID, userID).
+				WithExclusiveWriteLock().
+				HasRows()
 			mustNotBeError(err)
 		}
 		if !alreadyMember {
@@ -135,8 +138,8 @@ func (s *GroupStore) storeBadgeGroupPath(
 
 func (s *GroupStore) createBadgeGroupRelation(badgeGroupID, childBadgeGroupID int64, badgeURL string) bool {
 	err := s.GroupGroups().CreateRelation(badgeGroupID, childBadgeGroupID)
-	if err == ErrRelationCycle {
-		logging.SharedLogger.WithContext(s.ctx).
+	if errors.Is(err, ErrRelationCycle) {
+		logging.SharedLogger.WithContext(s.ctx()).
 			Warnf("Cannot add badge group %d into badge group %d (%s) because it would create a cycle",
 				childBadgeGroupID, badgeGroupID, badgeURL)
 		return false
@@ -151,7 +154,6 @@ func (s *GroupStore) makeUserManagerOfBadgeGroups(badgeGroupIDsMap map[int64]str
 		badgeGroupIDs = append(badgeGroupIDs, strconv.FormatInt(badgeGroupID, 10))
 	}
 	badgeGroupIDsList := strings.Join(badgeGroupIDs, ", ")
-	// nolint:gosec
 	mustNotBeError(s.Exec(`
 		INSERT IGNORE INTO group_managers (group_id, manager_id, can_manage, can_grant_group_access, can_watch_members)
 		SELECT badge_groups.group_id, ?, "memberships", 1, 1
@@ -165,7 +167,7 @@ func (s *GroupStore) makeUserMemberOfBadgeGroup(badgeGroupID, userID int64, badg
 	mustNotBeError(err)
 
 	if results[userID] != Success {
-		logging.SharedLogger.WithContext(s.ctx).
+		logging.SharedLogger.WithContext(s.ctx()).
 			Warnf("Cannot add the user %d into a badge group %d (%s), reason: %s",
 				userID, badgeGroupID, badgeURL, results[userID])
 	}

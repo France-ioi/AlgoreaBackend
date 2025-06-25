@@ -41,10 +41,7 @@ Feature: Find all breadcrumbs to an item - robustness
       | 60               | 70            |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
-      | 102      | 60      | info               |
       | 111      | 10      | info               |
-      | 111      | 60      | none               |
-      | 111      | 70      | none               |
     And the database has the following table "attempts":
       | id | participant_id | root_item_id | parent_attempt_id |
       | 0  | 101            | null         | null              |
@@ -88,6 +85,9 @@ Feature: Find all breadcrumbs to an item - robustness
 
   Scenario Outline: No access to participant_id
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated |
+      | 111      | 60      | info               |
     When I send a GET request to "<service_url>?participant_id=<participant_id>"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -100,6 +100,9 @@ Feature: Find all breadcrumbs to an item - robustness
 
   Scenario Outline: No paths
     Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated |
+      | 111      | 60      | info               |
     When I send a GET request to "<service_url>?participant_id=102"
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
@@ -109,3 +112,18 @@ Feature: Find all breadcrumbs to an item - robustness
     | /items/by-text-id/id70/breadcrumbs-from-roots |
     | /items/60/breadcrumbs-from-roots              |
     | /items/by-text-id/id60/breadcrumbs-from-roots |
+
+  Scenario Outline: Paths are not visible to the current user (info of the final item is not visible)
+    Given I am the user with id "111"
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 102      | 10      | content            |
+      | 102      | 60      | content            |
+      | 111      | 60      | none               |
+    When I send a GET request to "<service_url>?participant_id=102"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    Examples:
+      | service_url                                   |
+      | /items/60/breadcrumbs-from-roots              |
+      | /items/by-text-id/id60/breadcrumbs-from-roots |

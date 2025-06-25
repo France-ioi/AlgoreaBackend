@@ -32,7 +32,7 @@ import (
 //		* the participant should have a started, allowing submission, not ended result for each item but the last,
 //			with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //		* if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero,
-//		* the last item in `{ids}` should be either 'Task', or 'Chapter',
+//		* the final item in `{ids}` should be either 'Task', or 'Chapter',
 //
 //		otherwise the 'forbidden' error is returned.
 //
@@ -43,7 +43,7 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of item IDs
+//			description: slash-separated list of item IDs (no more than 10 IDs)
 //			required: true
 //		- name: parent_attempt_id
 //			in: query
@@ -69,7 +69,7 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -86,21 +86,17 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var attemptID int64
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, true, true)
 		service.MustNotBeError(err)
 		if !ok {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		itemID := ids[len(ids)-1]
-		apiError = checkIfAttemptCreationIsPossible(store, itemID, participantID)
-		if apiError != service.NoError {
-			return apiError.Error // rollback
-		}
+		err = checkIfAttemptCreationIsPossible(store, itemID, participantID)
+		service.MustNotBeError(err)
 
 		attemptID, err = store.Attempts().CreateNew(participantID, parentAttemptID, itemID, user.GroupID)
 		service.MustNotBeError(err)
@@ -108,24 +104,21 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) servic
 		store.ScheduleResultsPropagation()
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	render.Respond(w, r, service.CreationSuccess(map[string]interface{}{
 		"id": strconv.FormatInt(attemptID, 10),
 	}))
-	return service.NoError
+	return nil
 }
 
-func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID int64) service.APIError {
+func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID int64) error {
 	var allowsMultipleAttempts bool
 	err := store.Items().ByID(itemID).
 		Where("items.type IN('Task','Chapter')").
 		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).WithExclusiveWriteLock().Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -138,5 +131,5 @@ func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID
 			return service.ErrUnprocessableEntity(errors.New("the item doesn't allow multiple attempts"))
 		}
 	}
-	return service.NoError
+	return nil
 }

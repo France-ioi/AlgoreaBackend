@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -9,6 +10,7 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -628,30 +630,33 @@ func Test_IsOwnerValidator_AllowsSettingIsOwnerToFalseOrSameValue(t *testing.T) 
 	dataStore := database.NewDataStore(db)
 
 	currentPermissions := &userPermissions{}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore, &managerGeneratedPermissions{}, currentPermissions,
+	dataMap, modified, err := parsePermissionsInputData(dataStore, &managerGeneratedPermissions{}, currentPermissions,
 		&database.User{}, 0, map[string]interface{}{"is_owner": false})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.False(t, modified)
 	assert.Equal(t, &userPermissions{}, currentPermissions)
 	assert.Equal(t, map[string]interface{}{"is_owner": false}, dataMap)
 
 	currentPermissions = &userPermissions{IsOwner: true}
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
+	dataMap, modified, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
 		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": false})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": false}, dataMap)
 
 	currentPermissions = &userPermissions{IsOwner: true}
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
+	dataMap, modified, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
 		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": true}, dataMap)
 
 	currentPermissions = &userPermissions{}
-	_, _, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
+	_, _, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
 		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
+	require.IsType(t, (*service.APIError)(nil), err)
+	var apiError *service.APIError
+	assert.True(t, errors.As(err, &apiError))
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -663,16 +668,19 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 	dataStore := database.NewDataStore(db)
 
 	currentPermissions := &userPermissions{}
-	_, _, apiError := parsePermissionsInputData(dataStore,
+	_, _, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{IsOwnerGenerated: false}, currentPermissions,
 		&database.User{}, 0, map[string]interface{}{"is_owner": true})
+	require.IsType(t, (*service.APIError)(nil), err)
+	var apiError *service.APIError
+	assert.True(t, errors.As(err, &apiError))
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	currentPermissions = &userPermissions{}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{IsOwnerGenerated: true}, currentPermissions,
 		&database.User{}, 0, map[string]interface{}{"is_owner": true})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": true}, dataMap)
 
@@ -714,10 +722,10 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 			newValue := reflValues.Index(newIndex).Interface()
 			t.Run(fmt.Sprintf("%s -> %s", currentValue, newValue), func(t *testing.T) {
 				currentPermissions := currentPermissionsGenerator(currentValue, permissionGrantedStore)
-				dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+				dataMap, modified, err := parsePermissionsInputData(dataStore,
 					&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
 					map[string]interface{}{fieldName: newValue})
-				assert.Equal(t, service.NoError, apiError)
+				assert.Nil(t, err)
 				assert.Equal(t, newValue != currentValue, modified)
 				assert.Equal(t, map[string]interface{}{fieldName: newValue}, dataMap)
 				assert.Equal(t, currentPermissionsGenerator(newValue, permissionGrantedStore), currentPermissions)
@@ -743,8 +751,11 @@ func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string
 		}).Interface())
 	defer pg.Unpatch()
 
-	_, _, apiError := parsePermissionsInputData(dataStore,
+	_, _, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, &userPermissions{}, &database.User{}, 0, parsedBody)
+	require.IsType(t, (*service.APIError)(nil), err)
+	var apiError *service.APIError
+	assert.True(t, errors.As(err, &apiError))
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -811,17 +822,17 @@ func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
 	tm := time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)
 	tmPlus := tm.Add(time.Second)
 	currentPermissions := &userPermissions{CanEnterFrom: database.Time(tmPlus)}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
 		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:00Z"})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"can_enter_from": tm}, dataMap)
 
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
+	dataMap, modified, err = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
 		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:01Z"})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{"can_enter_from": tmPlus}, dataMap)
 
@@ -845,19 +856,19 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 	currentPermissions := &userPermissions{
 		CanEnterUntil: database.Time(time.Date(2019, 5, 30, 11, 0, 1, 0, time.UTC)),
 	}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
 		map[string]interface{}{"can_enter_until": "2019-05-30T11:00:00Z"})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{
 		"can_enter_until": time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC),
 	}, dataMap)
 
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
+	dataMap, modified, err = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
 		map[string]interface{}{"can_enter_until": "2019-05-30T11:00:01Z"})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{
 		"can_enter_until": time.Date(2019, 5, 30, 11, 0, 1, 0, time.UTC),
@@ -881,7 +892,7 @@ func Test_parsePermissionsInputData_ChecksCanViewFirstAndUsesItsNewValue(t *test
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
 	currentPermissions := &userPermissions{}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{
 			IsOwnerGenerated:           true,
 			CanGrantViewGeneratedValue: permissionGrantedStore.GrantViewIndexByName(solutionWithGrant),
@@ -895,7 +906,7 @@ func Test_parsePermissionsInputData_ChecksCanViewFirstAndUsesItsNewValue(t *test
 			"can_edit":                  "all_with_grant",
 			"can_make_session_official": true,
 		})
-	assert.Equal(t, service.NoError, apiError)
+	assert.Nil(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, &userPermissions{
 		CanViewValue:           permissionGrantedStore.ViewIndexByName(solution),

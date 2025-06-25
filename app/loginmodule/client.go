@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"runtime"
@@ -20,6 +19,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
+
+const oneMegabyte = 1 << 20
 
 // A Client is the login module client.
 type Client struct {
@@ -41,7 +42,7 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	request = request.WithContext(ctx)
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
-	body, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
+	body, err := io.ReadAll(io.LimitReader(response.Body, oneMegabyte))
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
@@ -183,7 +184,7 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	request.Header.Add("Content-Type", "application/json")
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
-	responseBody, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
+	responseBody, err := io.ReadAll(io.LimitReader(response.Body, oneMegabyte))
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
@@ -222,11 +223,9 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 // EncodeBody forms a request body with the given parameters for the login module: `{"client_id": ..., "data": _encoded_}`.
 func EncodeBody(requestParams map[string]string, clientID, clientKey string) (result []byte, err error) {
 	defer recoverPanics(&err)
-	paramsJSON, err := json.Marshal(requestParams)
-	mustNotBeError(err)
+	paramsJSON, _ := json.Marshal(requestParams)
 	encodedParams := Encode(paramsJSON, clientKey)
-	params, err := json.Marshal(map[string]string{"client_id": clientID, "data": encodedParams})
-	mustNotBeError(err)
+	params, _ := json.Marshal(map[string]string{"client_id": clientID, "data": encodedParams})
 	return params, err
 }
 
@@ -237,6 +236,7 @@ func Encode(data []byte, clientKey string) string {
 }
 
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {
+	//nolint:gomnd // we are going to add two fields: public_first_name and public_last_name
 	dest := make(map[string]interface{}, len(source)+2)
 	/*
 	 We ignore fields: birthday_year, client_id, created_at, creator_client_id,
@@ -355,7 +355,9 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(returnErr *error) { // nolint:gocritic
+func recoverPanics(
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
+) {
 	if p := recover(); p != nil {
 		switch e := p.(type) {
 		case runtime.Error:

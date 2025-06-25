@@ -60,7 +60,7 @@ type additionalTimes struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
@@ -77,14 +77,14 @@ func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Reque
 	found, err := store.Items().TimeLimitedByIDManagedByUser(itemID, user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	ok, err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		Having("MAX(can_grant_group_access) AND MAX(can_watch_members)").HasRows()
 	service.MustNotBeError(err)
 	if !ok {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	query := store.Groups().Where("groups.id = ?", groupID).
@@ -106,5 +106,5 @@ func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Reque
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

@@ -51,7 +51,7 @@ import (
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) error {
 	answerID, err := service.ResolveURLQueryPathInt64Field(httpReq, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -162,10 +162,10 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) ser
 
 	service.MustNotBeError(err)
 	if len(result) == 0 {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
 
 	render.Respond(rw, httpReq, convertedResult)
-	return service.NoError
+	return nil
 }

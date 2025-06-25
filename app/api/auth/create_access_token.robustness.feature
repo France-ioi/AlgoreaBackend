@@ -91,8 +91,11 @@ Feature: Login callback - robustness
       """
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
-    And the response error message should contain "Oauth2: cannot fetch token: 500"
-    And the response error message should contain "Response: Unknown error"
+    And the response error message should contain "Unknown error"
+    And logs should contain:
+      """
+      oauth2: cannot fetch token: 500\nResponse: Unknown error
+      """
     And the table "users" should remain unchanged
     And the table "groups" should remain unchanged
     And the table "groups_groups" should remain unchanged
@@ -117,7 +120,7 @@ Feature: Login callback - robustness
       """
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
-    And the response error message should contain "Can't retrieve user's profile (status code = 500)"
+    And the response error message should contain "Unknown error"
     And logs should contain:
       """
       {{ quote(`Can't retrieve user's profile (status code = 500, response = "Unknown error")`) }}
@@ -146,7 +149,7 @@ Feature: Login callback - robustness
       """
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
-    And the response error message should contain "Can't parse user's profile"
+    And the response error message should contain "Unknown error"
     And logs should contain:
       """
       {{ quote(`Can't parse user's profile (response = "Not a JSON", error = "invalid character 'N' looking for beginning of value")`)}}
@@ -175,7 +178,7 @@ Feature: Login callback - robustness
       """
     When I send a POST request to "/auth/token?code=somecode"
     Then the response code should be 500
-    And the response error message should contain "User's profile is invalid"
+    And the response error message should contain "Unknown error"
     And logs should contain:
       """
       {{ quote(`User's profile is invalid (response = ` + quote(`<profile_body>`) + `, error = "<error_text>")`) }}

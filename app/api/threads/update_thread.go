@@ -28,7 +28,7 @@ type threadUpdateFields struct {
 // updateThreadRequest is the expected input for thread updating
 // swagger:model threadEditRequest
 type updateThreadRequest struct {
-	threadUpdateFields `json:"thread,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	threadUpdateFields `json:"thread,squash"`
 
 	// Used to increment the message count when we are not sure of the exact total message count. Can be negative.
 	// Optional
@@ -107,7 +107,7 @@ type updateThreadRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -118,8 +118,8 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		return service.ErrInvalidRequest(err)
 	}
 
-	rawRequestData, apiError := service.ResolveJSONBodyIntoMap(r)
-	service.MustBeNoError(apiError)
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	service.MustNotBeError(err)
 
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -130,7 +130,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 		HasRows()
 	service.MustNotBeError(err)
 	if !userCanViewItemContent {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	err = store.InTransaction(func(store *database.DataStore) error {
@@ -165,14 +165,11 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 
 		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return apiError.Error
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
-		apiError = checkUpdateThreadPermissions(user, oldThreadInfo.ThreadStatus, input, participantID, &oldThreadInfo)
-		if apiError != service.NoError {
-			return apiError.Error
-		}
+		err = checkUpdateThreadPermissions(user, oldThreadInfo.ThreadStatus, input, participantID, &oldThreadInfo)
+		service.MustNotBeError(err)
 
 		threadData := computeNewThreadData(
 			formData, oldThreadInfo.ThreadMessageCount, oldThreadInfo.ThreadHelperGroupID, input, itemID, participantID)
@@ -180,13 +177,10 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) service
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
-	return service.NoError
+	return nil
 }
 
 func computeNewThreadData(
@@ -224,7 +218,7 @@ func checkUpdateThreadPermissions(
 	input updateThreadRequest,
 	participantID int64,
 	threadInfo *threadInfo,
-) service.APIError {
+) error {
 	if input.Status == "" {
 		if input.HelperGroupID == nil && input.MessageCount == nil && input.MessageCountIncrement == nil {
 			return service.ErrInvalidRequest(
@@ -233,13 +227,13 @@ func checkUpdateThreadPermissions(
 
 		// the current-user must be allowed to write
 		if !userCanWriteInThread(user, participantID, threadInfo) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 	} else if !userCanChangeThreadStatus(user, oldThreadStatus, input.Status, participantID, threadInfo) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	return service.NoError
+	return nil
 }
 
 func newMessageCountWithIncrement(oldMessageCount, increment int) int {

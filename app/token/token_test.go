@@ -3,7 +3,6 @@ package token
 import (
 	"crypto/rsa"
 	"errors"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"strconv"
@@ -154,8 +153,12 @@ func TestParseAndValidate(t *testing.T) {
 			defer monkey.UnpatchAll()
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
-			payload, apiErr := ParseAndValidate(tt.token, publicKey)
-			assert.Equal(t, tt.wantError, apiErr)
+			payload, err := ParseAndValidate(tt.token, publicKey)
+			if tt.wantError == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.wantError.Error())
+			}
 			assert.Equal(t, tt.wantPayload, payload)
 		})
 	}
@@ -378,7 +381,7 @@ func Test_prepareFileName_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
 }
 
 func createTmpPublicKeyFile(key []byte) (*os.File, error) {
-	tmpFilePublic, err := ioutil.TempFile("", "testPublicKey.pem")
+	tmpFilePublic, err := os.CreateTemp("", "testPublicKey.pem")
 	if err != nil {
 		return tmpFilePublic, err
 	}
@@ -388,7 +391,7 @@ func createTmpPublicKeyFile(key []byte) (*os.File, error) {
 }
 
 func createTmpPrivateKeyFile(key []byte) (*os.File, error) {
-	tmpFilePrivate, err := ioutil.TempFile("", "testPrivateKey.pem")
+	tmpFilePrivate, err := os.CreateTemp("", "testPrivateKey.pem")
 	if err != nil {
 		return tmpFilePrivate, err
 	}

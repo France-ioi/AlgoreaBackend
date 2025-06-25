@@ -30,23 +30,14 @@ func TestSchedulePropagation(t *testing.T) {
 		propagated           bool
 	}{
 		{
-			name: "should propagate sync when endpoint is defined",
+			name: "should propagate sync when endpoint is undefined",
 			args: args{
 				endpoint: "",
 			},
 			propagated: true,
 		},
 		{
-			name: "should propagate sync when the endpoint call returns an error",
-			args: args{
-				endpoint: "https://example.com",
-			},
-			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
-			endpointCallErr: fmt.Errorf("error"),
-			propagated:      true,
-		},
-		{
-			name: "should not propagate now (async) when endpoint is defined, and endpoint must be called",
+			name: "should not propagate sync when the endpoint is defined",
 			args: args{
 				endpoint: "https://example.com",
 			},
@@ -54,13 +45,22 @@ func TestSchedulePropagation(t *testing.T) {
 			propagated:           false,
 		},
 		{
-			name: "should do propagation when the endpoint is defined but the call fails",
+			name: "should not propagate sync when the endpoint is defined, but returns an error",
+			args: args{
+				endpoint: "https://example.com",
+			},
+			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
+			endpointCallErr: fmt.Errorf("error"),
+			propagated:      false,
+		},
+		{
+			name: "should not propagate sync when the endpoint is defined, but the response code is not 200",
 			args: args{
 				endpoint: "https://example.com",
 			},
 			loggedError:          "Propagation endpoint error: status=500",
 			endpointResponseCode: http.StatusInternalServerError,
-			propagated:           true,
+			propagated:           false,
 		},
 	}
 
@@ -87,7 +87,7 @@ func TestSchedulePropagation(t *testing.T) {
 
 			if tt.args.endpoint != "" {
 				if tt.endpointCallErr == nil {
-					httpmock.RegisterStubRequest(
+					httpmock.RegisterStubRequests(
 						httpmock.NewStubRequest(
 							"GET",
 							tt.args.endpoint+"?types=permissions",
@@ -95,7 +95,7 @@ func TestSchedulePropagation(t *testing.T) {
 						),
 					)
 				} else {
-					httpmock.RegisterStubRequest(
+					httpmock.RegisterStubRequests(
 						httpmock.NewStubRequest(
 							"GET",
 							tt.args.endpoint+"?types=permissions",
