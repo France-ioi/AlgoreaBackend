@@ -93,11 +93,11 @@ Feature: Save grading result - security
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
+    And the table "answers" should remain unchanged
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 100   | 1                                                |
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should remain unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
       | 0          | 101            | 10      | 50             | 1           | 1         | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
@@ -150,11 +150,11 @@ Feature: Save grading result - security
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
+    And the table "answers" should remain unchanged
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 100   | 1                                                |
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should remain unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
       | 0          | 101            | 10      | 50             | 1           | 1         | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
@@ -185,8 +185,8 @@ Feature: Save grading result - security
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: the token has expired"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -210,8 +210,8 @@ Feature: Save grading result - security
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: invalid token: crypto/rsa: verification error"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -238,8 +238,8 @@ Feature: Save grading result - security
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: the token has expired"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -263,8 +263,8 @@ Feature: Save grading result - security
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: invalid token: crypto/rsa: verification error"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -295,8 +295,8 @@ Feature: Save grading result - security
       """
     Then the response code should be 400
     And the response error message should contain "The platform has a public key, but the score_token is not given"
-    And the table "results" should stay unchanged
-    And the table "gradings" should stay unchanged
+    And the table "results" should remain unchanged
+    And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -342,7 +342,7 @@ Feature: Save grading result - security
       """
     Then the response code should be 400
     And the response error message should contain "The platform does not have a public key, but the score_token is given"
-    And the table "results" should stay unchanged
-    And the table "gradings" should stay unchanged
+    And the table "results" should remain unchanged
+    And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty

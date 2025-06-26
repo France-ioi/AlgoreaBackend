@@ -42,8 +42,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal array into Go value of type items.saveGradeRequest"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -56,8 +56,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -80,8 +80,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: invalid idItemLocal: should be a string"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -105,8 +105,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid score_token: invalid idItemLocal: strconv.ParseInt: parsing "abcd": invalid syntax"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -119,8 +119,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Either score_token or answer_token should be given"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -134,8 +134,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -159,8 +159,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: wrong idAttempt"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -185,8 +185,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: wrong idAttempt"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -210,8 +210,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Missing score which is required when the platform does not have a public key"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -236,8 +236,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Invalid answer_token: wrong idUserAnswer"
-    And the table "gradings" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "gradings" should remain unchanged
+    And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -268,8 +268,8 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Cannot find the platform for item 10"
-    And the table "results" should stay unchanged
-    And the table "gradings" should stay unchanged
+    And the table "results" should remain unchanged
+    And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -309,8 +309,8 @@ Feature: Save grading result - robustness
     """
     {{ quote(`A user tries to replay a score token with a different score value ({"idAttempt":"101/1","idItem":"80","idUser":"101","idUserAnswer":"124","newScore":100,"oldScore":0})`) }}
     """
-    And the table "results" should stay unchanged
-    And the table "gradings" should stay unchanged
+    And the table "results" should remain unchanged
+    And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
 
@@ -334,7 +334,7 @@ Feature: Save grading result - robustness
       """
     Then the response code should be 403
     And the response error message should contain "The answer has been already graded or is not found"
-    And the table "results" should stay unchanged
-    And the table "gradings" should stay unchanged
+    And the table "results" should remain unchanged
+    And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty

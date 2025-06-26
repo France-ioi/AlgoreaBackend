@@ -88,11 +88,11 @@ Feature: Save grading result
         "success": true
       }
       """
-    And the table "answers" should stay unchanged
+    And the table "answers" should remain unchanged
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 123       | 100   | 1                                                |
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should remain unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | validated | latest_activity_at  | latest_submission_at | score_obtained_at   | validated_at        |
       | 0          | 101            | 10      | 50             | 1           | 1         | 2019-05-30 11:00:00 | null                 | null                | 2017-05-29 06:38:38 |
@@ -328,7 +328,7 @@ Feature: Save grading result
       | 123       | 5       | 0                                                |
       | 124       | <score> | 1                                                |
       | 125       | 20      | 0                                                |
-    And the table "results" should stay unchanged
+    And the table "results" should remain unchanged
     Examples:
       | score | score_edit_rule | score_edit_value |
       | 19    | null            | null             |
@@ -389,7 +389,7 @@ Feature: Save grading result
     And the table "gradings" should be:
       | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
       | 124       | 100   | 1                                                |
-    And the table "results" should stay unchanged
+    And the table "results" should remain unchanged
 
   Scenario: Platform doesn't support tokens
     Given the database has the following table "attempts":

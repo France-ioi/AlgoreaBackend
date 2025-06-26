@@ -82,7 +82,7 @@ const (
 //				Since the login module responds with both access and refresh tokens, the service updates the user's
 //				refresh token in this case as well.
 //				We also delete all the expired tokens of the user to keep the database leaner.
-//				If there is no refresh token for the user in the DB,
+//				If there is no refresh token for the user in the DB or if the refresh token has expired,
 //				the 'not found' error is returned.
 //
 //
