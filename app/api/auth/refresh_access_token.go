@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"sync"
-	"time"
 
 	"golang.org/x/oauth2"
 
@@ -77,9 +76,7 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) e
 		service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
 	}
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], newToken,
-		time.Now().Add(time.Duration(expiresIn)*time.Second),
-		cookieAttributes)
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], newToken, expiresIn, cookieAttributes)
 	return nil
 }
 
@@ -103,6 +100,10 @@ func (srv *Service) refreshTokens(
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	token, err := oauthConfig.TokenSource(ctx, oldToken).Token()
 
+	deleteSessionFunc := func() {
+		service.MustNotBeError(store.Sessions().Delete("session_id = ? AND refresh_token = ?", sessionID, refreshToken).Error())
+	}
+
 	var retrieveError *oauth2.RetrieveError
 	if errors.As(err, &retrieveError) &&
 		retrieveError.Response.StatusCode == http.StatusUnauthorized {
@@ -110,18 +111,21 @@ func (srv *Service) refreshTokens(
 		logging.SharedLogger.WithContext(ctx).
 			Warnf("The refresh token is invalid for user %d", user.GroupID)
 
-		service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
+		deleteSessionFunc()
 		return "", 0, service.ErrNotFound(errors.New("the refresh token is invalid"))
 	}
 
 	service.MustNotBeError(err)
+
+	expiresIn, err = validateAndGetExpiresInFromOAuth2Token(token)
+	if err != nil {
+		deleteSessionFunc()
+		return "", 0, err
+	}
+
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		// insert the new access token
-		service.MustNotBeError(store.AccessTokens().InsertNewToken(
-			sessionID,
-			token.AccessToken,
-			int32(time.Until(token.Expiry)/time.Second),
-		))
+		service.MustNotBeError(store.AccessTokens().InsertNewToken(sessionID, token.AccessToken, expiresIn))
 		if refreshToken != token.RefreshToken {
 			service.MustNotBeError(store.Sessions().
 				Where("session_id = ?", sessionID).
@@ -131,7 +135,6 @@ func (srv *Service) refreshTokens(
 		}
 
 		newToken = token.AccessToken
-		expiresIn = int32(time.Until(token.Expiry).Round(time.Second) / time.Second)
 
 		return nil
 	}))

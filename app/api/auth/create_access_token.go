@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -267,6 +266,9 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 	token, err := oauthConfig.Exchange(r.Context(), code.(string), oauthOptions...)
 	service.MustNotBeError(err)
 
+	expiresIn, err := validateAndGetExpiresInFromOAuth2Token(token)
+	service.MustNotBeError(err)
+
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
 	service.MustNotBeError(err)
 	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0] //nolint:gomnd // cut off the port
@@ -282,11 +284,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 		service.MustNotBeError(store.Exec(
 			"INSERT INTO sessions (session_id, user_id, refresh_token) VALUES (?, ?, ?)",
 			sessionID, userID, token.RefreshToken).Error())
-		service.MustNotBeError(store.AccessTokens().InsertNewToken(
-			sessionID,
-			token.AccessToken,
-			int32(time.Until(token.Expiry)/time.Second),
-		))
+		service.MustNotBeError(store.AccessTokens().InsertNewToken(sessionID, token.AccessToken, expiresIn))
 
 		// Delete the oldest sessions of the user keeping up to maxNumberOfUserSessionsToKeep sessions.
 		store.Sessions().DeleteOldSessionsToKeepMaximum(userID, maxNumberOfUserSessionsToKeep)
@@ -294,17 +292,16 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 		return nil
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], token.AccessToken, token.Expiry, cookieAttributes)
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], token.AccessToken, expiresIn, cookieAttributes)
 	return nil
 }
 
 func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
-	rendererGenerator func(map[string]interface{}) render.Renderer, token string, expiresIn time.Time,
+	rendererGenerator func(map[string]interface{}) render.Renderer, token string, expiresIn int32,
 	cookieAttributes *auth.SessionCookieAttributes,
 ) {
-	secondsUntilExpiry := int32(time.Until(expiresIn).Round(time.Second) / time.Second)
 	response := map[string]interface{}{
-		"expires_in": secondsUntilExpiry,
+		"expires_in": expiresIn,
 	}
 	oldCookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
 	if oldCookieAttributes == nil {
@@ -315,7 +312,7 @@ func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWr
 		http.SetCookie(w, oldCookieAttributes.SessionCookie("", -1000))
 	}
 	if cookieAttributes.UseCookie {
-		http.SetCookie(w, cookieAttributes.SessionCookie(token, secondsUntilExpiry))
+		http.SetCookie(w, cookieAttributes.SessionCookie(token, expiresIn))
 	} else {
 		response["access_token"] = token
 	}

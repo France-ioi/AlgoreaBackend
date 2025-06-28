@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
@@ -108,8 +107,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error
 		return err
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}],
-		token, time.Now().Add(time.Duration(expiresIn)*time.Second), cookieAttributes)
+	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], token, expiresIn, cookieAttributes)
 	return nil
 }
 

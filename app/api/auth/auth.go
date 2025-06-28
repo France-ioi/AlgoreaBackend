@@ -2,9 +2,14 @@
 package auth
 
 import (
+	"errors"
+	"net/http"
+	"time"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"golang.org/x/oauth2"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -24,4 +29,16 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
 	router.With(auth.UserMiddleware(srv.Base)).
 		Post("/auth/logout", service.AppHandler(srv.logout).ServeHTTP)
+}
+
+func validateAndGetExpiresInFromOAuth2Token(token *oauth2.Token) (expiresIn int32, err error) {
+	if !token.Valid() {
+		return 0, &service.APIError{
+			HTTPStatusCode: http.StatusUnauthorized,
+			EmbeddedError:  errors.New("got an invalid OAuth2 token"),
+		}
+	}
+
+	expiresIn64 := int64(time.Until(token.Expiry).Round(time.Second) / time.Second)
+	return int32(expiresIn64), nil
 }
