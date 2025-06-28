@@ -1,6 +1,6 @@
 linters-settings:
   govet:
-    check-shadowing: true
+    shadow: true
     settings:
       printf:
         funcs:
@@ -69,31 +69,36 @@ linters-settings:
     detect-opposite: true
   paralleltest:
     ignore-missing: true
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+        yaml: camel
+        xml: camel
+        toml: camel
+        bson: camel
+        avro: snake
+        mapstructure: kebab
+        env: upperSnake
+        envconfig: upperSnake
+        whatever: snake
+      overrides:
+        - pkg: app/payloads
+          ignore: true
 
 linters:
   enable-all: true
   disable:
-    - deadcode         # Deprecated.
-    - exhaustivestruct # Deprecated.
-    - golint           # Deprecated.
-    - ifshort          # Deprecated.
-    - interfacer       # Deprecated.
-    - maligned         # Deprecated.
-    - nosnakecase      # Deprecated.
-    - scopelint        # Deprecated.
-    - structcheck      # Deprecated.
-    - varcheck         # Deprecated.
     - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
     - wsl              # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
-    - goerr113         # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
+    - err113           # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
     - contextcheck     # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
     - forcetypeassert  # For update to go1.20
     - ireturn          # For update to go1.20
     - maintidx         # For update to go1.20
     - nlreturn         # For update to go1.20
     - nonamedreturns   # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
-    - tagliatelle      # For update to go1.20
     - tenv             # For update to go1.20
     - thelper          # For update to go1.20
     - usestdlibvars    # For update to go1.20
@@ -102,17 +107,19 @@ linters:
     - exhaustruct      # For update to go1.20
     - gomoddirectives  # For update to go1.20
     - dupl             # For update to go1.20
+    - testifylint
+    - usetesting
+    - perfsprint
+    - recvcheck
 
-run:
-  skip-dirs:
+issues:
+  exclude-use-default: false
+  exclude-dirs:
     - ^db$
     - ^app/database/testdata$
     - ^test-results$
     - ^pkg/golinters/goanalysis/(checker|passes)$
     - ^app/doc$
-
-issues:
-  exclude-use-default: false
   exclude-rules:
     - path: _test\.go$
       linters:
@@ -129,16 +136,9 @@ issues:
     - text: unknown JSON option "squash" # an option provided by the mapstructure library and the formdata package
       linters:
         - staticcheck
-    - text: "timeCmpSimplify:" # this one suggests replacing !After() with Before() which is not correct
-      linters:
-        - gocritic
     - text: "Duplicate words \\(.*[:,].*\\) found"
       linters:
         - dupword
-
-  exclude:
-    - "not declared by package utf8"
-    - "unicode/utf8/utf8.go"
   max-issues-per-linter: 0
   max-same-issues: 0
   #fix: true # Enable to try auto fix.
@@ -146,4 +146,4 @@ issues:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.53.3 # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.64.7 # use the fixed version to not introduce new linters unexpectedly

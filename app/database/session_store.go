@@ -38,7 +38,7 @@ func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user
 }
 
 // DeleteOldSessionsToKeepMaximum deletes old sessions to keep the maximum number of sessions.
-func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
+func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, keepUpTo int) {
 	// Sessions without access tokens are treated as the oldest ones.
 	// So they will be deleted first when the maximum number of sessions is reached.
 	sessionsWithoutAccessTokensQuery := s.
@@ -65,7 +65,7 @@ func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
 		Select("session_id").
 		Order("issued_at DESC, session_id").
 		Limit(infinity). // Offset requires a limit in MySQL.
-		Offset(max).
+		Offset(keepUpTo).
 		SubQuery()
 
 	// The use of tmp_table is a workaround for the following MySQL error:

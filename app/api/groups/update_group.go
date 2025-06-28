@@ -42,7 +42,7 @@ type groupUpdateInput struct {
 
 	// Can be changed only from false to true
 	// (changing auto-rejects all pending join/leave requests and withdraws all pending invitations)
-	FrozenMembership bool `json:"frozen_membership"  validate:"changing_requires_can_manage_at_least=memberships,frozen_membership"`
+	FrozenMembership bool `json:"frozen_membership" validate:"changing_requires_can_manage_at_least=memberships,frozen_membership"`
 	// Cannot be set to null when enforce_max_participant is true
 	MaxParticipants *int `json:"max_participants" validate:"changing_requires_can_manage_at_least=memberships,max_participants"`
 	// Cannot be set to true when max_participants is null
@@ -427,7 +427,11 @@ func validateUpdateGroupInput(
 	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
 
 	err := formData.ParseMapData(rawRequestData)
-	return formData, err
+	if err != nil {
+		return nil, err
+	}
+
+	return formData, nil
 }
 
 func int64PtrEqualValues(a, b *int64) bool {

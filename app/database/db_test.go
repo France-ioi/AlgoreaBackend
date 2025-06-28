@@ -125,7 +125,7 @@ func TestDB_inTransaction_PanicWithString(t *testing.T) {
 	mock.ExpectRollback()
 
 	assert.PanicsWithValue(t, expectedError, func() {
-		_ = db.inTransaction(func(db *DB) error {
+		_ = db.inTransaction(func(_ *DB) error {
 			panic(expectedError)
 		})
 	})
@@ -305,7 +305,7 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	monkey.Patch(time.Sleep, func(d time.Duration) {})
+	monkey.Patch(time.Sleep, func(_ time.Duration) {})
 	defer monkey.UnpatchAll()
 
 	mock.ExpectBegin()
@@ -337,7 +337,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	monkey.Patch(time.Sleep, func(d time.Duration) {})
+	monkey.Patch(time.Sleep, func(_ time.Duration) {})
 	defer monkey.UnpatchAll()
 
 	mock.ExpectBegin()
@@ -1557,12 +1557,8 @@ func TestOpen_DSN(t *testing.T) {
 	defer patchGuard.Unpatch()
 
 	db, err := Open("/db")
-	assert.Error(t, err) // we want an error since dsn is wrong, but other things should be ok
-	assert.NotNil(t, db)
-	assert.NotNil(t, db.db)
-	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
-	rawDB := db.db.CommonDB().(*sqlDBWrapper).sqlDB
-	assertRawDBIsOK(t, rawDB)
+	assert.Error(t, err)
+	assert.Nil(t, db)
 }
 
 func TestOpen_WrongSourceType(t *testing.T) {
@@ -1573,7 +1569,7 @@ func TestOpen_WrongSourceType(t *testing.T) {
 
 func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(OpenRawDBConnection, func(string, bool) (*sql.DB, error) { return &sql.DB{}, expectedError })
+	monkey.Patch(OpenRawDBConnection, func(string, bool) (*sql.DB, error) { return nil, expectedError })
 	defer monkey.UnpatchAll()
 
 	db, err := Open("mydsn")

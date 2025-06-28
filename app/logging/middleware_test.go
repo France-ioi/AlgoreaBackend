@@ -66,10 +66,9 @@ func doRequest(forcePanic bool) {
 		GetLogEntry(r).Print("in service log")
 		if forcePanic {
 			panic("my panic msg")
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("dummy body"))
 		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("dummy body"))
 	})
 	// use the chi `Recoverer` middleware to catch panic and log it
 	// use the chi `RequestID` middleware to include request id in it (appear in logs)

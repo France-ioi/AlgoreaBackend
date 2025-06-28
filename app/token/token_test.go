@@ -380,24 +380,27 @@ func Test_prepareFileName_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
 	assert.Equal(t, "/app/something/app/ab/"+relFileName, preparedFileName)
 }
 
-func createTmpPublicKeyFile(key []byte) (*os.File, error) {
-	tmpFilePublic, err := os.CreateTemp("", "testPublicKey.pem")
+func createTmpKeyFile(key []byte, fileName string) (*os.File, error) {
+	tmpFile, err := os.CreateTemp("", fileName)
 	if err != nil {
-		return tmpFilePublic, err
+		return nil, err
 	}
 
-	_, err = tmpFilePublic.Write(key)
-	return tmpFilePublic, err
+	_, err = tmpFile.Write(key)
+	if err != nil {
+		_ = tmpFile.Close()
+		return nil, err
+	}
+
+	return tmpFile, nil
+}
+
+func createTmpPublicKeyFile(key []byte) (*os.File, error) {
+	return createTmpKeyFile(key, "testPublicKey.pem")
 }
 
 func createTmpPrivateKeyFile(key []byte) (*os.File, error) {
-	tmpFilePrivate, err := os.CreateTemp("", "testPrivateKey.pem")
-	if err != nil {
-		return tmpFilePrivate, err
-	}
-
-	_, err = tmpFilePrivate.Write(key)
-	return tmpFilePrivate, err
+	return createTmpKeyFile(key, "testPrivateKey.pem")
 }
 
 func Test_recoverPanics_and_mustNotBeError(t *testing.T) {

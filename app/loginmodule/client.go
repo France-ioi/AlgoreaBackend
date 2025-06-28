@@ -236,7 +236,7 @@ func Encode(data []byte, clientKey string) string {
 }
 
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {
-	//nolint:gomnd // we are going to add two fields: public_first_name and public_last_name
+	//nolint:mnd // we are going to add two fields: public_first_name and public_last_name
 	dest := make(map[string]interface{}, len(source)+2)
 	/*
 	 We ignore fields: birthday_year, client_id, created_at, creator_client_id,

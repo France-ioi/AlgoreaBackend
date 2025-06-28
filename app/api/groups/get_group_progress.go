@@ -350,7 +350,8 @@ func scanAndBuildProgressResults(
 				// Convert it by parsing
 				result := &database.Time{}
 				err := result.ScanString(data.(string))
-				return *result, err
+				service.MustNotBeError(err)
+				return *result, nil
 			},
 		),
 		Result:           reflDecodedTableCell.Addr().Interface(),

@@ -22,7 +22,7 @@ func Test_fileWithLineNum(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectCommit()
 
-	require.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+	require.NoError(t, NewDataStore(db).InTransaction(func(_ *DataStore) error {
 		assert.Contains(t, fileWithLineNum(), "/query_logger_test.go:")
 		return nil
 	}))
@@ -132,7 +132,7 @@ type timeType time.Time
 // Value returns a timeType Value (*time.Time).
 func (t *timeType) Value() (driver.Value, error) {
 	if t == nil {
-		return nil, nil
+		return nil, nil //nolint:nilnil // return nil for nil receiver
 	}
 	return (*time.Time)(t).UTC().Format("2006-01-02 15:04:05.999999"), nil
 }

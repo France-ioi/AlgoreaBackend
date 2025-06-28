@@ -36,6 +36,7 @@ func Test_mysqlDriverWrapper_Open(t *testing.T) {
 type driverMockWithError struct{}
 
 func (d *driverMockWithError) Open(name string) (driver.Conn, error) {
+	//nolint:nilnil // we return the value for test purposes
 	return &connMockWithName{&connMock{}, name}, fmt.Errorf("error for %s", name)
 }
 
@@ -52,11 +53,12 @@ func Test_mysqlDriverWrapper_Open_Error(t *testing.T) {
 
 type driverConnectorMockWithError struct{}
 
-func (d *driverConnectorMockWithError) Open(string) (driver.Conn, error) { return nil, nil }
+func (d *driverConnectorMockWithError) Open(string) (driver.Conn, error) { return nil, nil } //nolint:nilnil // It's just a mock.
 
 var _ driver.Driver = &driverConnectorMockWithError{}
 
 func (d *driverConnectorMockWithError) OpenConnector(name string) (driver.Connector, error) {
+	//nolint:nilnil // we return the value for test purposes
 	return &mysqlConnectorWrapper{}, fmt.Errorf("error for %s", name)
 }
 

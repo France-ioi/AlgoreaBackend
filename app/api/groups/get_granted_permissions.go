@@ -164,7 +164,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	// Used to be a subquery, but it failed with MySQL-8.0.26 due to obscure bugs introduced in this version.
 	// It works when doing the query first and using the result in the second query.
 	// See commit 5a25fbded8134c93c72dc853f72071943a1bd24c
-	managedGroupsWithCanGrantGroupAccessIds := user.GetManagedGroupsWithCanGrantGroupAccessIds(store)
+	managedGroupsWithCanGrantGroupAccessIDs := user.GetManagedGroupsWithCanGrantGroupAccessIDs(store)
 
 	var sourceGroupsQuery, groupsQuery *database.DB
 	if forDescendants {
@@ -178,7 +178,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 
 		sourceGroupsQuery = store.Groups().
 			Where("groups.type != 'User'").
-			Where("id IN (?)", managedGroupsWithCanGrantGroupAccessIds).
+			Where("id IN (?)", managedGroupsWithCanGrantGroupAccessIDs).
 			Where("id IN ?", ancestorsAndDescendantsQuery.SubQuery()).
 			Select("groups.id, groups.name")
 
@@ -190,7 +190,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	} else {
 		sourceGroupsQuery = store.ActiveGroupAncestors().
 			Where("child_group_id = ?", groupID).
-			Where("ancestor_group_id IN (?)", managedGroupsWithCanGrantGroupAccessIds).
+			Where("ancestor_group_id IN (?)", managedGroupsWithCanGrantGroupAccessIDs).
 			Joins("JOIN `groups` ON groups.id = ancestor_group_id").
 			Where("groups.type != 'User'").
 			Select("groups.id, groups.name")

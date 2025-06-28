@@ -71,7 +71,7 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 
 	monkey.PatchInstanceMethod(
 		reflect.TypeOf(&http.Server{}), //nolint:gosec // the instance of http.Server will never be used
-		"ListenAndServe", func(srv *http.Server) error {
+		"ListenAndServe", func(_ *http.Server) error {
 			err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			assert.NoError(t, err)
 			select {

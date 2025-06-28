@@ -40,5 +40,7 @@ func validateAndGetExpiresInFromOAuth2Token(token *oauth2.Token) (expiresIn int3
 	}
 
 	expiresIn64 := int64(time.Until(token.Expiry).Round(time.Second) / time.Second)
+	//nolint:gosec // G115: The oauth2 package guarantees that the "expires_in" value is always <= 2^31-1.
+	// Also, the "expires_in" value is always greater than 0 in valid tokens.
 	return int32(expiresIn64), nil
 }

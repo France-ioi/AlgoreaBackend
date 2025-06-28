@@ -73,9 +73,8 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 		if appenv.IsEnvTest() {
 			fmt.Fprintf(os.Stderr, "Cannot read the %q config file: %s", environment, err)
 			panic("Cannot read the test config file")
-		} else {
-			fmt.Fprintf(os.Stderr, "Cannot merge %q config file, ignoring it: %s", environment, err)
 		}
+		fmt.Fprintf(os.Stderr, "Cannot merge %q config file, ignoring it: %s", environment, err)
 	}
 
 	return config

@@ -136,7 +136,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 		t.Run(testCase.desc, func(t *testing.T) {
 			r := chi.NewRouter()
 			called := false
-			handler := func(w http.ResponseWriter, r *http.Request) {
+			handler := func(_ http.ResponseWriter, r *http.Request) {
 				called = true
 				value, err := ResolveURLQueryPathInt64Field(r, "id")
 				if testCase.expectedErrMsg != "" {
@@ -216,7 +216,7 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 		t.Run(testCase.desc, func(t *testing.T) {
 			called := false
 			r := chi.NewRouter()
-			handler := func(w http.ResponseWriter, r *http.Request) {
+			handler := func(_ http.ResponseWriter, r *http.Request) {
 				called = true
 				value, err := ResolveURLQueryPathInt64SliceField(r, "ids")
 				if testCase.expectedErrMsg != "" {

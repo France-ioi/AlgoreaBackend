@@ -271,7 +271,7 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
 	service.MustNotBeError(err)
-	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0] //nolint:gomnd // cut off the port
+	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
 
 	domainConfig := domain.ConfigFromContext(r.Context())
 
@@ -352,7 +352,7 @@ func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]int
 	}
 
 	contentType := strings.ToLower(strings.TrimSpace(
-		strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0])) //nolint:gomnd // cut off the parameters, keep only the media type
+		strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0])) //nolint:mnd // cut off the parameters, keep only the media type
 	switch contentType {
 	case "application/json":
 		if err := parseJSONParams(r, requestData); err != nil {

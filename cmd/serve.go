@@ -21,7 +21,7 @@ func init() { //nolint:gochecknoinits
 		Use:   "serve [environment]",
 		Short: "start http server",
 		Args:  cobra.MaximumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			var err error
 
 			// if arg given, replace the env

@@ -23,7 +23,7 @@ func (hook *Hook) GetAllLogs() string {
 	logs := ""
 
 	for _, entry := range hook.AllEntries() {
-		if len(logs) > 0 {
+		if logs != "" {
 			logs += newLine
 		}
 
@@ -39,7 +39,7 @@ func (hook *Hook) GetAllStructuredLogs() string {
 	formatter := logging.NewTextFormatterForTests()
 
 	for _, entry := range hook.AllEntries() {
-		if len(logs) > 0 {
+		if logs != "" {
 			logs += newLine
 		}
 		logBytes, err := formatter.Format(entry)

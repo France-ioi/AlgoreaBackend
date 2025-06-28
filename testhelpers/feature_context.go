@@ -156,6 +156,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 				*parentOutputRestorerFunc = nil
 			}
 		}
-		return contextCtx, tearDownErr
+		return contextCtx, tearDownErr //nolint:nilnil // It looks like we really want to return the context even if there is an error.
 	})
 }

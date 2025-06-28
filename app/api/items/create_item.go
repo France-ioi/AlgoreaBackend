@@ -307,7 +307,7 @@ func constructAsRootOfGroupIDValidator(
 
 // constructParentItemTypeValidator constructs a validator checking that the parent item is not a Task.
 func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func {
-	return func(fl validator.FieldLevel) bool {
+	return func(_ validator.FieldLevel) bool {
 		return parentInfo.Type != task
 	}
 }

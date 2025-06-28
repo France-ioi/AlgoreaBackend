@@ -213,13 +213,13 @@ func validateSortingField(
 func getFieldNameAndSortingTypeFromSortStatement(sortStatement string) (string, sortingType) {
 	var direction sortingDirection
 	var np nullPlacement
-	if len(sortStatement) > 0 && sortStatement[0] == '-' {
+	if sortStatement != "" && sortStatement[0] == '-' {
 		sortStatement = sortStatement[1:]
 		direction = desc
 	} else {
 		direction = asc
 	}
-	if len(sortStatement) > 0 && sortStatement[len(sortStatement)-1] == '$' {
+	if sortStatement != "" && sortStatement[len(sortStatement)-1] == '$' {
 		np = last
 		sortStatement = sortStatement[:len(sortStatement)-1]
 	}
@@ -307,7 +307,10 @@ func getFromValueForField(r *http.Request, fieldName string, fieldType FieldType
 		timeResult, err = ResolveURLQueryGetTimeField(r, fromFieldName)
 		result = (*database.Time)(&timeResult)
 	}
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 var safeColumnNameRegexp = regexp.MustCompile("[^a-zA-Z_0-9]")
@@ -346,7 +349,7 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 	safeColumnNames = make([]string, usedFieldsNumber)
 	conditions = make([]string, 0, usedFieldsNumber)
 	queryValuesPart := make([]interface{}, 0, usedFieldsNumber)
-	//nolint:gomnd // sum of 1..usedFieldsNumber = usedFieldsNumber*(usedFieldsNumber+1)/2
+	//nolint:mnd // sum of 1..usedFieldsNumber = usedFieldsNumber*(usedFieldsNumber+1)/2
 	queryValues = make([]interface{}, 0, (usedFieldsNumber+1)*usedFieldsNumber/2)
 	var conditionPrefix string
 
@@ -356,7 +359,7 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 		safeColumnName := safeColumnNameRegexp.ReplaceAllLiteralString(fieldName, "_")
 		safeColumnNames[index] = safeColumnName
 
-		if len(conditionPrefix) > 0 {
+		if conditionPrefix != "" {
 			conditionPrefix += " AND "
 		}
 		columnName := configuredFields[fieldName].ColumnName

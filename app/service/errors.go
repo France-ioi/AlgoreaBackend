@@ -46,7 +46,7 @@ func (e *APIError) httpResponse() render.Renderer {
 	}
 
 	result.ErrorText = e.EmbeddedError.Error()
-	if len(result.ErrorText) > 0 {
+	if result.ErrorText != "" {
 		result.ErrorText = strings.ToUpper(result.ErrorText[0:1]) + result.ErrorText[1:]
 	}
 

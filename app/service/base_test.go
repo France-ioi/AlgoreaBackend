@@ -16,7 +16,7 @@ import (
 func TestBase_GetUser(t *testing.T) {
 	middleware := auth.MockUserMiddleware(&database.User{GroupID: 42})
 	called := false
-	ts := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		called = true
 		srv := &Base{}
 		user := srv.GetUser(r)

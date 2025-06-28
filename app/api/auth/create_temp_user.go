@@ -84,7 +84,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		userID := createTempUserGroup(store)
 		login := createTempUser(store, userID, defaultLanguage,
-			strings.SplitN(r.RemoteAddr, ":", 2)[0]) //nolint:gomnd // cut off the port
+			strings.SplitN(r.RemoteAddr, ":", 2)[0]) //nolint:mnd // cut off the port
 
 		service.MustNotBeError(store.Groups().ByID(userID).UpdateColumn(map[string]interface{}{
 			"name":        login,

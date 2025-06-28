@@ -36,10 +36,7 @@ func init() { //nolint:gochecknoinits
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	appenv.ForceTestEnv()
 
-	rawDB, err := OpenRawDBConnection()
-	if err != nil {
-		panic(err)
-	}
+	rawDB := OpenRawDBConnection()
 
 	// Seed the DB
 	EmptyDB(rawDB)
@@ -48,8 +45,7 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	}
 
 	// Return a new db connection
-	var db *database.DB
-	db, err = database.Open(rawDB)
+	db, err := database.Open(rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -62,10 +58,7 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 	appenv.ForceTestEnv()
 
-	rawDB, err := OpenRawDBConnection()
-	if err != nil {
-		panic(err)
-	}
+	rawDB := OpenRawDBConnection()
 
 	// Seed the DB
 	EmptyDB(rawDB)
@@ -75,8 +68,7 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 	}
 
 	// Return a new db connection
-	var db *database.DB
-	db, err = database.Open(rawDB)
+	db, err := database.Open(rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +77,7 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 }
 
 // OpenRawDBConnection creates a new connection to the DB specified in the config.
-func OpenRawDBConnection() (*sql.DB, error) {
+func OpenRawDBConnection() *sql.DB {
 	appenv.ForceTestEnv()
 
 	// needs actual config for connection to DB
@@ -100,7 +92,7 @@ func OpenRawDBConnection() (*sql.DB, error) {
 	if err != nil {
 		panic(err)
 	}
-	return rawDB, err
+	return rawDB
 }
 
 // LoadFixture loads fixtures from `<current_pkg_dir>/testdata/<fileName>/` directory

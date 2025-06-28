@@ -153,7 +153,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	// check that the error has been handled by the recover
 	assert.Equal(http.StatusInternalServerError, response.StatusCode)
 	assert.Equal("Internal Server Error\n", string(respBody))
-	assert.Equal("text/plain; charset=utf-8", response.Header.Get("Content-type"))
+	assert.Equal("text/plain; charset=utf-8", response.Header.Get("Content-Type"))
 	allLogs := hook.AllEntries()
 	assert.Equal(2, len(allLogs)-nbLogsBeforeRequest)
 	// check that the req id is correct
@@ -174,7 +174,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	defer restoreFct()
 	app, _ := New()
 	router := app.HTTPHandler
-	router.Get("/dummy", func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/dummy", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("{\"data\":\"datadatadata\"}"))
@@ -192,7 +192,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 		return
 	}
 	defer func() { _ = response.Body.Close() }()
-	assert.NotNil(response.Header.Get("Content-type"))
+	assert.NotNil(response.Header.Get("Content-Type"))
 	assert.Equal("application/json", response.Header.Get("Content-Type"))
 	allLogs := hook.AllEntries()
 	assert.Equal(2, len(allLogs)-nbLogsBeforeRequest)

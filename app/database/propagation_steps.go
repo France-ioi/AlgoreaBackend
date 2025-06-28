@@ -50,7 +50,7 @@ type BeforePropagationStepHookFunc func(step PropagationStep)
 
 var (
 	// beforePropagationStepHook is a hook that is called before each propagation step.
-	beforePropagationStepHook BeforePropagationStepHookFunc = func(step PropagationStep) {}
+	beforePropagationStepHook BeforePropagationStepHookFunc = func(_ PropagationStep) {}
 	// beforePropagationStepMutex protects beforePropagationStepHook.
 	beforePropagationStepMutex sync.RWMutex
 )

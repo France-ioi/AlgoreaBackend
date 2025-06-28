@@ -12,7 +12,7 @@ LOCAL_BIN_DIR=./bin
 
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
-GOLANGCILINT_VERSION=1.53.3
+GOLANGCILINT_VERSION=1.64.7
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
@@ -102,7 +102,7 @@ lint:
 	@[ -e $(GOLANGCILINT) ] && \
 		($(GOLANGCILINT) --version | grep -F "version $(GOLANGCILINT_VERSION) built" > /dev/null || rm $(GOLANGCILINT)) || true
 	$(MAKE) $(GOLANGCILINT)
-	$(GOLANGCILINT) run -v --deadline 10m0s
+	$(GOLANGCILINT) run -v --timeout 10m0s
 
 swagger-generate:
 	swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \

@@ -27,7 +27,7 @@ func ParticipantMiddleware(srv GetStorer) func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var participantID int64
 			var failed bool
-			AppHandler(func(w http.ResponseWriter, r *http.Request) error {
+			AppHandler(func(_ http.ResponseWriter, r *http.Request) error {
 				var err error
 				defer func() {
 					failed = err != nil

@@ -81,16 +81,16 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		return reflect.ValueOf(time.Now().UTC().Format(a.Get(0).Interface().(string)))
 	})
 
-	set.AddGlobalFunc("currentTimeDB", func(a jet.Arguments) reflect.Value {
+	set.AddGlobalFunc("currentTimeDB", func(_ jet.Arguments) reflect.Value {
 		return reflect.ValueOf(time.Now().UTC().Truncate(time.Microsecond).Format("2006-01-02 15:04:05.999999"))
 	})
 
-	set.AddGlobalFunc("currentTimeDBMs", func(a jet.Arguments) reflect.Value {
+	set.AddGlobalFunc("currentTimeDBMs", func(_ jet.Arguments) reflect.Value {
 		return reflect.ValueOf(time.Now().UTC().Truncate(time.Millisecond).Format("2006-01-02 15:04:05.000"))
 	})
 
 	set.AddGlobalFunc("generateToken", func(a jet.Arguments) reflect.Value {
-		//nolint:gomnd // we require exactly two arguments: the payload and the private key
+		//nolint:mnd // we require exactly two arguments: the payload and the private key
 		a.RequireNumOfArguments("generateToken", 2, 2)
 		var privateKey *rsa.PrivateKey
 		privateKeyRefl := a.Get(1)
@@ -114,7 +114,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 				privateKey)))
 	})
 
-	set.AddGlobalFunc("app", func(a jet.Arguments) reflect.Value {
+	set.AddGlobalFunc("app", func(_ jet.Arguments) reflect.Value {
 		return reflect.ValueOf(ctx.application)
 	})
 

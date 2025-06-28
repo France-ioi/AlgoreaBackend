@@ -60,7 +60,7 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 
 	var resultsPropagationScheduled bool
 	monkey.PatchInstanceMethod(reflect.TypeOf(&DataStore{}), "ScheduleResultsPropagation",
-		func(s *DataStore) { resultsPropagationScheduled = true })
+		func(_ *DataStore) { resultsPropagationScheduled = true })
 	defer monkey.UnpatchAll()
 
 	const (

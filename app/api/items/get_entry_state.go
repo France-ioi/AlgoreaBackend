@@ -308,7 +308,7 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 			canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
 		}
 		service.MustNotBeError(canEnterQuery.Scan(&result.otherMembers).Error())
-		result.membersCount = int32(len(result.otherMembers))
+		result.membersCount = int32(len(result.otherMembers)) //nolint:gosec // G115: it's impossible to have more than 2^31-1 members
 
 		participatingSomewhereElseQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			Joins(`

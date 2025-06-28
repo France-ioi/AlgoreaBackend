@@ -29,7 +29,7 @@ func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
 
 			var patch *monkey.PatchGuard
 			patch = monkey.Patch(sqlmock.New, reflect.MakeFunc(reflect.TypeOf(sqlmock.New),
-				func(args []reflect.Value) (results []reflect.Value) {
+				func(_ []reflect.Value) (results []reflect.Value) {
 					patch.Unpatch()
 					_, mock, _ := sqlmock.New()
 					patch.Restore()

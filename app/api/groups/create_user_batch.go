@@ -207,7 +207,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 		numberOfUsersToBeCreated += subgroup.Count
 	}
 
-	//nolint:gomnd // 32^postfix_length should be greater than 2*numberOfUsersToBeCreated
+	//nolint:mnd // 32^postfix_length should be greater than 2*numberOfUsersToBeCreated
 	if float64(input.PostfixLength) <= math.Log(float64(2*numberOfUsersToBeCreated))/math.Log(32) {
 		return 0, nil, service.ErrInvalidRequest(errors.New("'postfix_length' is too small"))
 	}
@@ -262,7 +262,7 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 		domainConfig := domain.ConfigFromContext(r.Context())
 
 		result := make([]*resultRow, 0, len(subgroupsApprovals))
-		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated) //nolint:gomnd // 2 relations per user
+		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated) //nolint:mnd // 2 relations per user
 		usersToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
 		attemptsToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
 		usersInSubgroup := 0

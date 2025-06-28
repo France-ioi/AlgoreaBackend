@@ -19,8 +19,7 @@ import (
 )
 
 func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
-	db, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	db := testhelpers.OpenRawDBConnection()
 	defer func() { _ = db.Close() }()
 
 	ctx := context.Background()
@@ -47,8 +46,7 @@ func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
 }
 
 func TestMysqlConnectionWrapper_ResetSession_ResetsForeignKeyChecks(t *testing.T) {
-	db, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	db := testhelpers.OpenRawDBConnection()
 	defer func() { _ = db.Close() }()
 
 	ctx := context.Background()
@@ -76,8 +74,7 @@ func TestMysqlConnectionWrapper_ResetSession_ResetsForeignKeyChecks(t *testing.T
 }
 
 func TestMysqlConnectionWrapper_ResetSession_FailsOnClosedConnection(t *testing.T) {
-	db, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	db := testhelpers.OpenRawDBConnection()
 	defer func() { _ = db.Close() }()
 
 	ctx := context.Background()
@@ -93,16 +90,15 @@ func TestMysqlConnectionWrapper_ResetSession_FailsOnClosedConnection(t *testing.
 }
 
 type resetter = interface {
-	Reset(context.Context) error
+	Reset(ctx context.Context) error
 }
 
 func TestMysqlConnectionWrapper_Reset_FailsOnClosedConnection(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(&viper.Viper{}), "GetBool",
-		func(_ *viper.Viper, key string) bool { return false })
+		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
-	db, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	db := testhelpers.OpenRawDBConnection()
 	defer func() { _ = db.Close() }()
 
 	ctx := context.Background()
@@ -119,11 +115,10 @@ func TestMysqlConnectionWrapper_Reset_FailsOnClosedConnection(t *testing.T) {
 
 func TestMysqlConnectionWrapper_Reset_FailsWhenContextIsCancelled(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(&viper.Viper{}), "GetBool",
-		func(_ *viper.Viper, key string) bool { return false })
+		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
-	db, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	db := testhelpers.OpenRawDBConnection()
 	defer func() { _ = db.Close() }()
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
@@ -140,11 +135,10 @@ func TestMysqlConnectionWrapper_Reset_FailsWhenContextIsCancelled(t *testing.T) 
 
 func TestMysqlConnectionWrapper_Reset_FailsWhenWriteCommandPacketFails(t *testing.T) {
 	monkey.PatchInstanceMethod(reflect.TypeOf(&viper.Viper{}), "GetBool",
-		func(_ *viper.Viper, key string) bool { return false })
+		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
-	db, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	db := testhelpers.OpenRawDBConnection()
 	defer func() { _ = db.Close() }()
 
 	ctx := context.Background()
