@@ -429,6 +429,8 @@ func TestDataStore_WithNamedLock(t *testing.T) {
 func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeout int, expectedTableName string,
 	funcToTestGenerator func(store *DataStore) func(func(store *DataStore) error) error,
 ) {
+	t.Helper()
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

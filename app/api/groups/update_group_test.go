@@ -108,6 +108,8 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 }
 
 func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectationsFunc func(sqlmock.Sqlmock)) {
+	t.Helper()
+
 	response, mock, _, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 		"PUT", "/groups/1", `{"is_public":false}`, &database.User{GroupID: 2},
 		setMockExpectationsFunc,

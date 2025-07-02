@@ -572,6 +572,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		tt := tt
 		testEachWriteLockMode(t, tt.name+": is valid", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				t.Helper()
+
 				testoutput.SuppressIfPasses(t)
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
@@ -585,6 +587,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		})
 		testEachWriteLockMode(t, tt.name+": breadcrumbs hierarchy", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				t.Helper()
+
 				testoutput.SuppressIfPasses(t)
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
@@ -602,6 +606,8 @@ func assertBreadcrumbsHierarchy(t *testing.T,
 	wantAttemptIDMap, gotIDs map[int64]int64,
 	wantAttemptNumberMap, gotNumbers map[int64]int, err error,
 ) {
+	t.Helper()
+
 	assert.Equal(t, wantAttemptIDMap, gotIDs)
 	assert.Equal(t, wantAttemptNumberMap, gotNumbers)
 	assert.NoError(t, err)
@@ -1020,6 +1026,8 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 		tt := tt
 		testEachWriteLockMode(t, tt.name, func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				t.Helper()
+
 				testoutput.SuppressIfPasses(t)
 
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
@@ -1034,6 +1042,8 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 }
 
 func testEachWriteLockMode(t *testing.T, testName string, testGenFunc func(writeLock bool) func(*testing.T)) {
+	t.Helper()
+
 	for _, writeLock := range []bool{false, true} {
 		writeLock := writeLock
 		var lockName string

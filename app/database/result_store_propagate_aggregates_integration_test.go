@@ -226,6 +226,8 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 }
 
 func assertAggregatesEqual(t *testing.T, resultStore *database.ResultStore, expected []aggregatesResultRow) {
+	t.Helper()
+
 	var result []aggregatesResultRow
 	queryResultsAndStatesForTests(t, resultStore, &result, "latest_activity_at, tasks_tried, tasks_with_help, score_computed")
 	assert.Equal(t, expected, result)

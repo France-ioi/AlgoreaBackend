@@ -100,6 +100,8 @@ func testCheckerAllowsSettingLowerOrSameValue(
 	t *testing.T, values []string,
 	funcToCheck interface{}, currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -243,6 +245,8 @@ func testCheckerRequiresManagerToHaveSpecificPermission(
 	managerPermissionsGenerator func(
 		newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -298,6 +302,8 @@ func testCheckerRequiresCanViewBeGreaterOrEqualToContent(
 	managerPermissionsGenerator func(
 		permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -567,6 +573,8 @@ func Test_checkIfPossibleToModifyCanEnterFrom_RequiresManagerToHaveCanGrantViewG
 func testCheckerRequiresManagerToHaveCanGrantViewGreaterOrEqualToEnter(
 	t *testing.T, value, funcToCheck interface{}, currentPermissionsGenerator func() *userPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -699,6 +707,8 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 	currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
 	mockEnums bool,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	if mockEnums {
@@ -741,6 +751,8 @@ func Test_CanViewValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
 }
 
 func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string]interface{}, checkFunc interface{}) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	dataStore := database.NewDataStore(db)

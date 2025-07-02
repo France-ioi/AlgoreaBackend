@@ -276,6 +276,8 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T)
 func patchGormBeginTxWithVerifier(
 	t *testing.T, callsCount *int, expectedTxOptions *sql.TxOptions, expectedContextVars map[interface{}]interface{},
 ) (patch *monkey.PatchGuard) {
+	t.Helper()
+
 	patch = monkey.Patch(gormDBBeginTxReplacement,
 		func(ctx context.Context, db *gorm.DB, opts *sql.TxOptions) *gorm.DB {
 			*callsCount++
@@ -1578,6 +1580,8 @@ func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 }
 
 func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
+	t.Helper()
+
 	assert.Equal(t, "*instrumentedsql.WrappedDriver", fmt.Sprintf("%T", rawDB.Driver()))
 	assert.Contains(t, fmt.Sprintf("%#v", rawDB), "parent:(*database.mysqlConnectorWrapper)")
 }

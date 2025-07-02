@@ -53,6 +53,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = updateQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
@@ -68,6 +70,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = updateQueryForTesting
 			expectedAffectedRows = golang.Ptr(int64(1))
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
@@ -84,6 +88,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = selectQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
@@ -99,6 +105,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = selectQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
@@ -117,6 +125,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = selectQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
@@ -131,6 +141,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = selectQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
@@ -146,6 +158,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = beginTransactionLogMessage
 			mock.ExpectBegin().WillReturnError(expectedError)
@@ -161,6 +175,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = beginTransactionLogMessage
 			mock.ExpectBegin()
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).BeginTx(context.Background(), &sql.TxOptions{})
@@ -175,6 +191,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = selectQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
@@ -192,6 +210,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = selectQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
@@ -210,6 +230,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = updateQueryForTesting
 
@@ -237,6 +259,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = updateQueryForTesting
 			expectedAffectedRows = golang.Ptr(int64(1))
 
@@ -264,6 +288,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = updateQueryForTesting
 
@@ -291,6 +317,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = updateQueryForTesting
 
 			mock.ExpectBegin()
@@ -319,6 +347,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = updateQueryForTesting
 
@@ -345,6 +375,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = updateQueryForTesting
 
 			mock.ExpectBegin()
@@ -371,6 +403,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = updateQueryForTesting
 
@@ -394,6 +428,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = updateQueryForTesting
 			expectedAffectedRows = golang.Ptr(int64(1))
 
@@ -418,6 +454,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = updateQueryForTesting
 
@@ -441,6 +479,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = updateQueryForTesting
 
 			mock.ExpectBegin()
@@ -466,6 +506,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = updateQueryForTesting
 
@@ -488,6 +530,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = updateQueryForTesting
 
 			mock.ExpectBegin()
@@ -511,6 +555,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = commitTransactionLogMessage
 
@@ -531,6 +577,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = commitTransactionLogMessage
 
 			mock.ExpectBegin()
@@ -550,6 +598,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = errors.New("some error")
 			expectedQuery = rollbackTransactionLogMessage
 
@@ -570,6 +620,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedQuery = rollbackTransactionLogMessage
 
 			mock.ExpectBegin()
@@ -589,6 +641,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = context.Canceled
 			expectedQuery = rollbackTransactionLogMessage
 
@@ -620,6 +674,8 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
 			expectedQuery string, expectedAffectedRows *int64, expectedError error,
 		) {
+			t.Helper()
+
 			expectedError = context.Canceled
 			expectedQuery = commitTransactionLogMessage
 
@@ -669,6 +725,8 @@ func Test_SQLQueryLogging(t *testing.T) {
 }
 
 func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sqlQueryLoggingTest) {
+	t.Helper()
+
 	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
 	defer loggerRestoreFunc()
 
@@ -729,6 +787,8 @@ func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sql
 }
 
 func assertDurationIsOK(t *testing.T, entry *logrus.Entry) {
+	t.Helper()
+
 	assert.Contains(t, entry.Data, "duration")
 	if duration, ok := entry.Data["duration"]; ok {
 		assert.IsType(t, "", duration)

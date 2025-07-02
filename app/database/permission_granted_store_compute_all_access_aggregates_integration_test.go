@@ -832,6 +832,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_Propagates(t *testing.T) {
 }
 
 func testPropagates(t *testing.T, column, propagationColumn, valueForParent string, propagationMode bool, expectedValue string) {
+	t.Helper()
+
 	t.Run(valueForParent+" as "+expectedValue, func(t *testing.T) {
 		testoutput.SuppressIfPasses(t)
 
@@ -858,6 +860,8 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 }
 
 func assertPermissionsGeneratedResultRowsEqual(t *testing.T, expected, got []permissionsGeneratedResultRow) {
+	t.Helper()
+
 	if len(got) != len(expected) {
 		assert.ElementsMatch(t, expected, got)
 		return
@@ -869,6 +873,8 @@ func assertPermissionsGeneratedResultRowsEqual(t *testing.T, expected, got []per
 }
 
 func assertAllPermissionsGeneratedAreDone(t *testing.T, permissionGeneratedStore *database.PermissionGeneratedStore) {
+	t.Helper()
+
 	var cnt int
 	assert.NoError(t, permissionGeneratedStore.Table("permissions_propagate").Count(&cnt).Error())
 	assert.Zero(t, cnt, "found not done group-item pairs")

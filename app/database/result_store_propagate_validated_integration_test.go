@@ -32,6 +32,8 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 	validationType string,
 	prepareFunc func(*testing.T, *database.ResultStore), expectedResults []validatedResultRow,
 ) {
+	t.Helper()
+
 	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixture(fixtures...)
@@ -73,6 +75,8 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 				[]string{"results_propagation/_common"},
 				tt.name,
 				func(t *testing.T, resultStore *database.ResultStore) {
+					t.Helper()
+
 					assert.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
 						UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				},
@@ -92,6 +96,8 @@ func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhe
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
 		func(t *testing.T, resultStore *database.ResultStore) {
+			t.Helper()
+
 			assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id = 3").
 				UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 		},
@@ -127,6 +133,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common", "results_propagation/validated/all_and_category"},
 			validationType: "AllButOne",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id = 3").
 					UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
@@ -147,6 +155,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common", "results_propagation/validated/all_and_category"},
 			validationType: "AllButOne",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id IN (1, 3)").
 					UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
@@ -159,6 +169,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common", "results_propagation/validated/all_and_category"},
 			validationType: "All",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id IN (1, 3)").
 					UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
@@ -171,6 +183,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common"},
 			validationType: "All",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				assert.NoError(t, resultStore.ItemItems().Delete("parent_item_id=2").Error())
 				assert.NoError(t, resultStore.Delete("participant_id = 101 AND attempt_id = 1 AND item_id = 1").Error())
 			},
@@ -183,6 +197,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common", "results_propagation/validated/all_and_category"},
 			validationType: "All",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id IN (1, 3, 4)").
 					UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 			},
@@ -196,6 +212,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common", "results_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id IN (1, 3)").
 					UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				assert.NoError(t, resultStore.ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
@@ -211,6 +229,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common", "results_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				itemStore := resultStore.Items()
 				assert.NoError(t, itemStore.Where("id=4").UpdateColumn("no_score", true).Error())
 				assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id IN (1, 3)").
@@ -228,6 +248,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				itemStore := resultStore.Items()
 				assert.NoError(t, itemStore.Where("id = 1").UpdateColumn("no_score", true).Error())
 				assert.NoError(t, resultStore.ItemItems().Where("parent_item_id = 2 AND child_item_id = 1").
@@ -243,6 +265,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 			fixtures:       []string{"results_propagation/_common", "results_propagation/validated/all_and_category"},
 			validationType: "Categories",
 			prepareFunc: func(t *testing.T, resultStore *database.ResultStore) {
+				t.Helper()
+
 				assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id IN (3, 4)").
 					UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
 				assert.NoError(t, resultStore.ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").

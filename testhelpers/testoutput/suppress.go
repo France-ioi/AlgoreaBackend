@@ -19,6 +19,8 @@ import (
 //
 // Note: This function does nothing if the test is run in verbose mode.
 func SuppressIfPasses(t *testing.T) {
+	t.Helper()
+
 	if testing.Verbose() {
 		return
 	}
