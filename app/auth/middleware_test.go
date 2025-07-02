@@ -288,7 +288,7 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
+	mainRequest, _ := http.NewRequest(http.MethodGet, mainSrv.URL, http.NoBody)
 	for _, header := range authorizationHeaders {
 		mainRequest.Header.Add("Authorization", header)
 	}

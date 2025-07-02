@@ -29,7 +29,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			req, _ := http.NewRequest("GET", tt.url, http.NoBody)
+			req, _ := http.NewRequest(http.MethodGet, tt.url, http.NoBody)
 			watchedGroupID, watchedGroupIDIsSet, gotError := (&Base{}).ResolveWatchedGroupID(req)
 
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)

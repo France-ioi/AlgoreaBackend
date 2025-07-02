@@ -118,7 +118,7 @@ func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string,
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
+	mainRequest, _ := http.NewRequest(http.MethodGet, mainSrv.URL, http.NoBody)
 	client := &http.Client{}
 	response, err := client.Do(mainRequest)
 	var body string
