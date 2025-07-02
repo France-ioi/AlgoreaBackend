@@ -31,7 +31,7 @@ func TestResultStore_Propagate_Unlocks(t *testing.T) {
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
-	testRegularUnlocks(db, t)
+	testRegularUnlocks(t, db)
 }
 
 func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
@@ -43,7 +43,7 @@ func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
 		"results_propagation/unlocks_old_records")
 	defer func() { _ = db.Close() }()
 
-	testRegularUnlocks(db, t)
+	testRegularUnlocks(t, db)
 }
 
 func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
@@ -65,7 +65,7 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
-	prepareDependencies(db, t)
+	prepareDependencies(t, db)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
 		s.ScheduleResultsPropagation()
@@ -107,7 +107,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T)
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
 
-	testExplicitEntryUnlocks(db, t)
+	testExplicitEntryUnlocks(t, db)
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHasBeenSetAlready(t *testing.T) {
@@ -127,7 +127,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
-	prepareDependencies(db, t)
+	prepareDependencies(t, db)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
 		s.ScheduleResultsPropagation()
@@ -160,7 +160,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
-	testExplicitEntryUnlocks(db, t)
+	testExplicitEntryUnlocks(t, db)
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterUntilIsNotMax(t *testing.T) {
@@ -181,13 +181,15 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterUntil
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
-	testExplicitEntryUnlocks(db, t)
+	testExplicitEntryUnlocks(t, db)
 }
 
 var maxTime = database.Time(time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC))
 
-func testRegularUnlocks(db *database.DB, t *testing.T) {
-	prepareDependencies(db, t)
+func testRegularUnlocks(t *testing.T, db *database.DB) {
+	t.Helper()
+
+	prepareDependencies(t, db)
 
 	var unlockedItems *golang.Set[int64]
 	dataStore := database.NewDataStore(db)
@@ -247,8 +249,10 @@ func testRegularUnlocks(db *database.DB, t *testing.T) {
 	assert.True(t, found, "should have created a new result for the unlocked item 2001")
 }
 
-func testExplicitEntryUnlocks(db *database.DB, t *testing.T) {
-	prepareDependencies(db, t)
+func testExplicitEntryUnlocks(t *testing.T, db *database.DB) {
+	t.Helper()
+
+	prepareDependencies(t, db)
 
 	var unlockedItems *golang.Set[int64]
 
@@ -294,7 +298,9 @@ func testExplicitEntryUnlocks(db *database.DB, t *testing.T) {
 	assert.False(t, found, "should not have created a new result for the unlocked item 2001")
 }
 
-func prepareDependencies(db *database.DB, t *testing.T) {
+func prepareDependencies(t *testing.T, db *database.DB) {
+	t.Helper()
+
 	resultStore := database.NewDataStore(db).Results()
 	for _, ids := range []struct {
 		ParticipantID int64

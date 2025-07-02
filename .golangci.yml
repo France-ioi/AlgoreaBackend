@@ -100,7 +100,6 @@ linters:
     - nlreturn         # For update to go1.20
     - nonamedreturns   # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
     - tenv             # Deprecated in golangci-lint v1.64.0, replaced by `usetesting`
-    - thelper          # For update to go1.20
     - usestdlibvars    # For update to go1.20
     - varnamelen       # For update to go1.20
     - wrapcheck        # For update to go1.20

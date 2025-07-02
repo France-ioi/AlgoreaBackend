@@ -47,6 +47,8 @@ func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
 }
 
 func assertForeignKeysDBVars(t *testing.T, store *database.DataStore, expectedStackCount, expectedForeignKeyChecks int64) {
+	t.Helper()
+
 	var result struct {
 		StackCount       int64
 		ForeignKeyChecks int64

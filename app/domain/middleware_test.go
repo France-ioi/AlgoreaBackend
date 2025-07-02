@@ -101,6 +101,8 @@ func TestMiddleware(t *testing.T) {
 func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string, shouldEnterService bool,
 	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig, expectedDomain string,
 ) {
+	t.Helper()
+
 	// dummy server using the middleware
 	middleware := Middleware(domains, domainOverride)
 	enteredService := false // used to log if the service has been reached

@@ -90,6 +90,8 @@ func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
 }
 
 func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *database.DB {
+	t.Helper()
+
 	db := testhelpers.SetupDBWithFixtureString(`
 			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}, {id: 5003}]`, `
 			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 5003}, {id: 7000}]
