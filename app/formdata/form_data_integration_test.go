@@ -322,7 +322,7 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
-			req, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))
+			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
 			err := f.ParseJSONRequestData(req)
 			if tt.wantErr != "" {
 				assert.NotNil(t, err, "Should produce an error, but it did not")
@@ -676,7 +676,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
-			req, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))
+			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
 			assert.Nil(t, f.ParseJSONRequestData(req))
 
 			got := f.ConstructMapForDB()
@@ -736,7 +736,7 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
-			req, _ := http.NewRequest("POST", "/", strings.NewReader(tt.json))
+			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
 			assert.Nil(t, f.ParseJSONRequestData(req))
 
 			got := f.ConstructPartialMapForDB("Struct")

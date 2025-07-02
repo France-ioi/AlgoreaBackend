@@ -36,7 +36,7 @@ func NewClient(loginModuleURL string) *Client {
 func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile map[string]interface{}, err error) {
 	defer recoverPanics(&err)
 
-	request, err := http.NewRequest("GET", client.url+"/user_api/account", http.NoBody)
+	request, err := http.NewRequest(http.MethodGet, client.url+"/user_api/account", http.NoBody)
 	mustNotBeError(err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	request = request.WithContext(ctx)
@@ -178,7 +178,7 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 
 	params, err := EncodeBody(requestParams, clientID, clientKey)
 
-	request, err := http.NewRequest("POST", apiURL.String(), bytes.NewBuffer(params))
+	request, err := http.NewRequest(http.MethodPost, apiURL.String(), bytes.NewBuffer(params))
 	mustNotBeError(err)
 	request = request.WithContext(ctx)
 	request.Header.Add("Content-Type", "application/json")

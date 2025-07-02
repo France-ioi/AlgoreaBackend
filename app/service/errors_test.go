@@ -32,7 +32,7 @@ func responseForError(e error) *httptest.ResponseRecorder {
 }
 
 func responseForHTTPHandler(handler http.Handler) *httptest.ResponseRecorder {
-	req, _ := http.NewRequest("GET", "/dummy", http.NoBody)
+	req, _ := http.NewRequest(http.MethodGet, "/dummy", http.NoBody)
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, req)

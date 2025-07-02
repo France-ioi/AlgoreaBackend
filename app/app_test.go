@@ -136,7 +136,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	defer srv.Close()
 
 	nbLogsBeforeRequest := len(hook.AllEntries())
-	request, _ := http.NewRequest("GET", srv.URL+"/dummy", http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, srv.URL+"/dummy", http.NoBody)
 	request.Header.Set("X-Forwarded-For", "1.1.1.1")
 	response, err := http.DefaultClient.Do(request)
 	assert.NoError(err)
@@ -178,7 +178,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	defer srv.Close()
 
 	nbLogsBeforeRequest := len(hook.AllEntries())
-	request, _ := http.NewRequest("GET", srv.URL+"/dummy", http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, srv.URL+"/dummy", http.NoBody)
 	request.Header.Set("X-Real-IP", "1.1.1.1")
 	request.Header.Set("Accept-Encoding", "gzip, deflate")
 	response, err := http.DefaultClient.Do(request)
@@ -216,7 +216,7 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 	srv := httptest.NewServer(app.HTTPHandler)
 	defer srv.Close()
 
-	request, _ := http.NewRequest("GET", srv.URL+"/debug", http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, srv.URL+"/debug", http.NoBody)
 	response, err := http.DefaultClient.Do(request)
 	assert.NoError(err)
 	if err != nil {
@@ -241,7 +241,7 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	srv := httptest.NewServer(app.HTTPHandler)
 	defer srv.Close()
 
-	request, _ := http.NewRequest("GET", srv.URL+"/debug", http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, srv.URL+"/debug", http.NoBody)
 	response, err := http.DefaultClient.Do(request)
 	assert.NoError(err)
 	if err != nil {
@@ -269,7 +269,7 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 			srv := httptest.NewServer(router)
 			defer srv.Close()
 
-			request, _ := http.NewRequest("GET", srv.URL+"/dummy", http.NoBody)
+			request, _ := http.NewRequest(http.MethodGet, srv.URL+"/dummy", http.NoBody)
 			response, err := http.DefaultClient.Do(request)
 			assert.NoError(err)
 			if err != nil {

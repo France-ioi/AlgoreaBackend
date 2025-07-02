@@ -158,7 +158,7 @@ func callThroughParticipantMiddleware(userID, asTeamID int64, returnedError erro
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
+	mainRequest, _ := http.NewRequest(http.MethodGet, mainSrv.URL, http.NoBody)
 	mainRequest.Header.Add("Authorization", "Bearer 1234567")
 	client := &http.Client{}
 	result.resp, _ = client.Do(mainRequest) //nolint:bodyclose // the body is closed in the test

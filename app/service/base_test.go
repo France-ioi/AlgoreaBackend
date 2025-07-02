@@ -24,7 +24,7 @@ func TestBase_GetUser(t *testing.T) {
 	})))
 	defer ts.Close()
 
-	request, _ := http.NewRequest("GET", ts.URL, http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, ts.URL, http.NoBody)
 	response, err := http.DefaultClient.Do(request)
 	assert.NoError(t, err)
 	if err == nil {
