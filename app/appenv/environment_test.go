@@ -10,7 +10,7 @@ import (
 )
 
 func TestEnv_Prod(t *testing.T) {
-	_ = os.Setenv(envVarName, "prod")
+	t.Setenv(envVarName, "prod")
 
 	assert.Equal(t, "prod", Env())
 	assert.False(t, IsEnvDev())
@@ -19,7 +19,7 @@ func TestEnv_Prod(t *testing.T) {
 }
 
 func TestEnv_Dev(t *testing.T) {
-	_ = os.Setenv(envVarName, "dev")
+	t.Setenv(envVarName, "dev")
 
 	assert.Equal(t, "dev", Env())
 	assert.True(t, IsEnvDev())
@@ -28,7 +28,7 @@ func TestEnv_Dev(t *testing.T) {
 }
 
 func TestEnv_Test(t *testing.T) {
-	_ = os.Setenv(envVarName, "test")
+	t.Setenv(envVarName, "test")
 
 	assert.Equal(t, "test", Env())
 	assert.False(t, IsEnvDev())
@@ -37,6 +37,7 @@ func TestEnv_Test(t *testing.T) {
 }
 
 func TestEnv_NotSet(t *testing.T) {
+	t.Setenv(envVarName, "") // make the test restore the environment variable on cleanup
 	_ = os.Unsetenv(envVarName)
 
 	assert.Equal(t, "dev", Env())
@@ -46,7 +47,7 @@ func TestEnv_NotSet(t *testing.T) {
 }
 
 func TestEnv_Empty(t *testing.T) {
-	_ = os.Setenv(envVarName, "")
+	t.Setenv(envVarName, "")
 
 	assert.Equal(t, "dev", Env())
 	assert.True(t, IsEnvDev())
@@ -55,7 +56,7 @@ func TestEnv_Empty(t *testing.T) {
 }
 
 func TestEnv_Other(t *testing.T) {
-	_ = os.Setenv(envVarName, "myownenv")
+	t.Setenv(envVarName, "myownenv")
 
 	assert.Equal(t, "myownenv", Env())
 	assert.False(t, IsEnvDev())
@@ -64,6 +65,7 @@ func TestEnv_Other(t *testing.T) {
 }
 
 func TestSetDefaultEnvToTest_NotSet(t *testing.T) {
+	t.Setenv(envVarName, "") // make the test restore the environment variable on cleanup
 	_ = os.Unsetenv(envVarName)
 	SetDefaultEnvToTest()
 
@@ -74,7 +76,7 @@ func TestSetDefaultEnvToTest_NotSet(t *testing.T) {
 }
 
 func TestSetDefaultEnvToTest_Set(t *testing.T) {
-	_ = os.Setenv(envVarName, "prod")
+	t.Setenv(envVarName, "prod")
 	SetDefaultEnvToTest()
 
 	assert.Equal(t, "prod", Env())
@@ -84,8 +86,10 @@ func TestSetDefaultEnvToTest_Set(t *testing.T) {
 }
 
 func TestSetDefaultEnvToTest_Panic(t *testing.T) {
+	t.Setenv(envVarName, "") // make the test restore the environment variable on cleanup
 	_ = os.Unsetenv(envVarName)
 
+	//nolint:usetesting // here we patch os.Setenv to simulate an error
 	monkey.Patch(os.Setenv, func(string, string) error {
 		return errors.New("unexpected error")
 	})
@@ -97,15 +101,16 @@ func TestSetDefaultEnvToTest_Panic(t *testing.T) {
 }
 
 func TestSetEnv_Ok(t *testing.T) {
-	_ = os.Setenv(envVarName, "prod")
+	t.Setenv(envVarName, "prod")
 	SetEnv("myEnv")
 
 	assert.Equal(t, "myEnv", Env())
 }
 
 func TestSetEnv_Panic(t *testing.T) {
-	_ = os.Setenv(envVarName, "prod")
+	t.Setenv(envVarName, "prod")
 
+	//nolint:usetesting // here we patch os.Setenv to simulate an error
 	monkey.Patch(os.Setenv, func(string, string) error {
 		return errors.New("unexpected error")
 	})
@@ -117,7 +122,7 @@ func TestSetEnv_Panic(t *testing.T) {
 }
 
 func TestForceTestEnv(t *testing.T) {
-	_ = os.Setenv(envVarName, "prod")
+	t.Setenv(envVarName, "prod")
 	ForceTestEnv()
 
 	assert.Equal(t, "test", Env())

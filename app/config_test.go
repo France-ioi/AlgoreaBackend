@@ -47,8 +47,7 @@ func TestLoadConfigFrom(t *testing.T) {
 	err = os.WriteFile(tmpDir+"/config.dev.yaml", []byte("server:\n  rootpath: '/test/'"), 0o600)
 	assert.NoError(err)
 
-	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "999")
-	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
+	t.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "999")
 	conf := loadConfigFrom("config", tmpDir)
 
 	// test config override
@@ -61,8 +60,7 @@ func TestLoadConfigFrom(t *testing.T) {
 	assert.EqualValues("/test/", conf.Sub(serverConfigKey).GetString("rootPath"))
 
 	// test live env changes
-	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "777")
-	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__WRITETIMEOUT") }()
+	t.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "777")
 	assert.EqualValues(777, conf.GetInt("server.WriteTimeout"))
 }
 
@@ -192,10 +190,8 @@ func TestLoadConfig_Concurrent(t *testing.T) {
 func TestDBConfig_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
-	_ = os.Setenv("", "myself")
 	globalConfig.Set("database.collation", "stuff")
-	_ = os.Setenv("ALGOREA_DATABASE__TLSCONFIG", "v99") // env var which was not defined before
-	defer func() { _ = os.Unsetenv("ALGOREA_DATABASE__TLSCONFIG") }()
+	t.Setenv("ALGOREA_DATABASE__TLSCONFIG", "v99") // env var which was not defined before
 	dbConfig, err := DBConfig(globalConfig)
 	assert.NoError(err)
 	assert.Equal("stuff", dbConfig.Collation)
@@ -254,8 +250,7 @@ func TestAuthConfig(t *testing.T) {
 	globalConfig.Set("auth.anykey", 42)
 	config := AuthConfig(globalConfig)
 	assert.Equal(42, config.GetInt("anykey"))
-	_ = os.Setenv("ALGOREA_AUTH__ANYKEY", "999")
-	defer func() { _ = os.Unsetenv("ALGOREA_AUTH__ANYKEY") }()
+	t.Setenv("ALGOREA_AUTH__ANYKEY", "999")
 	assert.Equal(999, config.GetInt("anykey"))
 }
 
@@ -265,8 +260,7 @@ func TestLoggingConfig(t *testing.T) {
 	globalConfig.Set("logging.anykey", 42)
 	config := LoggingConfig(globalConfig)
 	assert.Equal(42, config.GetInt("anykey"))
-	_ = os.Setenv("ALGOREA_LOGGING__ANYKEY", "999")
-	defer func() { _ = os.Unsetenv("ALGOREA_LOGGING__ANYKEY") }()
+	t.Setenv("ALGOREA_LOGGING__ANYKEY", "999")
 	assert.Equal(999, config.GetInt("anykey"))
 }
 
@@ -276,8 +270,7 @@ func TestServerConfig(t *testing.T) {
 	globalConfig.Set("server.anykey", 42)
 	config := ServerConfig(globalConfig)
 	assert.Equal(42, config.GetInt("anykey"))
-	_ = os.Setenv("ALGOREA_SERVER__ANYKEY", "999")
-	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__ANYKEY") }()
+	t.Setenv("ALGOREA_SERVER__ANYKEY", "999")
 	assert.Equal(999, config.GetInt("anykey"))
 }
 

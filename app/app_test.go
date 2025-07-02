@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"bou.ke/monkey"
@@ -27,8 +26,7 @@ import (
 func TestNew_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest()
-	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "1")
-	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
+	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
 	app, err := New()
 	assert.NotNil(app)
 	assert.NoError(err)
@@ -44,8 +42,7 @@ func TestNew_Success(t *testing.T) {
 func TestNew_SuccessNoCompress(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest()
-	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "false")
-	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
+	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
 	assert.Len(app.HTTPHandler.Middlewares(), 8)
 }
@@ -53,8 +50,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 func TestNew_NotDefaultRootPath(t *testing.T) {
 	assert := assertlib.New(t)
 	appenv.SetDefaultEnvToTest()
-	_ = os.Setenv("ALGOREA_SERVER__ROOTPATH", "/api")
-	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__ROOTPATH") }()
+	t.Setenv("ALGOREA_SERVER__ROOTPATH", "/api")
 	app, err := New()
 	assert.NoError(err)
 	assert.Equal("/api/*", app.HTTPHandler.Routes()[0].Pattern)
@@ -168,8 +164,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 
 func TestMiddlewares_OnSuccess(t *testing.T) {
 	assert := assertlib.New(t)
-	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "1")
-	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
+	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
 	hook, restoreFct := logging.MockSharedLoggerHook()
 	defer restoreFct()
 	app, _ := New()
@@ -258,11 +253,9 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 
 func TestNew_DisableResultsPropagation(t *testing.T) {
 	for _, configSettingValue := range []bool{true, false} {
+		configSettingValue := configSettingValue
 		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
-			oldEnvValue := os.Getenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION")
-			defer func() { _ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", oldEnvValue) }()
-
-			_ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", fmt.Sprintf("%t", configSettingValue))
+			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", fmt.Sprintf("%t", configSettingValue))
 			assert := assertlib.New(t)
 
 			app, _ := New()
