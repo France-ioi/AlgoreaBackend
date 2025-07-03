@@ -8,9 +8,9 @@ CREATE TRIGGER `after_update_items_items` AFTER UPDATE ON `items_items` FOR EACH
         OLD.`watch_propagation` != NEW.`watch_propagation` OR
         OLD.`edit_propagation` != NEW.`edit_propagation`) THEN
         REPLACE INTO `permissions_propagate` (`group_id`, `item_id`, `propagate_to`)
-        SELECT `permissions_generated`.`group_id`, `permissions_generated`.`item_id`, 'self' as `propagate_to`
+        SELECT `permissions_generated`.`group_id`, NEW.`child_item_id`, 'self' as `propagate_to`
         FROM `permissions_generated`
-        WHERE `permissions_generated`.`item_id` = NEW.`child_item_id`;
+        WHERE `permissions_generated`.`item_id` = NEW.`parent_item_id`;
     END IF;
     IF (OLD.`category` != NEW.`category` OR OLD.`score_weight` != NEW.`score_weight`) THEN
         INSERT INTO `results_propagate`

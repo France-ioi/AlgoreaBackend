@@ -111,15 +111,15 @@ func TestItemItemStore_TriggerAfterUpdate_MarksPermissionsForRecomputing(t *test
 				Order("group_id, item_id").Scan(&markedPermissions).Error())
 			require.Empty(t, markedPermissions)
 
-			assert.NoError(t, dataStore.ItemItems().Where("parent_item_id=4 AND child_item_id=1").
+			assert.NoError(t, dataStore.ItemItems().Where("parent_item_id=1 AND child_item_id=11").
 				UpdateColumn(test.column, test.newValue).Error())
 
 			require.NoError(t, dataStore.Table("permissions_propagate").
 				Select("group_id, item_id, propagate_to").
 				Order("group_id, item_id").Scan(&markedPermissions).Error())
 			assert.Equal(t, []groupItemsResultRow{
-				{GroupID: 1, ItemID: 1, PropagateTo: "self"},
-				{GroupID: 2, ItemID: 1, PropagateTo: "self"},
+				{GroupID: 1, ItemID: 11, PropagateTo: "self"},
+				{GroupID: 2, ItemID: 11, PropagateTo: "self"},
 			}, markedPermissions)
 		})
 	}
