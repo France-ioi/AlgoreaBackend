@@ -50,7 +50,11 @@ func (sqlTX *sqlTxWrapper) Exec(query string, args ...interface{}) (result sql.R
 
 	result, err = sqlTX.sqlTx.ExecContext(sqlTX.ctx, query, args...)
 	err = sqlTX.handleError(err)
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // Prepare is not implemented intentionally and panics if called. Instead, use [prepare].
@@ -85,9 +89,14 @@ func (sqlTX *sqlTxWrapper) Query(query string, args ...interface{}) (rows *sql.R
 	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
 	defer getSQLQueryLoggingFunc(sqlTX.ctx, nil, &err, gorm.NowFunc(), query, args...)(sqlTX.logConfig)
 
+	//nolint:sqlclosecheck // The caller is responsible for closing the returned *sql.Rows.
 	rows, err = sqlTX.sqlTx.QueryContext(sqlTX.ctx, query, args...)
 	err = sqlTX.handleError(err)
-	return rows, err
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
 }
 
 // QueryRow executes a query that is expected to return at most one row.

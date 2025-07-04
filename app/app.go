@@ -44,7 +44,7 @@ func New() (*Application, error) {
 		panic("cannot seed the randomizer")
 	}
 	// Init the PRNG with a random value
-	rand.Seed(int64(binary.LittleEndian.Uint64(b[:])))
+	rand.Seed(int64(binary.LittleEndian.Uint64(b[:]))) //nolint:gosec // G115: we don't care if a big number becomes negative
 
 	if err := application.Reset(config); err != nil {
 		return nil, err

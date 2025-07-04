@@ -23,7 +23,7 @@ var (
 )
 
 func (conn *DB) loadDBEnum(fullColumnName string) {
-	parsedColumn := strings.SplitN(fullColumnName, ".", 2) //nolint:gomnd // two parts: tableName.columnName
+	parsedColumn := strings.SplitN(fullColumnName, ".", 2) //nolint:mnd // two parts: tableName.columnName
 	tableName := parsedColumn[0]
 	columnName := parsedColumn[1]
 

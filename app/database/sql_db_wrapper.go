@@ -44,6 +44,7 @@ func (sqlDB *sqlDBWrapper) Query(query string, args ...interface{}) (_ *sql.Rows
 	defer getSQLExecutionPlanLoggingFunc(sqlDB.ctx, sqlDB, sqlDB.logConfig, query, args...)()
 	defer getSQLQueryLoggingFunc(sqlDB.ctx, nil, &err, gorm.NowFunc(), query, args...)(sqlDB.logConfig)
 
+	//nolint:sqlclosecheck // The caller is responsible for closing the returned *sql.Rows.
 	return sqlDB.sqlDB.QueryContext(sqlDB.ctx, query, args...)
 }
 

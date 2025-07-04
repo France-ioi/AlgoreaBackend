@@ -56,7 +56,7 @@ var _ json.Marshaler = (*abstract)(nil)
 // For example, a token's string description is `{ENCODED_TOKEN}`
 // while a token's JSON description is `"{ENCODED_TOKEN}"`.
 type UnmarshalStringer interface {
-	UnmarshalString(string) error
+	UnmarshalString(s string) error
 }
 
 // MarshalStringer is the interface implemented by types
@@ -70,7 +70,7 @@ type MarshalStringer interface {
 // Signer is the interface implemented by types
 // that can sign themselves returning a token in a string.
 type Signer interface {
-	Sign(*rsa.PrivateKey) (string, error)
+	Sign(privateKey *rsa.PrivateKey) (string, error)
 }
 
 var (

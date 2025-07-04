@@ -388,7 +388,7 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 		squash := getJSONSquash(&structField)
 		result := true
 		if !squash {
-			if len(prefix) > 0 {
+			if prefix != "" {
 				jsonName = prefix + "." + jsonName
 			}
 

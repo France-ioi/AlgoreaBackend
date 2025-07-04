@@ -15,7 +15,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use: "AlgoreaBackend",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		application, err := app.New()
 		closeDB := func() {
 			if application != nil && application.Database != nil {

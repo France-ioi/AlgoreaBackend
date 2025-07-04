@@ -106,18 +106,18 @@ func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool 
 	return canRequestHelpTo
 }
 
-// GetManagedGroupsWithCanGrantGroupAccessIds retrieves all group ids that the user manages and for which
+// GetManagedGroupsWithCanGrantGroupAccessIDs retrieves all group ids that the user manages and for which
 // he can_grant_group_access.
-func (u *User) GetManagedGroupsWithCanGrantGroupAccessIds(store *DataStore) []int64 {
-	var managedGroupsWithCanGrantGroupAccessIds []int64
+func (u *User) GetManagedGroupsWithCanGrantGroupAccessIDs(store *DataStore) []int64 {
+	var managedGroupsWithCanGrantGroupAccessIDs []int64
 
 	store.ActiveGroupAncestors().ManagedByUser(u).
 		Group("groups_ancestors_active.child_group_id").
 		Having("MAX(group_managers.can_grant_group_access)").
 		Select("groups_ancestors_active.child_group_id AS id").
-		Pluck("id", &managedGroupsWithCanGrantGroupAccessIds)
+		Pluck("id", &managedGroupsWithCanGrantGroupAccessIDs)
 
-	return managedGroupsWithCanGrantGroupAccessIds
+	return managedGroupsWithCanGrantGroupAccessIDs
 }
 
 // CanWatchGroupMembers checks whether the user can watch a group / a participant.

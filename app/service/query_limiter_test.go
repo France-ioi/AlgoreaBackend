@@ -77,7 +77,7 @@ func TestQueryLimiter_Apply(t *testing.T) {
 
 			r := chi.NewRouter()
 			called := false
-			handler := func(w http.ResponseWriter, r *http.Request) {
+			handler := func(_ http.ResponseWriter, r *http.Request) {
 				called = true
 				db, mock := database.NewDBMock()
 				defer func() { _ = db.Close() }()

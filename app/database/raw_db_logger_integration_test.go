@@ -25,8 +25,7 @@ func Test_RawSQLQueryLogging_Duration(t *testing.T) {
 		func(_ *viper.Viper, key string) bool { return key == "LogRawSQLQueries" || key == "LogSQLQueries" })
 	defer monkey.UnpatchAll()
 
-	sqlDB, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	sqlDB := testhelpers.OpenRawDBConnection()
 	defer func() { _ = sqlDB.Close() }()
 
 	db, err := database.OpenWithLogConfig(sqlDB, database.LogConfig{LogSQLQueries: true}, true)
@@ -67,8 +66,7 @@ func Test_RawSQLQueryLogging_ResetSession(t *testing.T) {
 		func(_ *logging.Logger) bool { return true })
 	defer monkey.UnpatchAll()
 
-	sqlDB, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	sqlDB := testhelpers.OpenRawDBConnection()
 	defer func() { _ = sqlDB.Close() }()
 
 	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()

@@ -145,7 +145,7 @@ func checkThatUserHasRightsForDirectRelation(
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 
-	//nolint:gomnd // one row for the parent group, one for the child group
+	//nolint:mnd // one row for the parent group, one for the child group
 	if len(groupData) < 2 {
 		return service.ErrAPIInsufficientAccessRights
 	}
@@ -198,8 +198,8 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 				return err1 // rollback
 			}
 
-			results, err = performBulkMembershipActionTransition(store, action, parentGroupID, groupIDs, groupType, user)
-			return err
+			results = performBulkMembershipActionTransition(store, action, parentGroupID, groupIDs, groupType, user)
+			return nil
 		})
 	}
 
@@ -211,11 +211,11 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 
 func performBulkMembershipActionTransition(store *database.DataStore, action bulkMembershipAction, parentGroupID int64,
 	groupIDs []int64, groupType string, user *database.User,
-) (database.GroupGroupTransitionResults, error) {
+) database.GroupGroupTransitionResults {
 	groupID := groupIDs[0]
 	if groupType == team {
 		if action == acceptJoinRequestsAction && isOtherTeamMember(store, parentGroupID, groupID) {
-			return database.GroupGroupTransitionResults{groupID: inAnotherTeam}, nil
+			return database.GroupGroupTransitionResults{groupID: inAnotherTeam}
 		}
 
 		if map[bulkMembershipAction]bool{acceptJoinRequestsAction: true, acceptLeaveRequestsAction: true}[action] {
@@ -223,7 +223,7 @@ func performBulkMembershipActionTransition(store *database.DataStore, action bul
 				parentGroupID, groupID, action == acceptJoinRequestsAction, true)
 			service.MustNotBeError(err)
 			if !ok {
-				return database.GroupGroupTransitionResults{groupID: "entry_condition_failed"}, nil
+				return database.GroupGroupTransitionResults{groupID: "entry_condition_failed"}
 			}
 		}
 	}
@@ -236,7 +236,9 @@ func performBulkMembershipActionTransition(store *database.DataStore, action bul
 			acceptLeaveRequestsAction: database.AdminAcceptsLeaveRequest,
 			rejectLeaveRequestsAction: database.AdminRefusesLeaveRequest,
 		}[action], parentGroupID, groupIDs, nil, user.GroupID)
-	return results, err
+	service.MustNotBeError(err)
+
+	return results
 }
 
 func checkPreconditionsForBulkMembershipAction(action bulkMembershipAction, user *database.User, store *database.DataStore,

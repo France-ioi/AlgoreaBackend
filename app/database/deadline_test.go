@@ -132,7 +132,7 @@ func Test_Deadline(t *testing.T) {
 		{
 			name: "Before_Commit_InTransaction",
 			funcToCall: func(s *DataStore, cancel context.CancelFunc) error {
-				return s.InTransaction(func(s *DataStore) error {
+				return s.InTransaction(func(_ *DataStore) error {
 					cancel()
 					return nil
 				})
@@ -184,7 +184,7 @@ func Test_Deadline(t *testing.T) {
 					rows, err := stmt.QueryContext(s.ctx())
 					if rows != nil {
 						_ = rows.Err() // ignore the error as err is expected to be non-nil
-						_ = rows.Close()
+						defer func() { _ = rows.Close() }()
 					}
 					return err
 				})
@@ -217,7 +217,7 @@ func Test_Deadline(t *testing.T) {
 			name: "Before releasing a named lock inside a transaction",
 			funcToCall: func(s *DataStore, cancel context.CancelFunc) error {
 				return s.InTransaction(func(s *DataStore) error {
-					return s.WithNamedLock("test_lock", time.Second, func(s *DataStore) error {
+					return s.WithNamedLock("test_lock", time.Second, func(_ *DataStore) error {
 						cancel()
 						return nil
 					})
@@ -238,7 +238,7 @@ func Test_Deadline(t *testing.T) {
 			funcToCall: func(s *DataStore, cancel context.CancelFunc) error {
 				return s.InTransaction(func(s *DataStore) error {
 					cancel()
-					return s.WithNamedLock("test_lock", time.Second, func(s *DataStore) error {
+					return s.WithNamedLock("test_lock", time.Second, func(_ *DataStore) error {
 						return nil
 					})
 				})

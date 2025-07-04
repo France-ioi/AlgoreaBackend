@@ -48,7 +48,7 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	// app server
-	httpHandler := chi.NewRouter().With(func(handler http.Handler) http.Handler {
+	httpHandler := chi.NewRouter().With(func(_ http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx.application.HTTPHandler.ServeHTTP(w, r.WithContext(database.ContextWithTransactionRetrying(r.Context())))
 		})

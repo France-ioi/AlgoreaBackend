@@ -22,9 +22,9 @@ func validateDuration(fl validator.FieldLevel) bool {
 	if field.Kind() != reflect.String {
 		return false
 	}
-	//nolint:gomnd // we want exactly 3 parts (hours:minutes:seconds), but allow the 4th part in case of error
+	//nolint:mnd // we want exactly 3 parts (hours:minutes:seconds), but allow the 4th part in case of error
 	hms := strings.SplitN(field.String(), ":", 4)
-	//nolint:gomnd // fail when the number of parts is not 3 (hours:minutes:seconds)
+	//nolint:mnd // fail when the number of parts is not 3 (hours:minutes:seconds)
 	if len(hms) != 3 {
 		return false
 	}

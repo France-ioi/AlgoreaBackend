@@ -480,7 +480,7 @@ func registerCanRequestHelpToCanGrantViewContent(
 		data,
 		"can_request_help_to_can_grant_view_content",
 		"the current user doesn't have the right to update can_request_help_to",
-		func(fl validator.FieldLevel) bool {
+		func(_ validator.FieldLevel) bool {
 			// The current user must have can_grant_view >= content.
 
 			return managerPermissions.CanGrantViewGeneratedValue >= s.PermissionsGranted().GrantViewIndexByName(content)

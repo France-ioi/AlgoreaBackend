@@ -124,7 +124,7 @@ func TestLogger_Configure_OutputFileError(t *testing.T) {
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "file")
-	fakeFunc := func(name string, flag int, perm os.FileMode) (*os.File, error) {
+	fakeFunc := func(_ string, _ int, _ os.FileMode) (*os.File, error) {
 		return nil, errors.New("open error")
 	}
 	patch := monkey.Patch(os.OpenFile, fakeFunc)

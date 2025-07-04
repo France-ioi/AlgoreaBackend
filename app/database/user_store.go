@@ -38,7 +38,7 @@ func (s *UserStore) DeleteTemporaryWithTraps(delay time.Duration) (err error) {
 			Joins(`
 				LEFT JOIN access_tokens ON access_tokens.session_id = sessions.session_id AND
 					access_tokens.expires_at > NOW() - INTERVAL ? SECOND`,
-				uint64(delay.Round(time.Second)/time.Second)).
+				int64(delay.Round(time.Second)/time.Second)).
 			Where("access_tokens.session_id IS NULL").
 			Where("temp_user = 1")
 		return store.Users().deleteWithTraps(userScope, true)

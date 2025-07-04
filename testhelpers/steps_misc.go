@@ -214,7 +214,7 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	}
 
 	oldHTTPHandler := ctx.application.HTTPHandler
-	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
+	ctx.application.HTTPHandler = chi.NewRouter().With(func(_ http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(),
 				service.APIServiceContextVariableName(variableName), preprocessed)))

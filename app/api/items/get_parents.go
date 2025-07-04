@@ -145,7 +145,11 @@ func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Reque
 	params.participantID = service.ParticipantIDFromContext(httpReq.Context())
 
 	params.watchedGroupID, params.watchedGroupIDIsSet, err = srv.ResolveWatchedGroupID(httpReq)
-	return &params, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &params, nil
 }
 
 func constructItemParentsQuery(dataStore *database.DataStore, childItemID, groupID, attemptID int64,

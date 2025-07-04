@@ -64,7 +64,7 @@ func patchDBMethods(nowReplacer func(string) string) {
 			prepareContextGuard.Unpatch()
 			defer prepareContextGuard.Restore()
 			nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
-			return db.PrepareContext(c, query)
+			return db.PrepareContext(c, query) //nolint:sqlclosecheck // the caller is responsible for closing the statement
 		})
 	patchedMethods = append(patchedMethods, prepareContextGuard)
 	queryContextGuard = monkey.PatchInstanceMethod(
@@ -73,7 +73,7 @@ func patchDBMethods(nowReplacer func(string) string) {
 			queryContextGuard.Unpatch()
 			defer queryContextGuard.Restore()
 			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
-			return db.QueryContext(c, query, args...)
+			return db.QueryContext(c, query, args...) //nolint:sqlclosecheck // the caller is responsible for closing the rows
 		})
 	patchedMethods = append(patchedMethods, queryContextGuard)
 }

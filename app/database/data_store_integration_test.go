@@ -19,8 +19,7 @@ import (
 func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	rawDB, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	rawDB := testhelpers.OpenRawDBConnection()
 	db, err := database.Open(rawDB)
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -64,8 +63,7 @@ func TestDataStore_WithNamedLock_WorksOutsideOfTransaction(t *testing.T) {
 
 	testHook, restoreFunc := logging.MockSharedLoggerHook()
 	defer restoreFunc()
-	rawDB, err := testhelpers.OpenRawDBConnection()
-	require.NoError(t, err)
+	rawDB := testhelpers.OpenRawDBConnection()
 	db, err := database.OpenWithLogConfig(rawDB, database.LogConfig{LogSQLQueries: false}, true)
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
@@ -75,7 +73,7 @@ func TestDataStore_WithNamedLock_WorksOutsideOfTransaction(t *testing.T) {
 	defer close(resultCh)
 	for i := 0; i < 100; i++ {
 		go func() {
-			assert.NoError(t, s.WithNamedLock("test", 1*time.Second, func(store *database.DataStore) error {
+			assert.NoError(t, s.WithNamedLock("test", 1*time.Second, func(_ *database.DataStore) error {
 				return nil
 			}))
 			resultCh <- struct{}{}

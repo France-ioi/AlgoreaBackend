@@ -227,7 +227,7 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 	mock.ExpectCommit()
 
 	store := NewDataStoreWithTable(db, "myTable")
-	gotError := store.InTransaction(func(s *DataStore) error {
+	gotError := store.InTransaction(func(_ *DataStore) error {
 		return nil
 	}, txOptions)
 
@@ -468,7 +468,7 @@ func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
 	retryCount := 0
 	err := NewDataStore(db).RetryOnDuplicatePrimaryKeyError("users", func(store *DataStore) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
+		return store.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
 	})
 
 	assert.NoError(t, err)
@@ -492,7 +492,7 @@ func TestDataStore_RetryOnDuplicateKeyError(t *testing.T) {
 	retryCount := 0
 	err := NewDataStore(db).RetryOnDuplicateKeyError("users", "login", "login", func(store *DataStore) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (login) VALUES (?)", retryCount).Error()
+		return store.Exec("INSERT INTO users (login) VALUES (?)", retryCount).Error()
 	})
 
 	assert.NoError(t, err)

@@ -14,7 +14,9 @@ func TestSQLDBWrapper_Prepare_Panics(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	sqlDBWrapper := db.db.CommonDB().(*sqlDBWrapper)
-	assert.Panics(t, func() { _, _ = sqlDBWrapper.Prepare("SELECT 1") })
+	assert.Panics(t, func() {
+		_, _ = sqlDBWrapper.Prepare("SELECT 1") //nolint:sqlclosecheck // there is no statement to close as the Prepare should panic
+	})
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -42,7 +42,11 @@ func (s *SQLStmtWrapper) ExecContext(ctx context.Context, args ...interface{}) (
 
 	result, err = s.stmt.ExecContext(ctx, args...)
 	err = s.handleError(ctx, err)
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 /*
@@ -58,9 +62,13 @@ func (s *SQLStmtWrapper) QueryContext(ctx context.Context, args ...interface{}) 
 	defer getSQLExecutionPlanLoggingFunc(ctx, s.db, s.logConfig, s.sql, args...)()
 	defer getSQLQueryLoggingFunc(ctx, nil, &err, gorm.NowFunc(), s.sql, args...)(s.logConfig)
 
-	rows, err = s.stmt.QueryContext(ctx, args...)
+	rows, err = s.stmt.QueryContext(ctx, args...) //nolint:sqlclosecheck // The caller is responsible for closing the returned *sql.Rows.
 	err = s.handleError(ctx, err)
-	return rows, err
+	if err != nil {
+		return nil, err
+	}
+
+	return rows, nil
 }
 
 /*

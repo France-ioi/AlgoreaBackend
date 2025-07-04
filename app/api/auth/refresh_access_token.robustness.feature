@@ -52,3 +52,35 @@ Feature: Refresh an access token - robustness
     # The broken token has been removed
     And the table "sessions" should remain unchanged, except that the row with session_id "2" should be deleted
     And the table "access_tokens" should remain unchanged, except that the rows with session_id "2" should be deleted
+
+  Scenario: Requesting a new access token for a normal user results in an expired access token
+    Given the time now is "2020-01-01T02:00:00Z"
+    And the database has the following table "sessions":
+      | session_id | user_id | refresh_token             |
+      | 3          | 13      | jane_current_refreshtoken |
+    And the database has the following table "access_tokens":
+      | session_id | issued_at           | expires_at          | token              |
+      | 3          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
+    And the application config is:
+      """
+      auth:
+        loginModuleURL: "https://login.algorea.org"
+        clientID: "1"
+        clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
+      """
+    And the login module "token" endpoint for refresh token "jane_current_refreshtoken" returns 200 with body:
+      """
+      {
+        "token_type":"Bearer",
+        "expires_in":9,
+        "access_token":"jane_new_token",
+        "refresh_token":"jane_new_refreshtoken"
+      }
+      """
+    And the "Authorization" request header is "Bearer jane_current_token"
+    When I send a POST request to "/auth/token?use_cookie=1&cookie_secure=1"
+    Then the response code should be 401
+    And the response error message should contain "Got an invalid OAuth2 token"
+    And the response header "Set-Cookie" should not be set
+    And the table "sessions" should remain unchanged, except that the rows with session_id "3" should be deleted
+    And the table "access_tokens" should remain unchanged, except that the rows with session_id "3" should be deleted
