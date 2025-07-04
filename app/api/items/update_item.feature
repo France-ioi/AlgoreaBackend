@@ -178,7 +178,9 @@ Background:
       | 5577006791947779410 | 50      | content  | none           | none      | none     | false    | 5577006791947779410 | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 10                  | 21      | none               | none                     | none                | none               | false              |
       | 10                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 10                  | 60      | none               | none                     | none                | none               | false              |
       | 10                  | 112     | info               | none                     | none                | none               | false              |
       | 10                  | 134     | solution           | solution                 | answer              | all                | false              |
       | 11                  | 21      | content            | none                     | none                | none               | false              |
