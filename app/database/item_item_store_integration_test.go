@@ -143,13 +143,13 @@ func TestItemItemStore_TriggerBeforeDelete_MarksPermissionsForRecomputing(t *tes
 		Order("group_id, item_id").Scan(&markedPermissions).Error())
 	require.Empty(t, markedPermissions)
 
-	assert.NoError(t, dataStore.ItemItems().Delete("parent_item_id=4 AND child_item_id=1").Error())
+	assert.NoError(t, dataStore.ItemItems().Delete("parent_item_id=1 AND child_item_id=11").Error())
 
 	require.NoError(t, dataStore.Table("permissions_propagate").
 		Select("group_id, item_id, propagate_to").
 		Order("group_id, item_id").Scan(&markedPermissions).Error())
 	assert.Equal(t, []groupItemsResultRow{
-		{GroupID: 1, ItemID: 1, PropagateTo: "self"},
-		{GroupID: 2, ItemID: 1, PropagateTo: "self"},
+		{GroupID: 1, ItemID: 11, PropagateTo: "self"},
+		{GroupID: 2, ItemID: 11, PropagateTo: "self"},
 	}, markedPermissions)
 }
