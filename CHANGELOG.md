@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [v2.28.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.1...2.28.2) - 2025-06-27
+## [v2.28.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.1...v2.28.2) - 2025-06-27
 - speed up `groupRootsView` even more
 - make the `resultStart` service less locking
 - return 404 and delete the session in `refreshAccessToken` when the login module does not recognize the refresh token
