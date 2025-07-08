@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.28.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.2...v2.28.3) - 2025-07-08
+- fix and rework marking permissions for recomputing in triggers of `items_items`
+- optimize permissions marking in `after_update_items_items` even more
+- validate tokens returned by the login module
+- enable more linters
+- upgrade `golangci-lint` to v1.64.7
+- optimize permissions marking in `before_delete_items_items` even more
+
 ## [v2.28.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.1...v2.28.2) - 2025-06-27
 - speed up `groupRootsView` even more
 - make the `resultStart` service less locking
