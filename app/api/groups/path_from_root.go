@@ -59,18 +59,18 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) getPathFromRoot(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	ids := findGroupPath(srv.GetStore(r), groupID, user)
+	ids := findGroupPath(srv.GetStore(httpRequest), groupID, user)
 	if ids == nil {
 		return service.ErrAPIInsufficientAccessRights
 	}
-	render.Respond(w, r, map[string]interface{}{"path": ids})
+	render.Respond(responseWriter, httpRequest, map[string]interface{}{"path": ids})
 	return nil
 }
 

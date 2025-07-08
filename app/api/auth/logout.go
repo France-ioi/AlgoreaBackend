@@ -24,20 +24,20 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) logout(w http.ResponseWriter, r *http.Request) error {
-	sessionID := srv.GetSessionID(r)
+func (srv *Service) logout(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	sessionID := srv.GetSessionID(httpRequest)
 
-	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.Sessions().Delete("session_id = ?", sessionID).Error())
 		service.MustNotBeError(store.AccessTokens().Delete("session_id = ?", sessionID).Error())
 		return nil
 	}))
 
-	cookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
+	cookieAttributes := auth.SessionCookieAttributesFromContext(httpRequest.Context())
 	if cookieAttributes.UseCookie {
-		http.SetCookie(w, cookieAttributes.SessionCookie("", -1000))
+		http.SetCookie(responseWriter, cookieAttributes.SessionCookie("", -1000))
 	}
 
-	render.Respond(w, r, &service.Response[*struct{}]{Success: true, Message: "success"})
+	render.Respond(responseWriter, httpRequest, &service.Response[*struct{}]{Success: true, Message: "success"})
 	return nil
 }

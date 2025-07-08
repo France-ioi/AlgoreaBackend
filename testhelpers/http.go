@@ -18,13 +18,13 @@ import (
 // SendTestHTTPRequest sends an HTTP request to a given path on the test server.
 // It returns the response and the response body as a string. The response body is read completely and closed.
 // The timeout for requests is set to 5 seconds.
-func SendTestHTTPRequest(ts *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (
+func SendTestHTTPRequest(testServer *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (
 	response *http.Response, responseBody string, err error,
 ) {
 	const httpRequestTimeout = 5 * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), httpRequestTimeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, method, ts.URL+path, body)
+	req, err := http.NewRequestWithContext(ctx, method, testServer.URL+path, body)
 	if err != nil {
 		return nil, "", err
 	}

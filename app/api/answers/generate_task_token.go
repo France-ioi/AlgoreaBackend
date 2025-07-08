@@ -77,13 +77,13 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) error {
-	answerID, err := service.ResolveURLQueryPathInt64Field(r, "answer_id")
+func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	answerID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
 	var answerInfos struct {
 		AccessSolutions   bool
@@ -100,7 +100,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) er
 		Validated         bool
 	}
 
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	usersGroupsQuery := store.ActiveGroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	// a participant should have at least 'content' access to the answers.item_id
@@ -194,7 +194,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) er
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, service.CreationSuccess(map[string]interface{}{
+	render.Respond(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"task_token": signedTaskToken,
 	}))
 	return nil

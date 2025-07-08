@@ -162,13 +162,13 @@ type itemActivityLogResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "ancestor_item_id")
+func (srv *Service) getActivityLogForItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "ancestor_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	return srv.getActivityLog(w, r, &itemID)
+	return srv.getActivityLog(responseWriter, httpRequest, &itemID)
 }
 
 // swagger:operation GET /items/log items itemActivityLogForAllItems
@@ -257,8 +257,8 @@ func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Req
 	return srv.getActivityLog(w, r, nil)
 }
 
-func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) error {
-	user := srv.GetUser(r)
+func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpRequest *http.Request, itemID *int64) error {
+	user := srv.GetUser(httpRequest)
 
 	const (
 		resultStarted  = 1
@@ -269,28 +269,28 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	)
 
 	// check and patch from.activity_type to make it integer
-	urlParams := r.URL.Query()
+	urlParams := httpRequest.URL.Query()
 	if len(urlParams["from.activity_type"]) > 0 {
-		stringValue := r.URL.Query().Get("from.activity_type")
+		stringValue := httpRequest.URL.Query().Get("from.activity_type")
 		var intValue int
-		var ok bool
-		if intValue, ok = map[string]int{
+		var fromActivityTypeIsCorrect bool
+		if intValue, fromActivityTypeIsCorrect = map[string]int{
 			"result_started":   resultStarted,
 			"submission":       submission,
 			"result_validated": resultValidate,
 			"saved_answer":     savedAnswer,
 			"current_answer":   currentAnswer,
-		}[stringValue]; !ok {
+		}[stringValue]; !fromActivityTypeIsCorrect {
 			return service.ErrInvalidRequest(
 				errors.New(
 					"wrong value for from.activity_type (should be one of (result_started, submission, result_validated, saved_answer, current_answer))"))
 		}
 		urlParams["from.activity_type"] = []string{strconv.Itoa(intValue)}
-		r.URL.RawQuery = urlParams.Encode()
+		httpRequest.URL.RawQuery = urlParams.Encode()
 	}
 
 	fromValues, err := service.ParsePagingParameters(
-		r, service.SortingAndPagingTieBreakers{
+		httpRequest, service.SortingAndPagingTieBreakers{
 			"activity_type":  service.FieldTypeInt64,
 			"participant_id": service.FieldTypeInt64,
 			"attempt_id":     service.FieldTypeInt64,
@@ -301,7 +301,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		return service.ErrInvalidRequest(err)
 	}
 
-	query, err := srv.constructActivityLogQuery(srv.GetStore(r), r, itemID, user, fromValues)
+	query, err := srv.constructActivityLogQuery(srv.GetStore(httpRequest), httpRequest, itemID, user, fromValues)
 	service.MustNotBeError(err)
 
 	var result []itemActivityLogResponseRow
@@ -310,7 +310,7 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	fromAnswerID := int64(-1)
 	if len(urlParams["from.answer_id"]) > 0 {
 		// the error checking has been already done in constructActivityLogQuery()
-		fromAnswerID, _ = service.ResolveURLQueryGetInt64Field(r, "from.answer_id")
+		fromAnswerID, _ = service.ResolveURLQueryGetInt64Field(httpRequest, "from.answer_id")
 	}
 	for index := range result {
 		if *result[index].AnswerID != -1 {
@@ -327,15 +327,15 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		}
 	}
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 
-func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http.Request, itemID *int64,
+func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request, itemID *int64,
 	user *database.User, fromValues map[string]interface{},
 ) (*database.DB, error) {
-	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +347,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		HavingMaxPermissionAtLeast("view", "info")
 
 	if watchedGroupIDIsSet {
-		if len(r.URL.Query()["as_team_id"]) != 0 {
+		if len(httpRequest.URL.Query()["as_team_id"]) != 0 {
 			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
 		participantsQuery = store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
@@ -391,7 +391,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	answersQuery := store.Answers().DB
 
 	if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
-		r.Context().Value(service.APIServiceContextVariableName("forceStraightJoinInItemActivityLog")) == "force" {
+		httpRequest.Context().Value(service.APIServiceContextVariableName("forceStraightJoinInItemActivityLog")) == "force" {
 		// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
 		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
 		// also, we need to FORCE INDEX to do the sorted index scan
@@ -436,11 +436,11 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		Where("validated_results.participant_id IN (SELECT id FROM participants)")
 
 	startFromRowSubQuery, startFromRowCTESubQuery := srv.generateSubQueriesForPagination(
-		store, r.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery,
+		store, httpRequest.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery,
 		applyMandatoryAnswersConditions(store.Answers().Select(answersQueryDefaultSelect)),
 		fromValues)
 
-	answersQuery = service.NewQueryLimiter().Apply(r, answersQuery)
+	answersQuery = service.NewQueryLimiter().Apply(httpRequest, answersQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
 	answersQuery, _ = service.ApplySortingAndPaging(
 		nil, answersQuery,
@@ -461,7 +461,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	answersQuery = store.Raw("SELECT limited_answers.*, gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
 		Joins("LEFT JOIN gradings ON gradings.answer_id = limited_answers.answer_id")
 
-	startedResultsQuery = service.NewQueryLimiter().Apply(r, startedResultsQuery)
+	startedResultsQuery = service.NewQueryLimiter().Apply(httpRequest, startedResultsQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
 	startedResultsQuery, _ = service.ApplySortingAndPaging(
 		nil, startedResultsQuery,
@@ -477,7 +477,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
 
-	validatedResultsQuery = service.NewQueryLimiter().Apply(r, validatedResultsQuery)
+	validatedResultsQuery = service.NewQueryLimiter().Apply(httpRequest, validatedResultsQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
 	validatedResultsQuery, _ = service.ApplySortingAndPaging(
 		nil, validatedResultsQuery,
@@ -496,7 +496,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	unionCTEQuery := store.Raw("SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un",
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery := store.Table("un")
-	unionQuery = service.NewQueryLimiter().Apply(r, unionQuery)
+	unionQuery = service.NewQueryLimiter().Apply(httpRequest, unionQuery)
 	unionQuery, _ = service.ApplySortingAndPaging(
 		nil, unionQuery,
 		&service.SortingAndPagingParameters{

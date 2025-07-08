@@ -46,8 +46,8 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) error {
-	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+func (srv *Service) endAttempt(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	attemptID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -56,9 +56,9 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) error {
 		return service.ErrForbidden(errors.New("implicit attempts cannot be ended"))
 	}
 
-	participantID := service.ParticipantIDFromContext(r.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Attempts().
 			Where("participant_id = ?", participantID).
@@ -96,6 +96,6 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) error {
 
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
 	return nil
 }

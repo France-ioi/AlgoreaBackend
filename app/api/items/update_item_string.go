@@ -67,30 +67,30 @@ type itemStringUpdateRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) updateItemString(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	var languageTag string
 	useDefaultLanguage := true
-	if chi.URLParam(r, "language_tag") != "default" {
-		languageTag = chi.URLParam(r, "language_tag")
+	if chi.URLParam(httpRequest, "language_tag") != "default" {
+		languageTag = chi.URLParam(httpRequest, "language_tag")
 		useDefaultLanguage = false
 	}
 
 	input := itemStringUpdateRequest{}
 	data := formdata.NewFormData(&input)
-	err = data.ParseJSONRequestData(r)
+	err = data.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).WithSharedWriteLock().
 			Where("item_id = ?", itemID).
@@ -118,7 +118,7 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) err
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
 	return nil
 }
 

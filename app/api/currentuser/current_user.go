@@ -74,17 +74,19 @@ const (
 
 const team = "Team"
 
-func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) error {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) performGroupRelationAction(
+	responseWriter http.ResponseWriter, httpRequest *http.Request, action userGroupRelationAction,
+) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
 	var result database.GroupGroupTransitionResult
 	var approvalsToRequest database.GroupApprovals
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		if action == leaveGroupAction {
 			var found bool
 			found, err = store.Groups().ByID(groupID).
@@ -124,7 +126,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 				return service.ErrAPIInsufficientAccessRights // rollback
 			}
 
-			approvals.FromString(r.URL.Query().Get("approvals"))
+			approvals.FromString(httpRequest.URL.Query().Get("approvals"))
 		}
 
 		result, approvalsToRequest, err = performUserGroupRelationAction(action, store, user, groupID, approvals)
@@ -133,7 +135,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 
 	service.MustNotBeError(err)
 
-	return RenderGroupGroupTransitionResult(w, r, result, approvalsToRequest, action)
+	return RenderGroupGroupTransitionResult(responseWriter, httpRequest, result, approvalsToRequest, action)
 }
 
 func performUserGroupRelationAction(action userGroupRelationAction, store *database.DataStore, user *database.User,

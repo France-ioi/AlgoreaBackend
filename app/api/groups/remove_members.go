@@ -73,19 +73,19 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) error {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) removeMembers(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	userIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "user_ids")
+	userIDs, err := service.ResolveURLQueryGetInt64SliceField(httpRequest, "user_ids")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID))
 
 	results := make(database.GroupGroupTransitionResults, len(userIDs))
@@ -116,6 +116,6 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) error 
 		Message: "deleted",
 		Data:    results,
 	}
-	render.Respond(w, r, &response)
+	render.Respond(responseWriter, httpRequest, &response)
 	return nil
 }

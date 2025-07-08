@@ -109,11 +109,11 @@ type groupTeamProgressResponseTableCell struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getTeamProgress(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -122,11 +122,11 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) erro
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
 		return nil
 	}
 
@@ -141,7 +141,7 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) erro
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
 	teamIDQuery, err = service.ApplySortingAndPaging(
-		r, teamIDQuery,
+		httpRequest, teamIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -152,12 +152,12 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) erro
 		})
 	service.MustNotBeError(err)
 
-	teamIDQuery = service.NewQueryLimiter().Apply(r, teamIDQuery)
+	teamIDQuery = service.NewQueryLimiter().Apply(httpRequest, teamIDQuery)
 	service.MustNotBeError(teamIDQuery.
 		Pluck("groups.id", &teamIDs).Error())
 
 	if len(teamIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
 		return nil
 	}
 
@@ -198,6 +198,6 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) erro
 		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

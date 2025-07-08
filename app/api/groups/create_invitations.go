@@ -109,8 +109,8 @@ const maxAllowedLoginsToInvite = 100
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) error {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+func (srv *Service) createGroupInvitations(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -118,7 +118,7 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 	var requestData struct {
 		Logins []string `json:"logins"`
 	}
-	err = render.Decode(r, &requestData)
+	err = render.Decode(httpRequest, &requestData)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -129,8 +129,8 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 		return service.ErrInvalidRequest(fmt.Errorf("there should be no more than %d logins", maxAllowedLoginsToInvite))
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID))
 
 	results := make(map[string]string, len(requestData.Logins))
@@ -171,7 +171,7 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 		results[groupIDToLoginMap[id]] = string(result)
 	}
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(results)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(results)))
 
 	return nil
 }

@@ -70,27 +70,27 @@ type itemDependencyCreateRequest struct {
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) error {
-	dependentItemID, err := service.ResolveURLQueryPathInt64Field(r, "dependent_item_id")
+func (srv *Service) createDependency(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(r, "prerequisite_item_id")
+	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "prerequisite_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
 	input := itemDependencyCreateRequest{}
 	formData := formdata.NewFormData(&input)
-	err = formData.ParseJSONRequestData(r)
+	err = formData.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		if !user.CanViewItemInfo(store.WithExclusiveWriteLock(), prerequisiteItemID) {
 			return service.ErrAPIInsufficientAccessRights // rollback
 		}
@@ -125,7 +125,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) err
 
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess[*struct{}](nil)))
 
 	return nil
 }

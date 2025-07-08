@@ -71,14 +71,14 @@ func (ctx *TestContext) getRowMap(rowIndex int, table *godog.Table) map[string]s
 	rowHeader := table.Rows[0]
 	sourceRow := table.Rows[rowIndex]
 
-	rowMap := map[string]string{}
-	for i := 0; i < len(rowHeader.Cells); i++ {
-		value := sourceRow.Cells[i].Value
+	rowMap := make(map[string]string, len(rowHeader.Cells))
+	for cellIndex := 0; cellIndex < len(rowHeader.Cells); cellIndex++ {
+		value := sourceRow.Cells[cellIndex].Value
 		if value == "" {
 			continue
 		}
 
-		rowMap[rowHeader.Cells[i].Value] = value
+		rowMap[rowHeader.Cells[cellIndex].Value] = value
 	}
 
 	return rowMap

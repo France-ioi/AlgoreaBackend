@@ -84,11 +84,11 @@ type groupParentsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getParents(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -115,9 +115,9 @@ func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) error {
 			store.ActiveGroupGroups().
 				Select("parent_group_id").Where("child_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type != 'ContestParticipants'")
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -131,6 +131,6 @@ func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) error {
 	var result []groupParentsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

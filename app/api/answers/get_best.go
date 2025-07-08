@@ -53,17 +53,17 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+func (srv *Service) getBestAnswer(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
 	service.MustNotBeError(err)
 
-	user := srv.GetUser(httpReq)
-	store := srv.GetStore(httpReq)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	var result []map[string]interface{}
 
 	bestAnswerQuery := store.Answers().
@@ -106,6 +106,6 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 	}
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
 
-	render.Respond(rw, httpReq, convertedResult)
+	render.Respond(responseWriter, httpRequest, convertedResult)
 	return nil
 }

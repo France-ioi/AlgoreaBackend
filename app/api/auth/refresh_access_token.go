@@ -16,7 +16,7 @@ import (
 
 type sessionIDsInProgressMap sync.Map
 
-func (m *sessionIDsInProgressMap) WithLock(sessionID int64, r *http.Request, f func() error) error {
+func (m *sessionIDsInProgressMap) WithLock(sessionID int64, httpRequest *http.Request, funcToRun func() error) error {
 	sessionMutex := make(chan bool)
 	defer close(sessionMutex)
 	sessionMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex)
@@ -24,26 +24,26 @@ func (m *sessionIDsInProgressMap) WithLock(sessionID int64, r *http.Request, f f
 	for ; loaded; sessionMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex) {
 		select { // like mutex.Lock(), but with cancel/deadline
 		case <-sessionMutexInterface.(chan bool): // it is much better than <-time.After(...)
-		case <-r.Context().Done():
-			logging.GetLogEntry(r).Warnf("The request is canceled: %s", r.Context().Err())
-			return r.Context().Err()
+		case <-httpRequest.Context().Done():
+			logging.GetLogEntry(httpRequest).Warnf("The request is canceled: %s", httpRequest.Context().Err())
+			return httpRequest.Context().Err()
 		}
 	}
 	defer (*sync.Map)(m).Delete(sessionID)
 
-	return f()
+	return funcToRun()
 }
 
 var sessionIDsInProgress sessionIDsInProgressMap
 
-func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) error {
-	requestData := r.Context().Value(parsedRequestData).(map[string]interface{})
-	cookieAttributes, _ := srv.resolveCookieAttributes(r, requestData) // the error has been checked in createAccessToken()
+func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	requestData := httpRequest.Context().Value(parsedRequestData).(map[string]interface{})
+	cookieAttributes, _ := srv.resolveCookieAttributes(httpRequest, requestData) // the error has been checked in createAccessToken()
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
-	sessionID := srv.GetSessionID(r)
-	oldAccessToken := auth.BearerTokenFromContext(r.Context())
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
+	sessionID := srv.GetSessionID(httpRequest)
+	oldAccessToken := auth.BearerTokenFromContext(httpRequest.Context())
 
 	var newToken string
 	var expiresIn int32
@@ -67,8 +67,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) e
 			// We should not allow concurrency in this part because the login module generates not only
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
-			service.MustNotBeError(sessionIDsInProgress.WithLock(sessionID, r, func() error {
-				newToken, expiresIn, err = srv.refreshTokens(r.Context(), store, user, sessionID)
+			service.MustNotBeError(sessionIDsInProgress.WithLock(sessionID, httpRequest, func() error {
+				newToken, expiresIn, err = srv.refreshTokens(httpRequest.Context(), store, user, sessionID)
 				return err
 			}))
 		}
@@ -76,7 +76,8 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) e
 		service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
 	}
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], newToken, expiresIn, cookieAttributes)
+	srv.respondWithNewAccessToken(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], newToken, expiresIn, cookieAttributes)
 	return nil
 }
 

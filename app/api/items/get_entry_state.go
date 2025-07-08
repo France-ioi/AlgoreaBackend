@@ -135,19 +135,19 @@ type itemGetEntryStateResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getEntryState(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	// We do not use the participant middleware as we get groups_groups.frozen_membership using the same SQL query
 	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
+	if len(httpRequest.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "as_team_id")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -156,7 +156,7 @@ func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) error 
 	result, err := getItemInfoAndEntryState(itemID, groupID, user, store, false)
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 

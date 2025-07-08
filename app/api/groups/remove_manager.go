@@ -47,20 +47,20 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) removeGroupManager(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	managerID, err := service.ResolveURLQueryPathInt64Field(r, "manager_id")
+	managerID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "manager_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		// 1) the authenticated user should be the manager represented by managerID
 		//    or have can_manage:memberships_and_group permission on the groupID
@@ -93,6 +93,6 @@ func (srv *Service) removeGroupManager(w http.ResponseWriter, r *http.Request) e
 
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
 	return nil
 }

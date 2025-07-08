@@ -201,15 +201,15 @@ const (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) error {
-	requestData, err := parseRequestParametersForCreateAccessToken(r)
+func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	requestData, err := parseRequestParametersForCreateAccessToken(httpRequest)
 	service.MustNotBeError(err)
 
-	cookieAttributes, err := srv.resolveCookieAttributes(r, requestData)
+	cookieAttributes, err := srv.resolveCookieAttributes(httpRequest, requestData)
 	service.MustNotBeError(err)
 
 	code, codeGiven := requestData["code"]
-	if codeGiven && len(r.Header["Authorization"]) != 0 {
+	if codeGiven && len(httpRequest.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(
 			errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
 	}
@@ -221,17 +221,17 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 			reason         string
 		)
 		// The code is not given, requesting a new token from the given token.
-		requestContext, authorized, reason, err = auth.ValidatesUserAuthentication(srv.Base, w, r)
+		requestContext, authorized, reason, err = auth.ValidatesUserAuthentication(srv.Base, responseWriter, httpRequest)
 		service.MustNotBeError(err)
 
 		if authorized {
 			service.AppHandler(srv.refreshAccessToken).
-				ServeHTTP(w, r.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
+				ServeHTTP(responseWriter, httpRequest.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
 			return nil
 		}
 
 		var createTempUser bool
-		createTempUser, err = service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
+		createTempUser, err = service.ResolveURLQueryGetBoolFieldWithDefault(httpRequest, "create_temp_user_if_not_authorized", false)
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -247,9 +247,9 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 		// But from here, we want to be able to create a temporary user if the authorization is invalid,
 		// for example, because it expired.
 		// Since we don't need its value anymore, we just delete it.
-		r.Header.Del("Authorization")
+		httpRequest.Header.Del("Authorization")
 
-		service.AppHandler(srv.createTempUser).ServeHTTP(w, r)
+		service.AppHandler(srv.createTempUser).ServeHTTP(responseWriter, httpRequest)
 
 		return nil
 	}
@@ -263,21 +263,22 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", redirectURI.(string)))
 	}
 
-	token, err := oauthConfig.Exchange(r.Context(), code.(string), oauthOptions...)
+	token, err := oauthConfig.Exchange(httpRequest.Context(), code.(string), oauthOptions...)
 	service.MustNotBeError(err)
 
 	expiresIn, err := validateAndGetExpiresInFromOAuth2Token(token)
 	service.MustNotBeError(err)
 
-	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
+	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
+		GetUserProfile(httpRequest.Context(), token.AccessToken)
 	service.MustNotBeError(err)
-	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
+	userProfile["last_ip"] = strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
 
-	domainConfig := domain.ConfigFromContext(r.Context())
+	domainConfig := domain.ConfigFromContext(httpRequest.Context())
 
-	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
-		logging.LogEntrySetField(r, "user_id", userID)
+		logging.LogEntrySetField(httpRequest, "user_id", userID)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), userID, true))
 
 		sessionID := rand.Int63()
@@ -292,40 +293,41 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) er
 		return nil
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], token.AccessToken, expiresIn, cookieAttributes)
+	srv.respondWithNewAccessToken(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token.AccessToken, expiresIn, cookieAttributes)
 	return nil
 }
 
-func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
+func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request,
 	rendererGenerator func(map[string]interface{}) render.Renderer, token string, expiresIn int32,
 	cookieAttributes *auth.SessionCookieAttributes,
 ) {
 	response := map[string]interface{}{
 		"expires_in": expiresIn,
 	}
-	oldCookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
+	oldCookieAttributes := auth.SessionCookieAttributesFromContext(httpRequest.Context())
 	if oldCookieAttributes == nil {
 		oldCookieAttributes = &auth.SessionCookieAttributes{}
-		_, *oldCookieAttributes = auth.ParseSessionCookie(r)
+		_, *oldCookieAttributes = auth.ParseSessionCookie(httpRequest)
 	}
 	if oldCookieAttributes != nil && oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
-		http.SetCookie(w, oldCookieAttributes.SessionCookie("", -1000))
+		http.SetCookie(responseWriter, oldCookieAttributes.SessionCookie("", -1000))
 	}
 	if cookieAttributes.UseCookie {
-		http.SetCookie(w, cookieAttributes.SessionCookie(token, expiresIn))
+		http.SetCookie(responseWriter, cookieAttributes.SessionCookie(token, expiresIn))
 	} else {
 		response["access_token"] = token
 	}
-	service.MustNotBeError(render.Render(w, r, rendererGenerator(response)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, rendererGenerator(response)))
 }
 
-func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[string]interface{}) (
+func (srv *Service) resolveCookieAttributes(httpRequest *http.Request, requestData map[string]interface{}) (
 	cookieAttributes *auth.SessionCookieAttributes, err error,
 ) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
 	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
 		cookieAttributes.UseCookie = true
-		cookieAttributes.Domain = domain.CurrentDomainFromContext(r.Context())
+		cookieAttributes.Domain = domain.CurrentDomainFromContext(httpRequest.Context())
 		cookieAttributes.Path = srv.ServerConfig.GetString("rootPath")
 		if value, ok := requestData["cookie_secure"]; ok && value.(bool) {
 			cookieAttributes.Secure = true
@@ -340,37 +342,37 @@ func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[str
 	return cookieAttributes, nil
 }
 
-func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]interface{}, error) {
+func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (map[string]interface{}, error) {
 	allowedParameters := []string{
 		"code", "code_verifier", "redirect_uri",
 		"use_cookie", "cookie_secure", "cookie_same_site",
 	}
 	requestData := make(map[string]interface{}, len(allowedParameters))
-	query := r.URL.Query()
+	query := httpRequest.URL.Query()
 	for _, parameterName := range allowedParameters {
 		extractOptionalParameter(query, parameterName, requestData)
 	}
 
 	contentType := strings.ToLower(strings.TrimSpace(
-		strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0])) //nolint:mnd // cut off the parameters, keep only the media type
+		strings.SplitN(httpRequest.Header.Get("Content-Type"), ";", 2)[0])) //nolint:mnd // cut off the parameters, keep only the media type
 	switch contentType {
 	case "application/json":
-		if err := parseJSONParams(r, requestData); err != nil {
+		if err := parseJSONParams(httpRequest, requestData); err != nil {
 			return nil, err
 		}
 	case "application/x-www-form-urlencoded":
-		err := r.ParseForm()
+		err := httpRequest.ParseForm()
 		if err != nil {
 			return nil, service.ErrInvalidRequest(err)
 		}
 		for _, parameterName := range allowedParameters {
-			extractOptionalParameter(r.PostForm, parameterName, requestData)
+			extractOptionalParameter(httpRequest.PostForm, parameterName, requestData)
 		}
 	}
 	return preprocessBooleanCookieAttributes(requestData)
 }
 
-func parseJSONParams(r *http.Request, requestData map[string]interface{}) error {
+func parseJSONParams(httpRequest *http.Request, requestData map[string]interface{}) error {
 	var jsonPayload struct {
 		Code           *string `json:"code"`
 		CodeVerifier   *string `json:"code_verifier"`
@@ -379,8 +381,8 @@ func parseJSONParams(r *http.Request, requestData map[string]interface{}) error 
 		CookieSecure   *bool   `json:"cookie_secure"`
 		CookieSameSite *bool   `json:"cookie_same_site"`
 	}
-	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
-	err := json.NewDecoder(r.Body).Decode(&jsonPayload)
+	defer func() { _, _ = io.Copy(io.Discard, httpRequest.Body) }()
+	err := json.NewDecoder(httpRequest.Body).Decode(&jsonPayload)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -427,9 +429,9 @@ func extractOptionalParameter(query url.Values, paramName string, requestData ma
 	}
 }
 
-func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
+func createOrUpdateUser(userStore *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
 	var groupID int64
-	err := s.WithExclusiveWriteLock().
+	err := userStore.WithExclusiveWriteLock().
 		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
 
 	userData["latest_login_at"] = database.Now()
@@ -445,13 +447,13 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	defer func() { userData["badges"] = badges }()
 
 	if gorm.IsRecordNotFoundError(err) {
-		selfGroupID := createGroupFromLogin(s.Groups(), userData["login"].(string), domainConfig)
+		selfGroupID := createGroupFromLogin(userStore.Groups(), userData["login"].(string), domainConfig)
 		userData["temp_user"] = 0
 		userData["registered_at"] = database.Now()
 		userData["group_id"] = selfGroupID
 
-		service.MustNotBeError(s.Users().InsertMap(userData))
-		service.MustNotBeError(s.Attempts().InsertMap(map[string]interface{}{
+		service.MustNotBeError(userStore.InsertMap(userData))
+		service.MustNotBeError(userStore.Attempts().InsertMap(map[string]interface{}{
 			"participant_id": selfGroupID,
 			"id":             0,
 			"creator_id":     selfGroupID,
@@ -462,7 +464,7 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 	service.MustNotBeError(err)
 
-	found, err := s.GroupGroups().WithExclusiveWriteLock().Where("parent_group_id = ?", domainConfig.NonTempUsersGroupID).
+	found, err := userStore.GroupGroups().WithExclusiveWriteLock().Where("parent_group_id = ?", domainConfig.NonTempUsersGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	groupsGroupsToCreate := make([]map[string]interface{}, 0, 1)
@@ -471,9 +473,9 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 			map[string]interface{}{"parent_group_id": domainConfig.NonTempUsersGroupID, "child_group_id": groupID})
 	}
 
-	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsGroupsToCreate))
+	service.MustNotBeError(userStore.GroupGroups().CreateRelationsWithoutChecking(groupsGroupsToCreate))
 	delete(userData, "default_language")
-	service.MustNotBeError(s.ByID(groupID).UpdateColumn(userData).Error())
+	service.MustNotBeError(userStore.ByID(groupID).UpdateColumn(userData).Error())
 	return groupID
 }
 

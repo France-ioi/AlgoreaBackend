@@ -161,11 +161,11 @@ type listThreadParameters struct {
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) error {
-	params, err := srv.resolveListThreadParameters(r)
+func (srv *Service) listThreads(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	params, err := srv.resolveListThreadParameters(httpRequest)
 	service.MustNotBeError(err)
 
-	queryDB, err := srv.constructListThreadsQuery(r, params)
+	queryDB, err := srv.constructListThreadsQuery(httpRequest, params)
 	service.MustNotBeError(err)
 
 	var threads []thread
@@ -178,13 +178,13 @@ func (srv *Service) listThreads(rw http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	render.Respond(rw, r, threads)
+	render.Respond(responseWriter, httpRequest, threads)
 	return nil
 }
 
-func (srv *Service) constructListThreadsQuery(r *http.Request, params listThreadParameters) (*database.DB, error) {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) constructListThreadsQuery(httpRequest *http.Request, params listThreadParameters) (*database.DB, error) {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	query := store.Threads().
 		Joins("JOIN items ON	items.id = threads.item_id").
@@ -285,7 +285,7 @@ func (srv *Service) constructListThreadsQuery(r *http.Request, params listThread
 			threads.latest_update_at AS latest_update_at
 		`, user.GroupID, user.GroupID, user.GroupID)
 
-	return applySortingAndPaging(r, queryDB)
+	return applySortingAndPaging(httpRequest, queryDB)
 }
 
 func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB, error) {
@@ -305,15 +305,15 @@ func applySortingAndPaging(r *http.Request, queryDB *database.DB) (*database.DB,
 	})
 }
 
-func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThreadParameters, err error) {
+func (srv *Service) resolveListThreadParameters(httpRequest *http.Request) (params listThreadParameters, err error) {
 	var watchedGroupOK bool
-	params.WatchedGroupID, watchedGroupOK, err = srv.ResolveWatchedGroupID(r)
+	params.WatchedGroupID, watchedGroupOK, err = srv.ResolveWatchedGroupID(httpRequest)
 	if err != nil {
 		return params, err
 	}
 
 	var isMineError error
-	params.IsMine, isMineError = service.ResolveURLQueryGetBoolField(r, "is_mine")
+	params.IsMine, isMineError = service.ResolveURLQueryGetBoolField(httpRequest, "is_mine")
 
 	if watchedGroupOK && isMineError == nil {
 		return params, service.ErrInvalidRequest(errors.New("must not provide watched_group_id and is_mine at the same time"))
@@ -322,14 +322,14 @@ func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThr
 		return params, service.ErrInvalidRequest(errors.New("one of watched_group_id or is_mine must be given"))
 	}
 
-	if service.URLQueryPathHasField(r, "item_id") {
-		params.ItemID, err = service.ResolveURLQueryGetInt64Field(r, "item_id")
+	if service.URLQueryPathHasField(httpRequest, "item_id") {
+		params.ItemID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "item_id")
 		if err != nil {
 			return params, service.ErrInvalidRequest(err)
 		}
 
-		user := srv.GetUser(r)
-		store := srv.GetStore(r)
+		user := srv.GetUser(httpRequest)
+		store := srv.GetStore(httpRequest)
 		found, err := store.Permissions().
 			MatchingGroupAncestors(user.GroupID).
 			WherePermissionIsAtLeast("view", "content").
@@ -340,19 +340,19 @@ func (srv *Service) resolveListThreadParameters(r *http.Request) (params listThr
 		}
 	}
 
-	return resolveFilterParameters(r, params)
+	return resolveFilterParameters(httpRequest, params)
 }
 
-func resolveFilterParameters(r *http.Request, params listThreadParameters) (listThreadParameters, error) {
+func resolveFilterParameters(httpRequest *http.Request, params listThreadParameters) (listThreadParameters, error) {
 	var err error
 
-	params.Status, err = service.ResolveURLQueryGetStringField(r, "status")
+	params.Status, err = service.ResolveURLQueryGetStringField(httpRequest, "status")
 	if err != nil {
 		params.Status = ""
 	}
 
-	if service.URLQueryPathHasField(r, "latest_update_gt") {
-		latestUpdateGt, err := service.ResolveURLQueryGetTimeField(r, "latest_update_gt")
+	if service.URLQueryPathHasField(httpRequest, "latest_update_gt") {
+		latestUpdateGt, err := service.ResolveURLQueryGetTimeField(httpRequest, "latest_update_gt")
 		if err != nil {
 			return params, service.ErrInvalidRequest(err)
 		}

@@ -61,19 +61,19 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) enter(w http.ResponseWriter, r *http.Request) error {
-	ids, err := idsFromRequest(r)
+func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	ids, err := idsFromRequest(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	parentAttemptID, err := service.ResolveURLQueryGetInt64Field(r, "parent_attempt_id")
+	parentAttemptID, err := service.ResolveURLQueryGetInt64Field(httpRequest, "parent_attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	participantID := service.ParticipantIDFromContext(r.Context())
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
 	var entryState *itemGetEntryStateResponse
 	var itemInfo struct {
@@ -81,7 +81,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) error {
 		Duration            *string
 		ParticipantsGroupID *int64
 	}
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, false, true)
 		service.MustNotBeError(err)
@@ -112,7 +112,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) error {
 			PluckFirst("IFNULL(SUM(TIME_TO_SEC(group_item_additional_times.additional_time)), 0)", &totalAdditionalTime).
 			Error())
 
-		user := srv.GetUser(r)
+		user := srv.GetUser(httpRequest)
 		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
 			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
 				Where("participant_id = ?", entryState.groupID).WithExclusiveWriteLock().SubQuery()),
@@ -144,7 +144,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) error {
 			// so we need to recompute them
 			store.ScheduleResultsPropagation()
 		} else {
-			logging.GetLogEntry(r).Warnf("items.participants_group_id is not set for the item with id = %d", entryState.itemID)
+			logging.GetLogEntry(httpRequest).Warnf("items.participants_group_id is not set for the item with id = %d", entryState.itemID)
 		}
 
 		return nil
@@ -152,7 +152,7 @@ func (srv *Service) enter(w http.ResponseWriter, r *http.Request) error {
 
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"duration":   itemInfo.Duration,
 		"entered_at": itemInfo.Now,
 	})))

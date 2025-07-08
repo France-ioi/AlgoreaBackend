@@ -64,8 +64,8 @@ type groupBreadcrumbsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error {
-	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", maxNumberOfIDsInGroupPath)
+func (srv *Service) getBreadcrumbs(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(httpRequest, "ids", maxNumberOfIDsInGroupPath)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -73,8 +73,8 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error
 	for _, id := range ids {
 		idsInterface = append(idsInterface, id)
 	}
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	var result []groupBreadcrumbsViewResponseRow
 	err = store.Groups().PickVisibleGroups(store.Groups().Where("id IN(?)", ids), user).
@@ -87,6 +87,6 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error
 	}
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

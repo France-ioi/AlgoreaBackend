@@ -68,11 +68,11 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getTeamProgressCSV(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -81,19 +81,19 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) e
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
 	service.MustNotBeError(err)
 
-	w.Header().Set("Content-Type", "text/csv")
+	responseWriter.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
 	for i, id := range itemParentIDs {
 		itemParentIDsString[i] = strconv.FormatInt(id, 10)
 	}
-	w.Header().Set("Content-Disposition",
+	responseWriter.Header().Set("Content-Disposition",
 		fmt.Sprintf("attachment; filename=teams_progress_for_group_%d_and_child_items_of_%s.csv",
 			groupID, strings.Join(itemParentIDsString, "_")))
 	if len(itemParentIDs) == 0 {
-		_, err := w.Write([]byte("Team name\n"))
+		_, err := responseWriter.Write([]byte("Team name\n"))
 		service.MustNotBeError(err)
 		return nil
 	}
@@ -101,7 +101,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) e
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
 	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
-	csvWriter := csv.NewWriter(w)
+	csvWriter := csv.NewWriter(responseWriter)
 	defer csvWriter.Flush()
 	csvWriter.Comma = ';'
 

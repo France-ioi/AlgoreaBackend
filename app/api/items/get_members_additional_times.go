@@ -95,20 +95,20 @@ type itemAdditionalTimesInfo struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
+func (srv *Service) getMembersAdditionalTimes(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	participantType, err := getParticipantTypeForTimeLimitedItemManagedByUser(store, itemID, user)
 	if gorm.IsRecordNotFoundError(err) {
 		return service.ErrAPIInsufficientAccessRights
@@ -156,9 +156,9 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 			MAX(permissions_granted.can_enter_from < permissions_granted.can_enter_until)`,
 			store.PermissionsGranted().ViewIndexByName("info"))
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "found_group.name"},
@@ -172,7 +172,7 @@ func (srv *Service) getMembersAdditionalTimes(w http.ResponseWriter, r *http.Req
 	var result []itemAdditionalTimesInfo
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 

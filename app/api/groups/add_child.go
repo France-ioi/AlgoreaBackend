@@ -53,12 +53,12 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) error {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+func (srv *Service) addChild(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	childGroupID, err := service.ResolveURLQueryPathInt64Field(r, "child_group_id")
+	childGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "child_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -67,9 +67,9 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) error {
 		return service.ErrInvalidRequest(errors.New("a group cannot become its own parent"))
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(s *database.DataStore) error {
 		var errInTransaction error
 		service.MustNotBeError(checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation))
 
@@ -81,7 +81,7 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) error {
 	})
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess[*struct{}](nil)))
 
 	return nil
 }

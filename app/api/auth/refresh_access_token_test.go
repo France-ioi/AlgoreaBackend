@@ -39,13 +39,13 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 		if timeout {
 			var patchGuard *monkey.PatchGuard
 			patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&sessionIDsInProgressMap{}), "WithLock",
-				func(m *sessionIDsInProgressMap, sessionID int64, r *http.Request, f func() error) error {
+				func(sessionIDsInProgress *sessionIDsInProgressMap, sessionID int64, httpRequest *http.Request, funcToRun func() error) error {
 					cancelFunc()
-					ctx := r.Context()
+					ctx := httpRequest.Context()
 					(*valueCtxInterface)(unsafe.Pointer(&ctx)).p.timerCtx.err = context.DeadlineExceeded //nolint:gosec // imitate a timeout
 					patchGuard.Unpatch()
 					defer patchGuard.Restore()
-					return m.WithLock(sessionID, r, f)
+					return sessionIDsInProgress.WithLock(sessionID, httpRequest, funcToRun)
 				})
 			defer patchGuard.Unpatch()
 		}
@@ -92,15 +92,15 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 				var router chi.Router = mux
 				if timeout {
 					router = router.With(func(next http.Handler) http.Handler {
-						fn := func(w http.ResponseWriter, r *http.Request) {
+						handlerFunc := func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 							var ctx context.Context
-							ctx, cancelFunc = context.WithDeadline(r.Context(), time.Now().Add(1*time.Hour))
+							ctx, cancelFunc = context.WithDeadline(httpRequest.Context(), time.Now().Add(1*time.Hour))
 							defer cancelFunc()
 
-							r = r.WithContext(ctx)
-							next.ServeHTTP(w, r)
+							httpRequest = httpRequest.WithContext(ctx)
+							next.ServeHTTP(responseWriter, httpRequest)
 						}
-						return http.HandlerFunc(fn)
+						return http.HandlerFunc(handlerFunc)
 					})
 				}
 				router.
@@ -146,16 +146,16 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 }
 
 func createLoginModuleStubServer(expectedClientID, expectedClientSecret string) *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = r.ParseForm()
-		if r.URL.Path == "/oauth/token" &&
-			r.Form.Get("grant_type") == "refresh_token" &&
-			r.Form.Get("client_id") == expectedClientID &&
-			r.Form.Get("client_secret") == expectedClientSecret {
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(
-				`{"access_token": "newaccesstoken", "refresh_token": "new` + r.Form.Get("refresh_token") +
+	return httptest.NewServer(http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		_ = httpRequest.ParseForm()
+		if httpRequest.URL.Path == "/oauth/token" &&
+			httpRequest.Form.Get("grant_type") == "refresh_token" &&
+			httpRequest.Form.Get("client_id") == expectedClientID &&
+			httpRequest.Form.Get("client_secret") == expectedClientSecret {
+			responseWriter.Header().Set("Content-Type", "application/json; charset=utf-8")
+			responseWriter.WriteHeader(http.StatusOK)
+			_, _ = responseWriter.Write([]byte(
+				`{"access_token": "newaccesstoken", "refresh_token": "new` + httpRequest.Form.Get("refresh_token") +
 					`", "expires_in": 78901234}`))
 		}
 	}))

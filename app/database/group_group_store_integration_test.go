@@ -571,14 +571,13 @@ func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, e
 		"Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
 }
 
-func queryResultsAndStatesForTests(t *testing.T, s *database.ResultStore, result interface{}, customColumns string) {
+func queryResultsAndStatesForTests(t *testing.T, resultStore *database.ResultStore, result interface{}, customColumns string) {
 	t.Helper()
 
 	columns := "participant_id, attempt_id, item_id, IFNULL(state, 'done') AS state"
 	if customColumns != "" {
 		columns += "," + customColumns
 	}
-	resultStore := s.Results()
 	assert.NoError(t,
 		resultStore.Select(columns).
 			Joins("LEFT JOIN results_propagate USING(participant_id, attempt_id, item_id)").

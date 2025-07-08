@@ -128,11 +128,11 @@ type groupGroupProgressResponseTableCell struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -141,11 +141,11 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) err
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
 		return nil
 	}
 
@@ -163,7 +163,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) err
 			JOIN ` + "`groups`" + ` AS group_child
 			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'User')`)
 	ancestorGroupIDQuery, err = service.ApplySortingAndPaging(
-		r, ancestorGroupIDQuery,
+		httpRequest, ancestorGroupIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "group_child.name"},
@@ -176,11 +176,11 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) err
 
 	ancestorGroupIDQuery = service.NewQueryLimiter().
 		SetDefaultLimit(defaultGroupProgressLimit).SetMaxAllowedLimit(maxAllowedGroupProgressLimit).
-		Apply(r, ancestorGroupIDQuery)
+		Apply(httpRequest, ancestorGroupIDQuery)
 	service.MustNotBeError(ancestorGroupIDQuery.
 		Pluck("group_child.id", &ancestorGroupIDs).Error())
 	if len(ancestorGroupIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
 		return nil
 	}
 
@@ -244,7 +244,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) err
 		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 
@@ -286,15 +286,15 @@ func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64
 	orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, itemParentIDs[0])
 	itemOrder = append(itemOrder, 0)
 	currentChildNumber := 0
-	for i := range parentChildPairs {
-		for itemParentIDs[currentParentIDIndex] != parentChildPairs[i].ParentItemID {
+	for parentChildPairIndex := range parentChildPairs {
+		for itemParentIDs[currentParentIDIndex] != parentChildPairs[parentChildPairIndex].ParentItemID {
 			currentParentIDIndex++
 			currentChildNumber = 0
 			orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, itemParentIDs[currentParentIDIndex])
 			itemOrder = append(itemOrder, 0)
 		}
-		orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, parentChildPairs[i].ChildItemID)
-		childItemIDMap[parentChildPairs[i].ChildItemID] = true
+		orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, parentChildPairs[parentChildPairIndex].ChildItemID)
+		childItemIDMap[parentChildPairs[parentChildPairIndex].ChildItemID] = true
 		currentChildNumber++
 		itemOrder = append(itemOrder, currentChildNumber)
 	}

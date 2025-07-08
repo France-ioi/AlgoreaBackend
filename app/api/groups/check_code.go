@@ -92,17 +92,17 @@ type groupCodeCheckResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) error {
-	code, err := service.ResolveURLQueryGetStringField(r, "code")
+func (srv *Service) checkCode(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	code, err := service.ResolveURLQueryGetStringField(httpRequest, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	userIDToCheck := user.GroupID
 	if user.IsTempUser {
-		userIDToCheck = domain.ConfigFromContext(r.Context()).NonTempUsersGroupID
+		userIDToCheck = domain.ConfigFromContext(httpRequest.Context()).NonTempUsersGroupID
 	}
 
 	valid, reason, groupID := checkGroupCodeForUser(store, userIDToCheck, code)
@@ -124,7 +124,7 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) error {
 			Order("users.login, users.group_id").Scan(&response.Group.Managers).Error())
 	}
 
-	render.Respond(w, r, &response)
+	render.Respond(responseWriter, httpRequest, &response)
 	return nil
 }
 
@@ -142,9 +142,9 @@ const (
 func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code string) (
 	valid bool, reason groupCodeFailReason, groupID int64,
 ) {
-	info, ok, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
+	info, found, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
 	service.MustNotBeError(err)
-	if !ok {
+	if !found {
 		return false, noGroupReason, 0
 	}
 	if info.FrozenMembership {
@@ -163,15 +163,15 @@ func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code 
 		return true, okReason, info.GroupID
 	}
 
-	found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.GroupID, userIDToCheck, false)
+	found, err = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(info.GroupID, userIDToCheck, false)
 	service.MustNotBeError(err)
 	if found {
 		return false, conflictingTeamParticipationReason, info.GroupID
 	}
 
-	ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
+	found, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
 	service.MustNotBeError(err)
-	if !ok {
+	if !found {
 		return false, teamConditionsNotMetReason, info.GroupID
 	}
 	return true, okReason, info.GroupID

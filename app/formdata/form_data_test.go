@@ -35,13 +35,13 @@ func TestFormData_AllowUnknownFields(t *testing.T) {
 }
 
 func TestFormData_decodeMapIntoStruct_PanicsWhenMapstructureNewDecoderFails(t *testing.T) {
-	f := &FormData{}
+	formData := &FormData{}
 	defer func() {
 		p := recover()
 		assert.NotNil(t, p)
 		assert.Equal(t, errors.New("result must be a pointer"), p)
 	}()
-	f.decodeMapIntoStruct(map[string]interface{}{})
+	formData.decodeMapIntoStruct(map[string]interface{}{})
 }
 
 func TestFormData_RegisterTranslation_OverridesConflictingTranslationsSilently(t *testing.T) {
@@ -53,45 +53,45 @@ func TestFormData_RegisterTranslation_OverridesConflictingTranslationsSilently(t
 }
 
 func TestFormData_RegisterTranslation_PanicsOnError(t *testing.T) {
-	f := NewFormData(&struct{}{})
+	formData := NewFormData(&struct{}{})
 	defer func() {
 		p := recover()
 		assert.NotNil(t, p)
 		assert.IsType(t, (*ut.ErrMissingBracket)(nil), p)
 	}()
-	f.RegisterTranslation("", "{")
+	formData.RegisterTranslation("", "{")
 }
 
 func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T) {
-	f := NewFormData(&struct {
+	formData := NewFormData(&struct {
 		ID int64 `validate:"test=value"`
 	}{})
-	f.RegisterValidation("test", func(validator.FieldLevel) bool {
+	formData.RegisterValidation("test", func(validator.FieldLevel) bool {
 		return false
 	})
-	f.RegisterTranslation("test", "failed for field %[2]s with parameter %[3]s (tag=%[1]s)")
-	err := f.ParseMapData(map[string]interface{}{"id": int64(1)})
+	formData.RegisterTranslation("test", "failed for field %[2]s with parameter %[3]s (tag=%[1]s)")
+	err := formData.ParseMapData(map[string]interface{}{"id": int64(1)})
 	assert.Equal(t, err, FieldErrorsError{
 		"ID": []string{"failed for field ID with parameter value (tag=test)"},
 	})
 }
 
 func TestFormData_ValidatorSkippingUnsetFields(t *testing.T) {
-	f := NewFormData(&struct {
+	formData := NewFormData(&struct {
 		ID     *int64 `validate:"test"`
 		Nested *struct {
 			ID *int64 `validate:"test"`
 		} `validate:"test"`
 	}{})
-	f.RegisterValidation("test", f.ValidatorSkippingUnsetFields(func(validator.FieldLevel) bool {
+	formData.RegisterValidation("test", formData.ValidatorSkippingUnsetFields(func(validator.FieldLevel) bool {
 		return false
 	}))
-	f.RegisterTranslation("test", "failed")
-	err := f.ParseMapData(map[string]interface{}{})
+	formData.RegisterTranslation("test", "failed")
+	err := formData.ParseMapData(map[string]interface{}{})
 	assert.Nil(t, err)
-	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": nil})
+	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": nil})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}}, err)
-	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
+	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 }
 
@@ -104,30 +104,30 @@ func TestFormData_ValidatorSkippingUnchangedFields(t *testing.T) {
 		Nested *nestedStruct `validate:"test"`
 	}
 
-	f := NewFormData(&testStruct{})
-	f.RegisterValidation("test", f.ValidatorSkippingUnchangedFields(func(validator.FieldLevel) bool {
+	formData := NewFormData(&testStruct{})
+	formData.RegisterValidation("test", formData.ValidatorSkippingUnchangedFields(func(validator.FieldLevel) bool {
 		return false
 	}))
-	f.RegisterTranslation("test", "failed")
+	formData.RegisterTranslation("test", "failed")
 
-	err := f.ParseMapData(map[string]interface{}{})
+	err := formData.ParseMapData(map[string]interface{}{})
 	assert.Nil(t, err)
-	f.SetOldValues(&testStruct{})
-	err = f.ParseMapData(map[string]interface{}{})
+	formData.SetOldValues(&testStruct{})
+	err = formData.ParseMapData(map[string]interface{}{})
 	assert.Nil(t, err)
-	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
+	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
 	assert.Equal(t, FieldErrorsError{"Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 	i := int64(10)
 	j := int64(20)
-	f.SetOldValues(&testStruct{ID: &i, Nested: &nestedStruct{ID: &j}})
-	err = f.ParseMapData(map[string]interface{}{})
+	formData.SetOldValues(&testStruct{ID: &i, Nested: &nestedStruct{ID: &j}})
+	err = formData.ParseMapData(map[string]interface{}{})
 	assert.Nil(t, err)
-	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": nil}})
+	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": nil}})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
-	err = f.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
+	err = formData.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
 	assert.Equal(t, FieldErrorsError{"Nested": []string{"failed"}}, err)
-	f.SetOldValues(nil)
-	err = f.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
+	formData.SetOldValues(nil)
+	err = formData.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 }
 

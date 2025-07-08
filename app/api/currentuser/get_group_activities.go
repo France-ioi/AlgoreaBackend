@@ -131,19 +131,19 @@ type rootItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) error {
-	return srv.getRootItems(w, r, true)
+func (srv *Service) getRootActivities(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	return srv.getRootItems(responseWriter, httpRequest, true)
 }
 
-func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getRootItems(responseWriter http.ResponseWriter, httpRequest *http.Request, getActivities bool) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
 	service.MustNotBeError(err)
 
-	if watchedGroupIDIsSet && len(r.URL.Query()["as_team_id"]) != 0 {
+	if watchedGroupIDIsSet && len(httpRequest.URL.Query()["as_team_id"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 	}
 
@@ -151,9 +151,9 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 	activitiesResult, skillsResult := generateRootItemListFromRawData(store, rawData, getActivities)
 
 	if getActivities {
-		render.Respond(w, r, activitiesResult)
+		render.Respond(responseWriter, httpRequest, activitiesResult)
 	} else {
-		render.Respond(w, r, skillsResult)
+		render.Respond(responseWriter, httpRequest, skillsResult)
 	}
 	return nil
 }

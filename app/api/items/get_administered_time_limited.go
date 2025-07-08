@@ -79,9 +79,9 @@ type itemTimeLimitedAdminList struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getAdministeredList(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	var rows []itemTimeLimitedAdminList
 	query := store.Items().Select(`
@@ -98,7 +98,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		Where("items.requires_explicit_entry")
 
 	query, err := service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"title": {ColumnName: "IFNULL(COALESCE(user_strings.title, default_strings.title), '')"},
@@ -108,7 +108,7 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
 	service.MustNotBeError(err)
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 
 	service.MustNotBeError(query.Scan(&rows).Error())
 
@@ -151,6 +151,6 @@ func (srv *Service) getAdministeredList(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	render.Respond(w, r, rows)
+	render.Respond(responseWriter, httpRequest, rows)
 	return nil
 }

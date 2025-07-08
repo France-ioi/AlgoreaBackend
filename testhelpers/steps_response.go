@@ -238,25 +238,25 @@ func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 	sortedResults := make([]map[string]string, len(wants.Rows)-1)
 	sortedWants := make([]map[string]string, len(wants.Rows)-1)
 
-	for i := 1; i < len(wants.Rows); i++ {
+	for rowIndex := 1; rowIndex < len(wants.Rows); rowIndex++ {
 		curWant := make(map[string]string)
 		curResult := make(map[string]string)
 
-		wantRow := wants.Rows[i]
-		for j := 0; j < len(headerCells); j++ {
-			curHeader := headerCells[j].Value
+		wantRow := wants.Rows[rowIndex]
+		for cellIndex := 0; cellIndex < len(headerCells); cellIndex++ {
+			curHeader := headerCells[cellIndex].Value
 
-			curWant[curHeader] = ctx.replaceReferencesWithIDs(wantRow.Cells[j].Value)
-			sortedWants[i-1] = curWant
+			curWant[curHeader] = ctx.replaceReferencesWithIDs(wantRow.Cells[cellIndex].Value)
+			sortedWants[rowIndex-1] = curWant
 
 			// The header is a JSONPath (e.g. "title", "strings.title").
-			curJSONPathResult, err := jsonpath.Get(curHeader, jsonPathResArr[i-1])
+			curJSONPathResult, err := jsonpath.Get(curHeader, jsonPathResArr[rowIndex-1])
 			if err != nil {
-				return fmt.Errorf("wantRowsMatchesJSONPathResult: Couldn't retrieve JSONPath %v at %v", curHeader, jsonPathResArr[i-1])
+				return fmt.Errorf("wantRowsMatchesJSONPathResult: Couldn't retrieve JSONPath %v at %v", curHeader, jsonPathResArr[rowIndex-1])
 			}
 
 			curResult[curHeader] = stringifyJSONPathResultValue(curJSONPathResult)
-			sortedResults[i-1] = curResult
+			sortedResults[rowIndex-1] = curResult
 		}
 	}
 
@@ -481,14 +481,14 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(
 }
 
 // TheResponseErrorMessageShouldContain checks that the response contains the provided string.
-func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) {
+func (ctx *TestContext) TheResponseErrorMessageShouldContain(needle string) (err error) {
 	errorResp := service.ErrorResponse[interface{}]{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
 		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)
 	}
-	if !strings.Contains(errorResp.ErrorText, s) {
-		return fmt.Errorf("cannot find expected `%s` in error text: `%s`", s, errorResp.ErrorText)
+	if !strings.Contains(errorResp.ErrorText, needle) {
+		return fmt.Errorf("cannot find expected `%s` in error text: `%s`", needle, errorResp.ErrorText)
 	}
 
 	return nil

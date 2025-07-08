@@ -50,19 +50,19 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Request) error {
-	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
+func (srv *Service) applyDependency(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "prerequisite_item_id")
+	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "prerequisite_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.ItemDependencies().
 			Where("dependent_item_id = ?", dependentItemID).
@@ -124,6 +124,6 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
 	return nil
 }

@@ -87,20 +87,20 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
 
-	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+	attemptID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	participantID := service.ParticipantIDFromContext(r.Context())
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
 	var itemInfo struct {
 		AccessSolutions   bool
@@ -115,7 +115,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) er
 		HintsCachedCount int32 `gorm:"column:hints_cached"`
 		Validated        bool
 	}
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		// the group should have can_view >= 'content' permission on the item
 		err = store.Items().ByID(itemID).
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", participantID).
@@ -187,7 +187,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) er
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, service.UpdateSuccess(map[string]interface{}{
+	render.Respond(responseWriter, httpRequest, service.UpdateSuccess(map[string]interface{}{
 		"task_token": signedTaskToken,
 	}))
 	return nil

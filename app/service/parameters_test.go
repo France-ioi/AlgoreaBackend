@@ -134,7 +134,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			r := chi.NewRouter()
+			router := chi.NewRouter()
 			called := false
 			handler := func(_ http.ResponseWriter, r *http.Request) {
 				called = true
@@ -146,15 +146,15 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 				}
 				assert.Equal(t, testCase.expectedValue, value)
 			}
-			r.Get(testCase.routeString, handler)
+			router.Get(testCase.routeString, handler)
 
-			ts := httptest.NewServer(r)
-			request, _ := http.NewRequest(http.MethodGet, ts.URL+testCase.queryString, http.NoBody)
+			testServer := httptest.NewServer(router)
+			request, _ := http.NewRequest(http.MethodGet, testServer.URL+testCase.queryString, http.NoBody)
 			response, err := http.DefaultClient.Do(request)
 			if err == nil {
 				_ = response.Body.Close()
 			}
-			ts.Close()
+			testServer.Close()
 			assert.True(t, called, "The handler was not called")
 		})
 	}
@@ -215,7 +215,7 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			called := false
-			r := chi.NewRouter()
+			router := chi.NewRouter()
 			handler := func(_ http.ResponseWriter, r *http.Request) {
 				called = true
 				value, err := ResolveURLQueryPathInt64SliceField(r, "ids")
@@ -226,14 +226,14 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 				}
 				assert.Equal(t, testCase.expectedList, value)
 			}
-			r.Get(`/{ids:.*}something`, handler)
-			ts := httptest.NewServer(r)
-			request, _ := http.NewRequest(http.MethodGet, ts.URL+testCase.queryString, http.NoBody)
+			router.Get(`/{ids:.*}something`, handler)
+			testServer := httptest.NewServer(router)
+			request, _ := http.NewRequest(http.MethodGet, testServer.URL+testCase.queryString, http.NoBody)
 			response, err := http.DefaultClient.Do(request)
 			if err == nil {
 				_ = response.Body.Close()
 			}
-			ts.Close()
+			testServer.Close()
 			assert.True(t, called, "The handler was not called")
 		})
 	}

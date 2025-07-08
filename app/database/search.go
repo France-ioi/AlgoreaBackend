@@ -30,8 +30,8 @@ func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString stri
 		return conn.Where("FALSE")
 	}
 
-	for i := 0; i < len(words); i++ {
-		word := words[i]
+	for wordIndex := 0; wordIndex < len(words); wordIndex++ {
+		word := words[wordIndex]
 
 		// The "+" sign means that the word must be present in the result.
 		word = "+" + word
@@ -39,7 +39,7 @@ func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString stri
 		// The "*" sign means that the word can be a prefix of a word in the result.
 		word += "*"
 
-		words[i] = word
+		words[wordIndex] = word
 	}
 
 	searchPattern := strings.Join(words, " ")

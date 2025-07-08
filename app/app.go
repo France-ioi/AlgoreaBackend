@@ -38,13 +38,13 @@ func New() (*Application, error) {
 	config := LoadConfig()
 	application := &Application{}
 
-	var b [8]byte
-	_, err := crand.Read(b[:])
+	var randomBytes [8]byte
+	_, err := crand.Read(randomBytes[:])
 	if err != nil {
 		panic("cannot seed the randomizer")
 	}
 	// Init the PRNG with a random value
-	rand.Seed(int64(binary.LittleEndian.Uint64(b[:]))) //nolint:gosec // G115: we don't care if a big number becomes negative
+	rand.Seed(int64(binary.LittleEndian.Uint64(randomBytes[:]))) //nolint:gosec // G115: we don't care if a big number becomes negative
 
 	if err := application.Reset(config); err != nil {
 		return nil, err

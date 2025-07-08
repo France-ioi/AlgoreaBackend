@@ -133,11 +133,11 @@ type groupRequestsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getRequests(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -177,9 +177,9 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) error {
 		Where("group_membership_changes.action IN ('invitation_created', 'join_request_created', 'invitation_refused', 'join_request_refused')").
 		Where("group_membership_changes.group_id = ?", groupID)
 
-	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
+	if len(httpRequest.URL.Query()["rejections_within_weeks"]) > 0 {
 		var oldRejectionsWeeks int64
-		oldRejectionsWeeks, err = service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
+		oldRejectionsWeeks, err = service.ResolveURLQueryGetInt64Field(httpRequest, "rejections_within_weeks")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -188,9 +188,9 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) error {
 			NOW() - INTERVAL ? WEEK < group_membership_changes.at`, oldRejectionsWeeks)
 	}
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"action":             {ColumnName: "group_membership_changes.action"},
@@ -222,7 +222,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 

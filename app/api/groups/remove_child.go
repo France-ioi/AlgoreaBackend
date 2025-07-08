@@ -67,32 +67,32 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) error {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+func (srv *Service) removeChild(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	childGroupID, err := service.ResolveURLQueryPathInt64Field(r, "child_group_id")
+	childGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "child_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	shouldDeleteOrphans := false
-	if len(r.URL.Query()["delete_orphans"]) > 0 {
-		shouldDeleteOrphans, err = service.ResolveURLQueryGetBoolField(r, "delete_orphans")
+	if len(httpRequest.URL.Query()["delete_orphans"]) > 0 {
+		shouldDeleteOrphans, err = service.ResolveURLQueryGetBoolField(httpRequest, "delete_orphans")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
-		service.MustNotBeError(checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, deleteRelation))
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
+		service.MustNotBeError(checkThatUserHasRightsForDirectRelation(store, user, parentGroupID, childGroupID, deleteRelation))
 
 		// Check that the relation exists
 		var result []struct{}
-		service.MustNotBeError(s.ActiveGroupGroups().WithExclusiveWriteLock().
+		service.MustNotBeError(store.ActiveGroupGroups().WithExclusiveWriteLock().
 			Where("parent_group_id = ?", parentGroupID).
 			Where("child_group_id = ?", childGroupID).
 			Take(&result).Error())
@@ -100,10 +100,10 @@ func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) error {
 			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		return s.GroupGroups().DeleteRelation(parentGroupID, childGroupID, shouldDeleteOrphans)
+		return store.GroupGroups().DeleteRelation(parentGroupID, childGroupID, shouldDeleteOrphans)
 	})
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
 	return nil
 }

@@ -34,5 +34,5 @@ import (
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getDump(w http.ResponseWriter, r *http.Request) error {
-	return srv.getDumpCommon(r, w, false)
+	return srv.getDumpCommon(w, r, false)
 }

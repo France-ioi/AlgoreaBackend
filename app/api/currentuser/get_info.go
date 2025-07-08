@@ -106,11 +106,11 @@ type getInfoData struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
+func (srv *Service) getInfo(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
 	var userInfo getInfoData
-	err := srv.GetStore(r).Users().ByID(user.GroupID).
+	err := srv.GetStore(httpRequest).Users().ByID(user.GroupID).
 		Select(`group_id, temp_user, login, registered_at, email, email_verified, first_name, last_name,
 			student_id, country_code, time_zone, latest_profile_sync_at,
 			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,
@@ -125,6 +125,6 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) error {
 	}
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, &userInfo)
+	render.Respond(responseWriter, httpRequest, &userInfo)
 	return nil
 }

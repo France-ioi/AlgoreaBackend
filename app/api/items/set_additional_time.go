@@ -67,11 +67,11 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) setAdditionalTime(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	itemID, groupID, seconds, err := srv.getParametersForSetAdditionalTime(r)
+	itemID, groupID, seconds, err := srv.getParametersForSetAdditionalTime(httpRequest)
 	service.MustNotBeError(err)
 
 	var groupType string
@@ -108,20 +108,20 @@ func (srv *Service) setAdditionalTime(w http.ResponseWriter, r *http.Request) er
 	})
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, service.UpdateSuccess[*struct{}](nil))
+	render.Respond(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil))
 	return nil
 }
 
-func (srv *Service) getParametersForSetAdditionalTime(r *http.Request) (itemID, groupID, seconds int64, err error) {
-	itemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getParametersForSetAdditionalTime(httpRequest *http.Request) (itemID, groupID, seconds int64, err error) {
+	itemID, err = service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}
-	groupID, err = service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err = service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}
-	seconds, err = service.ResolveURLQueryGetInt64Field(r, "seconds")
+	seconds, err = service.ResolveURLQueryGetInt64Field(httpRequest, "seconds")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}

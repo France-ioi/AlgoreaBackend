@@ -116,15 +116,15 @@ type userViewResponse struct {
 //			"$ref": "#/responses/notFoundResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
+func (srv *Service) getUser(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
 	var scope *database.DB
-	store := srv.GetStore(r)
-	if userLogin := chi.URLParam(r, "login"); userLogin != "" {
+	store := srv.GetStore(httpRequest)
+	if userLogin := chi.URLParam(httpRequest, "login"); userLogin != "" {
 		scope = store.Users().Where("login = ?", userLogin)
 	} else {
-		userID, err := service.ResolveURLQueryPathInt64Field(r, "user_id")
+		userID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "user_id")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -174,7 +174,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) error {
 
 	userInfo.IsCurrentUser = userInfo.GroupID == user.GroupID
 
-	render.Respond(w, r, &userInfo)
+	render.Respond(responseWriter, httpRequest, &userInfo)
 	return nil
 }
 

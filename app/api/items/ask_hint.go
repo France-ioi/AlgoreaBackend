@@ -84,12 +84,12 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) error {
-	store := srv.GetStore(r)
+func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	store := srv.GetStore(httpRequest)
 	requestData := AskHintRequest{store: store, publicKey: srv.TokenConfig.PublicKey}
 
 	var err error
-	if err = render.Bind(r, &requestData); err != nil {
+	if err = render.Bind(httpRequest, &requestData); err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
@@ -99,7 +99,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) error {
 			requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
 			requestData.HintToken.ItemURL, requestData.HintToken.AttemptID))
 
-	logging.LogEntrySetField(r, "user_id", requestData.TaskToken.Converted.UserID)
+	logging.LogEntrySetField(httpRequest, "user_id", requestData.TaskToken.Converted.UserID)
 
 	err = store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
@@ -114,7 +114,7 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) error {
 
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []formdata.Anything
-		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, r)
+		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, httpRequest)
 		if gorm.IsRecordNotFoundError(err) {
 			return service.ErrNotFound(errors.New("no result or the attempt is expired")) // rollback
 		}
@@ -156,14 +156,14 @@ func (srv *Service) askHint(w http.ResponseWriter, r *http.Request) error {
 	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"task_token": newTaskToken,
 	})))
 	return nil
 }
 
-func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *database.DataStore,
-	r *http.Request,
+func queryAndParsePreviouslyRequestedHints(
+	taskToken *token.Task, store *database.DataStore, httpRequest *http.Request,
 ) ([]formdata.Anything, error) {
 	hintsInfo, err := store.Results().
 		GetHintsInfoForActiveAttempt(taskToken.Converted.ParticipantID, taskToken.Converted.AttemptID, taskToken.Converted.LocalItemID)
@@ -177,7 +177,7 @@ func queryAndParsePreviouslyRequestedHints(taskToken *token.Task, store *databas
 				"idItemLocal": taskToken.LocalItemID,
 				"idAttempt":   taskToken.AttemptID,
 			})
-			logging.GetLogEntry(r).Warnf("Unable to parse hints_requested (%s) having value %q: %s", fieldsForLoggingMarshaled,
+			logging.GetLogEntry(httpRequest).Warnf("Unable to parse hints_requested (%s) having value %q: %s", fieldsForLoggingMarshaled,
 				*hintsInfo.HintsRequested, hintsErr.Error())
 		}
 	}

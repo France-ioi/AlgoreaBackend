@@ -16,15 +16,15 @@ import (
 func TestBase_GetUser(t *testing.T) {
 	middleware := auth.MockUserMiddleware(&database.User{GroupID: 42})
 	called := false
-	ts := httptest.NewServer(middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+	testServer := httptest.NewServer(middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		called = true
 		srv := &Base{}
 		user := srv.GetUser(r)
 		assert.Equal(t, int64(42), user.GroupID)
 	})))
-	defer ts.Close()
+	defer testServer.Close()
 
-	request, _ := http.NewRequest(http.MethodGet, ts.URL, http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, testServer.URL, http.NoBody)
 	response, err := http.DefaultClient.Do(request)
 	assert.NoError(t, err)
 	if err == nil {

@@ -24,8 +24,8 @@ func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 
-	s := database.NewDataStore(db)
-	assert.NoError(t, s.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
+	store := database.NewDataStore(db)
+	assert.NoError(t, store.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
 		assertForeignKeysDBVars(t, store, 1, 0)
 		assert.NoError(t, store.WithForeignKeyChecksDisabled(func(innerStore *database.DataStore) error {
 			assertForeignKeysDBVars(t, innerStore, 2, 0)
@@ -34,8 +34,8 @@ func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
 		assertForeignKeysDBVars(t, store, 1, 0)
 		return nil
 	}))
-	assertForeignKeysDBVars(t, s, 0, 1)
-	assert.NoError(t, s.InTransaction(func(store *database.DataStore) error {
+	assertForeignKeysDBVars(t, store, 0, 1)
+	assert.NoError(t, store.InTransaction(func(store *database.DataStore) error {
 		assertForeignKeysDBVars(t, store, 0, 1)
 		assert.NoError(t, store.WithForeignKeyChecksDisabled(func(innerStore *database.DataStore) error {
 			assertForeignKeysDBVars(t, innerStore, 1, 0)

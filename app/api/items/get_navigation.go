@@ -131,20 +131,20 @@ type itemWatchedGroupStat struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+func (srv *Service) getItemNavigation(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
-	participantID := service.ParticipantIDFromContext(httpReq.Context())
-	store := srv.GetStore(httpReq)
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	store := srv.GetStore(httpRequest)
 
-	attemptID, err := resolveAttemptIDForNavigationData(store, httpReq, participantID, itemID)
+	attemptID, err := resolveAttemptIDForNavigationData(store, httpRequest, participantID, itemID)
 	service.MustNotBeError(err)
 
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
 	service.MustNotBeError(err)
 
 	rawData := getRawNavigationData(store, itemID, participantID, attemptID, user, watchedGroupID, watchedGroupIDIsSet)
@@ -163,7 +163,7 @@ func (srv *Service) getItemNavigation(rw http.ResponseWriter, httpReq *http.Requ
 	}
 	fillNavigationWithChildren(store, rawData, watchedGroupIDIsSet, &response.Children)
 
-	render.Respond(rw, httpReq, response)
+	render.Respond(responseWriter, httpRequest, response)
 	return nil
 }
 

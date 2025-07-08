@@ -57,10 +57,10 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
+func (srv *Service) getGroupMembershipsHistory(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
-	query := srv.GetStore(r).GroupMembershipChanges().
+	query := srv.GetStore(httpRequest).GroupMembershipChanges().
 		Select(`
 			group_membership_changes.at,
 			group_membership_changes.action,
@@ -75,9 +75,9 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 		query = query.Where("group_membership_changes.at >= ?", user.NotificationsReadAt)
 	}
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err := service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"at":       {ColumnName: "group_membership_changes.at"},
@@ -95,6 +95,6 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(responseWriter, httpRequest, convertedResult)
 	return nil
 }

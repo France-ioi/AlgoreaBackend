@@ -60,20 +60,20 @@ type additionalTimes struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
+func (srv *Service) getGroupAdditionalTimes(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	found, err := store.Items().TimeLimitedByIDManagedByUser(itemID, user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
@@ -105,6 +105,6 @@ func (srv *Service) getGroupAdditionalTimes(w http.ResponseWriter, r *http.Reque
 	var result additionalTimes
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

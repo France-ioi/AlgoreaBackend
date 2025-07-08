@@ -219,26 +219,26 @@ type itemResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+func (srv *Service) getItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
-	participantID := service.ParticipantIDFromContext(httpReq.Context())
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
 	service.MustNotBeError(err)
 
 	var languageTag string
 	var languageTagSet bool
-	if len(httpReq.URL.Query()["language_tag"]) != 0 {
-		languageTag = httpReq.URL.Query().Get("language_tag")
+	if len(httpRequest.URL.Query()["language_tag"]) != 0 {
+		languageTag = httpRequest.URL.Query().Get("language_tag")
 		languageTagSet = true
 	}
 
-	store := srv.GetStore(httpReq)
+	store := srv.GetStore(httpRequest)
 	rawData := getRawItemData(store.Items(), itemID, participantID, languageTag, languageTagSet, user, watchedGroupID, watchedGroupIDIsSet)
 	if rawData == nil {
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
@@ -254,7 +254,7 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) error
 		getEnteringTimeIntervals(store, watchedGroupID, itemID, &response.WatchedGroup.Permissions.EnteringTimeIntervals)
 	}
 
-	render.Respond(rw, httpReq, response)
+	render.Respond(responseWriter, httpRequest, response)
 	return nil
 }
 
@@ -328,7 +328,7 @@ type rawItem struct {
 }
 
 // getRawItemData reads data needed by the getItem service from the DB and returns an array of rawItem's.
-func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User,
+func getRawItemData(store *database.ItemStore, rootID, groupID int64, languageTag string, languageTagSet bool, user *database.User,
 	watchedGroupID int64, watchedGroupIDIsSet bool,
 ) *rawItem {
 	var result rawItem
@@ -370,18 +370,18 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 			 WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score`)
 
 	columnValues := []interface{}{groupID}
-	query := s.ByID(rootID).
+	query := store.ByID(rootID).
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info")
 
 	if watchedGroupIDIsSet {
-		watchedGroupPermissionsQuery := database.NewDataStore(s.New()).Permissions().
+		watchedGroupPermissionsQuery := database.NewDataStore(store.New()).Permissions().
 			AggregatedPermissionsForItems(watchedGroupID).
 			Where("permissions.item_id = items.id")
 		query = query.Joins(
 			"LEFT JOIN LATERAL ? AS watched_group_permissions ON watched_group_permissions.item_id = items.id",
 			watchedGroupPermissionsQuery.SubQuery())
 
-		currentUserCanGrantAccessToTheWatchedGroupQuery := s.
+		currentUserCanGrantAccessToTheWatchedGroupQuery := store.
 			GroupAncestors().
 			ManagedByUser(user).
 			Where("groups_ancestors.child_group_id = ?", watchedGroupID).
@@ -399,7 +399,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 			// as_team_id is given, so `permissions` are related to the team,
 			// and we need to join permissions of the current user explicitly to determine
 			// if the current user is able to view the average score and permissions of the watched group
-			currentUserPermissionsQuery := database.NewDataStore(s.New()).Permissions().
+			currentUserPermissionsQuery := database.NewDataStore(store.New()).Permissions().
 				AggregatedPermissionsForItems(user.GroupID).
 				Where("permissions.item_id = items.id")
 			query = query.Joins(
@@ -419,7 +419,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 				permissions.can_watch_generated_value > ? AS can_watch_for_group_results`)
 			service.MustNotBeError(err)
 		}
-		permissionsGrantedStore := s.PermissionsGranted()
+		permissionsGrantedStore := store.PermissionsGranted()
 		columnValues = append(columnValues,
 			permissionsGrantedStore.WatchIndexByName("none"),
 			permissionsGrantedStore.GrantViewIndexByName("none"),
@@ -430,7 +430,7 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 			(SELECT IFNULL(AVG(score), 0) AS avg_score FROM ? AS stats) AS watched_group_average_score`)
 		service.MustNotBeError(err)
 		columnValues = append(columnValues,
-			s.ActiveGroupAncestors().
+			store.ActiveGroupAncestors().
 				Select("participant.id").
 				Joins(`
 					JOIN `+"`groups`"+` AS participant

@@ -61,17 +61,17 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error {
-	cookieAttributes, err := srv.resolveCookieAttributesFromRequest(r)
+func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	cookieAttributes, err := srv.resolveCookieAttributesFromRequest(httpRequest)
 	service.MustNotBeError(err)
 
-	if len(r.Header["Authorization"]) != 0 {
+	if len(httpRequest.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("the 'Authorization' header must not be present"))
 	}
 
 	defaultLanguage := database.Default()
-	if len(r.URL.Query()["default_language"]) != 0 {
-		defaultLanguage = r.URL.Query().Get("default_language")
+	if len(httpRequest.URL.Query()["default_language"]) != 0 {
+		defaultLanguage = httpRequest.URL.Query().Get("default_language")
 		const maxLanguageLength = 3
 		if utf8.RuneCountInString(defaultLanguage.(string)) > maxLanguageLength {
 			return service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
@@ -81,10 +81,10 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error
 	var token string
 	var expiresIn int32
 
-	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		userID := createTempUserGroup(store)
 		login := createTempUser(store, userID, defaultLanguage,
-			strings.SplitN(r.RemoteAddr, ":", 2)[0]) //nolint:mnd // cut off the port
+			strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0]) //nolint:mnd // cut off the port
 
 		service.MustNotBeError(store.Groups().ByID(userID).UpdateColumn(map[string]interface{}{
 			"name":        login,
@@ -98,7 +98,7 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error
 			"created_at":     database.Now(),
 		}))
 
-		domainConfig := domain.ConfigFromContext(r.Context())
+		domainConfig := domain.ConfigFromContext(httpRequest.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(
 			[]map[string]interface{}{{"parent_group_id": domainConfig.TempUsersGroupID, "child_group_id": userID}}))
 
@@ -107,7 +107,8 @@ func (srv *Service) createTempUser(w http.ResponseWriter, r *http.Request) error
 		return err
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess[map[string]interface{}], token, expiresIn, cookieAttributes)
+	srv.respondWithNewAccessToken(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token, expiresIn, cookieAttributes)
 	return nil
 }
 
@@ -145,13 +146,13 @@ func createTempUserGroup(store *database.DataStore) int64 {
 	return userID
 }
 
-func (srv *Service) resolveCookieAttributesFromRequest(r *http.Request) (*auth.SessionCookieAttributes, error) {
-	requestData, err := parseCookieAttributesForCreateTempUser(r)
+func (srv *Service) resolveCookieAttributesFromRequest(httpRequest *http.Request) (*auth.SessionCookieAttributes, error) {
+	requestData, err := parseCookieAttributesForCreateTempUser(httpRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	cookieAttributes, err := srv.resolveCookieAttributes(r, requestData)
+	cookieAttributes, err := srv.resolveCookieAttributes(httpRequest, requestData)
 	if err != nil {
 		return nil, err
 	}

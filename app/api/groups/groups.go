@@ -176,23 +176,23 @@ const (
 	team          = "Team"
 )
 
-func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.Request,
-	action bulkMembershipAction,
+func (srv *Service) performBulkMembershipAction(
+	responseWriter http.ResponseWriter, httpRequest *http.Request, action bulkMembershipAction,
 ) error {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "group_ids")
+	groupIDs, err := service.ResolveURLQueryGetInt64SliceField(httpRequest, "group_ids")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 	var results database.GroupGroupTransitionResults
 	if len(groupIDs) > 0 {
-		err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+		err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 			groupType, err1 := checkPreconditionsForBulkMembershipAction(action, user, store, parentGroupID, groupIDs)
 			if err1 != nil {
 				return err1 // rollback
@@ -205,7 +205,7 @@ func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.R
 
 	service.MustNotBeError(err)
 
-	renderGroupGroupTransitionResults(w, r, results)
+	renderGroupGroupTransitionResults(responseWriter, httpRequest, results)
 	return nil
 }
 

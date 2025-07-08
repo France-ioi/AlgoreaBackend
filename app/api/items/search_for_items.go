@@ -96,8 +96,8 @@ type itemSearchResponseRowRaw struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) error {
-	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
+func (srv *Service) searchForItems(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	searchString, err := service.ResolveURLQueryGetStringField(httpRequest, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -109,10 +109,10 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) error
 			fmt.Errorf("the search string should be at least %d characters long", minSearchStringLength))
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(r, "types",
+	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(httpRequest, "types",
 		map[string]bool{"Chapter": true, "Task": true, "Skill": true})
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -121,7 +121,7 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) error
 	query := store.Items().GetSearchQuery(user, searchString, typesList)
 
 	query = service.NewQueryLimiter().
-		SetDefaultLimit(searchResultLimit).SetMaxAllowedLimit(searchResultLimit).Apply(r, query)
+		SetDefaultLimit(searchResultLimit).SetMaxAllowedLimit(searchResultLimit).Apply(httpRequest, query)
 
 	var result []itemSearchResponseRowRaw
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -135,6 +135,6 @@ func (srv *Service) searchForItems(w http.ResponseWriter, r *http.Request) error
 			Permissions: *result[i].AsItemPermissions(store.PermissionsGranted()),
 		})
 	}
-	render.Respond(w, r, convertedResult)
+	render.Respond(responseWriter, httpRequest, convertedResult)
 	return nil
 }

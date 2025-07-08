@@ -881,19 +881,19 @@ func assertGroupAncestorsEqual(t *testing.T, dataStore *database.DataStore, tt *
 				tt.wantGroupAncestors[i].ChildGroupID < tt.wantGroupAncestors[j].ChildGroupID)
 	})
 
-	for i := 0; i < len(tt.wantGroupAncestors); i++ {
-		if tt.wantGroupAncestors[i].ExpiresAt == "" {
-			tt.wantGroupAncestors[i].ExpiresAt = maxDateTime
+	for wantGroupAncestorsIndex := 0; wantGroupAncestorsIndex < len(tt.wantGroupAncestors); wantGroupAncestorsIndex++ {
+		if tt.wantGroupAncestors[wantGroupAncestorsIndex].ExpiresAt == "" {
+			tt.wantGroupAncestors[wantGroupAncestorsIndex].ExpiresAt = maxDateTime
 		}
 		if tt.shouldRunListeners {
-			parsed, err := time.Parse(time.DateTime, tt.wantGroupAncestors[i].ExpiresAt)
+			parsed, err := time.Parse(time.DateTime, tt.wantGroupAncestors[wantGroupAncestorsIndex].ExpiresAt)
 			assert.NoError(t, err)
 			if parsed.Before(time.Now().UTC()) {
 				newValue := make([]groupAncestor, 0, len(tt.wantGroupAncestors)-1)
-				newValue = append(newValue, tt.wantGroupAncestors[0:i]...)
-				newValue = append(newValue, tt.wantGroupAncestors[i+1:len(tt.wantGroupAncestors)]...)
+				newValue = append(newValue, tt.wantGroupAncestors[0:wantGroupAncestorsIndex]...)
+				newValue = append(newValue, tt.wantGroupAncestors[wantGroupAncestorsIndex+1:len(tt.wantGroupAncestors)]...)
 				tt.wantGroupAncestors = newValue
-				i--
+				wantGroupAncestorsIndex--
 			}
 		}
 	}

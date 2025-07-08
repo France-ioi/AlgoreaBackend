@@ -67,12 +67,12 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) error {
-	groupPrefix := chi.URLParam(r, "group_prefix")
-	customPrefix := chi.URLParam(r, "custom_prefix")
+func (srv *Service) removeUserBatch(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupPrefix := chi.URLParam(httpRequest, "group_prefix")
+	customPrefix := chi.URLParam(httpRequest, "custom_prefix")
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	managedByUser := store.ActiveGroupAncestors().ManagedByUser(user).
 		Where("can_manage != 'none'").
 		Select("groups_ancestors_active.child_group_id AS id")
@@ -102,7 +102,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) erro
 		HasRows()
 	service.MustNotBeError(err)
 	if found {
-		logging.SharedLogger.WithContext(r.Context()).Warnf(
+		logging.SharedLogger.WithContext(httpRequest.Context()).Warnf(
 			"User with group_id = %d failed to delete a user batch because of locked membership (group_prefix = '%s', custom_prefix = '%s')",
 			user.GroupID, groupPrefix, customPrefix)
 		return service.ErrUnprocessableEntity(errors.New("there are users with locked membership"))
@@ -110,7 +110,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) erro
 
 	result, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
 		DeleteUsers(
-			r.Context(),
+			httpRequest.Context(),
 			srv.AuthConfig.GetString("clientID"),
 			srv.AuthConfig.GetString("clientSecret"),
 			groupPrefix+"_"+customPrefix+"_",
@@ -128,6 +128,6 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) erro
 			Where("group_prefix = ?", groupPrefix).
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
 	return nil
 }

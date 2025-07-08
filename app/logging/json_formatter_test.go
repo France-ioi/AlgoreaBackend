@@ -10,7 +10,7 @@ import (
 )
 
 func Test_jsonFormatter_Format(t *testing.T) {
-	f := newJSONFormatter()
+	formatter := newJSONFormatter()
 
 	expectedTime := time.Date(2021, 1, 2, 3, 4, 5, 123456789, time.FixedZone("MyZone", 3*60*60))
 	entry := logrus.NewEntry(logrus.New()).WithTime(expectedTime).WithFields(map[string]interface{}{
@@ -19,7 +19,7 @@ func Test_jsonFormatter_Format(t *testing.T) {
 	})
 	entry.Level = logrus.WarnLevel
 	entry.Message = formatterTestLogMessage
-	got, err := f.Format(entry)
+	got, err := formatter.Format(entry)
 	require.NoError(t, err)
 
 	assert.JSONEq(t, `{

@@ -110,29 +110,30 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).
 		Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
 
-	for i := 1; i < len(ids); i++ {
+	for idIndex := 1; idIndex < len(ids); idIndex++ {
 		subQuery = subQuery.Joins(fmt.Sprintf(`
 				JOIN results AS results%d ON results%d.participant_id = ? AND
-					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`, i-1, i-1, i-1, i-1, i-1), groupID).
+					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1), groupID).
 			Joins(fmt.Sprintf(`
 				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
-					attempts%d.id = results%d.attempt_id`, i-1, i-1, i-1, i-1, i-1)).
+					attempts%d.id = results%d.attempt_id`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1)).
 			Joins(
 				fmt.Sprintf(
 					"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
-					i, i, i-1, i), ids[i]).
-			Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", i, i, i)).
-			Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", i-1),
+					idIndex, idIndex, idIndex-1, idIndex), ids[idIndex]).
+			Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex, idIndex, idIndex)).
+			Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", idIndex-1),
 				s.PermissionsGranted().ViewIndexByName("content"))
 
-		if i != len(ids)-1 {
+		if idIndex != len(ids)-1 {
 			subQuery = subQuery.Where(fmt.Sprintf(
 				"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
-				i, i, i, i, i-1))
+				idIndex, idIndex, idIndex, idIndex, idIndex-1))
 		}
 
 		if requireAttemptsToBeActive {
-			subQuery = subQuery.Where(fmt.Sprintf("attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until", i-1, i-1))
+			subQuery = subQuery.Where(
+				fmt.Sprintf("attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until", idIndex-1, idIndex-1))
 		}
 	}
 
@@ -318,15 +319,15 @@ func (s *ItemStore) TimeLimitedByIDManagedByUser(timeLimitedItemID int64, user *
 func (s *ItemStore) DeleteItem(itemID int64) (err error) {
 	s.mustBeInTransaction()
 
-	return s.ItemItems().WithItemsRelationsLock(func(s *DataStore) error {
-		mustNotBeError(s.WithForeignKeyChecksDisabled(func(s *DataStore) error {
-			return s.ItemStrings().Where("item_id = ?", itemID).Delete().Error()
+	return s.ItemItems().WithItemsRelationsLock(func(store *DataStore) error {
+		mustNotBeError(store.WithForeignKeyChecksDisabled(func(store *DataStore) error {
+			return store.ItemStrings().Where("item_id = ?", itemID).Delete().Error()
 		}))
-		mustNotBeError(s.Items().ByID(itemID).Delete().Error())
+		mustNotBeError(store.Items().ByID(itemID).Delete().Error())
 
-		mustNotBeError(s.ItemItems().CreateNewAncestors())
-		s.SchedulePermissionsPropagation()
-		s.ScheduleResultsPropagation()
+		mustNotBeError(store.ItemItems().CreateNewAncestors())
+		store.SchedulePermissionsPropagation()
+		store.ScheduleResultsPropagation()
 
 		return nil
 	})

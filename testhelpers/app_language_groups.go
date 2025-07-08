@@ -12,24 +12,24 @@ import (
 )
 
 // registerFeaturesForGroups registers the Gherkin features related to groups.
-func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
-	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
-	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
-	s.Step(`^there is a team (@\w+)$`, ctx.ThereIsATeam)
-	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
-	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
-	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
-	s.Step(`^the group (@\w+) is a child of the group (@\w+)$`, ctx.GroupIsAChildOfTheGroup)
-	s.Step(
+func (ctx *TestContext) registerFeaturesForGroups(scenarioContext *godog.ScenarioContext) {
+	scenarioContext.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
+	scenarioContext.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
+	scenarioContext.Step(`^there is a team (@\w+)$`, ctx.ThereIsATeam)
+	scenarioContext.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
+	scenarioContext.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
+	scenarioContext.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
+	scenarioContext.Step(`^the group (@\w+) is a child of the group (@\w+)$`, ctx.GroupIsAChildOfTheGroup)
+	scenarioContext.Step(
 		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
 		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
 	)
 
-	s.Step(`^the field "([^"]*)" of the group (@\w+) should be "([^"]*)"$`, ctx.TheFieldOfTheGroupShouldBe)
-	s.Step(`^(@\w+) should not be a member of the group (@\w+)$`, ctx.UserShouldNotBeAMemberOfTheGroup)
-	s.Step(`^(@\w+) should be a member of the group (@\w+)$`, ctx.UserShouldBeAMemberOfTheGroup)
+	scenarioContext.Step(`^the field "([^"]*)" of the group (@\w+) should be "([^"]*)"$`, ctx.TheFieldOfTheGroupShouldBe)
+	scenarioContext.Step(`^(@\w+) should not be a member of the group (@\w+)$`, ctx.UserShouldNotBeAMemberOfTheGroup)
+	scenarioContext.Step(`^(@\w+) should be a member of the group (@\w+)$`, ctx.UserShouldBeAMemberOfTheGroup)
 
-	s.Step(`^the group (@\w+) is a descendant of the group (@\w+) via (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
+	scenarioContext.Step(`^the group (@\w+) is a descendant of the group (@\w+) via (@\w+)$`, ctx.theGroupIsADescendantOfTheGroup)
 }
 
 // getGroupPrimaryKey returns the primary key of a group.

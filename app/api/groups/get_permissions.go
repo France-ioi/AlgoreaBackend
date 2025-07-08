@@ -173,24 +173,24 @@ type canRequestHelpToPermissionsRaw struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) error {
-	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(r, "source_group_id")
+func (srv *Service) getPermissions(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "source_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	err = checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(store, user, sourceGroupID, groupID)
 	service.MustNotBeError(err)
@@ -326,7 +326,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) error
 	permissionsRow := permissions[0]
 	permissionsGrantedStore := store.PermissionsGranted()
 
-	allUsersGroupID := domain.ConfigFromContext(r.Context()).AllUsersGroupID
+	allUsersGroupID := domain.ConfigFromContext(httpRequest.Context()).AllUsersGroupID
 	canRequestHelpToByOrigin := getCanRequestHelpToByOrigin(ancestorPermissions, store, groupID, itemID, sourceGroupID, allUsersGroupID, user)
 
 	// Filter on "granted" can have a maximum of one match because it is filtered on the primary key.
@@ -425,7 +425,7 @@ func (srv *Service) getPermissions(w http.ResponseWriter, r *http.Request) error
 		}},
 	}
 
-	render.Respond(w, r, &response)
+	render.Respond(responseWriter, httpRequest, &response)
 
 	return nil
 }

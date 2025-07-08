@@ -24,10 +24,10 @@ type GetStorer interface {
 // the 'forbidden' error is returned.
 func ParticipantMiddleware(srv GetStorer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 			var participantID int64
 			var failed bool
-			AppHandler(func(_ http.ResponseWriter, r *http.Request) error {
+			AppHandler(func(_ http.ResponseWriter, httpRequest *http.Request) error {
 				var err error
 				defer func() {
 					failed = err != nil
@@ -36,16 +36,16 @@ func ParticipantMiddleware(srv GetStorer) func(next http.Handler) http.Handler {
 						panic(p)
 					}
 				}()
-				user := auth.UserFromContext(r.Context())
-				participantID, err = GetParticipantIDFromRequest(r, user, srv.GetStore(r))
+				user := auth.UserFromContext(httpRequest.Context())
+				participantID, err = GetParticipantIDFromRequest(httpRequest, user, srv.GetStore(httpRequest))
 				return err
-			}).ServeHTTP(w, r)
+			}).ServeHTTP(responseWriter, httpRequest)
 			if failed {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ctxParticipant, participantID)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			ctx := context.WithValue(httpRequest.Context(), ctxParticipant, participantID)
+			next.ServeHTTP(responseWriter, httpRequest.WithContext(ctx))
 		})
 	}
 }

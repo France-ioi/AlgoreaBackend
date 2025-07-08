@@ -118,18 +118,18 @@ type groupManagersViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getManagers(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	var includeManagersOfAncestorGroups bool
-	if len(r.URL.Query()["include_managers_of_ancestor_groups"]) > 0 {
-		includeManagersOfAncestorGroups, err = service.ResolveURLQueryGetBoolField(r, "include_managers_of_ancestor_groups")
+	if len(httpRequest.URL.Query()["include_managers_of_ancestor_groups"]) > 0 {
+		includeManagersOfAncestorGroups, err = service.ResolveURLQueryGetBoolField(httpRequest, "include_managers_of_ancestor_groups")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -166,9 +166,9 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) error {
               can_manage_value, can_grant_group_access, can_watch_members`)
 	}
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -184,7 +184,7 @@ func (srv *Service) getManagers(w http.ResponseWriter, r *http.Request) error {
 
 	prepareGetManagersResult(result, store.GroupManagers(), includeManagersOfAncestorGroups)
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 
