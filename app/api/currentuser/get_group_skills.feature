@@ -1,36 +1,32 @@
 Feature: Get root skills for a participant group
   Background:
-    Given the database has the following table 'groups':
-      | id | name      | grade | type  | root_skill_id | created_at          |
-      | 1  | all       | -2    | Base  | 220           | 2019-01-30 08:26:49 |
-      | 11 | jdoe      | -2    | User  | null          | 2019-01-30 08:26:48 |
-      | 12 | Group A   | -2    | Class | 200           | 2019-01-30 08:26:49 |
-      | 13 | Group B   | -2    | Team  | 230           | 2019-01-30 08:26:46 |
-      | 14 | info_root | -2    | User  | null          | 2019-01-30 08:26:45 |
-      | 16 | info_mid  | -2    | User  | null          | 2019-01-30 08:26:44 |
-      | 18 | french    | -2    | User  | null          | 2019-01-30 08:26:43 |
-      | 19 | Team      | -2    | Team  | 210           | 2019-01-30 08:26:42 |
-      | 20 | Group C   | -2    | Club  | 230           | 2019-01-30 08:26:42 |
-      | 21 | Group D   | -2    | Club  | 240           | 2019-01-30 08:26:42 |
-      | 22 | Group E   | -2    | Club  | 250           | 2019-01-30 08:26:42 |
-      | 23 | Group F   | -2    | Club  | 260           | 2019-01-30 08:26:42 |
-      | 24 | Group G   | -2    | Club  | 270           | 2019-01-30 08:26:42 |
-      | 25 | Group H   | -2    | Club  | 280           | 2019-01-30 08:26:42 |
-      | 26 | Group K   | -2    | Club  | 290           | 2019-01-30 08:26:42 |
-      | 27 | Group Z   | -2    | Club  | 300           | 2019-01-30 08:26:42 |
-      | 29 | Class     | -2    | Class | 280           | 2019-01-30 08:26:42 |
-      | 30 | manager   | -2    | User  | 280           | 2019-01-30 08:26:42 |
-    And the database has the following table 'languages':
+    Given the database has the following table "groups":
+      | id | name      | type  | root_skill_id | created_at          |
+      | 1  | all       | Base  | 220           | 2019-01-30 08:26:49 |
+      | 12 | Group A   | Class | 200           | 2019-01-30 08:26:49 |
+      | 13 | Group B   | Team  | 230           | 2019-01-30 08:26:46 |
+      | 19 | Team      | Team  | 210           | 2019-01-30 08:26:42 |
+      | 20 | Group C   | Club  | 230           | 2019-01-30 08:26:42 |
+      | 21 | Group D   | Club  | 240           | 2019-01-30 08:26:42 |
+      | 22 | Group E   | Club  | 250           | 2019-01-30 08:26:42 |
+      | 23 | Group F   | Club  | 260           | 2019-01-30 08:26:42 |
+      | 24 | Group G   | Club  | 270           | 2019-01-30 08:26:42 |
+      | 25 | Group H   | Club  | 280           | 2019-01-30 08:26:42 |
+      | 26 | Group K   | Club  | 290           | 2019-01-30 08:26:42 |
+      | 27 | Group Z   | Club  | 300           | 2019-01-30 08:26:42 |
+      | 29 | Class     | Class | 280           | 2019-01-30 08:26:42 |
+      | 30 | manager   | User  | 280           | 2019-01-30 08:26:42 |
+    And the database has the following table "languages":
       | tag |
       | fr  |
-    And the database has the following table 'users':
-      | login     | temp_user | group_id | default_language |
-      | jdoe      | 0         | 11       |                  |
-      | info_root | 0         | 14       |                  |
-      | info_mid  | 0         | 16       |                  |
-      | fr_user   | 0         | 18       | fr               |
-      | manager   | 0         | 30       | fr               |
-    And the database has the following table 'groups_groups':
+    And the database has the following users:
+      | group_id | login     | default_language |
+      | 11       | jdoe      |                  |
+      | 14       | info_root |                  |
+      | 16       | info_mid  |                  |
+      | 18       | fr_user   | fr               |
+      | 30       | manager   | fr               |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 12             |
       | 1               | 13             |
@@ -50,13 +46,13 @@ Feature: Get root skills for a participant group
       | 26              | 27             |
       | 29              | 30             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id | can_watch_members |
       | 12         | 1        | true              |
       | 12         | 19       | true              |
       | 29         | 22       | true              |
       | 30         | 24       | true              |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type  | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
       | 200 | Skill | en                   | false    | false                   | User                   |
       | 210 | Skill | en                   | false    | false                   | User                   |
@@ -72,7 +68,7 @@ Feature: Get root skills for a participant group
       | 280 | Skill | en                   | false    | false                   | User                   |
       | 290 | Skill | en                   | false    | false                   | User                   |
       | 300 | Skill | en                   | false    | false                   | User                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 1        | 230     | none                     | none                     | result              | none               | false              |
       | 11       | 200     | solution                 | solution_with_grant      | none                | none               | true               |
@@ -126,7 +122,7 @@ Feature: Get root skills for a participant group
       | 29       | 280     | content_with_descendants | none                     | none                | none               | false              |
       | 30       | 290     | content_with_descendants | none                     | none                | none               | false              |
       | 29       | 300     | content_with_descendants | none                     | none                | none               | false              |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order | content_view_propagation |
       | 200            | 210           | 3           | none                     |
       | 200            | 220           | 2           | as_info                  |
@@ -134,7 +130,7 @@ Feature: Get root skills for a participant group
       | 210            | 211           | 1           | none                     |
       | 230            | 231           | 2           | none                     |
       | 230            | 232           | 1           | none                     |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title        |
       | 200     | en           | Skill 1      |
       | 210     | en           | Skill 2      |
@@ -150,7 +146,7 @@ Feature: Get root skills for a participant group
       | 250     | en           | null         |
       | 270     | en           | null         |
       | 290     | en           | null         |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | root_item_id | parent_attempt_id | ended_at            |
       | 0  | 11             | 2019-01-30 08:26:41 | null         | null              | null                |
       | 1  | 11             | 2019-01-30 08:26:41 | 200          | 0                 | 2019-01-30 09:26:48 |
@@ -159,7 +155,7 @@ Feature: Get root skills for a participant group
       | 0  | 18             | 2018-01-30 09:26:42 | null         | null              | null                |
       | 0  | 19             | 2018-01-30 09:26:42 | null         | null              | null                |
       | 0  | 26             | 2017-01-30 09:26:42 | null         | null              | null                |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | score_computed | submissions | started_at          | validated_at        | latest_activity_at  |
       | 0          | 11             | 200     | 91             | 11          | 2019-01-30 09:26:41 | null                | 2019-01-30 09:36:41 |
       | 0          | 11             | 210     | 92             | 12          | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 | 2019-01-30 09:36:42 |

@@ -30,7 +30,6 @@ type groupsMembersViewResponseRow struct {
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
-		// Nullable
 		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
@@ -53,6 +52,7 @@ type groupsMembersViewResponseRow struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: sort
 //			in: query
@@ -65,6 +65,7 @@ type groupsMembersViewResponseRow struct {
 //			description: Start the page from the member next to the member with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N members
 //			in: query
@@ -84,9 +85,11 @@ type groupsMembersViewResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -95,9 +98,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroup(store, user, groupID))
 
 	query := store.GroupGroups().
 		Select(`
@@ -124,7 +125,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 		Where("groups_groups.parent_group_id = ?", groupID)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -136,10 +137,7 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 			DefaultRules: "-member_since,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []groupsMembersViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -150,5 +148,5 @@ func (srv *Service) getMembers(w http.ResponseWriter, r *http.Request) service.A
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

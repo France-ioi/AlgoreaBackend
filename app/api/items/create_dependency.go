@@ -64,11 +64,13 @@ type itemDependencyCreateRequest struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"422":
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) error {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(r, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -88,17 +90,15 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		if !user.CanViewItemInfo(store.WithWriteLock(), prerequisiteItemID) {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+		if !user.CanViewItemInfo(store.WithExclusiveWriteLock(), prerequisiteItemID) {
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		permissionsQuery := store.Permissions().
 			AggregatedPermissionsForItemsOnWhichGroupHasPermission(user.GroupID, "edit", "all").
 			Where("item_id = ?", dependentItemID).
-			WithWriteLock()
+			WithExclusiveWriteLock()
 		if input.GrantContentView {
 			permissionsQuery = permissionsQuery.HavingMaxPermissionAtLeast("grant_view", "content")
 		}
@@ -107,8 +107,7 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 		found, err = permissionsQuery.HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		err = store.ItemDependencies().InsertMap(map[string]interface{}{
@@ -118,19 +117,15 @@ func (srv *Service) createDependency(w http.ResponseWriter, r *http.Request) ser
 			"grant_content_view": input.GrantContentView,
 		})
 		if err != nil && database.IsDuplicateEntryError(err) {
-			apiError = service.ErrUnprocessableEntity(errors.New("the dependency already exists"))
-			return apiError.Error // rollback
+			return service.ErrUnprocessableEntity(errors.New("the dependency already exists")) // rollback
 		}
 
 		return err
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(nil)))
+	service.MustNotBeError(render.Render(w, r, service.CreationSuccess[*struct{}](nil)))
 
-	return service.NoError
+	return nil
 }

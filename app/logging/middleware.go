@@ -34,26 +34,19 @@ import (
 )
 
 // StructuredLogger is a structured logrus Logger.
-type StructuredLogger struct {
-	*logrus.Logger
-}
+type StructuredLogger struct{}
 
 // NewStructuredLogger implements a custom structured logger using the global one.
 func NewStructuredLogger() func(next http.Handler) http.Handler {
-	return middleware.RequestLogger(&StructuredLogger{SharedLogger.Logger})
+	return middleware.RequestLogger(&StructuredLogger{})
 }
 
 // NewLogEntry sets default request log fields.
 func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
-	entry := &StructuredLoggerEntry{Logger: logrus.NewEntry(l.Logger)}
+	entry := &StructuredLoggerEntry{Logger: SharedLogger.WithContext(r.Context())}
 	logFields := logrus.Fields{}
 
 	logFields["type"] = "web"
-	logFields["ts"] = time.Now().UTC().Format(time.RFC1123)
-
-	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
-		logFields["req_id"] = reqID
-	}
 
 	scheme := "http"
 	if r.TLS != nil {
@@ -85,7 +78,7 @@ func (l *StructuredLoggerEntry) Write(status, bytes int, elapsed time.Duration) 
 	l.Logger = l.Logger.WithFields(logrus.Fields{
 		"resp_status":       status,
 		"resp_bytes_length": bytes,
-		"resp_elapsed_ms":   float64(elapsed.Nanoseconds()) / 1000000.0,
+		"resp_elapsed_ms":   float64(elapsed.Nanoseconds()) / float64(time.Millisecond),
 	})
 
 	l.Logger.Infoln("request complete")

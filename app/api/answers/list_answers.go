@@ -36,13 +36,16 @@ import (
 //		- name: item_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: author_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: attempt_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [-created_at,id]
@@ -54,6 +57,7 @@ import (
 //			description: Start the page from the answer next to the answer with `answers.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N answers
 //			in: query
@@ -73,9 +77,11 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) error {
 	user := srv.GetUser(httpReq)
 	store := srv.GetStore(httpReq)
 
@@ -89,7 +95,7 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 		Where("item_id = ?", itemID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	dataQuery := store.Answers().WithUsers().WithResults().
@@ -104,28 +110,34 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 		Where("answers.item_id = ?", itemID).
 		WithPersonalInfoViewApprovals(user)
 
-	authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
+	authorIDIsSet := len(httpReq.URL.Query()["author_id"]) > 0
 
-	if authorIDError != nil { // attempt_id
-		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
-		if attemptIDError != nil {
+	if !authorIDIsSet { // attempt_id
+		attemptIDIsSet := len(httpReq.URL.Query()["attempt_id"]) > 0
+		if !attemptIDIsSet {
 			return service.ErrInvalidRequest(fmt.Errorf("either author_id or attempt_id must be present"))
 		}
 
-		if result := srv.checkAccessRightsForGetAnswersByAttemptID(store, attemptID, user); result != service.NoError {
-			return result
+		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
+		if attemptIDError != nil {
+			return service.ErrInvalidRequest(attemptIDError)
 		}
+
+		service.MustNotBeError(srv.checkAccessRightsForGetAnswersByAttemptID(store, attemptID, user))
 
 		dataQuery = dataQuery.Where("answers.attempt_id = ?", attemptID)
 	} else { // author_id
-		if result := srv.checkAccessRightsForGetAnswersByAuthorID(store, authorID, user); result != service.NoError {
-			return result
+		authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
+		if authorIDError != nil {
+			return service.ErrInvalidRequest(authorIDError)
 		}
+
+		service.MustNotBeError(srv.checkAccessRightsForGetAnswersByAuthorID(store, authorID, user))
 
 		dataQuery = dataQuery.Where("author_id = ?", authorID)
 	}
 
-	dataQuery, apiError := service.ApplySortingAndPaging(
+	dataQuery, err = service.ApplySortingAndPaging(
 		httpReq, dataQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -135,9 +147,8 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 			DefaultRules: "-created_at,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
+
 	dataQuery = service.NewQueryLimiter().Apply(httpReq, dataQuery)
 
 	var result []rawAnswersData
@@ -146,7 +157,7 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) s
 	responseData := srv.convertDBDataToResponse(result)
 
 	render.Respond(rw, httpReq, responseData)
-	return service.NoError
+	return nil
 }
 
 // swagger:ignore
@@ -177,7 +188,6 @@ type answersResponseAnswer struct {
 	Type string `json:"type"`
 	// required: true
 	CreatedAt database.Time `json:"created_at"`
-	// Nullable
 	// required: true
 	Score *float32 `json:"score"`
 
@@ -210,7 +220,7 @@ func (srv *Service) convertDBDataToResponse(rawData []rawAnswersData) (response 
 
 func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
 	store *database.DataStore, attemptID int64, user *database.User,
-) service.APIError {
+) error {
 	var count int64
 	groupsManagedByUser := store.GroupAncestors().ManagedByUser(user).Select("groups_ancestors.child_group_id")
 	groupsWhereUserIsMember := store.GroupGroups().WhereUserIsMember(user).Select("parent_group_id")
@@ -222,22 +232,22 @@ func (srv *Service) checkAccessRightsForGetAnswersByAttemptID(
 			user.GroupID).
 		Count(&count).Error())
 	if count == 0 {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) checkAccessRightsForGetAnswersByAuthorID(
 	store *database.DataStore, authorID int64, user *database.User,
-) service.APIError {
+) error {
 	if authorID != user.GroupID {
 		found, err := store.GroupAncestors().ManagedByUser(user).
 			Where("groups_ancestors.child_group_id=?", authorID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 	}
 
-	return service.NoError
+	return nil
 }

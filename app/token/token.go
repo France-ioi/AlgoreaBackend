@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"reflect"
 	"regexp"
@@ -62,13 +61,13 @@ func getKey(config *viper.Viper, keyType string) ([]byte, error) {
 	if config.GetString(keyType+"KeyFile") == "" {
 		return nil, fmt.Errorf("missing %s key in the token config (%sKey or %sKeyFile)", keyType, keyType, keyType)
 	}
-	return ioutil.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
+	return os.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
 }
 
 var tokenPathTestRegexp = regexp.MustCompile(`.*([/\\]app(?:[/\\][a-z]+)*?)$`)
 
 func prepareFileName(fileName string) string {
-	if len(fileName) > 0 && fileName[0] == '/' {
+	if fileName != "" && fileName[0] == '/' {
 		return fileName
 	}
 
@@ -102,12 +101,13 @@ func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interf
 
 	// Validate token
 	if err = jwt.Validate(publicKey, crypto.SigningMethodRS512); err != nil {
-		return nil, fmt.Errorf("invalid token: %s", err)
+		return nil, fmt.Errorf("invalid token: %w", err)
 	}
 
 	today := time.Now().UTC()
-	yesterday := today.Add(-24 * time.Hour)
-	tomorrow := today.Add(24 * time.Hour)
+	const oneDay = 24 * time.Hour
+	yesterday := today.Add(-oneDay)
+	tomorrow := today.Add(oneDay)
 
 	const dateLayout = "02-01-2006" // 'd-m-Y' in PHP
 	todayStr := today.Format(dateLayout)
@@ -133,6 +133,22 @@ func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte
 	return token
 }
 
+// UnexpectedError represents an unexpected error so that we could differentiate it from expected errors.
+type UnexpectedError struct {
+	err error
+}
+
+// Error returns a string representation for an unexpected error.
+func (ue *UnexpectedError) Error() string {
+	return ue.err.Error()
+}
+
+// IsUnexpectedError returns true if its argument is an unexpected error.
+func IsUnexpectedError(err error) bool {
+	var unexpectedError *UnexpectedError
+	return errors.As(err, &unexpectedError)
+}
+
 // UnmarshalDependingOnItemPlatform unmarshals a token from JSON representation
 // using a platform's public key for given itemID.
 // The function returns nil (success) if the platform doesn't use tokens.
@@ -144,12 +160,15 @@ func UnmarshalDependingOnItemPlatform(
 	tokenFieldName string,
 ) (platformHasKey bool, err error) {
 	targetRefl := reflect.ValueOf(target)
+	defer recoverPanics(&err)
 
 	publicKey, err := store.Platforms().GetPublicKeyByItemID(itemID)
 	if gorm.IsRecordNotFoundError(err) {
 		return false, fmt.Errorf("cannot find the platform for item %d", itemID)
 	}
-	if publicKey == "" {
+	mustNotBeError(err)
+
+	if publicKey == nil {
 		return false, nil
 	}
 
@@ -158,9 +177,10 @@ func UnmarshalDependingOnItemPlatform(
 		return true, fmt.Errorf("missing %s", tokenFieldName)
 	}
 
-	parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(publicKey))
+	parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(*publicKey))
 	if err != nil {
-		logging.Warnf("cannot parse platform's public key for item with id = %d: %s", itemID, err.Error())
+		logging.SharedLogger.WithContext(store.GetContext()).
+			Warnf("cannot parse platform's public key for item with id = %d: %s", itemID, err.Error())
 
 		return true, fmt.Errorf("invalid %s: wrong platform's key", tokenFieldName)
 	}
@@ -173,4 +193,18 @@ func UnmarshalDependingOnItemPlatform(
 	}
 
 	return true, nil
+}
+
+func mustNotBeError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func recoverPanics(
+	err *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
+) {
+	if r := recover(); r != nil {
+		*err = &UnexpectedError{err: r.(error)}
+	}
 }

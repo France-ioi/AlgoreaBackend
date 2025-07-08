@@ -2,14 +2,16 @@ package items
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/render"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 const itemActivityLogStraightJoinBoundary = 10000
@@ -25,7 +27,7 @@ type itemActivityLogResponseRow struct {
 	AttemptID int64 `json:"attempt_id,string"`
 	// `answers.id`
 	AnswerID *int64 `json:"answer_id,string,omitempty"`
-	// use this as `{from.asnwer_id}` for pagination
+	// use this as `{from.answer_id}` for pagination
 	// required: true
 	FromAnswerID int64    `json:"from_answer_id,string"`
 	Score        *float32 `json:"score,omitempty"`
@@ -47,7 +49,7 @@ type itemActivityLogResponseRow struct {
 
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
-	} `json:"user,omitempty" gorm:"embedded;embedded_prefix:user__"`
+	} `gorm:"embedded;embedded_prefix:user__" json:"user,omitempty"`
 	// required: true
 	Item struct {
 		// required: true
@@ -57,13 +59,12 @@ type itemActivityLogResponseRow struct {
 		Type string `json:"type"`
 		// required: true
 		String struct {
-			// Nullable
 			// required: true
 			Title *string `json:"title"`
 		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
-	// required: true
-	CanWatchItemAnswer bool `json:"can_watch_item_answer"`
+	// only when `{watched_group_id}` is given
+	CanWatchAnswer *bool `json:"can_watch_answer,omitempty"`
 }
 
 // swagger:operation GET /items/{ancestor_item_id}/log items itemActivityLogForItem
@@ -96,35 +97,42 @@ type itemActivityLogResponseRow struct {
 //		- name: ancestor_item_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			description: The current user should be a manager of the watched group with `can_watch_members` = true,
 //							 otherwise the 'forbidden' error is returned
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.item_id
 //			description: Start the page from the row next to the row with `item_id`=`{from.item_id}`
 //							 (all other `{from.*}` parameters are required when `{from.item_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.participant_id
 //			description: Start the page from the row next to the row with `participant_id`=`{from.participant_id}`
 //							 (all other `{from.*}` parameters are required when `{from.participant_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.attempt_id
 //			description: Start the page from the row next to the row with `attempt_id`=`{from.attempt_id}`
 //							 (all other `{from.*}` parameters are required when `{from.attempt_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.answer_id
 //			description: Start the page from the row next to the row with `from_answer_id`=`{from.answer_id}`
 //							 (all other `{from.*}` parameters are required when `{from.answer_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.activity_type
 //			description: Start the page from the row next to the row with `activity_type`=`{from.activity_type}`
 //							 (all other `{from.*}` parameters are required when `{from.activity_type}` is present)
@@ -150,9 +158,11 @@ type itemActivityLogResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "ancestor_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -239,30 +249,49 @@ func (srv *Service) getActivityLogForItem(w http.ResponseWriter, r *http.Request
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) error {
 	return srv.getActivityLog(w, r, nil)
 }
 
-func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) service.APIError {
+func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemID *int64) error {
 	user := srv.GetUser(r)
+
+	const (
+		resultStarted  = 1
+		submission     = 2
+		resultValidate = 3
+		savedAnswer    = 4
+		currentAnswer  = 5
+	)
 
 	// check and patch from.activity_type to make it integer
 	urlParams := r.URL.Query()
 	if len(urlParams["from.activity_type"]) > 0 {
-		validActivityTypes := []string{"result_started", "submission", "result_validated", "saved_answer", "current_answer"}
-
-		if !utils.Contains(validActivityTypes, urlParams["from.activity_type"][0]) {
+		stringValue := r.URL.Query().Get("from.activity_type")
+		var intValue int
+		var ok bool
+		if intValue, ok = map[string]int{
+			"result_started":   resultStarted,
+			"submission":       submission,
+			"result_validated": resultValidate,
+			"saved_answer":     savedAnswer,
+			"current_answer":   currentAnswer,
+		}[stringValue]; !ok {
 			return service.ErrInvalidRequest(
 				errors.New(
 					"wrong value for from.activity_type (should be one of (result_started, submission, result_validated, saved_answer, current_answer))"))
 		}
+		urlParams["from.activity_type"] = []string{strconv.Itoa(intValue)}
+		r.URL.RawQuery = urlParams.Encode()
 	}
 
 	fromValues, err := service.ParsePagingParameters(
 		r, service.SortingAndPagingTieBreakers{
-			"activity_type":  service.FieldTypeString,
+			"activity_type":  service.FieldTypeInt64,
 			"participant_id": service.FieldTypeInt64,
 			"attempt_id":     service.FieldTypeInt64,
 			"item_id":        service.FieldTypeInt64,
@@ -272,10 +301,8 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 		return service.ErrInvalidRequest(err)
 	}
 
-	query, apiError := srv.constructActivityLogQuery(srv.GetStore(r), r, itemID, user, fromValues)
-	if apiError != service.NoError {
-		return apiError
-	}
+	query, err := srv.constructActivityLogQuery(srv.GetStore(r), r, itemID, user, fromValues)
+	service.MustNotBeError(err)
 
 	var result []itemActivityLogResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -301,20 +328,20 @@ func (srv *Service) getActivityLog(w http.ResponseWriter, r *http.Request, itemI
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http.Request, itemID *int64,
 	user *database.User, fromValues map[string]interface{},
-) (*database.DB, service.APIError) {
+) (*database.DB, error) {
 	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return nil, apiError
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	if err != nil {
+		return nil, err
 	}
 	participantsQuery := store.Raw("SELECT ? AS id", participantID)
 
-	visibleItemDescendants := store.Permissions().MatchingUserAncestors(user).
+	visibleItemDescendants := store.Permissions().MatchingGroupAncestors(participantID).
 		Select("item_id AS id").
 		Group("item_id").
 		HavingMaxPermissionAtLeast("view", "info")
@@ -347,32 +374,41 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			(answers.participant_id IN (SELECT id FROM participants))`,
 		visibleItemDescendantsSubQuery, participantsQuerySubQuery).Scan(&cnt).Error())
 
-	answersQuerySelect := `
-			LOWER(answers.type) AS activity_type,
+	const answersQueryDefaultSelect = `
+			CASE answers.type
+				WHEN 'Submission' THEN 2
+				WHEN 'Saved' THEN 4
+				WHEN 'Current' THEN 5
+			END AS activity_type_int,
+			answers.type + 0 AS type,
 			answers.created_at AS at,
 			answers.id AS answer_id,
 			answers.attempt_id, answers.participant_id,
-			answers.item_id, author_id AS user_id`
-	answersQuery := store.Answers().
-		Where("answers.participant_id IN (SELECT id FROM participants)").
-		Where("answers.item_id IN (SELECT id FROM items_to_show)")
+			answers.item_id,
+			author_id AS user_id`
+	answersQuerySelect := answersQueryDefaultSelect
 
-	if cnt.Cnt > itemActivityLogStraightJoinBoundary || r.Context().Value("forceStraightJoinInItemActivityLog") == "force" {
+	answersQuery := store.Answers().DB
+
+	if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
+		r.Context().Value(service.APIServiceContextVariableName("forceStraightJoinInItemActivityLog")) == "force" {
 		// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
-		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQuerySelect
-		answersQuery = answersQuery.
+		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
+		// also, we need to FORCE INDEX to do the sorted index scan
+		answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_type_d_id_autho)").
 			Where("answers.created_at <= NOW()").
 			Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
 			Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
 			Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
 			Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
 	}
-	answersQuery = answersQuery.Select(answersQuerySelect)
+	answersQuery = applyMandatoryAnswersConditions(answersQuery.Select(answersQuerySelect))
 
 	startedResultsQuery := store.Table("results AS started_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
-			'result_started' AS activity_type,
+			1 AS activity_type_int,
+			65535 AS type, /* results don't have a type */
 			started_at AS at,
 			-1 AS answer_id,
 			started_results.attempt_id, started_results.participant_id, started_results.item_id, started_results.participant_id AS user_id,
@@ -388,7 +424,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	validatedResultsQuery := store.Table("results AS validated_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
-			'result_validated' AS activity_type,
+			3 AS activity_type_int,
+			65535 AS type, /* results don't have a type */
 			validated_results.validated_at AS at,
 			-1 AS answer_id,
 			validated_results.attempt_id, validated_results.participant_id,
@@ -399,23 +436,24 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		Where("validated_results.participant_id IN (SELECT id FROM participants)")
 
 	startFromRowSubQuery, startFromRowCTESubQuery := srv.generateSubQueriesForPagination(
-		store, r.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery, answersQuery, fromValues)
+		store, r.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery,
+		applyMandatoryAnswersConditions(store.Answers().Select(answersQueryDefaultSelect)),
+		fromValues)
 
 	answersQuery = service.NewQueryLimiter().Apply(r, answersQuery)
 	// we have already checked for possible errors in constructActivityLogQuery()
 	answersQuery, _ = service.ApplySortingAndPaging(
 		nil, answersQuery,
 		&service.SortingAndPagingParameters{
-			// An index is defined for this query: answers.c_at_desc_item_id_part_id_attempt_id_desc_type_desc_answers.
 			Fields: service.SortingAndPagingFields{
 				"at":             {ColumnName: "answers.created_at"},
 				"item_id":        {ColumnName: "answers.item_id"},
 				"participant_id": {ColumnName: "answers.participant_id"},
 				"attempt_id":     {ColumnName: "answers.attempt_id"},
-				"activity_type":  {ColumnName: "answers.type"},
+				"type":           {ColumnName: `answers.type`},
 				"answer_id":      {ColumnName: "answers.id"},
 			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,activity_type,answer_id",
+			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-type,answer_id",
 			IgnoreSortParameter:  true,
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
@@ -463,14 +501,14 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 		nil, unionQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"at":             {ColumnName: "un.at"},
-				"participant_id": {ColumnName: "un.participant_id"},
-				"attempt_id":     {ColumnName: "un.attempt_id"},
-				"item_id":        {ColumnName: "un.item_id"},
-				"activity_type":  {ColumnName: "un.activity_type"},
-				"answer_id":      {ColumnName: "un.answer_id"},
+				"at":                {ColumnName: "un.at"},
+				"participant_id":    {ColumnName: "un.participant_id"},
+				"attempt_id":        {ColumnName: "un.attempt_id"},
+				"item_id":           {ColumnName: "un.item_id"},
+				"activity_type_int": {ColumnName: "un.activity_type_int"},
+				"answer_id":         {ColumnName: "un.answer_id"},
 			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,activity_type,answer_id",
+			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type_int,answer_id",
 			IgnoreSortParameter:  true,
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
@@ -478,14 +516,21 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 	query := store.Raw(`
 		WITH items_to_show AS ?, participants AS ?, start_from_row AS ?, un AS ?
 		SELECT STRAIGHT_JOIN
-			CASE activity_type
-				WHEN 'current' THEN 'current_answer'
-				WHEN 'saved' THEN 'saved_answer'
-				ELSE activity_type
+			CASE activity_type_int
+				WHEN 1 THEN 'result_started'
+				WHEN 2 THEN 'submission'
+				WHEN 3 THEN 'result_validated'
+				WHEN 4 THEN 'saved_answer'
+				WHEN 5 THEN 'current_answer'
 			END AS activity_type,
 			at, answer_id, attempt_id, participant_id, score,
-			items.id AS item__id, items.type AS item__type,
-			permissions_generated.can_watch_generated_value >= ? AS can_watch_item_answer,
+			items.id AS item__id, items.type AS item__type,`+
+		golang.LazyIf(watchedGroupIDIsSet,
+			func() string {
+				return fmt.Sprintf(`
+			permissions.can_watch_generated_value >= %d AS can_watch_answer,`,
+					store.PermissionsGranted().WatchIndexByName("answer"))
+			})+`
 			groups.id AS participant__id,
 			groups.name AS participant__name,
 			groups.type AS participant__type,
@@ -497,38 +542,43 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, r *http
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
 		FROM ? AS activities`, visibleItemDescendantsSubQuery, participantsQuerySubQuery,
 		startFromRowCTESubQuery, unionCTEQuery.SubQuery(),
-		store.PermissionsGranted().WatchIndexByName("answer"),
 		user.GroupID, user.GroupID, user.GroupID,
 		unionQuery.SubQuery()).
 		Joins("JOIN items ON items.id = item_id").
-		Joins(`
-			JOIN permissions_generated
-			  ON permissions_generated.item_id = items.id
-       AND permissions_generated.group_id = ?
-		`, user.GroupID).
 		Joins("JOIN `groups` ON groups.id = participant_id").
 		Joins("LEFT JOIN users ON users.group_id = user_id").
 		WithPersonalInfoViewApprovals(user).
 		JoinsUserAndDefaultItemStrings(user)
-	return query, service.NoError
+
+	if watchedGroupIDIsSet {
+		query = query.JoinsPermissionsForGroupToItems(participantID)
+	}
+
+	return query, nil
+}
+
+func applyMandatoryAnswersConditions(answersQuery *database.DB) *database.DB {
+	return answersQuery.
+		Where("answers.participant_id IN (SELECT id FROM participants)").
+		Where("answers.item_id IN (SELECT id FROM items_to_show)")
 }
 
 func (srv *Service) generateSubQueriesForPagination(
-	store *database.DataStore, activityType string, startedResultsQuery, validatedResultsQuery,
+	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
 	answersQuery *database.DB, fromValues map[string]interface{}) (
 	startFromRowSubQuery, startFromRowCTESubQuery interface{},
 ) {
 	startFromRowSubQuery = store.Table("start_from_row").SubQuery()
 	var startFromRowQuery *database.DB
-	switch activityType {
-	case "result_started":
+	switch activityTypeIndex {
+	case "1": // result_started
 		startFromRowQuery = startedResultsQuery.
 			Where("started_results.participant_id = ?", fromValues["participant_id"]).
 			Where("started_results.attempt_id = ?", fromValues["attempt_id"]).
 			Where("started_results.item_id = ?", fromValues["item_id"])
-	case "submission", "saved_answer", "current_answer":
+	case "2", "4", "5": // submission/saved_answer/current_answer
 		startFromRowQuery = answersQuery.Where("answers.id = ?", fromValues["answer_id"])
-	case "result_validated":
+	case "3": // result_validated
 		startFromRowQuery = validatedResultsQuery.
 			Where("validated_results.participant_id = ?", fromValues["participant_id"]).
 			Where("validated_results.attempt_id = ?", fromValues["attempt_id"]).

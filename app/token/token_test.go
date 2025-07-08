@@ -3,7 +3,6 @@ package token
 import (
 	"crypto/rsa"
 	"errors"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"strconv"
@@ -154,8 +153,12 @@ func TestParseAndValidate(t *testing.T) {
 			defer monkey.UnpatchAll()
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
-			payload, apiErr := ParseAndValidate(tt.token, publicKey)
-			assert.Equal(t, tt.wantError, apiErr)
+			payload, err := ParseAndValidate(tt.token, publicKey)
+			if tt.wantError == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, tt.wantError.Error())
+			}
 			assert.Equal(t, tt.wantPayload, payload)
 		})
 	}
@@ -377,22 +380,42 @@ func Test_prepareFileName_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
 	assert.Equal(t, "/app/something/app/ab/"+relFileName, preparedFileName)
 }
 
-func createTmpPublicKeyFile(key []byte) (*os.File, error) {
-	tmpFilePublic, err := ioutil.TempFile("", "testPublicKey.pem")
+func createTmpKeyFile(key []byte, fileName string) (*os.File, error) {
+	tmpFile, err := os.CreateTemp("", fileName)
 	if err != nil {
-		return tmpFilePublic, err
+		return nil, err
 	}
 
-	_, err = tmpFilePublic.Write(key)
-	return tmpFilePublic, err
+	_, err = tmpFile.Write(key)
+	if err != nil {
+		_ = tmpFile.Close()
+		return nil, err
+	}
+
+	return tmpFile, nil
+}
+
+func createTmpPublicKeyFile(key []byte) (*os.File, error) {
+	return createTmpKeyFile(key, "testPublicKey.pem")
 }
 
 func createTmpPrivateKeyFile(key []byte) (*os.File, error) {
-	tmpFilePrivate, err := ioutil.TempFile("", "testPrivateKey.pem")
-	if err != nil {
-		return tmpFilePrivate, err
-	}
+	return createTmpKeyFile(key, "testPrivateKey.pem")
+}
 
-	_, err = tmpFilePrivate.Write(key)
-	return tmpFilePrivate, err
+func Test_recoverPanics_and_mustNotBeError(t *testing.T) {
+	expectedError := errors.New("some error")
+	err := func() (err error) {
+		defer recoverPanics(&err)
+		mustNotBeError(expectedError)
+		return nil
+	}()
+	assert.Equal(t, &UnexpectedError{expectedError}, err)
+	assert.Equal(t, expectedError.Error(), err.Error())
+}
+
+func Test_UnexpectedError(t *testing.T) {
+	assert.True(t, IsUnexpectedError(&UnexpectedError{err: errors.New("some error")}))
+	assert.False(t, IsUnexpectedError(errors.New("some error")))
+	assert.False(t, IsUnexpectedError(nil))
 }

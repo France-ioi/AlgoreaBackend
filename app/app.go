@@ -2,9 +2,11 @@
 package app
 
 import (
+	"context"
 	crand "crypto/rand"
 	"encoding/binary"
 	"fmt"
+	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -42,7 +44,7 @@ func New() (*Application, error) {
 		panic("cannot seed the randomizer")
 	}
 	// Init the PRNG with a random value
-	rand.Seed(int64(binary.LittleEndian.Uint64(b[:])))
+	rand.Seed(int64(binary.LittleEndian.Uint64(b[:]))) //nolint:gosec // G115: we don't care if a big number becomes negative
 
 	if err := application.Reset(config); err != nil {
 		return nil, err
@@ -72,10 +74,18 @@ func (app *Application) Reset(config *viper.Viper) error {
 	logging.SharedLogger.Configure(loggingConfig)
 
 	// Init DB
+	if dbConfig.Params == nil {
+		dbConfig.Params = make(map[string]string, 1)
+	}
+	dbConfig.Params["charset"] = "utf8mb4"
 	db, err := database.Open(dbConfig.FormatDSN())
 	if err != nil {
-		logging.WithField("module", "database").Error(err)
+		logging.SharedLogger.WithContext(context.Background()).WithField("module", "database").Error(err)
 		return err
+	}
+
+	if serverConfig.GetBool("disableResultsPropagation") {
+		database.ProhibitResultsPropagation(db)
 	}
 
 	// Set up responder.
@@ -83,6 +93,12 @@ func (app *Application) Reset(config *viper.Viper) error {
 
 	// Set up middlewares
 	router := chi.NewRouter()
+
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r.WithContext(database.NewDataStore(app.Database).MergeContext(r.Context())))
+		})
+	})
 
 	router.Use(version.AddVersionHeader)
 

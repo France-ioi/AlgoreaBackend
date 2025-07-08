@@ -12,8 +12,8 @@ type GroupJoiningByCodeInfo struct {
 }
 
 // GetGroupJoiningByCodeInfoByCode returns GroupJoiningByCodeInfo for a given code
-// (or null if there is no public team with this code or the code has expired).
-func (s *DataStore) GetGroupJoiningByCodeInfoByCode(code string, withLock bool) (*GroupJoiningByCodeInfo, error) {
+// if there is a public team with this code and the code has not expired.
+func (s *DataStore) GetGroupJoiningByCodeInfoByCode(code string, withLock bool) (groupInfo GroupJoiningByCodeInfo, found bool, err error) {
 	var info GroupJoiningByCodeInfo
 	query := s.Groups().
 		Where("type <> 'User'").
@@ -23,11 +23,14 @@ func (s *DataStore) GetGroupJoiningByCodeInfoByCode(code string, withLock bool) 
 			id AS group_id, type, code_expires_at IS NULL AS code_expires_at_is_null,
 			code_lifetime IS NULL AS code_lifetime_is_null, frozen_membership`)
 	if withLock {
-		query = query.WithWriteLock()
+		query = query.WithExclusiveWriteLock()
 	}
-	err := query.Take(&info).Error()
+	err = query.Take(&info).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return nil, nil
+		return GroupJoiningByCodeInfo{}, false, nil
 	}
-	return &info, err
+	if err != nil {
+		return GroupJoiningByCodeInfo{}, false, err
+	}
+	return info, true, nil
 }

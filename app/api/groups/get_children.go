@@ -66,6 +66,7 @@ type groupChildrenViewResponseRow struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: types_include
 //			in: query
 //			default: [Class,Team,Club,Friends,Other,User,Session,Base]
@@ -84,6 +85,7 @@ type groupChildrenViewResponseRow struct {
 //			description: Start the page from the sub-group next to the sub-group with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [name,id]
@@ -110,9 +112,11 @@ type groupChildrenViewResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -133,7 +137,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 	found, err := store.Groups().PickVisibleGroups(store.Groups().ByID(groupID), user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
@@ -151,12 +155,12 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				),
 				0
 			) AS user_count,
-			IF(manager_permissions.found,
-				(SELECT COUNT(*) = 0
-				   FROM groups_groups_active
-				  WHERE groups_groups_active.parent_group_id = groups.id
-					  AND groups_groups_active.child_group_id != groups.id
-				),
+			IF(manager_permissions.found, (
+					SELECT 1
+					FROM groups_groups_active
+					WHERE groups_groups_active.parent_group_id = groups.id
+					LIMIT 1
+				) IS NULL,
 				NULL
 			) AS is_empty,
 			manager_permissions.found AS current_user_is_manager,
@@ -178,7 +182,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type IN (?)", typesList)
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -190,9 +194,7 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []groupChildrenViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -208,5 +210,5 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

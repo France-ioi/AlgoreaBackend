@@ -1,6 +1,6 @@
 Feature: Display the current progress of a participant on children of an item (groupParticipantProgress)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | name           |
       | 1  | Base    | Root 1         |
       | 3  | Base    | Root 2         |
@@ -15,39 +15,27 @@ Feature: Display the current progress of a participant on children of an item (g
       | 18 | Club    | Our Club       |
       | 19 | Club    | Another Club   |
       | 20 | Friends | My Friends     |
-      | 21 | User    | owner          |
-      | 22 | User    | owner2         |
-      | 51 | User    | johna          |
-      | 53 | User    | johnb          |
-      | 55 | User    | johnc          |
-      | 57 | User    | johnd          |
-      | 59 | User    | johne          |
-      | 61 | User    | janea          |
-      | 63 | User    | janeb          |
-      | 65 | User    | janec          |
-      | 67 | User    | janed          |
-      | 69 | User    | janee          |
-    And the database has the following table 'users':
-      | login  | group_id | default_language |
-      | owner  | 21       | en               |
-      | owner2 | 22       | en               |
-      | johna  | 51       | fr               |
-      | johnb  | 53       | fr               |
-      | johnc  | 55       | fr               |
-      | johnd  | 57       | fr               |
-      | johne  | 59       | fr               |
-      | janea  | 61       | fr               |
-      | janeb  | 63       | fr               |
-      | janec  | 65       | fr               |
-      | janed  | 67       | fr               |
-      | janee  | 69       | fr               |
-    And the database has the following table 'group_managers':
+    And the database has the following users:
+      | group_id | login  | default_language |
+      | 21       | owner  | en               |
+      | 22       | owner2 | en               |
+      | 51       | johna  | fr               |
+      | 53       | johnb  | fr               |
+      | 55       | johnc  | fr               |
+      | 57       | johnd  | fr               |
+      | 59       | johne  | fr               |
+      | 61       | janea  | fr               |
+      | 63       | janeb  | fr               |
+      | 65       | janec  | fr               |
+      | 67       | janed  | fr               |
+      | 69       | janee  | fr               |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 1        | 21         | true              |
       | 1        | 22         | true              |
       | 19       | 4          | true              |
       | 51       | 4          | true              |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 11             |
       | 1               | 67             |
@@ -75,7 +63,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 19              | 69             |
       | 20              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | type    | default_language_tag | no_score |
       | 200  | Chapter | fr                   | false    |
       | 210  | Chapter | fr                   | false    |
@@ -123,12 +111,12 @@ Feature: Display the current progress of a participant on children of an item (g
       | 1010 | Chapter | fr                   | false    |
       | 1020 | Chapter | fr                   | false    |
       | 1030 | Task    | fr                   | false    |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title    |
       | 214     | fr           | Tâche 14 |
       | 215     | en           | Task 15  |
       | 215     | fr           | Tâche 15 |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
       | 200            | 220           | 1           |
@@ -171,7 +159,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 410            | 418           | 7           |
       | 410            | 419           | 8           |
       | 1020           | 1030          | 0           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_watch_generated |
       | 4        | 210     | content                  | none                |
       | 21       | 210     | none                     | result              |
@@ -242,7 +230,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 51       | 217     | none                     | none                |
       | 51       | 1020    | content                  | result              |
       | 51       | 1030    | content                  | result              |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          |
       | 0  | 14             | 2020-01-01 00:03:00 |
       | 1  | 14             | 2020-01-01 00:03:00 |
@@ -257,7 +245,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 5  | 14             | 2020-01-01 00:03:00 |
       | 0  | 21             | 2020-01-01 00:03:00 |
       | 0  | 51             | 2020-01-01 00:03:00 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
       | 0          | 14             | 211     | 2020-01-01 00:03:00 | 0              | 2020-01-01 00:03:00 | 100          | 100         | 2020-01-01 00:04:00 | 2020-01-01 00:14:01 | # latest_activity_at for 51, 211 comes from this line (the last activity is made by a team)
       | 1          | 14             | 211     | 2020-01-01 00:02:00 | 40             | 2020-01-01 00:03:00 | 2            | 3           | 2020-01-01 00:03:02 | 2020-01-01 00:14:00 | # min(validated_at) for 51, 211 comes from this line (from a team)

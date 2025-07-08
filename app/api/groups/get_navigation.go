@@ -62,6 +62,7 @@ type groupNavigationViewResponse struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: limit
 //			description: Display the first N children
@@ -80,9 +81,11 @@ type groupNavigationViewResponse struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) error {
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -96,11 +99,16 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 		Where("groups.type != 'User'").
 		Select("id, name, type").Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
 	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
+		With("user_ancestors", ancestorsOfUserQuery(store, user)).
+		Select(`
+			groups.id, groups.type, groups.name,
+			`+currentUserMembershipSQLColumn(user)+`,
+			`+currentUserManagershipSQLColumn).
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).
@@ -108,8 +116,8 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) servic
 		Order("name")
 	query = service.NewQueryLimiter().Apply(r, query)
 
-	service.MustNotBeError(selectGroupsDataForMenu(store, query, user, "").Scan(&result.Children).Error())
+	service.MustNotBeError(query.Scan(&result.Children).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

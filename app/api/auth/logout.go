@@ -20,9 +20,11 @@ import (
 //			"$ref": "#/responses/successResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) logout(w http.ResponseWriter, r *http.Request) error {
 	sessionID := srv.GetSessionID(r)
 
 	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
@@ -36,6 +38,6 @@ func (srv *Service) logout(w http.ResponseWriter, r *http.Request) service.APIEr
 		http.SetCookie(w, cookieAttributes.SessionCookie("", -1000))
 	}
 
-	render.Respond(w, r, &service.Response{Success: true, Message: "success"})
-	return service.NoError
+	render.Respond(w, r, &service.Response[*struct{}]{Success: true, Message: "success"})
+	return nil
 }

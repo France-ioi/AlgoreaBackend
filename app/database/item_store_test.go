@@ -3,12 +3,17 @@ package database
 import (
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func TestItemStore_ContestManagedByUser(t *testing.T) {
+func TestItemStore_TimeLimitedByIDManagedByUser(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -32,13 +37,15 @@ func TestItemStore_ContestManagedByUser(t *testing.T) {
 		"(IFNULL(can_watch_generated_value, 1) >= ?) LIMIT 1")+"$").
 		WithArgs(int64(2), 3, int64(123), 2, 2).WillReturnRows(dbMock.NewRows([]string{"id"}).AddRow(123))
 	var id int64
-	err := NewDataStore(db).Items().ContestManagedByUser(123, &User{GroupID: 2}).
+	err := NewDataStore(db).Items().TimeLimitedByIDManagedByUser(123, &User{GroupID: 2}).
 		PluckFirst("items.id", &id).Error()
 	assert.NoError(t, err)
 	assert.Equal(t, int64(123), id)
 }
 
 func TestItemStore_DeleteItem_MustBeRunInTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -50,12 +57,14 @@ func TestItemStore_DeleteItem_MustBeRunInTransaction(t *testing.T) {
 }
 
 func TestItemStore_DeleteItem_ShouldUseNamedLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("items_items", 3).
+		WithArgs("items_items", itemsRelationsLockTimeout/time.Second).
 		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(0)))
 	mock.ExpectRollback()
 

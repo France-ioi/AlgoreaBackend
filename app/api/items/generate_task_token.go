@@ -12,7 +12,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation POST /items/{item_id}/attempts/{attempt_id}/generate-task-token items itemTaskTokenGenerate
@@ -45,10 +45,12 @@ import (
 //		- name: attempt_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: item_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: as_team_id
 //			in: query
@@ -81,9 +83,11 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
@@ -111,7 +115,6 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		HintsCachedCount int32 `gorm:"column:hints_cached"`
 		Validated        bool
 	}
-	apiError := service.NoError
 	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		// the group should have can_view >= 'content' permission on the item
 		err = store.Items().ByID(itemID).
@@ -128,8 +131,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 				store.PermissionsGranted().ViewIndexByName("solution")).
 			Take(&itemInfo).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -139,7 +141,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 			Where("results.item_id = ?", itemID)
 
 		// load the result data
-		err = resultScope.WithWriteLock().
+		err = resultScope.WithExclusiveWriteLock().
 			Select("hints_requested, hints_cached, validated").
 			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 			Where("NOW() < attempts.allows_submissions_until").
@@ -147,8 +149,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 			Take(&resultInfo).Error()
 
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.InsufficientAccessRightsError
-			return err // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -158,9 +159,6 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	fullAttemptID := fmt.Sprintf("%d/%d", participantID, attemptID)
@@ -170,12 +168,12 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 
 	taskToken := token.Task{
 		AccessSolutions:    &accessSolutions,
-		SubmissionPossible: utils.Ptr(true),
+		SubmissionPossible: golang.Ptr(true),
 		HintsAllowed:       &itemInfo.HintsAllowed,
 		HintsRequested:     resultInfo.HintsRequested,
-		HintsGivenCount:    utils.Ptr(strconv.Itoa(int(resultInfo.HintsCachedCount))),
-		IsAdmin:            utils.Ptr(false),
-		ReadAnswers:        utils.Ptr(true),
+		HintsGivenCount:    golang.Ptr(strconv.Itoa(int(resultInfo.HintsCachedCount))),
+		IsAdmin:            golang.Ptr(false),
+		ReadAnswers:        golang.Ptr(true),
 		UserID:             strconv.FormatInt(user.GroupID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,
@@ -192,5 +190,5 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 	render.Respond(w, r, service.UpdateSuccess(map[string]interface{}{
 		"task_token": signedTaskToken,
 	}))
-	return service.NoError
+	return nil
 }

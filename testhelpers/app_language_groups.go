@@ -8,21 +8,22 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 )
 
 // registerFeaturesForGroups registers the Gherkin features related to groups.
 func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 	s.Step(`^there are the following groups:$`, ctx.ThereAreTheFollowingGroups)
 	s.Step(`^there is a group (@\w+)$`, ctx.ThereIsAGroup)
+	s.Step(`^there is a team (@\w+)$`, ctx.ThereIsATeam)
 	s.Step(`^I am a member of the group (@\w+)$`, ctx.IAmAMemberOfTheGroup)
 	s.Step(`^I am a member of the group with id "([^"]*)"$`, ctx.IAmAMemberOfTheGroupWithID)
 	s.Step(`^(@\w+) is a member of the group (@\w+)$`, ctx.UserIsAMemberOfTheGroup)
-	s.Step(`^(@\w+) is a child of the group (@\w+)$`, ctx.GroupIsAChildOfTheGroup)
+	s.Step(`^the group (@\w+) is a child of the group (@\w+)$`, ctx.GroupIsAChildOfTheGroup)
 	s.Step(
 		`^(@\w+) is a member of the group (@\w+) who has approved access to his personal info$`,
 		ctx.UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonalInfo,
 	)
-	s.Step(`allUsersGroup is defined as the group (@\w+)$`, ctx.AllUsersGroupIsDefinedAsTheGroup)
 
 	s.Step(`^the field "([^"]*)" of the group (@\w+) should be "([^"]*)"$`, ctx.TheFieldOfTheGroupShouldBe)
 	s.Step(`^(@\w+) should not be a member of the group (@\w+)$`, ctx.UserShouldNotBeAMemberOfTheGroup)
@@ -32,49 +33,53 @@ func (ctx *TestContext) registerFeaturesForGroups(s *godog.ScenarioContext) {
 }
 
 // getGroupPrimaryKey returns the primary key of a group.
-func (ctx *TestContext) getGroupPrimaryKey(groupID int64) string {
-	return strconv.FormatInt(groupID, 10)
+func (ctx *TestContext) getGroupPrimaryKey(groupID int64) map[string]string {
+	return map[string]string{"id": strconv.FormatInt(groupID, 10)}
 }
 
-// addGroup adds a group in database.
-func (ctx *TestContext) addGroup(group string) {
-	groupID := ctx.getReference(group)
-
+// addGroup adds a group to the database.
+func (ctx *TestContext) addGroup(group, groupType string) {
+	groupID := ctx.getIDOfReference(group)
 	primaryKey := ctx.getGroupPrimaryKey(groupID)
 
 	if !ctx.isInDatabase("groups", primaryKey) {
-		ctx.addInDatabase("groups", primaryKey, map[string]interface{}{
-			"id": groupID,
-			// All the other fields are set to default values.
-			"name":                                   "Group " + referenceToName(group),
-			"type":                                   "Class",
-			"require_personal_info_access_approval":  "none",
-			"require_lock_membership_approval_until": nil,
-			"require_watch_approval":                 false,
+		ctx.needPopulateDatabase = true
+		err := ctx.DBHasTable("groups", &godog.Table{
+			Rows: []*messages.PickleTableRow{
+				{Cells: []*messages.PickleTableCell{
+					{Value: "id"},
+					{Value: "name"},
+					{Value: "type"},
+					{Value: "require_personal_info_access_approval"},
+					{Value: "require_lock_membership_approval_until"},
+					{Value: "require_watch_approval"},
+				}},
+				{Cells: []*messages.PickleTableCell{
+					{Value: strconv.FormatInt(groupID, 10)},
+					{Value: "Group " + referenceToName(group)},
+					{Value: groupType},
+					{Value: "none"},
+					{Value: "null"},
+					{Value: "false"},
+				}},
+			},
 		})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
 // setGroupFieldInDatabase sets a specific field of a group in the database.
-func (ctx *TestContext) setGroupFieldInDatabase(primaryKey, field string, value interface{}) {
-	if value == tableValueNull {
-		value = nil
-	}
-	if value == tableValueFalse {
-		value = false
-	}
-	if value == tableValueTrue {
-		value = true
-	}
-
-	ctx.dbTables["groups"][primaryKey][field] = value
+func (ctx *TestContext) setGroupFieldInDatabase(primaryKey map[string]string, field, value string) {
+	ctx.setDBTableRowColumnValue("groups", primaryKey, field, value)
 }
 
 // ThereAreTheFollowingGroups defines groups.
 func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 	for i := 1; i < len(groups.Rows); i++ {
 		group := ctx.getRowMap(i, groups)
-		groupID := ctx.getReference(group["group"])
+		groupID := ctx.getIDOfReference(group["group"])
 
 		err := ctx.ThereIsAGroup(group["group"])
 		mustNotBeError(err)
@@ -122,10 +127,17 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 	return nil
 }
 
-// ThereIsAGroup creates a new group.
-func (ctx *TestContext) ThereIsAGroup(group string) error {
-	ctx.addGroup(group)
+// ThereIsAGroup creates a new group (type=Class).
+func (ctx *TestContext) ThereIsAGroup(group string) (err error) {
+	defer recoverPanics(&err)
+	ctx.addGroup(group, "Class")
+	return nil
+}
 
+// ThereIsATeam creates a new team.
+func (ctx *TestContext) ThereIsATeam(group string) (err error) {
+	defer recoverPanics(&err)
+	ctx.addGroup(group, "Team")
 	return nil
 }
 
@@ -141,7 +153,7 @@ func (ctx *TestContext) IAmAMemberOfTheGroupWithID(group string) error {
 		return err
 	}
 
-	ctx.IsAMemberOfTheGroup(
+	ctx.GroupIsAMemberOfTheGroup(
 		ctx.user,
 		group,
 	)
@@ -161,7 +173,7 @@ func (ctx *TestContext) GroupIsAChildOfTheGroup(childGroup, parentGroup string) 
 		return err
 	}
 
-	ctx.IsAMemberOfTheGroup(childGroup, parentGroup)
+	ctx.GroupIsAMemberOfTheGroup(childGroup, parentGroup)
 
 	return nil
 }
@@ -184,34 +196,6 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 	}
 
 	ctx.addPersonalInfoViewApprovedFor(user, group)
-
-	return nil
-}
-
-// AllUsersGroupIsDefinedAsTheGroup creates and sets the allUsersGroup.
-func (ctx *TestContext) AllUsersGroupIsDefinedAsTheGroup(group string) error {
-	err := ctx.ThereIsAGroup(group)
-	if err != nil {
-		return err
-	}
-
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(group))
-	ctx.setGroupFieldInDatabase(groupPrimaryKey, "name", "AllUsers")
-	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "Base")
-
-	err = ctx.TheApplicationConfigIs(&godog.DocString{
-		Content: `
-domains:
-  -
-    domains: [127.0.0.1]
-    allUsersGroup: ` + group + `
-`,
-	})
-	if err != nil {
-		return err
-	}
-
-	ctx.allUsersGroup = group
 
 	return nil
 }
@@ -268,8 +252,8 @@ func (ctx *TestContext) theGroupIsADescendantOfTheGroup(descendant, parent, midd
 		}
 	}
 
-	ctx.IsAMemberOfTheGroup(middle, parent)
-	ctx.IsAMemberOfTheGroup(descendant, middle)
+	ctx.GroupIsAMemberOfTheGroup(middle, parent)
+	ctx.GroupIsAMemberOfTheGroup(descendant, middle)
 
 	return nil
 }

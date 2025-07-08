@@ -11,6 +11,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type validatedResultRow struct {
@@ -31,6 +32,8 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 	validationType string,
 	prepareFunc func(*testing.T, *database.ResultStore), expectedResults []validatedResultRow,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture(fixtures...)
 	defer func() { _ = db.Close() }()
 
@@ -64,6 +67,8 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			testResultStorePropagateValidated(t,
 				[]string{"results_propagation/_common"},
 				tt.name,
@@ -81,6 +86,8 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhenThereIsAtLeastOneValidatedChild(
 	t *testing.T,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	testResultStorePropagateValidated(t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
@@ -96,6 +103,8 @@ func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhe
 func TestResultStore_Propagate_ValidatedWithValidationTypeOneStaysNonValidatedWhenThereAreNoValidatedChildren(
 	t *testing.T,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	testResultStorePropagateValidated(t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
@@ -247,6 +256,7 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 			testResultStorePropagateValidated(t, testCase.fixtures,
 				testCase.validationType, testCase.prepareFunc, testCase.expectedResults)
 		})

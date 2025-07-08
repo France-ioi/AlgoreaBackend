@@ -26,16 +26,18 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the template constant "([^"]+)" is "(.*)"$`, ctx.TheTemplateConstantIsString)
 	s.Step(`^the template constant "([^"]+)" is:$`, ctx.TheTemplateConstantIsDocString)
 
-	s.Step(`^the database has the following table \'([\w\-_]*)\':$`, ctx.DBHasTable)
-	s.Step(`^the database table \'([\w\-_]*)\' has also the following rows?:$`, ctx.DBHasTable)
-	s.Step(`^the database has the following users:$`, ctx.DBHasUsers)
+	s.Step(`^the database has the following table "([^"]+)":$`, ctx.DBHasTable)
+	s.Step(`^the database table "([^"]+)"(?: also)? has the following rows?:$`, ctx.DBHasTable)
+	s.Step(`^the database(?: also)? has the following users?:$`, ctx.DBHasUsers)
 	s.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
 
 	ctx.registerFeaturesForSessions(s)
 	ctx.registerFeaturesForUsers(s)
 
 	s.Step(`^the time now is "([^"]*)"$`, ctx.TimeNow)
-	s.Step(`^time is frozen$`, ctx.TimeIsFrozen)
+	s.Step(`^the server time now is "([^"]*)"$`, ctx.ServerTimeNow)
+	s.Step(`^the time is frozen$`, ctx.TimeIsFrozen)
+	s.Step(`^the server time is frozen$`, ctx.ServerTimeIsFrozen)
 	s.Step(`^the generated group code is "([^"]*)"$`, ctx.TheGeneratedGroupCodeIs)
 	s.Step(`^the generated group codes are ("[^"]*"(?:\s*,\s*"[^"]*")*)$`, ctx.TheGeneratedGroupCodesAre)
 	s.Step(`^the generated auth key is "([^"]*)"$`, ctx.TheGeneratedAuthKeyIs)
@@ -46,34 +48,40 @@ func InitializeScenario(s *godog.ScenarioContext) {
 
 	s.Step(`^I am a manager of the group with id "([^"]*)"$`, ctx.IAmAManagerOfTheGroupWithID)
 	s.Step(`^I am a manager of the group (@\w+)$`, ctx.IAmAManagerOfTheGroup)
-	s.Step(`^(@\w+) is a manager of the group (@\w+) and can watch its members$`, ctx.UserIsAManagerOfTheGroupAndCanWatchItsMembers)
-	s.Step(`^I am a manager of the group (@\w+) and can watch its members$`, ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
-	s.Step(`(@\w+) is a manager of the group (@\w+) and can grant group access`, ctx.UserIsAManagerOfTheGroupAndCanGrantGroupAccess)
+	s.Step(`^I am a manager of the group (.+) and can watch for submissions from the group and its descendants$`,
+		ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
+	s.Step(`^the group (@\w+) is a manager of the group (@\w+) and can watch for submissions from the group and its descendants$`,
+		ctx.GroupIsAManagerOfTheGroupAndCanWatchItsMembers)
+	s.Step(`^the group (@\w+) is a manager of the group (@\w+) and can grant group access`,
+		ctx.GroupIsAManagerOfTheGroupAndCanGrantGroupAccess)
 	s.Step(
-		`(@\w+) is a manager of the group (@\w+) and can manage memberships and group`,
-		ctx.UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
+		`^the group (@\w+) is a manager of the group (@\w+) and can manage memberships and the group`,
+		ctx.GroupIsAManagerOfTheGroupAndCanManageMembershipsAndGroup,
 	)
 
 	s.Step(`^there are the following items:$`, ctx.ThereAreTheFollowingItems)
 	s.Step(`^there are the following tasks:$`, ctx.ThereAreTheFollowingTasks)
 	s.Step(`^there are the following item permissions:$`, ctx.ThereAreTheFollowingItemPermissions)
 	s.Step(`^there are the following item relations:$`, ctx.ThereAreTheFollowingItemRelations)
-	s.Step(`^I can watch the group (@\w+)$`, ctx.ICanWatchGroup)
-	s.Step(`^I can watch the participant with id "([^"]*)"$`, ctx.ICanWatchGroupWithID)
-	s.Step(`^I can view (none|info|content|content_with_descendants|solution) on item with id "([^"]*)"$`,
-		ctx.ICanViewOnItemWithID)
-	s.Step(`^I can watch (none|result|answer|answer_with_grant) on item with id "([^"]*)"$`, ctx.ICanWatchOnItemWithID)
+	s.Step(`^I can view (none|info|content|content_with_descendants|solution) of the item (.+)$`,
+		ctx.IHaveViewPermissionOnItem)
+	s.Step(`^the group (\@\w+) can view (none|info|content|content_with_descendants|solution) of the item (.+)$`,
+		ctx.GroupHasViewPermissionOnItem)
+	s.Step(`^I have the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`, ctx.IHaveWatchPermissionOnItem)
+	s.Step(`^the group (.+) has the watch permission set to "(none|result|answer|answer_with_grant)" on the item (.+)$`,
+		ctx.GroupHasWatchPermissionOnItem)
 	s.Step(`^I can request help to the group with id "([^"]*)" on the item with id "([^"]*)"$`,
 		ctx.ICanRequestHelpToTheGroupWithIDOnTheItemWithID)
 
 	ctx.registerFeaturesForGroupMembershipChanges(s)
 	ctx.registerFeaturesForGroupPendingRequests(s)
 
-	s.Step(`^there are the following results:$`, ctx.ThereAreTheFollowingResults)
-	s.Step(`^I have validated the item with id "([^"]*)"$`, ctx.IHaveValidatedItemWithID)
+	s.Step(`^there are the following validated results:$`, ctx.ThereAreTheFollowingValidatedResults)
+	s.Step(`^I have a validated result on the item (.+)$`, ctx.IHaveValidatedResultOnItem)
+	s.Step(`^the group (.+) has a validated result on the item (.+)$`, ctx.GroupHasValidatedResultOnItem)
 
 	s.Step(`^there are the following threads:$`, ctx.ThereAreTheFollowingThreads)
-	s.Step(`^there is a thread with "([^"]*)"$`, ctx.ThereIsAThreadWith)
+	s.Step(`^there is a thread with "(.*)"$`, ctx.ThereIsAThreadWith)
 	s.Step(`^there is no thread with "([^"]*)"$`, ctx.ThereIsNoThreadWith)
 	s.Step(`^I am part of the helper group of the thread$`, ctx.IAmPartOfTheHelperGroupOfTheThread)
 
@@ -90,7 +98,7 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the response should be "([^"]*)"$`, ctx.TheResponseShouldBe)
 	s.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
 
-	s.Step(`^the response should be a JSON array with (\d+) entr(ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
+	s.Step(`^the response should be a JSON array with (\d+) entr(?:ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
 	s.Step(`^the response at ([^ ]+) should be "([^"]*)"$`, ctx.TheResponseAtShouldBeTheValue)
 	s.Step("^the response at ([^ ]+) should be:$", ctx.TheResponseAtShouldBe)
 	s.Step("^the response at ([^ ]+) in JSON should be:$", ctx.TheResponseAtInJSONShouldBe)
@@ -102,12 +110,12 @@ func InitializeScenario(s *godog.ScenarioContext) {
 	s.Step(`^the table "([^"]*)" at (\w+?)s? "([^"]*)" should be:$`, ctx.TableAtColumnValueShouldBe)
 	s.Step(`^the table "([^"]*)" at (\w+?)s? "([^"]*)" should be empty$`, ctx.TableAtColumnValueShouldBeEmpty)
 	s.Step(`^the table "([^"]*)" should not contain (\w+?)s? "([^"]*)"$`, ctx.TableShouldNotContainColumnValue)
-	s.Step(`^the table "([^"]*)" should stay unchanged$`, ctx.TableShouldStayUnchanged)
-	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with (\w+?)s? "([^"]*)"$`,
-		ctx.TableShouldStayUnchangedButTheRowWithColumnValue)
-	s.Step(`^the table "([^"]*)" should stay unchanged but the rows? with ([^"]*) "([^"]*)" should be deleted$`,
-		ctx.TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted)
-	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DbTimeNow)
+	s.Step(`^the table "([^"]*)" should remain unchanged$`, ctx.TableShouldRemainUnchanged)
+	s.Step(`^the table "([^"]*)" should remain unchanged, regardless of the rows? with (\w+?)s? "([^"]*)"$`,
+		ctx.TableShouldStayUnchangedRegardlessOfTheRowsWithColumnValue)
+	s.Step(`^the table "([^"]*)" should remain unchanged, except that the rows? with ([^"]*) "([^"]*)" should be deleted$`,
+		ctx.TableShouldRemainUnchangedExceptThatTheRowsWithColumnValueShouldBeDeleted)
+	s.Step(`^the DB time now is "([^"]*)"$`, ctx.DBTimeNow)
 
 	s.Step(`^"([^"]+)" is a token signed by (.+) with the following payload:$`, ctx.SignedTokenIsDistributed)
 	s.Step(`^"([^"]+)" is a falsified token signed by (.+) with the following payload:$`, ctx.FalsifiedSignedTokenIsDistributed)
@@ -135,7 +143,10 @@ func InitializeScenario(s *godog.ScenarioContext) {
 		ctx.TheLoginModuleLTIResultSendEndpointForUserIDContentIDScoreReturns)
 
 	s.After(func(contextCtx context.Context, sc *godog.Scenario, err error) (context.Context, error) {
-		ctx.ScenarioTeardown(sc, err)
+		tearDownErr := ctx.ScenarioTeardown(sc, err)
+		if err == nil {
+			err = tearDownErr
+		}
 		if restoreFunc != nil { // If we captured the output, restore it
 			restoreFunc(err != nil) // Pass through the output if the test failed
 		}
@@ -145,6 +156,6 @@ func InitializeScenario(s *godog.ScenarioContext) {
 				*parentOutputRestorerFunc = nil
 			}
 		}
-		return contextCtx, nil
+		return contextCtx, tearDownErr //nolint:nilnil // It looks like we really want to return the context even if there is an error.
 	})
 }

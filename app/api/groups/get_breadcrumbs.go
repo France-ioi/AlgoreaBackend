@@ -10,6 +10,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
+const maxNumberOfIDsInGroupPath = 10
+
 // swagger:model groupBreadcrumbsViewResponseRow
 type groupBreadcrumbsViewResponseRow struct {
 	// required:true
@@ -58,10 +60,12 @@ type groupBreadcrumbsViewResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) service.APIError {
-	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", 10)
+func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error {
+	ids, err := service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", maxNumberOfIDsInGroupPath)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -79,10 +83,10 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) servi
 		Scan(&result).Error()
 
 	if gorm.IsRecordNotFoundError(err) || len(result) != len(ids) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

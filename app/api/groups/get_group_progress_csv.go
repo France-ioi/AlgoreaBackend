@@ -44,6 +44,7 @@ type idName struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -51,6 +52,7 @@ type idName struct {
 //			required: true
 //			items:
 //				type: integer
+//				format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with users progress on items
@@ -69,9 +71,11 @@ type idName struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -81,13 +85,11 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	service.MustNotBeError(err)
 
 	w.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
@@ -100,7 +102,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 	if len(itemParentIDs) == 0 {
 		_, err := w.Write([]byte("Group name\n"))
 		service.MustNotBeError(err)
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -126,7 +128,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		Scan(&groups).Error())
 
 	if len(groups) == 0 {
-		return service.NoError
+		return nil
 	}
 
 	ancestorGroupIDs := make([]string, len(groups))
@@ -182,7 +184,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		writeEmptyRowsForSkippedGroupsAtTheEnd(groupNumber, batchBoundary, groups, len(orderedItemIDListWithDuplicates), csvWriter)
 	}
 
-	return service.NoError
+	return nil
 }
 
 func generateGroupNameAndWriteEmptyRowsForSkippedGroups(

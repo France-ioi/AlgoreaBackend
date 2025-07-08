@@ -3,9 +3,9 @@
 package testhelpers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,7 +19,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
-const fixtureDir = "testdata" // special directory which is not included in binaries by the compile
+const (
+	fixtureDir = "testdata" // special directory which is not included in binaries by the compiler
+	utf8mb4    = "utf8mb4"
+)
 
 func init() { //nolint:gochecknoinits
 	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
@@ -33,10 +36,7 @@ func init() { //nolint:gochecknoinits
 func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	appenv.ForceTestEnv()
 
-	rawDB, err := OpenRawDBConnection()
-	if err != nil {
-		panic(err)
-	}
+	rawDB := OpenRawDBConnection()
 
 	// Seed the DB
 	EmptyDB(rawDB)
@@ -45,8 +45,7 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 	}
 
 	// Return a new db connection
-	var db *database.DB
-	db, err = database.Open(rawDB)
+	db, err := database.Open(rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -59,10 +58,7 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 	appenv.ForceTestEnv()
 
-	rawDB, err := OpenRawDBConnection()
-	if err != nil {
-		panic(err)
-	}
+	rawDB := OpenRawDBConnection()
 
 	// Seed the DB
 	EmptyDB(rawDB)
@@ -72,8 +68,7 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 	}
 
 	// Return a new db connection
-	var db *database.DB
-	db, err = database.Open(rawDB)
+	db, err := database.Open(rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -82,16 +77,22 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 }
 
 // OpenRawDBConnection creates a new connection to the DB specified in the config.
-func OpenRawDBConnection() (*sql.DB, error) {
+func OpenRawDBConnection() *sql.DB {
 	appenv.ForceTestEnv()
 
 	// needs actual config for connection to DB
-	dbConfig, _ := app.DBConfig(app.LoadConfig())
-	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN())
+	config := app.LoadConfig()
+	dbConfig, _ := app.DBConfig(config)
+	loggingConfig := app.LoggingConfig(config)
+	if dbConfig.Params == nil {
+		dbConfig.Params = make(map[string]string, 1)
+	}
+	dbConfig.Params["charset"] = utf8mb4
+	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN(), loggingConfig.GetBool("LogRawSQLQueries"))
 	if err != nil {
 		panic(err)
 	}
-	return rawDB, err
+	return rawDB
 }
 
 // LoadFixture loads fixtures from `<current_pkg_dir>/testdata/<fileName>/` directory
@@ -103,14 +104,18 @@ func OpenRawDBConnection() (*sql.DB, error) {
 func LoadFixture(db *sql.DB, fileName string) {
 	appenv.ForceTestEnv()
 
-	var files []os.FileInfo
+	var filenames []string
 	var err error
 	filePath := filepath.Join(fixtureDir, fileName)
 	stat, err := os.Stat(filePath)
 	if err == nil && stat.IsDir() {
-		files, err = ioutil.ReadDir(filePath)
+		files, err := os.ReadDir(filePath)
 		if err != nil {
 			panic(fmt.Errorf("unable to load fixture dir: %s", err.Error()))
+		}
+		filenames = make([]string, 0, len(files))
+		for _, f := range files {
+			filenames = append(filenames, f.Name())
 		}
 	} else {
 		file, err := os.Lstat(filePath)
@@ -118,13 +123,12 @@ func LoadFixture(db *sql.DB, fileName string) {
 			panic(fmt.Errorf("unable to load fixture file: %s", err.Error()))
 		}
 		filePath = filepath.Dir(filePath)
-		files = []os.FileInfo{file}
+		filenames = []string{file.Name()}
 	}
-	for _, f := range files {
+	for _, filename := range filenames {
 		var err error
 		var data []byte
-		filename := f.Name()
-		data, err = ioutil.ReadFile(filepath.Join(filePath, filename)) //nolint: gosec
+		data, err = os.ReadFile(filepath.Join(filePath, filename)) //nolint: gosec
 		if err != nil {
 			panic(err)
 		}
@@ -138,7 +142,8 @@ func LoadFixture(db *sql.DB, fileName string) {
 				panic(err)
 			}
 			tableName := name
-			logging.SharedLogger.Infof("Loading data into %q:\n%s", tableName, string(data))
+			logging.SharedLogger.WithContext(context.Background()).
+				Infof("Loading data into %q:\n%s", tableName, string(data))
 			InsertBatch(db, tableName, content)
 		}
 	}
@@ -151,7 +156,7 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 	fixture = dedent.Dedent(fixture)
 	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
 	bytesFixture := []byte(fixture)
-	logging.SharedLogger.Infof("Loading data chain:\n%s", bytesFixture)
+	logging.SharedLogger.WithContext(context.Background()).Infof("Loading data chain:\n%s", bytesFixture)
 	err := yaml.Unmarshal(bytesFixture, &content)
 	if err != nil {
 		panic(err)
@@ -211,7 +216,7 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 	}
 }
 
-// nolint: gosec
+//nolint:gosec
 func emptyDB(db *sql.DB, dbName string) error {
 	appenv.ForceTestEnv()
 
@@ -219,7 +224,9 @@ func emptyDB(db *sql.DB, dbName string) error {
                          FROM   information_schema.tables
                          WHERE  table_type   = 'BASE TABLE'
                            AND  table_schema = '` + dbName + `'
-                           AND  table_name  != 'gorp_migrations'`)
+                           AND  table_name  != 'gorp_migrations'
+                           AND  table_name  != 'user_batches'
+                         ORDER BY table_name`)
 	if err != nil {
 		return err
 	}
@@ -248,9 +255,6 @@ func emptyDB(db *sql.DB, dbName string) error {
 			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return scanErr
-		}
-		if tableName == dbName+".user_batches" { // skip this broken table
-			continue
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
 		_, err = tx.Exec("DELETE FROM " + tableName)

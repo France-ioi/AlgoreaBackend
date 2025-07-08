@@ -5,11 +5,8 @@ package testhelpers
 import (
 	"database/sql"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
-	"os"
+	"runtime"
 	"sort"
 
 	"bou.ke/monkey"
@@ -23,6 +20,7 @@ import (
 	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type dbquery struct {
@@ -32,25 +30,26 @@ type dbquery struct {
 
 // TestContext implements context for tests.
 type TestContext struct {
-	application          *app.Application // do NOT call it directly, use `app()`
-	userID               int64            // userID that will be used for the next requests
-	user                 string           // user reference of the logged user
-	featureQueries       []dbquery
-	lastResponse         *http.Response
-	lastResponseBody     string
-	logsHook             *loggingtest.Hook
-	logsRestoreFunc      func()
-	inScenario           bool
-	db                   *sql.DB
-	dbTableData          map[string]*godog.Table
-	templateSet          *jet.Set
-	requestHeaders       map[string][]string
-	referenceToIDMap     map[string]int64
-	idToReferenceMap     map[int64]string
-	dbTables             map[string]map[string]map[string]interface{}
-	currentThreadKey     string
-	allUsersGroup        string
-	needPopulateDatabase bool
+	application                     *app.Application // do NOT call it directly, use `app()`
+	userID                          int64            // userID that will be used for the next requests
+	user                            string           // user reference of the logged user
+	featureQueries                  []dbquery
+	lastResponse                    *http.Response
+	lastResponseBody                string
+	logsHook                        *loggingtest.Hook
+	logsRestoreFunc                 func()
+	inScenario                      bool
+	db                              *sql.DB
+	dbTableData                     map[string]*godog.Table
+	templateSet                     *jet.Set
+	requestHeaders                  map[string][]string
+	referenceToIDMap                map[string]int64
+	idToReferenceMap                map[int64]string
+	currentThreadKey                map[string]string
+	needPopulateDatabase            bool
+	previousRandSource              interface{}
+	previousGeneratedGroupCodeIndex int
+	generatedGroupCodeIndex         int
 }
 
 const (
@@ -73,7 +72,6 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	ctx.db = ctx.openDB()
 	ctx.dbTableData = make(map[string]*godog.Table)
 	ctx.templateSet = ctx.constructTemplateSet()
-	ctx.dbTables = make(map[string]map[string]map[string]interface{})
 	ctx.needPopulateDatabase = false
 
 	ctx.initReferences(sc)
@@ -83,8 +81,7 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 
 	err := ctx.initDB()
 	if err != nil {
-		fmt.Println("Unable to empty db")
-		panic(err)
+		panic(fmt.Errorf("unable to empty the DB: %w", err))
 	}
 }
 
@@ -96,7 +93,8 @@ func (ctx *TestContext) initReferences(sc *godog.Scenario) {
 	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
 	ctx.idToReferenceMap = make(map[int64]string, len(collectedReferences))
 	for index, reference := range collectedReferences {
-		id := int64(1000000000000000000) + int64(index)
+		const minReferenceID = int64(1000000000000000000) // a large number to avoid conflicts with other IDs in tests
+		id := minReferenceID + int64(index)
 		ctx.referenceToIDMap[reference] = id
 		ctx.idToReferenceMap[id] = reference
 	}
@@ -104,7 +102,7 @@ func (ctx *TestContext) initReferences(sc *godog.Scenario) {
 
 func collectReferencesInText(text string, referencesMap map[string]struct{}) {
 	for _, match := range referenceRegexp.FindAllString(text, -1) {
-		if match[0] != ReferencePrefix {
+		if match[0] != referencePrefix {
 			match = match[1:]
 		}
 		referencesMap[match] = struct{}{}
@@ -149,8 +147,7 @@ func (ctx *TestContext) setupApp() {
 	ctx.tearDownApp()
 	ctx.application, err = app.New()
 	if err != nil {
-		fmt.Println("Unable to load app")
-		panic(err)
+		panic(fmt.Errorf("unable to load the app: %w", err))
 	}
 }
 
@@ -162,50 +159,18 @@ func (ctx *TestContext) tearDownApp() {
 }
 
 // ScenarioTeardown is called after each scenario to remove stubs.
-func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) {
+func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) (err error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()
 	ctx.logsRestoreFunc()
 
 	defer func() {
-		if err := httpmock.AllStubsCalled(); err != nil {
-			panic(err) // godog doesn't allow to return errors from handlers (see https://github.com/cucumber/godog/issues/88)
-		}
+		err = httpmock.AllStubsCalled()
 		httpmock.DeactivateAndReset()
 	}()
 
 	ctx.tearDownApp()
-}
-
-func testRequest(ts *httptest.Server, method, path string, headers map[string][]string, body io.Reader) (*http.Response, string, error) {
-	req, err := http.NewRequest(method, ts.URL+path, body)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// add headers
-	for name, values := range headers {
-		for _, value := range values {
-			req.Header.Add(name, value)
-		}
-	}
-
-	client := http.Client{CheckRedirect: func(*http.Request, []*http.Request) error {
-		return http.ErrUseLastResponse
-	}}
-	// execute the query
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, "", err
-	}
-
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, "", err
-	}
-	defer func() { /* #nosec */ _ = resp.Body.Close() }()
-
-	return resp, string(respBody), nil
+	return nil
 }
 
 // openDB opens a connection to the database.
@@ -214,10 +179,16 @@ func (ctx *TestContext) openDB() *sql.DB {
 	if ctx.db == nil {
 		var err error
 		config, _ := app.DBConfig(ctx.application.Config)
-		ctx.db, err = sql.Open("instrumented-mysql", config.FormatDSN())
+		loggingConfig := app.LoggingConfig(ctx.application.Config)
+		if config.Params == nil {
+			config.Params = make(map[string]string, 1)
+		}
+		config.Params["charset"] = utf8mb4
+		ctx.db, err = sql.Open(
+			golang.IfElse(loggingConfig.GetBool("LogRawSQLQueries"), "instrumented-mysql", "mysql"),
+			config.FormatDSN())
 		if err != nil {
-			fmt.Println("Unable to connect to the database: ", err)
-			os.Exit(1)
+			panic(fmt.Errorf("unable to connect to the database: %w", err))
 		}
 	}
 
@@ -231,43 +202,26 @@ func (ctx *TestContext) emptyDB() error {
 
 func (ctx *TestContext) initDB() error {
 	err := ctx.emptyDB()
-	if err != nil {
-		return err
-	}
-
-	if len(ctx.featureQueries) > 0 {
-		tx, err := ctx.db.Begin()
-		if err != nil {
-			return err
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		for _, query := range ctx.featureQueries {
-			_, err = tx.Exec(query.sql, query.values)
-			if err != nil {
-				_ = tx.Rollback()
-				return err
-			}
-		}
-		_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-		if err != nil {
-			_ = tx.Rollback()
-			return err
-		}
-		err = tx.Commit()
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return err
 }
 
 func mustNotBeError(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+func recoverPanics(
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace returnErr with a panic
+) {
+	if p := recover(); p != nil {
+		switch e := p.(type) {
+		case runtime.Error:
+			panic(e)
+		case error:
+			*returnErr = e
+		default:
+			panic(p)
+		}
 	}
 }

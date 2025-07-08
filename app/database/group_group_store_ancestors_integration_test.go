@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type groupAncestorsResultRow struct {
@@ -27,14 +28,15 @@ type groupPropagateResultRow struct {
 var maxExpiresAt = "9999-12-31 23:59:59"
 
 func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
 		dataStore := database.NewDataStoreWithContext(context.Background(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
-			ds.ScheduleGroupsAncestorsPropagation()
-			return nil
+			return ds.GroupGroups().CreateNewAncestors()
 		}))
 	}, 30)
 
@@ -59,7 +61,6 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -67,13 +68,14 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common", "group_group_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -83,6 +85,8 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -96,6 +100,8 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
@@ -109,8 +115,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 	}
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -120,6 +125,8 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 2, AncestorGroupID: 2, IsSelf: true, ExpiresAt: maxExpiresAt},
 		{ChildGroupID: 3, AncestorGroupID: 2, IsSelf: false, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 3, AncestorGroupID: 3, IsSelf: true, ExpiresAt: maxExpiresAt},
+		{ChildGroupID: 4, AncestorGroupID: 4, IsSelf: true, ExpiresAt: maxExpiresAt},
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
@@ -133,11 +140,13 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAcceptedRequestsAndInvitations(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
-	assert.NoError(t, groupGroupStore.Exec("TRUNCATE TABLE groups_ancestors").Error())
+	assert.NoError(t, groupGroupStore.GroupAncestors().Delete("NOT is_self").Error())
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=2").Error())
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=3").Error())
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=1 AND child_group_id=4").Error())
@@ -146,8 +155,7 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	assert.NoError(t, groupGroupStore.Delete("parent_group_id=3 AND child_group_id=4").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -163,7 +171,6 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -171,6 +178,8 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 }
 
 func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
@@ -189,8 +198,7 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 		UpdateColumn("expires_at", "3024-12-31 20:10:30").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -212,7 +220,6 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -220,6 +227,8 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
@@ -238,8 +247,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T
 		UpdateColumn("expires_at", "2019-05-11 17:43:24").Error())
 
 	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
@@ -255,7 +263,6 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T
 	var propagateResult []groupPropagateResultRow
 	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},

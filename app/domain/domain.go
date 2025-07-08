@@ -14,15 +14,17 @@ const (
 
 // CtxConfig contains domain-specific settings related to a request context.
 type CtxConfig struct {
-	AllUsersGroupID  int64
-	TempUsersGroupID int64
+	AllUsersGroupID     int64
+	NonTempUsersGroupID int64
+	TempUsersGroupID    int64
 }
 
 // ConfigItem is one item of the configuration list.
 type ConfigItem struct {
-	Domains        []string
-	AllUsersGroup  int64
-	TempUsersGroup int64
+	Domains           []string
+	AllUsersGroup     int64
+	NonTempUsersGroup int64
+	TempUsersGroup    int64
 }
 
 // ConfigFromContext retrieves the current domain configuration from a context set by the middleware.

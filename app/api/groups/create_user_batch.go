@@ -118,9 +118,11 @@ type subgroupApproval struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
@@ -138,10 +140,8 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 		return service.ErrInvalidRequest(err)
 	}
 
-	numberOfUsersToBeCreated, subgroupsApprovals, apiError := checkCreateUserBatchRequestParameters(store, user, input)
-	if apiError != service.NoError {
-		return apiError
-	}
+	numberOfUsersToBeCreated, subgroupsApprovals, err := checkCreateUserBatchRequestParameters(store, user, input)
+	service.MustNotBeError(err)
 
 	err = store.UserBatches().InsertMap(map[string]interface{}{
 		"group_prefix":  input.GroupPrefix,
@@ -173,30 +173,30 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}()
 	service.MustNotBeError(err)
 	if !result {
-		panic(errors.New("login module failed"))
+		panic(service.ErrUnexpected(errors.New("login module failed")))
 	}
 
 	users := createBatchUsersInDB(store, input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
 
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(users)))
-	return service.NoError
+	return nil
 }
 
 func checkCreateUserBatchRequestParameters(store *database.DataStore, user *database.User, input createUserBatchRequest) (
-	numberOfUsersToBeCreated int, subgroupsApprovals []subgroupApproval, apiError service.APIError,
+	numberOfUsersToBeCreated int, subgroupsApprovals []subgroupApproval, err error,
 ) {
 	var prefixInfo struct {
 		GroupID  int64
 		MaxUsers int
 	}
-	err := store.ActiveGroupAncestors().ManagedByUser(user).
+	err = store.ActiveGroupAncestors().ManagedByUser(user).
 		Joins(`JOIN user_batch_prefixes ON user_batch_prefixes.group_id = groups_ancestors_active.child_group_id AND `+
 			`user_batch_prefixes.allow_new AND user_batch_prefixes.group_prefix = ?`, input.GroupPrefix).
 		Where("group_managers.can_manage != 'none'").
 		Select("user_batch_prefixes.group_id, user_batch_prefixes.max_users").
 		Scan(&prefixInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return 0, nil, service.InsufficientAccessRightsError
+		return 0, nil, service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -207,7 +207,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 		numberOfUsersToBeCreated += subgroup.Count
 	}
 
-	// 32^postfix_length should be greater than 2*numberOfUsersToBeCreated
+	//nolint:mnd // 32^postfix_length should be greater than 2*numberOfUsersToBeCreated
 	if float64(input.PostfixLength) <= math.Log(float64(2*numberOfUsersToBeCreated))/math.Log(32) {
 		return 0, nil, service.ErrInvalidRequest(errors.New("'postfix_length' is too small"))
 	}
@@ -215,7 +215,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 	service.MustNotBeError(store.Groups().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id").
 		Where("ancestor_group_id = ?", prefixInfo.GroupID).
-		Where("groups.id IN(?)", subgroupIDs).
+		Where("groups.id IN(?)", subgroupIDs). //nolint:asasalint // subgroupIDs is a single argument
 		Where("groups.type != 'User'").
 		Select(`
 			require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
@@ -224,7 +224,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 		Order(gorm.Expr("FIELD(groups.id"+strings.Repeat(", ?", len(subgroupIDs))+")", subgroupIDs...)).
 		Scan(&subgroupsApprovals).Error())
 	if len(subgroupsApprovals) != len(subgroupIDs) {
-		return 0, nil, service.InsufficientAccessRightsError
+		return 0, nil, service.ErrAPIInsufficientAccessRights
 	}
 
 	var currentSumSize int
@@ -233,7 +233,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 	if prefixInfo.MaxUsers < numberOfUsersToBeCreated+currentSumSize {
 		return 0, nil, service.ErrInvalidRequest(errors.New("'user_batch_prefix.max_users' exceeded"))
 	}
-	return numberOfUsersToBeCreated, subgroupsApprovals, service.NoError
+	return numberOfUsersToBeCreated, subgroupsApprovals, nil
 }
 
 type resultRowUser struct {
@@ -256,12 +256,13 @@ type resultRow struct {
 func createBatchUsersInDB(store *database.DataStore, input createUserBatchRequest, r *http.Request, numberOfUsersToBeCreated int,
 	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User,
 ) []*resultRow {
-	result := make([]*resultRow, 0, len(subgroupsApprovals))
+	var finalResult []*resultRow
 
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		domainConfig := domain.ConfigFromContext(r.Context())
 
-		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated)
+		result := make([]*resultRow, 0, len(subgroupsApprovals))
+		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated) //nolint:mnd // 2 relations per user
 		usersToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
 		attemptsToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
 		usersInSubgroup := 0
@@ -279,19 +280,7 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 				usersInSubgroup = 0
 			}
 
-			var userGroupID int64
-			service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
-				userGroupID = retryIDStore.NewID()
-				return retryIDStore.Groups().InsertMap(map[string]interface{}{
-					"id":          userGroupID,
-					"name":        createdUser.Login,
-					"type":        groupTypeUser,
-					"description": createdUser.Login,
-					"created_at":  database.Now(),
-					"is_open":     false,
-					"send_emails": false,
-				})
-			}))
+			userGroupID := createUserGroup(store, createdUser.Login)
 
 			var personalInfoApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{}
 			if subgroupsApprovals[currentSubgroupIndex].RequirePersonalInfoAccessApproval {
@@ -305,7 +294,7 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 			}
 			relationsToCreate = append(relationsToCreate,
 				map[string]interface{}{
-					"parent_group_id":                domainConfig.AllUsersGroupID,
+					"parent_group_id":                domainConfig.NonTempUsersGroupID,
 					"child_group_id":                 userGroupID,
 					"personal_info_view_approved_at": nil, "lock_membership_approved_at": nil, "watch_approved_at": nil,
 				},
@@ -344,7 +333,28 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 		}
 		service.MustNotBeError(store.Users().InsertMaps(usersToCreate))
 		service.MustNotBeError(store.Attempts().InsertMaps(attemptsToCreate))
-		return store.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+		err := store.GroupGroups().CreateRelationsWithoutChecking(relationsToCreate)
+		service.MustNotBeError(err)
+		finalResult = result
+
+		return nil
 	}))
-	return result
+	return finalResult
+}
+
+func createUserGroup(store *database.DataStore, login string) int64 {
+	var userGroupID int64
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *database.DataStore) error {
+		userGroupID = retryIDStore.NewID()
+		return retryIDStore.Groups().InsertMap(map[string]interface{}{
+			"id":          userGroupID,
+			"name":        login,
+			"type":        groupTypeUser,
+			"description": login,
+			"created_at":  database.Now(),
+			"is_open":     false,
+			"send_emails": false,
+		})
+	}))
+	return userGroupID
 }

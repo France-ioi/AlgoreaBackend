@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -135,7 +136,7 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 		t.Run(testCase.desc, func(t *testing.T) {
 			r := chi.NewRouter()
 			called := false
-			handler := func(w http.ResponseWriter, r *http.Request) {
+			handler := func(_ http.ResponseWriter, r *http.Request) {
 				called = true
 				value, err := ResolveURLQueryPathInt64Field(r, "id")
 				if testCase.expectedErrMsg != "" {
@@ -215,7 +216,7 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 		t.Run(testCase.desc, func(t *testing.T) {
 			called := false
 			r := chi.NewRouter()
-			handler := func(w http.ResponseWriter, r *http.Request) {
+			handler := func(_ http.ResponseWriter, r *http.Request) {
 				called = true
 				value, err := ResolveURLQueryPathInt64SliceField(r, "ids")
 				if testCase.expectedErrMsg != "" {
@@ -424,9 +425,15 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 				time.FixedZone("+0700", 7*3600)),
 		},
 		{
+			desc:        "correct value with milliseconds given",
+			queryString: "time=" + url.QueryEscape("2006-01-02T15:04:05.002+07:00"),
+			expectedValue: time.Date(2006, 1, 2, 15, 4, 5, int(2*time.Millisecond),
+				time.FixedZone("+0700", 7*3600)),
+		},
+		{
 			desc:           "wrong value given",
 			queryString:    "time=2006-01-02",
-			expectedErrMsg: "wrong value for time (should be time (rfc3339))",
+			expectedErrMsg: "wrong value for time (should be time (rfc3339Nano))",
 		},
 	}
 	for _, testCase := range testCases {
@@ -629,6 +636,51 @@ func TestResolveURLQueryPathInt64SliceFieldWithLimit(t *testing.T) {
 			got, err := ResolveURLQueryPathInt64SliceFieldWithLimit(expectedRequest, expectedParamName, tt.limit)
 			assert.Equal(t, tt.want, got)
 			assert.Equal(t, tt.wantErr, err)
+		})
+	}
+}
+
+func TestResolveJSONBodyIntoMap(t *testing.T) {
+	testCases := []struct {
+		name          string
+		body          string
+		expectedMap   map[string]interface{}
+		expectedError error
+	}{
+		{
+			name:          "empty body",
+			body:          "",
+			expectedMap:   nil,
+			expectedError: ErrInvalidRequest(errors.New("invalid input JSON: EOF")),
+		},
+		{
+			name:        "empty json",
+			body:        "{}",
+			expectedMap: map[string]interface{}{},
+		},
+		{
+			name:        "simple json",
+			body:        `{"key":"value"}`,
+			expectedMap: map[string]interface{}{"key": "value"},
+		},
+		{
+			name:          "invalid json",
+			body:          `{"key":"value"`,
+			expectedMap:   nil,
+			expectedError: ErrInvalidRequest(errors.New("invalid input JSON: unexpected EOF")),
+		},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			r, _ := http.NewRequest("PUT", "/", strings.NewReader(testCase.body))
+			list, err := ResolveJSONBodyIntoMap(r)
+			assert.Equal(t, testCase.expectedMap, list)
+			if testCase.expectedError == nil {
+				assert.NoError(t, err)
+			} else {
+				assert.EqualError(t, err, testCase.expectedError.Error())
+			}
 		})
 	}
 }

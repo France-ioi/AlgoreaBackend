@@ -15,7 +15,6 @@ type groupRequestsViewResponseRow struct {
 	// `group_membership_changes.member_id`
 	// required: true
 	MemberID int64 `json:"member_id,string"`
-	// Nullable
 	// required: true
 	At *database.Time `json:"at"`
 	// `group_membership_changes.action`
@@ -27,33 +26,31 @@ type groupRequestsViewResponseRow struct {
 	JoiningUser struct {
 		// `users.group_id`
 		// required: true
-		GroupID *int64 `json:"group_id,string"`
+		GroupID int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
 
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
-		// Nullable
 		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"joining_user" gorm:"embedded;embedded_prefix:joining_user__"`
 
-	// Nullable
 	// required: true
 	InvitingUser *struct {
 		// `users.group_id`
 		// required: true
+		// Extensions:
+		// x-nullable: false
 		GroupID *int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
 		// required: true
 		FirstName *string `json:"first_name"`
-		// Nullable
 		// required: true
 		LastName *string `json:"last_name"`
-	} `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+	} `gorm:"embedded;embedded_prefix:inviting_user__" json:"inviting_user"`
 }
 
 // swagger:operation GET /groups/{group_id}/requests group-memberships groupRequestsView
@@ -71,7 +68,7 @@ type groupRequestsViewResponseRow struct {
 //		When `old_rejections_weeks` is given, only those rejected invitations/requests
 //		(`group_membership_changes.action` is "invitation_refused" or "join_request_refused") are shown
 //		that are created in the last `old_rejections_weeks` weeks.
-//		Otherwise all rejected invitations/requests are shown.
+//		Otherwise, all rejected invitations/requests are shown.
 //
 //
 //		`first_name` and `last_name` are only shown for joining users whose personal info is visible to the current user.
@@ -88,6 +85,7 @@ type groupRequestsViewResponseRow struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: old_rejections_weeks
 //			in: query
@@ -111,6 +109,7 @@ type groupRequestsViewResponseRow struct {
 //							 (`{from.at}` is also required if `{from.member_id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N requests/invitations
 //			in: query
@@ -130,9 +129,11 @@ type groupRequestsViewResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -141,9 +142,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 	query := store.GroupMembershipChanges().
 		Select(`
@@ -179,7 +178,8 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 		Where("group_membership_changes.group_id = ?", groupID)
 
 	if len(r.URL.Query()["rejections_within_weeks"]) > 0 {
-		oldRejectionsWeeks, err := service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
+		var oldRejectionsWeeks int64
+		oldRejectionsWeeks, err = service.ResolveURLQueryGetInt64Field(r, "rejections_within_weeks")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -189,7 +189,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -204,10 +204,7 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 				"member_id": service.FieldTypeInt64,
 			},
 		})
-
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	query = attachUsersWithApproval(
 		query.Joins(
@@ -226,24 +223,26 @@ func (srv *Service) getRequests(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func attachUsersWithApproval(conn *database.DB, user *database.User) *database.DB {
-	return conn.New().Raw("WITH managed_groups AS ?, users_with_approval AS ? ?",
-		database.NewDataStore(conn.New()).ActiveGroupAncestors().ManagedByUser(user).
-			Select("groups_ancestors_active.child_group_id AS id").SubQuery(),
-		conn.New().Table("managed_groups").
-			Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = managed_groups.id").
-			Where("groups_groups_active.personal_info_view_approved").
-			Select("groups_groups_active.child_group_id AS group_id").
-			Group("groups_groups_active.child_group_id").Union(
+	return conn.
+		With("managed_groups",
+			database.NewDataStore(conn.New()).ActiveGroupAncestors().ManagedByUser(user).
+				Select("groups_ancestors_active.child_group_id AS id")).
+		With("users_with_approval",
 			conn.New().Table("managed_groups").
-				Joins("JOIN group_pending_requests ON group_pending_requests.group_id = managed_groups.id").
-				Where("group_pending_requests.personal_info_view_approved").
-				Where("group_pending_requests.type = 'join_request'").
-				Select("group_pending_requests.member_id AS group_id").
-				Group("group_pending_requests.member_id").SubQuery()).
-			Union(conn.New().Raw("SELECT ?", user.GroupID).SubQuery()).SubQuery(),
-		conn.QueryExpr())
+				Joins("JOIN groups_groups_active ON groups_groups_active.parent_group_id = managed_groups.id").
+				Where("groups_groups_active.personal_info_view_approved").
+				Select("groups_groups_active.child_group_id AS group_id").
+				Group("groups_groups_active.child_group_id").
+				Union(
+					conn.New().Table("managed_groups").
+						Joins("JOIN group_pending_requests ON group_pending_requests.group_id = managed_groups.id").
+						Where("group_pending_requests.personal_info_view_approved").
+						Where("group_pending_requests.type = 'join_request'").
+						Select("group_pending_requests.member_id AS group_id").
+						Group("group_pending_requests.member_id")).
+				Union(conn.New().Raw("SELECT ?", user.GroupID)))
 }

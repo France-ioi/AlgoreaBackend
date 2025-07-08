@@ -8,8 +8,6 @@ exclude github.com/thingful/httpmock v0.0.2
 
 exclude github.com/thingful/httpmock v0.0.1
 
-replace github.com/jinzhu/gorm v1.9.6 => github.com/France-ioi/gorm v0.0.0-20200829222212-0373d329b88b
-
 require (
 	bou.ke/monkey v1.0.1
 	github.com/CloudyKit/jet v2.1.3-0.20180809161101-62edd43e4f88+incompatible
@@ -18,8 +16,8 @@ require (
 	github.com/France-ioi/validator v9.29.2-0.20220110032854-1b7299b1a4db+incompatible
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/SermoDigital/jose v0.0.0-20180104203859-803625baeddc
-	github.com/akrylysov/algnhsa v0.12.1
-	github.com/aws/aws-lambda-go v1.28.0
+	github.com/akrylysov/algnhsa v1.1.0
+	github.com/aws/aws-lambda-go v1.43.0
 	github.com/cucumber/godog v0.14.1
 	github.com/cucumber/messages/go/v21 v21.0.1
 	github.com/go-chi/chi v3.3.3+incompatible
@@ -27,14 +25,14 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/locales v0.12.1
 	github.com/go-playground/universal-translator v0.16.0
-	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-sql-driver/mysql v1.8.1
 	github.com/google/go-cmp v0.5.9
-	github.com/jinzhu/gorm v1.9.6
+	github.com/jinzhu/gorm v1.9.17-0.20211120011537-5c235b72a414
 	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/rubenv/sql-migrate v0.0.0-20181213081019-5a8808c14925
-	github.com/sirupsen/logrus v1.2.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.3.1
 	github.com/stretchr/testify v1.8.2
@@ -45,6 +43,8 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/CloudyKit/fastprinter v0.0.0-20170127035650-74b38d55f37a // indirect
 	github.com/PaesslerAG/gval v1.0.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
@@ -62,7 +62,6 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.0 // indirect
@@ -73,11 +72,9 @@ require (
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
 	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect

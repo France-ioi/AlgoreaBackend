@@ -1,28 +1,27 @@
 Feature: List user batches (userBatchesView)
   Background:
-    Given the database has the following table 'groups':
-      | id | name   | grade | type  |
-      | 13 | class  | -2    | Class |
-      | 14 | class2 | -2    | Class |
-      | 21 | user   | -2    | User  |
-    And the database has the following table 'users':
-      | login | group_id |
-      | owner | 21       |
-    And the database has the following table 'group_managers':
+    Given the database has the following table "groups":
+      | id | name   | type  |
+      | 13 | class  | Class |
+      | 14 | class2 | Class |
+    And the database has the following user:
+      | group_id | login |
+      | 21       | owner |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'user_batch_prefixes':
+    And the database has the following table "user_batch_prefixes":
       | group_prefix | group_id | allow_new |
       | test         | 13       | 1         |
       | test1        | 13       | 1         |
       | test2        | 13       | 0         |
       | test3        | 21       | 1         |
       | test4        | 14       | 1         |
-    And the database has the following table 'user_batches_v2':
+    And the database has the following table "user_batches_v2":
       | group_prefix | custom_prefix | size | creator_id |
       | test         | custom        | 100  | null       |
       | test         | custom1       | 200  | 13         |

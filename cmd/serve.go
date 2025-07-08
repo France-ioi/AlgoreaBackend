@@ -2,6 +2,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ func init() { //nolint:gochecknoinits
 		Use:   "serve [environment]",
 		Short: "start http server",
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(_ *cobra.Command, args []string) error {
 			var err error
 
 			// if arg given, replace the env
@@ -36,28 +37,35 @@ func init() { //nolint:gochecknoinits
 
 			var application *app.Application
 			application, err = app.New()
+			defer func() {
+				if application != nil && application.Database != nil {
+					_ = application.Database.Close()
+				}
+			}()
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			if !skipChecks {
 				var domainConfig []domain.ConfigItem
 				domainConfig, err = app.DomainsConfig(application.Config)
 				if err != nil {
-					log.Fatalf("Cannot load domain config: %s\n", err)
+					return fmt.Errorf("cannot load domain config: %w", err)
 				}
 				err = configdb.CheckConfig(database.NewDataStore(application.Database), domainConfig)
 				if err != nil {
-					log.Fatalf("Integrity check failed: %s\nUse --skip-checks to bypass the integrity check\n", err)
+					return fmt.Errorf("integrity check failed: %w\nUse --skip-checks to bypass the integrity check", err)
 				}
 			}
 
 			var server *app.Server
 			server, err = app.NewServer(application)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
-			<-server.Start()
+			doneChannel := server.Start()
+			defer close(doneChannel)
+			return <-doneChannel
 		},
 	}
 

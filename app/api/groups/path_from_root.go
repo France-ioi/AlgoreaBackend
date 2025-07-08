@@ -55,9 +55,11 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
@@ -66,10 +68,10 @@ func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) serv
 
 	ids := findGroupPath(srv.GetStore(r), groupID, user)
 	if ids == nil {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	render.Respond(w, r, map[string]interface{}{"path": ids})
-	return service.NoError
+	return nil
 }
 
 func findGroupPath(store *database.DataStore, groupID int64, user *database.User) []string {

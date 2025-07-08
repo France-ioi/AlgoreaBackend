@@ -1,9 +1,9 @@
 package logging
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -17,104 +17,124 @@ import (
 func TestGlobal(t *testing.T) {
 	assert := assertlib.New(t)
 	ResetShared()
-	assert.IsType(&logrus.TextFormatter{}, SharedLogger.Formatter) // TextFormatter is logrus default
+	assert.IsType(&logrus.TextFormatter{}, SharedLogger.logrusLogger.Formatter) // TextFormatter is logrus default
 	conf := viper.New()
 	conf.Set("Format", "json")
-	conf.Set("Output", "file")
+	conf.Set("Output", "stdout")
 	SharedLogger.Configure(conf)
-	assert.IsType(&logrus.JSONFormatter{}, SharedLogger.Formatter)
+	assert.IsType(&jsonFormatter{}, SharedLogger.logrusLogger.Formatter)
 	ResetShared()
 }
 
-func TestConfigure_FormatText(t *testing.T) {
+func TestLogger_Configure_FormatText(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "text")
-	conf.Set("Output", "file")
+	conf.Set("Output", "stdout")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.IsType(&logrus.TextFormatter{}, logger.Formatter)
+	assert.IsType(&textFormatter{}, logger.logrusLogger.Formatter)
 }
 
-func TestConfigure_FormatJson(t *testing.T) {
-	assert := assertlib.New(t)
-	conf := viper.New()
-	conf.Set("Format", "json")
-	conf.Set("Output", "file")
-	logger := createLogger()
-	logger.Configure(conf)
-	assert.IsType(&logrus.JSONFormatter{}, logger.Formatter)
-}
-
-func TestConfigure_FormatInvalid(t *testing.T) {
-	assert := assertlib.New(t)
-	conf := viper.New()
-	conf.Set("Format", "yml")
-	conf.Set("Output", "file")
-	logger := createLogger()
-	assert.Panics(func() { logger.Configure(conf) })
-}
-
-func TestConfigure_OutputStdout(t *testing.T) {
+func TestLogger_Configure_FormatJson(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(os.Stdout, logger.Out)
+	assert.IsType(&jsonFormatter{}, logger.logrusLogger.Formatter)
 }
 
-func TestConfigure_OutputStderr(t *testing.T) {
+func TestLogger_Configure_FormatConsole(t *testing.T) {
+	assert := assertlib.New(t)
+	conf := viper.New()
+	conf.Set("Format", "console")
+	conf.Set("Output", "stdout")
+	logger := createLogger()
+	logger.Configure(conf)
+	assert.IsType(&consoleFormatter{}, logger.logrusLogger.Formatter)
+}
+
+func TestLogger_Configure_FormatInvalid(t *testing.T) {
+	assert := assertlib.New(t)
+	conf := viper.New()
+	conf.Set("Format", "yml")
+	conf.Set("Output", "stdout")
+	logger := createLogger()
+	assert.Panics(func() { logger.Configure(conf) })
+}
+
+func TestLogger_Configure_OutputStdout(t *testing.T) {
+	assert := assertlib.New(t)
+	conf := viper.New()
+	conf.Set("Format", "json")
+	conf.Set("Output", "stdout")
+	logger := createLogger()
+	logger.Configure(conf)
+	assert.Equal(os.Stdout, logger.logrusLogger.Out)
+}
+
+func TestLogger_Configure_OutputStderr(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stderr")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(os.Stderr, logger.Out)
+	assert.Equal(os.Stderr, logger.logrusLogger.Out)
 }
 
-func TestConfigure_OutputFile(t *testing.T) {
+func TestLogger_Configure_OutputFile(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "file")
+
+	_ = os.Remove("../../log/all.log.test")
+	defer func() { _ = os.Remove("../../log/all.log.test") }()
+	var patchGuard *monkey.PatchGuard
+	patchGuard = monkey.Patch(os.OpenFile, func(name string, flag int, perm os.FileMode) (*os.File, error) {
+		patchGuard.Unpatch()
+		defer patchGuard.Restore()
+		return os.OpenFile(name+".test", flag, perm) //nolint:gosec // No user input
+	})
+	defer patchGuard.Unpatch()
 
 	// will append time to make sure not to match a prev exec of the test
 	timestamp := time.Now().UnixNano()
 
 	logger1 := createLogger()
 	logger1.Configure(conf)
-	logger1.Errorf("logexec1 %d", timestamp)
+	logger1.WithContext(context.Background()).Errorf("logexec1 %d", timestamp)
 
 	// redo another init to check it will not override
 	logger2 := createLogger()
 	logger2.Configure(conf)
-	logger2.Warnf("logexec2 %d", timestamp)
+	logger2.WithContext(context.Background()).Warnf("logexec2 %d", timestamp)
 
 	// check the resulting file
-	content, _ := ioutil.ReadFile("../../log/all.log")
+	content, _ := os.ReadFile("../../log/all.log")
 	assert.Contains(string(content), fmt.Sprintf("logexec1 %d", timestamp))
 	assert.Contains(string(content), fmt.Sprintf("logexec2 %d", timestamp))
 }
 
-func TestConfigure_OutputFileError(t *testing.T) {
+func TestLogger_Configure_OutputFileError(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "file")
-	fakeFunc := func(name string, flag int, perm os.FileMode) (*os.File, error) {
+	fakeFunc := func(_ string, _ int, _ os.FileMode) (*os.File, error) {
 		return nil, errors.New("open error")
 	}
 	patch := monkey.Patch(os.OpenFile, fakeFunc)
 	defer patch.Unpatch()
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(os.Stdout, logger.Out)
+	assert.Equal(os.Stdout, logger.logrusLogger.Out)
 }
 
-func TestConfigure_OutputInvalid(t *testing.T) {
+func TestLogger_Configure_OutputInvalid(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "json")
@@ -123,35 +143,44 @@ func TestConfigure_OutputInvalid(t *testing.T) {
 	assert.Panics(func() { logger.Configure(conf) })
 }
 
-func TestConfigure_LevelDefault(t *testing.T) {
+func TestLogger_Configure_FormatConsoleAndFileOutput(t *testing.T) {
+	assert := assertlib.New(t)
+	conf := viper.New()
+	conf.Set("Format", "console")
+	conf.Set("Output", "file")
+	logger := createLogger()
+	assert.Panics(func() { logger.Configure(conf) })
+}
+
+func TestLogger_Configure_LevelDefault(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "text")
-	conf.Set("Output", "file")
+	conf.Set("Output", "stdout")
 	conf.Set("Level", "")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(logrus.InfoLevel, logger.Level)
+	assert.Equal(logrus.InfoLevel, logger.logrusLogger.Level)
 }
 
-func TestConfigure_LevelParsed(t *testing.T) {
+func TestLogger_Configure_LevelParsed(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "text")
-	conf.Set("Output", "file")
+	conf.Set("Output", "stdout")
 	conf.Set("Level", "warn")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(logrus.WarnLevel, logger.Level)
+	assert.Equal(logrus.WarnLevel, logger.logrusLogger.Level)
 }
 
-func TestConfigure_LevelInvalid(t *testing.T) {
+func TestLogger_Configure_LevelInvalid(t *testing.T) {
 	assert := assertlib.New(t)
 	conf := viper.New()
 	conf.Set("Format", "text")
-	conf.Set("Output", "file")
+	conf.Set("Output", "stdout")
 	conf.Set("Level", "invalid_level")
 	logger := createLogger()
 	logger.Configure(conf)
-	assert.Equal(logrus.InfoLevel, logger.Level)
+	assert.Equal(logrus.InfoLevel, logger.logrusLogger.Level)
 }

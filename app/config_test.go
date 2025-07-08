@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -41,11 +40,11 @@ func TestLoadConfigFrom(t *testing.T) {
 	defer deferFunc()
 
 	// create a temp config file
-	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("server:\n  port: 1234\n"), 0o600)
+	err := os.WriteFile(tmpDir+"/config.yaml", []byte("server:\n  port: 1234\n"), 0o600)
 	assert.NoError(err)
 
 	// change default config values
-	err = ioutil.WriteFile(tmpDir+"/config.dev.yaml", []byte("server:\n  rootpath: '/test/'"), 0o600)
+	err = os.WriteFile(tmpDir+"/config.dev.yaml", []byte("server:\n  rootpath: '/test/'"), 0o600)
 	assert.NoError(err)
 
 	_ = os.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "999")
@@ -124,11 +123,11 @@ func TestLoadConfigFrom_MustNotUseMainConfigFileInTestEnv(t *testing.T) {
 	defer deferFunc()
 
 	// create a main config file inside the tmp dir, and define two distinct yaml parameters in it
-	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1\nparam2: 2"), 0o600)
+	err := os.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1\nparam2: 2"), 0o600)
 	assert.NoError(err)
 
 	// create a temp test config file inside the tmp dir, and define only one of the two parameters in it
-	err = ioutil.WriteFile(tmpDir+"/config.test.yaml", []byte("param1: 3"), 0o600)
+	err = os.WriteFile(tmpDir+"/config.test.yaml", []byte("param1: 3"), 0o600)
 	assert.NoError(err)
 
 	conf := loadConfigFrom("config", tmpDir)
@@ -148,7 +147,7 @@ func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T
 	defer deferFunc()
 
 	// create a temp config file
-	err := ioutil.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1"), 0o600)
+	err := os.WriteFile(tmpDir+"/config.yaml", []byte("param1: 1"), 0o600)
 	assert.NoError(err)
 
 	assert.Panics(func() {
@@ -232,7 +231,7 @@ func TestDBConfig_StructToMapError(t *testing.T) {
 func TestTokenConfig_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
-	monkey.Patch(token.Initialize, func(config *viper.Viper) (*token.Config, error) {
+	monkey.Patch(token.Initialize, func(_ *viper.Viper) (*token.Config, error) {
 		return &token.Config{PlatformName: "test"}, nil
 	})
 	defer monkey.UnpatchAll()
@@ -286,9 +285,10 @@ func TestDomainsConfig_Success(t *testing.T) {
 	assert := assertlib.New(t)
 	globalConfig := viper.New()
 	sampleDomain := domain.ConfigItem{
-		Domains:        []string{"localhost", "other"},
-		AllUsersGroup:  2,
-		TempUsersGroup: 3,
+		Domains:           []string{"localhost", "other"},
+		AllUsersGroup:     2,
+		TempUsersGroup:    3,
+		NonTempUsersGroup: 4,
 	}
 	globalConfig.Set("domains", []domain.ConfigItem{sampleDomain})
 	config, err := DomainsConfig(globalConfig)
@@ -332,9 +332,10 @@ func TestReplaceDomainsConfig(t *testing.T) {
 	application, _ := New()
 	application.ReplaceDomainsConfig(globalConfig)
 	expected := []domain.ConfigItem{{
-		Domains:        []string{"localhost", "other"},
-		AllUsersGroup:  0,
-		TempUsersGroup: 0,
+		Domains:           []string{"localhost", "other"},
+		AllUsersGroup:     0,
+		TempUsersGroup:    0,
+		NonTempUsersGroup: 0,
 	}}
 	config, _ := DomainsConfig(application.Config)
 	assert.Equal(expected, config)
@@ -360,7 +361,7 @@ func Test_configDirectory_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
 
 func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.File, deferFunc func()) {
 	// create a temp config file
-	tmpFile, err := ioutil.TempFile(os.TempDir(), pattern)
+	tmpFile, err := os.CreateTemp(os.TempDir(), pattern)
 	assert.NoError(err)
 	return tmpFile, func() {
 		_ = os.Remove(tmpFile.Name())
@@ -369,7 +370,7 @@ func createTmpFile(pattern string, assert *assertlib.Assertions) (tmpFile *os.Fi
 }
 
 func createTmpDir(pattern string, assert *assertlib.Assertions) (name string, deferFun func()) {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), pattern)
+	tmpDir, err := os.MkdirTemp(os.TempDir(), pattern)
 	assert.NoError(err)
 	return tmpDir, func() { _ = os.RemoveAll(tmpDir) }
 }

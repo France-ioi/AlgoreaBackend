@@ -3,13 +3,16 @@
 package database_test
 
 import (
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type unlocksResultRow struct {
@@ -23,6 +26,8 @@ type unlocksResultRow struct {
 }
 
 func TestResultStore_Propagate_Unlocks(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
@@ -30,6 +35,8 @@ func TestResultStore_Propagate_Unlocks(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture(
 		"results_propagation/_common",
 		"results_propagation/unlocks",
@@ -40,19 +47,21 @@ func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture(
 		"results_propagation/_common",
 		"results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
-	oldTS := time.Now().UTC().Add(-time.Minute).Format("2006-01-02 15:04:05")
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow("1001", "content", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("1002", "content_with_descendants", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("2001", "content", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("2002", "info", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("4001", "none", oldTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow("4002", "content", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(1001, "content", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(1002, "content_with_descendants", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2001, "content", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2002, "info", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4001, "none", oldTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4002, "content", oldTS, "9999-12-31 23:59:58", oldTS),
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
@@ -65,14 +74,14 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	assert.NoError(t, err)
 
 	for i := range grantedPermissions {
-		grantedPermissions[i]["updated"] = "0"
+		grantedPermissions[i]["updated"] = int64(0)
 		delete(grantedPermissions[i], "latest_update_at")
 	}
 	const content = "content"
 	grantedPermissions[3]["can_view"] = content
 	grantedPermissions[4]["can_view"] = content
-	grantedPermissions[3]["updated"] = "1"
-	grantedPermissions[4]["updated"] = "1"
+	grantedPermissions[3]["updated"] = int64(1)
+	grantedPermissions[4]["updated"] = int64(1)
 
 	var result []map[string]interface{}
 	assert.NoError(t, dataStore.PermissionsGranted().
@@ -84,14 +93,16 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	assert.Equal(t, grantedPermissions, result)
 }
 
-func generateGrantedPermissionsRow(itemID, canView, canEnterFrom, canEnterUntil, latestUpdateAt string) map[string]interface{} {
+func generateGrantedPermissionsRow(itemID int64, canView, canEnterFrom, canEnterUntil, latestUpdateAt string) map[string]interface{} {
 	return map[string]interface{}{
-		"group_id": "101", "item_id": itemID, "can_view": canView, "can_enter_from": canEnterFrom,
-		"can_enter_until": canEnterUntil, "source_group_id": "101", "origin": "item_unlocking", "latest_update_at": latestUpdateAt,
+		"group_id": int64(101), "item_id": itemID, "can_view": canView, "can_enter_from": canEnterFrom,
+		"can_enter_until": canEnterUntil, "source_group_id": int64(101), "origin": "item_unlocking", "latest_update_at": latestUpdateAt,
 	}
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
@@ -100,17 +111,19 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T)
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHasBeenSetAlready(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
-	oldTS := time.Now().UTC().Add(-time.Minute).Format("2006-01-02 15:04:05")
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow("1001", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("1002", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2001", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2002", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4001", "content", oldTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4002", "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1002, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2002, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4002, "content", oldTS, "9999-12-31 23:59:59", oldTS),
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
@@ -130,18 +143,41 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 }
 
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromIsInTheFuture(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
-	oldTS := time.Now().UTC().Add(-time.Minute).Format("2006-01-02 15:04:05")
-	futureTS := time.Now().UTC().Add(time.Minute).Format("2006-01-02 15:04:05")
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
+	futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
 	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow("1001", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("1002", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2001", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("2002", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4001", "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow("4002", "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(1002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(2002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+		generateGrantedPermissionsRow(4002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+	}
+	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
+
+	testExplicitEntryUnlocks(db, t)
+}
+
+func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterUntilIsNotMax(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
+	defer func() { _ = db.Close() }()
+	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
+	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
+	futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
+	grantedPermissions := []map[string]interface{}{
+		generateGrantedPermissionsRow(1001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(1002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(2002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
+		generateGrantedPermissionsRow(4002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
 	}
 	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
 
@@ -153,12 +189,19 @@ var maxTime = database.Time(time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC))
 func testRegularUnlocks(db *database.DB, t *testing.T) {
 	prepareDependencies(db, t)
 
+	var unlockedItems *golang.Set[int64]
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		var err error
+		unlockedItems, err = s.Results().PropagateAndCollectUnlockedItemsForParticipant(101)
+		return err
 	})
 	assert.NoError(t, err)
+
+	unlockedItemsList := unlockedItems.Values()
+	sort.Slice(unlockedItemsList, func(i, j int) bool { return unlockedItemsList[i] < unlockedItemsList[j] })
+
+	assert.Equal(t, []int64{1001, 1002, 2001, 2002, 4001, 4002}, unlockedItemsList)
 
 	var result []unlocksResultRow
 	assert.NoError(t, dataStore.PermissionsGranted().
@@ -206,12 +249,21 @@ func testRegularUnlocks(db *database.DB, t *testing.T) {
 
 func testExplicitEntryUnlocks(db *database.DB, t *testing.T) {
 	prepareDependencies(db, t)
+
+	var unlockedItems *golang.Set[int64]
+
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		var err error
+		unlockedItems, err = s.Results().PropagateAndCollectUnlockedItemsForParticipant(101)
+		return err
 	})
 	assert.NoError(t, err)
+
+	unlockedItemsList := unlockedItems.Values()
+	sort.Slice(unlockedItemsList, func(i, j int) bool { return unlockedItemsList[i] < unlockedItemsList[j] })
+
+	assert.Equal(t, []int64{1001, 1002, 2001, 2002, 4001, 4002}, unlockedItemsList)
 
 	var result []unlocksResultRow
 	assert.NoError(t, dataStore.PermissionsGranted().

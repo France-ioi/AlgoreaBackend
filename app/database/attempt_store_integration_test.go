@@ -9,8 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type resultType struct {
@@ -31,6 +32,8 @@ type attemptType struct {
 }
 
 func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups:
 			- {id: 10}
@@ -77,8 +80,8 @@ func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
 	assert.Equal(t, attemptType{
 		ParticipantID:   10,
 		ID:              1,
-		ParentAttemptID: utils.Ptr(int64(200)),
-		RootItemID:      utils.Ptr(int64(20)),
+		ParentAttemptID: golang.Ptr(int64(200)),
+		RootItemID:      golang.Ptr(int64(20)),
 		CreatorID:       100,
 		CreatedAt:       &expectedTime,
 	}, attempt)

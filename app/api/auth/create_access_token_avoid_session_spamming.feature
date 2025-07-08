@@ -10,10 +10,10 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         -
           domains: [127.0.0.1]
           allUsersGroup: @AllUsers
-          TempUsersGroup: @TempUsers
+          nonTempUsersGroup: @NonTempUsers
+          tempUsersGroup: @TempUsers
       """
     And the time now is "2020-01-01T01:00:00Z"
-    And the DB time now is "2020-01-01 01:00:00"
     # login_id is used to match with the "id" returned by the login module
     And there are the following users:
       | user                  | login_id |
@@ -22,9 +22,9 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
       | @UserWith10Sessions_2 | 102      |
       | @UserWith9Sessions    | 9        |
     And there are the following groups:
-      | group      | members                                                                          |
-      | @AllUsers  | @UserWith9Sessions,@UserWith10Sessions,@UserWith10Sessions_2,@UserWith11Sessions |
-      | @TempUsers |                                                                                  |
+      | group         | members                                                                          |
+      | @AllUsers     | @TempUsers,@NonTempUsers                                                         |
+      | @NonTempUsers | @UserWith9Sessions,@UserWith10Sessions,@UserWith10Sessions_2,@UserWith11Sessions |
     And there are the following sessions:
       | session                          | user                  | refresh_token           |
       | @Session_UserWith11Sessions_1    | @UserWith11Sessions   | rt_user_11_session_1    | # shouldn't be deleted because it's the newest one

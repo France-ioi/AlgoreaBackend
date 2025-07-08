@@ -28,7 +28,7 @@ func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nol
 	var objmap []map[string]*json.RawMessage
 
 	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &objmap); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w\nData:%v", err, ctx.lastResponseBody)
 	}
 
 	if count != len(objmap) {
@@ -43,7 +43,7 @@ func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, err
 	var JSONResponse interface{}
 	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
 	if err != nil {
-		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %v", err)
+		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %w", err)
 	}
 
 	return jsonpath.Get(jsonPath, JSONResponse)
@@ -58,10 +58,10 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 			return nil
 		}
 
-		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %v", jsonPath, value, err)
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %w", jsonPath, value, err)
 	}
 
-	value = ctx.replaceReferencesByIDs(value)
+	value = ctx.replaceReferencesWithIDs(value)
 	if jsonPathResultMatchesValue(jsonPathRes, value) {
 		return nil
 	}
@@ -121,11 +121,19 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *godog.Tabl
 
 		// The result is an array (eg. "element": [...])
 		if len(typedJSONRes) != wantLength {
+			expectedJSONRows := make([]interface{}, len(typedJSONRes))
+			for index, row := range typedJSONRes {
+				if strValue, ok := row.(string); ok {
+					expectedJSONRows[index] = ctx.readableValue(strValue)
+				} else {
+					expectedJSONRows[index] = row
+				}
+			}
 			return fmt.Errorf(
 				"TheResponseAtShouldBe: The JsonPath result length should be %v but is %v for %v",
 				wantLength,
 				len(typedJSONRes),
-				typedJSONRes,
+				expectedJSONRows,
 			)
 		}
 
@@ -238,7 +246,7 @@ func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 		for j := 0; j < len(headerCells); j++ {
 			curHeader := headerCells[j].Value
 
-			curWant[curHeader] = ctx.replaceReferencesByIDs(wantRow.Cells[j].Value)
+			curWant[curHeader] = ctx.replaceReferencesWithIDs(wantRow.Cells[j].Value)
 			sortedWants[i-1] = curWant
 
 			// The header is a JSONPath (e.g. "title", "strings.title").
@@ -295,7 +303,7 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 	sortedWants := make([]string, len(wants.Rows))
 	for i := 0; i < len(wants.Rows); i++ {
 		sortedResults[i] = stringifyJSONPathResultValue(jsonPathResArr[i])
-		sortedWants[i] = ctx.replaceReferencesByIDs(wants.Rows[i].Cells[0].Value)
+		sortedWants[i] = ctx.replaceReferencesWithIDs(wants.Rows[i].Cells[0].Value)
 	}
 
 	sort.Strings(sortedResults)
@@ -330,14 +338,16 @@ func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint
 	return nil
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *godog.DocString) (err error) { // nolint
+// TheResponseBodyShouldBeJSON checks that the response body is a valid JSON and matches the given JSON.
+func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *godog.DocString) (err error) {
 	return ctx.TheResponseDecodedBodyShouldBeJSON("", body)
 }
 
-func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *godog.DocString) (err error) { // nolint
+// TheResponseDecodedBodyShouldBeJSON checks that the response body, after being decoded, is a valid JSON and matches the given JSON.
+func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *godog.DocString) error {
 	// verify the content type
-	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
-		return
+	if err := ValidateJSONContentType(ctx.lastResponse); err != nil {
+		return err
 	}
 
 	expectedBody, err := ctx.preprocessString(body.Content)
@@ -365,7 +375,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 
 	// re-encode actual response too
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), act); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)
 	}
 
 	if responseType != "" {
@@ -373,7 +383,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	}
 	actual, err := json.MarshalIndent(act, "", "\t")
 	if err != nil {
-		return
+		return err
 	}
 
 	return compareStrings(string(expected), string(actual))
@@ -472,10 +482,10 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(
 
 // TheResponseErrorMessageShouldContain checks that the response contains the provided string.
 func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) {
-	errorResp := service.ErrorResponse{}
+	errorResp := service.ErrorResponse[interface{}]{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)
 	}
 	if !strings.Contains(errorResp.ErrorText, s) {
 		return fmt.Errorf("cannot find expected `%s` in error text: `%s`", s, errorResp.ErrorText)
@@ -498,14 +508,11 @@ func (ctx *TestContext) TheResponseShouldBe(kind string) error {
 	if err := ctx.TheResponseCodeShouldBe(expectedCode); err != nil {
 		return err
 	}
-	if err := ctx.TheResponseBodyShouldBeJSON(&godog.DocString{
+	return ctx.TheResponseBodyShouldBeJSON(&godog.DocString{
 		Content: `
 		{
 			"message": "` + kind + `",
 			"success": true
 		}`,
-	}); err != nil {
-		return err
-	}
-	return nil
+	})
 }

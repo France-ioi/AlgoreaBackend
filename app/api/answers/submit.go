@@ -13,6 +13,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/doc"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
@@ -36,7 +37,7 @@ type submitRequestWrapper struct {
 
 // Created. Success response with answer_token
 // swagger:model answerSubmitResponse
-type answerSubmitResponse struct {
+type answerSubmitResponse struct { //nolint:unused
 	// description
 	// swagger:allOf
 	doc.CreatedResponse
@@ -79,9 +80,11 @@ type answerSubmitResponse struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) error {
 	requestData := SubmitRequest{PublicKey: srv.TokenConfig.PublicKey}
 
 	var err error
@@ -91,7 +94,8 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 
 	var answerID int64
 	var hintsInfo *database.HintsInfo
-	apiError := service.NoError
+
+	logging.LogEntrySetField(httpReq, "user_id", requestData.TaskToken.Converted.UserID)
 
 	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
@@ -101,16 +105,14 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		service.MustNotBeError(err)
 
 		if !hasAccess {
-			apiError = service.ErrForbidden(reason)
-			return apiError.Error // rollback
+			return service.ErrForbidden(reason) // rollback
 		}
 
 		hintsInfo, err = store.Results().GetHintsInfoForActiveAttempt(
 			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID, requestData.TaskToken.Converted.LocalItemID)
 
 		if gorm.IsRecordNotFoundError(err) {
-			apiError = service.ErrForbidden(errors.New("no active attempt found"))
-			return apiError.Error // rollback
+			return service.ErrForbidden(errors.New("no active attempt found")) // rollback
 		}
 		service.MustNotBeError(err)
 
@@ -134,9 +136,6 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 		return nil
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	answerToken, err := (&token.Answer{
@@ -157,7 +156,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) servic
 	service.MustNotBeError(render.Render(rw, httpReq, service.CreationSuccess(map[string]interface{}{
 		"answer_token": answerToken,
 	})))
-	return service.NoError
+	return nil
 }
 
 // UnmarshalJSON loads SubmitRequest from JSON passing a public key into TaskToken.
@@ -178,7 +177,7 @@ func (requestData *SubmitRequest) UnmarshalJSON(raw []byte) error {
 
 // Bind checks that all the needed request parameters (task_token & answer) are present and
 // all the needed values are valid.
-func (requestData *SubmitRequest) Bind(r *http.Request) error {
+func (requestData *SubmitRequest) Bind(_ *http.Request) error {
 	if requestData.TaskToken == nil {
 		return errors.New("missing task_token")
 	}

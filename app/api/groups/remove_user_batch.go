@@ -61,11 +61,13 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"422":
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) error {
 	groupPrefix := chi.URLParam(r, "group_prefix")
 	customPrefix := chi.URLParam(r, "custom_prefix")
 
@@ -85,7 +87,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	// There should not be users with locked membership in the groups the current user cannot manage
@@ -100,7 +102,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		HasRows()
 	service.MustNotBeError(err)
 	if found {
-		logging.Warnf(
+		logging.SharedLogger.WithContext(r.Context()).Warnf(
 			"User with group_id = %d failed to delete a user batch because of locked membership (group_prefix = '%s', custom_prefix = '%s')",
 			user.GroupID, groupPrefix, customPrefix)
 		return service.ErrUnprocessableEntity(errors.New("there are users with locked membership"))
@@ -120,12 +122,12 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}
 	service.MustNotBeError(store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
 		return store.Users().Where("login LIKE CONCAT(?, '\\_', ?, '\\_%')", groupPrefix, customPrefix)
-	}))
+	}, false))
 	service.MustNotBeError(
 		store.UserBatches().
 			Where("group_prefix = ?", groupPrefix).
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

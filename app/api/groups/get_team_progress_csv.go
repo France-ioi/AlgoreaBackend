@@ -37,6 +37,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -44,6 +45,7 @@ import (
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with users progress on items
@@ -62,9 +64,11 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -74,13 +78,11 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	service.MustNotBeError(err)
 
 	w.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
@@ -93,7 +95,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 	if len(itemParentIDs) == 0 {
 		_, err := w.Write([]byte("Team name\n"))
 		service.MustNotBeError(err)
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -120,7 +122,7 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 		Scan(&teams).Error())
 
 	if len(teams) == 0 {
-		return service.NoError
+		return nil
 	}
 	teamIDs := make([]string, len(teams))
 	for i := range teams {
@@ -134,7 +136,6 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 		}
 		teamIDsList := strings.Join(teamIDs[startFromTeam:batchBoundary], ", ")
 		teamNumber := startFromTeam
-		// nolint:gosec
 		service.MustNotBeError(store.Raw(`
 				SELECT
 				items.id AS item_id,
@@ -160,5 +161,5 @@ func (srv *Service) getTeamProgressCSV(w http.ResponseWriter, r *http.Request) s
 					}, csvWriter)).Error())
 	}
 
-	return service.NoError
+	return nil
 }

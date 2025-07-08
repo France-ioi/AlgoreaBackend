@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /current-user/group-invitations/{group_id}/accept group-memberships groupInvitationAccept
@@ -19,8 +17,8 @@ import (
 //		The invitation gets removed from `group_pending_requests`.
 //		The service also refreshes the access rights.
 //
-//		* If the group is a team and the user is already on a team that has attempts for same contest
-//			while the contest doesn't allow multiple attempts or that has active attempts for the same contest,
+//		* If the group is a team and the user is already on a team that has attempts for the same item requiring explicit entry
+//			while the item doesn't allow multiple attempts or that has active attempts for the same item requiring explicit entry,
 //			or if the group membership is frozen,
 //			the unprocessable entity error is returned.
 //
@@ -40,6 +38,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: approvals
 //			in: query
@@ -56,10 +55,12 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"422":
 //			"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) acceptGroupInvitation(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) acceptGroupInvitation(w http.ResponseWriter, r *http.Request) error {
 	return srv.performGroupRelationAction(w, r, acceptInvitationAction)
 }

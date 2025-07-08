@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -46,7 +47,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 		_ = func() (err error) {
 			defer recoverPanics(&err)
 			var a []int
-			a[0]++ // nolint:govet // runtime error
+			a[0]++ // runtime error
 			return nil
 		}()
 
@@ -165,24 +166,24 @@ func TestClient_GetUserProfile(t *testing.T) {
 			responseCode: 200,
 			response:     "{",
 			expectedErr:  errors.New("can't parse user's profile"),
-			expectedLog:  `level=warning msg="Can't parse user's profile (response = \"{\", error = \"unexpected EOF\")"`,
+			expectedLog:  `level=warning .* ` + regexp.QuoteMeta(`msg="Can't parse user's profile (response = \"{\", error = \"unexpected EOF\")"`),
 		},
 		{
 			name:         "invalid profile",
 			responseCode: 200,
 			response:     "{}",
 			expectedErr:  errors.New("user's profile is invalid"),
-			expectedLog: `level=warning msg="User's profile is invalid (response = \"{}\", ` +
-				`error = \"no id in user's profile\")"`,
+			expectedLog: `level=warning .* ` + regexp.QuoteMeta(`msg="User's profile is invalid (response = \"{}\", `+
+				`error = \"no id in user's profile\")"`),
 		},
 		{
 			name:         "invalid badges",
 			responseCode: 200,
 			response:     `{"id":100000001,"login":"jane","badges":1234}`,
 			expectedErr:  errors.New("user's profile is invalid"),
-			expectedLog: `level=warning msg="User's profile is invalid ` +
-				`(response = \"{\\\"id\\\":100000001,\\\"login\\\":\\\"jane\\\",\\\"badges\\\":1234}\", ` +
-				`error = \"invalid badges data\")"`,
+			expectedLog: `level=warning .* ` + regexp.QuoteMeta(`msg="User's profile is invalid `+
+				`(response = \"{\\\"id\\\":100000001,\\\"login\\\":\\\"jane\\\",\\\"badges\\\":1234}\", `+
+				`error = \"invalid badges data\")"`),
 		},
 	}
 
@@ -206,7 +207,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 			assert.Equal(t, tt.expectedErr, err)
 			assert.Equal(t, tt.expectedProfile, gotProfile)
 			if tt.expectedLog != "" {
-				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+				assert.Regexp(t, tt.expectedLog, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 			}
 			assert.NoError(t, httpmock.AllStubsCalled())
 		})
@@ -440,33 +441,33 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 					responseCode: 500,
 					response:     "Unexpected error",
 					expectedErr:  fmt.Errorf(testSuite.errorMessage+": %s", "bad response code"),
-					expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/` +
-						testSuite.endpoint + ` (status code = 500, response = \"Unexpected error\")"`,
+					expectedLog: `level=warning .* ` + regexp.QuoteMeta(`msg="Login module returned a bad status code for /platform_api/`+
+						testSuite.endpoint+` (status code = 500, response = \"Unexpected error\")"`),
 				},
 				{
 					name:         "corrupted base64",
 					responseCode: 200,
 					response:     "Some text",
 					expectedErr:  fmt.Errorf(testSuite.errorMessage+": %s", "illegal base64 data at input byte 4"),
-					expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/` +
-						testSuite.endpoint + ` (status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
+					expectedLog: `level=warning .*` + regexp.QuoteMeta(`msg="Can't decode response from the login module for /platform_api/`+
+						testSuite.endpoint+` (status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`),
 				},
 				{
 					name:         "can't unmarshal",
 					responseCode: 200,
 					response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
 					expectedErr:  fmt.Errorf(testSuite.errorMessage+": %s", "invalid character 'Ý' in literal true (expecting 'r')"),
-					expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/` +
-						testSuite.endpoint +
-						` (decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
-						`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
+					expectedLog: `level=warning .*` + regexp.QuoteMeta(`msg="Can't parse response from the login module for /platform_api/`+
+						testSuite.endpoint+
+						` (decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", `+
+						`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`),
 				},
 				{
 					name:         "'success' is false",
 					responseCode: 200,
 					response:     encodeAccountsManagerResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
-					expectedLog: `level=warning msg="The login module returned an error for /platform_api/` +
-						testSuite.endpoint + `: unknown error"`,
+					expectedLog: `level=warning .*` + regexp.QuoteMeta(`msg="The login module returned an error for /platform_api/`+
+						testSuite.endpoint+`: unknown error"`),
 				},
 			}
 			const moduleURL = "http://login.url.com"
@@ -500,7 +501,7 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 					assert.Equal(t, tt.expectedResult, result)
 					assert.Equal(t, tt.expectedErr, err)
 					if tt.expectedLog != "" {
-						assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+						assert.Regexp(t, tt.expectedLog, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 					}
 					assert.NoError(t, httpmock.AllStubsCalled())
 				})
@@ -572,31 +573,35 @@ func TestClient_CreateUsers(t *testing.T) {
 			responseCode: 500,
 			response:     "Unexpected error",
 			expectedErr:  fmt.Errorf("can't create users: %s", "bad response code"),
-			expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/accounts_manager/create ` +
-				`(status code = 500, response = \"Unexpected error\")"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="Login module returned a bad status code for /platform_api/accounts_manager/create `+
+					`(status code = 500, response = \"Unexpected error\")"`),
 		},
 		{
 			name:         "corrupted base64",
 			responseCode: 200,
 			response:     "Some text",
 			expectedErr:  fmt.Errorf("can't create users: %s", "illegal base64 data at input byte 4"),
-			expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/accounts_manager/create ` +
-				`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="Can't decode response from the login module for /platform_api/accounts_manager/create `+
+					`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`),
 		},
 		{
 			name:         "can't unmarshal",
 			responseCode: 200,
 			response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
 			expectedErr:  fmt.Errorf("can't create users: %s", "invalid character 'Ý' in literal true (expecting 'r')"),
-			expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/create ` +
-				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
-				`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="Can't parse response from the login module for /platform_api/accounts_manager/create `+
+					`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", `+
+					`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`),
 		},
 		{
 			name:         "'success' is false",
 			responseCode: 200,
 			response:     encodeAccountsManagerResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
-			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/create: unknown error"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="The login module returned an error for /platform_api/accounts_manager/create: unknown error"`),
 		},
 	}
 
@@ -637,7 +642,7 @@ func TestClient_CreateUsers(t *testing.T) {
 			assert.Equal(t, tt.expectedErr, err)
 			assert.Equal(t, tt.expectedData, data)
 			if tt.expectedLog != "" {
-				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+				assert.Regexp(t, tt.expectedLog, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 			}
 			assert.NoError(t, httpmock.AllStubsCalled())
 		})

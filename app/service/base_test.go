@@ -16,7 +16,7 @@ import (
 func TestBase_GetUser(t *testing.T) {
 	middleware := auth.MockUserMiddleware(&database.User{GroupID: 42})
 	called := false
-	ts := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewServer(middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		called = true
 		srv := &Base{}
 		user := srv.GetUser(r)
@@ -35,7 +35,9 @@ func TestBase_GetUser(t *testing.T) {
 }
 
 func TestBase_GetStore(t *testing.T) {
-	expectedDB := &database.DB{}
+	db, _ := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	expectedDB := db
 	expectedContext := context.Background()
 	expectedStore := database.NewDataStoreWithContext(expectedContext, expectedDB)
 	req := (&http.Request{}).WithContext(expectedContext)

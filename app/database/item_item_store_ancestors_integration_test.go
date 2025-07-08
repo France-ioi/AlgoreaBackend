@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type itemAncestorsResultRow struct {
@@ -23,14 +24,15 @@ type itemPropagateResultRow struct {
 }
 
 func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
 		dataStore := database.NewDataStoreWithContext(context.Background(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
-			ds.ScheduleItemsAncestorsPropagation()
-			return nil
+			return ds.ItemItems().CreateNewAncestors()
 		}))
 	}, 30)
 
@@ -50,7 +52,6 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	var propagateResult []itemPropagateResultRow
 	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -58,13 +59,14 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common", "item_item_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
 
 	itemItemStore := database.NewDataStore(db).ItemItems()
 	assert.NoError(t, itemItemStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleItemsAncestorsPropagation()
-		return nil
+		return ds.ItemItems().CreateNewAncestors()
 	}))
 
 	var result []itemAncestorsResultRow
@@ -85,6 +87,8 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
@@ -98,8 +102,7 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	}
 
 	assert.NoError(t, itemItemStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleItemsAncestorsPropagation()
-		return nil
+		return ds.ItemItems().CreateNewAncestors()
 	}))
 
 	var result []itemAncestorsResultRow

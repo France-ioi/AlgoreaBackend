@@ -15,7 +15,6 @@ type managedGroupsGetResponseRow struct {
 	ID int64 `json:"id,string"`
 	// required:true
 	Name string `json:"name"`
-	// Nullable
 	// required:true
 	Description *string `json:"description"`
 	// required:true
@@ -68,9 +67,11 @@ type managedGroupsGetResponseRow struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -88,7 +89,7 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 		Group("groups.id")
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -99,9 +100,7 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 			DefaultRules: "type,name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []managedGroupsGetResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -112,5 +111,5 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 	}
 
 	render.Respond(w, r, &result)
-	return service.NoError
+	return nil
 }

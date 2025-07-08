@@ -4,13 +4,16 @@ package database_test
 
 import (
 	"fmt"
-	"strconv"
+	"reflect"
 	"testing"
 
+	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGroupStore_CreateNew(t *testing.T) {
@@ -23,6 +26,8 @@ func TestGroupStore_CreateNew(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.groupType, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString()
 			defer func() { _ = db.Close() }()
 
@@ -65,14 +70,35 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			if test.shouldCreateAttempts {
 				expectedAttempts = []map[string]interface{}{
 					{
-						"participant_id": strconv.FormatInt(newID, 10), "id": "0", "creator_id": nil, "parent_attempt_id": nil,
-						"root_item_id": nil, "created_at_set": "1",
+						"participant_id": newID, "id": int64(0), "creator_id": nil, "parent_attempt_id": nil,
+						"root_item_id": nil, "created_at_set": int64(1),
 					},
 				}
 			}
 			assert.Equal(t, expectedAttempts, attempts)
 		})
 	}
+}
+
+func TestGroupStore_CreateNew_Duplicate(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, name: "Some group"}]`)
+	defer func() { _ = db.Close() }()
+
+	var nextID int64
+	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(*database.DataStore) int64 {
+		nextID++
+		return nextID
+	})
+	defer monkey.UnpatchAll()
+
+	var newID int64
+	require.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+		var err error
+		newID, err = store.Groups().CreateNew("Some group", "Class")
+		return err
+	}))
+	assert.Equal(t, int64(2), newID)
 }
 
 func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(t *testing.T) {
@@ -325,35 +351,40 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 	}
 	for _, tt := range tests {
 		tt := tt
-		db := testhelpers.SetupDBWithFixtureString(mainFixture, tt.fixture)
-		defer func() { _ = db.Close() }()
-		for _, withLock := range []bool{true, false} {
-			withLock := withLock
-			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
-				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-					store.ScheduleGroupsAncestorsPropagation()
+		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 
-					return nil
-				}))
+			db := testhelpers.SetupDBWithFixtureString(mainFixture, tt.fixture)
+			defer func() { _ = db.Close() }()
+			for _, withLock := range []bool{true, false} {
+				withLock := withLock
+				t.Run(fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
+					testoutput.SuppressIfPasses(t)
 
-				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-					got, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
-						tt.args.teamGroupID, tt.args.userID, tt.args.isAddition, withLock)
-					if (err != nil) != tt.wantErr {
-						t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+					assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+						if err := store.GroupGroups().CreateNewAncestors(); err != nil {
+							return err
+						}
+						got, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(
+							tt.args.teamGroupID, tt.args.userID, tt.args.isAddition, withLock)
+						if (err != nil) != tt.wantErr {
+							t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+							return nil
+						}
+						if got != tt.want {
+							t.Errorf("got = %v, want %v", got, tt.want)
+						}
 						return nil
-					}
-					if got != tt.want {
-						t.Errorf("got = %v, want %v", got, tt.want)
-					}
-					return nil
-				}))
-			})
-		}
+					}))
+				})
+			}
+		})
 	}
 }
 
-func Test_GroupStore_DeleteGroup(t *testing.T) {
+func TestGroupStore_DeleteGroup(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1234}]`)
 	defer func() { _ = db.Close() }()
 	groupStore := database.NewDataStore(db).Groups()
@@ -365,4 +396,86 @@ func Test_GroupStore_DeleteGroup(t *testing.T) {
 	assert.Empty(t, ids)
 	assert.NoError(t, groupStore.Table("groups_propagate").Pluck("id", &ids).Error())
 	assert.Empty(t, ids)
+}
+
+func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1234}, {id: 1235}]
+		items: [{id: 10, default_language_tag: fr}]
+		permissions_granted:
+			- {group_id: 1234, item_id: 10, source_group_id: 1235, can_view: content}
+			- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
+		permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`)
+	defer func() { _ = db.Close() }()
+
+	dataStore := database.NewDataStore(db).Groups()
+	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+		return store.Groups().DeleteGroup(1235)
+	}))
+	var newPermission string
+	require.NoError(t, dataStore.Permissions().Where("group_id = 1234 AND item_id = 10").
+		PluckFirst("can_view_generated", &newPermission).Error())
+	assert.Equal(t, "info", newPermission)
+}
+
+func TestGroupStore_DeleteGroup_RecomputesAccessForOrphanedSourceGroups(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(`
+		groups: [{id: 1234}, {id: 1235}, {id: 1236}]
+		groups_groups: [{parent_group_id: 1235, child_group_id: 1236}]
+		groups_ancestors: [{ancestor_group_id: 1235, child_group_id: 1236}]
+		items: [{id: 10, default_language_tag: fr}]
+		permissions_granted:
+			- {group_id: 1234, item_id: 10, source_group_id: 1236, can_view: content}
+			- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
+		permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`)
+	defer func() { _ = db.Close() }()
+
+	dataStore := database.NewDataStore(db).Groups()
+	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+		return store.Groups().DeleteGroup(1235)
+	}))
+	var newPermission string
+	require.NoError(t, dataStore.Permissions().Where("group_id = 1234 AND item_id = 10").
+		PluckFirst("can_view_generated", &newPermission).Error())
+	assert.Equal(t, "info", newPermission)
+}
+
+func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
+	const expectedErrorMessage = "Error 1644 (45000): Unable to change groups.type from/to User/Team"
+
+	for _, test := range []struct {
+		oldType     string
+		newType     string
+		expectError bool
+	}{
+		{oldType: "User", newType: "Team", expectError: true},
+		{oldType: "Team", newType: "User", expectError: true},
+		{oldType: "Class", newType: "User", expectError: true},
+		{oldType: "Class", newType: "Team", expectError: true},
+		{oldType: "User", newType: "Class", expectError: true},
+		{oldType: "Team", newType: "Class", expectError: true},
+		{oldType: "Team", newType: "Team", expectError: false},
+		{oldType: "User", newType: "User", expectError: false},
+		{oldType: "Other", newType: "Club", expectError: false},
+	} {
+		test := test
+		t.Run(fmt.Sprintf("%s to %s", test.oldType, test.newType), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, type: ` + test.oldType + `}]`)
+			defer func() { _ = db.Close() }()
+
+			groupGroupStore := database.NewDataStore(db).Groups()
+			result := groupGroupStore.ByID(1).UpdateColumn("type", test.newType)
+			if test.expectError {
+				assert.EqualError(t, result.Error(), expectedErrorMessage)
+			} else {
+				assert.NoError(t, result.Error())
+			}
+		})
+	}
 }

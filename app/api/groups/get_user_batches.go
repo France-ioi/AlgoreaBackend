@@ -16,7 +16,6 @@ type userBatch struct {
 	CustomPrefix string `json:"custom_prefix"`
 	// required: true
 	Size int `json:"size"`
-	// Nullable
 	// required: true
 	CreatorID *int64 `json:"creator_id,string"`
 }
@@ -36,6 +35,7 @@ type userBatch struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [group_prefix,custom_prefix]
@@ -70,9 +70,11 @@ type userBatch struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -94,7 +96,7 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 		Where(`user_batch_prefixes.group_id IN(?)`, prefixAncestors.QueryExpr()).
 		Select("user_batches_v2.group_prefix, user_batches_v2.custom_prefix, user_batches_v2.size, user_batches_v2.creator_id")
 
-	query, apiErr := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -108,13 +110,11 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 				"custom_prefix": service.FieldTypeString,
 			},
 		})
-	if apiErr != service.NoError {
-		return apiErr
-	}
+	service.MustNotBeError(err)
 
 	var result []userBatch
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

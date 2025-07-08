@@ -38,7 +38,7 @@ func encryptAes128Ecb(data, key []byte) []byte {
 	cipher, err := aes.NewCipher(key)
 	mustNotBeError(err)
 
-	paddingLength := blockSize - len(data)%16
+	paddingLength := blockSize - len(data)%blockSize
 	dataCopy := make([]byte, 0, len(data)+paddingLength)
 	dataCopy = append(dataCopy, data...)
 	for i := 0; i < paddingLength; i++ {

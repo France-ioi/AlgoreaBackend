@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 )
 
 // UserStore implements database operations on `users`.
@@ -14,9 +15,9 @@ func (s *UserStore) ByID(id int64) *DB {
 	return s.Where(s.tableName+".group_id = ?", id)
 }
 
-const deleteWithTrapsBatchSize = 1000
+const deleteWithTrapsBatchSize = 30
 
-// DeleteTemporaryWithTraps deletes temporary users who don't have active sessions.
+// DeleteTemporaryWithTraps deletes temporary users who don't have sessions or whose sessions expired more than `delay` ago.
 // It also removes linked rows in the tables:
 //  1. [`filters`, `sessions`, `access_tokens`]
 //     having `user_id` = `users.group_id`;
@@ -28,40 +29,43 @@ const deleteWithTrapsBatchSize = 1000
 //  5. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
 //  6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal to `users.group_id`;
 //  7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`.
-func (s *UserStore) DeleteTemporaryWithTraps() (err error) {
+func (s *UserStore) DeleteTemporaryWithTraps(delay time.Duration) (err error) {
 	defer recoverPanics(&err)
 
 	s.executeBatchesInTransactions(func(store *DataStore) int {
 		userScope := store.Users().
 			Joins("LEFT JOIN sessions ON sessions.user_id = users.group_id").
-			Joins("LEFT JOIN access_tokens ON access_tokens.session_id = sessions.session_id AND access_tokens.expires_at > NOW()").
-			// We don't want to delete users who have active sessions, so we retrieve all temp users who:
-			// - Have no session at all (sessions.session_id IS NULL)
-			// - Have a session, but there is no non-expired access token (all access tokens are expired: access_tokens.session_id IS NULL)
-			Where("sessions.session_id IS NULL OR access_tokens.session_id IS NULL").
+			Joins(`
+				LEFT JOIN access_tokens ON access_tokens.session_id = sessions.session_id AND
+					access_tokens.expires_at > NOW() - INTERVAL ? SECOND`,
+				int64(delay.Round(time.Second)/time.Second)).
+			Where("access_tokens.session_id IS NULL").
 			Where("temp_user = 1")
-		return store.Users().deleteWithTraps(userScope)
+		return store.Users().deleteWithTraps(userScope, true)
 	})
 	return nil
 }
 
 // DeleteWithTraps deletes a given user. It also removes linked rows in the same way as DeleteTemporaryWithTraps.
-func (s *UserStore) DeleteWithTraps(user *User) (err error) {
+// For non-temporary users (when isTemporary is false), it also removes `permissions_granted`
+// having source_group_id = users.group_id and schedules the permissions propagation.
+func (s *UserStore) DeleteWithTraps(user *User, isTemporary bool) (err error) {
 	return s.InTransaction(func(store *DataStore) error {
-		deleteOneBatchOfUsers(store.DB, []int64{user.GroupID})
-		store.ScheduleGroupsAncestorsPropagation()
+		deleteOneBatchOfUsers(store.DB, []int64{user.GroupID}, isTemporary)
 		return nil
 	})
 }
 
 // DeleteWithTrapsByScope deletes users matching the given scope.
 // It also removes linked rows in the same way as DeleteTemporaryWithTraps.
-func (s *UserStore) DeleteWithTrapsByScope(scopeFunc func(store *DataStore) *DB) (err error) {
+// For non-temporary users (when isTemporary is false), it also removes `permissions_granted`
+// having source_group_id = users.group_id and schedules the permissions propagation.
+func (s *UserStore) DeleteWithTrapsByScope(scopeFunc func(store *DataStore) *DB, isTemporary bool) (err error) {
 	defer recoverPanics(&err)
 
 	s.executeBatchesInTransactions(func(store *DataStore) int {
 		scope := scopeFunc(store)
-		return store.Users().deleteWithTraps(scope)
+		return store.Users().deleteWithTraps(scope, isTemporary)
 	})
 	return nil
 }
@@ -81,30 +85,32 @@ func (s *UserStore) executeBatchesInTransactions(f func(store *DataStore) int) {
 
 // deleteWithTraps deletes the first deleteWithTrapsBatchSize users satisfying the scope's conditions
 // and all the users' stuff.
-func (s *UserStore) deleteWithTraps(userScope *DB) int {
+func (s *UserStore) deleteWithTraps(userScope *DB, isTemporary bool) int {
 	userScope.mustBeInTransaction()
 
 	userIDs := make([]int64, 0, deleteWithTrapsBatchSize)
 
 	mustNotBeError(
-		userScope.WithWriteLock().Select("group_id").Limit(deleteWithTrapsBatchSize).
+		userScope.WithExclusiveWriteLock().Select("group_id").Limit(deleteWithTrapsBatchSize).
 			ScanIntoSlices(&userIDs).Error())
 
 	if len(userIDs) == 0 {
 		return 0
 	}
 
-	deleteOneBatchOfUsers(userScope, userIDs)
-	s.ScheduleGroupsAncestorsPropagation()
+	deleteOneBatchOfUsers(userScope, userIDs, isTemporary)
 
 	return len(userIDs)
 }
 
-func deleteOneBatchOfUsers(db *DB, userIDs []int64) {
+func deleteOneBatchOfUsers(db *DB, userIDs []int64, isTemporary bool) {
 	db.mustBeInTransaction()
 
-	// we should delete from groups_groups explicitly in order to invoke triggers on groups_groups
-	executeDeleteQuery(db, "groups_groups", "WHERE parent_group_id IN (?)", userIDs)
+	// we should delete from permissions_granted explicitly in order to invoke triggers on permissions_granted
+	if !isTemporary && executeDeleteQuery(db, "permissions_granted", "WHERE source_group_id IN (?)", userIDs) > 0 {
+		NewDataStore(db).SchedulePermissionsPropagation()
+	}
+
 	// deleting from `groups` triggers deletion from
 	// `groups_propagate`, `groups_groups`, `groups_ancestors`, `group_pending_requests`, `group_membership_changes`,
 	// `permissions_granted`, `permissions_generated", `attempts`, `results`,
@@ -112,7 +118,8 @@ func deleteOneBatchOfUsers(db *DB, userIDs []int64) {
 	executeDeleteQuery(db, "groups", "WHERE id IN (?)", userIDs)
 }
 
-func executeDeleteQuery(s *DB, table, condition string, args ...interface{}) {
-	mustNotBeError(
-		s.Exec(fmt.Sprintf("DELETE %[1]s FROM %[1]s ", QuoteName(table))+condition, args...).Error())
+func executeDeleteQuery(s *DB, table, condition string, args ...interface{}) int64 {
+	result := s.Exec(fmt.Sprintf("DELETE %[1]s FROM %[1]s ", QuoteName(table))+condition, args...)
+	mustNotBeError(result.Error())
+	return result.RowsAffected()
 }

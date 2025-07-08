@@ -10,21 +10,19 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
 		users: [{group_id: 5}]
 		groups_ancestors:
-			- {ancestor_group_id: 1, child_group_id: 1}
 			- {ancestor_group_id: 1, child_group_id: 5}
-			- {ancestor_group_id: 2, child_group_id: 2}
 			- {ancestor_group_id: 2, child_group_id: 5, expires_at: 2019-05-30 11:00:00}
-			- {ancestor_group_id: 3, child_group_id: 3}
 			- {ancestor_group_id: 3, child_group_id: 5}
-			- {ancestor_group_id: 4, child_group_id: 4}
-			- {ancestor_group_id: 5, child_group_id: 5}
 		items: [{id: 2, default_language_tag: 2}, {id: 3, default_language_tag: 2}]
 		permissions_generated:
 			- {group_id: 1, item_id: 2, can_view_generated: none}
@@ -53,15 +51,16 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 		groupID         int64
 		itemID          int64
 		canView         string
-		expectedChanged []resultPrimaryKey
+		expectedChanged []resultPrimaryKeyAndState
 	}{
 		{
 			name:    "make a parent item visible",
 			groupID: 104,
 			itemID:  2,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 3}, {105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -69,11 +68,11 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 			groupID: 104,
 			itemID:  1,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2},
-				{104, 1, 3},
-				{105, 1, 2},
-				{105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -81,32 +80,33 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 			groupID:         104,
 			itemID:          2,
 			canView:         "none",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "make an item visible",
 			groupID:         104,
 			itemID:          3,
 			canView:         "info",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:            "make a parent item visible for an expired membership",
 			groupID:         108,
 			itemID:          2,
 			canView:         "none",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.ScheduleGroupsAncestorsPropagation()
-				return nil
+				return store.GroupGroups().CreateNewAncestors()
 			}))
 			assert.NoError(t, dataStore.InsertMap(map[string]interface{}{
 				"group_id": test.groupID, "item_id": test.itemID, "can_view_generated": test.canView,
@@ -123,7 +123,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 		groupID         int64
 		itemID          int64
 		canView         string
-		expectedChanged []resultPrimaryKey
+		expectedChanged []resultPrimaryKeyAndState
 		noChanges       bool
 		updateExisting  bool
 	}{
@@ -132,8 +132,9 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID: 104,
 			itemID:  2,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 3}, {105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -141,11 +142,11 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID: 104,
 			itemID:  1,
 			canView: "info",
-			expectedChanged: []resultPrimaryKey{
-				{104, 1, 2},
-				{104, 1, 3},
-				{105, 1, 2},
-				{105, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{104, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
 			},
 		},
 		{
@@ -153,7 +154,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID:         108,
 			itemID:          1,
 			canView:         "none",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 			updateExisting:  true,
 		},
 		{
@@ -161,7 +162,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID:         104,
 			itemID:          3,
 			canView:         "info",
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 		{
 			name:           "switch ancestor from invisible to visible",
@@ -169,11 +170,11 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			itemID:         1,
 			canView:        "info",
 			updateExisting: true,
-			expectedChanged: []resultPrimaryKey{
-				{105, 1, 2},
-				{105, 1, 3},
-				{107, 1, 2},
-				{107, 1, 3},
+			expectedChanged: []resultPrimaryKeyAndState{
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{105, 1, 3}},
+				{ResultPrimaryKey: ResultPrimaryKey{107, 1, 2}},
+				{ResultPrimaryKey: ResultPrimaryKey{107, 1, 3}},
 			},
 		},
 		{
@@ -181,7 +182,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			groupID:         108,
 			itemID:          2,
 			canView:         "info",
-			expectedChanged: []resultPrimaryKey{{108, 1, 3}},
+			expectedChanged: []resultPrimaryKeyAndState{{ResultPrimaryKey: ResultPrimaryKey{108, 1, 3}}},
 		},
 		{
 			name:            "no changes",
@@ -189,12 +190,14 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			itemID:          1,
 			canView:         "info",
 			updateExisting:  true,
-			expectedChanged: []resultPrimaryKey{},
+			expectedChanged: []resultPrimaryKeyAndState{},
 			noChanges:       true,
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			fixures := make([]string, 0, 2)
 			if !test.updateExisting {
 				fixures = append(fixures,
@@ -206,8 +209,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-				store.ScheduleGroupsAncestorsPropagation()
-				return nil
+				return store.GroupGroups().CreateNewAncestors()
 			}))
 			result := dataStore.Where("group_id = ?", test.groupID).
 				Where("item_id = ?", test.itemID).UpdateColumn(map[string]interface{}{
@@ -226,6 +228,8 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 }
 
 func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrItemID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1}]
 		items: [{id: 2, default_language_tag: 2}]
@@ -233,7 +237,7 @@ func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrIt
 	`)
 	defer func() { _ = db.Close() }()
 
-	const expectedErrorMessage = "Error 1644: Unable to change immutable " +
+	const expectedErrorMessage = "Error 1644 (45000): Unable to change immutable " +
 		"permissions_generated.group_id and/or permissions_generated.child_item_id"
 
 	dataStore := database.NewDataStoreWithTable(db, "permissions_generated")

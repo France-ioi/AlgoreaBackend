@@ -1,10 +1,10 @@
 Feature: Support for parallel sessions
   Background:
     Given there are the following groups:
-      | group     | parent | members                                        |
-      | @AllUsers |        | @User1,@UserUntouched,@UserWithoutExpiredToken |
+      | group         | parent    | members                                        |
+      | @TempUsers    | @AllUsers |                                                |
+      | @NonTempUsers | @AllUsers | @User1,@UserUntouched,@UserWithoutExpiredToken |
     And the time now is "2020-01-01T01:00:00Z"
-    And the DB time now is "2020-01-01 01:00:00"
     And there are the following sessions:
       | session                          | user                     | refresh_token                 |
       | @Session_User1_1                 | @User1                   | rt_user_1_session_1           |
@@ -54,10 +54,10 @@ Feature: Support for parallel sessions
 
   Scenario: Should remove the expired access tokens of the user when refreshing a token, when the user is a temp user
     Given there are the following users:
-      | user                     | groups    | temp_user |
-      | @User1                   | @AllUsers | true      |
-      | @UserUntouched           | @AllUsers | true      |
-      | @UserWithoutExpiredToken | @AllUsers | true      |
+      | user                     | groups     | temp_user |
+      | @User1                   | @TempUsers | true      |
+      | @UserUntouched           | @TempUsers | true      |
+      | @UserWithoutExpiredToken | @TempUsers | true      |
     And the "Authorization" request header is "Bearer t_user_1_session_1_most_recent"
     When I send a POST request to "/auth/token"
     Then the response code should be 201
@@ -84,10 +84,10 @@ Feature: Support for parallel sessions
 
   Scenario: Should not remove any access token if there's no expired one for the user, when the user is a temp user
     Given there are the following users:
-      | user                     | groups    | temp_user |
-      | @User1                   | @AllUsers | true      |
-      | @UserUntouched           | @AllUsers | true      |
-      | @UserWithoutExpiredToken | @AllUsers | true      |
+      | user                     | groups     | temp_user |
+      | @User1                   | @TempUsers | true      |
+      | @UserUntouched           | @TempUsers | true      |
+      | @UserWithoutExpiredToken | @TempUsers | true      |
     And the "Authorization" request header is "Bearer t_user_without_expired_token"
     When I send a POST request to "/auth/token"
     Then the response code should be 201

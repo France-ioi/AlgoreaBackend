@@ -6,8 +6,9 @@ package loggingtest
 import (
 	"strings"
 
-	"github.com/sirupsen/logrus"            //nolint
 	"github.com/sirupsen/logrus/hooks/test" //nolint
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 // Hook is a hook designed for dealing with logs in test scenarios. It wraps logrus/hooks/test.Hook.
@@ -17,12 +18,12 @@ type Hook struct {
 
 const newLine = "\n"
 
-// GetAllLogs returns all the logs collected by the hook as a string.
+// GetAllLogs returns all the log messages (entry.Message) collected by the hook as a string.
 func (hook *Hook) GetAllLogs() string {
 	logs := ""
 
 	for _, entry := range hook.AllEntries() {
-		if len(logs) > 0 {
+		if logs != "" {
 			logs += newLine
 		}
 
@@ -35,24 +36,19 @@ func (hook *Hook) GetAllLogs() string {
 // GetAllStructuredLogs returns all the structured logs collected by the hook as a string.
 func (hook *Hook) GetAllStructuredLogs() string {
 	logs := ""
+	formatter := logging.NewTextFormatterForTests()
 
 	for _, entry := range hook.AllEntries() {
-		if len(logs) > 0 {
+		if logs != "" {
 			logs += newLine
 		}
-		logString, err := entry.String()
+		logBytes, err := formatter.Format(entry)
 		if err != nil {
 			logs += strings.TrimSpace(err.Error())
 		} else {
-			logs += strings.TrimSpace(logString)
+			logs += strings.TrimSpace(string(logBytes))
 		}
 	}
 
 	return logs
-}
-
-// NewNullLogger creates a discarding logger and installs the test hook.
-func NewNullLogger() (*logrus.Logger, *Hook) {
-	logger, hook := test.NewNullLogger()
-	return logger, &Hook{hook}
 }

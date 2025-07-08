@@ -10,8 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func setupDB() *database.DB {
@@ -31,6 +32,8 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.methodToCall, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := setupDB()
 			defer func() { _ = db.Close() }()
 
@@ -54,6 +57,8 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 }
 
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
 
@@ -83,6 +88,8 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				hasAccess, reason, err := store.Items().CheckSubmissionRights(test.participantID, test.itemID)
 				assert.Equal(t, test.wantHasAccess, hasAccess)
@@ -96,6 +103,8 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 }
 
 func TestItemStore_GetItemIDFromTextID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [
 			{id: 11, text_id: "id11", default_language_tag: fr},
@@ -125,6 +134,8 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				itemID, err := store.Items().GetItemIDFromTextID(test.textID)
 				assert.Equal(t, test.wantItemID, itemID)
@@ -136,6 +147,8 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 }
 
 func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_BreadcrumbsHierarchyForParentAttempt(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
@@ -374,15 +387,14 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 	defer func() { _ = db.Close() }()
 
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		store.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return store.GroupGroups().CreateNewAncestors()
 	}))
 
 	type args struct {
-		ids                               []int64
-		groupID                           int64
-		parentAttemptID                   int64
-		requireContentAccessToTheLastItem bool
+		ids                                []int64
+		groupID                            int64
+		parentAttemptID                    int64
+		requireContentAccessToTheFinalItem bool
 	}
 	tests := []struct {
 		name                 string
@@ -455,37 +467,37 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			args: args{ids: []int64{6, 8}, groupID: 101, parentAttemptID: 201},
 		},
 		{
-			name:                 "no content access to the last item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name:                 "no content access to the final item when requireContentAccessToTheFinalItem = true",
+			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name: "no access to the last item when requireContentAccessToTheLastItem = false",
-			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheLastItem: false},
+			name: "no access to the final item when requireContentAccessToTheFinalItem = false",
+			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheFinalItem: false},
 		},
 		{
-			name:                 "content access to the last item when requireContentAccessToTheLastItem = true",
-			args:                 args{ids: []int64{4, 6}, groupID: 101, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name:                 "content access to the final item when requireContentAccessToTheFinalItem = true",
+			args:                 args{ids: []int64{4, 6}, groupID: 101, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 			want:                 true,
 			wantAttemptIDMap:     map[int64]int64{4: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "info access to the last item when requireContentAccessToTheLastItem = false",
-			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheLastItem: false},
+			name:                 "info access to the final item when requireContentAccessToTheFinalItem = false",
+			args:                 args{ids: []int64{2, 4}, groupID: 103, parentAttemptID: 200, requireContentAccessToTheFinalItem: false},
 			want:                 true,
 			wantAttemptIDMap:     map[int64]int64{2: 200},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name: "no access to the last item when requireContentAccessToTheLastItem = true",
-			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheLastItem: true},
+			name: "no access to the final item when requireContentAccessToTheFinalItem = true",
+			args: args{ids: []int64{2, 4}, groupID: 104, parentAttemptID: 200, requireContentAccessToTheFinalItem: true},
 		},
-		{name: "no content access to the second to the last item", args: args{ids: []int64{2, 4, 6}, groupID: 105, parentAttemptID: 201}},
+		{name: "no content access to the second to the final item", args: args{ids: []int64{2, 4, 6}, groupID: 105, parentAttemptID: 201}},
 		{name: "no content access to the first item", args: args{ids: []int64{2, 4, 6}, groupID: 106, parentAttemptID: 201}},
 		{name: "result of the first item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 107, parentAttemptID: 201}},
-		{name: "result of the second to the last item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, parentAttemptID: 201}},
+		{name: "result of the second to the final item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, parentAttemptID: 201}},
 		{
 			name:                 "attempt of the first item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 109, parentAttemptID: 201},
@@ -493,7 +505,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is expired",
+			name:                 "attempt of the second to the final item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 110, parentAttemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
@@ -505,14 +517,14 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is ended",
+			name:                 "attempt of the second to the final item is ended",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 112, parentAttemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{name: "the first item is not a parent of the second item", args: args{ids: []int64{4, 4, 6}, groupID: 113, parentAttemptID: 200}},
 		{
-			name: "the second to the last item is not a parent of the last item",
+			name: "the second to the final item is not a parent of the final item",
 			args: args{ids: []int64{2, 4, 4}, groupID: 113, parentAttemptID: 200},
 		},
 		{
@@ -520,18 +532,18 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 114, parentAttemptID: 201},
 		},
 		{
-			name: "the first item's attempt is not the same as the the second items's attempt " +
+			name: "the first item's attempt is not the same as the second items's attempt " +
 				"while the second item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 115, parentAttemptID: 200},
 		},
 		{
-			name: "the third from the end item's attempt is not a parent for the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is set",
+			name: "the third from the end item's attempt is not a parent for the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 116, parentAttemptID: 201},
 		},
 		{
-			name: "the third from the end item's attempt is not the same as the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is not set",
+			name: "the third from the end item's attempt is not the same as the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 117, parentAttemptID: 200},
 		},
 		{
@@ -560,9 +572,11 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		tt := tt
 		testEachWriteLockMode(t, tt.name+": is valid", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				testoutput.SuppressIfPasses(t)
+
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
-						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheLastItem, writeLock)
+						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheFinalItem, writeLock)
 					assert.Equal(t, tt.want, got)
 					assert.NoError(t, err)
 					return nil
@@ -571,6 +585,8 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		})
 		testEachWriteLockMode(t, tt.name+": breadcrumbs hierarchy", func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				testoutput.SuppressIfPasses(t)
+
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(
 						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, writeLock)
@@ -592,6 +608,8 @@ func assertBreadcrumbsHierarchy(t *testing.T,
 }
 
 func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
@@ -841,8 +859,7 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		store.ScheduleGroupsAncestorsPropagation()
-		return nil
+		return store.GroupGroups().CreateNewAncestors()
 	}))
 
 	type args struct {
@@ -893,26 +910,26 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			args: args{ids: []int64{6, 8}, groupID: 101, attemptID: 202},
 		},
 		{
-			name: "no access to the last item",
+			name: "no access to the final item",
 			args: args{ids: []int64{2, 4}, groupID: 104, attemptID: 201},
 		},
 		{
-			name:                 "content access to the last item",
+			name:                 "content access to the final item",
 			args:                 args{ids: []int64{4, 6}, groupID: 101, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{4: 200, 6: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "info access to the last item",
+			name:                 "info access to the final item",
 			args:                 args{ids: []int64{2, 4}, groupID: 103, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
-		{name: "no content access to the second to the last item", args: args{ids: []int64{2, 4, 6}, groupID: 105, attemptID: 202}},
+		{name: "no content access to the second to the final item", args: args{ids: []int64{2, 4, 6}, groupID: 105, attemptID: 202}},
 		{name: "no content access to the first item", args: args{ids: []int64{2, 4, 6}, groupID: 106, attemptID: 202}},
 		{name: "result of the first item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 107, attemptID: 202}},
-		{name: "result of the second to the last item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, attemptID: 202}},
-		{name: "result of the last item is not started", args: args{ids: []int64{2, 4}, groupID: 108, attemptID: 201}},
+		{name: "result of the second to the final item is not started", args: args{ids: []int64{2, 4, 6}, groupID: 108, attemptID: 202}},
+		{name: "result of the final item is not started", args: args{ids: []int64{2, 4}, groupID: 108, attemptID: 201}},
 		{
 			name:                 "attempt of the first item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 109, attemptID: 202},
@@ -920,13 +937,13 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is expired",
+			name:                 "attempt of the second to the final item is expired",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 110, attemptID: 202},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201, 6: 202},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the last item is expired",
+			name:                 "attempt of the final item is expired",
 			args:                 args{ids: []int64{2, 4}, groupID: 110, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
@@ -938,46 +955,46 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the second to the last item is ended",
+			name:                 "attempt of the second to the final item is ended",
 			args:                 args{ids: []int64{2, 4, 6}, groupID: 112, attemptID: 202},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201, 6: 202},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{
-			name:                 "attempt of the last item is ended",
+			name:                 "attempt of the final item is ended",
 			args:                 args{ids: []int64{2, 4}, groupID: 112, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{2: 200, 4: 201},
 			wantAttemptNumberMap: map[int64]int{},
 		},
 		{name: "the first item is not a parent of the second item", args: args{ids: []int64{4, 4, 6}, groupID: 113, attemptID: 200}},
-		{name: "the second to the last item is not a parent of the last item", args: args{ids: []int64{2, 4, 4}, groupID: 113, attemptID: 200}},
+		{name: "the second to the final item is not a parent of the final item", args: args{ids: []int64{2, 4, 4}, groupID: 113, attemptID: 200}},
 		{
 			name: "the first item's attempt is not a parent for the second items's attempt while the second item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 114, attemptID: 202},
 		},
 		{
-			name: "the first item's attempt is not the same as the the second items's attempt " +
+			name: "the first item's attempt is not the same as the second items's attempt " +
 				"while the second item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 115, attemptID: 200},
 		},
 		{
-			name: "the third to the end item's attempt is not a parent for the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is set",
+			name: "the third to the end item's attempt is not a parent for the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 116, attemptID: 201},
 		},
 		{
-			name: "the second to the last item's attempt is not a parent for the last items's attempt " +
-				"while the last item's attempt root_item_id is set",
+			name: "the second to the final item's attempt is not a parent for the final items's attempt " +
+				"while the final item's attempt root_item_id is set",
 			args: args{ids: []int64{2, 4, 6}, groupID: 116, attemptID: 201},
 		},
 		{
-			name: "the third from the end item's attempt is not the same as the second to the last items's attempt " +
-				"while the second to the last item's attempt root_item_id is not set",
+			name: "the third from the end item's attempt is not the same as the second to the final items's attempt " +
+				"while the second to the final item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6, 8}, groupID: 117, attemptID: 200},
 		},
 		{
-			name: "the second the last item's attempt is not the same as the last items's attempt " +
-				"while the last item's attempt root_item_id is not set",
+			name: "the second the final item's attempt is not the same as the final items's attempt " +
+				"while the final item's attempt root_item_id is not set",
 			args: args{ids: []int64{2, 4, 6}, groupID: 117, attemptID: 200},
 		},
 		{
@@ -1003,6 +1020,8 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 		tt := tt
 		testEachWriteLockMode(t, tt.name, func(writeLock bool) func(*testing.T) {
 			return func(t *testing.T) {
+				testoutput.SuppressIfPasses(t)
+
 				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
 						tt.args.ids, tt.args.groupID, tt.args.attemptID, writeLock)
@@ -1034,32 +1053,38 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 		wantPlatformID *int64
 	}{
 		{name: "url is null", url: nil, wantPlatformID: nil},
-		{name: "chooses a platform with higher priority", url: utils.Ptr("1234"), wantPlatformID: utils.Ptr(int64(2))},
-		{name: "url doesn't match any regexp", url: utils.Ptr("34"), wantPlatformID: nil},
+		{name: "chooses a platform with higher priority", url: golang.Ptr("1234"), wantPlatformID: golang.Ptr(int64(2))},
+		{name: "url doesn't match any regexp", url: golang.Ptr("34"), wantPlatformID: nil},
 	}
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
 					- {id: 4, regexp: "^2.*", priority: 2}
 					- {id: 2, regexp: "^1.*", priority: 3}
 					- {id: 1, regexp: "^4.*", priority: 4}
-				languages: [{tag: fr}]`)
+				languages: [{tag: fr}]
+				items: [{id: 1000, url: "4", default_language_tag: fr}]`)
 			defer func() { _ = db.Close() }()
 
 			itemStore := database.NewDataStore(db).Items()
 			assert.NoError(t, itemStore.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
 				return store.Items().InsertMap(map[string]interface{}{
+					"id":                   1,
 					"url":                  test.url,
 					"default_language_tag": "fr",
 				})
 			}))
 			var platformID *int64
-			assert.NoError(t, itemStore.PluckFirst("platform_id", &platformID).Error())
+			assert.NoError(t, itemStore.ByID(1).PluckFirst("platform_id", &platformID).Error())
 			if test.wantPlatformID == nil {
-				assert.Nil(t, platformID)
+				if platformID != nil {
+					t.Errorf("wanted platform_id to be nil, but got %d", *platformID)
+				}
 			} else {
 				assert.NotNil(t, platformID)
 				if platformID != nil {
@@ -1076,17 +1101,19 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 		updateMap      map[string]interface{}
 		wantPlatformID *int64
 	}{
-		{name: "url is unchanged", updateMap: map[string]interface{}{"type": "Chapter"}, wantPlatformID: utils.Ptr(int64(1))},
+		{name: "url is unchanged", updateMap: map[string]interface{}{"type": "Chapter"}, wantPlatformID: golang.Ptr(int64(1))},
 		{name: "new url is null", updateMap: map[string]interface{}{"url": nil}, wantPlatformID: nil},
 		{
-			name: "chooses a platform with higher priority", updateMap: map[string]interface{}{"url": utils.Ptr("12345")},
-			wantPlatformID: utils.Ptr(int64(2)),
+			name: "chooses a platform with higher priority", updateMap: map[string]interface{}{"url": golang.Ptr("12345")},
+			wantPlatformID: golang.Ptr(int64(2)),
 		},
-		{name: "new url doesn't match any regexp", updateMap: map[string]interface{}{"url": utils.Ptr("34")}, wantPlatformID: nil},
+		{name: "new url doesn't match any regexp", updateMap: map[string]interface{}{"url": golang.Ptr("34")}, wantPlatformID: nil},
 	}
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 1, regexp: "^4.*", priority: 4}
@@ -1104,7 +1131,9 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 			var platformID *int64
 			assert.NoError(t, itemStore.ByID(1).PluckFirst("platform_id", &platformID).Error())
 			if test.wantPlatformID == nil {
-				assert.Nil(t, platformID)
+				if platformID != nil {
+					t.Errorf("wanted platform_id to be nil, but got %d", *platformID)
+				}
 			} else {
 				assert.NotNil(t, platformID)
 				if platformID != nil {
@@ -1125,22 +1154,24 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform",
 			regexp: "1", priority: 3,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(2)), utils.Ptr(int64(1)), utils.Ptr(int64(2)), utils.Ptr(int64(2))},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), golang.Ptr(int64(2))},
 		},
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform (higher priority)",
 			regexp: "1", priority: 6,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(5)), utils.Ptr(int64(4)), utils.Ptr(int64(5)), nil},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(5)), golang.Ptr(int64(4)), golang.Ptr(int64(5)), nil},
 		},
 		{
 			name:   "recalculates only item without a platform when the new platform has the lowest priority",
 			regexp: "1", priority: -1,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(4)), utils.Ptr(int64(1)), utils.Ptr(int64(2)), utils.Ptr(int64(2))},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(4)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), golang.Ptr(int64(2))},
 		},
 	}
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
@@ -1179,32 +1210,34 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (only priority is changed)",
 			regexp: "^1.*", priority: 3,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(2)), utils.Ptr(int64(1)), utils.Ptr(int64(2)), nil},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), nil},
 		},
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (only regexp is changed)",
 			regexp: "1", priority: 4,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(2)), utils.Ptr(int64(1)), utils.Ptr(int64(2)), nil},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), nil},
 		},
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (higher priority)",
 			regexp: "1", priority: 6,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(2)), utils.Ptr(int64(4)), utils.Ptr(int64(2)), nil},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(4)), golang.Ptr(int64(2)), nil},
 		},
 		{
 			name:   "recalculates only item without a platform when the new platform has the lowest priority",
 			regexp: "1", priority: -1,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(4)), utils.Ptr(int64(1)), utils.Ptr(int64(3)), nil},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(4)), golang.Ptr(int64(1)), golang.Ptr(int64(3)), nil},
 		},
 		{
 			name:   "doesn't recalculate anything when regexp & priority stays unchanged",
 			regexp: "^1.*", priority: 4,
-			wantPlatformIDs: []*int64{utils.Ptr(int64(4)), utils.Ptr(int64(1)), nil, utils.Ptr(int64(2))},
+			wantPlatformIDs: []*int64{golang.Ptr(int64(4)), golang.Ptr(int64(1)), nil, golang.Ptr(int64(2))},
 		},
 	}
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
@@ -1234,6 +1267,8 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 }
 
 func Test_ItemStore_DeleteItem(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		languages: [{tag: fr}]
 		items: [{id: 1234, default_language_tag: fr},{id: 1235, default_language_tag: fr}]

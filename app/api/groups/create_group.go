@@ -30,7 +30,6 @@ type createGroupRequest struct {
 //
 //
 //		Also, the service sets the authenticated user as a manager of the group with the highest level of permissions.
-//		After everything, it propagates group ancestors.
 //
 //
 //		The user should not be temporary, otherwise the "forbidden" response is returned.
@@ -50,9 +49,11 @@ type createGroupRequest struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 
@@ -64,7 +65,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 	}
 
 	if user.IsTempUser {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var groupID int64
@@ -86,5 +87,5 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) service.
 		GroupID int64 `json:"id,string"`
 	}{GroupID: groupID}
 	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
-	return service.NoError
+	return nil
 }

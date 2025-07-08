@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type validationDateResultRow struct {
@@ -34,6 +35,8 @@ func constructExpectedResultsForValidatedAtTests(t11, t12, t13, t14, t23, t24 *t
 }
 
 func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -75,6 +78,8 @@ func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValid
 func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren(
 	t *testing.T,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -106,6 +111,8 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategoriesAreNotValidated(
 	t *testing.T,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -139,6 +146,8 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithCategoryValidation_IfAllAreValidated(
 	t *testing.T,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -177,6 +186,8 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems(
 	t *testing.T,
 ) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
@@ -199,10 +210,10 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (1, 3, 4)").
 		UpdateColumn("category", "Validation").Error())
 
-	assert.NoError(t, itemStore.Where("id=1").Updates(map[string]interface{}{
+	assert.NoError(t, itemStore.Where("id=1").UpdateColumn(map[string]interface{}{
 		"type": "Task",
 	}).Error())
-	assert.NoError(t, itemStore.Where("id=3").Updates(map[string]interface{}{
+	assert.NoError(t, itemStore.Where("id=3").UpdateColumn(map[string]interface{}{
 		"no_score": true,
 	}).Error())
 

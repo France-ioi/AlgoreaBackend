@@ -19,16 +19,18 @@ import (
 //			"$ref": "#/responses/updatedResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateNotificationsReadAt(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateNotificationsReadAt(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
 	service.MustNotBeError(srv.GetStore(r).Users().ByID(user.GroupID).
 		UpdateColumn("notifications_read_at", database.Now()).Error())
 
-	response := service.Response{Success: true, Message: "updated"}
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
 	render.Respond(w, r, &response)
 
-	return service.NoError
+	return nil
 }

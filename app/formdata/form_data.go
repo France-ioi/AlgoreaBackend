@@ -3,9 +3,9 @@ package formdata
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -26,7 +26,7 @@ import (
 // FormData can parse JSON, validate it and construct a map for updating DB.
 type FormData struct {
 	definitionStructure interface{}
-	fieldErrors         FieldErrors
+	fieldErrors         FieldErrorsError
 	metadata            mapstructure.Metadata
 	usedKeys            map[string]bool
 	decodeErrors        map[string]bool
@@ -106,7 +106,7 @@ func (f *FormData) RegisterValidation(tag string, fn validator.Func) {
 func (f *FormData) RegisterTranslation(tag, text string) {
 	_ = f.validate.RegisterTranslation(tag, f.trans,
 		func(ut ut.Translator) (err error) {
-			err = ut.Add(tag, text, false)
+			err = ut.Add(tag, text, true) // Silently override the translation
 			if err != nil {
 				panic(err)
 			}
@@ -127,6 +127,7 @@ func (f *FormData) AllowUnknownFields() {
 }
 
 // ParseJSONRequestData parses and validates JSON from the request according to the structure definition.
+// As it reads out the request body, it should be called only once.
 func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 	if err := f.decodeRequestJSONDataIntoStruct(r); err != nil {
 		return err
@@ -218,17 +219,17 @@ var (
 
 func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	var rawData map[string]interface{}
-	defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
+	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawData)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid input JSON: %w", err)
 	}
 	f.decodeMapIntoStruct(rawData)
 	return nil
 }
 
 func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
-	f.fieldErrors = make(FieldErrors)
+	f.fieldErrors = make(FieldErrorsError)
 	f.usedKeys = make(map[string]bool)
 	f.decodeErrors = make(map[string]bool)
 	f.metadata = mapstructure.Metadata{}
@@ -253,7 +254,8 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 	}
 
 	if err = decoder.Decode(m); err != nil {
-		mapstructureErr := err.(*mapstructure.Error)
+		var mapstructureErr *mapstructure.Error
+		errors.As(err, &mapstructureErr)
 		for _, fieldErrorString := range mapstructureErr.Errors { // Convert mapstructure's errors to our format
 			if matches := mapstructTypeErrorRegexp.FindStringSubmatch(fieldErrorString); len(matches) > 0 {
 				key := make([]byte, len(matches[1]))
@@ -283,7 +285,8 @@ func (f *FormData) validateFieldValues() {
 }
 
 func (f *FormData) processValidatorErrors(err error) {
-	validatorErrors := err.(validator.ValidationErrors)
+	var validatorErrors validator.ValidationErrors
+	errors.As(err, &validatorErrors)
 	for _, validatorError := range validatorErrors {
 		path := validatorError.Namespace()
 		path = f.getUsedKeysPathFromValidatorPath(path)
@@ -343,7 +346,7 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 					return false // skip this field
 				}
 				var value string
-				if len(v) >= 2 {
+				if len(v) > 1 {
 					value = strings.Join(v[1:], ":")
 				} else {
 					value = key
@@ -385,7 +388,7 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 		squash := getJSONSquash(&structField)
 		result := true
 		if !squash {
-			if len(prefix) > 0 {
+			if prefix != "" {
 				jsonName = prefix + "." + jsonName
 			}
 

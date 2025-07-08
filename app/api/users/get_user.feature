@@ -6,18 +6,18 @@ Feature: Get user info
       | 3        | 1         | jane  | null       | null      | fr               | null      | null       |
       | 4        | 0         | john  | null       | null      | fr               | null      | null       |
       | 5        | 0         | paul  | null       | null      | fr               | null      | null       |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | name          |
       | 10 | Some group    |
       | 11 | Another group |
       | 12 | Friends       |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 11              | 4              | null                           |
       | 10              | 2              | 2019-05-30 11:00:00            |
       | 12              | 5              | null                           |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members | can_grant_group_access |
       | 10       | 11         | false             | false                  |
       | 12       | 4          | true              | false                  |

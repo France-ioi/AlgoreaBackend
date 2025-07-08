@@ -9,11 +9,14 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		attempts:
 			- {participant_id: 11, id: 1, root_item_id: 112, allows_submissions_until: 3019-05-30 12:00:00}
@@ -38,7 +41,7 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 		{
 			name: "with info", participantID: 11, attemptID: 2, itemID: 12,
 			wantHintsInfo: &database.HintsInfo{
-				HintsRequested: utils.Ptr(`[0,1,"hint",null]`),
+				HintsRequested: golang.Ptr(`[0,1,"hint",null]`),
 				HintsCached:    4,
 			},
 		},
@@ -50,6 +53,8 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				hintsInfo, err := store.Results().GetHintsInfoForActiveAttempt(test.participantID, test.attemptID, test.itemID)
 				assert.Equal(t, test.wantHintsInfo, hintsInfo)
@@ -61,6 +66,8 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 }
 
 func TestResultStore_Propagate(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -74,6 +81,8 @@ func TestResultStore_Propagate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
 				s.ScheduleResultsPropagation()
 				return nil

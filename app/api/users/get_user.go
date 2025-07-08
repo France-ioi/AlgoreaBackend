@@ -41,10 +41,8 @@ type userViewResponse struct {
 	TempUser bool `json:"temp_user"`
 	// required: true
 	Login string `json:"login"`
-	// Nullable
 	// required: true
 	FreeText *string `json:"free_text"`
-	// Nullable
 	// required: true
 	WebSite *string `json:"web_site"`
 
@@ -86,6 +84,8 @@ type userViewResponse struct {
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 
@@ -116,7 +116,7 @@ type userViewResponse struct {
 //			"$ref": "#/responses/notFoundResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	var scope *database.DB
@@ -175,7 +175,7 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 	userInfo.IsCurrentUser = userInfo.GroupID == user.GroupID
 
 	render.Respond(w, r, &userInfo)
-	return service.NoError
+	return nil
 }
 
 type groupInfo struct {

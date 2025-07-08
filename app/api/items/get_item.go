@@ -18,20 +18,16 @@ import (
 type itemStringCommon struct {
 	// required: true
 	LanguageTag string `json:"language_tag"`
-	// Nullable
 	// required: true
 	Title *string `json:"title"`
-	// Nullable
 	// required: true
-	ImageURL *string `json:"image_url"`
-	// Nullable; only if `can_view` >= 'content'
-	Subtitle *string `json:"subtitle"`
-	// Nullable; only if `can_view` >= 'content'
+	ImageURL    *string `json:"image_url"`
+	Subtitle    *string `json:"subtitle"`
 	Description *string `json:"description"`
 }
 
 type itemStringRootNodeWithSolutionAccess struct {
-	// Nullable; only if the user has access to solutions
+	// only if the user has access to solutions
 	EduComment *string `json:"edu_comment"`
 }
 
@@ -61,7 +57,6 @@ type commonItemFields struct {
 	// required: true
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type"`
-	// Nullable
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	// required: true
@@ -75,25 +70,25 @@ type commonItemFields struct {
 	Permissions structures.ItemPermissions `json:"permissions"`
 }
 
-type getItemCommonFields struct {
-	commonItemFields
-
-	// required: true
-	Permissions itemPermissionsWithCanRequestHelpTo `json:"permissions"`
-}
-
-type itemPermissionsWithCanRequestHelpTo struct {
+type getItemItemPermissions struct {
 	structures.ItemPermissions
 
 	// Whether a `can_request_help_to` permission is defined.
 	// required: true
 	CanRequestHelp bool `json:"can_request_help"`
+
+	EnteringTimeIntervals []enteringTimeInterval `json:"entering_time_intervals"`
+}
+
+type enteringTimeInterval struct {
+	CanEnterFrom  database.Time `json:"can_enter_from"`
+	CanEnterUntil database.Time `json:"can_enter_until"`
 }
 
 type itemRootNodeNotChapterFields struct {
-	// Nullable; only if not a chapter
+	// only if not a chapter
 	URL *string `json:"url"`
-	// Nullable; only if not a chapter
+	// only if not a chapter
 	Options *string `json:"options"`
 	// only if not a chapter
 	UsesAPI bool `json:"uses_api"`
@@ -103,7 +98,8 @@ type itemRootNodeNotChapterFields struct {
 
 // only if watched_group_id is given.
 type itemResponseWatchedGroupItemInfo struct {
-	Permissions *itemPermissionsWithCanRequestHelpTo `json:"permissions,omitempty"`
+	// only if the current user can watch the item or grant permissions to both the watched group and the item
+	Permissions *getItemItemPermissions `json:"permissions,omitempty"`
 
 	// Average score of all "end-members" within the watched group
 	// (or of the watched group itself if it is a user or a team).
@@ -114,7 +110,10 @@ type itemResponseWatchedGroupItemInfo struct {
 
 // swagger:model itemResponse
 type itemResponse struct {
-	*getItemCommonFields
+	commonItemFields
+
+	// required: true
+	Permissions getItemItemPermissions `json:"permissions"`
 
 	// required: true
 	// enum: All,Half,One,None
@@ -127,7 +126,6 @@ type itemResponse struct {
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
 	// required: true
 	TitleBarVisible bool `json:"title_bar_visible"`
-	// Nullable
 	// required: true
 	TextID *string `json:"text_id"`
 	// required: true
@@ -186,8 +184,7 @@ type itemResponse struct {
 //							 otherwise the "forbidden" error is returned.
 //
 //						 * If `{watched_group_id}` is given, the user should ba a manager of the group with the 'can_watch_members' permission,
-//							 otherwise the "forbidden" error is returned. Permissions of the watched group are only shown if the current user
-//							 can watch the item or grant permissions to both the watched group and the item.
+//							 otherwise the "forbidden" error is returned.
 //	parameters:
 //		- name: item_id
 //			in: path
@@ -218,9 +215,11 @@ type itemResponse struct {
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -229,10 +228,8 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 	user := srv.GetUser(httpReq)
 	participantID := service.ParticipantIDFromContext(httpReq.Context())
 
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpReq)
+	service.MustNotBeError(err)
 
 	var languageTag string
 	var languageTagSet bool
@@ -247,23 +244,49 @@ func (srv *Service) getItem(rw http.ResponseWriter, httpReq *http.Request) servi
 		return service.ErrNotFound(errors.New("insufficient access rights on the given item id or the item doesn't exist"))
 	}
 
-	hasCanRequestHelpTo := store.Items().HasCanRequestHelpTo(itemID, user.GroupID)
-	watchedGroupHasCanRequestHelpTo := false
-	if watchedGroupIDIsSet {
-		watchedGroupHasCanRequestHelpTo = store.Items().HasCanRequestHelpTo(itemID, watchedGroupID)
+	permissionGrantedStore := store.PermissionsGranted()
+	response := constructItemResponseFromDBData(rawData, permissionGrantedStore, watchedGroupIDIsSet)
+
+	response.Permissions.CanRequestHelp = hasCanRequestHelpTo(store, itemID, participantID)
+	getEnteringTimeIntervals(store, participantID, itemID, &response.Permissions.EnteringTimeIntervals)
+	if response.WatchedGroup != nil && response.WatchedGroup.Permissions != nil {
+		response.WatchedGroup.Permissions.CanRequestHelp = hasCanRequestHelpTo(store, itemID, watchedGroupID)
+		getEnteringTimeIntervals(store, watchedGroupID, itemID, &response.WatchedGroup.Permissions.EnteringTimeIntervals)
 	}
 
-	permissionGrantedStore := store.PermissionsGranted()
-	response := constructItemResponseFromDBData(
-		rawData,
-		permissionGrantedStore,
-		watchedGroupIDIsSet,
-		hasCanRequestHelpTo,
-		watchedGroupHasCanRequestHelpTo,
-	)
-
 	render.Respond(rw, httpReq, response)
-	return service.NoError
+	return nil
+}
+
+// hasCanRequestHelpTo checks whether there is a can_request_help_to permission on an item-group.
+// The checks are made on item's ancestor while can_request_help_propagation=1, and on group's ancestors.
+func hasCanRequestHelpTo(s *database.DataStore, itemID, groupID int64) bool {
+	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagationQuery(itemID)
+
+	hasCanRequestHelpTo, err := s.Users().
+		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", groupID).
+		Joins(`JOIN permissions_granted ON
+			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
+			permissions_granted.item_id IN (?)`, itemAncestorsRequestHelpPropagationQuery.SubQuery()).
+		Where("permissions_granted.can_request_help_to IS NOT NULL OR permissions_granted.is_owner = 1").
+		Select("1").
+		Limit(1).
+		HasRows()
+	service.MustNotBeError(err)
+
+	return hasCanRequestHelpTo
+}
+
+func getEnteringTimeIntervals(store *database.DataStore, groupID, itemID int64, enteringTimeIntervals *[]enteringTimeInterval) {
+	service.MustNotBeError(store.ActiveGroupAncestors().
+		Select("permissions_granted.can_enter_from, permissions_granted.can_enter_until").
+		Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Joins("JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id").
+		Where("permissions_granted.item_id = ?", itemID).
+		Where("permissions_granted.can_enter_until > NOW()").
+		Where("permissions_granted.can_enter_from < can_enter_until").
+		Order("permissions_granted.can_enter_from, permissions_granted.can_enter_until").
+		Scan(enteringTimeIntervals).Error())
 }
 
 // rawItem represents the getItem service data returned from the DB.
@@ -440,7 +463,6 @@ func getRawItemData(s *database.ItemStore, rootID, groupID int64, languageTag st
 		service.MustNotBeError(err)
 	}
 
-	// nolint:gosec
 	query = query.Select(columnsBuffer.String(), columnValues...)
 
 	err := query.Scan(&result).Error()
@@ -455,19 +477,20 @@ func constructItemResponseFromDBData(
 	rawData *rawItem,
 	permissionGrantedStore *database.PermissionGrantedStore,
 	watchedGroupIDIsSet bool,
-	hasCanRequestHelpTo bool,
-	watchedGroupHasCanRequestHelpTo bool,
 ) *itemResponse {
 	result := &itemResponse{
-		getItemCommonFields: &getItemCommonFields{
-			commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
-			Permissions: itemPermissionsWithCanRequestHelpTo{
-				ItemPermissions: *rawData.AsItemPermissions(permissionGrantedStore),
-				CanRequestHelp:  hasCanRequestHelpTo,
-			},
+		commonItemFields: *rawData.asItemCommonFields(permissionGrantedStore),
+		Permissions: getItemItemPermissions{
+			ItemPermissions: *rawData.AsItemPermissions(permissionGrantedStore),
 		},
 		String: itemStringRoot{
-			itemStringCommon: constructItemStringCommon(rawData),
+			itemStringCommon: &itemStringCommon{
+				LanguageTag: rawData.StringLanguageTag,
+				Title:       rawData.StringTitle,
+				ImageURL:    rawData.StringImageURL,
+				Subtitle:    rawData.StringSubtitle,
+				Description: rawData.StringDescription,
+			},
 		},
 		EntryMinAdmittedMembersRatio: rawData.EntryMinAdmittedMembersRatio,
 		EntryFrozenTeams:             rawData.EntryFrozenTeams,
@@ -504,22 +527,11 @@ func constructItemResponseFromDBData(
 			result.WatchedGroup.AverageScore = &rawData.WatchedGroupAverageScore
 		}
 		if rawData.CanViewWatchedGroupPermissions {
-			result.WatchedGroup.Permissions = &itemPermissionsWithCanRequestHelpTo{
+			result.WatchedGroup.Permissions = &getItemItemPermissions{
 				ItemPermissions: *rawData.WatchedGroupPermissions.AsItemPermissions(permissionGrantedStore),
-				CanRequestHelp:  watchedGroupHasCanRequestHelpTo,
 			}
 		}
 	}
 
 	return result
-}
-
-func constructItemStringCommon(rawData *rawItem) *itemStringCommon {
-	return &itemStringCommon{
-		LanguageTag: rawData.StringLanguageTag,
-		Title:       rawData.StringTitle,
-		ImageURL:    rawData.StringImageURL,
-		Subtitle:    rawData.StringSubtitle,
-		Description: rawData.StringDescription,
-	}
 }

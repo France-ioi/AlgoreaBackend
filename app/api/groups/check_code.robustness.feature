@@ -1,11 +1,8 @@
 Feature: Check if the group code is valid - robustness
   Background:
-    Given the database has the following table 'groups':
-      | id | type  |
-      | 21 | User  |
-    And the database has the following table 'users':
-      | login | group_id | temp_user |
-      | john  | 21       | false     |
+    Given the database has the following user:
+      | group_id | login |
+      | 21       | john  |
 
   Scenario: No code
     Given I am the user with id "21"

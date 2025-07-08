@@ -1,38 +1,38 @@
 Feature: Publish a result to LTI
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  |
       | 21  | User  |
       | 31  | User  |
       | 99  | Class |
       | 100 | Team  |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 99              | 21             |
       | 100             | 31             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 123 | fr                   |
       | 124 | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 21       | 123     | content                  |
       | 99       | 124     | content_with_descendants |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id  | participant_id |
       | 0   | 21             |
       | 1   | 21             |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 21             | 123     | 12.3           |
       | 1          | 21             | 123     | 15.6           |
       | 1          | 21             | 124     | 20.1           |
       | 1          | 31             | 123     | 9.5            |
-    And the database has the following table 'users':
-      | temp_user | login | group_id | login_id |
-      | 0         | john  | 21       | 1234567  |
-      | 1         | jane  | 31       | null     |
+    And the database has the following users:
+      | group_id | temp_user | login | login_id |
+      | 21       | 0         | john  | 1234567  |
+      | 31       | 1         | jane  | null     |
     And the application config is:
       """
       auth:

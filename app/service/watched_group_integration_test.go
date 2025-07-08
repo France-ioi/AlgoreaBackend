@@ -14,9 +14,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestBase_ResolveWatchedGroupID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		groups: [{id: 1, type: Class}, {id: 2, type: Team}, {id: 3, type: Other}, {id: 4, type: User}, {id: 5, type: User}, {id: 6, type: Team}]
 		groups_groups:
@@ -30,9 +33,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	defer func() { _ = db.Close() }()
 	store := database.NewDataStore(db)
 	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-		trStore.ScheduleGroupsAncestorsPropagation()
-
-		return nil
+		return trStore.GroupGroups().CreateNewAncestors()
 	}))
 
 	srv := &service.Base{}
@@ -48,10 +49,10 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		url                     string
 		wantWatchedGroupID      int64
 		wantWatchedGroupIDIsSet bool
-		wantAPIError            service.APIError
+		wantError               error
 	}{
-		{name: "watched_group_id is not managed by the user", url: "?watched_group_id=4", wantAPIError: forbiddenError},
-		{name: "no can_watch_members permission", url: "?watched_group_id=2", wantAPIError: forbiddenError},
+		{name: "watched_group_id is not managed by the user", url: "?watched_group_id=4", wantError: forbiddenError},
+		{name: "no can_watch_members permission", url: "?watched_group_id=2", wantError: forbiddenError},
 		{name: "managed by an ancestor", url: "?watched_group_id=3", wantWatchedGroupID: 3, wantWatchedGroupIDIsSet: true},
 		{name: "managed by the user", url: "?watched_group_id=5", wantWatchedGroupID: 5, wantWatchedGroupIDIsSet: true},
 		{name: "an ancestor is managed", url: "?watched_group_id=6", wantWatchedGroupID: 6, wantWatchedGroupIDIsSet: true},
@@ -60,11 +61,13 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			req, _ := http.NewRequest("GET", tt.url, http.NoBody)
-			watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(req)
+			watchedGroupID, watchedGroupIDIsSet, gotError := srv.ResolveWatchedGroupID(req)
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)
 			assert.Equal(t, tt.wantWatchedGroupIDIsSet, watchedGroupIDIsSet)
-			assert.Equal(t, tt.wantAPIError, apiError)
+			assert.Equal(t, tt.wantError, gotError)
 		})
 	}
 }

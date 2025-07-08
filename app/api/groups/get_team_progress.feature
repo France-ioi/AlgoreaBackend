@@ -1,6 +1,6 @@
 Feature: Display the current progress of teams on a subset of items (groupTeamProgress)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | name           |
       | 1  | Base    | Root 1         |
       | 3  | Base    | Root 2         |
@@ -14,34 +14,23 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 17 | Other   | A custom group |
       | 18 | Club    | Our Club       |
       | 20 | Friends | My Friends     |
-      | 21 | User    | owner          |
-      | 51 | User    | johna          |
-      | 53 | User    | johnb          |
-      | 55 | User    | johnc          |
-      | 57 | User    | johnd          |
-      | 59 | User    | johne          |
-      | 61 | User    | janea          |
-      | 63 | User    | janeb          |
-      | 65 | User    | janec          |
-      | 67 | User    | janed          |
-      | 69 | User    | janee          |
-    And the database has the following table 'users':
-      | login | group_id |
-      | owner | 21       |
-      | johna | 51       |
-      | johnb | 53       |
-      | johnc | 55       |
-      | johnd | 57       |
-      | johne | 59       |
-      | janea | 61       |
-      | janeb | 63       |
-      | janec | 65       |
-      | janed | 67       |
-      | janee | 69       |
-    And the database has the following table 'group_managers':
+    And the database has the following users:
+      | group_id | login |
+      | 21       | owner |
+      | 51       | johna |
+      | 53       | johnb |
+      | 55       | johnc |
+      | 57       | johnd |
+      | 59       | johne |
+      | 61       | janea |
+      | 63       | janeb |
+      | 65       | janec |
+      | 67       | janed |
+      | 69       | janee |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 1        | 4          | true              |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 11             |
       | 3               | 13             |
@@ -64,7 +53,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 16              | 67             |
       | 20              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type    | default_language_tag |
       | 200 | Chapter | fr                   |
       | 210 | Chapter | fr                   |
@@ -109,7 +98,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 417 | Task    | fr                   |
       | 418 | Task    | fr                   |
       | 419 | Task    | fr                   |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
       | 200            | 220           | 1           |
@@ -151,7 +140,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 410            | 417           | 7           |
       | 410            | 418           | 8           |
       | 410            | 419           | 9           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_watch_generated |
       | 21       | 210     | none                     | result              |
       | 21       | 211     | info                     | none                |
@@ -193,7 +182,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 20       | 417     | none                     | none                |
       | 21       | 418     | none                     | none                |
       | 20       | 419     | none                     | none                |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          |
       | 0  | 14             | 2017-05-29 06:38:38 |
       | 1  | 14             | 2017-05-29 06:38:38 |
@@ -205,7 +194,7 @@ Feature: Display the current progress of teams on a subset of items (groupTeamPr
       | 1  | 15             | 2017-04-29 06:38:38 |
       | 2  | 15             | 2017-03-29 06:38:38 |
       | 5  | 14             | 2017-05-29 06:38:38 |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          | score_computed | score_obtained_at   | hints_cached | submissions | validated_at        | latest_activity_at  |
       | 0          | 14             | 210     | 2017-05-29 05:38:38 | 50             | 2017-05-29 06:38:38 | 115          | 127         | null                | 2019-05-29 06:38:38 |
       | 0          | 14             | 211     | 2017-05-29 06:38:38 | 0              | 2017-05-29 06:38:38 | 100          | 100         | null                | 2018-05-30 06:38:38 |

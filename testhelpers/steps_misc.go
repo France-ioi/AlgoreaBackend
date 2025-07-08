@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,12 +20,27 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
-// TimeNow stubs time.Now to the provided time.
+// TimeNow stubs time.Now and mocks the DB function NOW() with the provided time.
 func (ctx *TestContext) TimeNow(timeStr string) error {
+	if err := ctx.ServerTimeNow(timeStr); err != nil {
+		return err
+	}
+	MockDBTime(time.Now().UTC().Format(time.DateTime + ".999999999"))
+	return nil
+}
+
+// ServerTimeNow stubs time.Now with the provided time.
+func (ctx *TestContext) ServerTimeNow(timeStr string) error {
+	var err error
+	timeStr, err = ctx.preprocessString(timeStr)
+	if err != nil {
+		return err
+	}
 	testTime, err := time.Parse(time.RFC3339Nano, timeStr)
 	if err == nil {
 		monkey.Patch(time.Now, func() time.Time { return testTime })
@@ -34,8 +48,17 @@ func (ctx *TestContext) TimeNow(timeStr string) error {
 	return err
 }
 
-// TimeIsFrozen stubs time.Now to the current time.
+// TimeIsFrozen stubs time.Now with the current time and mocks the DB function NOW().
 func (ctx *TestContext) TimeIsFrozen() error {
+	if err := ctx.ServerTimeIsFrozen(); err != nil {
+		return err
+	}
+	MockDBTime(time.Now().UTC().Format(time.DateTime + ".999999999"))
+	return nil
+}
+
+// ServerTimeIsFrozen stubs time.Now with the current time.
+func (ctx *TestContext) ServerTimeIsFrozen() error {
 	currentTime := time.Now()
 	monkey.Patch(time.Now, func() time.Time { return currentTime })
 	return nil
@@ -47,22 +70,23 @@ func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error {
 	return nil
 }
 
-var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
-
 // TheGeneratedGroupCodesAre stubs groups.GenerateGroupCode to generate the provided codes instead of random ones.
 // generatedCodes is in the following form:
 // example for three codes: "code1","code2","code3"
 // with an arbitrary number of codes.
 func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error {
-	currentIndex := 0
+	ctx.generatedGroupCodeIndex = -1
+	var parsedGeneratedCode []string
+	if err := json.Unmarshal([]byte(fmt.Sprintf("[%s]", generatedCodes)), &parsedGeneratedCode); err != nil {
+		return err
+	}
 	monkey.Patch(groups.GenerateGroupCode, func() (string, error) {
-		currentIndex++
-		code := multipleStringsRegexp.FindStringSubmatch(generatedCodes)
-		if code == nil {
+		ctx.generatedGroupCodeIndex++
+
+		if ctx.generatedGroupCodeIndex >= len(parsedGeneratedCode) {
 			return "", errors.New("not enough generated codes")
 		}
-		generatedCodes = generatedCodes[len(code[1]):]
-		return code[2], nil
+		return parsedGeneratedCode[ctx.generatedGroupCodeIndex], nil
 	})
 	return nil
 }
@@ -80,7 +104,7 @@ func (ctx *TestContext) LogsShouldContain(docString *godog.DocString) error {
 		return err
 	}
 	stringToSearch := strings.TrimSpace(preprocessed)
-	logs := ctx.logsHook.GetAllLogs()
+	logs := ctx.logsHook.GetAllStructuredLogs()
 	if !strings.Contains(logs, stringToSearch) {
 		return fmt.Errorf("cannot find %q in logs:\n%s", stringToSearch, logs)
 	}
@@ -127,6 +151,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 	return nil
 }
 
+// FalsifiedSignedTokenIsDistributed generates a falsified token and sets it in a global template variable.
 func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 	varName, signerName string,
 	jsonPayload *godog.DocString,
@@ -160,7 +185,7 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
-	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesByIDs(yamlConfig.Content))
+	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesWithIDs(yamlConfig.Content))
 	if err != nil {
 		return err
 	}
@@ -181,7 +206,7 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 }
 
 // TheContextVariableIs sets a context variable in the request http.Request as the provided value.
-// Can be retrieved from the request with r.Context().Value("variableName").
+// Can be retrieved from the request with r.Context().Value(service.APIServiceContextVariableName("variableName")).
 func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	preprocessed, err := ctx.preprocessString(value)
 	if err != nil {
@@ -189,9 +214,10 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	}
 
 	oldHTTPHandler := ctx.application.HTTPHandler
-	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
+	ctx.application.HTTPHandler = chi.NewRouter().With(func(_ http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
+			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(),
+				service.APIServiceContextVariableName(variableName), preprocessed)))
 		})
 	}).(*chi.Mux)
 	ctx.application.HTTPHandler.Mount("/", oldHTTPHandler)

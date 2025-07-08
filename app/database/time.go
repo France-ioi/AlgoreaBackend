@@ -26,6 +26,7 @@ func (t *Time) ScanString(str string) (err error) {
 	// Based on go-sql-driver/mysql.parseDateTime (see https://github.com/go-sql-driver/mysql/blob/master/utils.go#L109)
 	base := "0000-00-00 00:00:00.0000000"
 	switch len(str) {
+	//nolint:mnd // we allow "YYYY-MM-DD", "YYYY-MM-DD HH:MM:SS", "YYYY-MM-DD HH:MM:SS.M"-"YYYY-MM-DD HH:MM:SS.MMMMMM" formats
 	case 10, 19, 21, 22, 23, 24, 25, 26: // up to "YYYY-MM-DD HH:MM:SS.MMMMMM"
 		if str == base[:len(str)] {
 			return nil
@@ -45,7 +46,7 @@ func (t *Time) ScanString(str string) (err error) {
 // Value returns a database driver Value (*time.Time).
 func (t *Time) Value() (driver.Value, error) {
 	if t == nil {
-		return nil, nil
+		return nil, nil //nolint:nilnil // return nil for nil receiver
 	}
 	return (*time.Time)(t).UTC().Format(timeFormat), nil
 }

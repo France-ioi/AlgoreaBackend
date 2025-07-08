@@ -16,8 +16,9 @@ func Middleware(domains []ConfigItem, domainOverride string) func(next http.Hand
 	for _, domain := range domains {
 		for _, host := range domain.Domains {
 			domainsMap[host] = &CtxConfig{
-				AllUsersGroupID:  domain.AllUsersGroup,
-				TempUsersGroupID: domain.TempUsersGroup,
+				AllUsersGroupID:     domain.AllUsersGroup,
+				NonTempUsersGroupID: domain.NonTempUsersGroup,
+				TempUsersGroupID:    domain.TempUsersGroup,
 			}
 			if host == "default" {
 				defaultConfig = domainsMap[host]
@@ -28,7 +29,7 @@ func Middleware(domains []ConfigItem, domainOverride string) func(next http.Hand
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			domain := domainOverride
 			if domain == "" {
-				domain = strings.SplitN(r.Host, ":", 2)[0]
+				domain = strings.SplitN(r.Host, ":", 2)[0] //nolint:mnd // get the domain from the request host, ignoring the port if any
 			}
 			configuration := domainsMap[domain]
 			if configuration == nil {

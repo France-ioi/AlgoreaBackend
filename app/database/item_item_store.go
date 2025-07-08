@@ -7,13 +7,21 @@ type ItemItemStore struct {
 	*DataStore
 }
 
-const itemsRelationsLockTimeout = 3 * time.Second
+const itemsRelationsLockTimeout = 50 * time.Second
 
 // ChildrenOf returns a composable query for selecting children of the given item.
 func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 	return &ItemItemStore{
 		NewDataStoreWithTable(s.Where("items_items.parent_item_id=?", parentID), s.tableName),
 	}
+}
+
+// CreateNewAncestors populates items_ancestors table.
+func (s *ItemItemStore) CreateNewAncestors() (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+	s.DataStore.createNewAncestors("items", "item")
+	return nil
 }
 
 // ContentViewPropagationNameByIndex returns the content view propagation level name with the given index from the enum.

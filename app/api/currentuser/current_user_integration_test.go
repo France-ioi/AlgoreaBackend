@@ -12,13 +12,14 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 	tests := []struct {
-		name         string
-		fixture      string
-		wantAPIError service.APIError
+		name      string
+		fixture   string
+		wantError error
 	}{
 		{
 			name: "parent group is not a team",
@@ -34,7 +35,6 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 					- {participant_id: 1, id: 1, root_item_id: 1234}
 					- {participant_id: 2, id: 1, root_item_id: 1234}
 					- {participant_id: 3, id: 1, root_item_id: 1234}`,
-			wantAPIError: service.NoError,
 		},
 		{
 			name: "parent group is a team",
@@ -48,10 +48,9 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				items: [{id: 1234, default_language_tag: fr}]
 				attempts:
 					- {participant_id: 2, id: 1, root_item_id: 1234}`,
-			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with attempts for the given contest, but the user is not on teams",
+			name: "parent group is a team with attempts for the given item requiring explicit entry, but the user is not on teams",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
@@ -76,10 +75,9 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234}
 					- {participant_id: 4, id: 1, root_item_id: 1234}`,
-			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with attempts, but the user is on teams with attempts for other contests",
+			name: "parent group is a team with attempts, but the user is on teams with attempts for other items requiring explicit entry",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
@@ -99,10 +97,9 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234}
 					- {participant_id: 2, id: 1, root_item_id: 2345}`,
-			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with attempts and the user is on a team with attempts for the same contest",
+			name: "parent group is a team with attempts and the user is on a team with attempts for the same item requiring explicit entry",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
@@ -114,11 +111,11 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234}
 					- {participant_id: 2, id: 1, root_item_id: 1234}`,
-			wantAPIError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
+			wantError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
 		},
 		{
 			name: "parent group is a team with attempts and the user is on a team with attempts " +
-				"for the same contest (contest allows multiple attempts)",
+				"for the same item requiring explicit entry (the item allows multiple attempts)",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
@@ -130,11 +127,11 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234}
 					- {participant_id: 2, id: 1, root_item_id: 1234}`,
-			wantAPIError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
+			wantError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
 		},
 		{
-			name: "parent group is a team with attempts and the user is on a team with expired attempts for the same contest " +
-				"(contest allows multiple attempts)",
+			name: "parent group is a team with attempts and the user is on a team with expired attempts for " +
+				"the same item requiring explicit entry (the item allows multiple attempts)",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
@@ -146,11 +143,10 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234}
 					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
-			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with expired attempts and the user is on a team with expired attempts for the same contest " +
-				"(contest allows multiple attempts)",
+			name: "parent group is a team with expired attempts and the user is on a team with expired attempts for " +
+				"the same item requiring explicit entry (the item allows multiple attempts)",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
@@ -162,11 +158,10 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}
 					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
-			wantAPIError: service.NoError,
 		},
 		{
-			name: "parent group is a team with expired attempts and the user is on a team with expired attempts for the same contest " +
-				"(contest doesn't allow multiple attempts)",
+			name: "parent group is a team with expired attempts and the user is on a team with expired attempts " +
+				"for the same item requiring explicit entry (the item doesn't allow multiple attempts)",
 			fixture: `
 				groups:
 					- {id: 1, is_public: 1, type: "Team"}
@@ -178,24 +173,25 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 				attempts:
 					- {participant_id: 1, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}
 					- {participant_id: 2, id: 1, root_item_id: 1234, allows_submissions_until: 2019-05-30 11:00:00}`,
-			wantAPIError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
+			wantError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			testhelpers.SuppressOutputIfPasses(t)
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(tt.fixture)
 			defer func() { _ = db.Close() }()
 
 			store := database.NewDataStore(db)
-			var apiError service.APIError
+			var err error
 			assert.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
-				apiError = currentuser.CheckPreconditionsForGroupRequests(transactionStore,
+				err = currentuser.CheckPreconditionsForGroupRequests(transactionStore,
 					&database.User{GroupID: 10}, 1, "createJoinRequest")
 				return nil
 			}))
-			assert.Equal(t, tt.wantAPIError, apiError)
+			assert.Equal(t, tt.wantError, err)
 		})
 	}
 }

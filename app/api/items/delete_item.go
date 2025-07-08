@@ -18,7 +18,7 @@ import (
 //		Removes an item and objects linked to it.
 //
 //
-//		The service deletes `answers`, `groups_contest_items`,
+//		The service deletes `answers`, `group_item_additional_times`,
 //		`item_dependencies` (by `item_id` and `dependent_item_id`),
 //		`items_ancestors` (by `child_item_id`), `items_items` (by `child_item_id`), `items_strings`,
 //		`permissions_generated`, `permissions_granted`, `permissions_propagate`, `results`
@@ -43,44 +43,39 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"422":
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) error {
 	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	user := srv.GetUser(r)
-	apiErr := service.NoError
 
 	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
 		var found bool
 		found, err = s.Permissions().MatchingUserAncestors(user).Where("item_id = ?", itemID).
-			Where("is_owner_generated").WithWriteLock().HasRows()
+			Where("is_owner_generated").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		found, err = s.ItemItems().ChildrenOf(itemID).WithWriteLock().HasRows()
+		found, err = s.ItemItems().ChildrenOf(itemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
-			apiErr = service.ErrUnprocessableEntity(errors.New("the item must not have children"))
-			return apiErr.Error // rollback
+			return service.ErrUnprocessableEntity(errors.New("the item must not have children")) // rollback
 		}
 
 		return s.Items().DeleteItem(itemID)
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func init() { //nolint:gochecknoinits
@@ -20,7 +19,7 @@ func init() { //nolint:gochecknoinits
 		Short: "apply schema-change migrations to the database",
 		Long:  `migrate uses go-pg migration tool under the hood supporting the same commands and an additional reset command`,
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
 			// if arg given, replace the env
@@ -35,15 +34,17 @@ func init() { //nolint:gochecknoinits
 			var db *sql.DB
 			databaseConfig, err := app.DBConfig(app.LoadConfig())
 			if err != nil {
-				fmt.Println("Unable to load the database config: ", err)
+				cmd.Println("Unable to load the database config: ", err)
 				os.Exit(1)
 			}
 			databaseConfig.ParseTime = true
 			db, err = sql.Open("mysql", databaseConfig.FormatDSN())
 			if err != nil {
-				fmt.Println("Unable to connect to the database: ", err)
+				cmd.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
 			}
+
+			defer func() { _ = db.Close() }()
 
 			// migrate
 			var applied int
@@ -51,55 +52,25 @@ func init() { //nolint:gochecknoinits
 				var n int
 				n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Up, 1)
 				if err != nil {
-					fmt.Println("\nUnable to apply migration:", err)
-					os.Exit(1)
+					return fmt.Errorf("unable to apply migration: %w", err)
 				}
 				applied += n
 				if n == 0 {
 					break
 				}
-				fmt.Print(".")
+				cmd.Print(".")
 			}
-			fmt.Print("\n")
+			cmd.Print("\n")
 			switch {
 			case applied == 0:
-				fmt.Println("No migrations to apply!")
+				cmd.Println("No migrations to apply!")
 			default:
-				fmt.Printf("%d migration(s) applied successfully!\n", applied)
-
-				var gormDB *database.DB
-				gormDB, err = database.Open(db)
-				assertNoError(err, "Cannot open GORM db connection: ")
-				fmt.Print("Running ANALYZE TABLE attempts\n")
-				_, err = db.Exec("ANALYZE TABLE `attempts`")
-				assertNoError(err, "Cannot execute ANALYZE TABLE")
-				fmt.Print("Running ANALYZE TABLE `groups`\n")
-				_, err = db.Exec("ANALYZE TABLE `groups`")
-				assertNoError(err, "Cannot execute ANALYZE TABLE")
-				fmt.Print("Running ANALYZE TABLE `items`\n")
-				_, err = db.Exec("ANALYZE TABLE `items`")
-				assertNoError(err, "Cannot execute ANALYZE TABLE")
-				assertNoError(recomputeDBCaches(gormDB), "Cannot recompute db caches")
+				cmd.Printf("%d migration(s) applied successfully!\n", applied)
 			}
 
-			if db.Close() != nil {
-				fmt.Println("Cannot close DB connection:", err)
-				os.Exit(1)
-			}
+			return nil
 		},
 	}
 
 	rootCmd.AddCommand(migrateCmd)
-}
-
-func recomputeDBCaches(gormDB *database.DB) error {
-	return database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-		fmt.Print("Schedule the propagations\n")
-		store.ScheduleGroupsAncestorsPropagation()
-		store.ScheduleItemsAncestorsPropagation()
-		store.SchedulePermissionsPropagation()
-		store.ScheduleResultsPropagation()
-
-		return nil
-	})
 }

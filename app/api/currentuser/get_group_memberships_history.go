@@ -35,6 +35,7 @@ import (
 //							 (`{from.at}` is required when `{from.group_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Return the first N invitations/requests
 //			in: query
@@ -52,9 +53,11 @@ import (
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 
 	query := srv.GetStore(r).GroupMembershipChanges().
@@ -73,7 +76,7 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 	}
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -86,14 +89,12 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 				"at":       service.FieldTypeTime,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
 	render.Respond(w, r, convertedResult)
-	return service.NoError
+	return nil
 }

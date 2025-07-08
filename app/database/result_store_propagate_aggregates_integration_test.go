@@ -11,6 +11,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type aggregatesResultRow struct {
@@ -28,6 +29,8 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 	for _, markAllResultsAsToBePropagated := range []bool{false, true} {
 		markAllResultsAsToBePropagated := markAllResultsAsToBePropagated
 		t.Run(fmt.Sprintf("mark all as to_be_propagated=%v", markAllResultsAsToBePropagated), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/aggregates")
 			defer func() { _ = db.Close() }()
 
@@ -37,7 +40,7 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 			oldDate := currentDate.AddDate(-1, -1, -1)
 
 			assert.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
-				Updates(map[string]interface{}{
+				UpdateColumns(map[string]interface{}{
 					"latest_activity_at": oldDate,
 					"tasks_tried":        1,
 					"tasks_with_help":    2,
@@ -46,7 +49,7 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 				}).Error())
 			assert.NoError(t, resultStore.
 				Where("(item_id = 3 AND participant_id = 101 AND attempt_id = 1) OR (item_id = 3 AND participant_id = 101 AND attempt_id = 2)").
-				Updates(map[string]interface{}{
+				UpdateColumns(map[string]interface{}{
 					"latest_activity_at": currentDate,
 					"tasks_tried":        5,
 					"tasks_with_help":    6,
@@ -54,7 +57,7 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 				}).Error())
 			assert.NoError(t, resultStore.
 				Where("(item_id = 4 AND participant_id = 101 AND attempt_id = 1) OR (item_id = 4 AND participant_id = 101 AND attempt_id = 2)").
-				Updates(map[string]interface{}{
+				UpdateColumns(map[string]interface{}{
 					"latest_activity_at": oldDate,
 					"tasks_tried":        9,
 					"tasks_with_help":    10,
@@ -62,7 +65,7 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 					"validated_at":       "2019-05-30 11:00:00",
 				}).Error())
 
-			assert.NoError(t, resultStore.Where("item_id = 2 AND participant_id = 102 AND attempt_id = 1").Updates(map[string]interface{}{
+			assert.NoError(t, resultStore.Where("item_id = 2 AND participant_id = 102 AND attempt_id = 1").UpdateColumn(map[string]interface{}{
 				"latest_activity_at": oldDate,
 			}).Error())
 
@@ -111,6 +114,8 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
@@ -133,6 +138,8 @@ func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 }
 
 func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
@@ -140,7 +147,7 @@ func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *te
 	expectedLatestActivityAt2 := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
 
 	resultStore := database.NewDataStore(db).Results()
-	assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id = 2").Updates(map[string]interface{}{
+	assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id = 2").UpdateColumn(map[string]interface{}{
 		"latest_activity_at": time.Time(expectedLatestActivityAt2),
 	}).Error())
 
@@ -174,16 +181,18 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixture("results_propagation/_common")
 			defer func() { _ = db.Close() }()
 
 			resultStore := database.NewDataStore(db).Results()
 			assert.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
-				Updates(map[string]interface{}{
+				UpdateColumn(map[string]interface{}{
 					"score_computed": 10,
 				}).Error())
 			assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id = 2").
-				Updates(map[string]interface{}{
+				UpdateColumns(map[string]interface{}{
 					"score_edit_rule":  test.editRule,
 					"score_edit_value": test.editValue,
 				}).Error())

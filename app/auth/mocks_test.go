@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -30,7 +30,7 @@ func TestMiddlewareMock(t *testing.T) {
 	}
 	defer func() { _ = response.Body.Close() }()
 
-	respBody, err := ioutil.ReadAll(response.Body)
+	respBody, err := io.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Equal("42", string(respBody))
 }

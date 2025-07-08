@@ -40,14 +40,15 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of item IDs
+//			description: slash-separated list of item IDs (no more than 10 IDs)
 //			required: true
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"201":
-//			description: "Created. Success response with the attempt id for the last item in the path"
+//			description: "Created. Success response with the attempt id for the final item in the path"
 //			schema:
 //					type: object
 //					required: [success, message, data]
@@ -65,7 +66,7 @@ import (
 //							required: [attempt_id]
 //							properties:
 //								attempt_id:
-//									description: The attempt linked to the last item in the path
+//									description: The attempt linked to the final item in the path
 //									type: integer
 //									format: string
 //		"400":
@@ -74,9 +75,11 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) error {
 	var err error
 
 	ids, err := idsFromRequest(r)
@@ -87,13 +90,13 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 	participantID := service.ParticipantIDFromContext(r.Context())
 
 	var result []map[string]interface{}
-	apiError := service.NoError
 	var attemptID int64
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	var shouldSchedulePropagation bool
+	store := srv.GetStore(r)
+	err = store.InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		data := result[0]
@@ -122,21 +125,21 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) serv
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert, []string{"started_at", "latest_activity_at"}))
 			service.MustNotBeError(resultStore.InsertIgnoreMaps("results_propagate", rowsToInsertPropagate))
-
-			service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+			shouldSchedulePropagation = true
 		}
 
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
+
+	if shouldSchedulePropagation {
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+	}
 
 	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
 		"attempt_id": strconv.FormatInt(attemptID, 10),
 	})))
-	return service.NoError
+	return nil
 }
 
 func hasAccessToItemPath(store *database.DataStore, participantID int64, ids []int64) bool {
@@ -160,16 +163,16 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 
 	participantAncestors := store.ActiveGroupAncestors().Where("child_group_id = ?", participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id").
-		Select("root_activity_id, root_skill_id")
+		WithSharedWriteLock()
 	groupsManagedByParticipant := store.ActiveGroupAncestors().ManagedByGroup(participantID).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
-		Select("root_activity_id, root_skill_id")
+		WithSharedWriteLock()
 	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
-		groupsManagedByParticipant.Select("groups.root_activity_id").SubQuery())
+		groupsManagedByParticipant.Select("groups.root_activity_id"))
 	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
-		groupsManagedByParticipant.Select("groups.root_skill_id").SubQuery())
+		groupsManagedByParticipant.Select("groups.root_skill_id"))
 
-	query := store.Table("items as items0").WithWriteLock()
+	query := store.Table("items as items0").WithSharedWriteLock()
 	for i := 0; i < len(ids); i++ {
 		query = query.Where(fmt.Sprintf("items%d.id = ?", i), ids[i])
 	}

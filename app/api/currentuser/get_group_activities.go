@@ -109,9 +109,11 @@ type rootItem struct {
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with an array of root activities
@@ -125,21 +127,22 @@ type rootItem struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) error {
 	return srv.getRootItems(w, r, true)
 }
 
-func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) service.APIError {
+func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
 	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	service.MustNotBeError(err)
+
 	if watchedGroupIDIsSet && len(r.URL.Query()["as_team_id"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 	}
@@ -152,7 +155,7 @@ func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActi
 	} else {
 		render.Respond(w, r, skillsResult)
 	}
-	return service.NoError
+	return nil
 }
 
 func generateRootItemListFromRawData(
@@ -263,12 +266,12 @@ func getRootItemsFromDB(
 			Where("groups_ancestors_active.child_group_id IN(?)",
 				groupManagedByUserOrCurrentQuery.SubQuery())
 	} else {
-		groupsQuery := store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
-			groupsManagedByUserQuery.SubQuery(),
-			store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
-				Select("child_group_id").QueryExpr(), // descendants of managed groups
-			store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
-				Select("ancestor_group_id").QueryExpr()) // ancestors of managed groups
+		groupsQuery := store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
+			Select("child_group_id"). // descendants of managed groups
+			UnionAll(
+				store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
+					Select("ancestor_group_id")). // ancestors of managed groups
+			With("managed_groups", groupsManagedByUserQuery)
 		itemsWithResultsQuery = itemsWithResultsQuery.
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", groupsQuery.QueryExpr())
 		groupID = watchedGroupID

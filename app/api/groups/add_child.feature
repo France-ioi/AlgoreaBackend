@@ -1,38 +1,37 @@
 Feature: Add a parent-child relation between two groups
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | type  |
       | 11 | Group A | Class |
       | 13 | Group B | Class |
       | 14 | Group C | Class |
       | 21 | Self    | User  |
-    And the database has the following table 'users':
-      | login | temp_user | group_id | first_name  | last_name |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  |
-    And the database has the following table 'group_managers':
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 11       | 21         | memberships_and_group |
       | 13       | 21         | memberships           |
       | 14       | 21         | memberships_and_group |
-    And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag |
       | 20 | fr                   |
       | 30 | fr                   |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 20               | 30            |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 20             | 30            | 1           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 13       | 20      | content            |
       | 21       | 30      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 11             |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id |
       | 0          | 11             | 30      |
 
@@ -57,7 +56,7 @@ Feature: Add a parent-child relation between two groups
       | 13                | 13             | 1       |
       | 14                | 14             | 1       |
       | 21                | 21             | 1       |
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should remain unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id |
       | 0          | 11             | 20      |

@@ -5,9 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDB_WithPersonalInfoViewApprovals(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

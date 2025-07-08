@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model skillsViewResponseRow
@@ -37,9 +35,11 @@ type skillsViewResponseRow struct {
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with an array of root skills
@@ -53,8 +53,10 @@ type skillsViewResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRootSkills(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getRootSkills(w http.ResponseWriter, r *http.Request) error {
 	return srv.getRootItems(w, r, false)
 }

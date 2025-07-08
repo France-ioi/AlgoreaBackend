@@ -2,9 +2,15 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"sync/atomic"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // DataStore gather all stores for database operations on business data.
@@ -19,13 +25,40 @@ func NewDataStore(conn *DB) *DataStore {
 }
 
 // NewDataStoreWithContext returns a new DataStore with the given context.
-func NewDataStoreWithContext(ctx context.Context, conn *DB) *DataStore {
-	return &DataStore{DB: newDB(ctx, conn.db)}
+func NewDataStoreWithContext(ctx context.Context, db *DB) *DataStore {
+	return &DataStore{DB: cloneDBWithNewContext(ctx, db)}
 }
 
 // NewDataStoreWithTable returns a specialized DataStore.
 func NewDataStoreWithTable(conn *DB, tableName string) *DataStore {
 	return &DataStore{conn.Table(tableName), tableName}
+}
+
+// ProhibitResultsPropagation marks the context inside the DB connection as prohibiting the propagation of results.
+func ProhibitResultsPropagation(conn *DB) {
+	prohibitedPropagations := getProhibitedPropagationsFromContext(conn.ctx())
+	prohibitedPropagations.Results = true
+	conn.db = cloneDBWithNewContext(context.WithValue(conn.ctx(), prohibitedPropagationsContextKey, prohibitedPropagations), conn).db
+}
+
+// IsResultsPropagationProhibited returns true if the propagation of results is prohibited in the context of the current DB connection.
+func (s *DataStore) IsResultsPropagationProhibited() bool {
+	return getProhibitedPropagationsFromContext(s.DB.ctx()).Results
+}
+
+func getProhibitedPropagationsFromContext(ctx context.Context) propagationsBitField {
+	prohibitedPropagations := ctx.Value(prohibitedPropagationsContextKey)
+	if prohibitedPropagations == nil {
+		return propagationsBitField{}
+	}
+	return prohibitedPropagations.(propagationsBitField)
+}
+
+// MergeContext returns a new context based on the given one, with DB-related values copied
+// from the context of the current DB connection.
+func (s *DataStore) MergeContext(ctx context.Context) context.Context {
+	prohibitedPropagations := getProhibitedPropagationsFromContext(s.DB.ctx())
+	return context.WithValue(ctx, prohibitedPropagationsContextKey, prohibitedPropagations)
 }
 
 // ActiveGroupGroups returns a GroupGroupStore working with the `groups_groups_active` view.
@@ -88,9 +121,9 @@ func (s *DataStore) GroupPendingRequests() *GroupPendingRequestStore {
 	return &GroupPendingRequestStore{NewDataStoreWithTable(s.DB, "group_pending_requests")}
 }
 
-// GroupContestItems returns a GroupContestItemStore.
-func (s *DataStore) GroupContestItems() *GroupContestItemStore {
-	return &GroupContestItemStore{NewDataStoreWithTable(s.DB, "groups_contest_items")}
+// GroupItemAdditionalTimes returns a GroupItemAdditionalTimeStore.
+func (s *DataStore) GroupItemAdditionalTimes() *GroupItemAdditionalTimeStore {
+	return &GroupItemAdditionalTimeStore{NewDataStoreWithTable(s.DB, "group_item_additional_times")}
 }
 
 // GroupManagers returns a GroupManagerStore.
@@ -169,113 +202,180 @@ func (s *DataStore) UserBatchPrefixes() *UserBatchPrefixStore {
 }
 
 // NewID generates a positive random int64 to be used as id
-// !!! To be safe, the insertion should be be retried if the id conflicts with an existing entry.
+// !!! To be safe, the insertion should be retried if the id conflicts with an existing entry.
 func (s *DataStore) NewID() int64 {
 	// gen a 63-bits number as we want unsigned number stored in a 64-bits signed DB attribute
 	return rand.Int63()
 }
 
-type awaitingTriggers struct {
-	ItemAncestors  bool
-	GroupAncestors bool
-	Permissions    bool
-	Results        bool
+type propagationsBitField struct {
+	Permissions bool
+	Results     bool
 }
+
 type dbContextKey string
 
-var triggersContextKey = dbContextKey("triggers")
+const (
+	awaitingPropagationsContextKey   = dbContextKey("awaitingPropagations")
+	prohibitedPropagationsContextKey = dbContextKey("prohibitedPropagations")
+	retryEachTransactionContextKey   = dbContextKey("retryEachTransaction")
+	propagationsAreSyncContextKey    = dbContextKey("propagationsAreSync")
+	logErrorAsInfoFuncContextKey     = dbContextKey("logErrorAsInfoFunc")
+)
+
+var (
+	onStartOfTransactionToBeRetriedForcefullyHook atomic.Value
+	onForcefulRetryOfTransactionHook              atomic.Value
+)
+
+func init() { //nolint:gochecknoinits // this is an initialization function to store the default hooks
+	onStartOfTransactionToBeRetriedForcefullyHook.Store(func() {})
+	onForcefulRetryOfTransactionHook.Store(func() {})
+}
 
 // InTransaction executes the given function in a transaction and commits.
 // If a propagation is scheduled, it will be run after the transaction commit,
 // so we can run each step of the propagation in a separate transaction.
-func (s *DataStore) InTransaction(txFunc func(*DataStore) error) error {
-	s.DB.ctx = context.WithValue(s.DB.ctx, triggersContextKey, &awaitingTriggers{})
+//
+// For testing purposes, it is possible to force this method to retry the transaction once
+// by providing a context created with ContextWithTransactionRetrying.
+func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
+	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx(), awaitingPropagationsContextKey, &propagationsBitField{}), s.DB)
+	var retried bool
+
 	err := s.inTransaction(func(db *DB) error {
+		shouldForceTransactionRetry := s.DB.ctx().Value(retryEachTransactionContextKey) != nil && !retried
+
 		dataStore := NewDataStoreWithTable(db, s.tableName)
+		if shouldForceTransactionRetry {
+			onStartOfTransactionToBeRetriedForcefullyHook.Load().(func())()
+		}
+
 		err := txFunc(dataStore)
 
+		if err == nil && shouldForceTransactionRetry {
+			retried = true
+			onForcefulRetryOfTransactionHook.Load().(func())()
+			return &mysql.MySQLError{
+				Number: uint16(mysqldb.DeadlockError),
+			}
+		}
+
 		return err
-	})
+	}, txOptions...)
 	if err != nil {
 		return err
 	}
 
-	triggersToRun := s.ctx.Value(triggersContextKey).(*awaitingTriggers)
+	propagationsToRun := s.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx())
 
-	if triggersToRun.GroupAncestors {
-		triggersToRun.GroupAncestors = false
-		s.createNewAncestors("groups", "group")
-	}
-	if triggersToRun.ItemAncestors {
-		triggersToRun.ItemAncestors = false
-		s.createNewAncestors("items", "item")
-	}
-	if triggersToRun.Permissions {
-		triggersToRun.Permissions = false
+	if propagationsToRun.Permissions && !prohibitedPropagations.Permissions {
+		propagationsToRun.Permissions = false
 		s.PermissionsGranted().computeAllAccess()
 	}
-	if triggersToRun.Results {
-		triggersToRun.Results = false
-		err = s.Results().propagate()
+	if propagationsToRun.Results && !prohibitedPropagations.Results {
+		propagationsToRun.Results = false
+		err = s.Results().processResultsRecomputeForItemsAndPropagate()
 	}
 
 	return err
 }
 
-// ScheduleResultsPropagation schedules a run of ResultStore::propagate() after the transaction commit.
+// EnsureTransaction executes the given function in a transaction and commits. If a transaction is already started,
+// it will execute the function in the current transaction.
+func (s *DataStore) EnsureTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
+	if s.IsInTransaction() {
+		return txFunc(s)
+	}
+	return s.InTransaction(txFunc, txOptions...)
+}
+
+// SetOnStartOfTransactionToBeRetriedForcefullyHook sets a hook to be called on the start
+// of a transaction that will be forcefully retried.
+// For testing purposes only.
+func SetOnStartOfTransactionToBeRetriedForcefullyHook(hook func()) {
+	onStartOfTransactionToBeRetriedForcefullyHook.Store(hook)
+}
+
+// SetOnForcefulRetryOfTransactionHook sets a hook to be called on the retry
+// of a forcefully retried transaction.
+// For testing purposes only.
+func SetOnForcefulRetryOfTransactionHook(hook func()) {
+	onForcefulRetryOfTransactionHook.Store(hook)
+}
+
+// SetPropagationsModeToSync sets the mode of propagations to synchronous.
+// In this mode, the propagation of permissions and results will be done synchronously
+// before the transaction commit.
+func (s *DataStore) SetPropagationsModeToSync() (err error) {
+	s.mustBeInTransaction()
+
+	defer recoverPanics(&err)
+
+	mustNotBeError(s.Exec("SET @synchronous_propagations_connection_id = CONNECTION_ID()").Error())
+
+	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx(), propagationsAreSyncContextKey, true), s.DB)
+	return nil
+}
+
+// ScheduleResultsPropagation schedules a run of ResultStore::processResultsRecomputeForItemsAndPropagate() after the transaction commit.
 func (s *DataStore) ScheduleResultsPropagation() {
 	s.mustBeInTransaction()
 
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.Results = true
-}
-
-// ScheduleGroupsAncestorsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
-func (s *DataStore) ScheduleGroupsAncestorsPropagation() {
-	s.mustBeInTransaction()
-
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.GroupAncestors = true
-}
-
-// ScheduleItemsAncestorsPropagation schedules a run of the items ancestors propagation after the transaction commit.
-func (s *DataStore) ScheduleItemsAncestorsPropagation() {
-	s.mustBeInTransaction()
-
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.ItemAncestors = true
+	propagationsToRun := s.DB.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun.Results = true
 }
 
 // SchedulePermissionsPropagation schedules a run of the groups ancestors propagation after the transaction commit.
 func (s *DataStore) SchedulePermissionsPropagation() {
 	s.mustBeInTransaction()
 
-	triggersToRun := s.DB.ctx.Value(triggersContextKey).(*awaitingTriggers)
-	triggersToRun.Permissions = true
+	propagationsToRun := s.DB.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
+	propagationsToRun.Permissions = true
 }
 
 // WithForeignKeyChecksDisabled executes the given function with foreign keys checking disabled
 // (wraps it up in a transaction if no transaction started).
-func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) error) error {
+func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
 	return s.withForeignKeyChecksDisabled(func(db *DB) error {
 		return blockFunc(NewDataStoreWithTable(db, s.tableName))
-	})
+	}, txOptions...)
 }
 
+// IsInTransaction returns true if the store operates in a DB transaction at the moment.
 func (s *DataStore) IsInTransaction() bool {
 	return s.DB.isInTransaction()
 }
 
 // WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK.
-func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, txFunc func(*DataStore) error) error {
+func (s *DataStore) WithNamedLock(lockName string, timeout time.Duration, funcToCall func(*DataStore) error) error {
 	return s.withNamedLock(lockName, timeout, func(db *DB) error {
-		return txFunc(NewDataStoreWithTable(db, s.tableName))
+		return funcToCall(NewDataStoreWithTable(db, s.tableName))
 	})
 }
 
-// WithWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
-func (s *DataStore) WithWriteLock() *DataStore {
-	return NewDataStore(s.DB.WithWriteLock())
+// WithExclusiveWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire an exclusive lock on them, preventing other transactions from modifying them and
+// even from getting exclusive/shared locks on them. For non-existing rows, it works similarly to a shared lock (FOR SHARE).
+func (s *DataStore) WithExclusiveWriteLock() *DataStore {
+	return NewDataStore(s.DB.WithExclusiveWriteLock())
+}
+
+// WithSharedWriteLock converts "SELECT ..." statement into "SELECT ... FOR SHARE" statement.
+// For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
+// and acquire a shared lock on them, preventing other transactions from modifying them.
+func (s *DataStore) WithSharedWriteLock() *DataStore {
+	return NewDataStore(s.DB.WithSharedWriteLock())
+}
+
+// WithCustomWriteLocks converts "SELECT ..." statement into "SELECT ... FOR SHARE OF ... FOR UPDATE ..." statement.
+// For existing rows, it will read the latest committed data for the listed tables
+// (instead of the data from the repeatable-read snapshot) and acquire shared/exclusive locks on them,
+// preventing other transactions from modifying them.
+func (s *DataStore) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DataStore {
+	return NewDataStore(s.DB.WithCustomWriteLocks(shared, exclusive))
 }
 
 // ByID returns a composable query for filtering by _table_.id.
@@ -288,16 +388,16 @@ func (s *DataStore) ByID(id int64) *DB {
 
 // RetryOnDuplicatePrimaryKeyError will retry the given function on getting duplicate entry errors
 // for primary keys.
-func (s *DataStore) RetryOnDuplicatePrimaryKeyError(f func(store *DataStore) error) error {
-	return s.DB.retryOnDuplicatePrimaryKeyError(func(db *DB) error {
+func (s *DataStore) RetryOnDuplicatePrimaryKeyError(tableName string, f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicatePrimaryKeyError(tableName, func(db *DB) error {
 		return f(NewDataStore(db))
 	})
 }
 
 // RetryOnDuplicateKeyError will retry the given function on getting duplicate entry errors
 // for the given key.
-func (s *DataStore) RetryOnDuplicateKeyError(keyName, nameInError string, f func(store *DataStore) error) error {
-	return s.DB.retryOnDuplicateKeyError(keyName, nameInError, func(db *DB) error {
+func (s *DataStore) RetryOnDuplicateKeyError(tableName, keyName, nameInError string, f func(store *DataStore) error) error {
+	return s.DB.retryOnDuplicateKeyError(tableName, keyName, nameInError, func(db *DB) error {
 		return f(NewDataStore(db))
 	})
 }
@@ -326,4 +426,15 @@ func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColu
 // If updateColumns is nil, all the columns in dataMaps will be updated.
 func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateColumns []string) error {
 	return s.DB.insertOrUpdateMaps(s.tableName, dataMap, updateColumns)
+}
+
+// ContextWithTransactionRetrying wraps the given context with a flag to retry each transaction once.
+// Use it for testing purposes only.
+func ContextWithTransactionRetrying(ctx context.Context) context.Context {
+	return context.WithValue(ctx, retryEachTransactionContextKey, true)
+}
+
+func (s *DataStore) arePropagationsSync() bool {
+	propagationsAreSync, _ := s.ctx().Value(propagationsAreSyncContextKey).(bool)
+	return propagationsAreSync
 }

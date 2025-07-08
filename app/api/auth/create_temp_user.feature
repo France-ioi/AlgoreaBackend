@@ -6,17 +6,19 @@ Feature: Create a temporary user
         -
           domains: [127.0.0.1]
           allUsersGroup: 2
+          nonTempUsersGroup: 3
           tempUsersGroup: 4
       """
-    And the database has the following table 'groups':
-      | id | name      | type | text_id   |
-      | 2  | AllUsers  | Base | AllUsers  |
-      | 4  | TempUsers | User | TempUsers |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups":
+      | id | name         | type | text_id      |
+      | 2  | AllUsers     | Base | AllUsers     |
+      | 3  | NonTempUsers | Base | NonTempUsers |
+      | 4  | TempUsers    | Base | TempUsers    |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
+      | 2               | 3              |
       | 2               | 4              |
     And the time now is "2020-07-16T22:02:28Z"
-    And the DB time now is "2020-07-16 22:02:28"
 
   Scenario Outline: Create a new temporary user
     Given the generated auth key is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
@@ -39,19 +41,21 @@ Feature: Create a temporary user
     And the table "users" at group_id "5577006791947779410" should be:
       | group_id            | login_id | login        | temp_user | default_language            | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | <expected_default_language> | true                                                 | 127.0.0.1 |
-    And the table "groups" should stay unchanged but the row with id "5577006791947779410"
+    And the table "groups" should remain unchanged, regardless of the row with id "5577006791947779410"
     And the table "groups" at id "5577006791947779410" should be:
       | id                  | name         | type | description  | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 | is_open | send_emails |
       | 5577006791947779410 | tmp-49727887 | User | tmp-49727887 | true                                              | false   | false       |
-    And the table "groups_groups" should stay unchanged but the row with child_group_id "5577006791947779410"
+    And the table "groups_groups" should remain unchanged, regardless of the row with child_group_id "5577006791947779410"
     And the table "groups_groups" at child_group_id "5577006791947779410" should be:
       | parent_group_id | child_group_id      |
       | 4               | 5577006791947779410 |
     And the table "groups_ancestors" should be:
       | ancestor_group_id   | child_group_id      | is_self |
       | 2                   | 2                   | true    |
+      | 2                   | 3                   | false   |
       | 2                   | 4                   | false   |
       | 2                   | 5577006791947779410 | false   |
+      | 3                   | 3                   | true    |
       | 4                   | 4                   | true    |
       | 4                   | 5577006791947779410 | false   |
       | 5577006791947779410 | 5577006791947779410 | true    |

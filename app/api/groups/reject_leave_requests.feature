@@ -1,11 +1,10 @@
 Feature: Reject requests to leave a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type    |
       | 11  | Class   |
       | 13  | Team    |
       | 14  | Friends |
-      | 21  | User    |
       | 31  | User    |
       | 111 | User    |
       | 121 | User    |
@@ -16,10 +15,10 @@ Feature: Reject requests to leave a group
       | 151 | User    |
       | 161 | User    |
       | 444 | Team    |
-    And the database has the following table 'users':
-      | login | group_id | first_name  | last_name | grade |
-      | owner | 21       | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'groups_groups':
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 31             |
       | 13              | 111            |
@@ -28,7 +27,7 @@ Feature: Reject requests to leave a group
       | 13              | 141            |
       | 13              | 151            |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
       | 13       | 31        | leave_request |
@@ -39,7 +38,7 @@ Feature: Reject requests to leave a group
 
   Scenario: Reject requests to leave a group
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
     When I send a POST request to "/groups/13/leave-requests/reject?group_ids=31,141,21,11,13,122,151"
@@ -60,7 +59,7 @@ Feature: Reject requests to leave a group
       "success": true
     }
     """
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be:
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
@@ -71,4 +70,4 @@ Feature: Reject requests to leave a group
       | group_id | member_id | action                | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 31        | leave_request_refused | 21           | 1                                         |
       | 13       | 141       | leave_request_refused | 21           | 1                                         |
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged

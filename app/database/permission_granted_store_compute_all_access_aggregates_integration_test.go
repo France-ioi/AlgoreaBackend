@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type permissionsGeneratedResultRow struct {
@@ -25,6 +26,8 @@ var expectedRow14 = permissionsGeneratedResultRow{
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
@@ -97,6 +100,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
@@ -112,7 +117,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11").
 		UpdateColumn("can_view", "content").Error())
-	assert.NoError(t, permissionGrantedStore.ItemItems().Updates(map[string]interface{}{
+	assert.NoError(t, permissionGrantedStore.ItemItems().UpdateColumn(map[string]interface{}{
 		"content_view_propagation": "as_info",
 	}).Error())
 	assert.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
@@ -173,6 +178,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 	for _, access := range []string{"solution", "content_with_descendants"} {
 		access := access
 		t.Run(access, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 			defer func() { _ = db.Close() }()
 
@@ -324,6 +331,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 	} {
 		testcase := testcase
 		t.Run(testcase.canView+" as "+testcase.expectedCanView, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db := testhelpers.SetupDBWithFixtureString(`
 				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 				groups: [{id: 1}]
@@ -332,6 +341,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 						content_view_propagation: ` + testcase.contentViewPropagation + `,
 						upper_view_levels_propagation: ` + testcase.upperViewLevelsPropagation + `}
 				permissions_granted: [{group_id: 1, item_id: 1, source_group_id: 1, can_view: ` + testcase.canView + `}]`)
+			defer func() { _ = db.Close() }()
+
 			permissionStore := database.NewDataStore(db).Permissions()
 			assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 				ds.SchedulePermissionsPropagation()
@@ -346,6 +357,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr}
@@ -361,6 +374,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: info}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_view: content_with_descendants}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -373,6 +388,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanView(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanView(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
@@ -383,6 +400,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: content}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_view: content_with_descendants}
 			- {group_id: 2, item_id: 2, source_group_id: 1, can_view: solution}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -395,12 +414,16 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_view: content}
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: content_with_descendants}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -413,12 +436,16 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanView(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForOwners(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_view: content}
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_view: content_with_descendants, is_owner: 1}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -431,6 +458,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanViewAsSolutionForO
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantView(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr}
@@ -448,6 +477,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantV
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_grant_view: content_with_descendants}
 			- {group_id: 1, item_id: 3, source_group_id: 1, can_grant_view: solution_with_grant}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -460,6 +491,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanGrantV
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanGrantView(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
@@ -469,6 +502,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_grant_view: solution_with_grant}
 			- {group_id: 2, item_id: 2, source_group_id: 1, can_grant_view: solution}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -481,12 +516,16 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantView(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 1, origin: self, can_grant_view: content}
 			- {group_id: 1, item_id: 1, source_group_id: 1, origin: group_membership, can_grant_view: content_with_descendants}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -499,6 +538,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanGrantV
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsSolutionWithGrantForOwners(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}, {id: 3}]
@@ -506,6 +547,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsSolutio
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_grant_view: content}
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_grant_view: content_with_descendants, is_owner: 1}
 			- {group_id: 3, item_id: 2, source_group_id: 3, can_grant_view: none, is_owner: 1}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -522,6 +565,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanGrantViewAsSolutio
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr}
@@ -539,6 +584,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: result}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_watch: answer}
 			- {group_id: 1, item_id: 3, source_group_id: 1, can_watch: answer_with_grant}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -551,6 +598,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanWatch(
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanWatch(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
@@ -560,6 +609,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: result}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_watch: answer_with_grant}
 			- {group_id: 2, item_id: 2, source_group_id: 1, can_watch: answer}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -572,12 +623,16 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_watch: result}
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: answer}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -590,12 +645,16 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanWatch(
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanWatchAsAnswerWithGrantForOwners(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_watch: result}
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_watch: answer, is_owner: 1}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -608,6 +667,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanWatchAsAnswerWithG
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items:
 			- {id: 1, default_language_tag: fr}
@@ -625,6 +686,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: children}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_edit: all}
 			- {group_id: 1, item_id: 3, source_group_id: 1, can_edit: all_with_grant}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -637,6 +700,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsCanEdit(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrantedCanEdit(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
@@ -646,6 +711,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: children}
 			- {group_id: 1, item_id: 2, source_group_id: 1, can_edit: all_with_grant}
 			- {group_id: 2, item_id: 2, source_group_id: 1, can_edit: all}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -658,12 +725,16 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesMaxOfParentsAndGrante
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_edit: children}
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: all}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -676,12 +747,16 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesMaxOfGrantedCanEdit(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesCanEditAsAllWithGrantForOwners(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixtureString(`
 		items: [{id: 1, default_language_tag: fr}]
 		groups: [{id: 1}, {id: 2}]
 		permissions_granted:
 			- {group_id: 1, item_id: 1, source_group_id: 2, can_edit: children}
 			- {group_id: 1, item_id: 1, source_group_id: 1, can_edit: all, is_owner: 1}`)
+	defer func() { _ = db.Close() }()
+
 	permissionStore := database.NewDataStore(db).Permissions()
 	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
@@ -758,6 +833,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_Propagates(t *testing.T) {
 
 func testPropagates(t *testing.T, column, propagationColumn, valueForParent string, propagationMode bool, expectedValue string) {
 	t.Run(valueForParent+" as "+expectedValue, func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+
 		grantViewPropagationString := fmt.Sprint(propagationMode)
 		db := testhelpers.SetupDBWithFixtureString(`
 				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -766,6 +843,8 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 					- {parent_item_id: 1, child_item_id: 2, child_order: 1,
 						` + propagationColumn + `: ` + grantViewPropagationString + `}
 				permissions_granted: [{group_id: 1, item_id: 1, source_group_id: 1, ` + column + `: ` + valueForParent + `}]`)
+		defer func() { _ = db.Close() }()
+
 		permissionStore := database.NewDataStore(db).Permissions()
 		assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 			ds.SchedulePermissionsPropagation()

@@ -8,8 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type existingResultsRow struct {
@@ -32,13 +33,9 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 	mergedFixtures = append(mergedFixtures, `
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]
 		groups_ancestors:
-			- {ancestor_group_id: 1, child_group_id: 1}
-			- {ancestor_group_id: 2, child_group_id: 2}
-			- {ancestor_group_id: 3, child_group_id: 3}
 			- {ancestor_group_id: 1, child_group_id: 2}
 			- {ancestor_group_id: 1, child_group_id: 3}
 			- {ancestor_group_id: 2, child_group_id: 3}
-			- {ancestor_group_id: 4, child_group_id: 4}
 			- {ancestor_group_id: 4, child_group_id: 3, expires_at: 2019-05-30 11:00:00}
 		items:
 			- {id: 111, default_language_tag: fr}
@@ -141,11 +138,12 @@ func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 			name:               "should not create new results for items above the root_item_id",
 			fixtures:           []string{`permissions_generated: [{group_id: 3, item_id: 111, can_view_generated: info}]`},
 			expectedNewResults: []existingResultsRow{{ParticipantID: 3, AttemptID: 1, ItemID: 222}},
-			rootItemID:         utils.Ptr(int64(222)),
+			rootItemID:         golang.Ptr(int64(222)),
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 			testResultStorePropagateCreatesNew(t, &test)
 		})
 	}

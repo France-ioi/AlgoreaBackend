@@ -5,9 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestPermissionGeneratedStore_AggregatedPermissionsForItemsVisibleToGroup(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -35,6 +39,8 @@ func TestPermissionGeneratedStore_AggregatedPermissionsForItemsVisibleToGroup(t 
 }
 
 func TestPermissionGeneratedStore_AggregatedPermissionsForItemsOnWhichGroupHasViewPermission(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

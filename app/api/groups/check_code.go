@@ -17,15 +17,12 @@ type groupCodeCheckResponseGroup struct {
 	// required: true
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true
 	RequireWatchApproval bool `json:"require_watch_approval"`
-	// Nullable
 	// required: true
 	RootActivityID *int64 `json:"root_activity_id,string"`
-	// Nullable
 	// required: true
 	RootSkillID *int64 `json:"root_skill_id,string"`
 	// required: true
@@ -34,10 +31,8 @@ type groupCodeCheckResponseGroup struct {
 		ID int64 `json:"id,string"`
 		// required: true
 		Login string `json:"login"`
-		// Nullable
 		// required: true
 		FirstName *string `json:"first_name"`
-		// Nullable
 		// required: true
 		LastName *string `json:"last_name"`
 	} `json:"managers"`
@@ -65,8 +60,8 @@ type groupCodeCheckResponse struct {
 //		* if there is no group with `code_expires_at` > NOW() (or NULL), `code` = `{code}`, and `type` != 'User'
 //			(`reason` = 'no_group');
 //
-//		* if the group is a team and the user is already on a team that has attempts for same contest
-//			while the contest doesn't allow multiple attempts or that has active attempts for the same contest
+//		* if the group is a team and the user is already on a team that has attempts for the same item requiring explicit entry
+//			while the item doesn't allow multiple attempts or that has active attempts for the same item requiring explicit entry
 //			(`reason` = 'conflicting_team_participation'),
 //
 //		* if the group membership is frozen (`reason` = 'frozen_membership');
@@ -93,9 +88,11 @@ type groupCodeCheckResponse struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) error {
 	code, err := service.ResolveURLQueryGetStringField(r, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -105,7 +102,7 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.AP
 	store := srv.GetStore(r)
 	userIDToCheck := user.GroupID
 	if user.IsTempUser {
-		userIDToCheck = domain.ConfigFromContext(r.Context()).AllUsersGroupID
+		userIDToCheck = domain.ConfigFromContext(r.Context()).NonTempUsersGroupID
 	}
 
 	valid, reason, groupID := checkGroupCodeForUser(store, userIDToCheck, code)
@@ -128,7 +125,7 @@ func (srv *Service) checkCode(w http.ResponseWriter, r *http.Request) service.AP
 	}
 
 	render.Respond(w, r, &response)
-	return service.NoError
+	return nil
 }
 
 type groupCodeFailReason string
@@ -145,9 +142,9 @@ const (
 func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code string) (
 	valid bool, reason groupCodeFailReason, groupID int64,
 ) {
-	info, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
+	info, ok, err := store.GetGroupJoiningByCodeInfoByCode(code, false)
 	service.MustNotBeError(err)
-	if info == nil {
+	if !ok {
 		return false, noGroupReason, 0
 	}
 	if info.FrozenMembership {
@@ -172,7 +169,7 @@ func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code 
 		return false, conflictingTeamParticipationReason, info.GroupID
 	}
 
-	ok, err := store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
+	ok, err = store.Groups().CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(info.GroupID, userIDToCheck, true, false)
 	service.MustNotBeError(err)
 	if !ok {
 		return false, teamConditionsNotMetReason, info.GroupID

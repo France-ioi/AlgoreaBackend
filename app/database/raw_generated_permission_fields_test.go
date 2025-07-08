@@ -6,9 +6,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestRawGeneratedPermissionFields_AsItemPermissions(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name string
 		raw  *RawGeneratedPermissionFields

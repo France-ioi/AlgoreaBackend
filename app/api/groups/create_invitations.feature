@@ -1,48 +1,43 @@
 Feature: Invite users
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | type  | require_personal_info_access_approval | enforce_max_participants | max_participants |
       | 13  | Team  | none                                  | true                     | 2                |
-      | 21  | User  | none                                  | false                    | null             |
-      | 101 | User  | none                                  | false                    | null             |
-      | 102 | User  | none                                  | false                    | null             |
-      | 103 | User  | none                                  | false                    | null             |
-      | 104 | User  | none                                  | false                    | null             |
       | 444 | Team  | none                                  | false                    | null             |
       | 555 | Class | view                                  | false                    | null             |
-    And the database has the following table 'users':
-      | login | group_id | first_name  | last_name | temp_user |
-      | owner | 21       | Jean-Michel | Blanquer  | false     |
-      | john  | 101      | John        | Doe       | false     |
-      | jane  | 102      | Jane        | Doe       | false     |
-      | Jane  | 103      | Jane        | Smith     | false     |
-      | tmp   | 104      | Temp        | User      | true      |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name | temp_user |
+      | 21       | owner | Jean-Michel | Blanquer  | false     |
+      | 101      | john  | John        | Doe       | false     |
+      | 102      | jane  | Jane        | Doe       | false     |
+      | 103      | Jane  | Jane        | Smith     | false     |
+      | 104      | tmp   | Temp        | User      | true      |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag |
       | 20   | fr                   |
       | 30   | fr                   |
       | 1234 | fr                   |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 20               | 30            |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 20             | 30            | 1           |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 555      | 20      | content            |
       | 101      | 30      | content            |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id |
       | 0          | 101            | 30      |
 
   Scenario: Successfully invite users
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
     When I send a POST request to "/groups/13/invitations" with the following body:
@@ -74,13 +69,13 @@ Feature: Invite users
       | group_id | member_id | action             | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 21        | invitation_created | 21           | 1                                         |
       | 13       | 101       | invitation_created | 21           | 1                                         |
-    And the table "groups_ancestors" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged
 
   Scenario: The group is full
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
     When I send a POST request to "/groups/13/invitations" with the following body:
@@ -107,22 +102,22 @@ Feature: Invite users
     And the table "groups_groups" should be empty
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged
 
-  Scenario: Successfully invite users into a team skipping those who are members of other teams participating in the same contests
+  Scenario: Successfully invite users into a team skipping those who are members of other teams participating in solving the same items requiring explicit entry
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
-    And the database table 'groups_groups' has also the following rows:
+    And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id |
       | 444             | 21             |
       | 444             | 101            |
       | 444             | 102            |
     And the groups ancestors are computed
-    And the database table 'attempts' has also the following rows:
+    And the database table "attempts" also has the following rows:
       | participant_id | id | root_item_id |
       | 13             | 1  | 1234         |
       | 444            | 2  | 1234         |
@@ -147,19 +142,19 @@ Feature: Invite users
         "success": true
       }
       """
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged
 
   Scenario: Convert join-requests into invitations or make them accepted depending on approvals
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 555      | 21         | memberships_and_group |
-    And the database table 'group_pending_requests' has also the following rows:
+    And the database table "group_pending_requests" also has the following rows:
       | group_id | member_id | type         | personal_info_view_approved | at                  |
       | 555      | 101       | join_request | 1                           | 2019-05-30 11:00:00 |
       | 555      | 102       | join_request | 0                           | 2019-05-30 11:00:00 |
@@ -202,7 +197,7 @@ Feature: Invite users
       | 444               | 444            | 1       |
       | 555               | 101            | 0       |
       | 555               | 555            | 1       |
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should remain unchanged
     And the table "results" should be:
       | attempt_id | participant_id | item_id |
       | 0          | 101            | 20      |

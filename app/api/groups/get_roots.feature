@@ -1,6 +1,6 @@
 Feature: Get root groups (groupRootsView)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name                                     | type    |
       | 1  | Joined Base                              | Base    |
       | 2  | Managed Base                             | Base    |
@@ -36,18 +36,14 @@ Feature: Get root groups (groupRootsView)
       | 32 | U2                                       | User    |
       | 33 | U3                                       | User    |
       | 34 | U3                                       | User    |
-      | 41 | owner                                    | User    |
-      | 49 | jack                                     | User    |
-      | 50 | jane                                     | User    |
-      | 51 | john                                     | User    |
       | 52 | AllUsers                                 | Base    |
-    And the database has the following table 'users':
-      | login | group_id | first_name  | last_name |
-      | owner | 41       | Jean-Michel | Blanquer  |
-      | jack  | 49       | Jack        | Smith     |
-      | jane  | 50       | Jane        | Doe       |
-      | john  | 51       | John        | Doe       |
-    And the database has the following table 'group_managers':
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 41       | owner | Jean-Michel | Blanquer  |
+      | 49       | jack  | Jack        | Smith     |
+      | 50       | jane  | Jane        | Doe       |
+      | 51       | john  | John        | Doe       |
+    And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 41         |
       | 4        | 41         |
@@ -60,7 +56,7 @@ Feature: Get root groups (groupRootsView)
       | 26       | 50         |
       | 28       | 51         |
       | 52       | 41         |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 1               | 41             | 9999-12-31 23:59:59 |
       | 3               | 4              | 9999-12-31 23:59:59 |
@@ -111,7 +107,7 @@ Feature: Get root groups (groupRootsView)
       | 52              | 50             | 9999-12-31 23:59:59 |
       | 52              | 51             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
-    And the database has the following table 'groups_ancestors':
+    And the database has the following table "groups_ancestors":
       | ancestor_group_id | child_group_id | expires_at          |
       | 5                 | 41             | 2010-01-01 00:00:00 |
       | 7                 | 41             | 2010-01-01 00:00:00 |

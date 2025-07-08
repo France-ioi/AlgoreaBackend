@@ -5,9 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -27,6 +31,8 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 }
 
 func TestDB_WhereUserHasViewPermissionOnItems(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	ClearAllDBEnums()
@@ -47,6 +53,8 @@ func TestDB_WhereUserHasViewPermissionOnItems(t *testing.T) {
 }
 
 func TestDB_WhereItemsAreVisible(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	ClearAllDBEnums()
@@ -66,6 +74,8 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 }
 
 func TestDB_WhereUserHaveStartedResultOnItem(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -81,7 +91,7 @@ func TestDB_WhereUserHaveStartedResultOnItem(t *testing.T) {
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := db.Table("items").WhereUserHaveStartedResultOnItem(&user).Scan(&result).Error()
+	err := db.Table("items").WhereItemHasResultStartedByUser(&user).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

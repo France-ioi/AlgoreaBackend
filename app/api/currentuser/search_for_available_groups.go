@@ -45,6 +45,7 @@ const minSearchStringLength = 3
 //			description: Start the page from the group next to one with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N groups
 //			in: query
@@ -79,9 +80,11 @@ const minSearchStringLength = 3
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Request) error {
 	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -97,24 +100,22 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
-	query := store.Groups().GetSearchForAvailableGroupsQuery(user, searchString)
+	query := store.Groups().AvailableGroupsBySearchString(user, searchString)
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields:       service.SortingAndPagingFields{"id": {ColumnName: "groups.id"}},
 			DefaultRules: "id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
 	render.Respond(w, r, convertedResult)
-	return service.NoError
+	return nil
 }

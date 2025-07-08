@@ -10,6 +10,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type groupItemsResultRow struct {
@@ -19,6 +20,8 @@ type groupItemsResultRow struct {
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 

@@ -1,27 +1,24 @@
 Feature: Generate a read-only task token for an item from an answer
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  | name     | type  |
-      | 101 | john     | User  |
       | 102 | team     | Team  |
-      | 103 | manager  | User  |
       | 104 | Groupe A | Class |
-      | 105 | jack     | User  |
-    And the database has the following table 'users':
-      | login   | group_id |
-      | john    | 101      |
-      | manager | 103      |
-      | jack    | 105      |
-    And the database has the following table 'groups_groups':
+    And the database has the following users:
+      | group_id | login   |
+      | 101      | john    |
+      | 103      | manager |
+      | 105      | jack    |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 102             | 101            |
       | 102             | 105            |
       | 104             | 101            |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 104      | 103        | 1                 |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | url                    | type | entry_participant_type | default_language_tag | text_id |
       | 10 | http://taskplatform/10 | Task | User                   | fr                   | task10  |
       | 20 | http://taskplatform/20 | Task | Team                   | fr                   | task20  |
@@ -29,7 +26,7 @@ Feature: Generate a read-only task token for an item from an answer
       | 40 | http://taskplatform/40 | Task | User                   | fr                   | task40  |
       | 50 | http://taskplatform/50 | Task | User                   | fr                   | task50  |
       | 60 | http://taskplatform/60 | Task | User                   | fr                   | task60  |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_watch_generated |
       | 101      | 10      | content            | none                |
       | 103      | 10      | content            | answer              |
@@ -44,14 +41,14 @@ Feature: Generate a read-only task token for an item from an answer
       | 105      | 50      | content            | answer              |
       | 102      | 60      | content            | none                |
       | 104      | 60      | content            | answer              |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 101            |
       | 0  | 102            |
       | 1  | 102            |
       | 0  | 103            |
       | 1  | 103            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | started_at          | validated_at        | hints_requested | hints_cached |
       | 0          | 101            | 10      | 2020-01-01 01:01:01 | null                | null            | 0            |
       | 0          | 103            | 10      | 2020-01-01 01:01:01 | null                | null            | 0            |
@@ -66,7 +63,7 @@ Feature: Generate a read-only task token for an item from an answer
       | 0          | 102            | 50      | 2020-01-01 01:01:01 | null                | null            | 0            |
       | 0          | 101            | 60      | 2020-01-01 01:01:01 | null                | null            | 0            |
       | 1          | 102            | 60      | 2020-01-01 01:01:01 | null                | [1,2,3,4]       | 4            |
-    And the database has the following table 'answers':
+    And the database has the following table "answers":
       | id | participant_id | attempt_id | item_id | author_id | created_at          |
       | 1  | 101            | 0          | 10      | 101       | 2020-01-01 01:01:01 |
       | 2  | 102            | 0          | 20      | 105       | 2020-01-01 01:01:01 |
@@ -74,7 +71,7 @@ Feature: Generate a read-only task token for an item from an answer
       | 4  | 102            | 0          | 40      | 105       | 2020-01-01 01:01:01 |
       | 5  | 102            | 0          | 50      | 105       | 2020-01-01 01:01:01 |
       | 6  | 102            | 1          | 60      | 105       | 2020-01-01 01:01:01 |
-    And time is frozen
+    And the server time is frozen
 
   Scenario: User is able to fetch a task token when participant is the current user
     Given I am the user with id "101"

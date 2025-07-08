@@ -12,7 +12,7 @@ import (
 
 // swagger:model membershipsViewResponseRow
 type membershipsViewResponseRow struct {
-	// MAX(`group_membership_changes.at`); Nullable
+	// MAX(`group_membership_changes.at`)
 	// required: true
 	MemberSince *database.Time `json:"member_since"`
 	// `group_membership_changes.action` of the latest change
@@ -27,7 +27,6 @@ type membershipsViewResponseRow struct {
 		ID int64 `json:"id,string"`
 		// required: true
 		Name string `json:"name"`
-		// Nullable
 		// required: true
 		Description *string `json:"description"`
 		// required: true
@@ -61,6 +60,7 @@ type membershipsViewResponseRow struct {
 //			description: Start the page from the membership next to one with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N memberships
 //			in: query
@@ -78,9 +78,11 @@ type membershipsViewResponseRow struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -117,7 +119,7 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 		Where("groups.type != 'ContestParticipants'")
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -127,13 +129,11 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 			DefaultRules: "-member_since,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []membershipsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

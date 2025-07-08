@@ -1,12 +1,11 @@
 package database
 
-import "github.com/France-ioi/AlgoreaBackend/v2/app/database/mysqldb"
-
 // SessionStore implements database operations on `sessions`.
 type SessionStore struct {
 	*DataStore
 }
 
+// GetUserAndSessionIDByValidAccessToken returns the user and session ID associated with the given access token.
 func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user User, sessionID int64, err error) {
 	result := struct {
 		User      User `gorm:"embedded"`
@@ -39,7 +38,7 @@ func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user
 }
 
 // DeleteOldSessionsToKeepMaximum deletes old sessions to keep the maximum number of sessions.
-func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
+func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, keepUpTo int) {
 	// Sessions without access tokens are treated as the oldest ones.
 	// So they will be deleted first when the maximum number of sessions is reached.
 	sessionsWithoutAccessTokensQuery := s.
@@ -58,15 +57,15 @@ func (s *SessionStore) DeleteOldSessionsToKeepMaximum(userID int64, max int) {
 		`).
 		Joins("JOIN access_tokens ON access_tokens.session_id = sessions.session_id").
 		Where("sessions.user_id = ?", userID).
-		Group("access_tokens.session_id").
-		SubQuery()
+		Group("access_tokens.session_id")
 
+	const infinity = 1000000000 // A large number to ensure we can delete all sessions if needed.
 	sessionToDeleteQuery := sessionsWithoutAccessTokensQuery.
 		UnionAll(sessionsWithAccessTokensQuery).
 		Select("session_id").
 		Order("issued_at DESC, session_id").
-		Limit(mysqldb.MaxRowsReturned). // Offset requires a limit in MySQL.
-		Offset(max).
+		Limit(infinity). // Offset requires a limit in MySQL.
+		Offset(keepUpTo).
 		SubQuery()
 
 	// The use of tmp_table is a workaround for the following MySQL error:

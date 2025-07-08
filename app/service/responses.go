@@ -11,15 +11,15 @@ import (
 )
 
 // Response is used for generating non-data responses, i.e. on error or on POST/PUT/PATCH/DELETE request.
-type Response struct {
-	HTTPStatusCode int         `json:"-"`
-	Success        bool        `json:"success"`
-	Message        string      `json:"message"`
-	Data           interface{} `json:"data,omitempty"`
+type Response[T any] struct {
+	HTTPStatusCode int    `json:"-"`
+	Success        bool   `json:"success"`
+	Message        string `json:"message"`
+	Data           T      `json:"data,omitempty"`
 }
 
 // Render generates the HTTP response from Response.
-func (resp *Response) Render(w http.ResponseWriter, r *http.Request) error {
+func (resp *Response[T]) Render(_ http.ResponseWriter, r *http.Request) error {
 	if resp.Success && resp.Message == "" {
 		resp.Message = "success"
 	}
@@ -28,8 +28,8 @@ func (resp *Response) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 // CreationSuccess generated a success response for a POST creation.
-func CreationSuccess(data interface{}) render.Renderer {
-	return &Response{
+func CreationSuccess[T any](data T) render.Renderer {
+	return &Response[T]{
 		HTTPStatusCode: http.StatusCreated,
 		Success:        true,
 		Message:        "created",
@@ -38,8 +38,8 @@ func CreationSuccess(data interface{}) render.Renderer {
 }
 
 // UpdateSuccess generated a success response for a PUT updating.
-func UpdateSuccess(data interface{}) render.Renderer {
-	return &Response{
+func UpdateSuccess[T any](data T) render.Renderer {
+	return &Response[T]{
 		HTTPStatusCode: http.StatusOK,
 		Success:        true,
 		Message:        "updated",
@@ -48,8 +48,8 @@ func UpdateSuccess(data interface{}) render.Renderer {
 }
 
 // DeletionSuccess generated a success response for a DELETE deletion.
-func DeletionSuccess(data interface{}) render.Renderer {
-	return &Response{
+func DeletionSuccess[T any](data T) render.Renderer {
+	return &Response[T]{
 		HTTPStatusCode: http.StatusOK,
 		Success:        true,
 		Message:        "deleted",
@@ -59,7 +59,7 @@ func DeletionSuccess(data interface{}) render.Renderer {
 
 // UnchangedSuccess generated a success response for a POST/PUT/DELETE action if no data have been modified.
 func UnchangedSuccess(httpStatus int) render.Renderer {
-	return &Response{
+	return &Response[map[string]bool]{
 		HTTPStatusCode: httpStatus,
 		Success:        true,
 		Message:        "unchanged",

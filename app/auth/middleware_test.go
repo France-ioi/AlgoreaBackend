@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -47,6 +47,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123\nBearer:1234567",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "missing access token",
@@ -61,8 +62,8 @@ func TestUserMiddleware(t *testing.T) {
 			dbError:                  errors.New("some error"),
 			expectedStatusCode:       500,
 			expectedServiceWasCalled: false,
-			expectedBody:             `{"success":false,"message":"Internal server error","error_text":"Can't validate the access token"}` + "\n",
-			expectedLogs:             `level=error msg="Can't validate an access token: some error"`,
+			expectedBody:             `{"success":false,"message":"Internal server error"}` + "\n",
+			expectedLogs:             `level=error .* msg="Can't validate an access token: some error"`,
 		},
 		{
 			name:                     "expired token",
@@ -117,6 +118,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "accepts access token from cookies",
@@ -126,6 +128,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name: "takes the first access token from cookies",
@@ -138,6 +141,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "prefers an access token from the Authorization header if both cookie and the Authorization header are given",
@@ -148,6 +152,7 @@ func TestUserMiddleware(t *testing.T) {
 			expectedStatusCode:       200,
 			expectedServiceWasCalled: true,
 			expectedBody:             "user_id:890123",
+			expectedLogs:             "user_id=890123",
 		},
 		{
 			name:                     "sets user attributes",
@@ -208,7 +213,7 @@ func TestUserMiddleware(t *testing.T) {
 			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.cookieHeaders,
 				tt.userIDReturnedByDB, tt.dbError)
 			defer func() { _ = resp.Body.Close() }()
-			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			bodyBytes, _ := io.ReadAll(resp.Body)
 			assert.Equal(tt.expectedStatusCode, resp.StatusCode)
 			assert.Equal("application/json; charset=utf-8", resp.Header.Get("Content-Type"))
 			assert.Equal(tt.expectedServiceWasCalled, serviceWasCalled)
@@ -217,10 +222,8 @@ func TestUserMiddleware(t *testing.T) {
 			}
 			assert.Contains(string(bodyBytes), tt.expectedBody)
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-			if tt.expectedLogs == "" {
-				assert.Empty(logs)
-			} else {
-				assert.Contains(logs, tt.expectedLogs)
+			if tt.expectedLogs != "" {
+				assert.Regexp(tt.expectedLogs, logs)
 			}
 			assert.NoError(mock.ExpectationsWereMet())
 		})
@@ -273,15 +276,15 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		enteredService = true // has passed into the service
 		user := r.Context().Value(ctxUser).(*database.User)
-		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes))
-		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))
+		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes)) //nolint:errchkjson // the test data is always valid
+		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))                      //nolint:errchkjson // the test data is always valid
 		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string) +
 			"\nCookieAttributes:" + string(cookieAttributes) + "\nUser:" + string(userAttributes)
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(body))
 	})
-	mainSrv := httptest.NewServer(middleware(handler))
+	mainSrv := httptest.NewServer(logging.NewStructuredLogger()(middleware(handler)))
 	defer mainSrv.Close()
 
 	// calling web server

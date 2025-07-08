@@ -38,9 +38,11 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Request) error {
 	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -52,27 +54,22 @@ func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Reque
 
 	user := srv.GetUser(httpReq)
 
-	apiError := service.NoError
 	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("edit", "all").
-			Where("item_id = ?", dependentItemID).WithWriteLock().HasRows()
+			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		return store.ItemDependencies().
 			Delete("item_id = ? AND dependent_item_id = ?", prerequisiteItemID, dependentItemID).Error()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(rw, httpReq, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

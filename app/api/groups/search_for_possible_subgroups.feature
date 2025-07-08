@@ -1,6 +1,6 @@
 Feature: Search for possible subgroups
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type    | name                                  | description            |
       | 1  | Class   | amazing Class                         | Our class group        |
       | 2  | Team    | amazing Team                          | null                   |
@@ -15,10 +15,10 @@ Feature: Search for possible subgroups
       | 11 | User    | Another amazing User                  | Another user group     |
       | 12 | Club    | Club                                  | Parent group           |
       | 21 | User    | amazing user self                     |                        |
-    And the database has the following table 'users':
-      | login | temp_user | group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-    And the database has the following table 'groups_groups':
+    And the database has the following user:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 5               | 21             |
       | 6               | 21             |
@@ -29,13 +29,13 @@ Feature: Search for possible subgroups
       | 1               | 7              |
       | 4               | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 1        | 21         | memberships           |
       | 4        | 21         | memberships_and_group |
       | 2        | 5          | memberships_and_group |
       | 12       | 5          | memberships_and_group |
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 1        | 21        | invitation   |
       | 3        | 21        | join_request |

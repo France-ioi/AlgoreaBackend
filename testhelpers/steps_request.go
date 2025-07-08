@@ -3,10 +3,15 @@
 package testhelpers
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 
 	"github.com/cucumber/godog"
+	"github.com/go-chi/chi"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
@@ -27,7 +32,7 @@ func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
 	return nil
 }
 
-func (ctx *TestContext) ISendrequestToWithBody(method string, path string, body *godog.DocString) error { // nolint
+func (ctx *TestContext) ISendrequestToWithBody(method, path string, body *godog.DocString) error { //nolint
 	return ctx.iSendrequestGeneric(method, path, body.Content)
 }
 
@@ -43,8 +48,25 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	}
 
 	// app server
-	testServer := httptest.NewServer(ctx.application.HTTPHandler)
+	httpHandler := chi.NewRouter().With(func(_ http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx.application.HTTPHandler.ServeHTTP(w, r.WithContext(database.ContextWithTransactionRetrying(r.Context())))
+		})
+	})
+	httpHandler.Mount("/", ctx.application.HTTPHandler)
+	testServer := httptest.NewServer(httpHandler)
 	defer testServer.Close()
+
+	database.SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {
+		ctx.previousGeneratedGroupCodeIndex = ctx.generatedGroupCodeIndex
+		ctx.previousRandSource = rand.GetSource()
+	})
+	defer database.SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {})
+	database.SetOnForcefulRetryOfTransactionHook(func() {
+		ctx.generatedGroupCodeIndex = ctx.previousGeneratedGroupCodeIndex
+		rand.SetSource(ctx.previousRandSource)
+	})
+	defer database.SetOnForcefulRetryOfTransactionHook(func() {})
 
 	var headers map[string][]string
 	if ctx.userID != 0 {
@@ -68,9 +90,8 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 		return err
 	}
 
-	// do request
-	response, body, err := testRequest(testServer, method, path, headers, strings.NewReader(reqBody))
-	defer func() { _ = response.Body.Close() }()
+	//nolint:bodyclose // the body is closed in SendTestHTTPRequest
+	response, body, err := SendTestHTTPRequest(testServer, method, path, headers, strings.NewReader(reqBody))
 	if err != nil {
 		return err
 	}

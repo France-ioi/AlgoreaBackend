@@ -21,7 +21,7 @@ func TestFormData_IsSet(t *testing.T) {
 }
 
 func TestFormData_IsValid(t *testing.T) {
-	formData := &FormData{fieldErrors: FieldErrors{"fieldWithErrors": []string{"someError"}}}
+	formData := &FormData{fieldErrors: FieldErrorsError{"fieldWithErrors": []string{"someError"}}}
 	assert.True(t, formData.IsValid("someField"))
 	assert.False(t, formData.IsValid("fieldWithErrors"))
 }
@@ -44,15 +44,22 @@ func TestFormData_decodeMapIntoStruct_PanicsWhenMapstructureNewDecoderFails(t *t
 	f.decodeMapIntoStruct(map[string]interface{}{})
 }
 
+func TestFormData_RegisterTranslation_OverridesConflictingTranslationsSilently(t *testing.T) {
+	f := NewFormData(&struct{}{})
+	f.RegisterTranslation("", "")
+	assert.NotPanics(t, func() {
+		f.RegisterTranslation("", "")
+	})
+}
+
 func TestFormData_RegisterTranslation_PanicsOnError(t *testing.T) {
 	f := NewFormData(&struct{}{})
 	defer func() {
 		p := recover()
 		assert.NotNil(t, p)
-		assert.IsType(t, (*ut.ErrConflictingTranslation)(nil), p)
+		assert.IsType(t, (*ut.ErrMissingBracket)(nil), p)
 	}()
-	f.RegisterTranslation("", "")
-	f.RegisterTranslation("", "")
+	f.RegisterTranslation("", "{")
 }
 
 func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T) {
@@ -64,7 +71,7 @@ func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T
 	})
 	f.RegisterTranslation("test", "failed for field %[2]s with parameter %[3]s (tag=%[1]s)")
 	err := f.ParseMapData(map[string]interface{}{"id": int64(1)})
-	assert.Equal(t, err, FieldErrors{
+	assert.Equal(t, err, FieldErrorsError{
 		"ID": []string{"failed for field ID with parameter value (tag=test)"},
 	})
 }
@@ -83,9 +90,9 @@ func TestFormData_ValidatorSkippingUnsetFields(t *testing.T) {
 	err := f.ParseMapData(map[string]interface{}{})
 	assert.Nil(t, err)
 	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": nil})
-	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}}, err)
+	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}}, err)
 	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
-	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 }
 
 func TestFormData_ValidatorSkippingUnchangedFields(t *testing.T) {
@@ -109,19 +116,19 @@ func TestFormData_ValidatorSkippingUnchangedFields(t *testing.T) {
 	err = f.ParseMapData(map[string]interface{}{})
 	assert.Nil(t, err)
 	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
-	assert.Equal(t, FieldErrors{"Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+	assert.Equal(t, FieldErrorsError{"Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 	i := int64(10)
 	j := int64(20)
 	f.SetOldValues(&testStruct{ID: &i, Nested: &nestedStruct{ID: &j}})
 	err = f.ParseMapData(map[string]interface{}{})
 	assert.Nil(t, err)
 	err = f.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": nil}})
-	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 	err = f.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
-	assert.Equal(t, FieldErrors{"Nested": []string{"failed"}}, err)
+	assert.Equal(t, FieldErrorsError{"Nested": []string{"failed"}}, err)
 	f.SetOldValues(nil)
 	err = f.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
-	assert.Equal(t, FieldErrors{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
+	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 }
 
 func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
@@ -147,7 +154,7 @@ func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 			data:     "2019-05-30T14:00:00ZZ",
 			want:     database.Time(time.Time{}),
 			wantErr: &time.ParseError{
-				Layout:     "2006-01-02T15:04:05Z07:00",
+				Layout:     time.RFC3339,
 				Value:      "2019-05-30T14:00:00ZZ",
 				LayoutElem: "",
 				ValueElem:  "Z",
@@ -175,10 +182,10 @@ func TestFormData_fieldPathInValidator(t *testing.T) {
 		Field *string `json:"field" validate:"custom|custom1"`
 	}
 	type TestNestedStruct struct {
-		TestNestedNestedStruct `json:"nested_nested,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+		TestNestedNestedStruct `json:"nested_nested,squash"`
 	}
 	type testStruct struct {
-		TestNestedStruct `json:"nested,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+		TestNestedStruct `json:"nested,squash"`
 	}
 
 	var path, path1 string

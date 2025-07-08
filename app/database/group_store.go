@@ -28,24 +28,6 @@ func (s *GroupStore) ManagedBy(user *User) *DB {
 					user_ancestors.child_group_id = ?`, user.GroupID)
 }
 
-// TeamGroupForTeamItemAndUser returns a composable query for getting a team that
-//  1. the given user is a member of
-//  2. has an unexpired attempt with root_item_id = `itemID`.
-//
-// If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
-func (s *GroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
-	return s.
-		Joins(`JOIN groups_groups_active
-			ON groups_groups_active.parent_group_id = groups.id AND
-				groups_groups_active.child_group_id = ?`, user.GroupID).
-		Joins(`
-			JOIN attempts ON attempts.participant_id = groups.id AND
-				attempts.root_item_id = ? AND NOW() < attempts.allows_submissions_until`, itemID).
-		Where("groups.type = 'Team'").
-		Order("groups.id").
-		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
-}
-
 // TeamGroupForUser returns a composable query for getting team group of the given user with given id.
 func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 	return s.
@@ -57,11 +39,10 @@ func (s *GroupStore) TeamGroupForUser(teamGroupID int64, user *User) *DB {
 }
 
 // CreateNew creates a new group with given name and type.
-// It also runs GroupGroupStore.createNewAncestors().
 func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
-	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryStore *DataStore) error {
+	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError("groups", func(retryStore *DataStore) error {
 		groupID = retryStore.NewID()
 		return retryStore.Groups().InsertMap(map[string]interface{}{
 			"id":         groupID,
@@ -78,7 +59,7 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 			"created_at":     Now(),
 		}))
 	}
-	s.ScheduleGroupsAncestorsPropagation()
+
 	return groupID, nil
 }
 
@@ -126,12 +107,12 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 		Select("child_group_id")
 
 	if withLock {
-		activeTeamParticipationsQuery = activeTeamParticipationsQuery.WithWriteLock()
-		updatedMemberIDsQuery = updatedMemberIDsQuery.WithWriteLock()
+		activeTeamParticipationsQuery = activeTeamParticipationsQuery.WithExclusiveWriteLock()
+		updatedMemberIDsQuery = updatedMemberIDsQuery.WithExclusiveWriteLock()
 	}
 
 	if isAdding {
-		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID).QueryExpr())
+		updatedMemberIDsQuery = updatedMemberIDsQuery.UnionAll(s.Raw("SELECT ?", userID))
 	} else {
 		updatedMemberIDsQuery = updatedMemberIDsQuery.Where("child_group_id != ?", userID)
 	}
@@ -154,7 +135,7 @@ func (s *GroupStore) GenerateQueryCheckingIfActionBreaksEntryConditionsForActive
 				0) AS can_enter`)
 
 	if withLock {
-		membersPreconditionsQuery = membersPreconditionsQuery.WithWriteLock()
+		membersPreconditionsQuery = membersPreconditionsQuery.WithExclusiveWriteLock()
 	}
 
 	return s.Raw(`
@@ -173,14 +154,11 @@ func (s *GroupStore) DeleteGroup(groupID int64) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
-	mustNotBeError(s.GroupGroups().WithGroupsRelationsLock(func(s *DataStore) error {
-		s.GroupGroups().deleteGroupAndOrphanedDescendants(groupID)
-		return nil
-	}))
+	s.GroupGroups().deleteGroupAndOrphanedDescendants(groupID)
 	return nil
 }
 
-// AncestorsOfJoinedGroupsForGroup returns a query selecting all group ancestors ids of a group.
+// AncestorsOfJoinedGroupsForGroup returns a query selecting all group ancestors ids of groups joined by the given group.
 func (s *GroupStore) AncestorsOfJoinedGroupsForGroup(store *DataStore, groupID int64) *DB {
 	return store.ActiveGroupGroups().
 		Where("groups_groups_active.child_group_id = ?", groupID).
@@ -190,7 +168,7 @@ func (s *GroupStore) AncestorsOfJoinedGroupsForGroup(store *DataStore, groupID i
 		Select("groups_ancestors_active.ancestor_group_id")
 }
 
-// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of a user.
+// AncestorsOfJoinedGroups returns a query selecting all group ancestors ids of groups joined by the given user.
 func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
 	return s.AncestorsOfJoinedGroupsForGroup(store, user.GroupID)
 }
@@ -207,12 +185,6 @@ func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroupsForGroup(store *Data
 		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
 		Where("ancestor_group.type != 'ContestParticipants'").
 		Select("ancestors_of_managed.ancestor_group_id")
-}
-
-// ManagedUsersAndAncestorsOfManagedGroups returns all groups which are ancestors of managed groups,
-// and all users who are descendants from managed groups, for a user.
-func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroups(store *DataStore, user *User) *DB {
-	return s.ManagedUsersAndAncestorsOfManagedGroupsForGroup(store, user.GroupID)
 }
 
 // PickVisibleGroupsForGroup returns a query filtering only group which are visible for a group.
@@ -240,8 +212,6 @@ func (s *GroupStore) IsVisibleForGroup(groupID, visibleForGroupID int64) bool {
 
 	isVisible, err := s.PickVisibleGroupsForGroup(s.Groups().DB, visibleForGroupID).
 		Where("groups.id = ?", groupID).
-		Select("1").
-		Limit(1).
 		HasRows()
 	mustNotBeError(err)
 
@@ -267,22 +237,21 @@ func (s *GroupStore) GetDirectParticipantIDsOf(groupID int64) (participantIDs []
 }
 
 // HasParticipants checks whether a group has participants.
-func (s *GroupStore) HasParticipants(groupID int64) bool {
-	hasParticipants, err := s.
+// Must be called inside a transaction.
+func (s *GroupStore) HasParticipants(groupID int64) (hasParticipants bool, err error) {
+	return s.
 		Joins("JOIN groups_groups ON groups_groups.parent_group_id = groups.id").
 		Joins("JOIN `groups` AS participants ON participants.id = groups_groups.child_group_id").
 		Where("groups.id = ?", groupID).
 		Where("participants.type = 'User' OR participants.type = 'Team'").
+		WithSharedWriteLock().
 		Select("1").
 		Limit(1).
 		HasRows()
-	mustNotBeError(err)
-
-	return hasParticipants
 }
 
-// GetSearchForPossibleSubgroupsQuery returns a query for searching for possible subgroups of a user.
-func (s *GroupStore) GetSearchForPossibleSubgroupsQuery(user *User, searchString string) *DB {
+// PossibleSubgroupsBySearchString returns a query for searching for possible subgroups of a user.
+func (s *GroupStore) PossibleSubgroupsBySearchString(user *User, searchString string) *DB {
 	return s.ManagedBy(user).
 		Where("group_managers.can_manage = 'memberships_and_group'").
 		Group("groups.id").
@@ -295,7 +264,8 @@ func (s *GroupStore) GetSearchForPossibleSubgroupsQuery(user *User, searchString
 			groups.description`)
 }
 
-func (s *GroupStore) GetSearchForAvailableGroupsQuery(user *User, searchString string) *DB {
+// AvailableGroupsBySearchString returns a query for searching for available groups of a user.
+func (s *GroupStore) AvailableGroupsBySearchString(user *User, searchString string) *DB {
 	skipGroups := s.ActiveGroupGroups().
 		Select("groups_groups_active.parent_group_id").
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).

@@ -39,6 +39,7 @@ type userBatchPrefix struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [group_prefix]
@@ -69,9 +70,11 @@ type userBatchPrefix struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -80,9 +83,7 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 	managedByUser := store.ActiveGroupAncestors().ManagedByUser(user).
 		Where("can_manage != 'none'").
@@ -100,7 +101,7 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 			(SELECT COUNT(*) FROM user_batches_v2
 			 WHERE user_batches_v2.group_prefix = user_batch_prefixes.group_prefix) AS total_size`)
 
-	query, apiErr := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -109,13 +110,11 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 			DefaultRules: "group_prefix",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"group_prefix": service.FieldTypeString},
 		})
-	if apiErr != service.NoError {
-		return apiErr
-	}
+	service.MustNotBeError(err)
 
 	var result []userBatchPrefix
 	service.MustNotBeError(query.Scan(&result).Error())
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

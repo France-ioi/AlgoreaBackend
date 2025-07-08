@@ -34,6 +34,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: user_ids
 //			in: query
@@ -68,9 +69,11 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) error {
 	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
@@ -83,9 +86,7 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
-	if apiErr := checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiErr != service.NoError {
-		return apiErr
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID))
 
 	results := make(database.GroupGroupTransitionResults, len(userIDs))
 	for _, userID := range userIDs {
@@ -110,11 +111,11 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		results[id] = result
 	}
 
-	response := service.Response{
+	response := service.Response[database.GroupGroupTransitionResults]{
 		Success: true,
 		Message: "deleted",
 		Data:    results,
 	}
 	render.Respond(w, r, &response)
-	return service.NoError
+	return nil
 }

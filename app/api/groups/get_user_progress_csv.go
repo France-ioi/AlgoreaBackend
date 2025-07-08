@@ -46,6 +46,7 @@ const csvExportBatchSize = 500
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			required: true
@@ -53,6 +54,7 @@ const csvExportBatchSize = 500
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with users progress on items
@@ -71,9 +73,11 @@ const csvExportBatchSize = 500
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -83,13 +87,11 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	service.MustNotBeError(err)
 
 	w.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
@@ -102,7 +104,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 	if len(itemParentIDs) == 0 {
 		_, err := w.Write([]byte("Login;First name;Last name\n"))
 		service.MustNotBeError(err)
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -138,7 +140,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 		Scan(&users).Error())
 
 	if len(users) == 0 {
-		return service.NoError
+		return nil
 	}
 	userIDs := make([]string, len(users))
 	for i := range users {
@@ -153,7 +155,6 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 		userIDsList := strings.Join(userIDs[startFromUser:batchBoundary], ", ")
 		userNumber := startFromUser
 		service.MustNotBeError(
-			// nolint:gosec
 			joinUserProgressResultsForCSV(
 				store.Raw(`
 				SELECT STRAIGHT_JOIN
@@ -173,7 +174,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) s
 						}, csvWriter)).Error())
 	}
 
-	return service.NoError
+	return nil
 }
 
 func printTableHeader(
@@ -194,7 +195,7 @@ func printTableHeader(
 	for i := range items {
 		itemTitlesMap[items[i].ID] = items[i].Title
 	}
-	itemTitles := make([]string, 0, len(orderedItemIDListWithDuplicates)+3)
+	itemTitles := make([]string, 0, len(firstColumns)+len(orderedItemIDListWithDuplicates))
 	itemTitles = append(itemTitles, firstColumns...)
 	for i, itemID := range orderedItemIDListWithDuplicates {
 		title := itemTitlesMap[itemID.(int64)]
@@ -218,15 +219,12 @@ func processCSVResultRow(
 	currentRowNumber := 0
 	return func(m map[string]interface{}) error {
 		var score string
-		switch v := m["score"].(type) {
-		case string:
-			score = v
-		case nil:
-			score = ""
+		if m["score"] != nil {
+			score = fmt.Sprintf("%v", m["score"])
 		}
 
-		itemID := convertToInt64(m["item_id"])
-		groupID := convertToInt64(m["group_id"])
+		itemID := m["item_id"].(int64)
+		groupID := m["group_id"].(int64)
 
 		if currentRowNumber%uniqueItemsCount == 0 {
 			groupNames := generateGroupNamesFunc(groupID)
@@ -249,27 +247,13 @@ func processCSVResultRow(
 	}
 }
 
-func convertToInt64(value interface{}) int64 {
-	var err error
-	var result int64
-	switch v := value.(type) {
-	case string:
-		result, err = strconv.ParseInt(v, 10, 64)
-		service.MustNotBeError(err)
-	case int64:
-		result = v
-	}
-	return result
-}
-
 func joinUserProgressResultsForCSV(db *database.DB, userID interface{}) *database.DB {
 	return db.
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT STRAIGHT_JOIN groups.id
+				SELECT STRAIGHT_JOIN groups_groups_active.parent_group_id AS id
 				FROM groups_groups_active
-				JOIN `+"`groups`"+` ON groups.id = groups_groups_active.parent_group_id
-				WHERE groups.type = 'Team' AND groups_groups_active.child_group_id = ?
+				WHERE groups_groups_active.is_team_membership = 1 AND groups_groups_active.child_group_id = ?
 			) teams ON 1`, userID).
 		Joins(`
 			LEFT JOIN LATERAL (

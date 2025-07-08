@@ -5,9 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDB_WhereGroupRelationIsActual(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -20,13 +24,4 @@ func TestDB_WhereGroupRelationIsActual(t *testing.T) {
 	err := db.Table("groups_groups").WhereGroupRelationIsActual().Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGroupGroupStore_WithGroupsRelationsLock(t *testing.T) {
-	assertNamedLockMethod(t, "groups_groups", int(groupsRelationsLockTimeout.Seconds()), "groups_groups",
-		func(store *DataStore) func(func(store *DataStore) error) error {
-			return func(txFunc func(store *DataStore) error) error {
-				return store.GroupGroups().WithGroupsRelationsLock(txFunc)
-			}
-		})
 }

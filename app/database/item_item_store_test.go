@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"reflect"
 	"regexp"
 	"sync"
@@ -8,9 +9,13 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestItemItemStore_ChildrenOf(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -59,6 +64,8 @@ func TestItemItemStore_PropagationEnums(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, _ := NewDBMock()
 			defer func() { _ = db.Close() }()
 			itemItemStore := NewDataStore(db).ItemItems()
@@ -94,6 +101,8 @@ func TestItemItemStore_PropagationEnums(t *testing.T) {
 }
 
 func TestItemItemStore_UpperViewLevelsPropagationIndexByName_Load(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -107,6 +116,8 @@ func TestItemItemStore_UpperViewLevelsPropagationIndexByName_Load(t *testing.T) 
 }
 
 func TestItemItemStore_ContentViewPropagationIndexByName_Load(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, sqlMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -120,10 +131,41 @@ func TestItemItemStore_ContentViewPropagationIndexByName_Load(t *testing.T) {
 }
 
 func TestItemItemStore_WithItemsRelationsLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	assertNamedLockMethod(t, "items_items", int(itemsRelationsLockTimeout.Seconds()), "items_items",
 		func(store *DataStore) func(func(store *DataStore) error) error {
 			return func(txFunc func(store *DataStore) error) error {
 				return store.ItemItems().WithItemsRelationsLock(txFunc)
 			}
 		})
+}
+
+func TestItemItemStore_CreateNewAncestors_MustBeInTransaction(t *testing.T) {
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		_ = NewDataStore(db).ItemItems().CreateNewAncestors()
+	})
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestItemItemStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	expectedError := errors.New("some error")
+
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+	dbMock.ExpectBegin()
+	dbMock.ExpectExec("^INSERT INTO  items_propagate").WillReturnError(expectedError)
+	dbMock.ExpectRollback()
+
+	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
+		return NewDataStore(trDB).ItemItems().CreateNewAncestors()
+	}))
+
+	assert.NoError(t, dbMock.ExpectationsWereMet())
 }

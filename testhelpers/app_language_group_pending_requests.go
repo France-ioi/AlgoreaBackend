@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 )
 
 // registerFeaturesForGroupMembershipChanges registers the Gherkin features related to group membership changes.
@@ -26,25 +27,37 @@ func (ctx *TestContext) registerFeaturesForGroupPendingRequests(s *godog.Scenari
 }
 
 // getGroupPendingRequestPrimaryKey returns the primary key of a group pending request.
-func (ctx *TestContext) getGroupPendingRequestPrimaryKey(groupID, memberID int64) string {
-	return strconv.FormatInt(groupID, 10) + "," + strconv.FormatInt(memberID, 10)
+func (ctx *TestContext) getGroupPendingRequestPrimaryKey(groupID, memberID int64) map[string]string {
+	return map[string]string{"group_id": strconv.FormatInt(groupID, 10), "member_id": strconv.FormatInt(memberID, 10)}
 }
 
-// addGroup adds a group in database.
+// addGroup adds a group to the database.
 func (ctx *TestContext) addGroupPendingRequest(group, member, requestType string) {
-	groupID := ctx.getReference(group)
-	memberID := ctx.getReference(member)
+	groupID := ctx.getIDOfReference(group)
+	memberID := ctx.getIDOfReference(member)
 
 	primaryKey := ctx.getGroupPendingRequestPrimaryKey(groupID, memberID)
 
 	if !ctx.isInDatabase("group_pending_requests", primaryKey) {
-		ctx.addInDatabase("group_pending_requests", primaryKey, map[string]interface{}{
-			"group_id":  groupID,
-			"member_id": memberID,
-			"type":      requestType,
-			// All the other fields are set to default values.
-			"at": time.Now(),
+		err := ctx.DBHasTable("group_pending_requests", &godog.Table{
+			Rows: []*messages.PickleTableRow{
+				{
+					Cells: []*messages.PickleTableCell{
+						{Value: "group_id"}, {Value: "member_id"}, {Value: "type"}, {Value: "at"},
+					},
+					// All the other fields are set to default values.
+				},
+				{Cells: []*messages.PickleTableCell{
+					{Value: strconv.FormatInt(groupID, 10)},
+					{Value: strconv.FormatInt(memberID, 10)},
+					{Value: requestType},
+					{Value: time.Now().UTC().Format(time.DateTime)},
+				}},
+			},
 		})
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -85,7 +98,7 @@ func (ctx *TestContext) ThereShouldBeNoGroupPendingRequestsForTheMemberWithTheTy
 	return nil
 }
 
-// ThereShouldBeTheFollowingGroupPendingRequests checks that rows are present in the group_pending_requests table in database.
+// ThereShouldBeTheFollowingGroupPendingRequests checks that rows are present in the group_pending_requests table of the database.
 func (ctx *TestContext) ThereShouldBeTheFollowingGroupPendingRequests(entries *godog.Table) error {
 	for i := 1; i < len(entries.Rows); i++ {
 		change := ctx.getRowMap(i, entries)

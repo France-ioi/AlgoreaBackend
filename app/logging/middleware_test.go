@@ -37,7 +37,7 @@ func TestMiddleware_Success(t *testing.T) {
 	checkCommon(assert, entryData)
 	assert.Equal("request complete", hook.AllEntries()[2].Message)
 	assert.Equal(10, entryData["resp_bytes_length"])
-	assert.True(entryData["resp_elapsed_ms"].(float64) < 3.0, "Expected <3.0s, got: %f", entryData["resp_elapsed_ms"].(float64))
+	assert.True(entryData["resp_elapsed_ms"].(float64) < 3000.0, "Expected <3.0s, got: %f", entryData["resp_elapsed_ms"].(float64))
 	assert.Equal(200, entryData["resp_status"])
 }
 
@@ -66,10 +66,9 @@ func doRequest(forcePanic bool) {
 		GetLogEntry(r).Print("in service log")
 		if forcePanic {
 			panic("my panic msg")
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("dummy body"))
 		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("dummy body"))
 	})
 	// use the chi `Recoverer` middleware to catch panic and log it
 	// use the chi `RequestID` middleware to include request id in it (appear in logs)
@@ -87,7 +86,6 @@ func doRequest(forcePanic bool) {
 }
 
 func checkCommon(assert *assertlib.Assertions, entryData logrus.Fields) {
-	assert.NotNil(entryData["ts"])
 	assert.Equal("web", entryData["type"])
 	assert.Equal("https", entryData["http_scheme"])
 	assert.Equal("HTTP/1.1", entryData["http_proto"])

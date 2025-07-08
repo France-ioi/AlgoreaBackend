@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestAnswerStore_WithMethods(t *testing.T) {
@@ -31,6 +33,8 @@ func TestAnswerStore_WithMethods(t *testing.T) {
 	for _, testCase := range tests {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 

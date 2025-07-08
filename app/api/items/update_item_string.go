@@ -17,13 +17,10 @@ import (
 type itemStringUpdateRequest struct {
 	// maxLength: 200
 	Title string `json:"title" validate:"max=200"`
-	// Nullable
 	// maxLength: 2048
 	ImageURL *string `json:"image_url" validate:"omitempty,max=2048"`
-	// Nullable
 	// maxLength: 200
-	Subtitle *string `json:"subtitle" validate:"omitempty,max=200"`
-	// Nullable
+	Subtitle    *string `json:"subtitle"    validate:"omitempty,max=200"`
 	Description *string `json:"description"`
 }
 
@@ -66,9 +63,11 @@ type itemStringUpdateRequest struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) error {
 	var err error
 	user := srv.GetUser(r)
 
@@ -86,48 +85,41 @@ func (srv *Service) updateItemString(w http.ResponseWriter, r *http.Request) ser
 
 	input := itemStringUpdateRequest{}
 	data := formdata.NewFormData(&input)
-	apiError := service.NoError
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-		err = data.ParseJSONRequestData(r)
-		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
-		}
+	err = data.ParseJSONRequestData(r)
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
 
+	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
 		var found bool
-		found, err = store.Permissions().MatchingUserAncestors(user).WithWriteLock().
+		found, err = store.Permissions().MatchingUserAncestors(user).WithSharedWriteLock().
 			Where("item_id = ?", itemID).
 			WherePermissionIsAtLeast("view", "content").
 			WherePermissionIsAtLeast("edit", "all").
 			HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.ErrForbidden(errors.New("no access rights to edit the item"))
-			return apiError.Error // rollback
+			return service.ErrForbidden(errors.New("no access rights to edit the item")) // rollback
 		}
 
 		if useDefaultLanguage {
-			service.MustNotBeError(store.Items().ByID(itemID).WithWriteLock().PluckFirst("default_language_tag", &languageTag).Error())
+			service.MustNotBeError(store.Items().ByID(itemID).WithSharedWriteLock().PluckFirst("default_language_tag", &languageTag).Error())
 		} else {
-			found, err = store.Languages().ByTag(languageTag).WithWriteLock().HasRows()
+			found, err = store.Languages().ByTag(languageTag).WithSharedWriteLock().HasRows()
 			service.MustNotBeError(err)
 			if !found {
-				apiError = service.ErrInvalidRequest(errors.New("no such language"))
-				return apiError.Error // rollback
+				return service.ErrInvalidRequest(errors.New("no such language")) // rollback
 			}
 		}
 		updateItemStringData(store, itemID, languageTag, data.ConstructMapForDB())
 		return nil // commit
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
+	return nil
 }
 
 func updateItemStringData(store *database.DataStore, itemID int64, languageTag string, dbMap map[string]interface{}) {

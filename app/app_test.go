@@ -3,7 +3,8 @@ package app
 import (
 	crand "crypto/rand"
 	"errors"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -15,11 +16,10 @@ import (
 	"github.com/spf13/viper"
 	assertlib "github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 )
 
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
@@ -36,7 +36,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(app.Database)
 	assert.NotNil(app.HTTPHandler)
 	assert.NotNil(app.apiCtx)
-	assert.Len(app.HTTPHandler.Middlewares(), 8)
+	assert.Len(app.HTTPHandler.Middlewares(), 9)
 	assert.True(len(app.HTTPHandler.Routes()) > 0)
 	assert.Equal("/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
@@ -47,7 +47,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 	_ = os.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	defer func() { _ = os.Unsetenv("ALGOREA_SERVER__COMPRESS") }()
 	app, _ := New()
-	assert.Len(app.HTTPHandler.Middlewares(), 7)
+	assert.Len(app.HTTPHandler.Middlewares(), 8)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
@@ -147,13 +147,13 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	if err != nil {
 		return
 	}
-	respBody, _ := ioutil.ReadAll(response.Body)
+	respBody, _ := io.ReadAll(response.Body)
 	_ = response.Body.Close()
 
 	// check that the error has been handled by the recover
 	assert.Equal(http.StatusInternalServerError, response.StatusCode)
 	assert.Equal("Internal Server Error\n", string(respBody))
-	assert.Equal("text/plain; charset=utf-8", response.Header.Get("Content-type"))
+	assert.Equal("text/plain; charset=utf-8", response.Header.Get("Content-Type"))
 	allLogs := hook.AllEntries()
 	assert.Equal(2, len(allLogs)-nbLogsBeforeRequest)
 	// check that the req id is correct
@@ -174,7 +174,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	defer restoreFct()
 	app, _ := New()
 	router := app.HTTPHandler
-	router.Get("/dummy", func(w http.ResponseWriter, r *http.Request) {
+	router.Get("/dummy", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("{\"data\":\"datadatadata\"}"))
@@ -192,7 +192,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 		return
 	}
 	defer func() { _ = response.Body.Close() }()
-	assert.NotNil(response.Header.Get("Content-type"))
+	assert.NotNil(response.Header.Get("Content-Type"))
 	assert.Equal("application/json", response.Header.Get("Content-Type"))
 	allLogs := hook.AllEntries()
 	assert.Equal(2, len(allLogs)-nbLogsBeforeRequest)
@@ -228,7 +228,7 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 		return
 	}
 	defer func() { _ = response.Body.Close() }()
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	assert.NoError(err)
 	assert.Contains(string(body), "Types of profiles available:")
 }
@@ -254,4 +254,36 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	}
 	defer func() { _ = response.Body.Close() }()
 	assert.Equal(404, response.StatusCode)
+}
+
+func TestNew_DisableResultsPropagation(t *testing.T) {
+	for _, configSettingValue := range []bool{true, false} {
+		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
+			oldEnvValue := os.Getenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION")
+			defer func() { _ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", oldEnvValue) }()
+
+			_ = os.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", fmt.Sprintf("%t", configSettingValue))
+			assert := assertlib.New(t)
+
+			app, _ := New()
+			assert.Equal(configSettingValue, database.NewDataStore(app.Database).IsResultsPropagationProhibited())
+
+			router := app.HTTPHandler
+			router.Get("/dummy", func(_ http.ResponseWriter, r *http.Request) {
+				assert.Equal(configSettingValue, database.NewDataStoreWithContext(r.Context(), app.Database).IsResultsPropagationProhibited())
+			})
+
+			srv := httptest.NewServer(router)
+			defer srv.Close()
+
+			request, _ := http.NewRequest("GET", srv.URL+"/dummy", http.NoBody)
+			response, err := http.DefaultClient.Do(request)
+			assert.NoError(err)
+			if err != nil {
+				return
+			}
+			_, _ = io.ReadAll(response.Body)
+			_ = response.Body.Close()
+		})
+	}
 }

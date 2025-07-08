@@ -19,27 +19,24 @@ type invitationsViewResponseRow struct {
 	// required: true
 	At database.Time `json:"at"`
 
-	// the user that invited (Nullable)
+	// the user who invited
 	// required: true
-	InvitingUser *invitingUser `json:"inviting_user" gorm:"embedded;embedded_prefix:inviting_user__"`
+	InvitingUser *invitingUser `gorm:"embedded;embedded_prefix:inviting_user__" json:"inviting_user"`
 
 	// required: true
-	Group groupWithApprovals `json:"group" gorm:"embedded;embedded_prefix:group__"`
+	Group groupWithApprovals `gorm:"embedded;embedded_prefix:group__" json:"group"`
 }
 
-// The user that invited; Nullable.
 type invitingUser struct {
 	// `users.group_id`
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
 	Login string `json:"login"`
-	// Nullable
 	// required: true
-	FirstName string `json:"first_name"`
-	// Nullable
+	FirstName *string `json:"first_name"`
 	// required: true
-	LastName string `json:"last_name"`
+	LastName *string `json:"last_name"`
 }
 
 type groupWithApprovals struct {
@@ -48,7 +45,6 @@ type groupWithApprovals struct {
 	ID int64 `json:"id,string"`
 	// required: true
 	Name string `json:"name"`
-	// Nullable
 	// required: true
 	Description *string `json:"description"`
 	// required: true
@@ -57,7 +53,6 @@ type groupWithApprovals struct {
 	// enum: none,view,edit
 	// required: true
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true
@@ -90,6 +85,7 @@ type groupWithApprovals struct {
 //							 (`{from.at}` is required when `{from.group_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N requests/invitations
 //			in: query
@@ -107,9 +103,11 @@ type groupWithApprovals struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
 
@@ -147,7 +145,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 		Where("group_pending_requests.type='invitation'")
 
 	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
+	query, err := service.ApplySortingAndPaging(
 		r, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -160,9 +158,7 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 				"at":       service.FieldTypeTime,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []invitationsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -174,5 +170,5 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 	}
 
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }

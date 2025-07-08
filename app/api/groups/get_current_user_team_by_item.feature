@@ -1,18 +1,15 @@
 Feature: Get current user's team for item (teamGetByItemID)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type |
-      | 12 | User |
-      | 13 | User |
-      | 14 | User |
       | 20 | Team |
       | 21 | Team |
-    And the database has the following table 'users':
-      | login | group_id |
-      | user  | 12       |
-      | jane  | 13       |
-      | john  | 14       |
-    And the database has the following table 'groups_groups':
+    And the database has the following users:
+      | group_id | login |
+      | 12       | user  |
+      | 13       | jane  |
+      | 14       | john  |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 20              | 12             |
       | 20              | 13             |
@@ -20,7 +17,7 @@ Feature: Get current user's team for item (teamGetByItemID)
       | 21              | 12             |
       | 21              | 13             |
       | 21              | 14             |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | participant_id | id | root_item_id |
       | 20             | 1  | 100          |
       | 21             | 1  | 100          |

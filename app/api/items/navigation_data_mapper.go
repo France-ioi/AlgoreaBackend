@@ -96,7 +96,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		},
 	)
 
-	allItemsQuery := itemsQuery.UnionAll(childrenQuery.SubQuery())
+	allItemsQuery := itemsQuery.UnionAll(childrenQuery)
 	service.MustNotBeError(allItemsQuery.Error())
 
 	query := dataStore.Raw(`
@@ -158,6 +158,7 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 				Where("groups_ancestors_active.ancestor_group_id = ?", watchedGroupID).SubQuery()).SubQuery()
 	}
 
+	//nolint:mnd // in the end, we append 4 more values
 	values := make([]interface{}, len(columnListValues), len(columnListValues)+4)
 	copy(values, columnListValues)
 	canWatchResultEnumIndex := dataStore.PermissionsGranted().WatchIndexByName("result")
@@ -193,7 +194,6 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64, requir
 		externalColumnList += ", "
 	}
 
-	// nolint:gosec
 	itemsQuery := filterAttemptsFunc(dataStore.Raw(`
 			SELECT items.*, `+externalColumnList+`results.attempt_id,
 				results.score_computed, results.validated, results.started_at, results.latest_activity_at,

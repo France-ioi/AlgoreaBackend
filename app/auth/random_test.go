@@ -29,7 +29,7 @@ func TestGenerateKey(t *testing.T) {
 
 func TestGenerateKey_HandlesError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(rand.Int, func(rand io.Reader, max *big.Int) (n *big.Int, err error) {
+	monkey.Patch(rand.Int, func(_ io.Reader, _ *big.Int) (n *big.Int, err error) {
 		return nil, expectedError
 	})
 	defer monkey.UnpatchAll()

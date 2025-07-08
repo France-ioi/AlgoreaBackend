@@ -21,7 +21,6 @@ type groupParticipantProgressResponseCommon struct {
 	// Whether the participant or one of his teams has the item validated
 	// required:true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required:true
 	LatestActivityAt *database.Time `json:"latest_activity_at"`
 	// Number of hints requested for the result with the best score (if multiple, take the first one, chronologically).
@@ -58,10 +57,11 @@ type groupParticipantProgressResponseChild struct {
 	String structures.ItemString `json:"string"`
 
 	// required: true
+	// Extensions:
+	// x-nullable: false
 	CurrentUserPermissions *structures.ItemPermissions `json:"current_user_permissions"`
 
 	// The minimum `started_at` on a result among all attempts.
-	// Nullable
 	// required:true
 	StartedAt *database.Time `json:"started_at"`
 }
@@ -168,15 +168,15 @@ type participantProgressParameters struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) error {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
-	params, apiError := srv.parseParticipantProgressParameters(r, store, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	params, err := srv.parseParticipantProgressParameters(r, store, user)
+	service.MustNotBeError(err)
 
 	itemIDQuery := store.Items().
 		Select(`
@@ -188,20 +188,19 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 			IFNULL(user_permissions.is_owner_generated, 0) AS is_owner_generated,
 			MAX(is_parent) AS is_parent`)
 
-	var itemsItemsJoinQuery interface{}
-	itemsItemsSelfQuery := store.Raw("SELECT ? AS child_item_id, NULL AS child_order, 1 AS is_parent", params.ItemID).QueryExpr()
+	var itemsItemsJoinQuery *database.DB
+	itemsItemsSelfQuery := store.Raw("SELECT ? AS child_item_id, NULL AS child_order, 1 AS is_parent", params.ItemID)
 
 	if params.GetChildren {
 		itemsItemsJoinQuery = store.
 			ItemItems().
 			ChildrenOf(params.ItemID).
 			Select("child_item_id, child_order, 0 AS is_parent").
-			UnionAll(itemsItemsSelfQuery).
-			SubQuery()
+			UnionAll(itemsItemsSelfQuery)
 	} else {
 		itemsItemsJoinQuery = itemsItemsSelfQuery
 	}
-	itemIDQuery = itemIDQuery.Joins("JOIN (?) AS items_items ON items_items.child_item_id = items.id", itemsItemsJoinQuery)
+	itemIDQuery = itemIDQuery.Joins("JOIN (?) AS items_items ON items_items.child_item_id = items.id", itemsItemsJoinQuery.QueryExpr())
 
 	itemIDQuery = itemIDQuery.JoinsPermissionsForGroupToItemsWherePermissionAtLeast(params.CheckPermissionsForGroupID, "view", "info").
 		Joins(
@@ -210,53 +209,50 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 				Where("permissions.item_id = items.id").SubQuery()).
 		Group("items.id")
 
-	var fieldVariables []interface{}
 	var participantProgressQuery *database.DB
 	fields := `
 		items.id, items.type, items.no_score, items.default_language_tag,
 		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value,
 		can_edit_generated_value, is_owner_generated`
 	if params.ParticipantType == groupTypeUser {
-		participantProgressQuery = store.Raw("WITH visible_items AS ? ?",
-			itemIDQuery.SubQuery(),
-			joinUserProgressResults(
-				store.Raw(`
-					SELECT STRAIGHT_JOIN`+fields+", MAX(items.is_parent) AS is_parent, "+userProgressFields+`
-					FROM visible_items AS items`, fieldVariables...), params.ParticipantID).
-				Group("items.id").
-				Order("MAX(items.is_parent) DESC, MAX(items.child_order)").
-				QueryExpr())
+		participantProgressQuery = joinUserProgressResults(
+			store.Raw(`
+				SELECT STRAIGHT_JOIN`+fields+", MAX(items.is_parent) AS is_parent, "+userProgressFields+`
+				FROM visible_items AS items`), params.ParticipantID,
+		).Group("items.id").
+			Order("MAX(items.is_parent) DESC, MAX(items.child_order)").
+			With("visible_items", itemIDQuery)
 	} else {
-		participantProgressQuery = store.Raw("WITH visible_items AS ? ?",
-			itemIDQuery.SubQuery(),
-			store.Table("visible_items AS items").
-				Select(
-					fields+", is_parent, "+`
-					IFNULL(result_with_best_score.score_computed, 0) AS score,
-					IFNULL(result_with_best_score.validated, 0) AS validated,
-					(SELECT MIN(started_at) FROM results WHERE participant_id = ? AND item_id = items.id) AS started_at,
-					(SELECT MAX(latest_activity_at) FROM results WHERE participant_id = ? AND item_id = items.id) AS latest_activity_at,
-					IFNULL(result_with_best_score.hints_cached, 0) AS hints_requested,
-					IFNULL(result_with_best_score.submissions, 0) AS submissions,
-					IF(result_with_best_score.participant_id IS NULL,
-						0,
-						(
-							SELECT GREATEST(IF(result_with_best_score.validated,
-								TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
-								TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
-							), 0)
-							FROM results
-							WHERE participant_id = ? AND item_id = items.id
-						)
-					) AS time_spent`, params.ParticipantID, params.ParticipantID, params.ParticipantID).
-				Joins(`
-					LEFT JOIN LATERAL (
-						SELECT score_computed, validated, hints_cached, submissions, participant_id
+		participantProgressQuery = store.
+			Table("visible_items AS items").
+			With("visible_items", itemIDQuery).
+			Select(
+				fields+", is_parent, "+`
+				IFNULL(result_with_best_score.score_computed, 0) AS score,
+				IFNULL(result_with_best_score.validated, 0) AS validated,
+				(SELECT MIN(started_at) FROM results WHERE participant_id = ? AND item_id = items.id) AS started_at,
+				(SELECT MAX(latest_activity_at) FROM results WHERE participant_id = ? AND item_id = items.id) AS latest_activity_at,
+				IFNULL(result_with_best_score.hints_cached, 0) AS hints_requested,
+				IFNULL(result_with_best_score.submissions, 0) AS submissions,
+				IF(result_with_best_score.participant_id IS NULL,
+					0,
+					(
+						SELECT GREATEST(IF(result_with_best_score.validated,
+							TIMESTAMPDIFF(SECOND, MIN(started_at), MIN(validated_at)),
+							TIMESTAMPDIFF(SECOND, MIN(started_at), NOW())
+						), 0)
 						FROM results
 						WHERE participant_id = ? AND item_id = items.id
-						ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
-						LIMIT 1
-					) AS result_with_best_score ON 1`, params.ParticipantID).QueryExpr()).
+					)
+				) AS time_spent`, params.ParticipantID, params.ParticipantID, params.ParticipantID).
+			Joins(`
+				LEFT JOIN LATERAL (
+					SELECT score_computed, validated, hints_cached, submissions, participant_id
+					FROM results
+					WHERE participant_id = ? AND item_id = items.id
+					ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
+					LIMIT 1
+				) AS result_with_best_score ON 1`, params.ParticipantID).
 			Order("items.is_parent DESC, items.child_order")
 	}
 
@@ -302,13 +298,12 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	render.Respond(w, r, result)
-	return service.NoError
+	return nil
 }
 
 func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *database.DataStore, user *database.User) (
-	params participantProgressParameters, apiError service.APIError,
+	params participantProgressParameters, err error,
 ) {
-	var err error
 	params.ItemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")
 	if err != nil {
 		return params, service.ErrInvalidRequest(err)
@@ -321,9 +316,9 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 	}
 	params.CheckPermissionsForGroupID = params.ParticipantID
 
-	watchedGroupID, watchedGroupIDIsSet, apiError := srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return params, apiError
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	if err != nil {
+		return params, err
 	}
 
 	if watchedGroupIDIsSet {
@@ -333,7 +328,7 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 
 		params.ParticipantID = watchedGroupID
 		if !user.CanWatchItemResult(store, params.ItemID) {
-			return params, service.InsufficientAccessRightsError
+			return params, service.ErrAPIInsufficientAccessRights
 		}
 
 		service.MustNotBeError(store.Groups().ByID(watchedGroupID).PluckFirst("type", &params.ParticipantType).Error())
@@ -348,10 +343,10 @@ func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *d
 		"view",
 		"content",
 	) {
-		return params, service.InsufficientAccessRightsError
+		return params, service.ErrAPIInsufficientAccessRights
 	}
 
 	params.GetChildren = user.HasStartedResultOnItem(store, params.ItemID)
 
-	return params, service.NoError
+	return params, nil
 }

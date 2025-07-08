@@ -1,38 +1,36 @@
 Feature: Get a current answer
 Background:
-  Given the database has the following table 'groups':
+  Given the database has the following table "groups":
     | id | name    | type  |
-    | 11 | jdoe    | User  |
     | 13 | Team    | Team  |
     | 14 | Group B | Class |
-    | 21 | other   | User  |
     | 23 | Group C | Class |
-  And the database has the following table 'users':
-    | login | temp_user | group_id | first_name | last_name |
-    | jdoe  | 0         | 11       | John       | Doe       |
-    | other | 0         | 21       | George     | Bush      |
-  And the database has the following table 'groups_groups':
+  And the database has the following users:
+    | group_id | login |first_name | last_name |
+    | 11       | jdoe  |John       | Doe       |
+    | 21       | other |George     | Bush      |
+  And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 14              | 11             |
     | 13              | 21             |
     | 23              | 21             |
   And the groups ancestors are computed
-  And the database has the following table 'items':
+  And the database has the following table "items":
     | id  | default_language_tag |
     | 200 | fr                   |
     | 210 | fr                   |
     | 220 | fr                   |
-  And the database has the following table 'permissions_generated':
+  And the database has the following table "permissions_generated":
     | group_id | item_id | can_view_generated       |
     | 14       | 200     | content                  |
     | 23       | 210     | content_with_descendants |
     | 11       | 220     | content                  |
-  And the database has the following table 'results':
+  And the database has the following table "results":
     | attempt_id | participant_id | item_id |
     | 1          | 11             | 200     |
     | 1          | 11             | 220     |
     | 1          | 13             | 210     |
-  And the database has the following table 'answers':
+  And the database has the following table "answers":
     | id  | author_id | participant_id | attempt_id | item_id | type       | state   | answer   | created_at          |
     |   1 | 11        | 11             | 1          | 200     | Submission | State1 | print(1) | 2017-05-29 06:38:37 |
     |   2 | 11        | 11             | 1          | 200     | Saved      | State2 | print(2) | 2017-05-29 06:38:37 |
@@ -53,7 +51,7 @@ Background:
     | 205 | 11        | 13             | 1          | 210     | Saved      | State205 | print(5) | 2017-05-29 06:38:38 |
     | 206 | 11        | 13             | 2          | 210     | Current    | State206 | print(6) | 2017-05-29 06:38:38 |
     | 207 | 11        | 11             | 2          | 200     | Current    | State207 | print(7) | 2018-05-29 06:38:37 |
-  And the database has the following table 'gradings':
+  And the database has the following table "gradings":
     | answer_id | score | graded_at           |
     | 101       | 91    | 2018-05-29 06:38:31 |
     | 102       | 92    | 2019-05-29 06:38:32 |

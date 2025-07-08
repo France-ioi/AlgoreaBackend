@@ -1,6 +1,6 @@
 Feature: Search for items
   Background:
-    Given the database has the following table 'items':
+    Given the database has the following table "items":
       | id | type    | default_language_tag |
       | 1  | Chapter | en                   |
       | 2  | Task    | en                   |
@@ -30,7 +30,7 @@ Feature: Search for items
       | 29 | Chapter | en                   |
       | 30 | Chapter | en                   |
       | 31 | Chapter | en                   |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title                                     |
       | 1       | fr           | amazing Chapter                           |
       | 2       | fr           | amazing Task                              |
@@ -66,7 +66,7 @@ Feature: Search for items
       | login | default_language | temp_user | group_id | first_name  | last_name | grade |
       | owner | fr               | 0         | 21       | Jean-Michel | Blanquer  | 3     |
     And the groups ancestors are computed
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 22       | 1       | info                     |
       | 21       | 2       | content                  |
