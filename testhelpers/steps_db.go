@@ -85,13 +85,13 @@ func (ctx *TestContext) setDBTableRowColumnValues(tableName string, primaryKey, 
 	}
 
 	columnIndexes := getColumnIndexes(ctx.dbTableData[tableName], columns)
-	for i, columnIndex := range columnIndexes {
+	for columnNumber, columnIndex := range columnIndexes {
 		if columnIndex == -1 {
 			ctx.dbTableData[tableName] = combinePickleTables(
 				ctx.dbTableData[tableName],
-				&godog.Table{Rows: []*messages.PickleTableRow{{Cells: []*messages.PickleTableCell{{Value: columns[i]}}}}},
+				&godog.Table{Rows: []*messages.PickleTableRow{{Cells: []*messages.PickleTableCell{{Value: columns[columnNumber]}}}}},
 			)
-			columnIndexes[i] = len(ctx.dbTableData[tableName].Rows[0].Cells) - 1
+			columnIndexes[columnNumber] = len(ctx.dbTableData[tableName].Rows[0].Cells) - 1
 		}
 	}
 
@@ -165,8 +165,8 @@ func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primar
 		}
 	}
 
-	for i := 1; i < len(ctx.dbTableData[tableName].Rows); i++ {
-		row := ctx.dbTableData[tableName].Rows[i]
+	for rowIndex := 1; rowIndex < len(ctx.dbTableData[tableName].Rows); rowIndex++ {
+		row := ctx.dbTableData[tableName].Rows[rowIndex]
 		match := true
 		for primaryKeyColumn, primaryKeyIndex := range primaryKeyIndexes {
 			if row.Cells[primaryKeyIndex] == nil || row.Cells[primaryKeyIndex].Value != primaryKey[primaryKeyColumn] {
@@ -175,7 +175,7 @@ func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primar
 			}
 		}
 		if match {
-			return i
+			return rowIndex
 		}
 	}
 	return -1
@@ -235,20 +235,20 @@ func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 		groupIDColumnIndex := getColumnIndex(data, "group_id")
 		loginColumnIndex := getColumnIndex(data, "login")
 
-		for i := 1; i < len(data.Rows); i++ {
+		for rowIndex := 1; rowIndex < len(data.Rows); rowIndex++ {
 			var login string
 			if loginColumnIndex != -1 {
-				login = data.Rows[i].Cells[loginColumnIndex].Value
+				login = data.Rows[rowIndex].Cells[loginColumnIndex].Value
 			}
 
 			if groupIDColumnIndex != -1 &&
 				ctx.getDBTableRowIndexForPrimaryKey(
 					"groups",
-					map[string]string{"id": data.Rows[i].Cells[groupIDColumnIndex].Value},
+					map[string]string{"id": data.Rows[rowIndex].Cells[groupIDColumnIndex].Value},
 				) == -1 {
 				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleTableRow{
 					Cells: []*messages.PickleTableCell{
-						{Value: data.Rows[i].Cells[groupIDColumnIndex].Value}, {Value: login}, {Value: "User"},
+						{Value: data.Rows[rowIndex].Cells[groupIDColumnIndex].Value}, {Value: login}, {Value: "User"},
 					},
 				})
 			}
@@ -630,14 +630,14 @@ func (ctx *TestContext) dataTableShouldMatchDBResult(data *godog.Table, dbResult
 
 func (ctx *TestContext) formatDBRowAsTableRow(dbRow []*string) string {
 	dbRowValuesStr := make([]string, len(dbRow))
-	for i, value := range dbRow {
+	for columnIndex, value := range dbRow {
 		if value == nil {
-			dbRowValuesStr[i] = "null"
+			dbRowValuesStr[columnIndex] = "null"
 			continue
 		}
 
-		dbRowValuesStr[i] = *value
-		dbRowValuesStr[i] = ctx.readableValue(dbRowValuesStr[i])
+		dbRowValuesStr[columnIndex] = *value
+		dbRowValuesStr[columnIndex] = ctx.readableValue(dbRowValuesStr[columnIndex])
 	}
 
 	return "| " + strings.Join(dbRowValuesStr, " | ") + " |"

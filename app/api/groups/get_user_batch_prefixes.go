@@ -74,11 +74,11 @@ type userBatchPrefix struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getUserBatchPrefixes(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -102,7 +102,7 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 			 WHERE user_batches_v2.group_prefix = user_batch_prefixes.group_prefix) AS total_size`)
 
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"group_prefix": {ColumnName: "group_prefix"},
@@ -115,6 +115,6 @@ func (srv *Service) getUserBatchPrefixes(w http.ResponseWriter, r *http.Request)
 	var result []userBatchPrefix
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

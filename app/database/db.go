@@ -60,17 +60,17 @@ func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
 
 // Open connects to the database and tests the connection.
 func Open(source interface{}) (*DB, error) {
-	lc := LogConfig{
+	logConfig := LogConfig{
 		LogSQLQueries:     log.SharedLogger.IsSQLQueriesLoggingEnabled(),
 		AnalyzeSQLQueries: log.SharedLogger.IsSQLQueriesAnalyzingEnabled(),
 	}
 
 	rawSQLQueriesLoggingEnabled := log.SharedLogger.IsRawSQLQueriesLoggingEnabled()
-	return OpenWithLogConfig(source, lc, rawSQLQueriesLoggingEnabled)
+	return OpenWithLogConfig(source, logConfig, rawSQLQueriesLoggingEnabled)
 }
 
 // OpenWithLogConfig connects to the database and tests the connection. It uses the given logging settings.
-func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, error) {
+func OpenWithLogConfig(source interface{}, logConfig LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	driverName := "mysql"
@@ -86,10 +86,10 @@ func OpenWithLogConfig(source interface{}, lc LogConfig, rawSQLQueriesLoggingEna
 		if err != nil {
 			return nil, err
 		}
-		rawConnection = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &lc}
+		rawConnection = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &logConfig}
 		ownSQLDBConnection = true
 	case *sql.DB:
-		rawConnection = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &lc}
+		rawConnection = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &logConfig}
 	default:
 		return nil, fmt.Errorf("unknown database source type: %T (%v)", src, src)
 	}
@@ -176,19 +176,19 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 		return txDB.Error
 	}
 	defer func() {
-		p := recover()
+		recoveredPanic := recover()
 		switch {
-		case p != nil:
+		case recoveredPanic != nil:
 			// ensure rollback is executed even in case of panic
 			rollbackErr := txDB.Rollback().Error
 			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
 			// In all cases, the DB library closes the connection on rollback failure and logs the error.
 			// But still, in both cases, we should not retry the transaction.
 			// If the panic was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
-			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, p, rollbackErr, &err, txOptions...) {
+			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, recoveredPanic, rollbackErr, &err, txOptions...) {
 				return
 			}
-			panic(p) // re-throw panic after rollback if it was not a deadlock/timeout error
+			panic(recoveredPanic) // re-throw panic after rollback if it was not a deadlock/timeout error
 		case err != nil:
 			// ensure the rollback is executed, do not change the err
 			rollbackErr := txDB.Rollback().Error
@@ -241,15 +241,15 @@ func replaceDBInGormDB(db *gorm.DB, newDB gorm.SQLCommon) {
 // Happily, the original gorm.DB.BeginTx is only called from gorm.DB.Begin which is only called from gorm.DB.Transaction,
 // and we never use/expose gorm.DB.Transaction.
 func gormDBBeginTxReplacement(ctx context.Context, db *gorm.DB, txOpts *sql.TxOptions) *gorm.DB {
-	c := cloneGormDB(db)
+	clonedDB := cloneGormDB(db)
 	if db, ok := db.CommonDB().(*sqlDBWrapper); ok && db != nil {
 		tx, err := db.BeginTx(ctx, txOpts)
-		replaceDBInGormDB(c, tx)
-		_ = c.AddError(err)
+		replaceDBInGormDB(clonedDB, tx)
+		_ = clonedDB.AddError(err)
 	} else {
-		_ = c.AddError(gorm.ErrCantStartTransaction)
+		_ = clonedDB.AddError(gorm.ErrCantStartTransaction)
 	}
-	return c
+	return clonedDB
 }
 
 func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
@@ -858,8 +858,8 @@ func (conn *DB) retryOnDuplicatePrimaryKeyError(tableName string, f func(db *DB)
 	return conn.retryOnDuplicateKeyError(tableName, "PRIMARY", "id", f)
 }
 
-func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string, f func(db *DB) error) error {
-	i := 0
+func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string, funcToRun func(db *DB) error) error {
+	tryNumber := 0
 	outerCtx := conn.ctx()
 	innerCtx := context.WithValue(conn.ctx(), logErrorAsInfoFuncContextKey, func(err error) bool {
 		if IsDuplicateEntryErrorForKey(err, tableName, keyName) {
@@ -872,8 +872,8 @@ func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string,
 	})
 	innerConn := cloneDBWithNewContext(innerCtx, conn)
 
-	for ; i < keyTriesCount; i++ {
-		err := f(innerConn)
+	for ; tryNumber < keyTriesCount; tryNumber++ {
+		err := funcToRun(innerConn)
 		if err != nil {
 			if IsDuplicateEntryErrorForKey(err, tableName, keyName) {
 				continue // retry with a new id
@@ -921,14 +921,14 @@ func mustNotBeError(err error) {
 func recoverPanics(
 	returnErr *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
 ) {
-	if p := recover(); p != nil {
-		switch e := p.(type) {
+	if recoveredPanic := recover(); recoveredPanic != nil {
+		switch e := recoveredPanic.(type) {
 		case runtime.Error:
 			panic(e)
 		case error:
 			*returnErr = e
 		default:
-			panic(p)
+			panic(recoveredPanic)
 		}
 	}
 }
@@ -951,14 +951,14 @@ func EscapeLikeString(v string, escapeCharacter byte) string {
 	buf := make([]byte, len(v)*2) //nolint:mnd // in the worst case, where every character is escaped, we need twice as many bytes
 
 	for i := 0; i < len(v); i++ {
-		c := v[i]
-		switch c {
+		character := v[i]
+		switch character {
 		case '%', '_', escapeCharacter:
 			buf[pos] = escapeCharacter
-			buf[pos+1] = c
+			buf[pos+1] = character
 			pos += 2
 		default:
-			buf[pos] = c
+			buf[pos] = character
 			pos++
 		}
 	}

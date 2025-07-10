@@ -85,14 +85,14 @@ type groupNavigationViewResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) error {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) getNavigation(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	var result groupNavigationViewResponse
 	err = store.Groups().PickVisibleGroups(store.Groups().ByID(groupID), user).
@@ -114,10 +114,10 @@ func (srv *Service) getNavigation(w http.ResponseWriter, r *http.Request) error 
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).
 		Where("groups.type != 'User'").
 		Order("name")
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 
 	service.MustNotBeError(query.Scan(&result.Children).Error())
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

@@ -115,11 +115,11 @@ type groupUserProgressResponseTableCell struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getUserProgress(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -128,11 +128,11 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) erro
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
 		return nil
 	}
 
@@ -148,7 +148,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) erro
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Group("groups.id")
 	userIDQuery, err = service.ApplySortingAndPaging(
-		r, userIDQuery,
+		httpRequest, userIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -159,12 +159,12 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) erro
 		})
 	service.MustNotBeError(err)
 
-	userIDQuery = service.NewQueryLimiter().Apply(r, userIDQuery)
+	userIDQuery = service.NewQueryLimiter().Apply(httpRequest, userIDQuery)
 	service.MustNotBeError(userIDQuery.
 		Pluck("groups.id", &userIDs).Error())
 
 	if len(userIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
 		return nil
 	}
 
@@ -185,7 +185,7 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) erro
 		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 

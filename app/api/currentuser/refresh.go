@@ -26,15 +26,15 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	accessToken := auth.BearerTokenFromContext(r.Context())
+func (srv *Service) refresh(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	accessToken := auth.BearerTokenFromContext(httpRequest.Context())
 
-	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), accessToken)
+	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(httpRequest.Context(), accessToken)
 	service.MustNotBeError(err)
 	badges := userProfile["badges"].([]database.Badge)
 
-	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.Groups().StoreBadges(badges, user.GroupID, false))
 		userProfile["latest_activity_at"] = database.Now()
 		userProfile["latest_profile_sync_at"] = database.Now()
@@ -45,7 +45,7 @@ func (srv *Service) refresh(w http.ResponseWriter, r *http.Request) error {
 	}))
 
 	response := service.UpdateSuccess[*struct{}](nil)
-	render.Respond(w, r, &response)
+	render.Respond(responseWriter, httpRequest, &response)
 
 	return nil
 }

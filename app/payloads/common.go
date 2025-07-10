@@ -37,15 +37,15 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 	}
 
 	sourceType := sourceValue.Type()
-	fieldsNumber := sourceValue.NumField()
-	out := make(map[string]interface{}, fieldsNumber)
-	for i := 0; i < fieldsNumber; i++ {
-		field := sourceType.Field(i)
+	fieldsCount := sourceValue.NumField()
+	out := make(map[string]interface{}, fieldsCount)
+	for fieldNumber := 0; fieldNumber < fieldsCount; fieldNumber++ {
+		field := sourceType.Field(fieldNumber)
 		jsonName, omitEmpty := getJSONFieldNameAndOmitEmpty(&field)
 		if jsonName == "-" {
 			continue
 		}
-		fieldValue := sourceValue.Field(i)
+		fieldValue := sourceValue.Field(fieldNumber)
 		if !fieldValue.CanInterface() { // skip unexported fields
 			continue
 		}

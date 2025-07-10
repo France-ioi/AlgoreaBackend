@@ -27,7 +27,7 @@ type Ctx struct {
 func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig []domain.ConfigItem,
 	tokenConfig *token.Config,
 ) (*Ctx, *chi.Mux) {
-	r := chi.NewRouter()
+	router := chi.NewRouter()
 
 	srv := &service.Base{
 		ServerConfig: serverConfig,
@@ -38,15 +38,15 @@ func Router(db *database.DB, serverConfig, authConfig *viper.Viper, domainConfig
 	srv.SetGlobalStore(database.NewDataStore(db))
 
 	ctx := &Ctx{srv}
-	r.Group((&auth.Service{Base: srv}).SetRoutes)
-	r.Group((&items.Service{Base: srv}).SetRoutes)
-	r.Group((&threads.Service{Base: srv}).SetRoutes)
-	r.Group((&groups.Service{Base: srv}).SetRoutes)
-	r.Group((&answers.Service{Base: srv}).SetRoutes)
-	r.Group((&currentuser.Service{Base: srv}).SetRoutes)
-	r.Group((&users.Service{Base: srv}).SetRoutes)
-	r.Get("/status", ctx.status)
-	r.NotFound(service.NotFound)
+	router.Group((&auth.Service{Base: srv}).SetRoutes)
+	router.Group((&items.Service{Base: srv}).SetRoutes)
+	router.Group((&threads.Service{Base: srv}).SetRoutes)
+	router.Group((&groups.Service{Base: srv}).SetRoutes)
+	router.Group((&answers.Service{Base: srv}).SetRoutes)
+	router.Group((&currentuser.Service{Base: srv}).SetRoutes)
+	router.Group((&users.Service{Base: srv}).SetRoutes)
+	router.Get("/status", ctx.status)
+	router.NotFound(service.NotFound)
 
-	return ctx, r
+	return ctx, router
 }

@@ -107,22 +107,22 @@ type updateThreadRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) updateThread(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantID, err := service.ResolveURLQueryPathInt64Field(r, "participant_id")
+	participantID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "participant_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(httpRequest)
 	service.MustNotBeError(err)
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	userCanViewItemContent, err := store.Permissions().MatchingUserAncestors(user).
 		Where("permissions.item_id = ?", itemID).
@@ -156,7 +156,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) error {
 			constructHelperGroupIDNotSetWhenSetOrKeepClosed(oldThreadInfo.ThreadStatus))
 		formData.RegisterTranslation("helper_group_id_not_set_when_set_or_keep_closed",
 			"the helper_group_id must not be given when setting or keeping status to closed")
-		formData.RegisterValidation("group_visible_by", constructValidateGroupVisibleBy(srv, r))
+		formData.RegisterValidation("group_visible_by", constructValidateGroupVisibleBy(srv, httpRequest))
 		formData.RegisterTranslation("group_visible_by", "the group must be visible to the current-user and the participant")
 		formData.RegisterValidation("can_request_help_to_when_own_thread",
 			constructValidateCanRequestHelpToWhenOwnThread(user, store, participantID, itemID))
@@ -179,7 +179,7 @@ func (srv *Service) updateThread(w http.ResponseWriter, r *http.Request) error {
 	})
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
 	return nil
 }
 
@@ -259,22 +259,22 @@ func constructValidateCanRequestHelpToWhenOwnThread(user *database.User, store *
 	}
 }
 
-func constructValidateGroupVisibleBy(srv *Service, r *http.Request) validator.Func {
-	return func(fl validator.FieldLevel) bool {
-		store := srv.GetStore(r)
-		groupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+func constructValidateGroupVisibleBy(srv *Service, httpRequest *http.Request) validator.Func {
+	return func(fieldInfo validator.FieldLevel) bool {
+		store := srv.GetStore(httpRequest)
+		groupIDPtr := fieldInfo.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
 		if groupIDPtr == nil {
 			return false
 		}
 
 		var user *database.User
-		param := fl.Param()
+		param := fieldInfo.Param()
 		if param == "user_id" {
-			user = srv.GetUser(r)
+			user = srv.GetUser(httpRequest)
 		} else {
 			var err error
 			user = new(database.User)
-			user.GroupID, err = service.ResolveURLQueryPathInt64Field(r, param)
+			user.GroupID, err = service.ResolveURLQueryPathInt64Field(httpRequest, param)
 			service.MustNotBeError(err)
 		}
 

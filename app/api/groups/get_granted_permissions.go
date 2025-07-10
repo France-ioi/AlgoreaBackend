@@ -132,22 +132,22 @@ type grantedPermissionsViewResultRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) error {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) getGrantedPermissions(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	var forDescendants bool
-	if len(r.URL.Query()["descendants"]) > 0 {
-		forDescendants, err = service.ResolveURLQueryGetBoolField(r, "descendants")
+	if len(httpRequest.URL.Query()["descendants"]) > 0 {
+		forDescendants, err = service.ResolveURLQueryGetBoolField(httpRequest, "descendants")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		Where("groups.type != 'User'").Where("can_grant_group_access").HasRows()
@@ -228,9 +228,9 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			can_request_help_to AS permissions__can_request_help_to,
 			can_enter_until AS permissions__can_enter_until`)
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"source_group.name": {ColumnName: "source_group.name"},
@@ -253,6 +253,6 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(query.Scan(&permissions).Error())
-	render.Respond(w, r, permissions)
+	render.Respond(responseWriter, httpRequest, permissions)
 	return nil
 }

@@ -51,16 +51,16 @@ import (
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) error {
-	answerID, err := service.ResolveURLQueryPathInt64Field(httpReq, "answer_id")
+func (srv *Service) getAnswer(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	answerID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
+	user := srv.GetUser(httpRequest)
 	var result []map[string]interface{}
 
-	store := srv.GetStore(httpReq)
+	store := srv.GetStore(httpRequest)
 
 	userAndHisTeamsQuery := store.Raw("SELECT id FROM ? `teams` UNION ALL SELECT ?",
 		store.ActiveGroupGroups().
@@ -166,6 +166,6 @@ func (srv *Service) getAnswer(rw http.ResponseWriter, httpReq *http.Request) err
 	}
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
 
-	render.Respond(rw, httpReq, convertedResult)
+	render.Respond(responseWriter, httpRequest, convertedResult)
 	return nil
 }

@@ -477,7 +477,7 @@ func TestApplySorting(t *testing.T) {
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
 			}
 
-			request, _ := http.NewRequest("GET", "/"+tt.args.urlParameters, http.NoBody)
+			request, _ := http.NewRequest(http.MethodGet, "/"+tt.args.urlParameters, http.NoBody)
 			query := db.Table("users").Select("id")
 
 			query, gotError := ApplySortingAndPaging(request, query, tt.args.sortingAndPagingParameters)

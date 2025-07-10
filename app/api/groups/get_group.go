@@ -135,14 +135,14 @@ type groupGetResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) error {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) getGroup(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
 		With("user_ancestors", ancestorsOfUserQuery(store, user)).
@@ -257,7 +257,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) error {
 	if result.DescendantsCurrentUserIsManagerOf == nil {
 		result.DescendantsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
 	}
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 
 	return nil
 }

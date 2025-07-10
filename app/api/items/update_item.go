@@ -112,17 +112,17 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) updateItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(httpRequest)
 	service.MustNotBeError(err)
 
 	var propagationsToRun []string
@@ -203,7 +203,7 @@ func (srv *Service) updateItem(w http.ResponseWriter, r *http.Request) error {
 	service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)
 
 	// response
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
 	return nil
 }
 

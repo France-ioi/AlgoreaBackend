@@ -104,19 +104,19 @@ func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.R
 }
 
 func (srv *Service) getItemPrerequisitesOrDependencies(
-	rw http.ResponseWriter, httpReq *http.Request,
+	responseWriter http.ResponseWriter, httpRequest *http.Request,
 	givenColumn, joinToColumn string,
 ) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
-	participantID := service.ParticipantIDFromContext(httpReq.Context())
-	store := srv.GetStore(httpReq)
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	store := srv.GetStore(httpRequest)
 
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpReq)
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
 	service.MustNotBeError(err)
 
 	found, err := store.Permissions().
@@ -160,7 +160,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 
 	response := prerequisiteOrDependencyItemsFromRawData(rawData, watchedGroupIDIsSet, store.PermissionsGranted())
 
-	render.Respond(rw, httpReq, response)
+	render.Respond(responseWriter, httpRequest, response)
 	return nil
 }
 

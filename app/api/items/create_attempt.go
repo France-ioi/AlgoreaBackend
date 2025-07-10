@@ -69,24 +69,24 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) createAttempt(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
 
-	ids, err := idsFromRequest(r)
+	ids, err := idsFromRequest(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	parentAttemptID, err := service.ResolveURLQueryGetInt64Field(r, "parent_attempt_id")
+	parentAttemptID, err := service.ResolveURLQueryGetInt64Field(httpRequest, "parent_attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	participantID := service.ParticipantIDFromContext(r.Context())
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
 	var attemptID int64
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, true, true)
 		service.MustNotBeError(err)
@@ -106,7 +106,7 @@ func (srv *Service) createAttempt(w http.ResponseWriter, r *http.Request) error 
 	})
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, service.CreationSuccess(map[string]interface{}{
+	render.Respond(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"id": strconv.FormatInt(attemptID, 10),
 	}))
 	return nil

@@ -142,11 +142,11 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 				mockPlatformPublicKeyLoading(mock, tt.itemID, publicKeyPtr)
 			}
 
-			r := &AskHintRequest{
+			askHintRequest := &AskHintRequest{
 				store:     database.NewDataStore(db),
 				publicKey: tokentest.AlgoreaPlatformPublicKeyParsed,
 			}
-			err := r.UnmarshalJSON(tt.raw)
+			err := askHintRequest.UnmarshalJSON(tt.raw)
 			if tt.wantErr == nil {
 				assert.NoError(t, err)
 			} else {
@@ -157,15 +157,15 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 				}
 			}
 			if err == nil {
-				r.store = nil
-				if r.HintToken != nil {
-					r.HintToken.PublicKey = nil
+				askHintRequest.store = nil
+				if askHintRequest.HintToken != nil {
+					askHintRequest.HintToken.PublicKey = nil
 				}
-				if r.TaskToken != nil {
-					r.TaskToken.PublicKey = nil
+				if askHintRequest.TaskToken != nil {
+					askHintRequest.TaskToken.PublicKey = nil
 				}
-				r.publicKey = nil
-				assert.Equal(t, &tt.expected, r)
+				askHintRequest.publicKey = nil
+				assert.Equal(t, &tt.expected, askHintRequest)
 			}
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})

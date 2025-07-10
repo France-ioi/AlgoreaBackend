@@ -78,19 +78,19 @@ func (u *User) CanViewItemInfo(s *DataStore, itemID int64) bool {
 }
 
 // CanRequestHelpTo checks whether the user can request help on an item to a group.
-func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool {
+func (u *User) CanRequestHelpTo(store *DataStore, itemID, helperGroupID int64) bool {
 	// in order to verify that the user “can request help to” a group on an item, we need to verify whether
 	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
 	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
 	// additionally, if the user owns the item, he can request help to any group.
 
-	if u.IsItemOwner(s, itemID) {
+	if u.IsItemOwner(store, itemID) {
 		return true
 	}
 
-	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagationQuery(itemID)
+	itemAncestorsRequestHelpPropagationQuery := store.Items().GetAncestorsRequestHelpPropagationQuery(itemID)
 
-	canRequestHelpTo, err := s.Users().
+	canRequestHelpTo, err := store.Users().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", u.GroupID).
 		Joins(`JOIN permissions_granted ON
 			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND

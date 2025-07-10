@@ -63,7 +63,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			req, _ := http.NewRequest("GET", tt.url, http.NoBody)
+			req, _ := http.NewRequest(http.MethodGet, tt.url, http.NoBody)
 			watchedGroupID, watchedGroupIDIsSet, gotError := srv.ResolveWatchedGroupID(req)
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)
 			assert.Equal(t, tt.wantWatchedGroupIDIsSet, watchedGroupIDIsSet)

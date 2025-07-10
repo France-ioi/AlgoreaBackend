@@ -39,6 +39,8 @@ var outputRestorerFuncKey = contextKey("outputRestorerFunc")
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package).
 func RunGodogTests(t *testing.T, tags string) {
+	t.Helper()
+
 	appenv.SetDefaultEnvToTest()
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {

@@ -128,12 +128,12 @@ type groupUserRequestsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) error {
-	store := srv.GetStore(r)
-	groupID, groupIDSet, includeDescendantGroups, types, err := srv.resolveParametersForGetUserRequests(store, r)
+func (srv *Service) getUserRequests(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	store := srv.GetStore(httpRequest)
+	groupID, groupIDSet, includeDescendantGroups, types, err := srv.resolveParametersForGetUserRequests(store, httpRequest)
 	service.MustNotBeError(err)
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 	query := store.GroupPendingRequests().
 		Select(`
 			group_pending_requests.at,
@@ -168,9 +168,9 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) erro
 				Select("groups_ancestors_active.child_group_id").SubQuery())
 	}
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"user.login":    {ColumnName: "user.login"},
@@ -194,20 +194,20 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) erro
 		}
 	}
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 
-func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, r *http.Request) (
+func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, httpRequest *http.Request) (
 	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, err error,
 ) {
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	urlQuery := r.URL.Query()
+	urlQuery := httpRequest.URL.Query()
 	groupIDSet = len(urlQuery["group_id"]) > 0
 	includeDescendantGroupsSet := len(urlQuery["include_descendant_groups"]) > 0
 	if groupIDSet {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "group_id")
+		groupID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "group_id")
 		if err != nil {
 			return 0, false, false, nil, service.ErrInvalidRequest(err)
 		}
@@ -215,7 +215,7 @@ func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStor
 		service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 		if includeDescendantGroupsSet {
-			if includeDescendantGroups, err = service.ResolveURLQueryGetBoolField(r, "include_descendant_groups"); err != nil {
+			if includeDescendantGroups, err = service.ResolveURLQueryGetBoolField(httpRequest, "include_descendant_groups"); err != nil {
 				return 0, false, false, nil, service.ErrInvalidRequest(err)
 			}
 		}
@@ -226,7 +226,7 @@ func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStor
 			service.ErrInvalidRequest(errors.New("'include_descendant_groups' should not be given when 'group_id' is not given"))
 	}
 
-	types, err = resolveTypesParameterForGetUserRequests(r)
+	types, err = resolveTypesParameterForGetUserRequests(httpRequest)
 	return groupID, groupIDSet, includeDescendantGroups, types, err
 }
 

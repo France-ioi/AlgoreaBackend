@@ -79,24 +79,24 @@ type updatedStartResultResponse struct { //nolint:unused
 //				"$ref": "#/responses/requestTimeoutResponse"
 //			"500":
 //				"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) startResult(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
 
-	ids, err := idsFromRequest(r)
+	ids, err := idsFromRequest(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	attemptID, err := service.ResolveURLQueryGetInt64Field(r, "attempt_id")
+	attemptID, err := service.ResolveURLQueryGetInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantID := service.ParticipantIDFromContext(r.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
 	var attemptInfo attemptsListResponseRow
 	var shouldSchedulePropagation bool
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	err = store.InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, attemptID, true, true)
@@ -131,7 +131,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 			shouldSchedulePropagation = true
 		}
 
-		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(r)).
+		service.MustNotBeError(constructQueryForGettingAttemptsList(store, participantID, itemID, srv.GetUser(httpRequest)).
 			Where("attempts.id = ?", attemptID).
 			WithCustomWriteLocks(golang.NewSet("results"), golang.NewSet[string]()).
 			Scan(&attemptInfo).Error())
@@ -148,7 +148,7 @@ func (srv *Service) startResult(w http.ResponseWriter, r *http.Request) error {
 		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
 	}
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(&attemptInfo)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess(&attemptInfo)))
 	return nil
 }
 

@@ -91,11 +91,11 @@ type parentItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request) error {
-	params, err := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
+func (srv *Service) getItemParents(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	params, err := srv.resolveGetParentsOrChildrenServiceParams(httpRequest)
 	service.MustNotBeError(err)
 
-	store := srv.GetStore(httpReq)
+	store := srv.GetStore(httpRequest)
 	found, err := store.Permissions().
 		MatchingGroupAncestors(params.participantID).
 		WherePermissionIsAtLeast("view", "info").
@@ -114,7 +114,7 @@ func (srv *Service) getItemParents(rw http.ResponseWriter, httpReq *http.Request
 
 	response := parentItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
 
-	render.Respond(rw, httpReq, response)
+	render.Respond(responseWriter, httpRequest, response)
 	return nil
 }
 

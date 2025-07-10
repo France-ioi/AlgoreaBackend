@@ -100,6 +100,8 @@ func testCheckerAllowsSettingLowerOrSameValue(
 	t *testing.T, values []string,
 	funcToCheck interface{}, currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -243,6 +245,8 @@ func testCheckerRequiresManagerToHaveSpecificPermission(
 	managerPermissionsGenerator func(
 		newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -298,6 +302,8 @@ func testCheckerRequiresCanViewBeGreaterOrEqualToContent(
 	managerPermissionsGenerator func(
 		permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -543,14 +549,14 @@ func Test_checkIfPossibleToModifyCanEnterFrom_AllowsSettingGreaterOrSameValue(t 
 	defer database.ClearAllDBEnums()
 	dataStore := database.NewDataStore(db)
 
-	tm := time.Date(2019, 5, 30, 11, 0, 0, 1, time.UTC)
-	tmPlus := tm.Add(time.Nanosecond)
+	timestamp := time.Date(2019, 5, 30, 11, 0, 0, 1, time.UTC)
+	timestampPlus := timestamp.Add(time.Nanosecond)
 	assert.Equal(t, true, checkIfPossibleToModifyCanEnterFrom(
-		tmPlus, &userPermissions{CanEnterFrom: database.Time(tmPlus)}, &managerGeneratedPermissions{}, dataStore))
+		timestampPlus, &userPermissions{CanEnterFrom: database.Time(timestampPlus)}, &managerGeneratedPermissions{}, dataStore))
 	assert.Equal(t, true, checkIfPossibleToModifyCanEnterFrom(
-		tm, &userPermissions{CanEnterFrom: database.Time(tm)}, &managerGeneratedPermissions{}, dataStore))
+		timestamp, &userPermissions{CanEnterFrom: database.Time(timestamp)}, &managerGeneratedPermissions{}, dataStore))
 	assert.Equal(t, false, checkIfPossibleToModifyCanEnterFrom(
-		tm, &userPermissions{CanEnterFrom: database.Time(tmPlus)}, &managerGeneratedPermissions{}, dataStore))
+		timestamp, &userPermissions{CanEnterFrom: database.Time(timestampPlus)}, &managerGeneratedPermissions{}, dataStore))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -567,6 +573,8 @@ func Test_checkIfPossibleToModifyCanEnterFrom_RequiresManagerToHaveCanGrantViewG
 func testCheckerRequiresManagerToHaveCanGrantViewGreaterOrEqualToEnter(
 	t *testing.T, value, funcToCheck interface{}, currentPermissionsGenerator func() *userPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -699,6 +707,8 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 	currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
 	mockEnums bool,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	if mockEnums {
@@ -741,6 +751,8 @@ func Test_CanViewValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
 }
 
 func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string]interface{}, checkFunc interface{}) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	dataStore := database.NewDataStore(db)
@@ -819,22 +831,22 @@ func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
 		func(time.Time, *userPermissions, *managerGeneratedPermissions, *database.DataStore) bool { return true })
 	defer pg.Unpatch()
 
-	tm := time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)
-	tmPlus := tm.Add(time.Second)
-	currentPermissions := &userPermissions{CanEnterFrom: database.Time(tmPlus)}
+	timestamp := time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)
+	timestampPlus := timestamp.Add(time.Second)
+	currentPermissions := &userPermissions{CanEnterFrom: database.Time(timestampPlus)}
 	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
 		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:00Z"})
 	assert.Nil(t, err)
 	assert.True(t, modified)
-	assert.Equal(t, map[string]interface{}{"can_enter_from": tm}, dataMap)
+	assert.Equal(t, map[string]interface{}{"can_enter_from": timestamp}, dataMap)
 
 	dataMap, modified, err = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
 		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:01Z"})
 	assert.Nil(t, err)
 	assert.False(t, modified)
-	assert.Equal(t, map[string]interface{}{"can_enter_from": tmPlus}, dataMap)
+	assert.Equal(t, map[string]interface{}{"can_enter_from": timestampPlus}, dataMap)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -1020,15 +1032,15 @@ func Test_correctPermissionsDataMap(t *testing.T) {
 		},
 	}
 
-	for _, ts := range tests {
-		ts := ts
-		t.Run(ts.permission, func(t *testing.T) {
-			for _, tt := range ts.tests {
-				tt := tt
-				t.Run(fmt.Sprintf("%s=%v, can_view=%s", ts.permission, tt.value, tt.canView), func(t *testing.T) {
+	for _, test := range tests {
+		test := test
+		t.Run(test.permission, func(t *testing.T) {
+			for _, testSpec := range test.tests {
+				testSpec := testSpec
+				t.Run(fmt.Sprintf("%s=%v, can_view=%s", test.permission, testSpec.value, testSpec.canView), func(t *testing.T) {
 					dataMap := make(map[string]interface{})
-					correctPermissionsDataMap(dataStore, dataMap, ts.userPermissionsFunc(tt.value, tt.canView))
-					assert.Equal(t, tt.expectedDataMap, dataMap)
+					correctPermissionsDataMap(dataStore, dataMap, test.userPermissionsFunc(testSpec.value, testSpec.canView))
+					assert.Equal(t, testSpec.expectedDataMap, dataMap)
 				})
 			}
 		})

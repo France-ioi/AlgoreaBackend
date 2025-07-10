@@ -48,7 +48,7 @@ func Test_consoleFormatter_Format_TextTest_WithAffectedRows(t *testing.T) {
 }
 
 func Test_consoleFormatter_Format_ErrorLevel(t *testing.T) {
-	f := newConsoleFormatter()
+	formatter := newConsoleFormatter()
 
 	entry := logrus.NewEntry(logrus.New()).
 		WithTime(time.Date(2021, 1, 2, 3, 4, 5, 123456789, time.FixedZone("MyZone", 3*60*60))).
@@ -62,7 +62,7 @@ func Test_consoleFormatter_Format_ErrorLevel(t *testing.T) {
 	entry.Level = logrus.ErrorLevel
 	entry.Message = formatterTestLogMessage
 
-	got, err := f.Format(entry)
+	got, err := formatter.Format(entry)
 	require.NoError(t, err)
 
 	assert.Equal(t,
@@ -76,7 +76,7 @@ func Test_consoleFormatter_Format_ErrorLevel(t *testing.T) {
 }
 
 func Test_consoleFormatter_Format_MessageInTheMiddle(t *testing.T) {
-	f := newConsoleFormatter()
+	formatter := newConsoleFormatter()
 
 	entry := logrus.NewEntry(logrus.New()).
 		WithTime(time.Date(2021, 1, 2, 3, 4, 5, 123456789, time.FixedZone("MyZone", 3*60*60))).
@@ -89,7 +89,7 @@ func Test_consoleFormatter_Format_MessageInTheMiddle(t *testing.T) {
 	entry.Level = logrus.InfoLevel
 	entry.Message = formatterTestLogMessage
 
-	got, err := f.Format(entry)
+	got, err := formatter.Format(entry)
 	require.NoError(t, err)
 
 	assert.Equal(t,

@@ -122,10 +122,10 @@ type subgroupApproval struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) createUserBatch(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	input := createUserBatchRequest{}
 	formData := formdata.NewFormData(&input)
@@ -135,7 +135,7 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) erro
 	formData.RegisterTranslation("custom_prefix",
 		"The custom prefix should only consist of letters/digits/hyphens and be 2-14 characters long")
 
-	err = formData.ParseJSONRequestData(r)
+	err = formData.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -156,14 +156,15 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) erro
 	service.MustNotBeError(err)
 
 	result, createdUsers, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
-		CreateUsers(r.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"), &loginmodule.CreateUsersParams{
-			Prefix:         fmt.Sprintf("%s_%s_", input.GroupPrefix, input.CustomPrefix),
-			Amount:         numberOfUsersToBeCreated,
-			PostfixLength:  input.PostfixLength,
-			PasswordLength: input.PasswordLength,
-			LoginFixed:     func(b bool) *bool { return &b }(true),
-			Language:       func(s string) *string { return &s }(user.DefaultLanguage),
-		})
+		CreateUsers(httpRequest.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"),
+			&loginmodule.CreateUsersParams{
+				Prefix:         fmt.Sprintf("%s_%s_", input.GroupPrefix, input.CustomPrefix),
+				Amount:         numberOfUsersToBeCreated,
+				PostfixLength:  input.PostfixLength,
+				PasswordLength: input.PasswordLength,
+				LoginFixed:     func(b bool) *bool { return &b }(true),
+				Language:       func(s string) *string { return &s }(user.DefaultLanguage),
+			})
 
 	defer func() {
 		if p := recover(); p != nil {
@@ -176,9 +177,9 @@ func (srv *Service) createUserBatch(w http.ResponseWriter, r *http.Request) erro
 		panic(service.ErrUnexpected(errors.New("login module failed")))
 	}
 
-	users := createBatchUsersInDB(store, input, r, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
+	users := createBatchUsersInDB(store, input, httpRequest, numberOfUsersToBeCreated, createdUsers, subgroupsApprovals, user)
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(users)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(users)))
 	return nil
 }
 
@@ -253,13 +254,13 @@ type resultRow struct {
 	Users []resultRowUser `json:"users"`
 }
 
-func createBatchUsersInDB(store *database.DataStore, input createUserBatchRequest, r *http.Request, numberOfUsersToBeCreated int,
+func createBatchUsersInDB(store *database.DataStore, input createUserBatchRequest, httpRequest *http.Request, numberOfUsersToBeCreated int,
 	createdUsers []loginmodule.CreateUsersResponseDataRow, subgroupsApprovals []subgroupApproval, user *database.User,
 ) []*resultRow {
 	var finalResult []*resultRow
 
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-		domainConfig := domain.ConfigFromContext(r.Context())
+		domainConfig := domain.ConfigFromContext(httpRequest.Context())
 
 		result := make([]*resultRow, 0, len(subgroupsApprovals))
 		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated) //nolint:mnd // 2 relations per user

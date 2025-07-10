@@ -217,14 +217,14 @@ type rawListChildItem struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) error {
-	params, err := srv.resolveGetParentsOrChildrenServiceParams(httpReq)
+func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	params, err := srv.resolveGetParentsOrChildrenServiceParams(httpRequest)
 	service.MustNotBeError(err)
 
 	requiredViewPermissionOnItems := "info"
-	if len(httpReq.URL.Query()["show_invisible_items"]) > 0 {
+	if len(httpRequest.URL.Query()["show_invisible_items"]) > 0 {
 		var showInvisibleItems bool
-		showInvisibleItems, err = service.ResolveURLQueryGetBoolField(httpReq, "show_invisible_items")
+		showInvisibleItems, err = service.ResolveURLQueryGetBoolField(httpRequest, "show_invisible_items")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -233,7 +233,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		}
 	}
 
-	store := srv.GetStore(httpReq)
+	store := srv.GetStore(httpRequest)
 	found, err := store.Permissions().
 		MatchingGroupAncestors(params.participantID).
 		WherePermissionIsAtLeast("view", "content").
@@ -286,7 +286,7 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 
 	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
 
-	render.Respond(rw, httpReq, response)
+	render.Respond(responseWriter, httpRequest, response)
 	return nil
 }
 

@@ -30,21 +30,21 @@ type GetStorer interface {
 // It takes the access token from the 'Authorization' header and loads the user info from the DB.
 func UserMiddleware(service GetStorer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestContext, isSuccess, reason, err := ValidatesUserAuthentication(service, w, r)
+		return http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+			requestContext, isSuccess, reason, err := ValidatesUserAuthentication(service, responseWriter, httpRequest)
 			if err != nil || !isSuccess {
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
+				responseWriter.Header().Set("Content-Type", "application/json; charset=utf-8")
 				if err != nil {
-					w.WriteHeader(http.StatusInternalServerError)
-					_, _ = fmt.Fprintf(w, `{"success":false,"message":"Internal server error"}`+"\n")
+					responseWriter.WriteHeader(http.StatusInternalServerError)
+					_, _ = fmt.Fprintf(responseWriter, `{"success":false,"message":"Internal server error"}`+"\n")
 					return
 				}
-				w.WriteHeader(http.StatusUnauthorized)
-				_, _ = fmt.Fprintf(w, `{"success":false,"message":"Unauthorized","error_text":"%s"}`+"\n", reason)
+				responseWriter.WriteHeader(http.StatusUnauthorized)
+				_, _ = fmt.Fprintf(responseWriter, `{"success":false,"message":"Unauthorized","error_text":"%s"}`+"\n", reason)
 				return
 			}
 
-			next.ServeHTTP(w, r.WithContext(requestContext))
+			next.ServeHTTP(responseWriter, httpRequest.WithContext(requestContext))
 		})
 	}
 }
@@ -54,51 +54,51 @@ func UserMiddleware(service GetStorer) func(next http.Handler) http.Handler {
 //   - A request context with the user authenticated on success
 //   - Whether the authentication was a success
 //   - The reason why the user couldn't be authenticated
-func ValidatesUserAuthentication(service GetStorer, w http.ResponseWriter, r *http.Request) (
+func ValidatesUserAuthentication(service GetStorer, responseWriter http.ResponseWriter, httpRequest *http.Request) (
 	ctx context.Context, authorized bool, reason string, err error,
 ) {
 	var user database.User
 	var sessionID int64
 
-	accessToken, cookieAttributes := ParseSessionCookie(r)
+	accessToken, cookieAttributes := ParseSessionCookie(httpRequest)
 
-	for _, authValue := range r.Header["Authorization"] {
+	for _, authValue := range httpRequest.Header["Authorization"] {
 		//nolint:mnd // credentials = "Bearer" 1*SP b64token (see https://tools.ietf.org/html/rfc6750#section-2.1)
 		parsedAuthValue := strings.SplitN(authValue, " ", 3)
 		if len(parsedAuthValue) == 2 && parsedAuthValue[0] == "Bearer" {
 			accessToken = parsedAuthValue[1]
 			// Delete the cookie since the Authorization header is given
-			deleteSessionCookie(w, &cookieAttributes)
+			deleteSessionCookie(responseWriter, &cookieAttributes)
 			break
 		}
 	}
 
 	if accessToken == "" {
-		return r.Context(), false, "No access token provided", nil
+		return httpRequest.Context(), false, "No access token provided", nil
 	}
 
 	if len(accessToken) > database.AccessTokenMaxLength {
 		authorized = false
 	} else {
-		user, sessionID, err = service.GetStore(r).Sessions().GetUserAndSessionIDByValidAccessToken(accessToken)
+		user, sessionID, err = service.GetStore(httpRequest).Sessions().GetUserAndSessionIDByValidAccessToken(accessToken)
 		authorized = err == nil
 		if err != nil && !gorm.IsRecordNotFoundError(err) {
-			logging.SharedLogger.WithContext(r.Context()).Errorf("Can't validate an access token: %s", err)
+			logging.SharedLogger.WithContext(httpRequest.Context()).Errorf("Can't validate an access token: %s", err)
 
-			return r.Context(), false, "", err
+			return httpRequest.Context(), false, "", err
 		}
 	}
 
 	if !authorized {
-		return r.Context(), false, "Invalid access token", nil
+		return httpRequest.Context(), false, "Invalid access token", nil
 	}
 
-	ctx = context.WithValue(r.Context(), ctxBearer, accessToken)
+	ctx = context.WithValue(httpRequest.Context(), ctxBearer, accessToken)
 	ctx = context.WithValue(ctx, ctxSessionCookieAttributes, &cookieAttributes)
 	ctx = context.WithValue(ctx, ctxUser, &user)
 	ctx = context.WithValue(ctx, ctxSessionID, sessionID)
 
-	logging.LogEntrySetField(r, "user_id", user.GroupID)
+	logging.LogEntrySetField(httpRequest, "user_id", user.GroupID)
 
 	return ctx, true, "", nil
 }

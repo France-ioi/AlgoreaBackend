@@ -26,29 +26,29 @@ func Middleware(domains []ConfigItem, domainOverride string) func(next http.Hand
 		}
 	}
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 			domain := domainOverride
 			if domain == "" {
-				domain = strings.SplitN(r.Host, ":", 2)[0] //nolint:mnd // get the domain from the request host, ignoring the port if any
+				domain = strings.SplitN(httpRequest.Host, ":", 2)[0] //nolint:mnd // get the domain from the request host, ignoring the port if any
 			}
 			configuration := domainsMap[domain]
 			if configuration == nil {
 				configuration = defaultConfig // if no match, set the default one (that can be nil as well)
 			}
 			if configuration == nil {
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				w.WriteHeader(http.StatusNotImplemented)
+				responseWriter.Header().Set("Content-Type", "application/json; charset=utf-8")
+				responseWriter.WriteHeader(http.StatusNotImplemented)
 				data, _ := json.Marshal(struct {
 					Success   bool   `json:"success"`
 					Message   string `json:"message"`
 					ErrorText string `json:"error_text"`
 				}{Success: false, Message: "Not implemented", ErrorText: fmt.Sprintf("Wrong domain %q", domain)})
-				_, _ = w.Write(data)
+				_, _ = responseWriter.Write(data)
 				return
 			}
 			ctx := context.WithValue(
-				context.WithValue(r.Context(), ctxDomainConfig, configuration), ctxDomain, domain)
-			next.ServeHTTP(w, r.WithContext(ctx))
+				context.WithValue(httpRequest.Context(), ctxDomainConfig, configuration), ctxDomain, domain)
+			next.ServeHTTP(responseWriter, httpRequest.WithContext(ctx))
 		})
 	}
 }

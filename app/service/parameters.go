@@ -75,10 +75,10 @@ func ResolveURLQueryGetStringSliceField(req *http.Request, paramName string) ([]
 //
 // All values from both the request parameters are checked against the list of known values.
 func ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(
-	r *http.Request, fieldName string, knownValuesMap map[string]bool,
+	httpRequest *http.Request, fieldName string, knownValuesMap map[string]bool,
 ) ([]string, error) {
 	var valuesMap map[string]bool
-	valuesToInclude, err := ResolveURLQueryGetStringSliceField(r, fieldName+"_include")
+	valuesToInclude, err := ResolveURLQueryGetStringSliceField(httpRequest, fieldName+"_include")
 	if err == nil {
 		valuesMap = make(map[string]bool, len(valuesToInclude))
 		for _, value := range valuesToInclude {
@@ -94,7 +94,7 @@ func ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(
 		}
 	}
 
-	valuesToExclude, err := ResolveURLQueryGetStringSliceField(r, fieldName+"_exclude")
+	valuesToExclude, err := ResolveURLQueryGetStringSliceField(httpRequest, fieldName+"_exclude")
 	if err == nil && len(valuesToExclude) != 0 {
 		for _, valueToExclude := range valuesToExclude {
 			if !knownValuesMap[valueToExclude] {

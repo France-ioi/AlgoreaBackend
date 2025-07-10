@@ -138,13 +138,13 @@ func formatValue(value interface{}) string {
 		return nullString
 	}
 
-	switch v := value.(type) {
+	switch castValue := value.(type) {
 	case time.Time:
-		return formatTime(v)
+		return formatTime(castValue)
 	case []byte:
-		return formatBytes(v)
+		return formatBytes(castValue)
 	case driver.Valuer:
-		return formatValuer(v)
+		return formatValuer(castValue)
 	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64, bool:
 		return fmt.Sprintf("%v", value)
 	default:
@@ -181,13 +181,13 @@ func formatBytes(v []byte) string {
 	return "'<binary>'"
 }
 
-func formatTime(v time.Time) string {
-	if v.IsZero() {
+func formatTime(value time.Time) string {
+	if value.IsZero() {
 		return fmt.Sprintf("'%v'", "0000-00-00 00:00:00")
 	}
 
 	// Print fractions for time values
-	return fmt.Sprintf("'%v'", v.Format("2006-01-02 15:04:05.999999999"))
+	return fmt.Sprintf("'%v'", value.Format("2006-01-02 15:04:05.999999999"))
 }
 
 func fillSQLPlaceholders(query string, values []interface{}) string {

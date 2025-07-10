@@ -153,19 +153,19 @@ type groupUpdateInput struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) error {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) updateGroup(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(httpRequest)
 	service.MustNotBeError(err)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
-		groupStore := s.Groups()
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
+		groupStore := store.Groups()
 
 		var currentGroupData groupUpdateInput
 
@@ -191,7 +191,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) error {
 		service.MustNotBeError(err)
 
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(rawRequestData, groupHasParticipants, &currentGroupData, s)
+		formData, err = validateUpdateGroupInput(rawRequestData, groupHasParticipants, &currentGroupData, store)
 		if err != nil {
 			return service.ErrInvalidRequest(err) // rollback
 		}
@@ -204,21 +204,21 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) error {
 			delete(dbMap, "approval_change_action")
 		}
 
-		err = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
+		err = validateRootActivityIDAndIsOfficial(store, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
 		service.MustNotBeError(err)
 
-		err = validateRootSkillID(s, user, currentGroupData.RootSkillID, dbMap)
+		err = validateRootSkillID(store, user, currentGroupData.RootSkillID, dbMap)
 		service.MustNotBeError(err)
 
 		if approvalChangeAction != "" {
-			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
+			participantIDs := store.Groups().GetDirectParticipantIDsOf(groupID)
 
 			// If the approval_change_action is 'reinvite', we need to reinvite the participants.
 			if approvalChangeAction == "reinvite" {
-				_, _, err = s.GroupGroups().Transition(database.AdminStrengthensApprovalWithReinvite, groupID, participantIDs, nil, user.GroupID)
+				_, _, err = store.GroupGroups().Transition(database.AdminStrengthensApprovalWithReinvite, groupID, participantIDs, nil, user.GroupID)
 				service.MustNotBeError(err)
 			} else {
-				_, _, err = s.GroupGroups().Transition(database.AdminStrengthensApprovalWithEmpty, groupID, participantIDs, nil, user.GroupID)
+				_, _, err = store.GroupGroups().Transition(database.AdminStrengthensApprovalWithEmpty, groupID, participantIDs, nil, user.GroupID)
 				service.MustNotBeError(err)
 			}
 		}
@@ -235,7 +235,7 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) error {
 	service.MustNotBeError(err)
 
 	response := service.Response[*struct{}]{Success: true, Message: "updated"}
-	render.Respond(w, r, &response)
+	render.Respond(responseWriter, httpRequest, &response)
 
 	return nil
 }
@@ -551,10 +551,10 @@ func requireWatchApprovalIsStrengthened(groupHasParticipants, oldValue, newValue
 	return !oldValue && newValue
 }
 
-func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, currentGroupData *groupUpdateInput) bool {
-	switch fl.FieldName() {
+func fieldIsStrengthened(fieldInfo validator.FieldLevel, groupHasParticipants bool, currentGroupData *groupUpdateInput) bool {
+	switch fieldInfo.FieldName() {
 	case "require_personal_info_access_approval":
-		newValue := fl.Field().String()
+		newValue := fieldInfo.Field().String()
 
 		return requirePersonalInfoAccessApprovalIsStrengthened(
 			groupHasParticipants,
@@ -562,7 +562,7 @@ func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, cur
 			newValue,
 		)
 	case "require_lock_membership_approval_until":
-		newValue := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+		newValue := fieldInfo.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
 
 		return requireLockMembershipApprovalUntilIsStrengthened(
 			groupHasParticipants,
@@ -570,7 +570,7 @@ func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, cur
 			newValue,
 		)
 	case "require_watch_approval":
-		newValue := fl.Field().Bool()
+		newValue := fieldInfo.Field().Bool()
 
 		return requireWatchApprovalIsStrengthened(
 			groupHasParticipants,

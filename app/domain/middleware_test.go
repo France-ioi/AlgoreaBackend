@@ -101,22 +101,24 @@ func TestMiddleware(t *testing.T) {
 func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string, shouldEnterService bool,
 	expectedStatusCode int, expectedBody string, expectedConfig *CtxConfig, expectedDomain string,
 ) {
+	t.Helper()
+
 	// dummy server using the middleware
 	middleware := Middleware(domains, domainOverride)
 	enteredService := false // used to log if the service has been reached
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 		enteredService = true // has passed into the service
-		configuration := r.Context().Value(ctxDomainConfig).(*CtxConfig)
+		configuration := httpRequest.Context().Value(ctxDomainConfig).(*CtxConfig)
 		assert.Equal(t, expectedConfig, configuration)
-		domain := r.Context().Value(ctxDomain).(string)
+		domain := httpRequest.Context().Value(ctxDomain).(string)
 		assert.Equal(t, expectedDomain, domain)
-		w.WriteHeader(http.StatusOK)
+		responseWriter.WriteHeader(http.StatusOK)
 	})
 	mainSrv := httptest.NewServer(middleware(handler))
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
+	mainRequest, _ := http.NewRequest(http.MethodGet, mainSrv.URL, http.NoBody)
 	client := &http.Client{}
 	response, err := client.Do(mainRequest)
 	var body string

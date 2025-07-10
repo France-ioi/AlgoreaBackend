@@ -85,6 +85,10 @@ linters-settings:
       overrides:
         - pkg: app/payloads
           ignore: true
+  varnamelen:
+    ignore-names:
+      - db
+      - tx
 
 linters:
   enable-all: true
@@ -99,16 +103,12 @@ linters:
     - maintidx         # For update to go1.20
     - nlreturn         # For update to go1.20
     - nonamedreturns   # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
-    - tenv             # For update to go1.20
-    - thelper          # For update to go1.20
-    - usestdlibvars    # For update to go1.20
-    - varnamelen       # For update to go1.20
+    - tenv             # Deprecated in golangci-lint v1.64.0, replaced by `usetesting`
     - wrapcheck        # For update to go1.20
     - exhaustruct      # For update to go1.20
     - gomoddirectives  # For update to go1.20
     - dupl             # For update to go1.20
     - testifylint
-    - usetesting
     - perfsprint
     - recvcheck
 
@@ -124,6 +124,10 @@ issues:
     - path: _test\.go$
       linters:
         - noctx
+    - path: _test\.go$
+      text: "name 'tt' is too short for the scope of its usage"
+      linters:
+        - varnamelen
     - path: ^app/servicetest/
       linters:
         - noctx

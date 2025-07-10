@@ -172,10 +172,10 @@ type participantProgressParameters struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
-	params, err := srv.parseParticipantProgressParameters(r, store, user)
+func (srv *Service) getParticipantProgress(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
+	params, err := srv.parseParticipantProgressParameters(httpRequest, store, user)
 	service.MustNotBeError(err)
 
 	itemIDQuery := store.Items().
@@ -271,58 +271,58 @@ func (srv *Service) getParticipantProgress(w http.ResponseWriter, r *http.Reques
 		result.Children = &children
 	}
 
-	for i := range rows {
+	for rowIndex := range rows {
 		commonFields := groupParticipantProgressResponseCommon{
-			ItemID:           rows[i].ItemID,
-			Score:            rows[i].Score,
-			Validated:        rows[i].Validated,
-			LatestActivityAt: rows[i].LatestActivityAt,
-			HintsRequested:   rows[i].HintsRequested,
-			Submissions:      rows[i].Submissions,
-			TimeSpent:        rows[i].TimeSpent,
+			ItemID:           rows[rowIndex].ItemID,
+			Score:            rows[rowIndex].Score,
+			Validated:        rows[rowIndex].Validated,
+			LatestActivityAt: rows[rowIndex].LatestActivityAt,
+			HintsRequested:   rows[rowIndex].HintsRequested,
+			Submissions:      rows[rowIndex].Submissions,
+			TimeSpent:        rows[rowIndex].TimeSpent,
 		}
-		if rows[i].IsParent {
+		if rows[rowIndex].IsParent {
 			result.Item = commonFields
 		} else {
 			*result.Children = append(*result.Children, groupParticipantProgressResponseChild{
 				groupParticipantProgressResponseCommon: &commonFields,
-				NoScore:                                rows[i].NoScore,
-				Type:                                   rows[i].Type,
+				NoScore:                                rows[rowIndex].NoScore,
+				Type:                                   rows[rowIndex].Type,
 				String: structures.ItemString{
-					Title:       rows[i].StringTitle,
-					LanguageTag: rows[i].StringLanguageTag,
+					Title:       rows[rowIndex].StringTitle,
+					LanguageTag: rows[rowIndex].StringLanguageTag,
 				},
-				CurrentUserPermissions: rows[i].AsItemPermissions(store.PermissionsGranted()),
-				StartedAt:              rows[i].StartedAt,
+				CurrentUserPermissions: rows[rowIndex].AsItemPermissions(store.PermissionsGranted()),
+				StartedAt:              rows[rowIndex].StartedAt,
 			})
 		}
 	}
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 
-func (srv *Service) parseParticipantProgressParameters(r *http.Request, store *database.DataStore, user *database.User) (
+func (srv *Service) parseParticipantProgressParameters(httpRequest *http.Request, store *database.DataStore, user *database.User) (
 	params participantProgressParameters, err error,
 ) {
-	params.ItemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")
+	params.ItemID, err = service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return params, service.ErrInvalidRequest(err)
 	}
 
 	params.ParticipantType = groupTypeUser
-	params.ParticipantID = service.ParticipantIDFromContext(r.Context())
+	params.ParticipantID = service.ParticipantIDFromContext(httpRequest.Context())
 	if params.ParticipantID != user.GroupID {
 		params.ParticipantType = groupTypeTeam
 	}
 	params.CheckPermissionsForGroupID = params.ParticipantID
 
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(r)
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
 	if err != nil {
 		return params, err
 	}
 
 	if watchedGroupIDIsSet {
-		if len(r.URL.Query()["as_team_id"]) != 0 {
+		if len(httpRequest.URL.Query()["as_team_id"]) != 0 {
 			return params, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 		}
 

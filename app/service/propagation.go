@@ -22,7 +22,7 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 		}
 
 		callTime := time.Now()
-		req, _ := http.NewRequestWithContext(store.GetContext(), "GET", endpoint+"?types="+strings.Join(types, ","), http.NoBody)
+		req, _ := http.NewRequestWithContext(store.GetContext(), http.MethodGet, endpoint+"?types="+strings.Join(types, ","), http.NoBody)
 		response, err := client.Do(req)
 		logging.SharedLogger.WithContext(store.GetContext()).
 			Infof("Propagation endpoint called: %v, types=%v, duration=%v", endpoint, types, time.Since(callTime))

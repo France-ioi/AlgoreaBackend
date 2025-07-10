@@ -41,13 +41,13 @@ type PropagationVerifier struct {
 
 // NewPropagationVerifier creates a new PropagationVerifier with the required propagation steps.
 func NewPropagationVerifier(requiredPropagationSteps *PropagationStepsSet) *PropagationVerifier {
-	pv := &PropagationVerifier{
+	propagationVerifier := &PropagationVerifier{
 		requiredPropagationSteps: requiredPropagationSteps,
 	}
-	if pv.requiredPropagationSteps == nil {
-		pv.requiredPropagationSteps = golang.NewSet[database.PropagationStep]()
+	if propagationVerifier.requiredPropagationSteps == nil {
+		propagationVerifier.requiredPropagationSteps = golang.NewSet[database.PropagationStep]()
 	}
-	return pv
+	return propagationVerifier
 }
 
 // WithFixture sets the DB fixture to load before running the verification.

@@ -17,7 +17,7 @@ import (
 // and shows a JSON formatted error to the user.
 type AppHandler func(http.ResponseWriter, *http.Request) error
 
-func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (fn AppHandler) ServeHTTP(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 	var apiErr *APIError
 	var shouldLogError bool
 	var errorToLog string
@@ -41,13 +41,13 @@ func (fn AppHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if shouldLogError {
-			logging.GetLogEntry(r).Errorf("unexpected error: %s, stack trace: %s", errorToLog, debug.Stack())
+			logging.GetLogEntry(httpRequest).Errorf("unexpected error: %s, stack trace: %s", errorToLog, debug.Stack())
 		}
 		if apiErr != nil { // apiErr is an APIError, not builtin.error
-			_ = render.Render(w, r, apiErr.httpResponse()) // never fails
+			_ = render.Render(responseWriter, httpRequest, apiErr.httpResponse()) // never fails
 		}
 	}()
-	err := fn(w, r)
+	err := fn(responseWriter, httpRequest)
 	if err != nil {
 		if !errors.As(err, &apiErr) {
 			apiErr = ErrUnexpected(fmt.Errorf("unknown error"))

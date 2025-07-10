@@ -84,8 +84,8 @@ const minSearchStringLength = 3
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Request) error {
-	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
+func (srv *Service) searchForAvailableGroups(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	searchString, err := service.ResolveURLQueryGetStringField(httpRequest, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -97,14 +97,14 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 			fmt.Errorf("the search string should be at least %d characters long", minSearchStringLength))
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	query := store.Groups().AvailableGroupsBySearchString(user, searchString)
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields:       service.SortingAndPagingFields{"id": {ColumnName: "groups.id"}},
 			DefaultRules: "id",
@@ -116,6 +116,6 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
-	render.Respond(w, r, convertedResult)
+	render.Respond(responseWriter, httpRequest, convertedResult)
 	return nil
 }

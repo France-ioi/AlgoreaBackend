@@ -131,13 +131,13 @@ func TestDataStore_ByID(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	const id = 123
+	const idToFetch = 123
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `tableName` WHERE (tableName.id = ?)")).
-		WithArgs(id).
+		WithArgs(idToFetch).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := NewDataStoreWithTable(db, "tableName").ByID(id).Scan(&result).Error()
+	err := NewDataStoreWithTable(db, "tableName").ByID(idToFetch).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -429,6 +429,8 @@ func TestDataStore_WithNamedLock(t *testing.T) {
 func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeout int, expectedTableName string,
 	funcToTestGenerator func(store *DataStore) func(func(store *DataStore) error) error,
 ) {
+	t.Helper()
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

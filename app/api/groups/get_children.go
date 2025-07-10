@@ -116,16 +116,16 @@ type groupChildrenViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getChildren(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(r, "types",
+	typesList, err := service.ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(httpRequest, "types",
 		map[string]bool{
 			"Base": true, "Class": true, "Team": true, "Club": true, "Friends": true,
 			"Other": true, "User": true, "Session": true,
@@ -181,9 +181,9 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) error {
 			store.ActiveGroupGroups().
 				Select("child_group_id").Where("parent_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type IN (?)", typesList)
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name":  {ColumnName: "groups.name"},
@@ -209,6 +209,6 @@ func (srv *Service) getChildren(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

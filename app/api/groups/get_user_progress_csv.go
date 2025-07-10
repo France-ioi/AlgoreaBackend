@@ -77,11 +77,11 @@ const csvExportBatchSize = 500
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getUserProgressCSV(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -90,19 +90,19 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) e
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, r, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
 	service.MustNotBeError(err)
 
-	w.Header().Set("Content-Type", "text/csv")
+	responseWriter.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
 	for i, id := range itemParentIDs {
 		itemParentIDsString[i] = strconv.FormatInt(id, 10)
 	}
-	w.Header().Set("Content-Disposition",
+	responseWriter.Header().Set("Content-Disposition",
 		fmt.Sprintf("attachment; filename=users_progress_for_group_%d_and_child_items_of_%s.csv",
 			groupID, strings.Join(itemParentIDsString, "_")))
 	if len(itemParentIDs) == 0 {
-		_, err := w.Write([]byte("Login;First name;Last name\n"))
+		_, err := responseWriter.Write([]byte("Login;First name;Last name\n"))
 		service.MustNotBeError(err)
 		return nil
 	}
@@ -110,7 +110,7 @@ func (srv *Service) getUserProgressCSV(w http.ResponseWriter, r *http.Request) e
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
 	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
-	csvWriter := csv.NewWriter(w)
+	csvWriter := csv.NewWriter(responseWriter)
 	defer csvWriter.Flush()
 	csvWriter.Comma = ';'
 
@@ -217,14 +217,14 @@ func processCSVResultRow(
 	var rowArray []string
 	var cellsMap map[int64]string
 	currentRowNumber := 0
-	return func(m map[string]interface{}) error {
+	return func(rowMap map[string]interface{}) error {
 		var score string
-		if m["score"] != nil {
-			score = fmt.Sprintf("%v", m["score"])
+		if rowMap["score"] != nil {
+			score = fmt.Sprintf("%v", rowMap["score"])
 		}
 
-		itemID := m["item_id"].(int64)
-		groupID := m["group_id"].(int64)
+		itemID := rowMap["item_id"].(int64)
+		groupID := rowMap["group_id"].(int64)
 
 		if currentRowNumber%uniqueItemsCount == 0 {
 			groupNames := generateGroupNamesFunc(groupID)

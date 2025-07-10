@@ -42,19 +42,19 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Request) error {
-	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
+func (srv *Service) deleteDependency(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "prerequisite_item_id")
+	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "prerequisite_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("edit", "all").
@@ -70,6 +70,6 @@ func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Reque
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.DeletionSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
 	return nil
 }

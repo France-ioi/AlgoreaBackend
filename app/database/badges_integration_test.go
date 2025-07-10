@@ -422,16 +422,16 @@ func TestGroupStore_StoreBadge_PropagatesResults(t *testing.T) {
 }
 
 func getGroupIDByBadgeURL(store *database.DataStore, url string, knownBadgeGroups map[string]int64) int64 {
-	if id, ok := knownBadgeGroups[url]; ok {
-		return id
+	if groupID, ok := knownBadgeGroups[url]; ok {
+		return groupID
 	}
-	var id int64
-	err := store.Groups().Where("text_id = ?", url).PluckFirst("id", &id).Error()
+	var groupID int64
+	err := store.Groups().Where("text_id = ?", url).PluckFirst("id", &groupID).Error()
 	if err != nil {
 		panic(err)
 	}
-	knownBadgeGroups[url] = id
-	return id
+	knownBadgeGroups[url] = groupID
+	return groupID
 }
 
 func TestGroupStore_createBadgeGroup_Duplicate(t *testing.T) {

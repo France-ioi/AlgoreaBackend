@@ -103,13 +103,13 @@ type breadcrumbElement struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getBreadcrumbsFromRootsByItemID(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	return srv.getBreadcrumbsFromRoots(w, r, itemID)
+	return srv.getBreadcrumbsFromRoots(responseWriter, httpRequest, itemID)
 }
 
 // swagger:operation GET /items/by-text-id/{text_id}/breadcrumbs-from-roots items itemBreadcrumbsFromRootsByTextIdGet
@@ -152,29 +152,29 @@ func (srv *Service) getBreadcrumbsFromRootsByItemID(w http.ResponseWriter, r *ht
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbsFromRootsByTextID(w http.ResponseWriter, r *http.Request) error {
-	textID := chi.URLParam(r, "text_id")
+func (srv *Service) getBreadcrumbsFromRootsByTextID(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	textID := chi.URLParam(httpRequest, "text_id")
 
 	// we wouldn't be here if the url weren't valid.
 	decodedTextID, _ := url.QueryUnescape(textID)
 
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	itemID, err := store.Items().GetItemIDFromTextID(decodedTextID)
 	if err != nil {
 		return service.ErrInvalidRequest(errors.New("no item found with text_id"))
 	}
 
-	return srv.getBreadcrumbsFromRoots(w, r, itemID)
+	return srv.getBreadcrumbsFromRoots(responseWriter, httpRequest, itemID)
 }
 
-func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Request, itemID int64) error {
-	store := srv.GetStore(r)
-	user := srv.GetUser(r)
+func (srv *Service) getBreadcrumbsFromRoots(responseWriter http.ResponseWriter, httpRequest *http.Request, itemID int64) error {
+	store := srv.GetStore(httpRequest)
+	user := srv.GetUser(httpRequest)
 
 	participantID := user.GroupID
-	if len(r.URL.Query()["participant_id"]) != 0 {
+	if len(httpRequest.URL.Query()["participant_id"]) != 0 {
 		var err error
-		participantID, err = service.ResolveURLQueryGetInt64Field(r, "participant_id")
+		participantID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "participant_id")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -188,7 +188,7 @@ func (srv *Service) getBreadcrumbsFromRoots(w http.ResponseWriter, r *http.Reque
 	if len(breadcrumbs) == 0 {
 		return service.ErrAPIInsufficientAccessRights
 	}
-	render.Respond(w, r, breadcrumbs)
+	render.Respond(responseWriter, httpRequest, breadcrumbs)
 	return nil
 }
 
@@ -220,19 +220,19 @@ func findItemBreadcrumbs(store *database.DataStore, participantID int64, user *d
 	for breadcrumbPathsIndex := 0; breadcrumbPathsIndex < len(breadcrumbPaths); breadcrumbPathsIndex++ {
 		bcPath := &breadcrumbPaths[breadcrumbPathsIndex]
 		for pathIndex := range bcPath.Path {
-			id := bcPath.Path[pathIndex].ID
+			itemID := bcPath.Path[pathIndex].ID
 			if participantID != user.GroupID &&
-				(itemInfoMap[id] == nil || // if the item is not visible to the current user
+				(itemInfoMap[itemID] == nil || // if the item is not visible to the current user
 					// or a non-final item's content is not visible to the current user
-					pathIndex != len(bcPath.Path)-1 && itemInfoMap[id].CanViewGeneratedValue < contentViewPermissionIndex) {
+					pathIndex != len(bcPath.Path)-1 && itemInfoMap[itemID].CanViewGeneratedValue < contentViewPermissionIndex) {
 				// remove the path
 				breadcrumbPaths = append(breadcrumbPaths[:breadcrumbPathsIndex], breadcrumbPaths[breadcrumbPathsIndex+1:]...)
 				breadcrumbPathsIndex--
 				break
 			}
-			bcPath.Path[pathIndex].Title = itemInfoMap[id].Title
-			bcPath.Path[pathIndex].LanguageTag = itemInfoMap[id].LanguageTag
-			bcPath.Path[pathIndex].Type = itemInfoMap[id].Type
+			bcPath.Path[pathIndex].Title = itemInfoMap[itemID].Title
+			bcPath.Path[pathIndex].LanguageTag = itemInfoMap[itemID].LanguageTag
+			bcPath.Path[pathIndex].Type = itemInfoMap[itemID].Type
 		}
 	}
 

@@ -51,9 +51,9 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) delete(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) delete(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	doNotDelete, err := store.ActiveGroupGroups().WhereUserIsMember(user).
 		Where("groups_groups_active.lock_membership_approved").
@@ -62,7 +62,7 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) error {
 	service.MustNotBeError(err)
 
 	if doNotDelete {
-		logging.GetLogEntry(r).
+		logging.GetLogEntry(httpRequest).
 			Infof("A user with group_id = %d tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()",
 				user.GroupID)
 		return service.ErrForbidden(errors.New("you cannot delete yourself right now"))
@@ -78,14 +78,14 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) error {
 	if !user.IsTempUser {
 		var result bool
 		result, err = loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
-			UnlinkClient(r.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"), loginID)
+			UnlinkClient(httpRequest.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"), loginID)
 		service.MustNotBeError(err)
 		if !result {
 			return service.ErrUnexpected(errors.New("login module failed"))
 		}
 	}
 
-	render.Respond(w, r, service.DeletionSuccess[*struct{}](nil))
+	render.Respond(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil))
 
 	return nil
 }

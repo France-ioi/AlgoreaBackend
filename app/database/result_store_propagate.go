@@ -129,12 +129,12 @@ func (s *ResultStore) propagate(collectUnlockedItemsForParticipant *int64) (
 	return participantItemsUnlocked, nil
 }
 
-func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(s *DataStore, chunkSize int) {
-	mustNotBeError(s.EnsureTransaction(func(s *DataStore) error {
+func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(store *DataStore, chunkSize int) {
+	mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
 		initTransactionTime := time.Now()
 
-		mustNotBeError(s.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
-		mustNotBeError(s.Exec(`
+		mustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
+		mustNotBeError(store.Exec(`
 			CREATE TEMPORARY TABLE results_to_mark (
 				participant_id BIGINT(20) NOT NULL,
 				attempt_id BIGINT(20) NOT NULL,
@@ -145,19 +145,19 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 		defer func() {
 			// As we start from dropping the temporary table, it's optional to delete it here.
 			// This means we can use a potentially canceled context and ignore the error.
-			s.Exec("DROP TEMPORARY TABLE results_to_mark")
+			store.Exec("DROP TEMPORARY TABLE results_to_mark")
 		}()
 
-		resultsPropagateTableName := s.Results().resultsPropagateTableName()
+		resultsPropagateTableName := store.Results().resultsPropagateTableName()
 
 		// We mark as 'to_be_recomputed' results of all parents of a chunk of results marked as 'to_be_propagated'.
 		// Also, we insert missing results for chapters having children with results marked as 'to_be_propagated'.
 		// We only create results for chapters which are (or have ancestors which are) visible to the group that attempted
 		// to solve the child items. Chapters requiring explicit entry or placed outside the scope
 		// of the attempts' root item are skipped).
-		mustNotBeError(s.Exec(
+		mustNotBeError(store.Exec(
 			"UPDATE "+resultsPropagateTableName+" SET state = 'propagating' WHERE state = 'to_be_propagated' LIMIT ?", chunkSize).Error())
-		result := s.db.Exec(`
+		result := store.db.Exec(`
 			INSERT INTO results_to_mark (participant_id, attempt_id, item_id, result_exists)
 			WITH results_to_insert (participant_id, attempt_id, item_id, result_exists) AS (
 					SELECT results.participant_id,
@@ -215,24 +215,24 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 		mustNotBeError(result.Error)
 
 		if result.RowsAffected > 0 {
-			mustNotBeError(s.Exec(`
+			mustNotBeError(store.Exec(`
 				INSERT IGNORE INTO results (participant_id, attempt_id, item_id, latest_activity_at)
 				SELECT
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, '1000-01-01 00:00:00'
 				FROM results_to_mark
 				WHERE NOT result_exists`).Error())
 
-			mustNotBeError(s.Exec(`
+			mustNotBeError(store.Exec(`
 				INSERT INTO ` + resultsPropagateTableName +
-				` (` + golang.If(s.arePropagationsSync(), "connection_id, ") + `participant_id, attempt_id, item_id, state)
+				` (` + golang.If(store.arePropagationsSync(), "connection_id, ") + `participant_id, attempt_id, item_id, state)
 				SELECT
-					` + golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ") + `
+					` + golang.If(store.arePropagationsSync(), "CONNECTION_ID(), ") + `
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, 'to_be_recomputed'
 				FROM results_to_mark
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
 		}
 
-		logging.SharedLogger.WithContext(s.ctx()).Debugf(
+		logging.SharedLogger.WithContext(store.ctx()).Debugf(
 			"Duration of step of results propagation: %d rows affected, took %v",
 			result.RowsAffected,
 			time.Since(initTransactionTime),
@@ -242,13 +242,13 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 	}))
 }
 
-func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataStore, chunkSize int) {
+func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(store *DataStore, chunkSize int) {
 	hasChanges := true
 
 	for hasChanges {
 		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMain)
 
-		mustNotBeError(s.EnsureTransaction(func(s *DataStore) error {
+		mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
 			initTransactionTime := time.Now()
 
 			// We process only those objects that were marked as 'to_be_recomputed' and
@@ -263,12 +263,12 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 			//  - validated, depending on the items_items.category and items.validation_type
 			//    (an item should have at least one validated child to become validated itself by the propagation)
 
-			resultsPropagateTableName := s.Results().resultsPropagateTableName()
+			resultsPropagateTableName := store.Results().resultsPropagateTableName()
 
 			// Process only those results marked as 'to_be_recomputed' that do not have child results marked as 'to_be_recomputed'.
 			// Start from marking them as 'recomputing'. It's important that the 'recomputing' state never leaks outside the transaction.
 			// Instead of marking all the suitable results as 'recomputing' at once, we do it in chunks to avoid locking the table for too long.
-			result := s.Exec(`
+			result := store.Exec(`
 				WITH
 					marked_to_be_recomputed AS (
 						SELECT participant_id, attempt_id, item_id FROM `+resultsPropagateTableName+` WHERE state='to_be_recomputed'
@@ -390,10 +390,10 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 						target_results.recomputing_state = 'recomputing'
 					WHERE results_propagate.state = 'recomputing'`
 
-			mustNotBeError(s.Exec(updateQuery).Error())
+			mustNotBeError(store.Exec(updateQuery).Error())
 
 			// We mark all modified results marked as 'recomputing' as 'to_be_propagated'.
-			result = s.Exec(`
+			result = store.Exec(`
 				UPDATE ` + resultsPropagateTableName + ` AS results_propagate
 				JOIN results USING(participant_id, attempt_id, item_id)
 				SET results_propagate.state = 'to_be_propagated'
@@ -402,9 +402,9 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 			rowsModified := result.RowsAffected()
 
 			// Finally we unmark all unchanged results marked as 'recomputing'.
-			mustNotBeError(s.Exec(`DELETE FROM ` + resultsPropagateTableName + ` WHERE state = 'recomputing'`).Error())
+			mustNotBeError(store.Exec(`DELETE FROM ` + resultsPropagateTableName + ` WHERE state = 'recomputing'`).Error())
 
-			logging.SharedLogger.WithContext(s.ctx()).
+			logging.SharedLogger.WithContext(store.ctx()).
 				Debugf("Duration of step of results propagation: %d rows affected, %d rows modified, took %v",
 					rowsAffected, rowsModified, time.Since(initTransactionTime))
 
@@ -413,16 +413,16 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(s *DataSt
 	}
 }
 
-func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore, collectUnlockedItemsForParticipant *int64) (
+func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(store *DataStore, collectUnlockedItemsForParticipant *int64) (
 	unlockedItemsCount int64, participantItemsUnlocked []int64,
 ) {
-	mustNotBeError(s.EnsureTransaction(func(s *DataStore) error {
+	mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
 		initTransactionTime := time.Now()
 
 		participantItemsUnlocked = nil
-		resultsPropagateTableName := s.Results().resultsPropagateTableName()
+		resultsPropagateTableName := store.Results().resultsPropagateTableName()
 
-		mustNotBeError(s.db.Exec(`
+		mustNotBeError(store.db.Exec(`
 			CREATE TEMPORARY TABLE items_to_unlock (
 				participant_id BIGINT(20) NOT NULL,
 				item_id BIGINT(20) NOT NULL,
@@ -431,10 +431,10 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore,
 				latest_update_at DATETIME NOT NULL
 			)`).Error)
 
-		defer s.db.Exec("DROP TEMPORARY TABLE items_to_unlock")
+		defer store.db.Exec("DROP TEMPORARY TABLE items_to_unlock")
 
-		canViewContentIndex := s.PermissionsGranted().ViewIndexByName("content")
-		result := s.db.Exec(`
+		canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
+		result := store.db.Exec(`
 				INSERT INTO items_to_unlock
 				SELECT results.participant_id, items.id AS item_id,
 					IF(items.requires_explicit_entry, 'none', 'content') AS can_view,
@@ -462,13 +462,13 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore,
 
 		if result.RowsAffected > 0 {
 			if collectUnlockedItemsForParticipant != nil {
-				mustNotBeError(s.Table("items_to_unlock").
+				mustNotBeError(store.Table("items_to_unlock").
 					Select("DISTINCT item_id").
 					Where("participant_id = ?", *collectUnlockedItemsForParticipant).
 					Order("item_id").Pluck("DISTINCT item_id", &participantItemsUnlocked).Error())
 			}
 
-			result = s.db.Exec(`
+			result = store.db.Exec(`
 				INSERT INTO permissions_granted
 					(group_id, item_id, source_group_id, origin, can_view, can_enter_from, latest_update_at)
 					SELECT
@@ -491,9 +491,9 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore,
 			unlockedItemsCount = result.RowsAffected
 		}
 
-		mustNotBeError(s.Exec("DELETE FROM " + resultsPropagateTableName + " WHERE state = 'propagating'").Error())
+		mustNotBeError(store.Exec("DELETE FROM " + resultsPropagateTableName + " WHERE state = 'propagating'").Error())
 
-		logging.SharedLogger.WithContext(s.ctx()).Debugf(
+		logging.SharedLogger.WithContext(store.ctx()).Debugf(
 			"Duration of final step of results propagation: %d rows affected, took %v",
 			result.RowsAffected,
 			time.Since(initTransactionTime),
@@ -506,18 +506,18 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(s *DataStore,
 }
 
 // setResultsPropagationFromTableResultsRecomputeForItems inserts results_propagate rows from results_recompute_for_items.
-func setResultsPropagationFromTableResultsRecomputeForItems(s *DataStore) {
+func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 	const chunkSize = 20000
 
 	// Mark all rows from results_recompute_for_items as processing.
-	mustNotBeError(s.Exec("UPDATE results_recompute_for_items SET is_being_processed = 1").Error())
+	mustNotBeError(store.Exec("UPDATE results_recompute_for_items SET is_being_processed = 1").Error())
 
 	for {
 		var rowsAffected int64
 		initTransactionTime := time.Now()
-		mustNotBeError(s.InTransaction(func(s *DataStore) error {
+		mustNotBeError(store.InTransaction(func(store *DataStore) error {
 			// Insert a chunk of results for items marked as processing in results_recompute_for_items into results_propagate.
-			result := s.Exec(`
+			result := store.Exec(`
 				INSERT INTO results_propagate
 					(
 						SELECT results.participant_id, results.attempt_id, results.item_id, 'to_be_recomputed' AS state
@@ -539,12 +539,12 @@ func setResultsPropagationFromTableResultsRecomputeForItems(s *DataStore) {
 			mustNotBeError(result.Error())
 			rowsAffected = result.RowsAffected()
 			if rowsAffected == 0 {
-				mustNotBeError(s.Exec("DELETE FROM results_recompute_for_items WHERE is_being_processed").Error())
+				mustNotBeError(store.Exec("DELETE FROM results_recompute_for_items WHERE is_being_processed").Error())
 			}
 
 			return nil
 		}))
-		logging.SharedLogger.WithContext(s.ctx()).Debugf(
+		logging.SharedLogger.WithContext(store.ctx()).Debugf(
 			"Duration of step of results propagation insertion from results_recompute_for_items: took %v with %d rows affected",
 			time.Since(initTransactionTime),
 			rowsAffected,

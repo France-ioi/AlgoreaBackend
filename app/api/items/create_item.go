@@ -191,20 +191,20 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
+func (srv *Service) createItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 	if user.IsTempUser {
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemID, err := validateAndInsertItem(srv, r)
+	itemID, err := validateAndInsertItem(srv, httpRequest)
 	service.MustNotBeError(err)
 
 	// response
 	response := struct {
 		ItemID int64 `json:"id,string"`
 	}{ItemID: itemID}
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(&response)))
 	return nil
 }
 
@@ -387,21 +387,21 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 			*oldPropagationLevelsMap = generateOldPropagationLevelsMap(store, itemID)
 		}
 
-		for _, id := range ids {
-			if _, ok := (*childrenInfoMap)[id]; !ok {
+		for _, itemID := range ids {
+			if _, ok := (*childrenInfoMap)[itemID]; !ok {
 				// the child item candidate is not visible and there are no existing items_items
 				if oldPropagationLevelsMap == nil {
 					return false
 				}
 				// the child item candidate is not visible and it is not a child item
-				if _, ok = (*oldPropagationLevelsMap)[id]; !ok {
+				if _, ok := (*oldPropagationLevelsMap)[itemID]; !ok {
 					return false
 				}
 				// the child item candidate is not visible, but it is a child item already:
 				// stub the permissions with nones
-				(*childrenInfoMap)[id] = permissionAndType{
+				(*childrenInfoMap)[itemID] = permissionAndType{
 					Permission: &Permission{
-						ItemID:                     id,
+						ItemID:                     itemID,
 						CanViewGeneratedValue:      1,
 						CanGrantViewGeneratedValue: 1,
 						CanWatchGeneratedValue:     1,

@@ -11,7 +11,7 @@ import (
 const TemporaryUserSessionLifetimeInSeconds = int32(2 * time.Hour / time.Second) // 2 hours (7200 seconds)
 
 // CreateNewTempSession creates a new session for a temporary user.
-func CreateNewTempSession(s *database.DataStore, userID int64) (
+func CreateNewTempSession(store *database.DataStore, userID int64) (
 	accessToken string, expiresIn int32, err error,
 ) {
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
@@ -20,9 +20,9 @@ func CreateNewTempSession(s *database.DataStore, userID int64) (
 	mustNotBeError(err)
 
 	// the transaction is needed to retry in case of lock wait timeout or deadlock
-	err = s.EnsureTransaction(func(s *database.DataStore) error {
+	err = store.EnsureTransaction(func(store *database.DataStore) error {
 		var sessionID int64
-		err = s.RetryOnDuplicateKeyError("sessions", "PRIMARY", "session_id", func(s *database.DataStore) error {
+		err = store.RetryOnDuplicateKeyError("sessions", "PRIMARY", "session_id", func(s *database.DataStore) error {
 			sessionID = s.NewID()
 			// No refresh tokens specified for temporary users.
 			return s.Sessions().InsertMap(map[string]interface{}{
@@ -31,13 +31,13 @@ func CreateNewTempSession(s *database.DataStore, userID int64) (
 			})
 		})
 		if err == nil {
-			err = s.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn)
+			err = store.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn)
 		}
 		return err
 	})
 
 	if err == nil {
-		logging.SharedLogger.WithContext(s.GetContext()).
+		logging.SharedLogger.WithContext(store.GetContext()).
 			Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
 				expiresIn, userID)
 	}
@@ -46,19 +46,19 @@ func CreateNewTempSession(s *database.DataStore, userID int64) (
 }
 
 // RefreshTempUserSession refreshes the session of a temporary user.
-func RefreshTempUserSession(s *database.DataStore, userID, sessionID int64) (accessToken string, expiresIn int32, err error) {
+func RefreshTempUserSession(store *database.DataStore, userID, sessionID int64) (accessToken string, expiresIn int32, err error) {
 	expiresIn = TemporaryUserSessionLifetimeInSeconds
 
 	accessToken, err = GenerateKey()
 	mustNotBeError(err)
 
 	// the transaction is needed to retry the insert in case of lock wait timeout or deadlock
-	err = s.EnsureTransaction(func(s *database.DataStore) error {
-		return s.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn)
+	err = store.EnsureTransaction(func(store *database.DataStore) error {
+		return store.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn)
 	})
 
 	if err == nil {
-		logging.SharedLogger.WithContext(s.GetContext()).
+		logging.SharedLogger.WithContext(store.GetContext()).
 			Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
 				expiresIn, userID)
 	}

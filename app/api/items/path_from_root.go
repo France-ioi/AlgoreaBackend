@@ -93,19 +93,19 @@ type rawItemPath struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getPathFromRoot(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantID := service.ParticipantIDFromContext(r.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
-	itemPaths := findItemPaths(srv.GetStore(r), participantID, itemID, 1)
+	itemPaths := findItemPaths(srv.GetStore(httpRequest), participantID, itemID, 1)
 	if itemPaths == nil {
 		return service.ErrAPIInsufficientAccessRights
 	}
-	render.Respond(w, r, map[string]interface{}{"path": itemPaths[0].Path})
+	render.Respond(responseWriter, httpRequest, map[string]interface{}{"path": itemPaths[0].Path})
 	return nil
 }
 

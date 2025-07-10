@@ -15,14 +15,14 @@ import (
 func TestMiddlewareMock(t *testing.T) {
 	assert := assertlib.New(t)
 	middleware := MockUserMiddleware(&database.User{GroupID: 42})
-	ts := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	testServer := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := UserFromContext(r.Context())
 		assert.NotNil(SessionCookieAttributesFromContext(r.Context()))
 		_, _ = w.Write([]byte(strconv.FormatInt(user.GroupID, 10)))
 	})))
-	defer ts.Close()
+	defer testServer.Close()
 
-	request, _ := http.NewRequest("GET", ts.URL, http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, testServer.URL, http.NoBody)
 	response, err := http.DefaultClient.Do(request)
 	assert.NoError(err)
 	if err != nil {

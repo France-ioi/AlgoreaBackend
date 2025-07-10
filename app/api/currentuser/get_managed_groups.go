@@ -71,9 +71,9 @@ type managedGroupsGetResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getManagedGroups(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	query := store.Groups().
 		Joins("JOIN group_managers ON group_managers.group_id = groups.id").
@@ -88,9 +88,9 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) err
 			MAX(can_watch_members) AS can_watch_members`).
 		Group("groups.id")
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err := service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"type": {ColumnName: "groups.type"},
@@ -110,6 +110,6 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) err
 		result[index].CanManage = groupManagerStore.CanManageNameByIndex(result[index].CanManageValue)
 	}
 
-	render.Respond(w, r, &result)
+	render.Respond(responseWriter, httpRequest, &result)
 	return nil
 }

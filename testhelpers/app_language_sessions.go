@@ -15,16 +15,16 @@ import (
 )
 
 // registerFeaturesForSessions registers the Gherkin features related to sessions and access tokens.
-func (ctx *TestContext) registerFeaturesForSessions(s *godog.ScenarioContext) {
-	s.Step(`^I am (@\w+)$`, ctx.IAm)
-	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
+func (ctx *TestContext) registerFeaturesForSessions(scenarioContext *godog.ScenarioContext) {
+	scenarioContext.Step(`^I am (@\w+)$`, ctx.IAm)
+	scenarioContext.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
 
-	s.Step(`^there are the following sessions:$`, ctx.ThereAreTheFollowingSessions)
-	s.Step(`^there are the following access tokens:$`, ctx.ThereAreTheFollowingAccessTokens)
-	s.Step(`^there are (\d+) sessions for user (@\w+)$`, ctx.ThereAreCountSessionsForUser)
-	s.Step(`^there is no session (@\w+)$`, ctx.ThereIsNoSessionID)
-	s.Step(`^there are (\d+) access tokens for user (@\w+)$`, ctx.ThereAreCountAccessTokensForUser)
-	s.Step(`^there is no access token "([^"]*)"$`, ctx.ThereIsNoAccessToken)
+	scenarioContext.Step(`^there are the following sessions:$`, ctx.ThereAreTheFollowingSessions)
+	scenarioContext.Step(`^there are the following access tokens:$`, ctx.ThereAreTheFollowingAccessTokens)
+	scenarioContext.Step(`^there are (\d+) sessions for user (@\w+)$`, ctx.ThereAreCountSessionsForUser)
+	scenarioContext.Step(`^there is no session (@\w+)$`, ctx.ThereIsNoSessionID)
+	scenarioContext.Step(`^there are (\d+) access tokens for user (@\w+)$`, ctx.ThereAreCountAccessTokensForUser)
+	scenarioContext.Step(`^there is no access token "([^"]*)"$`, ctx.ThereIsNoAccessToken)
 }
 
 // addSession adds a session to the database.

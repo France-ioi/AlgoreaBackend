@@ -49,33 +49,33 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) deleteItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
-		found, err = s.Permissions().MatchingUserAncestors(user).Where("item_id = ?", itemID).
+		found, err = store.Permissions().MatchingUserAncestors(user).Where("item_id = ?", itemID).
 			Where("is_owner_generated").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		found, err = s.ItemItems().ChildrenOf(itemID).WithExclusiveWriteLock().HasRows()
+		found, err = store.ItemItems().ChildrenOf(itemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			return service.ErrUnprocessableEntity(errors.New("the item must not have children")) // rollback
 		}
 
-		return s.Items().DeleteItem(itemID)
+		return store.Items().DeleteItem(itemID)
 	})
 
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
 	return nil
 }

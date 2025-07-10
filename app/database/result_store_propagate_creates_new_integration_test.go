@@ -29,6 +29,8 @@ type resultStorePropagateCreatesNewTestCase struct {
 }
 
 func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropagateCreatesNewTestCase) {
+	t.Helper()
+
 	mergedFixtures := make([]string, 0, len(testCase.fixtures)+1)
 	mergedFixtures = append(mergedFixtures, `
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]

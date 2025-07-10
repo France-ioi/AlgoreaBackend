@@ -76,24 +76,24 @@ import (
 //			"$ref": "#/responses/unprocessableEntityResponseWithMissingApprovals"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) error {
-	code, err := service.ResolveURLQueryGetStringField(r, "code")
+func (srv *Service) joinGroupByCode(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	code, err := service.ResolveURLQueryGetStringField(httpRequest, "code")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 	if user.IsTempUser {
 		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var results database.GroupGroupTransitionResults
 	var approvalsToRequest map[int64]database.GroupApprovals
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		info, ok, errInTransaction := store.GetGroupJoiningByCodeInfoByCode(code, true)
 		service.MustNotBeError(errInTransaction)
 		if !ok {
-			logging.GetLogEntry(r).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
+			logging.GetLogEntry(httpRequest).Warnf("A user with group_id = %d tried to join a group using a wrong/expired code", user.GroupID)
 			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
@@ -109,7 +109,7 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) erro
 		}
 
 		var approvals database.GroupApprovals
-		approvals.FromString(r.URL.Query().Get("approvals"))
+		approvals.FromString(httpRequest.URL.Query().Get("approvals"))
 		results, approvalsToRequest, errInTransaction = store.GroupGroups().Transition(
 			database.UserJoinsGroupByCode, info.GroupID, []int64{user.GroupID},
 			map[int64]database.GroupApprovals{user.GroupID: approvals}, user.GroupID)
@@ -117,7 +117,8 @@ func (srv *Service) joinGroupByCode(w http.ResponseWriter, r *http.Request) erro
 	})
 	service.MustNotBeError(err)
 
-	return RenderGroupGroupTransitionResult(w, r, results[user.GroupID], approvalsToRequest[user.GroupID], joinGroupByCodeAction)
+	return RenderGroupGroupTransitionResult(
+		responseWriter, httpRequest, results[user.GroupID], approvalsToRequest[user.GroupID], joinGroupByCodeAction)
 }
 
 func checkPossibilityToJoinTeam(store *database.DataStore, info database.GroupJoiningByCodeInfo, user *database.User) error {

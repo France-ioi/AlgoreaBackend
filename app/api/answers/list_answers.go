@@ -81,11 +81,11 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) error {
-	user := srv.GetUser(httpReq)
-	store := srv.GetStore(httpReq)
+func (srv *Service) listAnswers(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	itemID, itemIDError := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+	itemID, itemIDError := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if itemIDError != nil {
 		return service.ErrInvalidRequest(itemIDError)
 	}
@@ -110,15 +110,15 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) e
 		Where("answers.item_id = ?", itemID).
 		WithPersonalInfoViewApprovals(user)
 
-	authorIDIsSet := len(httpReq.URL.Query()["author_id"]) > 0
+	authorIDIsSet := len(httpRequest.URL.Query()["author_id"]) > 0
 
 	if !authorIDIsSet { // attempt_id
-		attemptIDIsSet := len(httpReq.URL.Query()["attempt_id"]) > 0
+		attemptIDIsSet := len(httpRequest.URL.Query()["attempt_id"]) > 0
 		if !attemptIDIsSet {
 			return service.ErrInvalidRequest(fmt.Errorf("either author_id or attempt_id must be present"))
 		}
 
-		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
+		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpRequest, "attempt_id")
 		if attemptIDError != nil {
 			return service.ErrInvalidRequest(attemptIDError)
 		}
@@ -127,7 +127,7 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) e
 
 		dataQuery = dataQuery.Where("answers.attempt_id = ?", attemptID)
 	} else { // author_id
-		authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpReq, "author_id")
+		authorID, authorIDError := service.ResolveURLQueryGetInt64Field(httpRequest, "author_id")
 		if authorIDError != nil {
 			return service.ErrInvalidRequest(authorIDError)
 		}
@@ -138,7 +138,7 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) e
 	}
 
 	dataQuery, err = service.ApplySortingAndPaging(
-		httpReq, dataQuery,
+		httpRequest, dataQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"created_at": {ColumnName: "answers.created_at"},
@@ -149,14 +149,14 @@ func (srv *Service) listAnswers(rw http.ResponseWriter, httpReq *http.Request) e
 		})
 	service.MustNotBeError(err)
 
-	dataQuery = service.NewQueryLimiter().Apply(httpReq, dataQuery)
+	dataQuery = service.NewQueryLimiter().Apply(httpRequest, dataQuery)
 
 	var result []rawAnswersData
 	service.MustNotBeError(dataQuery.Scan(&result).Error())
 
 	responseData := srv.convertDBDataToResponse(result)
 
-	render.Respond(rw, httpReq, responseData)
+	render.Respond(responseWriter, httpRequest, responseData)
 	return nil
 }
 

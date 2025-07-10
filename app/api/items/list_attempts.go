@@ -120,18 +120,18 @@ type attemptsListResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) error {
-	itemID, participantID, parentAttemptID, err := srv.resolveParametersForListAttempts(r)
+func (srv *Service) listAttempts(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, participantID, parentAttemptID, err := srv.resolveParametersForListAttempts(httpRequest)
 	service.MustNotBeError(err)
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	query := constructQueryForGettingAttemptsList(srv.GetStore(r), participantID, itemID, user).
+	query := constructQueryForGettingAttemptsList(srv.GetStore(httpRequest), participantID, itemID, user).
 		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID)
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"id": {ColumnName: "results.attempt_id"},
@@ -152,7 +152,7 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 
@@ -173,21 +173,21 @@ func constructQueryForGettingAttemptsList(store *database.DataStore, participant
 			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
 }
 
-func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
+func (srv *Service) resolveParametersForListAttempts(httpRequest *http.Request) (
 	itemID, participantID, parentAttemptID int64, err error,
 ) {
-	itemID, err = service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err = service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, err := attemptIDOrParentAttemptID(r)
+	attemptID, parentAttemptID, attemptIDSet, err := attemptIDOrParentAttemptID(httpRequest)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	participantID = service.ParticipantIDFromContext(r.Context())
-	store := srv.GetStore(r)
+	participantID = service.ParticipantIDFromContext(httpRequest.Context())
+	store := srv.GetStore(httpRequest)
 
 	if attemptIDSet {
 		if attemptID != 0 {

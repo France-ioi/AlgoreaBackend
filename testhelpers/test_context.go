@@ -58,7 +58,7 @@ const (
 )
 
 // SetupTestContext initializes the test context. Called before each scenario.
-func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
+func (ctx *TestContext) SetupTestContext(scenario *godog.Scenario) {
 	var logHook *test.Hook
 	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
 	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
@@ -74,7 +74,7 @@ func (ctx *TestContext) SetupTestContext(sc *godog.Scenario) {
 	ctx.templateSet = ctx.constructTemplateSet()
 	ctx.needPopulateDatabase = false
 
-	ctx.initReferences(sc)
+	ctx.initReferences(scenario)
 
 	// reset the seed to get predictable results on PRNG for tests
 	rand.Seed(1)
@@ -214,14 +214,14 @@ func mustNotBeError(err error) {
 func recoverPanics(
 	returnErr *error, //nolint:gocritic // we need the pointer as we replace returnErr with a panic
 ) {
-	if p := recover(); p != nil {
-		switch e := p.(type) {
+	if recoveredPanic := recover(); recoveredPanic != nil {
+		switch e := recoveredPanic.(type) {
 		case runtime.Error:
 			panic(e)
 		case error:
 			*returnErr = e
 		default:
-			panic(p)
+			panic(recoveredPanic)
 		}
 	}
 }

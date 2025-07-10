@@ -79,20 +79,20 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) startResultPath(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
 
-	ids, err := idsFromRequest(r)
+	ids, err := idsFromRequest(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantID := service.ParticipantIDFromContext(r.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
 	var result []map[string]interface{}
 	var attemptID int64
 	var shouldSchedulePropagation bool
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	err = store.InTransaction(func(store *database.DataStore) error {
 		result = getDataForResultPathStart(store, participantID, ids)
 		if len(result) == 0 {
@@ -136,7 +136,7 @@ func (srv *Service) startResultPath(w http.ResponseWriter, r *http.Request) erro
 		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
 	}
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess(map[string]interface{}{
 		"attempt_id": strconv.FormatInt(attemptID, 10),
 	})))
 	return nil
@@ -182,39 +182,43 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	var columns string
 	attemptIsActiveCondition := "1"
 	var columnsForOrder string
-	for i := 0; i < len(ids); i++ {
+	for idIndex := 0; idIndex < len(ids); idIndex++ {
 		var previousAttemptCondition string
-		if i > 0 {
+		if idIndex > 0 {
 			score += " + "
 			const comma = ", "
 			columns += comma
 			previousAttemptCondition = fmt.Sprintf(` AND
-					IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id`, i, i, i, i, i-1)
+					IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id`,
+				idIndex, idIndex, idIndex, idIndex, idIndex-1)
 		}
 
-		columnsForOrder += fmt.Sprintf(", attempts%d.id DESC", i)
+		columnsForOrder += fmt.Sprintf(", attempts%d.id DESC", idIndex)
 		attemptIsActiveCondition = fmt.Sprintf(
-			"attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until AND %s", i, i, attemptIsActiveCondition)
-		score += fmt.Sprintf("((results%d.started_at IS NULL) << %d)", i, len(ids)-i-1)
+			"attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until AND %s", idIndex, idIndex, attemptIsActiveCondition)
+		score += fmt.Sprintf("((results%d.started_at IS NULL) << %d)", idIndex, len(ids)-idIndex-1)
 		query = query.
 			Joins(fmt.Sprintf(`
 				JOIN attempts AS attempts%d ON attempts%d.participant_id = ? AND
-					(NOT items%d.requires_explicit_entry OR attempts%d.root_item_id = items%d.id)`+previousAttemptCondition, i, i, i, i, i),
+					(NOT items%d.requires_explicit_entry OR attempts%d.root_item_id = items%d.id)`+previousAttemptCondition,
+				idIndex, idIndex, idIndex, idIndex, idIndex),
 				participantID).
 			Joins(fmt.Sprintf(`
-					LEFT JOIN results AS results%d ON results%d.participant_id = attempts%d.participant_id AND
-						attempts%d.id = results%d.attempt_id AND results%d.item_id = items%d.id`, i, i, i, i, i, i, i)).
+				LEFT JOIN results AS results%d ON results%d.participant_id = attempts%d.participant_id AND
+					attempts%d.id = results%d.attempt_id AND results%d.item_id = items%d.id`,
+				idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex)).
 			Where(
 				fmt.Sprintf("(NOT items%d.requires_explicit_entry OR results%d.attempt_id IS NOT NULL) AND (results%d.started_at IS NOT NULL OR %s)",
-					i, i, i, attemptIsActiveCondition))
+					idIndex, idIndex, idIndex, attemptIsActiveCondition))
 
-		if i != len(ids)-1 {
+		if idIndex != len(ids)-1 {
 			query = query.Joins(fmt.Sprintf(
 				"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
-				i+1, i+1, i, i+1), ids[i+1]).
-				Joins(fmt.Sprintf("JOIN items AS items%d ON items%d.id = items_items%d.child_item_id", i+1, i+1, i+1))
+				idIndex+1, idIndex+1, idIndex, idIndex+1), ids[idIndex+1]).
+				Joins(fmt.Sprintf("JOIN items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex+1, idIndex+1, idIndex+1))
 		}
-		columns += fmt.Sprintf("attempts%d.id AS attempt_id%d, results%d.started_at IS NOT NULL AS has_started_result%d", i, i, i, i)
+		columns += fmt.Sprintf(
+			"attempts%d.id AS attempt_id%d, results%d.started_at IS NOT NULL AS has_started_result%d", idIndex, idIndex, idIndex, idIndex)
 	}
 	query = query.Select(columns).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
 		Order(score + columnsForOrder).Limit(1)

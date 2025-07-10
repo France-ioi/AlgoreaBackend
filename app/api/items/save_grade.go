@@ -102,25 +102,25 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) error {
-	store := srv.GetStore(r)
+func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	store := srv.GetStore(httpRequest)
 	requestData := saveGradeRequestParsed{store: store, publicKey: srv.TokenConfig.PublicKey}
 
 	var err error
-	if err = render.Bind(r, &requestData); err != nil {
+	if err = render.Bind(httpRequest, &requestData); err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	logging.LogEntrySetField(r, "user_id", requestData.ScoreToken.Converted.UserID)
+	logging.LogEntrySetField(httpRequest, "user_id", requestData.ScoreToken.Converted.UserID)
 
-	var validated, ok bool
+	var validated, newGradingSaved bool
 	unlockedItems := make([]map[string]interface{}, 0)
 	err = store.InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.SetPropagationsModeToSync())
 		var unlockedItemIDs *golang.Set[int64]
-		validated, ok, unlockedItemIDs = saveGradingResultsIntoDB(store, &requestData)
+		validated, newGradingSaved, unlockedItemIDs = saveGradingResultsIntoDB(store, &requestData)
 
-		if !ok || unlockedItemIDs.Size() == 0 {
+		if !newGradingSaved || unlockedItemIDs.Size() == 0 {
 			return nil
 		}
 
@@ -143,11 +143,11 @@ func (srv *Service) saveGrade(w http.ResponseWriter, r *http.Request) error {
 	})
 	service.MustNotBeError(err)
 
-	if !ok {
+	if !newGradingSaved {
 		return service.ErrForbidden(errors.New("the answer has been already graded or is not found"))
 	}
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"validated":      validated,
 		"unlocked_items": service.ConvertSliceOfMapsFromDBToJSON(unlockedItems),
 	})))

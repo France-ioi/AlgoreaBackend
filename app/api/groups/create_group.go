@@ -53,13 +53,13 @@ type createGroupRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) createGroup(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
 	input := createGroupRequest{}
 	formData := formdata.NewFormData(&input)
-	err = formData.ParseJSONRequestData(r)
+	err = formData.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -69,7 +69,7 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	var groupID int64
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		groupID, err = store.Groups().CreateNew(input.Name, input.Type)
 		service.MustNotBeError(err)
 		return store.GroupManagers().InsertMap(map[string]interface{}{
@@ -86,6 +86,6 @@ func (srv *Service) createGroup(w http.ResponseWriter, r *http.Request) error {
 	response := struct {
 		GroupID int64 `json:"id,string"`
 	}{GroupID: groupID}
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(&response)))
 	return nil
 }

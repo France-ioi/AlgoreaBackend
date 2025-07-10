@@ -96,14 +96,14 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) getBreadcrumbs(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	// Get IDs from request and validate it.
-	params, err := srv.parametersForGetBreadcrumbs(r)
+	params, err := srv.parametersForGetBreadcrumbs(httpRequest)
 	service.MustNotBeError(err)
 
 	var attemptIDMap map[int64]int64
 	var attemptNumberMap map[int64]int
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	if params.attemptIDIsSet {
 		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForAttempt(
 			params.ids, params.participantID, params.attemptID, false)
@@ -139,7 +139,7 @@ func (srv *Service) getBreadcrumbs(w http.ResponseWriter, r *http.Request) error
 			result[index]["attempt_order"] = itemAttemptNumber
 		}
 	}
-	render.Respond(w, r, service.ConvertSliceOfMapsFromDBToJSON(result))
+	render.Respond(responseWriter, httpRequest, service.ConvertSliceOfMapsFromDBToJSON(result))
 	return nil
 }
 
@@ -152,39 +152,39 @@ type getBreadcrumbsParameters struct {
 	user            *database.User
 }
 
-func (srv *Service) parametersForGetBreadcrumbs(r *http.Request) (parameters *getBreadcrumbsParameters, err error) {
+func (srv *Service) parametersForGetBreadcrumbs(httpRequest *http.Request) (parameters *getBreadcrumbsParameters, err error) {
 	var params getBreadcrumbsParameters
-	params.ids, err = idsFromRequest(r)
+	params.ids, err = idsFromRequest(httpRequest)
 	if err != nil {
 		return nil, service.ErrInvalidRequest(err)
 	}
 
-	params.attemptID, params.parentAttemptID, params.attemptIDIsSet, err = attemptIDOrParentAttemptID(r)
+	params.attemptID, params.parentAttemptID, params.attemptIDIsSet, err = attemptIDOrParentAttemptID(httpRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	params.user = srv.GetUser(r)
-	params.participantID = service.ParticipantIDFromContext(r.Context())
+	params.user = srv.GetUser(httpRequest)
+	params.participantID = service.ParticipantIDFromContext(httpRequest.Context())
 	return &params, nil
 }
 
-func attemptIDOrParentAttemptID(r *http.Request) (
+func attemptIDOrParentAttemptID(httpRequest *http.Request) (
 	attemptID, parentAttemptID int64, attemptIDSet bool, err error,
 ) {
-	attemptIDSet = len(r.URL.Query()["attempt_id"]) != 0
-	parentAttemptIDSet := len(r.URL.Query()["parent_attempt_id"]) != 0
+	attemptIDSet = len(httpRequest.URL.Query()["attempt_id"]) != 0
+	parentAttemptIDSet := len(httpRequest.URL.Query()["parent_attempt_id"]) != 0
 	if attemptIDSet {
 		if parentAttemptIDSet {
 			return 0, 0, false, service.ErrInvalidRequest(errors.New("only one of attempt_id and parent_attempt_id can be given"))
 		}
-		attemptID, err = service.ResolveURLQueryGetInt64Field(r, "attempt_id")
+		attemptID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "attempt_id")
 		if err != nil {
 			return 0, 0, false, service.ErrInvalidRequest(err)
 		}
 	}
 	if parentAttemptIDSet {
-		parentAttemptID, err = service.ResolveURLQueryGetInt64Field(r, "parent_attempt_id")
+		parentAttemptID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "parent_attempt_id")
 		if err != nil {
 			return 0, 0, false, service.ErrInvalidRequest(err)
 		}

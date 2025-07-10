@@ -55,9 +55,9 @@ type groupRootsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	const columns = "ancestor_group.id, ancestor_group.type, ancestor_group.name"
 	matchingGroupsQuery := store.Raw(`
@@ -108,7 +108,7 @@ func (srv *Service) getRoots(w http.ResponseWriter, r *http.Request) error {
 	var result []groupRootsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 

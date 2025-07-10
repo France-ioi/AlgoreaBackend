@@ -12,18 +12,18 @@ import (
 )
 
 // registerFeaturesForGroupMembershipChanges registers the Gherkin features related to group membership changes.
-func (ctx *TestContext) registerFeaturesForGroupPendingRequests(s *godog.ScenarioContext) {
-	s.Step(`^there are the following group pending requests:$`, ctx.ThereAreTheFollowingGroupPendingRequests)
+func (ctx *TestContext) registerFeaturesForGroupPendingRequests(scenarioContext *godog.ScenarioContext) {
+	scenarioContext.Step(`^there are the following group pending requests:$`, ctx.ThereAreTheFollowingGroupPendingRequests)
 
-	s.Step(
+	scenarioContext.Step(
 		`^there should be no group pending requests for the group (@\w+) with the type "([^"]*)"$`,
 		ctx.ThereShouldBeNoGroupPendingRequestsForTheGroupWithTheType,
 	)
-	s.Step(
+	scenarioContext.Step(
 		`^there should be no group pending requests for the member (@\w+) with the type "([^"]*)"$`,
 		ctx.ThereShouldBeNoGroupPendingRequestsForTheMemberWithTheType,
 	)
-	s.Step(`^there should be the following group pending requests:$`, ctx.ThereShouldBeTheFollowingGroupPendingRequests)
+	scenarioContext.Step(`^there should be the following group pending requests:$`, ctx.ThereShouldBeTheFollowingGroupPendingRequests)
 }
 
 // getGroupPendingRequestPrimaryKey returns the primary key of a group pending request.

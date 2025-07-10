@@ -869,6 +869,8 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 }
 
 func assertGroupAncestorsEqual(t *testing.T, dataStore *database.DataStore, tt *transitionTest) {
+	t.Helper()
+
 	var groupAncestors []groupAncestor
 	assert.NoError(t, dataStore.GroupAncestors().Select("ancestor_group_id, child_group_id, is_self, expires_at").
 		Order("ancestor_group_id, child_group_id").Scan(&groupAncestors).Error())
@@ -879,19 +881,19 @@ func assertGroupAncestorsEqual(t *testing.T, dataStore *database.DataStore, tt *
 				tt.wantGroupAncestors[i].ChildGroupID < tt.wantGroupAncestors[j].ChildGroupID)
 	})
 
-	for i := 0; i < len(tt.wantGroupAncestors); i++ {
-		if tt.wantGroupAncestors[i].ExpiresAt == "" {
-			tt.wantGroupAncestors[i].ExpiresAt = maxDateTime
+	for wantGroupAncestorsIndex := 0; wantGroupAncestorsIndex < len(tt.wantGroupAncestors); wantGroupAncestorsIndex++ {
+		if tt.wantGroupAncestors[wantGroupAncestorsIndex].ExpiresAt == "" {
+			tt.wantGroupAncestors[wantGroupAncestorsIndex].ExpiresAt = maxDateTime
 		}
 		if tt.shouldRunListeners {
-			parsed, err := time.Parse(time.DateTime, tt.wantGroupAncestors[i].ExpiresAt)
+			parsed, err := time.Parse(time.DateTime, tt.wantGroupAncestors[wantGroupAncestorsIndex].ExpiresAt)
 			assert.NoError(t, err)
 			if parsed.Before(time.Now().UTC()) {
 				newValue := make([]groupAncestor, 0, len(tt.wantGroupAncestors)-1)
-				newValue = append(newValue, tt.wantGroupAncestors[0:i]...)
-				newValue = append(newValue, tt.wantGroupAncestors[i+1:len(tt.wantGroupAncestors)]...)
+				newValue = append(newValue, tt.wantGroupAncestors[0:wantGroupAncestorsIndex]...)
+				newValue = append(newValue, tt.wantGroupAncestors[wantGroupAncestorsIndex+1:len(tt.wantGroupAncestors)]...)
 				tt.wantGroupAncestors = newValue
-				i--
+				wantGroupAncestorsIndex--
 			}
 		}
 	}
@@ -1337,6 +1339,8 @@ func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitio
 }
 
 func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupStore, expected []groupGroup) {
+	t.Helper()
+
 	var groupsGroups []groupGroup
 	assert.NoError(t, groupGroupStore.Select(`
 			parent_group_id, child_group_id, expires_at, personal_info_view_approved_at,
@@ -1370,6 +1374,8 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 func assertGroupPendingRequestsEqual(t *testing.T, groupPendingRequestStore *database.GroupPendingRequestStore,
 	expected []groupPendingRequest,
 ) {
+	t.Helper()
+
 	var groupPendingRequests []groupPendingRequest
 	assert.NoError(t, groupPendingRequestStore.Select(`
 			group_id, member_id, `+"`type`"+`, personal_info_view_approved,
@@ -1400,6 +1406,8 @@ func assertGroupPendingRequestsEqual(t *testing.T, groupPendingRequestStore *dat
 func assertGroupMembershipChangesEqual(
 	t *testing.T, groupMembershipChangeStore *database.GroupMembershipChangeStore, expected []groupMembershipChange,
 ) {
+	t.Helper()
+
 	var groupMembershipChanges []groupMembershipChange
 	assert.NoError(t, groupMembershipChangeStore.Select("group_id, member_id, initiator_id, action, at").
 		Order("group_id, member_id, at").Scan(&groupMembershipChanges).Error())
@@ -1426,6 +1434,8 @@ func assertGroupMembershipChangesEqual(
 }
 
 func assertGrantedPermissionsEqual(t *testing.T, grantedPermissionStore *database.PermissionGrantedStore, expected []grantedPermission) {
+	t.Helper()
+
 	var grantedPermissions []grantedPermission
 	assert.NoError(t, grantedPermissionStore.Select("group_id, item_id, source_group_id, origin, can_view").
 		Order("group_id, item_id, source_group_id, origin").Scan(&grantedPermissions).Error())
@@ -1435,6 +1445,8 @@ func assertGrantedPermissionsEqual(t *testing.T, grantedPermissionStore *databas
 func assertGeneratedPermissionsEqual(
 	t *testing.T, permissionGeneratedStore *database.PermissionGeneratedStore, expected []permissionsGeneratedResultRow,
 ) {
+	t.Helper()
+
 	if expected == nil {
 		expected = make([]permissionsGeneratedResultRow, 0)
 	}

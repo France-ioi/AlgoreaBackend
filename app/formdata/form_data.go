@@ -200,15 +200,15 @@ func (f *FormData) ValidatorSkippingUnsetFields(nestedValidator validator.Func) 
 // ValidatorSkippingUnchangedFields constructs a validator checking only fields with changed values.
 // You might want to call f.SetOldValues(oldValues) before in order to provide the form with previous field values.
 func (f *FormData) ValidatorSkippingUnchangedFields(nestedValidator validator.Func) validator.Func {
-	return f.ValidatorSkippingUnsetFields(func(fl validator.FieldLevel) bool {
-		structPath := fl.StructPath()
+	return f.ValidatorSkippingUnsetFields(func(fieldInfo validator.FieldLevel) bool {
+		structPath := fieldInfo.StructPath()
 		structPath = structPath[strings.IndexRune(structPath, '.')+1:]
 		oldValue := getFieldValueByStructPath(reflect.ValueOf(f.oldValues), structPath)
-		newValue := getFieldValueByStructPath(fl.Field(), "")
+		newValue := getFieldValueByStructPath(fieldInfo.Field(), "")
 		if newValue == oldValue {
 			return true
 		}
-		return nestedValidator(fl)
+		return nestedValidator(fieldInfo)
 	})
 }
 
@@ -228,7 +228,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	return nil
 }
 
-func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
+func (f *FormData) decodeMapIntoStruct(dataMap map[string]interface{}) {
 	f.fieldErrors = make(FieldErrorsError)
 	f.usedKeys = make(map[string]bool)
 	f.decodeErrors = make(map[string]bool)
@@ -253,7 +253,7 @@ func (f *FormData) decodeMapIntoStruct(m map[string]interface{}) {
 		panic(err) // this error can only be caused by bugs in the code
 	}
 
-	if err = decoder.Decode(m); err != nil {
+	if err = decoder.Decode(dataMap); err != nil {
 		var mapstructureErr *mapstructure.Error
 		errors.As(err, &mapstructureErr)
 		for _, fieldErrorString := range mapstructureErr.Errors { // Convert mapstructure's errors to our format
@@ -338,16 +338,16 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 		dbName := gorm.ToColumnName(structField.Name)
 
 		for _, str := range []string{structField.Tag.Get("sql"), structField.Tag.Get("gorm")} {
-			tags := strings.Split(str, ";")
-			for _, value := range tags {
-				v := strings.Split(value, ":")
-				key := strings.TrimSpace(v[0])
+			keyValuePairs := strings.Split(str, ";")
+			for _, keyValuePair := range keyValuePairs {
+				keyValueSplit := strings.Split(keyValuePair, ":")
+				key := strings.TrimSpace(keyValueSplit[0])
 				if key == "-" {
 					return false // skip this field
 				}
 				var value string
-				if len(v) > 1 {
-					value = strings.Join(v[1:], ":")
+				if len(keyValueSplit) > 1 {
+					value = strings.Join(keyValueSplit[1:], ":")
 				} else {
 					value = key
 				}
@@ -369,7 +369,7 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 	}, reflValue, prefix)
 }
 
-func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.StructField, jsonName string) bool,
+func traverseStructure(funcToApply func(fieldValue reflect.Value, structField reflect.StructField, jsonName string) bool,
 	reflValue reflect.Value, prefix string,
 ) {
 	for reflValue.Kind() == reflect.Ptr {
@@ -392,13 +392,13 @@ func traverseStructure(fn func(fieldValue reflect.Value, structField reflect.Str
 				jsonName = prefix + "." + jsonName
 			}
 
-			result = fn(field, structField, jsonName)
+			result = funcToApply(field, structField, jsonName)
 		} else {
 			jsonName = prefix
 		}
 
 		if result && field.Kind() == reflect.Struct {
-			traverseStructure(fn, field, jsonName)
+			traverseStructure(funcToApply, field, jsonName)
 		}
 	}
 }
@@ -453,15 +453,15 @@ func getFieldValueByStructPath(value reflect.Value, structPath string) interface
 // any value to payloads.Anything.
 func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 	return func(
-		f reflect.Type,
-		t reflect.Type,
+		from reflect.Type,
+		to reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if t.Name() != "Anything" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/formdata" {
+		if to.Name() != "Anything" || to.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/formdata" {
 			return data, nil
 		}
 
-		if f.Kind() == reflect.Slice && f.Elem().Kind() == reflect.Uint8 {
+		if from.Kind() == reflect.Slice && from.Elem().Kind() == reflect.Uint8 {
 			return *AnythingFromBytes(data.([]byte)), nil
 		}
 		bytes, _ := json.Marshal(data)
@@ -489,14 +489,14 @@ func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc 
 	timeDecodeFunc := mapstructure.StringToTimeHookFunc(layout)
 
 	return func(
-		f reflect.Type,
-		t reflect.Type,
+		from reflect.Type,
+		to reflect.Type,
 		data interface{},
 	) (interface{}, error) {
-		if f.Kind() != reflect.String || t.Name() != "Time" || t.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/database" {
+		if from.Kind() != reflect.String || to.Name() != "Time" || to.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/database" {
 			return data, nil
 		}
-		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, f, reflect.TypeOf((*time.Time)(nil)).Elem(), data)
+		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, from, reflect.TypeOf((*time.Time)(nil)).Elem(), data)
 		return database.Time(converted.(time.Time).UTC()), err
 	}
 }

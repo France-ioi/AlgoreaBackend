@@ -83,19 +83,19 @@ type threadGetResponse struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getThread(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantID, err := service.ResolveURLQueryPathInt64Field(r, "participant_id")
+	participantID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "participant_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	threadGetResponse := new(threadGetResponse)
 	threadGetResponse.ItemID = itemID
@@ -131,7 +131,7 @@ func (srv *Service) getThread(rw http.ResponseWriter, r *http.Request) error {
 	threadGetResponse.ThreadToken, err = srv.generateThreadToken(itemID, participantID, &threadInfo, user)
 	service.MustNotBeError(err)
 
-	render.Respond(rw, r, threadGetResponse)
+	render.Respond(responseWriter, httpRequest, threadGetResponse)
 
 	return nil
 }

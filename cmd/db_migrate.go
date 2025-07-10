@@ -49,13 +49,13 @@ func init() { //nolint:gochecknoinits
 			// migrate
 			var applied int
 			for {
-				var n int
-				n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Up, 1)
+				var appliedDuringIteration int
+				appliedDuringIteration, err = migrate.ExecMax(db, "mysql", migrations, migrate.Up, 1)
 				if err != nil {
 					return fmt.Errorf("unable to apply migration: %w", err)
 				}
-				applied += n
-				if n == 0 {
+				applied += appliedDuringIteration
+				if appliedDuringIteration == 0 {
 					break
 				}
 				cmd.Print(".")

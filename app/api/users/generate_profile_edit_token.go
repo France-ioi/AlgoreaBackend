@@ -84,23 +84,23 @@ type ProfileEditToken struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Request) error {
-	targetUserID, err := service.ResolveURLQueryPathInt64Field(r, "target_user_id")
+func (srv *Service) generateProfileEditToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	targetUserID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "target_user_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	var targetUserLoginID int64
-	var ok bool
+	var targetUserLoginFound bool
 	if user.LoginID != nil {
-		targetUserLoginID, ok = getLoginIDForProfileEditing(store, user, targetUserID)
+		targetUserLoginID, targetUserLoginFound = getLoginIDForProfileEditing(store, user, targetUserID)
 	}
 
 	// Checks rights.
-	if !ok {
+	if !targetUserLoginFound {
 		return service.ErrAPIInsufficientAccessRights
 	}
 
@@ -108,7 +108,7 @@ func (srv *Service) generateProfileEditToken(rw http.ResponseWriter, r *http.Req
 
 	response.ProfileEditToken, response.Alg = srv.getProfileEditToken(*user.LoginID, targetUserLoginID)
 
-	render.Respond(rw, r, response)
+	render.Respond(responseWriter, httpRequest, response)
 
 	return nil
 }

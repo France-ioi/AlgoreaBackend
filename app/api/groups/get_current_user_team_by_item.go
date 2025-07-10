@@ -49,21 +49,21 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getCurrentUserTeamByItem(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getCurrentUserTeamByItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	var teamID int64
-	user := srv.GetUser(r)
-	err = srv.GetStore(r).ActiveGroupGroups().TeamGroupForTeamItemAndUser(itemID, user).
+	user := srv.GetUser(httpRequest)
+	err = srv.GetStore(httpRequest).ActiveGroupGroups().TeamGroupForTeamItemAndUser(itemID, user).
 		PluckFirst("groups_groups_active.parent_group_id", &teamID).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.ErrNotFound(errors.New("no team for this item"))
 	}
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, &map[string]string{"group_id": strconv.FormatInt(teamID, 10)})
+	render.Respond(responseWriter, httpRequest, &map[string]string{"group_id": strconv.FormatInt(teamID, 10)})
 	return nil
 }

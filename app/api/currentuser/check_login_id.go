@@ -37,15 +37,15 @@ type loginIDCheckData struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) checkLoginID(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
+func (srv *Service) checkLoginID(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
-	loginID, err := service.ResolveURLQueryGetInt64Field(r, "login_id")
+	loginID, err := service.ResolveURLQueryGetInt64Field(httpRequest, "login_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	render.Respond(w, r, &loginIDCheckData{
+	render.Respond(responseWriter, httpRequest, &loginIDCheckData{
 		LoginIDMatched: user.LoginID != nil && *user.LoginID == loginID,
 	})
 	return nil

@@ -62,30 +62,30 @@ import (
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) answerCreate(rw http.ResponseWriter, httpReq *http.Request) error {
-	return srv.saveAnswerWithType(rw, httpReq, false)
+func (srv *Service) answerCreate(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	return srv.saveAnswerWithType(responseWriter, httpRequest, false)
 }
 
-func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Request, isCurrent bool) error {
-	attemptID, err := service.ResolveURLQueryPathInt64Field(httpReq, "attempt_id")
+func (srv *Service) saveAnswerWithType(responseWriter http.ResponseWriter, httpRequest *http.Request, isCurrent bool) error {
+	attemptID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	var requestData answerData
 	formData := formdata.NewFormData(&requestData)
-	err = formData.ParseJSONRequestData(httpReq)
+	err = formData.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
-	participantID := service.ParticipantIDFromContext(httpReq.Context())
-	store := srv.GetStore(httpReq)
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	store := srv.GetStore(httpRequest)
 
 	found, err := store.Results().ByID(participantID, attemptID, itemID).HasRows()
 	service.MustNotBeError(err)
@@ -120,6 +120,6 @@ func (srv *Service) saveAnswerWithType(rw http.ResponseWriter, httpReq *http.Req
 		result = service.CreationSuccess[*struct{}](nil)
 	}
 
-	service.MustNotBeError(render.Render(rw, httpReq, result))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, result))
 	return nil
 }

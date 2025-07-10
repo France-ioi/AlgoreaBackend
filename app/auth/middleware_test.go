@@ -273,22 +273,24 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 	// dummy server using the middleware
 	middleware := UserMiddleware(&storeProvider{database.NewDataStore(dbmock)})
 	enteredService := false // used to log if the service has been reached
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 		enteredService = true // has passed into the service
-		user := r.Context().Value(ctxUser).(*database.User)
-		cookieAttributes, _ := json.Marshal(r.Context().Value(ctxSessionCookieAttributes)) //nolint:errchkjson // the test data is always valid
-		userAttributes, _ := json.Marshal(r.Context().Value(ctxUser))                      //nolint:errchkjson // the test data is always valid
-		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + r.Context().Value(ctxBearer).(string) +
+		user := httpRequest.Context().Value(ctxUser).(*database.User)
+		//nolint:errchkjson // the test data is always valid
+		cookieAttributes, _ := json.Marshal(httpRequest.Context().Value(ctxSessionCookieAttributes))
+		//nolint:errchkjson // the test data is always valid
+		userAttributes, _ := json.Marshal(httpRequest.Context().Value(ctxUser))
+		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + httpRequest.Context().Value(ctxBearer).(string) +
 			"\nCookieAttributes:" + string(cookieAttributes) + "\nUser:" + string(userAttributes)
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(body))
+		responseWriter.Header().Set("Content-Type", "application/json; charset=utf-8")
+		responseWriter.WriteHeader(http.StatusOK)
+		_, _ = responseWriter.Write([]byte(body))
 	})
 	mainSrv := httptest.NewServer(logging.NewStructuredLogger()(middleware(handler)))
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL, http.NoBody)
+	mainRequest, _ := http.NewRequest(http.MethodGet, mainSrv.URL, http.NoBody)
 	for _, header := range authorizationHeaders {
 		mainRequest.Header.Add("Authorization", header)
 	}

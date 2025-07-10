@@ -89,11 +89,11 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		return reflect.ValueOf(time.Now().UTC().Truncate(time.Millisecond).Format("2006-01-02 15:04:05.000"))
 	})
 
-	set.AddGlobalFunc("generateToken", func(a jet.Arguments) reflect.Value {
+	set.AddGlobalFunc("generateToken", func(arguments jet.Arguments) reflect.Value {
 		//nolint:mnd // we require exactly two arguments: the payload and the private key
-		a.RequireNumOfArguments("generateToken", 2, 2)
+		arguments.RequireNumOfArguments("generateToken", 2, 2)
 		var privateKey *rsa.PrivateKey
-		privateKeyRefl := a.Get(1)
+		privateKeyRefl := arguments.Get(1)
 		if privateKeyRefl.CanAddr() {
 			privateKey = privateKeyRefl.Addr().Interface().(*rsa.PrivateKey)
 		} else {
@@ -106,11 +106,11 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 			}
 			privateKey, err = crypto.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
 			if err != nil {
-				a.Panicf("Cannot parse private key: %s", err)
+				arguments.Panicf("Cannot parse private key: %s", err)
 			}
 		}
 		return reflect.ValueOf(
-			fmt.Sprintf("%q", token.Generate(a.Get(0).Interface().(map[string]interface{}),
+			fmt.Sprintf("%q", token.Generate(arguments.Get(0).Interface().(map[string]interface{}),
 				privateKey)))
 	})
 
@@ -118,9 +118,9 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		return reflect.ValueOf(ctx.application)
 	})
 
-	set.AddGlobalFunc("db", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("db", 1, 1)
-		path := a.Get(0).Interface().(string)
+	set.AddGlobalFunc("db", func(arguments jet.Arguments) reflect.Value {
+		arguments.RequireNumOfArguments("db", 1, 1)
+		path := arguments.Get(0).Interface().(string)
 		if match := dbPathRegexp.FindStringSubmatch(path); match != nil {
 			gherkinTable := ctx.dbTableData[match[1]]
 			neededColumnNumber := -1
@@ -131,15 +131,15 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 				}
 			}
 			if neededColumnNumber == -1 {
-				a.Panicf("cannot find column %q in table %q", match[3], match[1])
+				arguments.Panicf("cannot find column %q in table %q", match[3], match[1])
 			}
 			rowNumber, conversionErr := strconv.Atoi(match[2])
 			if conversionErr != nil {
-				a.Panicf("can't convert a row number: %s", conversionErr.Error())
+				arguments.Panicf("can't convert a row number: %s", conversionErr.Error())
 			}
 			return reflect.ValueOf(gherkinTable.Rows[rowNumber].Cells[neededColumnNumber].Value)
 		}
-		a.Panicf("wrong data path: %q", path)
+		arguments.Panicf("wrong data path: %q", path)
 		return reflect.Value{}
 	})
 

@@ -194,6 +194,8 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
 	remainingGroupIDs []int64, remainingGroupsGroups, remainingGroupsAncestors []map[string]interface{},
 ) {
+	t.Helper()
+
 	var rows []map[string]interface{}
 	var ids []int64
 
@@ -224,6 +226,8 @@ type grantedPermission struct {
 func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remainingGroupIDs []int64,
 	expectedGrantedPermissions []grantedPermission, expectedGeneratedPermissions []permissionsGeneratedResultRow,
 ) {
+	t.Helper()
+
 	var ids []int64
 	assert.NoError(t, dataStore.Table("filters").Order("group_id").
 		Pluck("group_id", &ids).Error())
@@ -544,6 +548,8 @@ type resultPrimaryKeyAndState struct {
 }
 
 func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, expectedChanged []resultPrimaryKeyAndState) {
+	t.Helper()
+
 	var results []resultPrimaryKeyAndState
 	queryResultsAndStatesForTests(t, dataStore.Results(), &results, "")
 
@@ -565,12 +571,13 @@ func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, e
 		"Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
 }
 
-func queryResultsAndStatesForTests(t *testing.T, s *database.ResultStore, result interface{}, customColumns string) {
+func queryResultsAndStatesForTests(t *testing.T, resultStore *database.ResultStore, result interface{}, customColumns string) {
+	t.Helper()
+
 	columns := "participant_id, attempt_id, item_id, IFNULL(state, 'done') AS state"
 	if customColumns != "" {
 		columns += "," + customColumns
 	}
-	resultStore := s.Results()
 	assert.NoError(t,
 		resultStore.Select(columns).
 			Joins("LEFT JOIN results_propagate USING(participant_id, attempt_id, item_id)").

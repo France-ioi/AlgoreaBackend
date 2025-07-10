@@ -64,29 +64,29 @@ type resultUpdateRequest struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) updateResult(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+	attemptID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantID := service.ParticipantIDFromContext(r.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
 	input := resultUpdateRequest{}
 	formData := formdata.NewFormData(&input)
-	err = formData.ParseJSONRequestData(r)
+	err = formData.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		resultScope := store.Results().
 			Where("participant_id = ?", participantID).
 			Where("attempt_id = ?", attemptID).
@@ -106,6 +106,6 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) error {
 	})
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess[*struct{}](nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
 	return nil
 }

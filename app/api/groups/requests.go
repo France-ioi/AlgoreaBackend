@@ -9,11 +9,13 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-func renderGroupGroupTransitionResults(w http.ResponseWriter, r *http.Request, results database.GroupGroupTransitionResults) {
+func renderGroupGroupTransitionResults(
+	responseWriter http.ResponseWriter, httpRequest *http.Request, results database.GroupGroupTransitionResults,
+) {
 	response := service.Response[database.GroupGroupTransitionResults]{
 		Success: true,
 		Message: "updated",
 		Data:    results,
 	}
-	render.Respond(w, r, &response)
+	render.Respond(responseWriter, httpRequest, &response)
 }

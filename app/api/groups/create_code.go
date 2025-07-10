@@ -54,12 +54,12 @@ const maxNumberOfRetriesForCodeGenerator = 3
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) error {
+func (srv *Service) createCode(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -71,7 +71,7 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) error {
 		for retryCount := 1; ; retryCount++ {
 			if retryCount > maxNumberOfRetriesForCodeGenerator {
 				generatorErr := errors.New("the code generator is broken")
-				logging.GetLogEntry(r).Error(generatorErr)
+				logging.GetLogEntry(httpRequest).Error(generatorErr)
 				return generatorErr
 			}
 
@@ -89,7 +89,7 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}))
 
-	render.Respond(w, r, struct {
+	render.Respond(responseWriter, httpRequest, struct {
 		Code string `json:"code"`
 	}{newCode})
 

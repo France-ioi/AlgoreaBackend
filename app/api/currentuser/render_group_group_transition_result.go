@@ -11,7 +11,8 @@ import (
 )
 
 // RenderGroupGroupTransitionResult renders database.GroupGroupTransitionResult as a response or returns an APIError.
-func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, result database.GroupGroupTransitionResult,
+func RenderGroupGroupTransitionResult(
+	responseWriter http.ResponseWriter, httpRequest *http.Request, result database.GroupGroupTransitionResult,
 	approvalsToRequest database.GroupApprovals, action userGroupRelationAction,
 ) error {
 	isCreateAction := map[userGroupRelationAction]bool{
@@ -43,24 +44,24 @@ func RenderGroupGroupTransitionResult(w http.ResponseWriter, r *http.Request, re
 		if approvalsToRequest != (database.GroupApprovals{}) {
 			errorResponse.Data = map[string]interface{}{"missing_approvals": approvalsToRequest.ToArray()}
 		}
-		service.MustNotBeError(render.Render(w, r, errorResponse))
+		service.MustNotBeError(render.Render(responseWriter, httpRequest, errorResponse))
 		return nil
 	case database.Unchanged:
 		statusCode := 200
 		if isCreateAction {
 			statusCode = 201
 		}
-		service.MustNotBeError(render.Render(w, r, service.UnchangedSuccess(statusCode)))
+		service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UnchangedSuccess(statusCode)))
 	case database.Success:
 		renderGroupGroupTransitionSuccess(isCreateAction,
 			map[userGroupRelationAction]bool{
 				leaveGroupAction: true,
-			}[action], w, r)
+			}[action], responseWriter, httpRequest)
 	}
 	return nil
 }
 
-func renderGroupGroupTransitionSuccess(isCreateAction, isDeleteAction bool, w http.ResponseWriter, r *http.Request) {
+func renderGroupGroupTransitionSuccess(isCreateAction, isDeleteAction bool, responseWriter http.ResponseWriter, httpRequest *http.Request) {
 	var successRenderer render.Renderer
 	switch {
 	case isCreateAction:
@@ -70,5 +71,5 @@ func renderGroupGroupTransitionSuccess(isCreateAction, isDeleteAction bool, w ht
 	default:
 		successRenderer = service.UpdateSuccess(map[string]bool{"changed": true})
 	}
-	service.MustNotBeError(render.Render(w, r, successRenderer))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, successRenderer))
 }

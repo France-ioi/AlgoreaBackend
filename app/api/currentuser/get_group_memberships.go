@@ -82,9 +82,9 @@ type membershipsViewResponseRow struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) error {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getGroupMemberships(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	query := store.ActiveGroupGroups().
 		Select(`
@@ -118,9 +118,9 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).
 		Where("groups.type != 'ContestParticipants'")
 
-	query = service.NewQueryLimiter().Apply(r, query)
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err := service.ApplySortingAndPaging(
-		r, query,
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"member_since": {ColumnName: "latest_change.at"},
@@ -134,6 +134,6 @@ func (srv *Service) getGroupMemberships(w http.ResponseWriter, r *http.Request) 
 	var result []membershipsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }

@@ -84,20 +84,20 @@ type answerSubmitResponse struct { //nolint:unused
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) error {
+func (srv *Service) submit(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	requestData := SubmitRequest{PublicKey: srv.TokenConfig.PublicKey}
 
 	var err error
-	if err = render.Bind(httpReq, &requestData); err != nil {
+	if err = render.Bind(httpRequest, &requestData); err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	var answerID int64
 	var hintsInfo *database.HintsInfo
 
-	logging.LogEntrySetField(httpReq, "user_id", requestData.TaskToken.Converted.UserID)
+	logging.LogEntrySetField(httpRequest, "user_id", requestData.TaskToken.Converted.UserID)
 
-	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
 		hasAccess, reason, err = store.Items().
@@ -153,7 +153,7 @@ func (srv *Service) submit(rw http.ResponseWriter, httpReq *http.Request) error 
 	}).Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(rw, httpReq, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"answer_token": answerToken,
 	})))
 	return nil

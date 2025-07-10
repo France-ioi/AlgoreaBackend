@@ -42,25 +42,25 @@ func NewStructuredLogger() func(next http.Handler) http.Handler {
 }
 
 // NewLogEntry sets default request log fields.
-func (l *StructuredLogger) NewLogEntry(r *http.Request) middleware.LogEntry {
-	entry := &StructuredLoggerEntry{Logger: SharedLogger.WithContext(r.Context())}
+func (l *StructuredLogger) NewLogEntry(httpRequest *http.Request) middleware.LogEntry {
+	entry := &StructuredLoggerEntry{Logger: SharedLogger.WithContext(httpRequest.Context())}
 	logFields := logrus.Fields{}
 
 	logFields["type"] = "web"
 
 	scheme := "http"
-	if r.TLS != nil {
+	if httpRequest.TLS != nil {
 		scheme = "https"
 	}
 
 	logFields["http_scheme"] = scheme
-	logFields["http_proto"] = r.Proto
-	logFields["http_method"] = r.Method
+	logFields["http_proto"] = httpRequest.Proto
+	logFields["http_method"] = httpRequest.Method
 
-	logFields["remote_addr"] = r.RemoteAddr
-	logFields["user_agent"] = r.UserAgent()
+	logFields["remote_addr"] = httpRequest.RemoteAddr
+	logFields["user_agent"] = httpRequest.UserAgent()
 
-	logFields["uri"] = fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
+	logFields["uri"] = fmt.Sprintf("%s://%s%s", scheme, httpRequest.Host, httpRequest.RequestURI)
 
 	entry.Logger = entry.Logger.WithFields(logFields)
 

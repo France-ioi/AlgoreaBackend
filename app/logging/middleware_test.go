@@ -60,15 +60,15 @@ func TestMiddleware_Panic(t *testing.T) {
 func doRequest(forcePanic bool) {
 	// setting up the server with 1 service and using the logger middleware
 	loggerMiddleware := NewStructuredLogger()
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		LogEntrySetField(r, "my_key", 42)
-		LogEntrySetFields(r, map[string]interface{}{"opt_one": 1, "foo": "bar"})
-		GetLogEntry(r).Print("in service log")
+	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		LogEntrySetField(httpRequest, "my_key", 42)
+		LogEntrySetFields(httpRequest, map[string]interface{}{"opt_one": 1, "foo": "bar"})
+		GetLogEntry(httpRequest).Print("in service log")
 		if forcePanic {
 			panic("my panic msg")
 		}
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("dummy body"))
+		responseWriter.WriteHeader(http.StatusOK)
+		_, _ = responseWriter.Write([]byte("dummy body"))
 	})
 	// use the chi `Recoverer` middleware to catch panic and log it
 	// use the chi `RequestID` middleware to include request id in it (appear in logs)
@@ -77,7 +77,7 @@ func doRequest(forcePanic bool) {
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL+"/a_path", http.NoBody)
+	mainRequest, _ := http.NewRequest(http.MethodGet, mainSrv.URL+"/a_path", http.NoBody)
 	client := mainSrv.Client()
 	response, err := client.Do(mainRequest)
 	if err == nil {

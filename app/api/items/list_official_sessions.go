@@ -151,14 +151,14 @@ type rawOfficialSession struct {
 //			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request) error {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) listOfficialSessions(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	found, err := store.Permissions().MatchingUserAncestors(user).
 		Where("item_id = ?", itemID).
 		WherePermissionIsAtLeast("view", "info").HasRows()
@@ -171,9 +171,9 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 		Where("is_official_session").
 		Where("is_public").
 		Where("root_activity_id = ?", itemID)
-	idsQuery = service.NewQueryLimiter().Apply(r, idsQuery)
+	idsQuery = service.NewQueryLimiter().Apply(httpRequest, idsQuery)
 	idsQuery, err = service.ApplySortingAndPaging(
-		r, idsQuery,
+		httpRequest, idsQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"group_id":       {ColumnName: "groups.id"},
@@ -219,7 +219,7 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 	var result []officialSessionsListResponseRow
 	srv.fillOfficialSessionsWithParents(rawData, &result)
 
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 	return nil
 }
 
