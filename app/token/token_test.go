@@ -5,7 +5,6 @@ import (
 	"errors"
 	"math/big"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -57,34 +56,6 @@ var threadTokenFromAlgoreaPlatform = []byte(
 		"02LU6SCFaNXDft-VYfPFt0ro8VWb5zhRls8Mjqsb_f-jiPlu4D1CAeNK0g")
 
 const testPlatformName = "test_dmitry"
-
-// generateSignedTestToken generates a signed test token.
-// Use it if you need to generate a signed token to use in your tests.
-func generateSignedTestToken() string { //nolint:unused
-	now, err := time.Parse(time.RFC3339, "2020-01-01T00:00:00Z")
-	if err != nil {
-		panic(err)
-	}
-
-	monkey.Patch(time.Now, func() time.Time { return now })
-
-	content := Thread{
-		ItemID:        "1",
-		ParticipantID: "2",
-		UserID:        "3",
-		IsMine:        true,
-		CanWatch:      true,
-		CanWrite:      false,
-		Exp:           strconv.FormatInt(now.Add(time.Hour*2).Unix(), 10),
-	}
-
-	signedToken, err := (&content).Sign(tokentest.TaskPlatformPrivateKeyParsed)
-	if err != nil {
-		panic(err)
-	}
-
-	return signedToken
-}
 
 func TestParseAndValidate(t *testing.T) {
 	tests := []struct {

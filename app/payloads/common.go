@@ -28,9 +28,20 @@ func ParseMap(raw map[string]interface{}, target interface{}) error {
 	return nil
 }
 
+// ConverterIntoMap is an interface implemented by types
+// that can convert themselves into a map.
+// payloads.ConvertIntoMap uses this interface to convert structs into maps.
+type ConverterIntoMap interface {
+	ConvertIntoMap() map[string]interface{}
+}
+
 // ConvertIntoMap converts a struct into a map
 // Fields without a `json` tag or having '-' as a json field name are skipped.
 func ConvertIntoMap(source interface{}) map[string]interface{} {
+	if converter, ok := source.(ConverterIntoMap); ok {
+		return converter.ConvertIntoMap()
+	}
+
 	sourceValue := reflect.ValueOf(source)
 	for sourceValue.Kind() == reflect.Ptr {
 		sourceValue = sourceValue.Elem()

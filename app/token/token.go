@@ -3,11 +3,9 @@ package token
 
 import (
 	"crypto/rsa"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -152,14 +150,13 @@ func IsUnexpectedError(err error) bool {
 // UnmarshalDependingOnItemPlatform unmarshals a token from JSON representation
 // using a platform's public key for given itemID.
 // The function returns nil (success) if the platform doesn't use tokens.
-func UnmarshalDependingOnItemPlatform(
+func UnmarshalDependingOnItemPlatform[P any](
 	store *database.DataStore,
 	itemID int64,
-	target interface{},
+	target **Token[P],
 	token []byte,
 	tokenFieldName string,
 ) (platformHasKey bool, err error) {
-	targetRefl := reflect.ValueOf(target)
 	defer recoverPanics(&err)
 
 	publicKey, err := store.Platforms().GetPublicKeyByItemID(itemID)
@@ -185,10 +182,9 @@ func UnmarshalDependingOnItemPlatform(
 		return true, fmt.Errorf("invalid %s: wrong platform's key", tokenFieldName)
 	}
 
-	targetRefl.Elem().Set(reflect.New(targetRefl.Elem().Type().Elem()))
-	targetRefl.Elem().Elem().FieldByName("PublicKey").Set(reflect.ValueOf(parsedPublicKey))
+	*target = &Token[P]{PublicKey: parsedPublicKey}
 
-	if err = targetRefl.Elem().Interface().(json.Unmarshaler).UnmarshalJSON(token); err != nil {
+	if err = (*target).UnmarshalJSON(token); err != nil {
 		return true, fmt.Errorf("invalid %s: %s", tokenFieldName, err.Error())
 	}
 

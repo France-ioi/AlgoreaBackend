@@ -111,7 +111,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 		return service.ErrInvalidRequest(err)
 	}
 
-	logging.LogEntrySetField(httpRequest, "user_id", requestData.ScoreToken.Converted.UserID)
+	logging.LogEntrySetField(httpRequest, "user_id", requestData.ScoreToken.Payload.Converted.UserID)
 
 	var validated, newGradingSaved bool
 	unlockedItems := make([]map[string]interface{}, 0)
@@ -134,7 +134,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
          ON default_strings.item_id = items.id AND default_strings.language_tag = items.default_language_tag`).
 			Joins(`LEFT JOIN items_strings user_strings
          ON user_strings.item_id=items.id AND user_strings.language_tag = (SELECT default_language FROM users WHERE group_id = ?)`,
-				requestData.ScoreToken.Converted.UserID).
+				requestData.ScoreToken.Payload.Converted.UserID).
 			Where("items.id IN (?)", unlockedItemIDs.Values()).
 			Order("items.id").
 			ScanIntoSliceOfMaps(&unlockedItems).Error())
@@ -157,7 +157,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeRequestParsed) (
 	validated, ok bool, unlockedItemIDs *golang.Set[int64],
 ) {
-	score := requestData.ScoreToken.Converted.Score
+	score := requestData.ScoreToken.Payload.Converted.Score
 
 	const maxScore = 100
 	gotFullScore := score == maxScore
@@ -180,7 +180,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 					ELSE ?
 				END, score_computed, 0), 100)`, score, score)
 	values := []interface{}{
-		requestData.ScoreToken.Converted.UserAnswerID, // for join
+		requestData.ScoreToken.Payload.Converted.UserAnswerID, // for join
 		1, // tasks_tried
 		// for score_computed we compare patched scores
 		gorm.Expr(`
@@ -203,9 +203,9 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 
 	updateExpr := "SET " + strings.Join(columnsToUpdate, " = ?, ") + " = ?"
 	values = append(values,
-		requestData.ScoreToken.Converted.ParticipantID,
-		requestData.ScoreToken.Converted.AttemptID,
-		requestData.ScoreToken.Converted.LocalItemID,
+		requestData.ScoreToken.Payload.Converted.ParticipantID,
+		requestData.ScoreToken.Payload.Converted.AttemptID,
+		requestData.ScoreToken.Payload.Converted.LocalItemID,
 	)
 	service.MustNotBeError(
 		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+
@@ -213,17 +213,17 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 			Error())
 	resultStore := store.Results()
 	service.MustNotBeError(resultStore.MarkAsToBePropagated(
-		requestData.ScoreToken.Converted.ParticipantID, requestData.ScoreToken.Converted.AttemptID,
-		requestData.ScoreToken.Converted.LocalItemID, false))
+		requestData.ScoreToken.Payload.Converted.ParticipantID, requestData.ScoreToken.Payload.Converted.AttemptID,
+		requestData.ScoreToken.Payload.Converted.LocalItemID, false))
 
-	unlockedItemIDs, err := resultStore.PropagateAndCollectUnlockedItemsForParticipant(requestData.ScoreToken.Converted.ParticipantID)
+	unlockedItemIDs, err := resultStore.PropagateAndCollectUnlockedItemsForParticipant(requestData.ScoreToken.Payload.Converted.ParticipantID)
 	service.MustNotBeError(err)
 
 	return validated, true, unlockedItemIDs
 }
 
 func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeRequestParsed, score float64) bool {
-	answerID := requestData.ScoreToken.Converted.UserAnswerID
+	answerID := requestData.ScoreToken.Payload.Converted.UserAnswerID
 	gradingStore := store.Gradings()
 
 	insertError := gradingStore.InsertMap(map[string]interface{}{
@@ -244,10 +244,10 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 			if *oldScore != score {
 				//nolint:errchkjson // no error: only strings and floats previously decoded from JSON
 				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
-					"idAttempt":    requestData.ScoreToken.AttemptID,
-					"idItem":       requestData.ScoreToken.LocalItemID,
-					"idUser":       requestData.ScoreToken.UserID,
-					"idUserAnswer": requestData.ScoreToken.UserAnswerID,
+					"idAttempt":    requestData.ScoreToken.Payload.AttemptID,
+					"idItem":       requestData.ScoreToken.Payload.LocalItemID,
+					"idUser":       requestData.ScoreToken.Payload.UserID,
+					"idUserAnswer": requestData.ScoreToken.Payload.UserAnswerID,
 					"newScore":     score,
 					"oldScore":     *oldScore,
 				})
@@ -263,8 +263,8 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 }
 
 type saveGradeRequestParsed struct {
-	ScoreToken  *token.Score
-	AnswerToken *token.Answer
+	ScoreToken  *token.Token[payloads.ScoreToken]
+	AnswerToken *token.Token[payloads.AnswerToken]
 
 	store     *database.DataStore
 	publicKey *rsa.PublicKey
@@ -334,12 +334,12 @@ func (requestData *saveGradeRequestParsed) unmarshalAnswerToken(wrapper *saveGra
 	if wrapper.AnswerToken == nil {
 		return errors.New("either score_token or answer_token should be given")
 	}
-	requestData.AnswerToken = &token.Answer{PublicKey: requestData.publicKey}
+	requestData.AnswerToken = &token.Token[payloads.AnswerToken]{PublicKey: requestData.publicKey}
 	if err := requestData.AnswerToken.UnmarshalJSON(wrapper.AnswerToken.Bytes()); err != nil {
 		return fmt.Errorf("invalid answer_token: %s", err.Error())
 	}
 
-	itemID := requestData.AnswerToken.Converted.LocalItemID
+	itemID := requestData.AnswerToken.Payload.Converted.LocalItemID
 	publicKey, err := requestData.store.Platforms().GetPublicKeyByItemID(itemID)
 	if gorm.IsRecordNotFoundError(err) {
 		return fmt.Errorf("cannot find the platform for item %d", itemID)
@@ -361,19 +361,19 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 		return errors.New("missing score which is required when the platform does not have a public key")
 	}
 
-	requestData.ScoreToken = &token.Score{
+	requestData.ScoreToken = &token.Token[payloads.ScoreToken]{Payload: payloads.ScoreToken{
 		Converted: payloads.ScoreTokenConverted{
 			Score:         *wrapper.Score,
-			UserID:        requestData.AnswerToken.Converted.UserID,
-			UserAnswerID:  requestData.AnswerToken.Converted.UserAnswerID,
-			LocalItemID:   requestData.AnswerToken.Converted.LocalItemID,
-			ParticipantID: requestData.AnswerToken.Converted.ParticipantID,
-			AttemptID:     requestData.AnswerToken.Converted.AttemptID,
+			UserID:        requestData.AnswerToken.Payload.Converted.UserID,
+			UserAnswerID:  requestData.AnswerToken.Payload.Converted.UserAnswerID,
+			LocalItemID:   requestData.AnswerToken.Payload.Converted.LocalItemID,
+			ParticipantID: requestData.AnswerToken.Payload.Converted.ParticipantID,
+			AttemptID:     requestData.AnswerToken.Payload.Converted.AttemptID,
 		},
-		ItemURL:     requestData.AnswerToken.ItemURL,
-		AttemptID:   requestData.AnswerToken.AttemptID,
-		LocalItemID: requestData.AnswerToken.LocalItemID,
-	}
+		ItemURL:     requestData.AnswerToken.Payload.ItemURL,
+		AttemptID:   requestData.AnswerToken.Payload.AttemptID,
+		LocalItemID: requestData.AnswerToken.Payload.LocalItemID,
+	}}
 	return nil
 }
 

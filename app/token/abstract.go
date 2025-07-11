@@ -4,16 +4,25 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 )
 
-type abstract struct {
-	Payload interface{}
+// Token represents a token. It contains a payload of type P,
+// a public key for validation, and a private key for signing.
+// The idea is to use this struct to represent various types of tokens
+// to validate and sign them easily.
+type Token[P any] struct {
+	Payload    P
+	PublicKey  *rsa.PublicKey
+	PrivateKey *rsa.PrivateKey
 }
 
-func (t *abstract) UnmarshalJSON(raw []byte) error {
+// UnmarshalJSON unmarshals the token from JSON.
+// It expects the JSON to be a JSON string containing the encoded token.
+// The token is parsed and validated using the public key.
+// If the token is valid, it populates the Payload field with the parsed data.
+func (t *Token[P]) UnmarshalJSON(raw []byte) error {
 	var err error
 
 	var buffer string
@@ -25,31 +34,38 @@ func (t *abstract) UnmarshalJSON(raw []byte) error {
 	return t.UnmarshalString(buffer)
 }
 
-func (t *abstract) UnmarshalString(raw string) error {
+// UnmarshalString unmarshals the token from a string.
+// It expects the string to be an encoded token.
+// The token is parsed and validated using the public key.
+// If the token is valid, it populates the Payload field with the parsed data.
+func (t *Token[P]) UnmarshalString(raw string) error {
 	var err error
 
-	publicKey := reflect.ValueOf(t.Payload).Elem().FieldByName("PublicKey").Interface().(*rsa.PublicKey)
-	tokenPayload, err := ParseAndValidate([]byte(raw), publicKey)
+	tokenPayload, err := ParseAndValidate([]byte(raw), t.PublicKey)
 	if err != nil {
 		return err
 	}
 
-	return payloads.ParseMap(tokenPayload, t.Payload)
+	return payloads.ParseMap(tokenPayload, &t.Payload)
 }
 
-var _ json.Unmarshaler = (*abstract)(nil)
+var _ json.Unmarshaler = (*Token[interface{}])(nil)
 
-func (t *abstract) MarshalJSON() ([]byte, error) {
-	privateKey := reflect.ValueOf(t.Payload).Elem().FieldByName("PrivateKey").Interface().(*rsa.PrivateKey)
-	return []byte(fmt.Sprintf("%q", Generate(payloads.ConvertIntoMap(t.Payload), privateKey))), nil
+// MarshalJSON marshals the token into JSON.
+// It generates a signed token from the Payload field using the private key,
+// and returns it as a JSON string.
+func (t *Token[P]) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%q", Generate(payloads.ConvertIntoMap(t.Payload), t.PrivateKey))), nil
 }
 
-func (t *abstract) MarshalString() (string, error) {
-	privateKey := reflect.ValueOf(t.Payload).Elem().FieldByName("PrivateKey").Interface().(*rsa.PrivateKey)
-	return string(Generate(payloads.ConvertIntoMap(t.Payload), privateKey)), nil
+// MarshalString marshals the token into a string.
+// It generates a signed token from the Payload field using the private key,
+// and returns it as a string.
+func (t *Token[P]) MarshalString() (string, error) {
+	return string(Generate(payloads.ConvertIntoMap(t.Payload), t.PrivateKey)), nil
 }
 
-var _ json.Marshaler = (*abstract)(nil)
+var _ json.Marshaler = (*Token[interface{}])(nil)
 
 // UnmarshalStringer is the interface implemented by types
 // that can unmarshal a string description of themselves.
@@ -73,23 +89,22 @@ type Signer interface {
 	Sign(privateKey *rsa.PrivateKey) (string, error)
 }
 
+// Sign returns a signed token as a string.
+func (t *Token[P]) Sign(privateKey *rsa.PrivateKey) (string, error) {
+	t.PrivateKey = privateKey
+	return t.MarshalString()
+}
+
+var _ Signer = (*Token[interface{}])(nil)
+
 var (
-	_ UnmarshalStringer = (*abstract)(nil)
-	_ MarshalStringer   = (*abstract)(nil)
+	_ UnmarshalStringer = (*Token[interface{}])(nil)
+	_ MarshalStringer   = (*Token[interface{}])(nil)
 )
 
-func marshalJSON(payload interface{}) ([]byte, error) {
-	return (&abstract{Payload: payload}).MarshalJSON()
+// ConvertIntoMap converts the token's payload into a map.
+func (t *Token[P]) ConvertIntoMap() map[string]interface{} {
+	return payloads.ConvertIntoMap(t.Payload)
 }
 
-func unmarshalJSON(data []byte, payload interface{}) error {
-	return (&abstract{Payload: payload}).UnmarshalJSON(data)
-}
-
-func marshalString(payload interface{}) (string, error) {
-	return (&abstract{Payload: payload}).MarshalString()
-}
-
-func unmarshalString(data string, payload interface{}) error {
-	return (&abstract{Payload: payload}).UnmarshalString(data)
-}
+var _ payloads.ConverterIntoMap = (*Token[interface{}])(nil)

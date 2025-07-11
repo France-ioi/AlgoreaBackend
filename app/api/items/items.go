@@ -11,8 +11,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 // Service is the mount point for services related to `items`.
@@ -81,7 +81,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuth.Get("/items/time-limited/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
 }
 
-func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
+func checkHintOrScoreTokenRequiredFields(taskToken *payloads.TaskToken, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string,
 ) error {

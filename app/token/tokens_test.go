@@ -27,35 +27,35 @@ var marshalAndSignTests = []struct {
 	{
 		name:        "task token",
 		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Task{}),
+		structType:  reflect.TypeOf(Token[payloads.TaskToken]{}),
 		payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
 		payloadType: reflect.TypeOf(payloads.TaskToken{}),
 	},
 	{
 		name:        "answer token",
 		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Answer{}),
+		structType:  reflect.TypeOf(Token[payloads.AnswerToken]{}),
 		payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
 		payloadType: reflect.TypeOf(payloads.AnswerToken{}),
 	},
 	{
 		name:        "hint token",
 		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Hint{}),
+		structType:  reflect.TypeOf(Token[payloads.HintToken]{}),
 		payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
 		payloadType: reflect.TypeOf(payloads.HintToken{}),
 	},
 	{
 		name:        "score token",
 		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Score{}),
+		structType:  reflect.TypeOf(Token[payloads.ScoreToken]{}),
 		payloadMap:  payloadstest.ScorePayloadFromGrader,
 		payloadType: reflect.TypeOf(payloads.ScoreToken{}),
 	},
 	{
 		name:        "thread token",
 		currentTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Thread{}),
+		structType:  reflect.TypeOf(Token[payloads.ThreadToken]{}),
 		payloadMap:  payloadstest.ThreadPayloadFromAlgoreaPlatformOriginal,
 		payloadType: reflect.TypeOf(payloads.ThreadToken{}),
 	},
@@ -73,12 +73,14 @@ func TestToken_MarshalJSON(t *testing.T) {
 			assert.NoError(t, err)
 
 			payloadRefl := reflect.New(test.payloadType)
-			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
-			payloadRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
 			payload := payloadRefl.Interface()
 			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
-			tokenStruct := reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface().(json.Marshaler)
-			token, err := tokenStruct.MarshalJSON()
+			tokenStructRefl := reflect.New(test.structType)
+			tokenStructRefl.Elem().FieldByName("Payload").Set(payloadRefl.Elem())
+			tokenStructRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			tokenStructRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			tokenStruct := tokenStructRefl.Interface()
+			token, err := tokenStruct.(json.Marshaler).MarshalJSON()
 			assert.NoError(t, err)
 
 			resultRefl := reflect.New(test.structType)
@@ -86,7 +88,7 @@ func TestToken_MarshalJSON(t *testing.T) {
 			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
 			result := resultRefl.Interface().(json.Unmarshaler)
 			assert.NoError(t, result.UnmarshalJSON(token))
-			assert.Equal(t, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface(), result)
+			assert.Equal(t, tokenStruct, result)
 		})
 	}
 }
@@ -102,12 +104,14 @@ func TestToken_Sign(t *testing.T) {
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
 
+			tokenStructRefl := reflect.New(test.structType)
 			payloadRefl := reflect.New(test.payloadType)
-			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
 			payload := payloadRefl.Interface()
 			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
-			tokenStruct := reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface().(Signer)
-			token, err := tokenStruct.Sign(privateKey)
+			tokenStructRefl.Elem().FieldByName("Payload").Set(payloadRefl.Elem())
+			tokenStructRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			tokenStruct := tokenStructRefl.Interface()
+			token, err := tokenStruct.(Signer).Sign(privateKey)
 			assert.NoError(t, err)
 
 			resultRefl := reflect.New(test.structType)
@@ -115,7 +119,7 @@ func TestToken_Sign(t *testing.T) {
 			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
 			result := resultRefl.Interface().(UnmarshalStringer)
 			assert.NoError(t, result.UnmarshalString(token))
-			assert.Equal(t, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface(), result)
+			assert.Equal(t, tokenStruct, result)
 		})
 	}
 }
@@ -132,11 +136,13 @@ func TestToken_MarshalString(t *testing.T) {
 			assert.NoError(t, err)
 
 			payloadRefl := reflect.New(test.payloadType)
-			payloadRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
-			payloadRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			tokenStructRefl := reflect.New(test.structType)
+			tokenStructRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			tokenStructRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			tokenStruct := tokenStructRefl.Interface()
 			payload := payloadRefl.Interface()
 			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
-			tokenStruct := reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface()
+			tokenStructRefl.Elem().FieldByName("Payload").Set(payloadRefl.Elem())
 			token, err := tokenStruct.(MarshalStringer).MarshalString()
 			assert.NoError(t, err)
 			tokenJSON, err := tokenStruct.(json.Marshaler).MarshalJSON()
@@ -149,11 +155,11 @@ func TestToken_MarshalString(t *testing.T) {
 			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
 			result := resultRefl.Interface().(UnmarshalStringer)
 			assert.NoError(t, result.UnmarshalString(token))
-			assert.Equal(t, reflect.ValueOf(payload).Convert(reflect.PtrTo(test.structType)).Interface(), result)
+			assert.Equal(t, tokenStruct, result)
 		})
 	}
 }
 
-func TestAbstract_UnmarshalJSON_HandlesError(t *testing.T) {
-	assert.Equal(t, errors.New("not a compact JWS"), (&Task{}).UnmarshalJSON([]byte(`""`)))
+func TestToken_UnmarshalJSON_HandlesError(t *testing.T) {
+	assert.Equal(t, errors.New("not a compact JWS"), (&Token[payloads.TaskToken]{}).UnmarshalJSON([]byte(`""`)))
 }

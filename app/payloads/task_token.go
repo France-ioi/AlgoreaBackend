@@ -1,7 +1,6 @@
 package payloads
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"strconv"
@@ -31,9 +30,6 @@ type TaskToken struct {
 	IsAdmin            *bool   `json:"bIsAdmin,omitempty"`
 
 	Converted TaskTokenConverted
-
-	PublicKey  *rsa.PublicKey
-	PrivateKey *rsa.PrivateKey
 }
 
 // TaskTokenConverted contains converted field values of TaskToken payload.

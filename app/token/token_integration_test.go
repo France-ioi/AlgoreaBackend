@@ -3,10 +3,8 @@
 package token_test
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,6 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -23,15 +22,15 @@ import (
 func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 	expectedParsedPayload := payloads.HintToken{}
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedParsedPayload)
-	expectedToken := (*token.Hint)(&expectedParsedPayload)
+	expectedToken := &token.Token[payloads.HintToken]{Payload: expectedParsedPayload}
 	tests := []struct {
 		name                   string
 		itemID                 int64
 		token                  []byte
 		tokenFieldName         string
 		fixtures               []string
-		target                 interface{}
-		expected               interface{}
+		target                 **token.Token[payloads.HintToken]
+		expected               *token.Token[payloads.HintToken]
 		expectedHasPlatformKey bool
 		expectedErr            error
 	}{
@@ -53,7 +52,7 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  nil,
 			tokenFieldName:         "hint_requested",
-			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
 			expected:               nil,
 			expectedHasPlatformKey: true,
 			expectedErr:            errors.New("missing hint_requested"),
@@ -69,7 +68,7 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  []byte(""),
 			tokenFieldName:         "hint_requested",
-			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
 			expected:               nil,
 			expectedHasPlatformKey: true,
 			expectedErr:            errors.New("invalid hint_requested: unexpected end of JSON input"),
@@ -85,7 +84,7 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  []byte("dsafafd"),
 			tokenFieldName:         "score_token",
-			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
 			expected:               nil,
 			expectedHasPlatformKey: true,
 			expectedErr:            errors.New("invalid score_token: wrong platform's key"),
@@ -102,7 +101,7 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform,
 				tokentest.TaskPlatformPrivateKeyParsed))),
 			tokenFieldName:         "hint_requested",
-			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
+			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
 			expected:               expectedToken,
 			expectedHasPlatformKey: true,
 			expectedErr:            nil,
@@ -117,8 +116,8 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  []byte(`{}`),
 			tokenFieldName:         "hint_requested",
-			target:                 reflect.New(reflect.TypeOf(&token.Hint{})).Interface(),
-			expected:               (*token.Hint)(nil),
+			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
+			expected:               (*token.Token[payloads.HintToken])(nil),
 			expectedHasPlatformKey: false,
 			expectedErr:            nil,
 		},
@@ -135,12 +134,11 @@ func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
 			assert.Equal(t, tt.expectedHasPlatformKey, hasPlatformKey)
 			assert.Equal(t, tt.expectedErr, err)
 			if err == nil {
-				if tt.expected != nil && tt.target != nil && !reflect.ValueOf(tt.target).Elem().IsNil() {
-					reflect.ValueOf(tt.expected).Elem().FieldByName("Date").Set(
-						reflect.ValueOf(tt.target).Elem().Elem().FieldByName("Date"))
-					reflect.ValueOf(tt.target).Elem().Elem().FieldByName("PublicKey").Set(reflect.ValueOf((*rsa.PublicKey)(nil)))
+				if tt.expected != nil && tt.target != nil {
+					tt.expected.Payload.Date = (*tt.target).Payload.Date
+					(*tt.target).PublicKey = nil
 				}
-				assert.Equal(t, tt.expected, reflect.ValueOf(tt.target).Elem().Interface())
+				assert.Equal(t, tt.expected, *tt.target)
 			}
 		})
 	}

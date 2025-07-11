@@ -15,6 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
@@ -94,18 +95,18 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 	}
 
 	service.MustNotBeError(
-		checkHintOrScoreTokenRequiredFields(requestData.TaskToken,
+		checkHintOrScoreTokenRequiredFields(&requestData.TaskToken.Payload,
 			"hint_requested",
-			requestData.HintToken.Converted.UserID, requestData.HintToken.LocalItemID,
-			requestData.HintToken.ItemURL, requestData.HintToken.AttemptID))
+			requestData.HintToken.Payload.Converted.UserID, requestData.HintToken.Payload.LocalItemID,
+			requestData.HintToken.Payload.ItemURL, requestData.HintToken.Payload.AttemptID))
 
-	logging.LogEntrySetField(httpRequest, "user_id", requestData.TaskToken.Converted.UserID)
+	logging.LogEntrySetField(httpRequest, "user_id", requestData.TaskToken.Payload.Converted.UserID)
 
 	err = store.InTransaction(func(store *database.DataStore) error {
 		var hasAccess bool
 		var reason error
 		hasAccess, reason, err = store.Items().
-			CheckSubmissionRights(requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.LocalItemID)
+			CheckSubmissionRights(requestData.TaskToken.Payload.Converted.ParticipantID, requestData.TaskToken.Payload.Converted.LocalItemID)
 		service.MustNotBeError(err)
 
 		if !hasAccess {
@@ -114,29 +115,29 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 
 		// Get the previous hints requested JSON data
 		var hintsRequestedParsed []formdata.Anything
-		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(requestData.TaskToken, store, httpRequest)
+		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(&requestData.TaskToken.Payload, store, httpRequest)
 		if gorm.IsRecordNotFoundError(err) {
 			return service.ErrNotFound(errors.New("no result or the attempt is expired")) // rollback
 		}
 		service.MustNotBeError(err)
 
 		// Add the new requested hint to the list if it's not in the list yet
-		hintsRequestedParsed = addHintToListIfNeeded(hintsRequestedParsed, requestData.HintToken.AskedHint)
+		hintsRequestedParsed = addHintToListIfNeeded(hintsRequestedParsed, requestData.HintToken.Payload.AskedHint)
 
 		var hintsRequestedNew []byte
 		hintsRequestedNew, err = json.Marshal(hintsRequestedParsed)
 		service.MustNotBeError(err)
 		hintsRequestedNewString := string(hintsRequestedNew)
-		requestData.TaskToken.HintsRequested = &hintsRequestedNewString
+		requestData.TaskToken.Payload.HintsRequested = &hintsRequestedNewString
 		hintsGivenCountString := strconv.Itoa(len(hintsRequestedParsed))
-		requestData.TaskToken.HintsGivenCount = &hintsGivenCountString
+		requestData.TaskToken.Payload.HintsGivenCount = &hintsGivenCountString
 
 		resultStore := store.Results()
 		// Update results with the hint request
 		service.MustNotBeError(resultStore.
-			Where("participant_id = ?", requestData.TaskToken.Converted.ParticipantID).
-			Where("attempt_id = ?", requestData.TaskToken.Converted.AttemptID).
-			Where("item_id = ?", requestData.TaskToken.Converted.LocalItemID).
+			Where("participant_id = ?", requestData.TaskToken.Payload.Converted.ParticipantID).
+			Where("attempt_id = ?", requestData.TaskToken.Payload.Converted.AttemptID).
+			Where("item_id = ?", requestData.TaskToken.Payload.Converted.LocalItemID).
 			UpdateColumn(map[string]interface{}{
 				"tasks_with_help":    1,
 				"latest_activity_at": database.Now(),
@@ -145,14 +146,14 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 				"hints_cached":       len(hintsRequestedParsed),
 			}).Error())
 		service.MustNotBeError(resultStore.MarkAsToBePropagated(
-			requestData.TaskToken.Converted.ParticipantID, requestData.TaskToken.Converted.AttemptID,
-			requestData.TaskToken.Converted.LocalItemID, true))
+			requestData.TaskToken.Payload.Converted.ParticipantID, requestData.TaskToken.Payload.Converted.AttemptID,
+			requestData.TaskToken.Payload.Converted.LocalItemID, true))
 
 		return nil
 	})
 	service.MustNotBeError(err)
 
-	requestData.TaskToken.PlatformName = srv.TokenConfig.PlatformName
+	requestData.TaskToken.Payload.PlatformName = srv.TokenConfig.PlatformName
 	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
@@ -163,19 +164,21 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 }
 
 func queryAndParsePreviouslyRequestedHints(
-	taskToken *token.Task, store *database.DataStore, httpRequest *http.Request,
+	taskTokenPayload *payloads.TaskToken, store *database.DataStore, httpRequest *http.Request,
 ) ([]formdata.Anything, error) {
-	hintsInfo, err := store.Results().
-		GetHintsInfoForActiveAttempt(taskToken.Converted.ParticipantID, taskToken.Converted.AttemptID, taskToken.Converted.LocalItemID)
+	hintsInfo, err := store.Results().GetHintsInfoForActiveAttempt(
+		taskTokenPayload.Converted.ParticipantID,
+		taskTokenPayload.Converted.AttemptID,
+		taskTokenPayload.Converted.LocalItemID)
 	var hintsRequestedParsed []formdata.Anything
 	if err == nil && hintsInfo.HintsRequested != nil {
 		hintsErr := json.Unmarshal([]byte(*hintsInfo.HintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
 			hintsRequestedParsed = nil
 			fieldsForLoggingMarshaled, _ := json.Marshal(map[string]string{
-				"idUser":      taskToken.UserID,
-				"idItemLocal": taskToken.LocalItemID,
-				"idAttempt":   taskToken.AttemptID,
+				"idUser":      taskTokenPayload.UserID,
+				"idItemLocal": taskTokenPayload.LocalItemID,
+				"idAttempt":   taskTokenPayload.AttemptID,
 			})
 			logging.GetLogEntry(httpRequest).Warnf("Unable to parse hints_requested (%s) having value %q: %s", fieldsForLoggingMarshaled,
 				*hintsInfo.HintsRequested, hintsErr.Error())
@@ -200,8 +203,8 @@ func addHintToListIfNeeded(hintsList []formdata.Anything, hintToAdd formdata.Any
 
 // AskHintRequest represents a JSON request body format needed by items.askHint().
 type AskHintRequest struct {
-	TaskToken *token.Task
-	HintToken *token.Hint
+	TaskToken *token.Token[payloads.TaskToken]
+	HintToken *token.Token[payloads.HintToken]
 
 	store     *database.DataStore
 	publicKey *rsa.PublicKey
@@ -221,7 +224,7 @@ func (requestData *AskHintRequest) UnmarshalJSON(raw []byte) error {
 	if wrapper.TaskToken == nil {
 		return errors.New("missing task_token")
 	}
-	requestData.TaskToken = &token.Task{PublicKey: requestData.publicKey}
+	requestData.TaskToken = &token.Token[payloads.TaskToken]{PublicKey: requestData.publicKey}
 	if err := requestData.TaskToken.UnmarshalString(*wrapper.TaskToken); err != nil {
 		return fmt.Errorf("invalid task_token: %s", err.Error())
 	}
@@ -233,7 +236,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 		return errors.New("missing hint_requested")
 	}
 
-	itemID := requestData.TaskToken.Converted.LocalItemID
+	itemID := requestData.TaskToken.Payload.Converted.LocalItemID
 	platformHasKey, err := token.UnmarshalDependingOnItemPlatform(
 		requestData.store,
 		itemID,
@@ -255,7 +258,8 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 
 // Bind of AskHintRequest checks that the asked hint is present.
 func (requestData *AskHintRequest) Bind(_ *http.Request) error {
-	if len(requestData.HintToken.AskedHint.Bytes()) == 0 || bytes.Equal([]byte("null"), requestData.HintToken.AskedHint.Bytes()) {
+	if len(requestData.HintToken.Payload.AskedHint.Bytes()) == 0 ||
+		bytes.Equal([]byte("null"), requestData.HintToken.Payload.AskedHint.Bytes()) {
 		return fmt.Errorf("asked hint should not be empty")
 	}
 	return nil
