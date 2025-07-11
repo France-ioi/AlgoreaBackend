@@ -26,21 +26,29 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(
 	statusCode int,
 	body *godog.DocString,
 ) error {
-	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode := ctx.preprocessString(code)
 	preprocessedBody := ctx.preprocessString(body.Content)
-	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	params := url.Values{
-		"client_id":     {ctx.appAuthConfig().GetString("ClientID")},
-		"client_secret": {ctx.appAuthConfig().GetString("ClientSecret")},
-		"grant_type":    {"authorization_code"},
-		"code":          {preprocessedCode},
+		"grant_type": {"authorization_code"},
+		"code":       {preprocessedCode},
 	}
+	ctx.stubOAuth2RequestToLoginModule(params, statusCode, preprocessedBody)
+	return nil
+}
+
+func (ctx *TestContext) stubOAuth2RequestToLoginModule(requestParams url.Values, statusCode int, body string) {
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	responder := httpmock.NewStringResponder(statusCode, body)
+	params := make(url.Values, len(requestParams))
+	for key, values := range requestParams {
+		params[key] = values
+	}
+	params.Set("client_id", ctx.appAuthConfig().GetString("ClientID"))
+	params.Set("client_secret", ctx.appAuthConfig().GetString("ClientSecret"))
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
 		ctx.appAuthConfig().GetString("LoginModuleURL")+"/oauth/token", responder,
 		httpmock.WithBody(
 			bytes.NewBufferString(params.Encode()))))
-	return nil
 }
 
 // TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns mocks the return of the login module /oauth/token,
@@ -50,23 +58,15 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 	statusCode int,
 	body *godog.DocString,
 ) error {
-	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode := ctx.preprocessString(code)
 	preprocessedCodeVerifier := ctx.preprocessString(codeVerifier)
 	preprocessedBody := ctx.preprocessString(body.Content)
-	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
-	authConfig := app.AuthConfig(ctx.application.Config)
 	params := url.Values{
-		"client_id":     {authConfig.GetString("ClientID")},
-		"client_secret": {authConfig.GetString("ClientSecret")},
 		"grant_type":    {"authorization_code"},
 		"code":          {preprocessedCode},
 		"code_verifier": {preprocessedCodeVerifier},
 	}
-	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		authConfig.GetString("LoginModuleURL")+"/oauth/token", responder,
-		httpmock.WithBody(
-			bytes.NewBufferString(params.Encode()))))
+	ctx.stubOAuth2RequestToLoginModule(params, statusCode, preprocessedBody)
 	return nil
 }
 
@@ -77,25 +77,17 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedi
 	statusCode int,
 	body *godog.DocString,
 ) error {
-	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedCode := ctx.preprocessString(code)
 	preprocessedCodeVerifier := ctx.preprocessString(codeVerifier)
 	preprocessedRedirectURI := ctx.preprocessString(redirectURI)
 	preprocessedBody := ctx.preprocessString(body.Content)
-	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
-	authConfig := app.AuthConfig(ctx.application.Config)
 	params := url.Values{
-		"client_id":     {authConfig.GetString("ClientID")},
-		"client_secret": {authConfig.GetString("ClientSecret")},
 		"grant_type":    {"authorization_code"},
 		"code":          {preprocessedCode},
 		"code_verifier": {preprocessedCodeVerifier},
 		"redirect_uri":  {preprocessedRedirectURI},
 	}
-	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		authConfig.GetString("LoginModuleURL")+"/oauth/token", responder,
-		httpmock.WithBody(
-			bytes.NewBufferString(params.Encode()))))
+	ctx.stubOAuth2RequestToLoginModule(params, statusCode, preprocessedBody)
 	return nil
 }
 
@@ -106,20 +98,13 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(
 	statusCode int,
 	body *godog.DocString,
 ) error {
-	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	preprocessedRefreshToken := ctx.preprocessString(refreshToken)
 	preprocessedBody := ctx.preprocessString(body.Content)
-	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	params := url.Values{
-		"client_id":     {ctx.appAuthConfig().GetString("ClientID")},
-		"client_secret": {ctx.appAuthConfig().GetString("ClientSecret")},
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {preprocessedRefreshToken},
 	}
-	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
-		ctx.appAuthConfig().GetString("LoginModuleURL")+"/oauth/token", responder,
-		httpmock.WithBody(
-			bytes.NewBufferString(params.Encode()))))
+	ctx.stubOAuth2RequestToLoginModule(params, statusCode, preprocessedBody)
 	return nil
 }
 
