@@ -68,22 +68,6 @@ func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte
 	return token
 }
 
-// UnexpectedError represents an unexpected error so that we could differentiate it from expected errors.
-type UnexpectedError struct {
-	err error
-}
-
-// Error returns a string representation for an unexpected error.
-func (ue *UnexpectedError) Error() string {
-	return ue.err.Error()
-}
-
-// IsUnexpectedError returns true if its argument is an unexpected error.
-func IsUnexpectedError(err error) bool {
-	var unexpectedError *UnexpectedError
-	return errors.As(err, &unexpectedError)
-}
-
 // UnmarshalDependingOnItemPlatform unmarshals a token from JSON representation
 // using a platform's public key for given itemID.
 // The function returns nil (success) if the platform doesn't use tokens.
@@ -126,18 +110,4 @@ func UnmarshalDependingOnItemPlatform[P any](
 	}
 
 	return true, nil
-}
-
-func mustNotBeError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func recoverPanics(
-	err *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
-) {
-	if r := recover(); r != nil {
-		*err = &UnexpectedError{err: r.(error)}
-	}
 }
