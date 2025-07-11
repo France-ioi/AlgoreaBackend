@@ -27,14 +27,8 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeReturns(
 	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedCode, err := ctx.preprocessString(code)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedCode := ctx.preprocessString(code)
+	preprocessedBody := ctx.preprocessString(body.Content)
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	params := url.Values{
 		"client_id":     {ctx.appAuthConfig().GetString("ClientID")},
@@ -57,18 +51,9 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedCode, err := ctx.preprocessString(code)
-	if err != nil {
-		return err
-	}
-	preprocessedCodeVerifier, err := ctx.preprocessString(codeVerifier)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedCode := ctx.preprocessString(code)
+	preprocessedCodeVerifier := ctx.preprocessString(codeVerifier)
+	preprocessedBody := ctx.preprocessString(body.Content)
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	authConfig := app.AuthConfig(ctx.application.Config)
 	params := url.Values{
@@ -93,22 +78,10 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedi
 	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedCode, err := ctx.preprocessString(code)
-	if err != nil {
-		return err
-	}
-	preprocessedCodeVerifier, err := ctx.preprocessString(codeVerifier)
-	if err != nil {
-		return err
-	}
-	preprocessedRedirectURI, err := ctx.preprocessString(redirectURI)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedCode := ctx.preprocessString(code)
+	preprocessedCodeVerifier := ctx.preprocessString(codeVerifier)
+	preprocessedRedirectURI := ctx.preprocessString(redirectURI)
+	preprocessedBody := ctx.preprocessString(body.Content)
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	authConfig := app.AuthConfig(ctx.application.Config)
 	params := url.Values{
@@ -134,14 +107,8 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForRefreshTokenReturns(
 	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedRefreshToken, err := ctx.preprocessString(refreshToken)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedRefreshToken := ctx.preprocessString(refreshToken)
+	preprocessedBody := ctx.preprocessString(body.Content)
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	params := url.Values{
 		"client_id":     {ctx.appAuthConfig().GetString("ClientID")},
@@ -164,14 +131,8 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(
 	body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedToken, err := ctx.preprocessString(authToken)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedToken := ctx.preprocessString(authToken)
+	preprocessedBody := ctx.preprocessString(body.Content)
 	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("GET",
 		ctx.appAuthConfig().GetString("LoginModuleURL")+"/user_api/account", responder,
@@ -185,14 +146,8 @@ func (ctx *TestContext) TheLoginModuleUnlinkClientEndpointForUserIDReturns(
 	userID string, statusCode int, body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedUserID, err := ctx.preprocessString(userID)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedUserID := ctx.preprocessString(userID)
+	preprocessedBody := ctx.preprocessString(body.Content)
 
 	clientSecret := ctx.appAuthConfig().GetString("clientSecret")
 	encodedResponseBody := loginmodule.Encode([]byte(preprocessedBody), clientSecret)
@@ -216,22 +171,10 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 	userID, contentID, score string, statusCode int, body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedUserID, err := ctx.preprocessString(userID)
-	if err != nil {
-		return err
-	}
-	preprocessedContentID, err := ctx.preprocessString(contentID)
-	if err != nil {
-		return err
-	}
-	preprocessedScore, err := ctx.preprocessString(score)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedUserID := ctx.preprocessString(userID)
+	preprocessedContentID := ctx.preprocessString(contentID)
+	preprocessedScore := ctx.preprocessString(score)
+	preprocessedBody := ctx.preprocessString(body.Content)
 
 	clientSecret := ctx.appAuthConfig().GetString("clientSecret")
 	encodedResponseBody := loginmodule.Encode([]byte(preprocessedBody), clientSecret)
@@ -274,14 +217,8 @@ func (ctx *TestContext) theLoginModuleAccountsManagerEndpointWithParamsReturns(
 	endpoint, params string, statusCode int, body *godog.DocString,
 ) error {
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
-	preprocessedParams, err := ctx.preprocessString(params)
-	if err != nil {
-		return err
-	}
-	preprocessedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedParams := ctx.preprocessString(params)
+	preprocessedBody := ctx.preprocessString(body.Content)
 	clientSecret := ctx.appAuthConfig().GetString("clientSecret")
 	encodedResponseBody := loginmodule.Encode([]byte(preprocessedBody), clientSecret)
 

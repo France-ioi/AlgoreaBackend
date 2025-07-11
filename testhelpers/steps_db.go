@@ -47,10 +47,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
 			for _, cell := range data.Rows[i].Cells {
-				var err error
-				if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
-					return err
-				}
+				cell.Value = ctx.preprocessString(cell.Value)
 				vals = append(vals, dbDataTableValue(cell.Value))
 			}
 		}
@@ -672,10 +669,7 @@ func (ctx *TestContext) dataRowMatchesDBRow(dataRow *messages.PickleTableRow,
 			continue
 		}
 
-		dataValue, err := ctx.preprocessString(dataCell.Value)
-		if err != nil {
-			return err
-		}
+		dataValue := ctx.preprocessString(dataCell.Value)
 
 		columnValue := columnValues[colIndex]
 		if columnValue == nil {
@@ -834,11 +828,7 @@ func constructWhereForColumnValues(columnNames, columnValues []string, whereIn b
 
 // DBTimeNow sets the current time in the database to the provided time.
 func (ctx *TestContext) DBTimeNow(timeStrRaw string) error {
-	var err error
-	timeStrRaw, err = ctx.preprocessString(timeStrRaw)
-	if err != nil {
-		return err
-	}
+	timeStrRaw = ctx.preprocessString(timeStrRaw)
 	MockDBTime(timeStrRaw)
 	return nil
 }
