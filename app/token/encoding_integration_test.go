@@ -19,7 +19,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func TestToken_UnmarshalDependingOnItemPlatform(t *testing.T) {
+func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 	expectedParsedPayload := payloads.HintToken{}
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedParsedPayload)
 	expectedToken := &token.Token[payloads.HintToken]{Payload: expectedParsedPayload}

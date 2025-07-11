@@ -133,7 +133,7 @@ func TestParseAndValidate(t *testing.T) {
 	}
 }
 
-func Test_GenerateToken(t *testing.T) {
+func TestGenerate(t *testing.T) {
 	tests := []struct {
 		name         string
 		platformName string
@@ -178,7 +178,7 @@ func Test_GenerateToken(t *testing.T) {
 	}
 }
 
-func Test_GenerateToken_PanicsOnError(t *testing.T) {
+func TestGenerate_PanicsOnError(t *testing.T) {
 	privateKey := &rsa.PrivateKey{D: &big.Int{}, PublicKey: rsa.PublicKey{N: &big.Int{}}}
 	defer func() {
 		e := recover()
