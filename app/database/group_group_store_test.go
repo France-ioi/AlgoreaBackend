@@ -256,6 +256,13 @@ func TestGroupGroupStore_CreateNewAncestors_MustBeInTransaction(t *testing.T) {
 }
 
 func TestGroupGroupStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *testing.T) {
+	testErrorHandlingInAncestorsPropagation(t, "groups_propagate", func(trDB *DB) error {
+		return NewDataStore(trDB).GroupGroups().CreateNewAncestors()
+	})
+}
+
+func testErrorHandlingInAncestorsPropagation(t *testing.T, propagateTableName string, callPropagationFunc func(db *DB) error) {
+	t.Helper()
 	testoutput.SuppressIfPasses(t)
 
 	expectedError := errors.New("some error")
@@ -263,11 +270,11 @@ func TestGroupGroupStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	dbMock.ExpectBegin()
-	dbMock.ExpectExec("^INSERT INTO  groups_propagate").WillReturnError(expectedError)
+	dbMock.ExpectExec("^INSERT INTO  " + propagateTableName).WillReturnError(expectedError)
 	dbMock.ExpectRollback()
 
 	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
-		return NewDataStore(trDB).GroupGroups().CreateNewAncestors()
+		return callPropagationFunc(trDB)
 	}))
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())

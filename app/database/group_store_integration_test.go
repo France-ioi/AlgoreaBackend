@@ -401,47 +401,50 @@ func TestGroupStore_DeleteGroup(t *testing.T) {
 func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
-		groups: [{id: 1234}, {id: 1235}]
-		items: [{id: 10, default_language_tag: fr}]
-		permissions_granted:
-			- {group_id: 1234, item_id: 10, source_group_id: 1235, can_view: content}
-			- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
-		permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`)
-	defer func() { _ = db.Close() }()
+	for _, test := range []struct {
+		name    string
+		fixture string
+	}{
+		{
+			name: "Common",
+			fixture: `
+				groups: [{id: 1234}, {id: 1235}]
+				items: [{id: 10, default_language_tag: fr}]
+				permissions_granted:
+					- {group_id: 1234, item_id: 10, source_group_id: 1235, can_view: content}
+					- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
+				permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`,
+		},
+		{
+			name: "OrphanedSourceGroups",
+			fixture: `
+				groups: [{id: 1234}, {id: 1235}, {id: 1236}]
+				groups_groups: [{parent_group_id: 1235, child_group_id: 1236}]
+				groups_ancestors: [{ancestor_group_id: 1235, child_group_id: 1236}]
+				items: [{id: 10, default_language_tag: fr}]
+				permissions_granted:
+					- {group_id: 1234, item_id: 10, source_group_id: 1236, can_view: content}
+					- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
+				permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`,
+		},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 
-	dataStore := database.NewDataStore(db).Groups()
-	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-		return store.Groups().DeleteGroup(1235)
-	}))
-	var newPermission string
-	require.NoError(t, dataStore.Permissions().Where("group_id = 1234 AND item_id = 10").
-		PluckFirst("can_view_generated", &newPermission).Error())
-	assert.Equal(t, "info", newPermission)
-}
+			db := testhelpers.SetupDBWithFixtureString(test.fixture)
+			defer func() { _ = db.Close() }()
 
-func TestGroupStore_DeleteGroup_RecomputesAccessForOrphanedSourceGroups(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	db := testhelpers.SetupDBWithFixtureString(`
-		groups: [{id: 1234}, {id: 1235}, {id: 1236}]
-		groups_groups: [{parent_group_id: 1235, child_group_id: 1236}]
-		groups_ancestors: [{ancestor_group_id: 1235, child_group_id: 1236}]
-		items: [{id: 10, default_language_tag: fr}]
-		permissions_granted:
-			- {group_id: 1234, item_id: 10, source_group_id: 1236, can_view: content}
-			- {group_id: 1234, item_id: 10, source_group_id: 1234, can_view: info}
-		permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`)
-	defer func() { _ = db.Close() }()
-
-	dataStore := database.NewDataStore(db).Groups()
-	require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
-		return store.Groups().DeleteGroup(1235)
-	}))
-	var newPermission string
-	require.NoError(t, dataStore.Permissions().Where("group_id = 1234 AND item_id = 10").
-		PluckFirst("can_view_generated", &newPermission).Error())
-	assert.Equal(t, "info", newPermission)
+			store := database.NewDataStore(db)
+			require.NoError(t, store.InTransaction(func(store *database.DataStore) error {
+				return store.Groups().DeleteGroup(1235)
+			}))
+			var newPermission string
+			require.NoError(t, store.Permissions().Where("group_id = 1234 AND item_id = 10").
+				PluckFirst("can_view_generated", &newPermission).Error())
+			assert.Equal(t, "info", newPermission)
+		})
+	}
 }
 
 func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
