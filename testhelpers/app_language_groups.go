@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages/go/v21"
 )
 
 // registerFeaturesForGroups registers the Gherkin features related to groups.
@@ -44,26 +43,15 @@ func (ctx *TestContext) addGroup(group, groupType string) {
 
 	if !ctx.isInDatabase("groups", primaryKey) {
 		ctx.needPopulateDatabase = true
-		err := ctx.DBHasTable("groups", &godog.Table{
-			Rows: []*messages.PickleTableRow{
-				{Cells: []*messages.PickleTableCell{
-					{Value: "id"},
-					{Value: "name"},
-					{Value: "type"},
-					{Value: "require_personal_info_access_approval"},
-					{Value: "require_lock_membership_approval_until"},
-					{Value: "require_watch_approval"},
-				}},
-				{Cells: []*messages.PickleTableCell{
-					{Value: strconv.FormatInt(groupID, 10)},
-					{Value: "Group " + referenceToName(group)},
-					{Value: groupType},
-					{Value: "none"},
-					{Value: "null"},
-					{Value: "false"},
-				}},
-			},
-		})
+		err := ctx.DBHasTable("groups",
+			constructGodogTableFromData([]stringKeyValuePair{
+				{"id", strconv.FormatInt(groupID, 10)},
+				{"name", "Group " + referenceToName(group)},
+				{"type", groupType},
+				{"require_personal_info_access_approval", "none"},
+				{"require_lock_membership_approval_until", "null"},
+				{"require_watch_approval", "false"},
+			}))
 		if err != nil {
 			panic(err)
 		}

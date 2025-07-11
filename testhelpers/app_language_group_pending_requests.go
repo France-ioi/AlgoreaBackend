@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages/go/v21"
 )
 
 // registerFeaturesForGroupMembershipChanges registers the Gherkin features related to group membership changes.
@@ -39,22 +38,13 @@ func (ctx *TestContext) addGroupPendingRequest(group, member, requestType string
 	primaryKey := ctx.getGroupPendingRequestPrimaryKey(groupID, memberID)
 
 	if !ctx.isInDatabase("group_pending_requests", primaryKey) {
-		err := ctx.DBHasTable("group_pending_requests", &godog.Table{
-			Rows: []*messages.PickleTableRow{
-				{
-					Cells: []*messages.PickleTableCell{
-						{Value: "group_id"}, {Value: "member_id"}, {Value: "type"}, {Value: "at"},
-					},
-					// All the other fields are set to default values.
-				},
-				{Cells: []*messages.PickleTableCell{
-					{Value: strconv.FormatInt(groupID, 10)},
-					{Value: strconv.FormatInt(memberID, 10)},
-					{Value: requestType},
-					{Value: time.Now().UTC().Format(time.DateTime)},
-				}},
-			},
-		})
+		err := ctx.DBHasTable("group_pending_requests",
+			constructGodogTableFromData([]stringKeyValuePair{
+				{"group_id", strconv.FormatInt(groupID, 10)},
+				{"member_id", strconv.FormatInt(memberID, 10)},
+				{"type", requestType},
+				{"at", time.Now().UTC().Format(time.DateTime)},
+			}))
 		if err != nil {
 			panic(err)
 		}

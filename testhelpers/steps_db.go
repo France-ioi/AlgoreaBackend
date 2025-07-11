@@ -178,6 +178,25 @@ func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primar
 	return -1
 }
 
+type stringKeyValuePair struct {
+	Key   string
+	Value string
+}
+
+func constructGodogTableFromData(data []stringKeyValuePair) *godog.Table {
+	table := &godog.Table{}
+	table.Rows = make([]*messages.PickleTableRow, 2) //nolint:mnd // one for header, one for data
+	table.Rows[0] = &messages.PickleTableRow{Cells: make([]*messages.PickleTableCell, 0, len(data))}
+	table.Rows[1] = &messages.PickleTableRow{Cells: make([]*messages.PickleTableCell, 0, len(data))}
+
+	for _, keyValuePair := range data {
+		table.Rows[0].Cells = append(table.Rows[0].Cells, &messages.PickleTableCell{Value: keyValuePair.Key})
+		table.Rows[1].Cells = append(table.Rows[1].Cells, &messages.PickleTableCell{Value: keyValuePair.Value})
+	}
+
+	return table
+}
+
 func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
 	if !ctx.inScenario {
 		ctx.featureQueries = append(ctx.featureQueries, dbquery{query, vals})
