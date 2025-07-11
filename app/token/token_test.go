@@ -189,7 +189,7 @@ func Test_GenerateToken_PanicsOnError(t *testing.T) {
 	Generate(map[string]interface{}{}, privateKey)
 }
 
-func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
+func Test_BuildConfig_LoadsKeysFromFile(t *testing.T) {
 	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
@@ -211,7 +211,7 @@ func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	tokenConfig, err := Initialize(config)
+	tokenConfig, err := BuildConfig(config)
 	assert.NoError(t, err)
 	assert.Equal(t, &Config{
 		PrivateKey:   expectedPrivateKey,
@@ -220,7 +220,7 @@ func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
 	}, tokenConfig)
 }
 
-func Test_Initialize_LoadsKeysFromString(t *testing.T) {
+func Test_BuildConfig_LoadsKeysFromString(t *testing.T) {
 	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
 	assert.NoError(t, err)
 	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
@@ -230,7 +230,7 @@ func Test_Initialize_LoadsKeysFromString(t *testing.T) {
 	config.Set("PrivateKey", tokentest.AlgoreaPlatformPrivateKey)
 	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
 	config.Set("PlatformName", "my platform")
-	tokenConfig, err := Initialize(config)
+	tokenConfig, err := BuildConfig(config)
 	assert.NoError(t, err)
 	assert.Equal(t, &Config{
 		PrivateKey:   expectedPrivateKey,
@@ -239,7 +239,7 @@ func Test_Initialize_LoadsKeysFromString(t *testing.T) {
 	}, tokenConfig)
 }
 
-func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
+func Test_BuildConfig_CannotLoadPublicKey(t *testing.T) {
 	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
@@ -250,11 +250,11 @@ func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", "nosuchfile.pem")
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
+	_, err = BuildConfig(config)
 	assert.IsType(t, &os.PathError{}, err)
 }
 
-func Test_Initialize_CannotLoadPrivateKey(t *testing.T) {
+func Test_BuildConfig_CannotLoadPrivateKey(t *testing.T) {
 	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
@@ -265,12 +265,12 @@ func Test_Initialize_CannotLoadPrivateKey(t *testing.T) {
 	config.Set("PrivateKeyFile", "nosuchfile.pem")
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
+	_, err = BuildConfig(config)
 
 	assert.IsType(t, &os.PathError{}, err)
 }
 
-func Test_Initialize_CannotParsePublicKey(t *testing.T) {
+func Test_BuildConfig_CannotParsePublicKey(t *testing.T) {
 	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
@@ -287,12 +287,12 @@ func Test_Initialize_CannotParsePublicKey(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
+	_, err = BuildConfig(config)
 
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
 
-func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
+func Test_BuildConfig_CannotParsePrivateKey(t *testing.T) {
 	tmpFilePrivate, err := createTmpPrivateKeyFile([]byte{})
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
@@ -309,23 +309,23 @@ func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
+	_, err = BuildConfig(config)
 
 	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
 }
 
-func Test_Initialize_MissingPublicKey(t *testing.T) {
+func Test_BuildConfig_MissingPublicKey(t *testing.T) {
 	config := viper.New()
 	config.Set("PlatformName", "my platform")
-	_, err := Initialize(config)
+	_, err := BuildConfig(config)
 	assert.EqualError(t, err, "missing Public key in the token config (PublicKey or PublicKeyFile)")
 }
 
-func Test_Initialize_MissingPrivateKey(t *testing.T) {
+func Test_BuildConfig_MissingPrivateKey(t *testing.T) {
 	config := viper.New()
 	config.Set("PlatformName", "my platform")
 	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
-	_, err := Initialize(config)
+	_, err := BuildConfig(config)
 	assert.EqualError(t, err, "missing Private key in the token config (PrivateKey or PrivateKeyFile)")
 }
 
