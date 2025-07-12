@@ -570,34 +570,29 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 	}
 	for _, tt := range tests {
 		tt := tt
-		testEachWriteLockMode(t, tt.name+": is valid", func(writeLock bool) func(*testing.T) {
-			return func(t *testing.T) {
-				t.Helper()
+		testEachWriteLockMode(t, tt.name+": is valid", func(t *testing.T, writeLock bool) {
+			t.Helper()
 
-				testoutput.SuppressIfPasses(t)
+			testoutput.SuppressIfPasses(t)
 
-				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-					got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
-						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheFinalItem, writeLock)
-					assert.Equal(t, tt.want, got)
-					assert.NoError(t, err)
-					return nil
-				}))
-			}
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				got, err := store.Items().IsValidParticipationHierarchyForParentAttempt(
+					tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, tt.args.requireContentAccessToTheFinalItem, writeLock)
+				assert.Equal(t, tt.want, got)
+				assert.NoError(t, err)
+				return nil
+			}))
 		})
-		testEachWriteLockMode(t, tt.name+": breadcrumbs hierarchy", func(writeLock bool) func(*testing.T) {
-			return func(t *testing.T) {
-				t.Helper()
+		testEachWriteLockMode(t, tt.name+": breadcrumbs hierarchy", func(t *testing.T, writeLock bool) {
+			t.Helper()
+			testoutput.SuppressIfPasses(t)
 
-				testoutput.SuppressIfPasses(t)
-
-				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(
-						tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, writeLock)
-					assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
-					return nil
-				}))
-			}
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(
+					tt.args.ids, tt.args.groupID, tt.args.parentAttemptID, writeLock)
+				assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
+				return nil
+			}))
 		})
 	}
 }
@@ -1024,24 +1019,21 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt := tt
-		testEachWriteLockMode(t, tt.name, func(writeLock bool) func(*testing.T) {
-			return func(t *testing.T) {
-				t.Helper()
+		testEachWriteLockMode(t, tt.name, func(t *testing.T, writeLock bool) {
+			t.Helper()
+			testoutput.SuppressIfPasses(t)
 
-				testoutput.SuppressIfPasses(t)
-
-				assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-					gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
-						tt.args.ids, tt.args.groupID, tt.args.attemptID, writeLock)
-					assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
-					return nil
-				}))
-			}
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
+					tt.args.ids, tt.args.groupID, tt.args.attemptID, writeLock)
+				assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
+				return nil
+			}))
 		})
 	}
 }
 
-func testEachWriteLockMode(t *testing.T, testName string, testGenFunc func(writeLock bool) func(*testing.T)) {
+func testEachWriteLockMode(t *testing.T, testName string, testFunc func(t *testing.T, writeLock bool)) {
 	t.Helper()
 
 	for _, writeLock := range []bool{false, true} {
@@ -1052,7 +1044,9 @@ func testEachWriteLockMode(t *testing.T, testName string, testGenFunc func(write
 		} else {
 			lockName = "(without write lock)"
 		}
-		t.Run(testName+" "+lockName, testGenFunc(writeLock))
+		t.Run(testName+" "+lockName, func(t *testing.T) {
+			testFunc(t, writeLock)
+		})
 	}
 }
 
