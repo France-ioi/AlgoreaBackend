@@ -13,7 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
-func TestHint_UnmarshalString(t *testing.T) {
+func TestToken_HintToken_UnmarshalString(t *testing.T) {
 	hint := Token[payloads.HintToken]{}
 	err := payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &hint.Payload)
 	assert.NoError(t, err)
