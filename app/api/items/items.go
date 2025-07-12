@@ -369,7 +369,7 @@ func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.Fo
 		childPermissions.CanGrantViewGeneratedValue, store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "solution_with_grant"))
 }
 
-//nolint:dupl
+//nolint:dupl // It looks like a duplicate of validateChildContentViewPropagationAndApplyDefaultValue, but it is not.
 func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
 ) error {
@@ -402,7 +402,7 @@ func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formd
 	return nil
 }
 
-//nolint:dupl
+//nolint:dupl // It looks like a duplicate of validateChildUpperViewLevelsPropagationAndApplyDefaultValue, but it is not.
 func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
 ) error {
