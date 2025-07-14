@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"bou.ke/monkey"
@@ -238,7 +239,7 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 	for _, configSettingValue := range []bool{true, false} {
 		configSettingValue := configSettingValue
 		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
-			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", fmt.Sprintf("%t", configSettingValue))
+			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", strconv.FormatBool(configSettingValue))
 			app, _ := New()
 			assert.Equal(t, configSettingValue, database.NewDataStore(app.Database).IsResultsPropagationProhibited())
 

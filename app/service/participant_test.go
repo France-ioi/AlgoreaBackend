@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -38,7 +37,7 @@ func TestGetParticipantIDFromRequest_InvalidAsTeamID(t *testing.T) {
 	participantID, err := GetParticipantIDFromRequest(
 		&http.Request{URL: &url.URL{RawQuery: "as_team_id=abc"}}, &database.User{GroupID: 123}, database.NewDataStore(db))
 	assert.Equal(t, int64(0), participantID)
-	assert.Equal(t, ErrInvalidRequest(fmt.Errorf("wrong value for as_team_id (should be int64)")), err)
+	assert.Equal(t, ErrInvalidRequest(errors.New("wrong value for as_team_id (should be int64)")), err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

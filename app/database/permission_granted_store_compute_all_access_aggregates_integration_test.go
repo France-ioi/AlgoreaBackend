@@ -3,7 +3,7 @@
 package database_test
 
 import (
-	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -713,7 +713,7 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 	t.Helper()
 
 	t.Run(valueForParent+" as "+expectedValue, func(t *testing.T) {
-		grantViewPropagationString := fmt.Sprint(propagationMode)
+		grantViewPropagationString := strconv.FormatBool(propagationMode)
 		testGeneratedPermission(t, `
 				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 				groups: [{id: 1}]

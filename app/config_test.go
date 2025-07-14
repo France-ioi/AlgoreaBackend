@@ -2,7 +2,7 @@ package app
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -191,7 +191,7 @@ func TestDBConfig_UnmarshallingError(t *testing.T) {
 	globalConfig := viper.New()
 	monkey.PatchInstanceMethod(reflect.TypeOf(globalConfig), "Unmarshal",
 		func(_ *viper.Viper, _ interface{}, _ ...viper.DecoderConfigOption) error {
-			return fmt.Errorf("unmarshalling error")
+			return errors.New("unmarshalling error")
 		},
 	)
 	defer monkey.UnpatchAll()
@@ -203,7 +203,7 @@ func TestDBConfig_StructToMapError(t *testing.T) {
 	// unexpected error, must monkey patch it
 	globalConfig := viper.New()
 	monkey.Patch(mapstructure.Decode, func(_ interface{}, _ interface{}) error {
-		return fmt.Errorf("struct2map error")
+		return errors.New("struct2map error")
 	})
 	defer monkey.UnpatchAll()
 	_, err := DBConfig(globalConfig)

@@ -1,7 +1,7 @@
 package answers
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -115,7 +115,7 @@ func (srv *Service) listAnswers(responseWriter http.ResponseWriter, httpRequest 
 	if !authorIDIsSet { // attempt_id
 		attemptIDIsSet := len(httpRequest.URL.Query()["attempt_id"]) > 0
 		if !attemptIDIsSet {
-			return service.ErrInvalidRequest(fmt.Errorf("either author_id or attempt_id must be present"))
+			return service.ErrInvalidRequest(errors.New("either author_id or attempt_id must be present"))
 		}
 
 		attemptID, attemptIDError := service.ResolveURLQueryGetInt64Field(httpRequest, "attempt_id")

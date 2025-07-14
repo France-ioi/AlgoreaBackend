@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -51,7 +52,7 @@ func TestSchedulePropagation(t *testing.T) {
 				endpoint: "https://example.com",
 			},
 			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
-			endpointCallErr: fmt.Errorf("error"),
+			endpointCallErr: errors.New("error"),
 			propagated:      false,
 		},
 		{

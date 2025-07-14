@@ -3,7 +3,7 @@
 package service_test
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
 	"testing"
@@ -43,17 +43,17 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 		{
 			name:          "no team",
 			query:         "as_team_id=404",
-			expectedError: service.ErrForbidden(fmt.Errorf("can't use given as_team_id as a user's team")),
+			expectedError: service.ErrForbidden(errors.New("can't use given as_team_id as a user's team")),
 		},
 		{
 			name:          "as_team_id is not a team",
 			query:         "param&as_team_id=1",
-			expectedError: service.ErrForbidden(fmt.Errorf("can't use given as_team_id as a user's team")),
+			expectedError: service.ErrForbidden(errors.New("can't use given as_team_id as a user's team")),
 		},
 		{
 			name:          "the current user is not a member of as_team_id",
 			query:         "as_team_id=2",
-			expectedError: service.ErrForbidden(fmt.Errorf("can't use given as_team_id as a user's team")),
+			expectedError: service.ErrForbidden(errors.New("can't use given as_team_id as a user's team")),
 		},
 		{
 			name:           "okay",

@@ -399,7 +399,7 @@ func joinSubQueryForPaging(query *database.DB, usedFields []string, configuredFi
 		}
 		for fieldName := range fromValues {
 			startFromRowQuery = startFromRowQuery.
-				Where(fmt.Sprintf("%s <=> ?", configuredFields[fieldName].ColumnName), fromValues[fieldName])
+				Where(configuredFields[fieldName].ColumnName+" <=> ?", fromValues[fieldName])
 		}
 		startFromRowQuery = startFromRowQuery.Select(strings.Join(fieldsToSelect, ", "))
 		startFromRowSubQuery = startFromRowQuery.Limit(1).SubQuery()

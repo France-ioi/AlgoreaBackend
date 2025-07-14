@@ -260,7 +260,7 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 func (requestData *AskHintRequest) Bind(_ *http.Request) error {
 	if len(requestData.HintToken.Payload.AskedHint.Bytes()) == 0 ||
 		bytes.Equal([]byte("null"), requestData.HintToken.Payload.AskedHint.Bytes()) {
-		return fmt.Errorf("asked hint should not be empty")
+		return errors.New("asked hint should not be empty")
 	}
 	return nil
 }
