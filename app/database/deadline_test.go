@@ -11,6 +11,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
@@ -272,12 +273,12 @@ func Test_Deadline(t *testing.T) {
 				(*cancelCtxInterface)(unsafe.Pointer(&ctx)).p.cause = nil
 			})
 
-			assert.EqualError(t, err, context.DeadlineExceeded.Error())
+			require.EqualError(t, err, context.DeadlineExceeded.Error())
 
 			assert.Eventually(t, func() bool {
 				return mock.ExpectationsWereMet() == nil
 			}, 3*time.Second, 10*time.Millisecond)
-			assert.NoError(t, mock.ExpectationsWereMet())
+			require.NoError(t, mock.ExpectationsWereMet())
 
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 			assert.Contains(t, logs, "context deadline exceeded")

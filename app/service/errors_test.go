@@ -46,21 +46,21 @@ func responseForHandler(appHandler service.AppHandler) *httptest.ResponseRecorde
 func TestNoErrorWithAPIError(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(&service.APIError{HTTPStatusCode: http.StatusConflict, EmbeddedError: nil})
-	assert.Equal(`{"success":false,"message":"Conflict"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Conflict"}`, recorder.Body.String())
 	assert.Equal(http.StatusConflict, recorder.Code)
 }
 
 func TestInvalidRequest(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrInvalidRequest(errors.New("sample invalid req")))
-	assert.Equal(`{"success":false,"message":"Bad Request","error_text":"Sample invalid req"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Bad Request","error_text":"Sample invalid req"}`, recorder.Body.String())
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
 
 func TestUnprocessableEntityRequest(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrUnprocessableEntity(errors.New(someErrorMessage)))
-	assert.Equal(`{"success":false,"message":"Unprocessable Entity","error_text":"Some error"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Unprocessable Entity","error_text":"Some error"}`, recorder.Body.String())
 	assert.Equal(http.StatusUnprocessableEntity, recorder.Code)
 }
 
@@ -90,35 +90,35 @@ func TestInvalidRequest_WithFormErrors(t *testing.T) {
 func TestForbidden(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrForbidden(errors.New("sample forbidden resp")))
-	assert.Equal(`{"success":false,"message":"Forbidden","error_text":"Sample forbidden resp"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Forbidden","error_text":"Sample forbidden resp"}`, recorder.Body.String())
 	assert.Equal(http.StatusForbidden, recorder.Code)
 }
 
 func TestUnexpected(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrUnexpected(errors.New("unexp err")))
-	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unexp err"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Internal Server Error","error_text":"Unexp err"}`, recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 }
 
 func TestNotFound(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrNotFound(errors.New(someErrorMessage)))
-	assert.Equal(`{"success":false,"message":"Not Found","error_text":"Some error"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Not Found","error_text":"Some error"}`, recorder.Body.String())
 	assert.Equal(http.StatusNotFound, recorder.Code)
 }
 
 func TestRequestTimeout(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrRequestTimeout())
-	assert.Equal(`{"success":false,"message":"Request Timeout"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Request Timeout"}`, recorder.Body.String())
 	assert.Equal(http.StatusRequestTimeout, recorder.Code)
 }
 
 func TestConflict(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrConflict(errors.New("conflict error")))
-	assert.Equal(`{"success":false,"message":"Conflict","error_text":"Conflict error"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Conflict","error_text":"Conflict error"}`, recorder.Body.String())
 	assert.Equal(http.StatusConflict, recorder.Code)
 }
 
@@ -131,7 +131,7 @@ func TestRendersErrUnexpectedOnPanicWithError(t *testing.T) {
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)
-	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`+"\n",
+	assert.JSONEq(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`,
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 	assert.Contains(hook.GetAllLogs(), "unexpected error: some error")
@@ -146,7 +146,7 @@ func TestRendersRecoveredAPIErrorOnPanicWithAPIError(t *testing.T) {
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)
-	assert.Equal(`{"success":false,"message":"Forbidden","error_text":"Insufficient access rights"}`+"\n",
+	assert.JSONEq(`{"success":false,"message":"Forbidden","error_text":"Insufficient access rights"}`,
 		recorder.Body.String())
 	assert.Equal(http.StatusForbidden, recorder.Code)
 	assert.NotContains(strings.ToLower(hook.GetAllLogs()), "error")
@@ -162,7 +162,7 @@ func TestRendersErrUnexpectedOnPanicWithSomeValue(t *testing.T) {
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)
-	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`+"\n",
+	assert.JSONEq(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`,
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 	assert.Contains(hook.GetAllLogs(), "unexpected error: some error")
@@ -177,7 +177,7 @@ func TestRendersErrRequestTimeoutOnPanicContextDeadlineExceeded(t *testing.T) {
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)
-	assert.Equal(`{"success":false,"message":"Request Timeout"}`+"\n", recorder.Body.String())
+	assert.JSONEq(`{"success":false,"message":"Request Timeout"}`, recorder.Body.String())
 	assert.Equal(http.StatusRequestTimeout, recorder.Code)
 }
 
@@ -191,7 +191,7 @@ func TestRendersErrUnexpectedOnReturningNonAPIError(t *testing.T) {
 	defer restoreFunc()
 
 	recorder := responseForHTTPHandler(handler)
-	assert.Equal(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`+"\n",
+	assert.JSONEq(`{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`,
 		recorder.Body.String())
 	assert.Equal(http.StatusInternalServerError, recorder.Code)
 	assert.Contains(hook.GetAllLogs(), "unexpected error: some error")

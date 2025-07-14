@@ -48,7 +48,7 @@ func TestDB_inTransaction_NoErrors(t *testing.T) {
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, []resultStruct{{1}}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -198,12 +198,12 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 			mock.ExpectCommit()
 
-			assert.NoError(t, db.inTransaction(func(db *DB) error {
+			require.NoError(t, db.inTransaction(func(db *DB) error {
 				var result []interface{}
 				return db.Raw("SELECT 1").Scan(&result).Error()
 			}))
 			assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
-			assert.NoError(t, mock.ExpectationsWereMet())
+			require.NoError(t, mock.ExpectationsWereMet())
 
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 			assert.Contains(t, logs, fmt.Sprintf("Retrying transaction (count: 1) after Error %d:", errorNumber))
@@ -262,7 +262,7 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T)
 				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 			mock.ExpectCommit()
 
-			assert.NoError(t, db.inTransaction(func(db *DB) error {
+			require.NoError(t, db.inTransaction(func(db *DB) error {
 				var result []interface{}
 				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 				return nil
@@ -413,7 +413,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 			mock.ExpectCommit()
 
-			assert.NoError(t, db.inTransaction(func(db *DB) error {
+			require.NoError(t, db.inTransaction(func(db *DB) error {
 				var result []interface{}
 				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 				return nil
@@ -447,7 +447,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 				WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 			mock.ExpectCommit()
 
-			assert.NoError(t, db.inTransaction(func(db *DB) error {
+			require.NoError(t, db.inTransaction(func(db *DB) error {
 				var result []interface{}
 				return db.Raw("SELECT 1").Scan(&result).Error()
 			}))
@@ -489,7 +489,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 					return nil
 				}))
 			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
-			assert.NoError(t, mock.ExpectationsWereMet())
+			require.NoError(t, mock.ExpectationsWereMet())
 
 			require.Len(t, loggerHook.AllEntries(), 1)
 			assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
@@ -531,7 +531,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 					return db.Raw("SELECT 1").Scan(&result).Error()
 				}))
 			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
-			assert.NoError(t, mock.ExpectationsWereMet())
+			require.NoError(t, mock.ExpectationsWereMet())
 
 			require.Len(t, loggerHook.AllEntries(), 1)
 			assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
@@ -705,7 +705,7 @@ func TestDB_Count(t *testing.T) {
 	countDB := db.Count(&result)
 
 	assert.NotEqual(t, countDB, db)
-	assert.NoError(t, countDB.Error())
+	require.NoError(t, countDB.Error())
 	assert.Equal(t, db.ctx(), countDB.ctx())
 	assert.Nil(t, countDB.ctes)
 	assert.Equal(t, db.logConfig(), countDB.logConfig())
@@ -753,7 +753,7 @@ func TestDB_Take(t *testing.T) {
 	takeDB := db.Take(&result, "id = 1")
 
 	assert.NotEqual(t, takeDB, db)
-	assert.NoError(t, takeDB.Error())
+	require.NoError(t, takeDB.Error())
 	assert.Equal(t, db.ctx(), takeDB.ctx())
 	assert.Nil(t, takeDB.ctes)
 	assert.Equal(t, db.logConfig(), takeDB.logConfig())
@@ -776,7 +776,7 @@ func TestDB_HasRows(t *testing.T) {
 
 	found, err := db.Where("id = 1").HasRows()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, found)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -795,7 +795,7 @@ func TestDB_HasRows_NoRows(t *testing.T) {
 
 	found, err := db.Where("id = 1").HasRows()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, found)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -838,7 +838,7 @@ func TestDB_Pluck(t *testing.T) {
 	pluckDB := db.Pluck("id", &result)
 
 	assert.NotEqual(t, pluckDB, db)
-	assert.NoError(t, pluckDB.Error())
+	require.NoError(t, pluckDB.Error())
 	assert.Equal(t, db.ctx(), pluckDB.ctx())
 	assert.Nil(t, pluckDB.ctes)
 	assert.Equal(t, db.logConfig(), pluckDB.logConfig())
@@ -926,7 +926,7 @@ func TestDB_PluckFirst(t *testing.T) {
 	pluckFirstDB := db.PluckFirst("id", &result)
 
 	assert.NotEqual(t, pluckFirstDB, db)
-	assert.NoError(t, pluckFirstDB.Error())
+	require.NoError(t, pluckFirstDB.Error())
 	assert.Equal(t, db.ctx(), pluckFirstDB.ctx())
 	assert.Nil(t, pluckFirstDB.ctes)
 	assert.Equal(t, db.logConfig(), pluckFirstDB.logConfig())
@@ -998,7 +998,7 @@ func TestDB_Scan(t *testing.T) {
 	scanDB := db.Scan(&result)
 
 	assert.NotEqual(t, scanDB, db)
-	assert.NoError(t, scanDB.Error())
+	require.NoError(t, scanDB.Error())
 	assert.Equal(t, db.ctx(), scanDB.ctx())
 	assert.Nil(t, scanDB.ctes)
 	assert.Equal(t, db.logConfig(), scanDB.logConfig())
@@ -1026,7 +1026,7 @@ func TestDB_Scan_WipesOldData(t *testing.T) {
 	result := []resultType{{ID: 2, Value: "another value"}, {ID: 3, Value: "third value"}}
 	scanDB := db.Scan(&result)
 
-	assert.NoError(t, scanDB.Error())
+	require.NoError(t, scanDB.Error())
 	assert.Equal(t, []resultType{{ID: 1, Value: "value"}}, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -1041,8 +1041,8 @@ func TestDB_Scan_NonSlicePointer(t *testing.T) {
 	result := 1
 	scanDB := db.Scan(&result)
 
-	assert.EqualError(t, scanDB.Error(), "unsupported destination, should be slice or struct")
-	assert.NoError(t, mock.ExpectationsWereMet())
+	require.EqualError(t, scanDB.Error(), "unsupported destination, should be slice or struct")
+	require.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDB_Scan_NonPointer(t *testing.T) {
@@ -1122,7 +1122,7 @@ func TestDB_Exec(t *testing.T) {
 	execDB := db.Exec(query, 1, 2)
 
 	assert.NotEqual(t, execDB, db)
-	assert.NoError(t, execDB.Error())
+	require.NoError(t, execDB.Error())
 	assert.Equal(t, db.ctx(), execDB.ctx())
 	assert.Nil(t, execDB.ctes)
 	assert.Equal(t, db.logConfig(), execDB.logConfig())
@@ -1237,7 +1237,7 @@ func TestDB_ScanIntoSlices(t *testing.T) {
 
 	dbScan := db.ScanIntoSlices(&ids, &fields)
 	assert.Equal(t, dbScan, db)
-	assert.NoError(t, dbScan.Error())
+	require.NoError(t, dbScan.Error())
 
 	assert.Equal(t, []int64{1, 2, 3}, ids)
 	assert.Equal(t, []*string{golang.Ptr("value"), golang.Ptr("another value"), nil}, fields)
@@ -1341,7 +1341,7 @@ func TestDB_ScanIntoSliceOfMaps(t *testing.T) {
 	var result []map[string]interface{}
 	dbScan := db.ScanIntoSliceOfMaps(&result)
 	assert.Equal(t, dbScan, db)
-	assert.NoError(t, dbScan.Error())
+	require.NoError(t, dbScan.Error())
 
 	assert.Equal(t, []map[string]interface{}{
 		{"id": int64(1), "Field": "value"},
@@ -1511,7 +1511,7 @@ func TestDB_UpdateColumn(t *testing.T) {
 
 	updateDB := db.UpdateColumn("name", someName)
 	assert.NotEqual(t, updateDB, db)
-	assert.NoError(t, updateDB.Error())
+	require.NoError(t, updateDB.Error())
 	assert.Equal(t, db.ctx(), updateDB.ctx())
 	assert.Nil(t, updateDB.ctes)
 	assert.Equal(t, db.logConfig(), updateDB.logConfig())
@@ -1534,7 +1534,7 @@ func TestDB_Set(t *testing.T) {
 
 	setDB := db.Set("gorm:query_option", "FOR UPDATE")
 	assert.NotEqual(t, setDB, db)
-	assert.NoError(t, setDB.Error())
+	require.NoError(t, setDB.Error())
 	assert.Equal(t, db.ctx(), setDB.ctx())
 	assert.Equal(t, db.ctes, setDB.ctes)
 	assert.Equal(t, db.logConfig(), setDB.logConfig())
@@ -1546,7 +1546,7 @@ func TestDB_Set(t *testing.T) {
 
 func TestOpenRawDBConnection(t *testing.T) {
 	db, err := OpenRawDBConnection("/db", true)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, sql.Drivers(), "instrumented-mysql")
 	assertRawDBIsOK(t, db)
 }
@@ -1559,7 +1559,7 @@ func TestOpen_DSN(t *testing.T) {
 	defer patchGuard.Unpatch()
 
 	db, err := Open("/db")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Nil(t, db)
 }
 

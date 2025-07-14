@@ -209,7 +209,7 @@ groups_groups:
 			}
 
 			err = CreateMissingData(database.NewDataStore(db), domainConfig)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			// Once CreateMissingData() have been called, CheckConfig() should pass.
 			err = CheckConfig(database.NewDataStore(db), domainConfig)

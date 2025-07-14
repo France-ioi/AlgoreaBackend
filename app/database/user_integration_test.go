@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -98,7 +99,7 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			user := &database.User{}
-			assert.NoError(t, user.LoadByID(store, test.userID))
+			require.NoError(t, user.LoadByID(store, test.userID))
 
 			canSeeAnswer := user.CanSeeAnswer(store, test.participantID, test.itemID)
 			assert.Equal(t, test.expectedResult, canSeeAnswer)

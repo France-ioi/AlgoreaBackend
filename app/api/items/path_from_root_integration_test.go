@@ -7,6 +7,7 @@ import (
 	_ "unsafe"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/items"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -697,9 +698,9 @@ func Test_findItemPaths(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(globalFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
-			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
-				assert.NoError(t, s.GroupGroups().CreateNewAncestors())
-				assert.NoError(t, s.ItemItems().CreateNewAncestors())
+			require.NoError(t, store.InTransaction(func(s *database.DataStore) error {
+				require.NoError(t, s.GroupGroups().CreateNewAncestors())
+				require.NoError(t, s.ItemItems().CreateNewAncestors())
 				s.SchedulePermissionsPropagation()
 				s.ScheduleResultsPropagation()
 				return nil

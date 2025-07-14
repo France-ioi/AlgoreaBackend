@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -38,7 +39,7 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 
 	itemItemStore := database.NewDataStore(db).ItemItems()
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
+	require.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
 		{ChildItemID: 2, AncestorItemID: 1},
@@ -50,7 +51,7 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
@@ -77,7 +78,7 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "todo"},
 		{ID: 2, AncestorsComputationState: "todo"},
@@ -95,7 +96,7 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	itemItemStore := database.NewDataStore(db).ItemItems()
 
 	for i := 1; i <= 4; i++ {
-		assert.NoError(t, itemItemStore.Exec(
+		require.NoError(t, itemItemStore.Exec(
 			"INSERT INTO items_propagate (id, ancestors_computation_state) VALUES (?, 'done') "+
 				"ON DUPLICATE KEY UPDATE ancestors_computation_state='done'", i).
 			Error())
@@ -113,7 +114,7 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},

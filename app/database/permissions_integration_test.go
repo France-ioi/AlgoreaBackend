@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -74,7 +75,7 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			var result []map[string]interface{}
-			assert.NoError(t, itemStore.Select("items.id, permissions.*").
+			require.NoError(t, itemStore.Select("items.id, permissions.*").
 				JoinsPermissionsForGroupToItems(5).
 				Where("items.id IN (?)", test.ids).Order("items.id").
 				ScanIntoSliceOfMaps(&result).Error())
@@ -143,7 +144,7 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 			testoutput.SuppressIfPasses(t)
 
 			var result []map[string]interface{}
-			assert.NoError(t, itemStore.Select("items.id, permissions.*").
+			require.NoError(t, itemStore.Select("items.id, permissions.*").
 				JoinsPermissionsForGroupToItemsWherePermissionAtLeast(5, test.permissionKind, test.neededPermission).
 				Where("items.id IN (?)", test.ids).Order("items.id").
 				ScanIntoSliceOfMaps(&result).Error())

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
@@ -49,7 +50,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			}
 			db = reflect.ValueOf(itemStore).MethodByName(testCase.methodToCall).
 				Call(parameters)[0].Interface().(*database.DB).Pluck(testCase.column, &result)
-			assert.NoError(t, db.Error())
+			require.NoError(t, db.Error())
 
 			assert.Equal(t, testCase.expected, result)
 		})
@@ -386,7 +387,7 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 	`)
 	defer func() { _ = db.Close() }()
 
-	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+	require.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		return store.GroupGroups().CreateNewAncestors()
 	}))
 
@@ -859,7 +860,7 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	`)
 	defer func() { _ = db.Close() }()
 
-	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+	require.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		return store.GroupGroups().CreateNewAncestors()
 	}))
 
@@ -1281,17 +1282,17 @@ func Test_ItemStore_DeleteItem(t *testing.T) {
 	`)
 	defer func() { _ = db.Close() }()
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.InTransaction(func(store *database.DataStore) error {
+	require.NoError(t, store.InTransaction(func(store *database.DataStore) error {
 		return store.Items().DeleteItem(1235)
 	}))
 	var ids []int64
-	assert.NoError(t, store.Items().Pluck("id", &ids).Error())
+	require.NoError(t, store.Items().Pluck("id", &ids).Error())
 	assert.Equal(t, []int64{1234}, ids)
-	assert.NoError(t, store.ItemStrings().Pluck("item_id", &ids).Error())
+	require.NoError(t, store.ItemStrings().Pluck("item_id", &ids).Error())
 	assert.Equal(t, []int64{1234}, ids)
-	assert.NoError(t, store.Table("items_propagate").
+	require.NoError(t, store.Table("items_propagate").
 		Where("ancestors_computation_state != 'done'").Pluck("id", &ids).Error())
 	assert.Empty(t, ids)
-	assert.NoError(t, store.Table("permissions_propagate").Pluck("item_id", &ids).Error())
+	require.NoError(t, store.Table("permissions_propagate").Pluck("item_id", &ids).Error())
 	assert.Empty(t, ids)
 }

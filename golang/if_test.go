@@ -11,7 +11,7 @@ func TestIfElse(t *testing.T) {
 	assert.Equal(t, 2, IfElse(false, 1, 2))
 	assert.Equal(t, "a", IfElse(true, "a", "b"))
 	assert.Equal(t, "b", IfElse(false, "a", "b"))
-	assert.Equal(t, true, IfElse(true, true, false))
+	assert.True(t, IfElse(true, true, false))
 }
 
 func TestIf(t *testing.T) {
@@ -22,8 +22,8 @@ func TestIf(t *testing.T) {
 	assert.Equal(t, 0, If(false, 1))
 	assert.Equal(t, "a", If(true, "a"))
 	assert.Equal(t, "", If(false, "a"))
-	assert.Equal(t, true, If(true, true))
-	assert.Equal(t, false, If(false, true))
+	assert.True(t, If(true, true))
+	assert.False(t, If(false, true))
 	assert.Equal(t, (*string)(nil), If(false, strPtr))
 }
 

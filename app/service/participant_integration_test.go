@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -29,7 +30,7 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 	`)
 	defer func() { _ = db.Close() }()
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
+	require.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
 		return trStore.GroupGroups().CreateNewAncestors()
 	}))
 

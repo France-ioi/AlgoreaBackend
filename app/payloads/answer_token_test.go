@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAnswerToken_Bind(t *testing.T) {
@@ -86,10 +87,10 @@ func TestAnswerToken_Bind(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.answerToken.Bind()
 			if tt.wantErr == nil {
-				assert.NoError(t, got)
+				require.NoError(t, got)
 				assert.Equal(t, tt.wantConverted, tt.answerToken.Converted)
 			} else {
-				assert.Equal(t, got, tt.wantErr)
+				assert.Equal(t, tt.wantErr, got)
 			}
 		})
 	}

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -70,12 +71,12 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 			}).Error())
 
 			err := resultStore.InTransaction(func(s *database.DataStore) error {
-				assert.NoError(t, resultStore.Exec(
+				require.NoError(t, resultStore.Exec(
 					"INSERT IGNORE INTO results_propagate SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state FROM results").Error())
 				s.ScheduleResultsPropagation()
 				return nil
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			expected := []aggregatesResultRow{
 				{
@@ -124,7 +125,7 @@ func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 		s.ScheduleResultsPropagation()
 		return nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expectedLatestActivityAt1 := database.Time(time.Date(2019, 5, 29, 11, 0, 0, 0, time.UTC))
 	expectedLatestActivityAt2 := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
@@ -147,7 +148,7 @@ func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *te
 	expectedLatestActivityAt2 := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
 
 	resultStore := database.NewDataStore(db).Results()
-	assert.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id = 2").UpdateColumn(map[string]interface{}{
+	require.NoError(t, resultStore.Where("participant_id = 101 AND attempt_id = 1 AND item_id = 2").UpdateColumn(map[string]interface{}{
 		"latest_activity_at": time.Time(expectedLatestActivityAt2),
 	}).Error())
 
@@ -155,7 +156,7 @@ func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *te
 		s.ScheduleResultsPropagation()
 		return nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expected := []aggregatesResultRow{
 		{ParticipantID: 101, AttemptID: 1, ItemID: 1, State: "done", LatestActivityAt: expectedLatestActivityAt1},
@@ -201,7 +202,7 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 				s.ScheduleResultsPropagation()
 				return nil
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			expectedLatestActivityAt1 := database.Time(time.Date(2019, 5, 29, 11, 0, 0, 0, time.UTC))
 			expectedLatestActivityAt2 := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))

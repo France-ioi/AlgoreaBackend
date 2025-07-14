@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -26,7 +27,7 @@ func TestBase_GetUser(t *testing.T) {
 
 	request, _ := http.NewRequest(http.MethodGet, testServer.URL, http.NoBody)
 	response, err := http.DefaultClient.Do(request)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	if err == nil {
 		_ = response.Body.Close()
 	}

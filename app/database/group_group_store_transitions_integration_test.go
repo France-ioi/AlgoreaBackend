@@ -814,7 +814,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 
 			if tt.createPendingCycleWithType != "" {
 				for _, id := range []int64{30, 20} {
-					assert.NoError(t, dataStore.Exec(`
+					require.NoError(t, dataStore.Exec(`
 						INSERT INTO group_pending_requests (
 							group_id, member_id, type, personal_info_view_approved, lock_membership_approved, watch_approved, at
 						) VALUES (20, ?, ?, 1, 1, 1, NOW(3))`,
@@ -823,11 +823,11 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			}
 
 			if tt.maxParticipants != nil {
-				assert.NoError(t, dataStore.Groups().ByID(20).UpdateColumn("max_participants", *tt.maxParticipants).Error())
+				require.NoError(t, dataStore.Groups().ByID(20).UpdateColumn("max_participants", *tt.maxParticipants).Error())
 			}
 
 			if tt.doNotEnforceMaxParticipants {
-				assert.NoError(t, dataStore.Groups().ByID(20).UpdateColumn("enforce_max_participants", false).Error())
+				require.NoError(t, dataStore.Groups().ByID(20).UpdateColumn("enforce_max_participants", false).Error())
 			}
 
 			var result database.GroupGroupTransitionResults
@@ -840,7 +840,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				return err
 			})
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.wantResult, result)
 			if tt.wantApprovalsToRequest == nil {
 				tt.wantApprovalsToRequest = map[int64]database.GroupApprovals{}
@@ -853,7 +853,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			assertGroupAncestorsEqual(t, dataStore, &tt)
 
 			var count int64
-			assert.NoError(t, dataStore.Table("groups_propagate").
+			require.NoError(t, dataStore.Table("groups_propagate").
 				Where("ancestors_computation_state != 'done'").Count(&count).Error())
 			if tt.shouldRunListeners {
 				assert.Zero(t, count, "Listeners should be executed")
@@ -872,7 +872,7 @@ func assertGroupAncestorsEqual(t *testing.T, dataStore *database.DataStore, tt *
 	t.Helper()
 
 	var groupAncestors []groupAncestor
-	assert.NoError(t, dataStore.GroupAncestors().Select("ancestor_group_id, child_group_id, is_self, expires_at").
+	require.NoError(t, dataStore.GroupAncestors().Select("ancestor_group_id, child_group_id, is_self, expires_at").
 		Order("ancestor_group_id, child_group_id").Scan(&groupAncestors).Error())
 
 	sort.Slice(tt.wantGroupAncestors, func(i, j int) bool {
@@ -887,7 +887,7 @@ func assertGroupAncestorsEqual(t *testing.T, dataStore *database.DataStore, tt *
 		}
 		if tt.shouldRunListeners {
 			parsed, err := time.Parse(time.DateTime, tt.wantGroupAncestors[wantGroupAncestorsIndex].ExpiresAt)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			if parsed.Before(time.Now().UTC()) {
 				newValue := make([]groupAncestor, 0, len(tt.wantGroupAncestors)-1)
 				newValue = append(newValue, tt.wantGroupAncestors[0:wantGroupAncestorsIndex]...)
@@ -1046,7 +1046,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 				return err
 			})
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, database.GroupGroupTransitionResults{3: tt.wantResult}, result)
 
 			if tt.wantResult == success {
@@ -1067,7 +1067,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 			}
 
 			var count int64
-			assert.NoError(t, dataStore.Table("groups_propagate").
+			require.NoError(t, dataStore.Table("groups_propagate").
 				Where("ancestors_computation_state != 'done'").Count(&count).Error())
 			if tt.wantResult == success {
 				assert.Zero(t, count, "Listeners should be executed")
@@ -1115,7 +1115,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 				return err
 			})
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, database.GroupGroupTransitionResults{3: "approvals_missing"}, result)
 			assert.Equal(t, map[int64]database.GroupApprovals{
 				3: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
@@ -1153,7 +1153,7 @@ func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEno
 		return err
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, database.GroupGroupTransitionResults{3: "success"}, result)
 	assert.Empty(t, approvalsToRequest)
 	assertGroupPendingRequestsEqual(t, dataStore.GroupPendingRequests(), []groupPendingRequest{
@@ -1202,7 +1202,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 				return err
 			})
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, database.GroupGroupTransitionResults{3: tt.wantResult}, result)
 
 			if tt.wantResult == success {
@@ -1223,7 +1223,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 			}
 
 			var count int64
-			assert.NoError(t, dataStore.Table("groups_propagate").
+			require.NoError(t, dataStore.Table("groups_propagate").
 				Where("ancestors_computation_state != 'done'").Count(&count).Error())
 			if tt.wantResult == success {
 				assert.Zero(t, count, "Listeners should be executed")
@@ -1342,7 +1342,7 @@ func assertGroupGroupsEqual(t *testing.T, groupGroupStore *database.GroupGroupSt
 	t.Helper()
 
 	var groupsGroups []groupGroup
-	assert.NoError(t, groupGroupStore.Select(`
+	require.NoError(t, groupGroupStore.Select(`
 			parent_group_id, child_group_id, expires_at, personal_info_view_approved_at,
 			lock_membership_approved_at, watch_approved_at`).
 		Order("parent_group_id, child_group_id").Scan(&groupsGroups).Error())
@@ -1377,7 +1377,7 @@ func assertGroupPendingRequestsEqual(t *testing.T, groupPendingRequestStore *dat
 	t.Helper()
 
 	var groupPendingRequests []groupPendingRequest
-	assert.NoError(t, groupPendingRequestStore.Select(`
+	require.NoError(t, groupPendingRequestStore.Select(`
 			group_id, member_id, `+"`type`"+`, personal_info_view_approved,
 			lock_membership_approved, watch_approved`).
 		Order("group_id, member_id").Scan(&groupPendingRequests).Error())
@@ -1409,7 +1409,7 @@ func assertGroupMembershipChangesEqual(
 	t.Helper()
 
 	var groupMembershipChanges []groupMembershipChange
-	assert.NoError(t, groupMembershipChangeStore.Select("group_id, member_id, initiator_id, action, at").
+	require.NoError(t, groupMembershipChangeStore.Select("group_id, member_id, initiator_id, action, at").
 		Order("group_id, member_id, at").Scan(&groupMembershipChanges).Error())
 
 	assert.Len(t, groupMembershipChanges, len(expected))
@@ -1427,8 +1427,8 @@ func assertGroupMembershipChangesEqual(
 		assert.Equal(t, row.InitiatorID, groupMembershipChanges[index].InitiatorID,
 			"wrong initiator_id for row %#v", groupMembershipChanges[index])
 		if groupMembershipChanges[index].At != nil {
-			assert.True(t, (*time.Time)(groupMembershipChanges[index].At).Sub(time.Now().UTC())/time.Second < 5)
-			assert.True(t, time.Now().UTC().Sub(time.Time(*groupMembershipChanges[index].At))/time.Second > -5)
+			assert.Less(t, int((*time.Time)(groupMembershipChanges[index].At).Sub(time.Now().UTC())/time.Second), 5)
+			assert.Greater(t, int(time.Now().UTC().Sub(time.Time(*groupMembershipChanges[index].At))/time.Second), -5)
 		}
 	}
 }
@@ -1437,7 +1437,7 @@ func assertGrantedPermissionsEqual(t *testing.T, grantedPermissionStore *databas
 	t.Helper()
 
 	var grantedPermissions []grantedPermission
-	assert.NoError(t, grantedPermissionStore.Select("group_id, item_id, source_group_id, origin, can_view").
+	require.NoError(t, grantedPermissionStore.Select("group_id, item_id, source_group_id, origin, can_view").
 		Order("group_id, item_id, source_group_id, origin").Scan(&grantedPermissions).Error())
 	assert.Equal(t, expected, grantedPermissions)
 }
@@ -1451,7 +1451,7 @@ func assertGeneratedPermissionsEqual(
 		expected = make([]permissionsGeneratedResultRow, 0)
 	}
 	var generatedPermissions []permissionsGeneratedResultRow
-	assert.NoError(t, permissionGeneratedStore.Select("group_id, item_id, can_view_generated").
+	require.NoError(t, permissionGeneratedStore.Select("group_id, item_id, can_view_generated").
 		Order("group_id, item_id").Scan(&generatedPermissions).Error())
 	assert.EqualValues(t, expected, generatedPermissions)
 }

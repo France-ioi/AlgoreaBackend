@@ -14,6 +14,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
@@ -78,9 +79,9 @@ func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetInt64SliceField(req, "ids")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(t, err, testCase.expectedErrMsg)
+				require.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, testCase.expectedList, list)
 		})
@@ -271,9 +272,9 @@ func TestResolveURLQueryGetStringField(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringField(req, "name")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(t, err, testCase.expectedErrMsg)
+				require.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, testCase.expectedValue, list)
 		})
@@ -324,9 +325,9 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetBoolField(req, "flag")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(t, err, testCase.expectedErrMsg)
+				require.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, testCase.expectedValue, list)
 		})
@@ -397,9 +398,9 @@ func TestResolveURLQueryGetBoolFieldWithDefault(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetBoolFieldWithDefault(req, "flag", testCase.defaultValue)
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(t, err, testCase.expectedErrMsg)
+				require.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, testCase.expectedValue, list)
 		})
@@ -442,9 +443,9 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			dateTime, err := ResolveURLQueryGetTimeField(req, "time")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(t, err, testCase.expectedErrMsg)
+				require.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			assert.True(t, testCase.expectedValue.Equal(dateTime))
 		})
@@ -501,9 +502,9 @@ func TestResolveURLQueryGetStringSliceField(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringSliceField(req, "values")
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(t, err, testCase.expectedErrMsg)
+				require.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			assert.Equal(t, testCase.expectedList, list)
 		})
@@ -579,9 +580,9 @@ func TestResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(t *testi
 			list, err := ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(req, "fruits",
 				map[string]bool{"apple": true, "orange": true, "pear": true})
 			if testCase.expectedErrMsg != "" {
-				assert.EqualError(t, err, testCase.expectedErrMsg)
+				require.EqualError(t, err, testCase.expectedErrMsg)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 			sort.Strings(list)
 			sort.Strings(testCase.expectedList)

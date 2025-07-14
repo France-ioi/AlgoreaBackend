@@ -66,7 +66,7 @@ func TestAccessTokenStore_GetMostRecentValidTokenForSession(t *testing.T) {
 
 	accessTokenStore := database.NewDataStore(db).AccessTokens()
 	token, err := accessTokenStore.GetMostRecentValidTokenForSession(456)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, database.MostRecentToken{
 		Token:              "token2",
 		SecondsUntilExpiry: 302,
@@ -74,7 +74,7 @@ func TestAccessTokenStore_GetMostRecentValidTokenForSession(t *testing.T) {
 	}, token)
 
 	token, err = accessTokenStore.GetMostRecentValidTokenForSession(457)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, database.MostRecentToken{
 		Token:              "token3",
 		SecondsUntilExpiry: 303,
@@ -110,20 +110,29 @@ func TestAccessTokenStore_DeleteExpiredTokensOfUser(t *testing.T) {
 	assert.NoError(t, accessTokenStore.Count(&count).Error())
 	assert.Equal(t, 2, count)
 
-	_, err := accessTokenStore.GetMostRecentValidTokenForSession(456)
-	assert.EqualError(t, err, "record not found")
-	token, err := accessTokenStore.GetMostRecentValidTokenForSession(457)
-	assert.NoError(t, err)
-	assert.Equal(t, database.MostRecentToken{
-		Token:              "token4",
-		SecondsUntilExpiry: 1,
-		TooNewToRefresh:    false,
-	}, token)
-	token, err = accessTokenStore.GetMostRecentValidTokenForSession(458)
-	assert.NoError(t, err)
-	assert.Equal(t, database.MostRecentToken{
-		Token:              "token5",
-		SecondsUntilExpiry: -3,
-		TooNewToRefresh:    false,
-	}, token)
+	t.Run("456", func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+		_, err := accessTokenStore.GetMostRecentValidTokenForSession(456)
+		require.EqualError(t, err, "record not found")
+	})
+	t.Run("457", func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+		token, err := accessTokenStore.GetMostRecentValidTokenForSession(457)
+		require.NoError(t, err)
+		assert.Equal(t, database.MostRecentToken{
+			Token:              "token4",
+			SecondsUntilExpiry: 1,
+			TooNewToRefresh:    false,
+		}, token)
+	})
+	t.Run("458", func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+		token, err := accessTokenStore.GetMostRecentValidTokenForSession(458)
+		require.NoError(t, err)
+		assert.Equal(t, database.MostRecentToken{
+			Token:              "token5",
+			SecondsUntilExpiry: -3,
+			TooNewToRefresh:    false,
+		}, token)
+	})
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func TestZero(t *testing.T) {
-	assert.Equal(t, false, Zero[bool]())
+	assert.False(t, Zero[bool]())
 	assert.Equal(t, 0, Zero[int]())
 	assert.Equal(t, int64(0), Zero[int64]())
 	assert.Equal(t, "", Zero[string]())

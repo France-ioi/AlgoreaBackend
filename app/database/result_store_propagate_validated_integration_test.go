@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -40,7 +41,7 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
-	assert.NoError(t,
+	require.NoError(t,
 		resultStore.Items().Where("id=2").
 			UpdateColumn("validation_type", validationType).Error())
 	if prepareFunc != nil {
@@ -51,7 +52,7 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 		s.ScheduleResultsPropagation()
 		return nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var result []validatedResultRow
 	queryResultsAndStatesForTests(t, resultStore, &result, "validated")
@@ -219,9 +220,9 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 				t.Helper()
 
 				itemStore := resultStore.Items()
-				assert.NoError(t, itemStore.Where("id=4").UpdateColumn("no_score", true).Error())
+				require.NoError(t, itemStore.Where("id=4").UpdateColumn("no_score", true).Error())
 				markResultAsValidated(t, resultStore, "participant_id = 101 AND attempt_id = 1 AND item_id IN (1, 3)")
-				assert.NoError(t, resultStore.ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
+				require.NoError(t, resultStore.ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
 					UpdateColumn("category", "Validation").Error())
 			},
 			expectedResults: buildExpectedValidatedResultRows(map[string]bool{

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -112,14 +113,14 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			var found bool
 			var err error
 			if tt.withLock {
-				assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
+				require.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
 					got, found, err = trStore.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 					return err
 				}))
 			} else {
 				got, found, err = store.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.wantFound, found)
 			assert.Equal(t, tt.want, got)
 		})

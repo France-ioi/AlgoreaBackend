@@ -176,7 +176,7 @@ func TestDataStore_InTransaction_NoErrors(t *testing.T) {
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, []resultStruct{{1}}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -231,8 +231,8 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 		return nil
 	}, txOptions)
 
-	assert.Nil(t, gotError)
-	assert.NoError(t, mock.ExpectationsWereMet())
+	require.NoError(t, gotError)
+	require.NoError(t, mock.ExpectationsWereMet())
 	assert.Equal(t, 1, callsCount)
 }
 
@@ -337,8 +337,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_WithTxOptions(t *testing.T) {
 		return nil
 	}, txOptions)
 
-	assert.Nil(t, gotError)
-	assert.NoError(t, mock.ExpectationsWereMet())
+	require.NoError(t, gotError)
+	require.NoError(t, mock.ExpectationsWereMet())
 	assert.Equal(t, 1, callsCount)
 }
 
@@ -735,7 +735,7 @@ func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
 	//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
 	assert.Equal(t, dbWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
 
-	assert.Nil(t, mock.ExpectationsWereMet())
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
@@ -767,7 +767,7 @@ func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	assert.Nil(t, mock.ExpectationsWereMet())
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDataStore_EnsureTransaction(t *testing.T) {
@@ -817,10 +817,10 @@ func TestDataStore_SetPropagationsModeToSync(t *testing.T) {
 
 	require.Nil(t, db.ctx().Value(propagationsAreSyncContextKey))
 
-	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+	require.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
 		require.NoError(t, store.SetPropagationsModeToSync())
-		assert.Equal(t, store.DB.ctx().Value(propagationsAreSyncContextKey), true)
-		assert.Equal(t, store.DB.db.CommonDB().(*sqlTxWrapper).ctx.Value(propagationsAreSyncContextKey), true)
+		assert.Equal(t, true, store.DB.ctx().Value(propagationsAreSyncContextKey))
+		assert.Equal(t, true, store.DB.db.CommonDB().(*sqlTxWrapper).ctx.Value(propagationsAreSyncContextKey))
 		return nil
 	}))
 	assert.NoError(t, mock.ExpectationsWereMet())

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -101,14 +102,14 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 				var got bool
 				var err error
 				if withLock {
-					assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
+					require.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
 						got, err = trStore.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, tt.userID, true)
 						return err
 					}))
 				} else {
 					got, err = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, tt.userID, false)
 				}
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, got)
 			})
 		}

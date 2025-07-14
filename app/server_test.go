@@ -13,13 +13,14 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestServer_Start(t *testing.T) {
 	app, err := New()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	srv, err := NewServer(app)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// check defaults are applied correctly
 	assert.True(t, strings.HasSuffix(srv.Addr, ":8088"))
@@ -30,11 +31,11 @@ func TestServer_Start(t *testing.T) {
 	defer close(doneChannel)
 
 	err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	select {
 	case err = <-doneChannel:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(3 * time.Second):
 		assert.Fail(t, "Timeout on waiting for server to stop")
 	}
@@ -42,17 +43,17 @@ func TestServer_Start(t *testing.T) {
 
 func TestServer_Start_HandlesListenerError(t *testing.T) {
 	app, err := New()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	app.Config.Set("server.port", -1)
 	srv, err := NewServer(app)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	doneChannel := srv.Start()
 	defer close(doneChannel)
 
 	select {
 	case err = <-doneChannel:
-		assert.EqualError(t, err, "server returned an error: listen tcp: address -1: invalid port")
+		require.EqualError(t, err, "server returned an error: listen tcp: address -1: invalid port")
 	case <-time.After(3 * time.Second):
 		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		assert.Fail(t, "Timeout on waiting for server to stop")
@@ -61,9 +62,9 @@ func TestServer_Start_HandlesListenerError(t *testing.T) {
 
 func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 	app, err := New()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	srv, err := NewServer(app)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expectedError := errors.New("some error")
 
@@ -97,7 +98,7 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 
 	select {
 	case err = <-doneChannel:
-		assert.EqualError(t, err, "server returned an error: some error")
+		require.EqualError(t, err, "server returned an error: some error")
 	case <-time.After(3 * time.Second):
 		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 		assert.Fail(t, "Timeout on waiting for server to stop")
@@ -106,9 +107,9 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 
 func TestServer_Start_CanBeStoppedByShutdown(t *testing.T) {
 	app, err := New()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	srv, err := NewServer(app)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	doneChannel := srv.Start()
 	defer close(doneChannel)
@@ -117,7 +118,7 @@ func TestServer_Start_CanBeStoppedByShutdown(t *testing.T) {
 
 	select {
 	case err := <-doneChannel:
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	case <-time.After(3 * time.Second):
 		assert.Fail(t, "Timeout on waiting for server to stop")
 	}
@@ -125,9 +126,9 @@ func TestServer_Start_CanBeStoppedByShutdown(t *testing.T) {
 
 func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
 	app, err := New()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	srv, err := NewServer(app)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expectedError := errors.New("some error")
 	var patchGuard *monkey.PatchGuard
@@ -146,7 +147,7 @@ func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
 	defer close(doneChannel)
 
 	err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	select {
 	case err := <-doneChannel:

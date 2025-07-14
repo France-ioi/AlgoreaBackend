@@ -9,6 +9,7 @@ import (
 
 	"github.com/France-ioi/mapstructure"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
@@ -325,12 +326,10 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
 			err := f.ParseJSONRequestData(req)
 			if tt.wantErr != "" {
-				assert.NotNil(t, err, "Should produce an error, but it did not")
-				if err != nil {
-					assert.Equal(t, tt.wantErr, err.Error())
-				}
+				require.Error(t, err, "Should produce an error, but it did not")
+				assert.Equal(t, tt.wantErr, err.Error())
 			} else {
-				assert.Nil(t, err)
+				require.NoError(t, err)
 			}
 			if tt.wantFieldErrors != nil {
 				assert.IsType(t, formdata.FieldErrorsError{}, err)
@@ -509,12 +508,12 @@ func TestFormData_ParseMapData(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
 			err := f.ParseMapData(tt.sourceMap)
 			if tt.wantErr != "" {
-				assert.NotNil(t, err, "Should produce an error, but it did not")
+				require.Error(t, err, "Should produce an error, but it did not")
 				if err != nil {
 					assert.Equal(t, tt.wantErr, err.Error())
 				}
 			} else {
-				assert.Nil(t, err)
+				require.NoError(t, err)
 			}
 			if tt.wantFieldErrors != nil {
 				assert.IsType(t, formdata.FieldErrorsError{}, err)
@@ -677,7 +676,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
-			assert.Nil(t, f.ParseJSONRequestData(req))
+			require.NoError(t, f.ParseJSONRequestData(req))
 
 			got := f.ConstructMapForDB()
 			assert.Equal(t, tt.want, got)
@@ -737,7 +736,7 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
-			assert.Nil(t, f.ParseJSONRequestData(req))
+			require.NoError(t, f.ParseJSONRequestData(req))
 
 			got := f.ConstructPartialMapForDB("Struct")
 			assert.Equal(t, tt.want, got)
@@ -789,7 +788,7 @@ func Test_toAnythingHookFunc(t *testing.T) {
 			hook := formdata.ToAnythingHookFunc()
 			converted, err := mapstructure.DecodeHookExec(hook, tt.typeFrom, tt.typeTo, tt.data)
 			if tt.wantErr == nil {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, converted)
 			} else {
 				assert.Equal(t, tt.wantErr, err)
@@ -821,7 +820,7 @@ func Test_stringToInt64HookFunc(t *testing.T) {
 			hook := formdata.StringToInt64HookFunc()
 			converted, err := mapstructure.DecodeHookExec(hook, tt.typeFrom, tt.typeTo, tt.data)
 			if tt.wantErr == nil {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, converted)
 			} else {
 				assert.Equal(t, tt.wantErr, err)

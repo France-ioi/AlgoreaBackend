@@ -9,18 +9,19 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateKey(t *testing.T) {
 	got1, err := GenerateKey()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, got1, 32)
 	assert.Regexp(t, `^[0-9a-z]{32}$`, got1)
 
 	got2, err := GenerateKey()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, got2, 32)
 	assert.Regexp(t, `^[0-9a-z]{32}$`, got2)
 

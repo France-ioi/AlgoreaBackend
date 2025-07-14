@@ -34,7 +34,7 @@ func TestPropagationStepSets(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.set.Size(), len(test.expectedContent))
+			assert.Len(t, test.expectedContent, test.set.Size())
 			for _, step := range test.expectedContent {
 				assert.True(t, test.set.Contains(step), "step %q not found in the set", step)
 			}

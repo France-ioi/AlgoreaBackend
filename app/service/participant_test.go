@@ -14,6 +14,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -27,7 +28,7 @@ func TestGetParticipantIDFromRequest_NoAsTeamID(t *testing.T) {
 	participantID, err := GetParticipantIDFromRequest(
 		&http.Request{URL: &url.URL{}}, &database.User{GroupID: 123}, database.NewDataStore(db))
 	assert.Equal(t, int64(123), participantID)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -103,7 +104,7 @@ func TestParticipantMiddleware(t *testing.T) {
 			assert.Equal(t, tt.expectedServiceWasCalled, result.serviceWasCalled)
 			assert.Equal(t, result.actualUserID, tt.userID)
 			assert.Contains(t, string(bodyBytes), tt.expectedBody)
-			assert.NoError(t, result.mock.ExpectationsWereMet())
+			require.NoError(t, result.mock.ExpectationsWereMet())
 			assert.Contains(t, result.logsHook.GetAllLogs(), tt.logContains)
 		})
 	}

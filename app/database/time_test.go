@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTime_ScanString(t *testing.T) {
@@ -71,20 +72,20 @@ func TestTime_ScanString(t *testing.T) {
 func TestTime_Value(t *testing.T) {
 	tm := &time.Time{}
 	value, err := (*Time)(tm).Value()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "0001-01-01 00:00:00", value)
 }
 
 func TestTime_Value_Nil(t *testing.T) {
 	tm := (*Time)(nil)
 	value, err := tm.Value()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, value)
 }
 
 func TestTime_MarshalJSON(t *testing.T) {
 	tm := Time(time.Date(2019, 5, 30, 11, 30, 15, 0, time.UTC))
 	result, err := (&tm).MarshalJSON()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, []byte(`"2019-05-30T11:30:15Z"`), result)
 }

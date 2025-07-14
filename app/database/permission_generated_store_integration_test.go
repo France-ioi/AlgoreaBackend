@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -35,7 +36,7 @@ func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
 
 	permissionsStore := database.NewDataStore(db).Permissions()
 	var result []map[string]interface{}
-	assert.NoError(t, permissionsStore.MatchingUserAncestors(&database.User{GroupID: 5}).
+	require.NoError(t, permissionsStore.MatchingUserAncestors(&database.User{GroupID: 5}).
 		Select("item_id, can_view_generated").
 		ScanIntoSliceOfMaps(&result).Error())
 	assert.Equal(t, []map[string]interface{}{
@@ -208,14 +209,14 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
-			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+			require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
 				return store.GroupGroups().CreateNewAncestors()
 			}))
 			result := dataStore.Where("group_id = ?", test.groupID).
 				Where("item_id = ?", test.itemID).UpdateColumn(map[string]interface{}{
 				"can_view_generated": test.canView,
 			})
-			assert.NoError(t, result.Error())
+			require.NoError(t, result.Error())
 
 			if test.noChanges {
 				assert.Zero(t, result.RowsAffected())
@@ -243,8 +244,8 @@ func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrIt
 	dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
 	result := dataStore.Where("group_id = 1 AND item_id = 2").
 		UpdateColumn("group_id", 3)
-	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	require.EqualError(t, result.Error(), expectedErrorMessage)
 	result = dataStore.Where("group_id = 1 AND item_id = 2").
 		UpdateColumn("item_id", 3)
-	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	require.EqualError(t, result.Error(), expectedErrorMessage)
 }
