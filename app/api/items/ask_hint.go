@@ -114,7 +114,7 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 		}
 
 		// Get the previous hints requested JSON data
-		var hintsRequestedParsed []formdata.Anything
+		var hintsRequestedParsed []*formdata.Anything
 		hintsRequestedParsed, err = queryAndParsePreviouslyRequestedHints(&requestData.TaskToken.Payload, store, httpRequest)
 		if gorm.IsRecordNotFoundError(err) {
 			return service.ErrNotFound(errors.New("no result or the attempt is expired")) // rollback
@@ -165,12 +165,12 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 
 func queryAndParsePreviouslyRequestedHints(
 	taskTokenPayload *payloads.TaskToken, store *database.DataStore, httpRequest *http.Request,
-) ([]formdata.Anything, error) {
+) ([]*formdata.Anything, error) {
 	hintsInfo, err := store.Results().GetHintsInfoForActiveAttempt(
 		taskTokenPayload.Converted.ParticipantID,
 		taskTokenPayload.Converted.AttemptID,
 		taskTokenPayload.Converted.LocalItemID)
-	var hintsRequestedParsed []formdata.Anything
+	var hintsRequestedParsed []*formdata.Anything
 	if err == nil && hintsInfo.HintsRequested != nil {
 		hintsErr := json.Unmarshal([]byte(*hintsInfo.HintsRequested), &hintsRequestedParsed)
 		if hintsErr != nil {
@@ -187,7 +187,7 @@ func queryAndParsePreviouslyRequestedHints(
 	return hintsRequestedParsed, err
 }
 
-func addHintToListIfNeeded(hintsList []formdata.Anything, hintToAdd formdata.Anything) []formdata.Anything {
+func addHintToListIfNeeded(hintsList []*formdata.Anything, hintToAdd *formdata.Anything) []*formdata.Anything {
 	var hintFound bool
 	for _, hint := range hintsList {
 		if bytes.Equal(hint.Bytes(), hintToAdd.Bytes()) {

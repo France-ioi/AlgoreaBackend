@@ -14,7 +14,7 @@ func TestHintToken_UnmarshalJSON_InvalidJSON(t *testing.T) {
 	tt := &HintToken{}
 	err := tt.UnmarshalJSON([]byte("[]"))
 	require.Error(t, err)
-	assert.Equal(t, "json: cannot unmarshal array into Go value of type map[string]formdata.Anything", err.Error())
+	assert.Equal(t, "json: cannot unmarshal array into Go value of type map[string]*formdata.Anything", err.Error())
 }
 
 func TestHintToken_UnmarshalJSON_WrongUserID(t *testing.T) {
@@ -30,7 +30,7 @@ func TestHintToken_UnmarshalJSON(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, &HintToken{
 		UserID:    "10",
-		AskedHint: *formdata.AnythingFromString("false"),
+		AskedHint: formdata.AnythingFromString("false"),
 		Converted: HintTokenConverted{
 			UserID: 10,
 		},
@@ -42,7 +42,7 @@ func TestHintToken_MarshalJSON(t *testing.T) {
 		UserID:      "10",
 		AttemptID:   "100",
 		LocalItemID: "200",
-		AskedHint:   *formdata.AnythingFromString("false"),
+		AskedHint:   formdata.AnythingFromString("false"),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
 	require.NoError(t, err)
