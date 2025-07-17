@@ -50,20 +50,13 @@ type sqlQueryLoggingTest struct {
 var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 	{
 		name: "sqlDBWrapper.Exec with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = updateQueryForTesting
-			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
-			mock.ExpectExec("^" + regexp.QuoteMeta(expectedQuery) + "$").WillReturnError(expectedError)
-			result, err := db.db.CommonDB().(*sqlDBWrapper).Exec(expectedQuery)
-			assert.Equal(t, expectedError, err)
-			assert.Nil(t, result)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLDBWrapperQueryOrExecWithError(
+			func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
+				mock.ExpectExec(expectedSQL).WillReturnError(expectedError)
+			},
+			func(db *sqlDBWrapper, expectedQuery string) (interface{}, error) {
+				return db.Exec(expectedQuery)
+			}),
 	},
 	{
 		name: "sqlDBWrapper.Exec with success",
@@ -85,20 +78,13 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 	},
 	{
 		name: "sqlDBWrapper.Query with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = selectQueryForTesting
-			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
-			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").WillReturnError(expectedError)
-			result, err := db.db.CommonDB().(*sqlDBWrapper).Query(expectedQuery)
-			assert.Equal(t, expectedError, err)
-			assert.Nil(t, result)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLDBWrapperQueryOrExecWithError(
+			func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
+				mock.ExpectQuery(expectedSQL).WillReturnError(expectedError)
+			},
+			func(db *sqlDBWrapper, expectedQuery string) (interface{}, error) {
+				return db.Query(expectedQuery)
+			}),
 	},
 	{
 		name: "sqlDBWrapper.Query with success",
@@ -227,32 +213,13 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 	},
 	{
 		name: "SQLStmtWrapper.ExecContext with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = updateQueryForTesting
-
-			mock.ExpectBegin()
-			prepareExpectation := mock.ExpectPrepare("^" + regexp.QuoteMeta(expectedQuery) + "$")
-			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
-			prepareExpectation.ExpectExec().WillReturnError(expectedError)
-			mock.ExpectCommit()
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			stmtWrapper, err := txWrapper.prepare(expectedQuery)
-			require.NoError(t, err)
-			defer func() { _ = stmtWrapper.Close() }()
-			result, err := stmtWrapper.ExecContext(context.Background())
-			assert.Equal(t, expectedError, err)
-			assert.Nil(t, result)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLStmtWrapperQueryContextOrExecContextWithError(
+			func(prepareExpectation *sqlmock.ExpectedPrepare, expectedError error) {
+				prepareExpectation.ExpectExec().WillReturnError(expectedError)
+			},
+			func(stmtWrapper *SQLStmtWrapper) (interface{}, error) {
+				return stmtWrapper.ExecContext(context.Background())
+			}),
 	},
 	{
 		name: "SQLStmtWrapper.ExecContext with success",
@@ -285,32 +252,13 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 	},
 	{
 		name: "SQLStmtWrapper.QueryContext with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = updateQueryForTesting
-
-			mock.ExpectBegin()
-			prepareExpectation := mock.ExpectPrepare("^" + regexp.QuoteMeta(expectedQuery) + "$")
-			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
-			prepareExpectation.ExpectQuery().WillReturnError(expectedError)
-			mock.ExpectCommit()
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			stmtWrapper, err := txWrapper.prepare(expectedQuery)
-			require.NoError(t, err)
-			defer func() { _ = stmtWrapper.Close() }()
-			rows, err := stmtWrapper.QueryContext(context.Background())
-			assert.Equal(t, expectedError, err)
-			assert.Nil(t, rows)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLStmtWrapperQueryContextOrExecContextWithError(
+			func(prepareExpectation *sqlmock.ExpectedPrepare, expectedError error) {
+				prepareExpectation.ExpectQuery().WillReturnError(expectedError)
+			},
+			func(stmtWrapper *SQLStmtWrapper) (interface{}, error) {
+				return stmtWrapper.QueryContext(context.Background())
+			}),
 	},
 	{
 		name: "SQLStmtWrapper.QueryContext with success",
@@ -400,28 +348,14 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 	},
 	{
 		name: "sqlTxWrapper.Exec with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = updateQueryForTesting
-
-			mock.ExpectBegin()
-			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
-			mock.ExpectExec("^" + regexp.QuoteMeta(expectedQuery) + "$").WillReturnError(expectedError)
-			mock.ExpectCommit()
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			result, err := txWrapper.Exec(expectedQuery)
-			assert.Equal(t, expectedError, err)
-			assert.Nil(t, result)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperExecOrQueryWithError(
+			func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
+				mock.ExpectExec(expectedSQL).WillReturnError(expectedError)
+			},
+			func(txWrapper *sqlTxWrapper, expectedQuery string) (interface{}, error) {
+				return txWrapper.Exec(expectedQuery)
+			},
+		),
 	},
 	{
 		name: "sqlTxWrapper.Exec with success",
@@ -451,28 +385,13 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 	},
 	{
 		name: "sqlTxWrapper.Query with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = updateQueryForTesting
-
-			mock.ExpectBegin()
-			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
-			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").WillReturnError(expectedError)
-			mock.ExpectCommit()
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			rows, err := txWrapper.Query(expectedQuery)
-			assert.Equal(t, expectedError, err)
-			assert.Nil(t, rows)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperExecOrQueryWithError(
+			func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
+				mock.ExpectQuery(expectedSQL).WillReturnError(expectedError)
+			},
+			func(txWrapper *sqlTxWrapper, expectedQuery string) (interface{}, error) {
+				return txWrapper.Query(expectedQuery)
+			}),
 	},
 	{
 		name: "sqlTxWrapper.Query with success",
@@ -552,156 +471,232 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 	},
 	{
 		name: "sqlTxWrapper.Commit with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = commitTransactionLogMessage
-
-			mock.ExpectBegin()
-			mock.ExpectCommit().WillReturnError(expectedError)
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			err = txWrapper.Commit()
-			assert.Equal(t, expectedError, err)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackWithError(
+			func(mock sqlmock.Sqlmock, expectedError error) {
+				mock.ExpectCommit().WillReturnError(expectedError)
+			},
+			func(txWrapper *sqlTxWrapper) error {
+				return txWrapper.Commit()
+			},
+			commitTransactionLogMessage,
+		),
 		skipAnalyzeSQLQueriesTesting: true,
 	},
 	{
 		name: "sqlTxWrapper.Commit with success",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedQuery = commitTransactionLogMessage
-
-			mock.ExpectBegin()
-			mock.ExpectCommit()
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			err = txWrapper.Commit()
-			require.NoError(t, err)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperSuccessfulCommitOrRollback(
+			func(mock sqlmock.Sqlmock) {
+				mock.ExpectCommit()
+			},
+			func(txWrapper *sqlTxWrapper) error {
+				return txWrapper.Commit()
+			},
+			commitTransactionLogMessage),
 		skipAnalyzeSQLQueriesTesting: true,
 	},
 	{
 		name: "sqlTxWrapper.Rollback with error",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = errors.New("some error")
-			expectedQuery = rollbackTransactionLogMessage
-
-			mock.ExpectBegin()
-			mock.ExpectRollback().WillReturnError(expectedError)
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			err = txWrapper.Rollback()
-			assert.Equal(t, expectedError, err)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackWithError(
+			func(mock sqlmock.Sqlmock, expectedError error) {
+				mock.ExpectRollback().WillReturnError(expectedError)
+			},
+			func(txWrapper *sqlTxWrapper) error {
+				return txWrapper.Rollback()
+			},
+			rollbackTransactionLogMessage),
 		skipAnalyzeSQLQueriesTesting: true,
 	},
 	{
 		name: "sqlTxWrapper.Rollback with success",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedQuery = rollbackTransactionLogMessage
-
-			mock.ExpectBegin()
-			mock.ExpectRollback()
-
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
-			require.NoError(t, err)
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
-			err = txWrapper.Rollback()
-			require.NoError(t, err)
-			return expectedQuery, expectedAffectedRows, expectedError
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperSuccessfulCommitOrRollback(
+			func(mock sqlmock.Sqlmock) {
+				mock.ExpectRollback()
+			},
+			func(txWrapper *sqlTxWrapper) error {
+				return txWrapper.Rollback()
+			},
+			rollbackTransactionLogMessage),
 		skipAnalyzeSQLQueriesTesting: true,
 	},
 	{
 		name: "sqlTxWrapper.Rollback error because of a context cancellation",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = context.Canceled
-			expectedQuery = rollbackTransactionLogMessage
-
-			mock.ExpectBegin()
-			mock.ExpectRollback()
-
-			ctx, cancelFunc := context.WithCancel(context.Background())
-			sqlDBWrapper := db.db.CommonDB().(*sqlDBWrapper)
-			oldLogSQLQueriesValue := sqlDBWrapper.logConfig.LogSQLQueries
-			sqlDBWrapper.logConfig.LogSQLQueries = false
-			tx, err := sqlDBWrapper.BeginTx(ctx, &sql.TxOptions{})
-			require.NoError(t, err)
-			sqlDBWrapper.logConfig.LogSQLQueries = oldLogSQLQueriesValue
-			tx.logConfig.LogSQLQueries = oldLogSQLQueriesValue
-			cancelFunc()
-
-			assert.Eventually(t, func() bool {
-				return mock.ExpectationsWereMet() == nil
-			}, 1*time.Second, 10*time.Millisecond)
-			require.Nil(t, mock.ExpectationsWereMet(), "cancelFunc() should have caused the rollback to be called")
-			err = tx.Rollback()
-			require.Equal(t, expectedError, err)
-			return expectedQuery, expectedAffectedRows, errors.New(expectedError.Error() + " (the transaction has been rolled back implicitly)")
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackFailingBecauseOfContextCancellation(
+			func(tx *sqlTxWrapper) error {
+				return tx.Rollback()
+			},
+			rollbackTransactionLogMessage),
 		skipAnalyzeSQLQueriesTesting: true,
 	},
 	{
 		name: "sqlTxWrapper.Commit error because of a context cancellation",
-		funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
-			expectedQuery string, expectedAffectedRows *int64, expectedError error,
-		) {
-			t.Helper()
-
-			expectedError = context.Canceled
-			expectedQuery = commitTransactionLogMessage
-
-			mock.ExpectBegin()
-			mock.ExpectRollback()
-
-			ctx, cancelFunc := context.WithCancel(context.Background())
-			sqlDBWrapper := db.db.CommonDB().(*sqlDBWrapper)
-			oldLogSQLQueriesValue := sqlDBWrapper.logConfig.LogSQLQueries
-			sqlDBWrapper.logConfig.LogSQLQueries = false
-			tx, err := sqlDBWrapper.BeginTx(ctx, &sql.TxOptions{})
-			require.NoError(t, err)
-			sqlDBWrapper.logConfig.LogSQLQueries = oldLogSQLQueriesValue
-			tx.logConfig.LogSQLQueries = oldLogSQLQueriesValue
-			cancelFunc()
-
-			assert.Eventually(t, func() bool {
-				return mock.ExpectationsWereMet() == nil
-			}, 1*time.Second, 10*time.Millisecond)
-			require.Nil(t, mock.ExpectationsWereMet(), "cancelFunc() should have caused the rollback to be called")
-			err = tx.Commit()
-			assert.Equal(t, expectedError, err)
-			return expectedQuery, expectedAffectedRows, errors.New(expectedError.Error() + " (the transaction has been rolled back implicitly)")
-		},
+		funcToRun: generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackFailingBecauseOfContextCancellation(
+			func(tx *sqlTxWrapper) error {
+				return tx.Commit()
+			},
+			commitTransactionLogMessage),
 		skipAnalyzeSQLQueriesTesting: true,
 	},
+}
+
+func generateTestFuncToCheckSQLDBWrapperQueryOrExecWithError(
+	mockCallOnDBFunc func(sqlmock.Sqlmock, string, error),
+	callOnDBFunc func(*sqlDBWrapper, string) (interface{}, error),
+) funcToRunInSQLQueryLoggingTests {
+	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+		expectedQuery string, expectedAffectedRows *int64, expectedError error,
+	) {
+		t.Helper()
+
+		expectedError = errors.New("some error")
+		expectedQuery = updateQueryForTesting
+		expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+		mockCallOnDBFunc(mock, "^"+regexp.QuoteMeta(expectedQuery)+"$", expectedError)
+		resultOrRows, err := callOnDBFunc(db.db.CommonDB().(*sqlDBWrapper), expectedQuery)
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, resultOrRows)
+		return expectedQuery, expectedAffectedRows, expectedError
+	}
+}
+
+func generateTestFuncToCheckSQLQueryLoggingForSQLStmtWrapperQueryContextOrExecContextWithError(
+	mockCallOnPreparedStmtFunc func(*sqlmock.ExpectedPrepare, error),
+	callOnPreparedStmtFunc func(*SQLStmtWrapper) (interface{}, error),
+) funcToRunInSQLQueryLoggingTests {
+	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+		expectedQuery string, expectedAffectedRows *int64, expectedError error,
+	) {
+		t.Helper()
+
+		expectedError = errors.New("some error")
+		expectedQuery = updateQueryForTesting
+
+		mock.ExpectBegin()
+		prepareExpectation := mock.ExpectPrepare("^" + regexp.QuoteMeta(expectedQuery) + "$")
+		expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+		mockCallOnPreparedStmtFunc(prepareExpectation, expectedError)
+		mock.ExpectCommit()
+
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		require.NoError(t, err)
+		defer func() { _ = tx.Commit() }()
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		stmtWrapper, err := txWrapper.prepare(expectedQuery)
+		require.NoError(t, err)
+		defer func() { _ = stmtWrapper.Close() }()
+		resultOrRows, err := callOnPreparedStmtFunc(stmtWrapper)
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, resultOrRows)
+		return expectedQuery, expectedAffectedRows, expectedError
+	}
+}
+
+func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperExecOrQueryWithError(
+	mockCallOnTxFunc func(sqlmock.Sqlmock, string, error),
+	callOnTxFunc func(*sqlTxWrapper, string) (interface{}, error),
+) funcToRunInSQLQueryLoggingTests {
+	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+		expectedQuery string, expectedAffectedRows *int64, expectedError error,
+	) {
+		t.Helper()
+
+		expectedError = errors.New("some error")
+		expectedQuery = updateQueryForTesting
+
+		mock.ExpectBegin()
+		expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+		mockCallOnTxFunc(mock, "^"+regexp.QuoteMeta(expectedQuery)+"$", expectedError)
+		mock.ExpectCommit()
+
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		require.NoError(t, err)
+		defer func() { _ = tx.Commit() }()
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		resultOrRows, err := callOnTxFunc(txWrapper, expectedQuery)
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, resultOrRows)
+		return expectedQuery, expectedAffectedRows, expectedError
+	}
+}
+
+func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperSuccessfulCommitOrRollback(
+	mockCallOnTxFunc func(sqlmock.Sqlmock),
+	callOnTxFunc func(*sqlTxWrapper) error,
+	expectedQueryLogMessage string,
+) funcToRunInSQLQueryLoggingTests {
+	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
+		expectedQuery string, expectedAffectedRows *int64, expectedError error,
+	) {
+		t.Helper()
+
+		mock.ExpectBegin()
+		mockCallOnTxFunc(mock)
+
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		require.NoError(t, err)
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		err = callOnTxFunc(txWrapper)
+		require.NoError(t, err)
+		return expectedQueryLogMessage, expectedAffectedRows, expectedError
+	}
+}
+
+func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackWithError(
+	mockCallOnTxFunc func(sqlmock.Sqlmock, error),
+	callOnTxFunc func(*sqlTxWrapper) error,
+	expectedQueryLogMessage string,
+) funcToRunInSQLQueryLoggingTests {
+	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
+		expectedQuery string, expectedAffectedRows *int64, expectedError error,
+	) {
+		t.Helper()
+
+		expectedError = errors.New("some error")
+
+		mock.ExpectBegin()
+		mockCallOnTxFunc(mock, expectedError)
+
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		require.NoError(t, err)
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		err = callOnTxFunc(txWrapper)
+		assert.Equal(t, expectedError, err)
+		return expectedQueryLogMessage, expectedAffectedRows, expectedError
+	}
+}
+
+func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackFailingBecauseOfContextCancellation(
+	callOnTxFunc func(*sqlTxWrapper) error,
+	expectedQueryLogMessage string,
+) funcToRunInSQLQueryLoggingTests {
+	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
+		expectedQuery string, expectedAffectedRows *int64, expectedError error,
+	) {
+		t.Helper()
+
+		expectedError = context.Canceled
+
+		mock.ExpectBegin()
+		mock.ExpectRollback()
+
+		ctx, cancelFunc := context.WithCancel(context.Background())
+		sqlDBWrapper := db.db.CommonDB().(*sqlDBWrapper)
+		oldLogSQLQueriesValue := sqlDBWrapper.logConfig.LogSQLQueries
+		sqlDBWrapper.logConfig.LogSQLQueries = false
+		tx, err := sqlDBWrapper.BeginTx(ctx, &sql.TxOptions{})
+		require.NoError(t, err)
+		sqlDBWrapper.logConfig.LogSQLQueries = oldLogSQLQueriesValue
+		tx.logConfig.LogSQLQueries = oldLogSQLQueriesValue
+		cancelFunc()
+
+		assert.Eventually(t, func() bool {
+			return mock.ExpectationsWereMet() == nil
+		}, 1*time.Second, 10*time.Millisecond)
+		require.Nil(t, mock.ExpectationsWereMet(), "cancelFunc() should have caused the rollback to be called")
+		err = callOnTxFunc(tx)
+		require.Equal(t, expectedError, err)
+		return expectedQueryLogMessage, expectedAffectedRows,
+			errors.New(expectedError.Error() + " (the transaction has been rolled back implicitly)")
+	}
 }
 
 func Test_SQLQueryLogging(t *testing.T) {

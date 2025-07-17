@@ -1,7 +1,6 @@
 package database
 
 import (
-	"errors"
 	"reflect"
 	"regexp"
 	"sync"
@@ -153,19 +152,7 @@ func TestItemItemStore_CreateNewAncestors_MustBeInTransaction(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_HandlesErrorOfCreateNewAncestors(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	expectedError := errors.New("some error")
-
-	db, dbMock := NewDBMock()
-	defer func() { _ = db.Close() }()
-	dbMock.ExpectBegin()
-	dbMock.ExpectExec("^INSERT INTO  items_propagate").WillReturnError(expectedError)
-	dbMock.ExpectRollback()
-
-	assert.Equal(t, expectedError, db.inTransaction(func(trDB *DB) error {
+	testErrorHandlingInAncestorsPropagation(t, "items_propagate", func(trDB *DB) error {
 		return NewDataStore(trDB).ItemItems().CreateNewAncestors()
-	}))
-
-	assert.NoError(t, dbMock.ExpectationsWereMet())
+	})
 }

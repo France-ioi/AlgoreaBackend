@@ -54,21 +54,15 @@ func (ctx *TestContext) replaceReferencesWithIDs(str string) string {
 	})
 }
 
-func (ctx *TestContext) preprocessString(str string) (string, error) {
+func (ctx *TestContext) preprocessString(str string) string {
 	str = ctx.replaceReferencesWithIDs(str)
 	tmpl, err := ctx.templateSet.Parse("template", str)
-	if err != nil {
-		return "", err
-	}
+	mustNotBeError(err)
 	const kilobyte = 1024
 	buffer := bytes.NewBuffer(make([]byte, 0, kilobyte))
 	err = tmpl.Execute(buffer, nil, nil)
-	if err != nil {
-		return "", err
-	}
-	str = buffer.String()
-
-	return str, nil
+	mustNotBeError(err)
+	return buffer.String()
 }
 
 func (ctx *TestContext) constructTemplateSet() *jet.Set {

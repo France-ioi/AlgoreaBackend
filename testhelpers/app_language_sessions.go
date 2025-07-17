@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages/go/v21"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -32,16 +31,12 @@ func (ctx *TestContext) addSession(session, user, refreshToken string) {
 	sessionID := ctx.getIDOfReference(session)
 	userID := ctx.getIDOfReference(user)
 
-	err := ctx.DBHasTable("sessions", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{
-				{Value: "session_id"}, {Value: "user_id"}, {Value: "refresh_token"},
-			}},
-			{Cells: []*messages.PickleTableCell{
-				{Value: strconv.FormatInt(sessionID, 10)}, {Value: strconv.FormatInt(userID, 10)}, {Value: refreshToken},
-			}},
-		},
-	})
+	err := ctx.DBHasTable("sessions",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"session_id", strconv.FormatInt(sessionID, 10)},
+			{"user_id", strconv.FormatInt(userID, 10)},
+			{"refresh_token", refreshToken},
+		}))
 	if err != nil {
 		panic(err)
 	}
@@ -61,12 +56,13 @@ func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt strin
 		panic(err)
 	}
 
-	err = ctx.DBHasTable("access_tokens", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{{Value: "session_id"}, {Value: "token"}, {Value: "issued_at"}, {Value: "expires_at"}}},
-			{Cells: []*messages.PickleTableCell{{Value: strconv.FormatInt(sessionID, 10)}, {Value: token}, {Value: issuedAt}, {Value: expiresAt}}},
-		},
-	})
+	err = ctx.DBHasTable("access_tokens",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"session_id", strconv.FormatInt(sessionID, 10)},
+			{"token", token},
+			{"issued_at", issuedAt},
+			{"expires_at", expiresAt},
+		}))
 	if err != nil {
 		panic(err)
 	}

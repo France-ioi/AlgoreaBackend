@@ -1,7 +1,6 @@
 package payloads
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"strconv"
@@ -20,9 +19,7 @@ type ScoreToken struct {
 	UserAnswerID string  `json:"idUserAnswer"`
 	Answer       *string `json:"sAnswer"`
 
-	Converted  ScoreTokenConverted
-	PublicKey  *rsa.PublicKey
-	PrivateKey *rsa.PrivateKey
+	Converted ScoreTokenConverted
 }
 
 // ScoreTokenConverted contains converted field values of ScoreToken payload.

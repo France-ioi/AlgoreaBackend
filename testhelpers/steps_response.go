@@ -163,10 +163,7 @@ func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *godo
 		return err
 	}
 
-	preprocessedWants, err := ctx.preprocessString(wants.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedWants := ctx.preprocessString(wants.Content)
 
 	expected, err := indentJSON(preprocessedWants)
 	if err != nil {
@@ -200,11 +197,7 @@ func (ctx *TestContext) TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSON
 
 	expectedJSON := strings.ReplaceAll(expectedJSONParam.Content, " ", "")
 	expectedJSON = strings.ReplaceAll(expectedJSON, "\n", "")
-
-	expectedJSON, err = ctx.preprocessString(expectedJSON)
-	if err != nil {
-		return err
-	}
+	expectedJSON = ctx.preprocessString(expectedJSON)
 
 	return compareStrings(expectedJSON, string(plainJSON))
 }
@@ -350,10 +343,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		return err
 	}
 
-	expectedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	expectedBody := ctx.preprocessString(body.Content)
 
 	expected, err := indentJSON(expectedBody)
 	if err != nil {
@@ -391,10 +381,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 
 // TheResponseBodyShouldBe checks that the response is the same as the one provided.
 func (ctx *TestContext) TheResponseBodyShouldBe(body *godog.DocString) (err error) {
-	expectedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+	expectedBody := ctx.preprocessString(body.Content)
 	return compareStrings(expectedBody, ctx.lastResponseBody)
 }
 
@@ -430,10 +417,7 @@ func (ctx *TestContext) TheResponseHeaderShouldBe(headerName, headerValue string
 		return ctx.TheResponseHeaderShouldNotBeSet(headerName)
 	}
 
-	headerValue, err = ctx.preprocessString(headerValue)
-	if err != nil {
-		return err
-	}
+	headerValue = ctx.preprocessString(headerValue)
 	headerName = http.CanonicalHeaderKey(headerName)
 
 	if len(ctx.lastResponse.Header[headerName]) == 0 {
@@ -464,10 +448,7 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(
 	headerName string,
 	headersValue *godog.DocString,
 ) (err error) {
-	headerValue, err := ctx.preprocessString(headersValue.Content)
-	if err != nil {
-		return err
-	}
+	headerValue := ctx.preprocessString(headersValue.Content)
 	lines := strings.Split(headerValue, "\n")
 	trimmed := make([]string, 0, len(lines))
 	for i := range lines {

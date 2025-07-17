@@ -139,7 +139,7 @@ func (srv *Service) getThread(responseWriter http.ResponseWriter, httpRequest *h
 func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo *threadInfo, user *database.User) (string, error) {
 	expirationTime := time.Now().Add(threadTokenLifetime)
 
-	threadToken, err := (&token.Thread{
+	threadToken, err := (&token.Token[payloads.ThreadToken]{Payload: payloads.ThreadToken{
 		ItemID:        strconv.FormatInt(itemID, 10),
 		ParticipantID: strconv.FormatInt(participantID, 10),
 		UserID:        strconv.FormatInt(user.GroupID, 10),
@@ -147,7 +147,7 @@ func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo 
 		CanWatch:      userCanWatchForThread(threadInfo),
 		CanWrite:      userCanWriteInThread(user, participantID, threadInfo),
 		Exp:           strconv.FormatInt(expirationTime.Unix(), 10),
-	}).Sign(srv.TokenConfig.PrivateKey)
+	}}).Sign(srv.TokenConfig.PrivateKey)
 
 	return threadToken, err
 }

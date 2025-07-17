@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
@@ -173,7 +174,7 @@ func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRe
 
 	accessSolutions := answerInfos.AccessSolutions || answerInfos.Validated
 
-	taskToken := token.Task{
+	taskToken := token.Token[payloads.TaskToken]{Payload: payloads.TaskToken{
 		AccessSolutions:    &accessSolutions,
 		SubmissionPossible: golang.Ptr(false),
 		HintsAllowed:       golang.Ptr(false),
@@ -190,7 +191,7 @@ func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRe
 		RandomSeed:         strconv.FormatUint(randomSeed, 10),
 		PlatformName:       srv.TokenConfig.PlatformName,
 		Login:              answerInfos.AuthorLogin,
-	}
+	}}
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 

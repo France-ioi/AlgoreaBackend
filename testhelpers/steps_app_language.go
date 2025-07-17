@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
@@ -25,10 +24,7 @@ var (
 
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
-	preprocessed, err := ctx.preprocessString(parameters)
-	if err != nil {
-		panic(err)
-	}
+	preprocessed := ctx.preprocessString(parameters)
 
 	parameterMap := make(map[string]string)
 	arrayParameters := strings.Split(preprocessed, ",")
@@ -135,12 +131,11 @@ func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
 	childGroupID := ctx.getIDOfReference(childGroup)
 
 	ctx.needPopulateDatabase = true
-	err := ctx.DBHasTable("groups_groups", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{{Value: "parent_group_id"}, {Value: "child_group_id"}}},
-			{Cells: []*messages.PickleTableCell{{Value: strconv.FormatInt(parentGroupID, 10)}, {Value: strconv.FormatInt(childGroupID, 10)}}},
-		},
-	})
+	err := ctx.DBHasTable("groups_groups",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"parent_group_id", strconv.FormatInt(parentGroupID, 10)},
+			{"child_group_id", strconv.FormatInt(childGroupID, 10)},
+		}))
 	if err != nil {
 		panic(err)
 	}
@@ -157,24 +152,14 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 	groupID := ctx.getIDOfReference(group)
 
 	ctx.needPopulateDatabase = true
-	err = ctx.DBHasTable("group_managers", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{
-				{Value: "manager_id"},
-				{Value: "group_id"},
-				{Value: "can_watch_members"},
-				{Value: "can_grant_group_access"},
-				{Value: "can_manage"},
-			}},
-			{Cells: []*messages.PickleTableCell{
-				{Value: strconv.FormatInt(managerID, 10)},
-				{Value: strconv.FormatInt(groupID, 10)},
-				{Value: canWatchMembers},
-				{Value: canGrantGroupAccess},
-				{Value: canManage},
-			}},
-		},
-	})
+	err = ctx.DBHasTable("group_managers",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"manager_id", strconv.FormatInt(managerID, 10)},
+			{"group_id", strconv.FormatInt(groupID, 10)},
+			{"can_watch_members", canWatchMembers},
+			{"can_grant_group_access", canGrantGroupAccess},
+			{"can_manage", canManage},
+		}))
 	if err != nil {
 		panic(err)
 	}
@@ -194,16 +179,13 @@ func (ctx *TestContext) setGrantedPermission(group, item, sourceGroup, origin, p
 
 	if !ctx.isInDatabase(permissionsGrantedTable, primaryKey) {
 		ctx.needPopulateDatabase = true
-		err := ctx.DBHasTable(permissionsGrantedTable, &godog.Table{
-			Rows: []*messages.PickleTableRow{
-				{Cells: []*messages.PickleTableCell{
-					{Value: "group_id"}, {Value: "source_group_id"}, {Value: "item_id"}, {Value: "origin"},
-				}},
-				{Cells: []*messages.PickleTableCell{
-					{Value: groupIDString}, {Value: sourceGroupIDString}, {Value: itemIDString}, {Value: origin},
-				}},
-			},
-		})
+		err := ctx.DBHasTable(permissionsGrantedTable,
+			constructGodogTableFromData([]stringKeyValuePair{
+				{"group_id", groupIDString},
+				{"source_group_id", sourceGroupIDString},
+				{"item_id", itemIDString},
+				{"origin", origin},
+			}))
 		if err != nil {
 			panic(err)
 		}
@@ -229,12 +211,11 @@ func (ctx *TestContext) addAttempt(item, participant string) {
 	participantID := ctx.getIDOfReference(participant)
 
 	ctx.needPopulateDatabase = true
-	err := ctx.DBHasTable("attempts", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{{Value: "id"}, {Value: "participant_id"}}},
-			{Cells: []*messages.PickleTableCell{{Value: strconv.FormatInt(itemID, 10)}, {Value: strconv.FormatInt(participantID, 10)}}},
-		},
-	})
+	err := ctx.DBHasTable("attempts",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"id", strconv.FormatInt(itemID, 10)},
+			{"participant_id", strconv.FormatInt(participantID, 10)},
+		}))
 	if err != nil {
 		panic(err)
 	}
@@ -246,17 +227,13 @@ func (ctx *TestContext) addValidatedResult(attemptID, participant, item string, 
 	itemID := ctx.getIDOfReference(item)
 
 	ctx.needPopulateDatabase = true
-	err := ctx.DBHasTable("results", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{{Value: "attempt_id"}, {Value: "participant_id"}, {Value: "item_id"}, {Value: "validated_at"}}},
-			{Cells: []*messages.PickleTableCell{
-				{Value: attemptID},
-				{Value: strconv.FormatInt(participantID, 10)},
-				{Value: strconv.FormatInt(itemID, 10)},
-				{Value: validatedAt.UTC().Format(time.DateTime)},
-			}},
-		},
-	})
+	err := ctx.DBHasTable("results",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"attempt_id", attemptID},
+			{"participant_id", strconv.FormatInt(participantID, 10)},
+			{"item_id", strconv.FormatInt(itemID, 10)},
+			{"validated_at", validatedAt.UTC().Format(time.DateTime)},
+		}))
 	if err != nil {
 		panic(err)
 	}
@@ -275,16 +252,12 @@ func (ctx *TestContext) addItemItem(parentItem, childItem string) {
 	childItemID := ctx.getIDOfReference(childItem)
 
 	ctx.needPopulateDatabase = true
-	err := ctx.DBHasTable("items_items", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{{Value: "parent_item_id"}, {Value: "child_item_id"}, {Value: "child_order"}}},
-			{Cells: []*messages.PickleTableCell{
-				{Value: strconv.FormatInt(parentItemID, 10)},
-				{Value: strconv.FormatInt(childItemID, 10)},
-				{Value: strconv.FormatInt((parentItemID+childItemID)%1000, 10)},
-			}},
-		},
-	})
+	err := ctx.DBHasTable("items_items",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"parent_item_id", strconv.FormatInt(parentItemID, 10)},
+			{"child_item_id", strconv.FormatInt(childItemID, 10)},
+			{"child_order", strconv.FormatInt((parentItemID+childItemID)%1000, 10)},
+		}))
 	if err != nil {
 		panic(err)
 	}
@@ -295,7 +268,7 @@ func (ctx *TestContext) addItemItemPropagation(parent, child, propagation, propa
 	ctx.setDBTableRowColumnValue("items_items", primaryKey, propagation, propagationValue)
 }
 
-// addItem adds an item in the database.
+// addItem adds an item to the database.
 func (ctx *TestContext) addItem(fields map[string]string) {
 	dbFields, primaryKey, oldRowIndex := ctx.constructDBFieldsForAddItem(fields)
 
@@ -306,17 +279,11 @@ func (ctx *TestContext) addItem(fields map[string]string) {
 		return
 	}
 
-	columnNameCells := make([]*messages.PickleTableCell, 0, len(dbFields))
-	columnValues := make([]*messages.PickleTableCell, 0, len(dbFields))
-	for key, value := range dbFields {
-		columnNameCells = append(columnNameCells, &messages.PickleTableCell{Value: key})
-		columnValues = append(columnValues, &messages.PickleTableCell{Value: value})
+	keyValuePairs := make([]stringKeyValuePair, 0, len(dbFields))
+	for name, value := range dbFields {
+		keyValuePairs = append(keyValuePairs, stringKeyValuePair{name, value})
 	}
-	err := ctx.DBHasTable("items", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: columnNameCells}, {Cells: columnValues},
-		},
-	})
+	err := ctx.DBHasTable("items", constructGodogTableFromData(keyValuePairs))
 	if err != nil {
 		panic(err)
 	}
@@ -390,26 +357,15 @@ func (ctx *TestContext) addThread(item, participant, helperGroup, status, messag
 		panic(err)
 	}
 
-	err = ctx.DBHasTable("threads", &godog.Table{
-		Rows: []*messages.PickleTableRow{
-			{Cells: []*messages.PickleTableCell{
-				{Value: "item_id"},
-				{Value: "participant_id"},
-				{Value: "helper_group_id"},
-				{Value: "status"},
-				{Value: "message_count"},
-				{Value: "latest_update_at"},
-			}},
-			{Cells: []*messages.PickleTableCell{
-				{Value: strconv.FormatInt(itemID, 10)},
-				{Value: strconv.FormatInt(participantID, 10)},
-				{Value: strconv.FormatInt(helperGroupID, 10)},
-				{Value: status},
-				{Value: messageCount},
-				{Value: latestUpdateAt},
-			}},
-		},
-	})
+	err = ctx.DBHasTable("threads",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"item_id", strconv.FormatInt(itemID, 10)},
+			{"participant_id", strconv.FormatInt(participantID, 10)},
+			{"helper_group_id", strconv.FormatInt(helperGroupID, 10)},
+			{"status", status},
+			{"message_count", messageCount},
+			{"latest_update_at", latestUpdateAt},
+		}))
 	if err != nil {
 		panic(err)
 	}

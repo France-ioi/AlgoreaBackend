@@ -1,7 +1,5 @@
 package payloads
 
-import "crypto/rsa"
-
 // ThreadToken represents data inside a thread token.
 // swagger:model ThreadToken
 type ThreadToken struct {
@@ -27,9 +25,4 @@ type ThreadToken struct {
 	// Expiry date in the number of seconds since 01/01/1970 UTC.
 	// required:true
 	Exp string `json:"exp"`
-
-	// swagger:ignore
-	PublicKey *rsa.PublicKey
-	// swagger:ignore
-	PrivateKey *rsa.PrivateKey
 }

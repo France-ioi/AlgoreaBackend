@@ -339,87 +339,39 @@ func (srv *Service) getPermissions(responseWriter http.ResponseWriter, httpReque
 
 	response := permissionsViewResponse{
 		Granted: grantedPermissionsStruct{
-			permissionsStruct: permissionsStruct{
-				ItemPermissions: structures.ItemPermissions{
-					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_directly_can_view_value"].(int64))),
-					CanGrantView: permissionsGrantedStore.GrantViewNameByIndex(int(permissionsRow["granted_directly_can_grant_view_value"].(int64))),
-					CanWatch:     permissionsGrantedStore.WatchNameByIndex(int(permissionsRow["granted_directly_can_watch_value"].(int64))),
-					CanEdit:      permissionsGrantedStore.EditNameByIndex(int(permissionsRow["granted_directly_can_edit_value"].(int64))),
-					IsOwner:      permissionsRow["granted_directly_is_owner"].(int64) == 1,
-				},
-				CanMakeSessionOfficial: permissionsRow["granted_directly_can_make_session_official"].(int64) == 1,
-			},
+			permissionsStruct: permissionsStructForPrefix(
+				permissionsGrantedStore, permissionsRow, "granted_directly"),
 			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_directly_can_enter_from"]),
 			CanEnterUntil:    service.ConvertDBTimeToJSONTime(permissionsRow["granted_directly_can_enter_until"]),
 			CanRequestHelpTo: canRequestHelpToPermission,
 		},
 		Computed: computedPermissions{aggregatedPermissionsWithCanEnterFromStruct{
-			permissionsStruct: permissionsStruct{
-				ItemPermissions: structures.ItemPermissions{
-					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["generated_can_view_value"].(int64))),
-					CanGrantView: permissionsGrantedStore.GrantViewNameByIndex(int(permissionsRow["generated_can_grant_view_value"].(int64))),
-					CanWatch:     permissionsGrantedStore.WatchNameByIndex(int(permissionsRow["generated_can_watch_value"].(int64))),
-					CanEdit:      permissionsGrantedStore.EditNameByIndex(int(permissionsRow["generated_can_edit_value"].(int64))),
-					IsOwner:      permissionsRow["generated_is_owner"].(int64) == 1,
-				},
-				CanMakeSessionOfficial: permissionsRow["generated_can_make_session_official"].(int64) == 1,
-			},
+			permissionsStruct: permissionsStructForPrefix(
+				permissionsGrantedStore, permissionsRow, "generated"),
 			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["generated_can_enter_from"]),
 			CanRequestHelpTo: canRequestHelpToByOrigin[OriginComputed],
 		}},
 		GrantedViaGroupMembership: permissionsGrantedViaGroupMembership{aggregatedPermissionsWithCanEnterFromStruct{
-			permissionsStruct: permissionsStruct{
-				ItemPermissions: structures.ItemPermissions{
-					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_membership_can_view_value"].(int64))),
-					CanGrantView: permissionsGrantedStore.GrantViewNameByIndex(int(permissionsRow["granted_anc_membership_can_grant_view_value"].(int64))),
-					CanWatch:     permissionsGrantedStore.WatchNameByIndex(int(permissionsRow["granted_anc_membership_can_watch_value"].(int64))),
-					CanEdit:      permissionsGrantedStore.EditNameByIndex(int(permissionsRow["granted_anc_membership_can_edit_value"].(int64))),
-					IsOwner:      permissionsRow["granted_anc_membership_is_owner"].(int64) == 1,
-				},
-				CanMakeSessionOfficial: permissionsRow["granted_anc_membership_can_make_session_official"].(int64) == 1,
-			},
+			permissionsStruct: permissionsStructForPrefix(
+				permissionsGrantedStore, permissionsRow, "granted_anc_membership"),
 			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_membership_can_enter_from"]),
 			CanRequestHelpTo: canRequestHelpToByOrigin[OriginGroupMembership],
 		}},
 		GrantedViaItemUnlocking: permissionsGrantedViaItemUnlocking{aggregatedPermissionsWithCanEnterFromStruct{
-			permissionsStruct: permissionsStruct{
-				ItemPermissions: structures.ItemPermissions{
-					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_unlocking_can_view_value"].(int64))),
-					CanGrantView: permissionsGrantedStore.GrantViewNameByIndex(int(permissionsRow["granted_anc_unlocking_can_grant_view_value"].(int64))),
-					CanWatch:     permissionsGrantedStore.WatchNameByIndex(int(permissionsRow["granted_anc_unlocking_can_watch_value"].(int64))),
-					CanEdit:      permissionsGrantedStore.EditNameByIndex(int(permissionsRow["granted_anc_unlocking_can_edit_value"].(int64))),
-					IsOwner:      permissionsRow["granted_anc_unlocking_is_owner"].(int64) == 1,
-				},
-				CanMakeSessionOfficial: permissionsRow["granted_anc_unlocking_can_make_session_official"].(int64) == 1,
-			},
+			permissionsStruct: permissionsStructForPrefix(
+				permissionsGrantedStore, permissionsRow, "granted_anc_unlocking"),
 			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_unlocking_can_enter_from"]),
 			CanRequestHelpTo: canRequestHelpToByOrigin[OriginItemUnlocking],
 		}},
 		GrantedViaSelf: permissionsGrantedViaSelf{aggregatedPermissionsWithCanEnterFromStruct{
-			permissionsStruct: permissionsStruct{
-				ItemPermissions: structures.ItemPermissions{
-					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_self_can_view_value"].(int64))),
-					CanGrantView: permissionsGrantedStore.GrantViewNameByIndex(int(permissionsRow["granted_anc_self_can_grant_view_value"].(int64))),
-					CanWatch:     permissionsGrantedStore.WatchNameByIndex(int(permissionsRow["granted_anc_self_can_watch_value"].(int64))),
-					CanEdit:      permissionsGrantedStore.EditNameByIndex(int(permissionsRow["granted_anc_self_can_edit_value"].(int64))),
-					IsOwner:      permissionsRow["granted_anc_self_is_owner"].(int64) == 1,
-				},
-				CanMakeSessionOfficial: permissionsRow["granted_anc_self_can_make_session_official"].(int64) == 1,
-			},
+			permissionsStruct: permissionsStructForPrefix(
+				permissionsGrantedStore, permissionsRow, "granted_anc_self"),
 			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_self_can_enter_from"]),
 			CanRequestHelpTo: canRequestHelpToByOrigin[OriginSelf],
 		}},
 		GrantedViaOther: permissionsGrantedViaOther{aggregatedPermissionsWithCanEnterFromStruct{
-			permissionsStruct: permissionsStruct{
-				ItemPermissions: structures.ItemPermissions{
-					CanView:      permissionsGrantedStore.ViewNameByIndex(int(permissionsRow["granted_anc_other_can_view_value"].(int64))),
-					CanGrantView: permissionsGrantedStore.GrantViewNameByIndex(int(permissionsRow["granted_anc_other_can_grant_view_value"].(int64))),
-					CanWatch:     permissionsGrantedStore.WatchNameByIndex(int(permissionsRow["granted_anc_other_can_watch_value"].(int64))),
-					CanEdit:      permissionsGrantedStore.EditNameByIndex(int(permissionsRow["granted_anc_other_can_edit_value"].(int64))),
-					IsOwner:      permissionsRow["granted_anc_other_is_owner"].(int64) == 1,
-				},
-				CanMakeSessionOfficial: permissionsRow["granted_anc_other_can_make_session_official"].(int64) == 1,
-			},
+			permissionsStruct: permissionsStructForPrefix(
+				permissionsGrantedStore, permissionsRow, "granted_anc_other"),
 			CanEnterFrom:     service.ConvertDBTimeToJSONTime(permissionsRow["granted_anc_other_can_enter_from"]),
 			CanRequestHelpTo: canRequestHelpToByOrigin[OriginOther],
 		}},
@@ -474,6 +426,22 @@ func getCanRequestHelpToByOrigin(
 	}
 
 	return canRequestHelpToByOrigin
+}
+
+func permissionsStructForPrefix(
+	pgStore *database.PermissionGrantedStore,
+	permissionsRow map[string]interface{}, prefix string,
+) permissionsStruct {
+	return permissionsStruct{
+		ItemPermissions: structures.ItemPermissions{
+			CanView:      pgStore.ViewNameByIndex(int(permissionsRow[prefix+"_can_view_value"].(int64))),
+			CanGrantView: pgStore.GrantViewNameByIndex(int(permissionsRow[prefix+"_can_grant_view_value"].(int64))),
+			CanWatch:     pgStore.WatchNameByIndex(int(permissionsRow[prefix+"_can_watch_value"].(int64))),
+			CanEdit:      pgStore.EditNameByIndex(int(permissionsRow[prefix+"_can_edit_value"].(int64))),
+			IsOwner:      permissionsRow[prefix+"_is_owner"].(int64) == 1,
+		},
+		CanMakeSessionOfficial: permissionsRow[prefix+"_can_make_session_official"].(int64) == 1,
+	}
 }
 
 // filterCanRequestHelpTo filters the canRequestHelpTo permissions to only keep the ones matching the wanted origin.

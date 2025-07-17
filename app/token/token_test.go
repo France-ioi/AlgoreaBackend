@@ -1,421 +1,165 @@
 package token
 
 import (
-	"crypto/rsa"
+	"encoding/json"
 	"errors"
-	"math/big"
-	"os"
-	"strconv"
+	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
 	"bou.ke/monkey"
 	"github.com/SermoDigital/jose/crypto"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
-var taskTokenFromAlgoreaPlatform = []byte(
-	"eyJhbGciOiJSUzUxMiJ9.eyJzTG9naW4iOiJ0ZXN0IiwiYklzQWRtaW4iOiIwIiwiaWRV" +
-		"c2VyIjoiNTU2MzcxODIxNjkzMjE5OTI1IiwiaWRJdGVtIjpudWxsLCJzSGludHNSZXF" +
-		"1ZXN0ZWQiOm51bGwsImJIaW50c0FsbG93ZWQiOiIwIiwic1N1cHBvcnRlZExhbmdQcm" +
-		"9nIjoiKiIsImJBY2Nlc3NTb2x1dGlvbnMiOiIxIiwiaXRlbVVybCI6Imh0dHA6XC9cL" +
-		"3Rhc2twbGF0Zm9ybS5tYmxvY2tlbGV0LmluZm9cL3Rhc2suaHRtbD90YXNrSWQ9NDAz" +
-		"NDQ5NTQzNjcyMTgzOTM2IiwiaWRJdGVtTG9jYWwiOiI5MDE3NTY1NzMzNDU4MzE0MDk" +
-		"iLCJiU3VibWlzc2lvblBvc3NpYmxlIjp0cnVlLCJpZEF0dGVtcHQiOm51bGwsIm5iSG" +
-		"ludHNHaXZlbiI6IjAiLCJiSGludFBvc3NpYmxlIjp0cnVlLCJpZFRhc2siOm51bGwsI" +
-		"mJSZWFkQW5zd2VycyI6dHJ1ZSwicmFuZG9tU2VlZCI6IjU1NjM3MTgyMTY5MzIxOTky" +
-		"NSIsInBsYXRmb3JtTmFtZSI6InRlc3RfZG1pdHJ5IiwiZGF0ZSI6IjAyLTA1LTIwMTk" +
-		"ifQ.jyAWVPyW442LQAcAAG8F8NddmKtRJLaNhpSsR7WZIDrkXro6G25ZL4oFxzQuMZp" +
-		"k2xMkkSRyK3bjM0uOOQ0F6yDZOkJ3TiSbJe-tROUdcPP3xgGsoc8eOK2_KNLoXg49u9" +
-		"Jtg-C1Yru04pXF9nEsm2FLB9n-Rg-cLCmPxbVCm_U")
-
-var answerTokenFromAlgoreaPlatform = []byte(
-	"eyJhbGciOiJSUzUxMiJ9.eyJzQW5zd2VyIjoie1wiaWRTdWJtaXNzaW9uXCI6XCI4OTkx" +
-		"NDYzMDkyMDM4NTUwNzRcIixcImxhbmdQcm9nXCI6XCJweXRob25cIixcInNvdXJjZUN" +
-		"vZGVcIjpcInByaW50KG1pbihpbnQoaW5wdXQoKSksIGludChpbnB1dCgpKSwgaW50KG" +
-		"lucHV0KCkpKSlcIn0iLCJpZFVzZXIiOiI1NTYzNzE4MjE2OTMyMTk5MjUiLCJpZEl0Z" +
-		"W0iOm51bGwsImlkQXR0ZW1wdCI6bnVsbCwiaXRlbVVybCI6Imh0dHA6XC9cL3Rhc2tw" +
-		"bGF0Zm9ybS5tYmxvY2tlbGV0LmluZm9cL3Rhc2suaHRtbD90YXNrSWQ9NDAzNDQ5NTQ" +
-		"zNjcyMTgzOTM2IiwiaWRJdGVtTG9jYWwiOiI5MDE3NTY1NzMzNDU4MzE0MDkiLCJpZF" +
-		"VzZXJBbnN3ZXIiOiIyNTE1MTAwMjcxMzg3MjY4NTciLCJwbGF0Zm9ybU5hbWUiOiJ0Z" +
-		"XN0X2RtaXRyeSIsInJhbmRvbVNlZWQiOiI1NTYzNzE4MjE2OTMyMTk5MjUiLCJzSGlu" +
-		"dHNSZXF1ZXN0ZWQiOm51bGwsIm5iSGludHNHaXZlbiI6IjAiLCJkYXRlIjoiMDItMDU" +
-		"tMjAxOSJ9.GriSv4nj0M0CHPuUSAWs31Wv-VPAm494rGL6RrAnrmg5Q5DNBhT8_RGua" +
-		"pU5rhaTUHuWr3iwWZYEVqWVrFbuDbKmkKrwCCA6-j6NinWqzGG61EaunxpKXYDQjFOn" +
-		"uH8E1PWMKrC6OLk-5J4NUE5qGn87WKbOpbzuzwcUdWJV77o")
-
-var threadTokenFromAlgoreaPlatform = []byte(
-	"eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJjYW5fd2F0Y2giOnRydWUsImNhbl93" +
-		"cml0ZSI6ZmFsc2UsImRhdGUiOiIwMS0wMS0yMDIwIiwiZXhwIjoiMTU3Nzg0NDAwMCI" +
-		"sImlzX21pbmUiOnRydWUsIml0ZW1faWQiOiIxIiwicGFydGljaXBhbnRfaWQiOiIyIi" +
-		"widXNlcl9pZCI6IjMifQ.LKG_tr29frEvvBwLECnEA9T_437cINuijcXUp3CSvBwV4z" +
-		"kCuCg3_zyv2GMZ-IhgngljQ1rU_Gr0IG_vJwIUHwRZW6xfDBgQikpOO9CVMdSWZsr_n" +
-		"02LU6SCFaNXDft-VYfPFt0ro8VWb5zhRls8Mjqsb_f-jiPlu4D1CAeNK0g")
-
-const testPlatformName = "test_dmitry"
-
-// generateSignedTestToken generates a signed test token.
-// Use it if you need to generate a signed token to use in your tests.
-func generateSignedTestToken() string { //nolint:unused
-	now, err := time.Parse(time.RFC3339, "2020-01-01T00:00:00Z")
-	if err != nil {
-		panic(err)
-	}
-
-	monkey.Patch(time.Now, func() time.Time { return now })
-
-	content := Thread{
-		ItemID:        "1",
-		ParticipantID: "2",
-		UserID:        "3",
-		IsMine:        true,
-		CanWatch:      true,
-		CanWrite:      false,
-		Exp:           strconv.FormatInt(now.Add(time.Hour*2).Unix(), 10),
-	}
-
-	signedToken, err := (&content).Sign(tokentest.TaskPlatformPrivateKeyParsed)
-	if err != nil {
-		panic(err)
-	}
-
-	return signedToken
+var marshalAndSignTests = []struct {
+	name        string
+	currentTime time.Time
+	structType  reflect.Type
+	payloadMap  map[string]interface{}
+	payloadType reflect.Type
+}{
+	{
+		name:        "task token",
+		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+		structType:  reflect.TypeOf(Token[payloads.TaskToken]{}),
+		payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform,
+		payloadType: reflect.TypeOf(payloads.TaskToken{}),
+	},
+	{
+		name:        "answer token",
+		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+		structType:  reflect.TypeOf(Token[payloads.AnswerToken]{}),
+		payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
+		payloadType: reflect.TypeOf(payloads.AnswerToken{}),
+	},
+	{
+		name:        "hint token",
+		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+		structType:  reflect.TypeOf(Token[payloads.HintToken]{}),
+		payloadMap:  payloadstest.HintPayloadFromTaskPlatform,
+		payloadType: reflect.TypeOf(payloads.HintToken{}),
+	},
+	{
+		name:        "score token",
+		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+		structType:  reflect.TypeOf(Token[payloads.ScoreToken]{}),
+		payloadMap:  payloadstest.ScorePayloadFromGrader,
+		payloadType: reflect.TypeOf(payloads.ScoreToken{}),
+	},
+	{
+		name:        "thread token",
+		currentTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+		structType:  reflect.TypeOf(Token[payloads.ThreadToken]{}),
+		payloadMap:  payloadstest.ThreadPayloadFromAlgoreaPlatformOriginal,
+		payloadType: reflect.TypeOf(payloads.ThreadToken{}),
+	},
 }
 
-func TestParseAndValidate(t *testing.T) {
-	tests := []struct {
-		name        string
-		currentTime time.Time
-		token       []byte
-		wantPayload map[string]interface{}
-		wantError   error
-	}{
-		{
-			name:        "a task token generated by AlgoreaPlatform",
-			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			token:       taskTokenFromAlgoreaPlatform,
-			wantPayload: payloadstest.TaskPayloadFromAlgoreaPlatformOriginal,
-			wantError:   nil,
-		},
-		{
-			name:        "a task token generated by AlgoreaPlatform has expired",
-			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC).Add(+36 * time.Hour),
-			token:       taskTokenFromAlgoreaPlatform,
-			wantPayload: nil,
-			wantError:   errors.New("the token has expired"),
-		},
-		{
-			name:        "a task token generated by AlgoreaPlatform has not started",
-			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC).Add(-36*time.Hour - 1),
-			token:       taskTokenFromAlgoreaPlatform,
-			wantPayload: nil,
-			wantError:   errors.New("the token has expired"),
-		},
-		{
-			name:        "an answer token generated by AlgoreaPlatform",
-			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			token:       answerTokenFromAlgoreaPlatform,
-			wantPayload: payloadstest.AnswerPayloadFromAlgoreaPlatformOriginal,
-			wantError:   nil,
-		},
-		{
-			name:        "a thread token generated by AlgoreaPlatform",
-			currentTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-			token:       threadTokenFromAlgoreaPlatform,
-			wantPayload: payloadstest.ThreadPayloadFromAlgoreaPlatformOriginal,
-			wantError:   nil,
-		},
-		{
-			name: "invalid token",
-			token: []byte("eyJhbGciOiJSUzUxMiJ9.eyJzTG9naW4iOiJtYmxvY2tlbGV0IiwiYklzQWRtaW4iOiIwIiwiaWRVc2V" +
-				"yIjoiODMxOTM1MTM0OTEzMzQ0OSIsImlkSXRlbSI6bnVsbCwic0hpbnRzUmVxdWVzdGVkIjoiW3tcInJvdG9ySW5kZXh" +
-				"cIjowLFwiY2VsbFJhbmtcIjowfV0iLCJiSGludHNBbGxvd2VkIjoiMCIsInNTdXBwb3J0ZWRMYW5nUHJvZyI6IioiLCJ" +
-				"iQWNjZXNzU29sdXRpb25zIjoiMSIsIml0ZW1VcmwiOiJodHRwczpcL1wvc3RhdGljLWl0ZW1zLmFsZ29yZWEub3JnXC8" +
-				"yMDE4LWVuaWdtYVwvP3Rhc2tJRD1odHRwJTNBJTJGJTJGY29uY291cnMtYWxraW5kaS5mciUyRnRhc2tzJTJGMjAxOCU" +
-				"yRmVuaWdtYSZ2ZXJzaW9uPTEiLCJpZEl0ZW1Mb2NhbCI6IjE5NzcxNjA0MDYyMTk0OTg0NSIsImJTdWJtaXNzaW9uUG9" +
-				"zc2libGUiOnRydWUsImlkQXR0ZW1wdCI6IjI2NzQ5NDAzMDM4MjUzMjc0NSIsIm5iSGludHNHaXZlbiI6IjEiLCJiSGl" +
-				"udFBvc3NpYmxlIjp0cnVlLCJpZFRhc2siOm51bGwsImJSZWFkQW5zd2VycyI6dHJ1ZSwicmFuZG9tU2VlZCI6IjI2NzQ" +
-				"5NDAzMDM4MjUzMjc0NSIsInBsYXRmb3JtTmFtZSI6Imh0dHA6XC9cL2FsZ29yZWEucGVtLmRldiIsImRhdGUiOiIwMi0" +
-				"wNS0yMDE5In0.2Ay1D3adWMhKLldMSWoVftE8584HGkKzSNMFHx-YgCC8TsFSnIANGYCH2VGwbubt5tw8EMif4NMqplM" +
-				"e1ROK81N6nk-wPH-cxW-N9qwZvGFFh7PfgDBIQiuYbk-DHid9gGTf4oIOkb-6lD9GjPe4QNZM9zhVWarC-5xzTbWbdUg"),
-			wantError: errors.New("invalid token: crypto/rsa: verification error"),
-		},
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
+func TestToken_MarshalJSON(t *testing.T) {
+	for _, test := range marshalAndSignTests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
 			defer monkey.UnpatchAll()
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-			assert.NoError(t, err)
-			payload, err := ParseAndValidate(tt.token, publicKey)
-			if tt.wantError == nil {
-				assert.NoError(t, err)
-			} else {
-				assert.EqualError(t, err, tt.wantError.Error())
-			}
-			assert.Equal(t, tt.wantPayload, payload)
-		})
-	}
-}
-
-func Test_GenerateToken(t *testing.T) {
-	tests := []struct {
-		name         string
-		platformName string
-		currentTime  time.Time
-		payload      map[string]interface{}
-	}{
-		{
-			name:         "task payload",
-			platformName: testPlatformName,
-			currentTime:  time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			payload:      payloadstest.TaskPayloadFromAlgoreaPlatform,
-		},
-		{
-			name:         "answer payload",
-			platformName: testPlatformName,
-			currentTime:  time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			payload:      payloadstest.AnswerPayloadFromAlgoreaPlatform,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
-			defer monkey.UnpatchAll()
-
-			patchedPayload := make(map[string]interface{}, len(tt.payload))
-			for k := range tt.payload {
-				patchedPayload[k] = tt.payload[k]
-			}
-			delete(patchedPayload, "date")
-
-			var err error
 			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
 			assert.NoError(t, err)
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
 			assert.NoError(t, err)
-			token := Generate(patchedPayload, privateKey)
-			payload, err := ParseAndValidate(token, publicKey)
+
+			payloadRefl := reflect.New(test.payloadType)
+			payload := payloadRefl.Interface()
+			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
+			tokenStructRefl := reflect.New(test.structType)
+			tokenStructRefl.Elem().FieldByName("Payload").Set(payloadRefl.Elem())
+			tokenStructRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			tokenStructRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			tokenStruct := tokenStructRefl.Interface()
+			token, err := tokenStruct.(json.Marshaler).MarshalJSON()
 			assert.NoError(t, err)
-			assert.Equal(t, tt.payload, payload)
+
+			resultRefl := reflect.New(test.structType)
+			resultRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			result := resultRefl.Interface().(json.Unmarshaler)
+			assert.NoError(t, result.UnmarshalJSON(token))
+			assert.Equal(t, tokenStruct, result)
 		})
 	}
 }
 
-func Test_GenerateToken_PanicsOnError(t *testing.T) {
-	privateKey := &rsa.PrivateKey{D: &big.Int{}, PublicKey: rsa.PublicKey{N: &big.Int{}}}
-	defer func() {
-		e := recover()
-		assert.Equal(t, errors.New("crypto/rsa: message too long for RSA key size"), e)
-	}()
-	Generate(map[string]interface{}{}, privateKey)
-}
+func TestToken_Sign(t *testing.T) {
+	for _, test := range marshalAndSignTests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
+			defer monkey.UnpatchAll()
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			assert.NoError(t, err)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			assert.NoError(t, err)
 
-func Test_Initialize_LoadsKeysFromFile(t *testing.T) {
-	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
-	if tmpFilePublic != nil {
-		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
+			tokenStructRefl := reflect.New(test.structType)
+			payloadRefl := reflect.New(test.payloadType)
+			payload := payloadRefl.Interface()
+			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
+			tokenStructRefl.Elem().FieldByName("Payload").Set(payloadRefl.Elem())
+			tokenStructRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			tokenStruct := tokenStructRefl.Interface()
+			token, err := tokenStruct.(Signer).Sign(privateKey)
+			assert.NoError(t, err)
+
+			resultRefl := reflect.New(test.structType)
+			resultRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			result := resultRefl.Interface().(UnmarshalStringer)
+			assert.NoError(t, result.UnmarshalString(token))
+			assert.Equal(t, tokenStruct, result)
+		})
 	}
-	assert.NoError(t, err)
+}
 
-	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
-	if tmpFilePrivate != nil {
-		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
+func TestToken_MarshalString(t *testing.T) {
+	for _, test := range marshalAndSignTests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
+			defer monkey.UnpatchAll()
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			assert.NoError(t, err)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			assert.NoError(t, err)
+
+			payloadRefl := reflect.New(test.payloadType)
+			tokenStructRefl := reflect.New(test.structType)
+			tokenStructRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			tokenStructRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			tokenStruct := tokenStructRefl.Interface()
+			payload := payloadRefl.Interface()
+			assert.NoError(t, payloads.ParseMap(test.payloadMap, payload))
+			tokenStructRefl.Elem().FieldByName("Payload").Set(payloadRefl.Elem())
+			token, err := tokenStruct.(MarshalStringer).MarshalString()
+			assert.NoError(t, err)
+			tokenJSON, err := tokenStruct.(json.Marshaler).MarshalJSON()
+			assert.NoError(t, err)
+
+			assert.Equal(t, string(tokenJSON), fmt.Sprintf("%q", token))
+
+			resultRefl := reflect.New(test.structType)
+			resultRefl.Elem().FieldByName("PublicKey").Set(reflect.ValueOf(publicKey))
+			resultRefl.Elem().FieldByName("PrivateKey").Set(reflect.ValueOf(privateKey))
+			result := resultRefl.Interface().(UnmarshalStringer)
+			assert.NoError(t, result.UnmarshalString(token))
+			assert.Equal(t, tokenStruct, result)
+		})
 	}
-	assert.NoError(t, err)
-
-	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
-	assert.NoError(t, err)
-	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-	assert.NoError(t, err)
-
-	config := viper.New()
-	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
-	config.Set("PublicKeyFile", tmpFilePublic.Name())
-	config.Set("PlatformName", "my platform")
-	tokenConfig, err := Initialize(config)
-	assert.NoError(t, err)
-	assert.Equal(t, &Config{
-		PrivateKey:   expectedPrivateKey,
-		PublicKey:    expectedPublicKey,
-		PlatformName: "my platform",
-	}, tokenConfig)
 }
 
-func Test_Initialize_LoadsKeysFromString(t *testing.T) {
-	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
-	assert.NoError(t, err)
-	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-	assert.NoError(t, err)
-
-	config := viper.New()
-	config.Set("PrivateKey", tokentest.AlgoreaPlatformPrivateKey)
-	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
-	config.Set("PlatformName", "my platform")
-	tokenConfig, err := Initialize(config)
-	assert.NoError(t, err)
-	assert.Equal(t, &Config{
-		PrivateKey:   expectedPrivateKey,
-		PublicKey:    expectedPublicKey,
-		PlatformName: "my platform",
-	}, tokenConfig)
-}
-
-func Test_Initialize_CannotLoadPublicKey(t *testing.T) {
-	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
-	if tmpFilePrivate != nil {
-		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
-	}
-	assert.NoError(t, err)
-
-	config := viper.New()
-	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
-	config.Set("PublicKeyFile", "nosuchfile.pem")
-	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
-	assert.IsType(t, &os.PathError{}, err)
-}
-
-func Test_Initialize_CannotLoadPrivateKey(t *testing.T) {
-	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
-	if tmpFilePublic != nil {
-		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
-	}
-	assert.NoError(t, err)
-
-	config := viper.New()
-	config.Set("PrivateKeyFile", "nosuchfile.pem")
-	config.Set("PublicKeyFile", tmpFilePublic.Name())
-	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
-
-	assert.IsType(t, &os.PathError{}, err)
-}
-
-func Test_Initialize_CannotParsePublicKey(t *testing.T) {
-	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
-	if tmpFilePrivate != nil {
-		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
-	}
-	assert.NoError(t, err)
-
-	tmpFilePublic, err := createTmpPublicKeyFile([]byte{})
-	if tmpFilePublic != nil {
-		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
-	}
-	assert.NoError(t, err)
-
-	config := viper.New()
-	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
-	config.Set("PublicKeyFile", tmpFilePublic.Name())
-	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
-
-	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
-}
-
-func Test_Initialize_CannotParsePrivateKey(t *testing.T) {
-	tmpFilePrivate, err := createTmpPrivateKeyFile([]byte{})
-	if tmpFilePrivate != nil {
-		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
-	}
-	assert.NoError(t, err)
-
-	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
-	if tmpFilePublic != nil {
-		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
-	}
-	assert.NoError(t, err)
-
-	config := viper.New()
-	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
-	config.Set("PublicKeyFile", tmpFilePublic.Name())
-	config.Set("PlatformName", "my platform")
-	_, err = Initialize(config)
-
-	assert.Equal(t, errors.New("invalid key: Key must be PEM encoded PKCS1 or PKCS8 private key"), err)
-}
-
-func Test_Initialize_MissingPublicKey(t *testing.T) {
-	config := viper.New()
-	config.Set("PlatformName", "my platform")
-	_, err := Initialize(config)
-	assert.EqualError(t, err, "missing Public key in the token config (PublicKey or PublicKeyFile)")
-}
-
-func Test_Initialize_MissingPrivateKey(t *testing.T) {
-	config := viper.New()
-	config.Set("PlatformName", "my platform")
-	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
-	_, err := Initialize(config)
-	assert.EqualError(t, err, "missing Private key in the token config (PrivateKey or PrivateKeyFile)")
-}
-
-const relFileName = "app/token/token_test.go"
-
-func Test_prepareFileName(t *testing.T) {
-	assert.Equal(t, "/", prepareFileName("/"))
-
-	// absolute path
-	assert.Equal(t, "/afile.key", prepareFileName("/afile.key"))
-
-	// rel path
-	preparedFileName := prepareFileName(relFileName)
-	assert.Equal(t, relFileName, preparedFileName[len(preparedFileName)-len(relFileName):])
-	assert.FileExists(t, preparedFileName)
-}
-
-func Test_prepareFileName_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
-	monkey.Patch(os.Getwd, func() (string, error) { return "/app/something/app/ab/app/token", nil })
-	defer monkey.UnpatchAll()
-	relFileName := "app/token/token_test.go"
-	preparedFileName := prepareFileName(relFileName)
-	assert.Equal(t, "/app/something/app/ab/"+relFileName, preparedFileName)
-}
-
-func createTmpKeyFile(key []byte, fileName string) (*os.File, error) {
-	tmpFile, err := os.CreateTemp("", fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = tmpFile.Write(key)
-	if err != nil {
-		_ = tmpFile.Close()
-		return nil, err
-	}
-
-	return tmpFile, nil
-}
-
-func createTmpPublicKeyFile(key []byte) (*os.File, error) {
-	return createTmpKeyFile(key, "testPublicKey.pem")
-}
-
-func createTmpPrivateKeyFile(key []byte) (*os.File, error) {
-	return createTmpKeyFile(key, "testPrivateKey.pem")
-}
-
-func Test_recoverPanics_and_mustNotBeError(t *testing.T) {
-	expectedError := errors.New("some error")
-	err := func() (err error) {
-		defer recoverPanics(&err)
-		mustNotBeError(expectedError)
-		return nil
-	}()
-	assert.Equal(t, &UnexpectedError{expectedError}, err)
-	assert.Equal(t, expectedError.Error(), err.Error())
-}
-
-func Test_UnexpectedError(t *testing.T) {
-	assert.True(t, IsUnexpectedError(&UnexpectedError{err: errors.New("some error")}))
-	assert.False(t, IsUnexpectedError(errors.New("some error")))
-	assert.False(t, IsUnexpectedError(nil))
+func TestToken_UnmarshalJSON_HandlesError(t *testing.T) {
+	assert.Equal(t, errors.New("not a compact JWS"), (&Token[payloads.TaskToken]{}).UnmarshalJSON([]byte(`""`)))
 }

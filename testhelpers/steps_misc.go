@@ -36,11 +36,7 @@ func (ctx *TestContext) TimeNow(timeStr string) error {
 
 // ServerTimeNow stubs time.Now with the provided time.
 func (ctx *TestContext) ServerTimeNow(timeStr string) error {
-	var err error
-	timeStr, err = ctx.preprocessString(timeStr)
-	if err != nil {
-		return err
-	}
+	timeStr = ctx.preprocessString(timeStr)
 	testTime, err := time.Parse(time.RFC3339Nano, timeStr)
 	if err == nil {
 		monkey.Patch(time.Now, func() time.Time { return testTime })
@@ -99,10 +95,7 @@ func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedKey string) error {
 
 // LogsShouldContain checks that the logs contain a provided string.
 func (ctx *TestContext) LogsShouldContain(docString *godog.DocString) error {
-	preprocessed, err := ctx.preprocessString(docString.Content)
-	if err != nil {
-		return err
-	}
+	preprocessed := ctx.preprocessString(docString.Content)
 	stringToSearch := strings.TrimSpace(preprocessed)
 	logs := ctx.logsHook.GetAllStructuredLogs()
 	if !strings.Contains(logs, stringToSearch) {
@@ -136,10 +129,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
-	data, err := ctx.preprocessString(jsonPayload.Content)
-	if err != nil {
-		return err
-	}
+	data := ctx.preprocessString(jsonPayload.Content)
 
 	var payload map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &payload); err != nil {
@@ -158,10 +148,7 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
-	data, err := ctx.preprocessString(jsonPayload.Content)
-	if err != nil {
-		return err
-	}
+	data := ctx.preprocessString(jsonPayload.Content)
 
 	var payload map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &payload); err != nil {
@@ -185,11 +172,8 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
-	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesWithIDs(yamlConfig.Content))
-	if err != nil {
-		return err
-	}
-	err = config.MergeConfig(strings.NewReader(preprocessedConfig))
+	preprocessedConfig := ctx.preprocessString(ctx.replaceReferencesWithIDs(yamlConfig.Content))
+	err := config.MergeConfig(strings.NewReader(preprocessedConfig))
 	if err != nil {
 		return err
 	}
@@ -208,10 +192,7 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 // TheContextVariableIs sets a context variable in the request http.Request as the provided value.
 // Can be retrieved from the request with r.Context().Value(service.APIServiceContextVariableName("variableName")).
 func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
-	preprocessed, err := ctx.preprocessString(value)
-	if err != nil {
-		return err
-	}
+	preprocessed := ctx.preprocessString(value)
 
 	oldHTTPHandler := ctx.application.HTTPHandler
 	ctx.application.HTTPHandler = chi.NewRouter().With(func(_ http.Handler) http.Handler {

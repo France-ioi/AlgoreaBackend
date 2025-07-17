@@ -11,8 +11,8 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 // Service is the mount point for services related to `items`.
@@ -81,7 +81,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuth.Get("/items/time-limited/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
 }
 
-func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
+func checkHintOrScoreTokenRequiredFields(taskToken *payloads.TaskToken, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string,
 ) error {
@@ -369,7 +369,7 @@ func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.Fo
 		childPermissions.CanGrantViewGeneratedValue, store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "solution_with_grant"))
 }
 
-//nolint:dupl
+//nolint:dupl // It looks like a duplicate of validateChildContentViewPropagationAndApplyDefaultValue, but it is not.
 func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
 ) error {
@@ -402,7 +402,7 @@ func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formd
 	return nil
 }
 
-//nolint:dupl
+//nolint:dupl // It looks like a duplicate of validateChildUpperViewLevelsPropagationAndApplyDefaultValue, but it is not.
 func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
 ) error {

@@ -1,7 +1,6 @@
 package payloads
 
 import (
-	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -20,9 +19,6 @@ type HintToken struct {
 	AskedHint   formdata.Anything `json:"askedHint"`
 
 	Converted HintTokenConverted
-
-	PublicKey  *rsa.PublicKey
-	PrivateKey *rsa.PrivateKey
 }
 
 // HintTokenConverted contains converted field values of HintToken payload.

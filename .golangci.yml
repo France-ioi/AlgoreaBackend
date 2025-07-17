@@ -104,10 +104,8 @@ linters:
     - nlreturn         # For update to go1.20
     - nonamedreturns   # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
     - tenv             # Deprecated in golangci-lint v1.64.0, replaced by `usetesting`
-    - wrapcheck        # For update to go1.20
-    - exhaustruct      # For update to go1.20
-    - gomoddirectives  # For update to go1.20
-    - dupl             # For update to go1.20
+    - wrapcheck        # Requires all errors from external packages are wrapped during return. (It requires many changes without any real benefit for now. Disabled by default in golangci-lint.)
+    - exhaustruct      # Requires all structure fields to be initialized. (Requires many changes without any real benefit. Disabled by default in golangci-lint.)
     - testifylint
     - perfsprint
     - recvcheck

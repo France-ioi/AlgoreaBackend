@@ -145,43 +145,41 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromIsInTheFuture(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
-	defer func() { _ = db.Close() }()
-	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
-	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
-	futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
-	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow(1001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow(1002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow(2001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow(2002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow(4001, "none", futureTS, "9999-12-31 23:59:59", oldTS),
-		generateGrantedPermissionsRow(4002, "none", futureTS, "9999-12-31 23:59:59", oldTS),
+	for _, test := range []struct {
+		name          string
+		canEnterUntil string
+	}{
+		{
+			name:          "can_enter_until is infinity",
+			canEnterUntil: "9999-12-31 23:59:59",
+		},
+		{
+			name:          "can_enter_until is not infinity",
+			canEnterUntil: "9999-12-31 23:59:58",
+		},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
+			defer func() { _ = db.Close() }()
+			assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
+			oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
+			futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
+			grantedPermissions := []map[string]interface{}{
+				generateGrantedPermissionsRow(1001, "none", futureTS, test.canEnterUntil, oldTS),
+				generateGrantedPermissionsRow(1002, "none", futureTS, test.canEnterUntil, oldTS),
+				generateGrantedPermissionsRow(2001, "none", futureTS, test.canEnterUntil, oldTS),
+				generateGrantedPermissionsRow(2002, "none", futureTS, test.canEnterUntil, oldTS),
+				generateGrantedPermissionsRow(4001, "none", futureTS, test.canEnterUntil, oldTS),
+				generateGrantedPermissionsRow(4002, "none", futureTS, test.canEnterUntil, oldTS),
+			}
+			assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
+
+			testExplicitEntryUnlocks(t, db)
+		})
 	}
-	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
-
-	testExplicitEntryUnlocks(t, db)
-}
-
-func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterUntilIsNotMax(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
-	defer func() { _ = db.Close() }()
-	assert.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
-	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
-	futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
-	grantedPermissions := []map[string]interface{}{
-		generateGrantedPermissionsRow(1001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow(1002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow(2001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow(2002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow(4001, "none", futureTS, "9999-12-31 23:59:58", oldTS),
-		generateGrantedPermissionsRow(4002, "none", futureTS, "9999-12-31 23:59:58", oldTS),
-	}
-	assert.NoError(t, database.NewDataStore(db).PermissionsGranted().InsertMaps(grantedPermissions))
-
-	testExplicitEntryUnlocks(t, db)
 }
 
 var maxTime = database.Time(time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC))

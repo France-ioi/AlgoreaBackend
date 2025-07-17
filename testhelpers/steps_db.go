@@ -47,10 +47,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
 			for _, cell := range data.Rows[i].Cells {
-				var err error
-				if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
-					return err
-				}
+				cell.Value = ctx.preprocessString(cell.Value)
 				vals = append(vals, dbDataTableValue(cell.Value))
 			}
 		}
@@ -179,6 +176,25 @@ func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primar
 		}
 	}
 	return -1
+}
+
+type stringKeyValuePair struct {
+	Key   string
+	Value string
+}
+
+func constructGodogTableFromData(data []stringKeyValuePair) *godog.Table {
+	table := &godog.Table{}
+	table.Rows = make([]*messages.PickleTableRow, 2) //nolint:mnd // one for header, one for data
+	table.Rows[0] = &messages.PickleTableRow{Cells: make([]*messages.PickleTableCell, 0, len(data))}
+	table.Rows[1] = &messages.PickleTableRow{Cells: make([]*messages.PickleTableCell, 0, len(data))}
+
+	for _, keyValuePair := range data {
+		table.Rows[0].Cells = append(table.Rows[0].Cells, &messages.PickleTableCell{Value: keyValuePair.Key})
+		table.Rows[1].Cells = append(table.Rows[1].Cells, &messages.PickleTableCell{Value: keyValuePair.Value})
+	}
+
+	return table
 }
 
 func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
@@ -672,10 +688,7 @@ func (ctx *TestContext) dataRowMatchesDBRow(dataRow *messages.PickleTableRow,
 			continue
 		}
 
-		dataValue, err := ctx.preprocessString(dataCell.Value)
-		if err != nil {
-			return err
-		}
+		dataValue := ctx.preprocessString(dataCell.Value)
 
 		columnValue := columnValues[colIndex]
 		if columnValue == nil {
@@ -834,11 +847,7 @@ func constructWhereForColumnValues(columnNames, columnValues []string, whereIn b
 
 // DBTimeNow sets the current time in the database to the provided time.
 func (ctx *TestContext) DBTimeNow(timeStrRaw string) error {
-	var err error
-	timeStrRaw, err = ctx.preprocessString(timeStrRaw)
-	if err != nil {
-		return err
-	}
+	timeStrRaw = ctx.preprocessString(timeStrRaw)
 	MockDBTime(timeStrRaw)
 	return nil
 }

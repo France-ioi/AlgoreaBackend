@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/cucumber/godog"
-	messages "github.com/cucumber/messages/go/v21"
 )
 
 // registerFeaturesForUsers registers the Gherkin features related to users.
@@ -26,27 +25,15 @@ func (ctx *TestContext) addUser(user string) {
 	primaryKey := ctx.getUserPrimaryKey(userGroupID)
 
 	if !ctx.isInDatabase("users", primaryKey) {
-		err := ctx.DBHasTable("users", &godog.Table{
-			Rows: []*messages.PickleTableRow{
-				{Cells: []*messages.PickleTableCell{
-					{Value: "group_id"},
-					{Value: "login"},
-					{Value: "login_id"},
-					{Value: "temp_user"},
-					{Value: "first_name"},
-					{Value: "last_name"},
-				}},
-				{Cells: []*messages.PickleTableCell{
-					{Value: strconv.FormatInt(userGroupID, 10)},
-					{Value: referenceToName(user)},
-					// All the other fields are set to default values.
-					{Value: "null"},
-					{Value: "false"},
-					{Value: "null"},
-					{Value: "null"},
-				}},
-			},
-		})
+		err := ctx.DBHasTable("users",
+			constructGodogTableFromData([]stringKeyValuePair{
+				{"group_id", strconv.FormatInt(userGroupID, 10)},
+				{"login", referenceToName(user)},
+				{"login_id", "null"},
+				{"temp_user", "false"},
+				{"first_name", "null"},
+				{"last_name", "null"},
+			}))
 		if err != nil {
 			panic(err)
 		}

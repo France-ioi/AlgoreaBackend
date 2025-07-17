@@ -15,11 +15,7 @@ import (
 )
 
 func (ctx *TestContext) TheRequestHeaderIs(name, value string) error { //nolint
-	value, err := ctx.preprocessString(value)
-	if err != nil {
-		return err
-	}
-
+	value = ctx.preprocessString(value)
 	if value == undefinedHeaderValue {
 		return nil
 	}
@@ -80,15 +76,8 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 		headers = ctx.requestHeaders
 	}
 
-	reqBody, err = ctx.preprocessString(reqBody)
-	if err != nil {
-		return err
-	}
-
-	path, err = ctx.preprocessString(path)
-	if err != nil {
-		return err
-	}
+	reqBody = ctx.preprocessString(reqBody)
+	path = ctx.preprocessString(path)
 
 	//nolint:bodyclose // the body is closed in SendTestHTTPRequest
 	response, body, err := SendTestHTTPRequest(testServer, method, path, headers, strings.NewReader(reqBody))

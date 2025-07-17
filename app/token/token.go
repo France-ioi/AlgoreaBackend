@@ -1,210 +1,110 @@
-// Package token provides a way to serialize/un-serialize data structures in an encrypted token.
 package token
 
 import (
 	"crypto/rsa"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"os"
-	"reflect"
-	"regexp"
-	"strings"
-	"time"
 
-	"github.com/SermoDigital/jose/crypto"
-	"github.com/SermoDigital/jose/jws"
-	"github.com/jinzhu/gorm"
-	"github.com/spf13/viper"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 )
 
-// Config contains parsed keys and PlatformName.
-type Config struct {
-	PublicKey    *rsa.PublicKey
-	PrivateKey   *rsa.PrivateKey
-	PlatformName string
+// Token represents a token. It contains a payload of type P,
+// a public key for validation, and a private key for signing.
+// The idea is to use this struct to represent various types of tokens
+// to validate and sign them easily.
+type Token[P any] struct {
+	Payload    P
+	PublicKey  *rsa.PublicKey
+	PrivateKey *rsa.PrivateKey
 }
 
-// Initialize loads keys from the config and resolves the platform name.
-func Initialize(config *viper.Viper) (tokenConfig *Config, err error) {
-	tokenConfig = &Config{PlatformName: config.GetString("PlatformName")}
+// UnmarshalJSON unmarshals the token from JSON.
+// It expects the JSON to be a JSON string containing the encoded token.
+// The token is parsed and validated using the public key.
+// If the token is valid, it populates the Payload field with the parsed data.
+func (t *Token[P]) UnmarshalJSON(raw []byte) error {
+	var err error
 
-	bytes, err := getKey(config, "Public")
+	var buffer string
+	err = json.Unmarshal(raw, &buffer)
 	if err != nil {
-		return
+		return err
 	}
-	tokenConfig.PublicKey, err = crypto.ParseRSAPublicKeyFromPEM(bytes)
+
+	return t.UnmarshalString(buffer)
+}
+
+// UnmarshalString unmarshals the token from a string.
+// It expects the string to be an encoded token.
+// The token is parsed and validated using the public key.
+// If the token is valid, it populates the Payload field with the parsed data.
+func (t *Token[P]) UnmarshalString(raw string) error {
+	var err error
+
+	tokenPayload, err := ParseAndValidate([]byte(raw), t.PublicKey)
 	if err != nil {
-		return
+		return err
 	}
-	bytes, err = getKey(config, "Private")
-	if err != nil {
-		return
-	}
-	tokenConfig.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(bytes)
-	if err != nil {
-		return
-	}
-	return
+
+	return payloads.ParseMap(tokenPayload, &t.Payload)
 }
 
-// getKey returns either "<keyType>Key" if not empty or the content of "<keyType>KeyFile" otherwise
-// keyType is either "Public" or "Private".
-func getKey(config *viper.Viper, keyType string) ([]byte, error) {
-	key := config.GetString(keyType + "Key")
-	if key != "" {
-		return []byte(key), nil
-	}
-	if config.GetString(keyType+"KeyFile") == "" {
-		return nil, fmt.Errorf("missing %s key in the token config (%sKey or %sKeyFile)", keyType, keyType, keyType)
-	}
-	return os.ReadFile(prepareFileName(config.GetString(keyType + "KeyFile")))
+var _ json.Unmarshaler = (*Token[interface{}])(nil)
+
+// MarshalJSON marshals the token into JSON.
+// It generates a signed token from the Payload field using the private key,
+// and returns it as a JSON string.
+func (t *Token[P]) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%q", Generate(payloads.ConvertIntoMap(t.Payload), t.PrivateKey))), nil
 }
 
-var tokenPathTestRegexp = regexp.MustCompile(`.*([/\\]app(?:[/\\][a-z]+)*?)$`)
-
-func prepareFileName(fileName string) string {
-	if fileName != "" && fileName[0] == '/' {
-		return fileName
-	}
-
-	cwd, _ := os.Getwd()
-	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
-		match := tokenPathTestRegexp.FindStringSubmatchIndex(cwd)
-		if match != nil {
-			cwd = cwd[:match[2]]
-		}
-	}
-	return cwd + "/" + fileName
+// MarshalString marshals the token into a string.
+// It generates a signed token from the Payload field using the private key,
+// and returns it as a string.
+func (t *Token[P]) MarshalString() (string, error) {
+	return string(Generate(payloads.ConvertIntoMap(t.Payload), t.PrivateKey)), nil
 }
 
-// GetUnsafeFromToken returns the value of the field without checking the token signature.
-func GetUnsafeFromToken(token []byte, field string) (interface{}, error) {
-	token = []byte(strings.Trim(string(token), "\""))
+var _ json.Marshaler = (*Token[interface{}])(nil)
 
-	jwt, err := jws.ParseJWT(token)
-	if err != nil {
-		return nil, err
-	}
-	return jwt.Claims().Get(field), nil
+// UnmarshalStringer is the interface implemented by types
+// that can unmarshal a string description of themselves.
+// For example, a token's string description is `{ENCODED_TOKEN}`
+// while a token's JSON description is `"{ENCODED_TOKEN}"`.
+type UnmarshalStringer interface {
+	UnmarshalString(s string) error
 }
 
-// ParseAndValidate parses a token and validates its signature and date.
-func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interface{}, error) {
-	jwt, err := jws.ParseJWT(token)
-	if err != nil {
-		return nil, err
-	}
-
-	// Validate token
-	if err = jwt.Validate(publicKey, crypto.SigningMethodRS512); err != nil {
-		return nil, fmt.Errorf("invalid token: %w", err)
-	}
-
-	today := time.Now().UTC()
-	const oneDay = 24 * time.Hour
-	yesterday := today.Add(-oneDay)
-	tomorrow := today.Add(oneDay)
-
-	const dateLayout = "02-01-2006" // 'd-m-Y' in PHP
-	todayStr := today.Format(dateLayout)
-	yesterdayStr := yesterday.Format(dateLayout)
-	tomorrowStr := tomorrow.Format(dateLayout)
-
-	jwtDate := jwt.Claims().Get("date")
-	if jwtDate != yesterdayStr && jwtDate != todayStr && jwtDate != tomorrowStr {
-		return nil, errors.New("the token has expired")
-	}
-
-	return jwt.Claims(), nil
+// MarshalStringer is the interface implemented by types
+// that can marshal themselves into a string.
+// For example, a token's string description is `{ENCODED_TOKEN}`
+// while a token's JSON description is `"{ENCODED_TOKEN}"`.
+type MarshalStringer interface {
+	MarshalString() (string, error)
 }
 
-// Generate generates a signed token for a payload.
-func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte {
-	payload["date"] = time.Now().UTC().Format("02-01-2006")
-
-	token, err := jws.NewJWT(payload, crypto.SigningMethodRS512).Serialize(privateKey)
-	if err != nil {
-		panic(err)
-	}
-	return token
+// Signer is the interface implemented by types
+// that can sign themselves returning a token in a string.
+type Signer interface {
+	Sign(privateKey *rsa.PrivateKey) (string, error)
 }
 
-// UnexpectedError represents an unexpected error so that we could differentiate it from expected errors.
-type UnexpectedError struct {
-	err error
+// Sign returns a signed token as a string.
+func (t *Token[P]) Sign(privateKey *rsa.PrivateKey) (string, error) {
+	t.PrivateKey = privateKey
+	return t.MarshalString()
 }
 
-// Error returns a string representation for an unexpected error.
-func (ue *UnexpectedError) Error() string {
-	return ue.err.Error()
+var _ Signer = (*Token[interface{}])(nil)
+
+var (
+	_ UnmarshalStringer = (*Token[interface{}])(nil)
+	_ MarshalStringer   = (*Token[interface{}])(nil)
+)
+
+// ConvertIntoMap converts the token's payload into a map.
+func (t *Token[P]) ConvertIntoMap() map[string]interface{} {
+	return payloads.ConvertIntoMap(t.Payload)
 }
 
-// IsUnexpectedError returns true if its argument is an unexpected error.
-func IsUnexpectedError(err error) bool {
-	var unexpectedError *UnexpectedError
-	return errors.As(err, &unexpectedError)
-}
-
-// UnmarshalDependingOnItemPlatform unmarshals a token from JSON representation
-// using a platform's public key for given itemID.
-// The function returns nil (success) if the platform doesn't use tokens.
-func UnmarshalDependingOnItemPlatform(
-	store *database.DataStore,
-	itemID int64,
-	target interface{},
-	token []byte,
-	tokenFieldName string,
-) (platformHasKey bool, err error) {
-	targetRefl := reflect.ValueOf(target)
-	defer recoverPanics(&err)
-
-	publicKey, err := store.Platforms().GetPublicKeyByItemID(itemID)
-	if gorm.IsRecordNotFoundError(err) {
-		return false, fmt.Errorf("cannot find the platform for item %d", itemID)
-	}
-	mustNotBeError(err)
-
-	if publicKey == nil {
-		return false, nil
-	}
-
-	// Token shouldn't be null when there is a public key.
-	if token == nil {
-		return true, fmt.Errorf("missing %s", tokenFieldName)
-	}
-
-	parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(*publicKey))
-	if err != nil {
-		logging.SharedLogger.WithContext(store.GetContext()).
-			Warnf("cannot parse platform's public key for item with id = %d: %s", itemID, err.Error())
-
-		return true, fmt.Errorf("invalid %s: wrong platform's key", tokenFieldName)
-	}
-
-	targetRefl.Elem().Set(reflect.New(targetRefl.Elem().Type().Elem()))
-	targetRefl.Elem().Elem().FieldByName("PublicKey").Set(reflect.ValueOf(parsedPublicKey))
-
-	if err = targetRefl.Elem().Interface().(json.Unmarshaler).UnmarshalJSON(token); err != nil {
-		return true, fmt.Errorf("invalid %s: %s", tokenFieldName, err.Error())
-	}
-
-	return true, nil
-}
-
-func mustNotBeError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func recoverPanics(
-	err *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
-) {
-	if r := recover(); r != nil {
-		*err = &UnexpectedError{err: r.(error)}
-	}
-}
+var _ payloads.ConverterIntoMap = (*Token[interface{}])(nil)

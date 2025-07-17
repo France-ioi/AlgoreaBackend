@@ -149,7 +149,7 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 // TokenConfig returns the token fixed config from the global config.
 func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)
-	return token.Initialize(sub)
+	return token.BuildConfig(sub)
 }
 
 // AuthConfig returns an auth dynamic config from the global config.
