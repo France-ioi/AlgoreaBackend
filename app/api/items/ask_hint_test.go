@@ -10,6 +10,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
@@ -148,7 +149,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 			}
 			err := askHintRequest.UnmarshalJSON(tt.raw)
 			if tt.wantErr == nil {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			} else {
 				if err == nil {
 					assert.Equal(t, tt.wantErr, err)

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
@@ -12,28 +13,24 @@ import (
 func TestHintToken_UnmarshalJSON_InvalidJSON(t *testing.T) {
 	tt := &HintToken{}
 	err := tt.UnmarshalJSON([]byte("[]"))
-	assert.NotNil(t, err)
-	if err != nil {
-		assert.Equal(t, "json: cannot unmarshal array into Go value of type map[string]formdata.Anything", err.Error())
-	}
+	require.Error(t, err)
+	assert.Equal(t, "json: cannot unmarshal array into Go value of type map[string]*formdata.Anything", err.Error())
 }
 
 func TestHintToken_UnmarshalJSON_WrongUserID(t *testing.T) {
 	tt := &HintToken{}
 	err := tt.UnmarshalJSON([]byte(`{"idUser":"abc"}`))
-	assert.NotNil(t, err)
-	if err != nil {
-		assert.Equal(t, "wrong idUser", err.Error())
-	}
+	require.Error(t, err)
+	assert.Equal(t, "wrong idUser", err.Error())
 }
 
 func TestHintToken_UnmarshalJSON(t *testing.T) {
 	tt := &HintToken{}
 	err := tt.UnmarshalJSON([]byte(`{"idUser":"10", "askedHint":   false}`))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, &HintToken{
 		UserID:    "10",
-		AskedHint: *formdata.AnythingFromString("false"),
+		AskedHint: formdata.AnythingFromString("false"),
 		Converted: HintTokenConverted{
 			UserID: 10,
 		},
@@ -45,9 +42,9 @@ func TestHintToken_MarshalJSON(t *testing.T) {
 		UserID:      "10",
 		AttemptID:   "100",
 		LocalItemID: "200",
-		AskedHint:   *formdata.AnythingFromString("false"),
+		AskedHint:   formdata.AnythingFromString("false"),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
-	assert.NoError(t, err)
-	assert.Equal(t, []byte(`{"askedHint":false,"date":"","idAttempt":"100","idItemLocal":"200","idUser":"10","itemUrl":""}`), result)
+	require.NoError(t, err)
+	assert.JSONEq(t, `{"askedHint":false,"date":"","idAttempt":"100","idItemLocal":"200","idUser":"10","itemUrl":""}`, string(result))
 }

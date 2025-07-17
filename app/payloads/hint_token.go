@@ -10,13 +10,13 @@ import (
 
 // HintToken represents data inside a hint token.
 type HintToken struct {
-	Date        string            `json:"date"             validate:"dmy-date"` // dd-mm-yyyy
-	UserID      string            `json:"idUser,omitempty"`
-	ItemID      *string           `json:"idItem,omitempty"`
-	LocalItemID string            `json:"idItemLocal"`
-	ItemURL     string            `json:"itemUrl"`
-	AttemptID   string            `json:"idAttempt"`
-	AskedHint   formdata.Anything `json:"askedHint"`
+	Date        string             `json:"date"             validate:"dmy-date"` // dd-mm-yyyy
+	UserID      string             `json:"idUser,omitempty"`
+	ItemID      *string            `json:"idItem,omitempty"`
+	LocalItemID string             `json:"idItemLocal"`
+	ItemURL     string             `json:"itemUrl"`
+	AttemptID   string             `json:"idAttempt"`
+	AskedHint   *formdata.Anything `json:"askedHint"`
 
 	Converted HintTokenConverted
 }
@@ -28,7 +28,7 @@ type HintTokenConverted struct {
 
 // UnmarshalJSON unmarshals the hint token payload from JSON.
 func (tt *HintToken) UnmarshalJSON(raw []byte) error {
-	preparsedHintToken := map[string]formdata.Anything{}
+	preparsedHintToken := map[string]*formdata.Anything{}
 	if err := json.Unmarshal(raw, &preparsedHintToken); err != nil {
 		return err
 	}

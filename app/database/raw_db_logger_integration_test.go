@@ -50,10 +50,8 @@ func Test_RawSQLQueryLogging_Duration(t *testing.T) {
 			assert.IsType(t, "", duration)
 			if durationStr, ok := duration.(string); ok {
 				parsedDuration, err := time.ParseDuration(durationStr)
-				assert.NoError(t, err)
-				if err == nil {
-					assert.Greater(t, parsedDuration, 0*time.Second)
-				}
+				require.NoError(t, err)
+				assert.Greater(t, parsedDuration, 0*time.Second)
 			}
 		}
 	}
@@ -94,10 +92,8 @@ func Test_RawSQLQueryLogging_ResetSession(t *testing.T) {
 			assert.IsType(t, "", duration)
 			if durationStr, ok := duration.(string); ok {
 				parsedDuration, err := time.ParseDuration(durationStr)
-				assert.NoError(t, err)
-				if err == nil {
-					assert.Greater(t, parsedDuration, 0*time.Second)
-				}
+				require.NoError(t, err)
+				assert.Greater(t, parsedDuration, 0*time.Second)
 			}
 		}
 	}

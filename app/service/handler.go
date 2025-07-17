@@ -30,12 +30,12 @@ func (fn AppHandler) ServeHTTP(responseWriter http.ResponseWriter, httpRequest *
 				if errors.Is(err, context.DeadlineExceeded) {
 					apiErr = ErrRequestTimeout()
 				} else {
-					apiErr = ErrUnexpected(fmt.Errorf("unknown error"))
+					apiErr = ErrUnexpected(errors.New("unknown error"))
 					shouldLogError = true
 					errorToLog = err.Error()
 				}
 			default:
-				apiErr = ErrUnexpected(fmt.Errorf("unknown error"))
+				apiErr = ErrUnexpected(errors.New("unknown error"))
 				errorToLog = fmt.Sprintf("%+v", err)
 				shouldLogError = true
 			}
@@ -50,7 +50,7 @@ func (fn AppHandler) ServeHTTP(responseWriter http.ResponseWriter, httpRequest *
 	err := fn(responseWriter, httpRequest)
 	if err != nil {
 		if !errors.As(err, &apiErr) {
-			apiErr = ErrUnexpected(fmt.Errorf("unknown error"))
+			apiErr = ErrUnexpected(errors.New("unknown error"))
 			shouldLogError = true
 			errorToLog = err.Error()
 		}

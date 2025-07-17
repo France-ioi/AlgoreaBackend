@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -42,7 +43,7 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	var result []groupAncestorsResultRow
-	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
+	require.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
@@ -59,7 +60,7 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
-	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
@@ -90,7 +91,7 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
-	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "todo"},
 		{ID: 2, AncestorsComputationState: "todo"},
@@ -108,18 +109,18 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 
 	for i := 1; i <= 4; i++ {
-		assert.NoError(t, groupGroupStore.Exec(
+		require.NoError(t, groupGroupStore.Exec(
 			"INSERT INTO groups_propagate (id, ancestors_computation_state) VALUES (?, 'done') "+
 				"ON DUPLICATE KEY UPDATE ancestors_computation_state='done'", i).
 			Error())
 	}
 
-	assert.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
+	require.NoError(t, groupGroupStore.InTransaction(func(ds *database.DataStore) error {
 		return ds.GroupGroups().CreateNewAncestors()
 	}))
 
 	var result []groupAncestorsResultRow
-	assert.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
+	require.NoError(t, groupGroupStore.GroupAncestors().Order("child_group_id, ancestor_group_id").Scan(&result).Error())
 
 	assert.Equal(t, []groupAncestorsResultRow{ // these rows have already been there
 		{ChildGroupID: 1, AncestorGroupID: 1, IsSelf: true, ExpiresAt: maxExpiresAt},
@@ -130,7 +131,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
-	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
@@ -169,7 +170,7 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
-	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
@@ -218,7 +219,7 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
-	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
@@ -261,7 +262,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T
 	}, result)
 
 	var propagateResult []groupPropagateResultRow
-	assert.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, groupGroupStore.Table("groups_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []groupPropagateResultRow{
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},

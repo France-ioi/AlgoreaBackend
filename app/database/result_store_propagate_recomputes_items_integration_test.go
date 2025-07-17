@@ -58,10 +58,10 @@ func TestResultStore_Propagate_RecomputesResultsForItemsFromTableResultsRecomput
 		}), "Results Propagation failed")
 
 	hasRows, err := dataStore.Table("results_recompute_for_items").HasRows()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, hasRows)
 	hasRows, err = dataStore.Table("results_propagate").HasRows()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, hasRows)
 
 	expectedTime, _ := time.Parse(time.DateTime, "2019-05-30 11:00:00")

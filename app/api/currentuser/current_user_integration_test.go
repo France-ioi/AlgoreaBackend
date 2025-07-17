@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/currentuser"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -186,7 +187,7 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 
 			store := database.NewDataStore(db)
 			var err error
-			assert.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
+			require.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
 				err = currentuser.CheckPreconditionsForGroupRequests(transactionStore,
 					&database.User{GroupID: 10}, 1, "createJoinRequest")
 				return nil

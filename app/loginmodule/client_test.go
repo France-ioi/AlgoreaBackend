@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -480,13 +481,13 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 					responder := httpmock.NewStringResponder(tt.responseCode, tt.response)
 
 					parsedParams, err := url.ParseQuery(testSuite.params)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 					paramsMap := make(map[string]string, len(parsedParams))
 					for key := range parsedParams {
 						paramsMap[key] = parsedParams.Get(key)
 					}
 					requestBody, err := EncodeBody(paramsMap, "clientID", "clientKeyclientKey")
-					assert.NoError(t, err)
+					require.NoError(t, err)
 
 					httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
 						moduleURL+"/platform_api/"+testSuite.endpoint, responder,
@@ -618,13 +619,13 @@ func TestClient_CreateUsers(t *testing.T) {
 			}
 
 			parsedParams, err := url.ParseQuery(tt.loginModuleParams)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			paramsMap := make(map[string]string, len(parsedParams))
 			for key := range parsedParams {
 				paramsMap[key] = parsedParams.Get(key)
 			}
 			requestBody, err := EncodeBody(paramsMap, "clientID", "clientKeyclientKey")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
 				moduleURL+"/platform_api/accounts_manager/create", responder,
@@ -665,23 +666,23 @@ func TestEncodeBody(t *testing.T) {
 	const clientID = "1234"
 	const clientKey = "abcdefghijklmnop"
 	encoded, err := EncodeBody(params, clientID, clientKey)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	var unmarshaled map[string]string
 	err = json.Unmarshal(encoded, &unmarshaled)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, clientID, unmarshaled["client_id"])
-	assert.Equal(t, 2, len(unmarshaled))
+	assert.Len(t, unmarshaled, 2)
 	assert.Contains(t, unmarshaled, "data")
 	decodedData := make([]byte, base64.StdEncoding.DecodedLen(len(unmarshaled["data"])))
 	n, err := base64.StdEncoding.Decode(decodedData, []byte(unmarshaled["data"]))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	decodedData = decodedData[0:n]
 	decryptedData := decryptAes128Ecb(decodedData, []byte(clientKey)[:16])
 	decoder := json.NewDecoder(bytes.NewReader(decryptedData))
 	decoder.UseNumber()
 	var parsedData map[string]string
 	err = decoder.Decode(&parsedData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, params, parsedData)
 }
 
@@ -710,7 +711,7 @@ func TestEncode(t *testing.T) {
 			assert.Len(t, got, tt.expectedLen)
 			decodedData := make([]byte, base64.StdEncoding.DecodedLen(len(got)))
 			n, err := base64.StdEncoding.Decode(decodedData, []byte(got))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			decodedData = decodedData[0:n]
 			decryptedData := decryptAes128Ecb(decodedData, []byte(clientKey)[:16])
 			assert.Equal(t, tt.data, decryptedData)

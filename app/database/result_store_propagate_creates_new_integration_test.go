@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
@@ -69,7 +70,7 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 	defer func() { _ = db.Close() }()
 
 	if testCase.rootItemID != nil {
-		assert.NoError(t, database.NewDataStore(db).Attempts().Where("participant_id = 3 AND id = 1").
+		require.NoError(t, database.NewDataStore(db).Attempts().Where("participant_id = 3 AND id = 1").
 			UpdateColumn("root_item_id", testCase.rootItemID).Error())
 	}
 	resultStore := database.NewDataStore(db).Results()
@@ -77,7 +78,7 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 		s.ScheduleResultsPropagation()
 		return nil
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	const expectedDate = "2019-05-30 11:00:00"
 	for i := range testCase.expectedNewResults {

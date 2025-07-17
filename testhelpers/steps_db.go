@@ -4,6 +4,7 @@ package testhelpers
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -638,7 +639,7 @@ func (ctx *TestContext) dataTableShouldMatchDBResult(data *godog.Table, dbResult
 
 	// check that there are no rows in the test data table left for checking (this means there are fewer rows in the SQL result)
 	if iDataRow < len(data.Rows) {
-		return fmt.Errorf("there are fewer rows in the SQL result than expected")
+		return errors.New("there are fewer rows in the SQL result than expected")
 	}
 
 	return nil

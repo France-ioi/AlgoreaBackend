@@ -303,7 +303,7 @@ func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGrad
 
 	localItemIDUnsafeString, ok := localItemIDUnsafeRaw.(string)
 	if !ok {
-		return fmt.Errorf("invalid score_token: invalid idItemLocal: should be a string")
+		return errors.New("invalid score_token: invalid idItemLocal: should be a string")
 	}
 
 	localItemIDUnsafe, err := strconv.ParseInt(localItemIDUnsafeString, 10, 64)

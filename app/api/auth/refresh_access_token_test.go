@@ -117,8 +117,8 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 		} else {
 			assert.Equal(t, 201, response.StatusCode)
 			body, _ := io.ReadAll(response.Body)
-			assert.Equal(t,
-				`{"success":true,"message":"created","data":{"access_token":"newaccesstoken","expires_in":78901234}}`+"\n",
+			assert.JSONEq(t,
+				`{"success":true,"message":"created","data":{"access_token":"newaccesstoken","expires_in":78901234}}`,
 				string(body))
 		}
 		assert.NoError(t, mock.ExpectationsWereMet())

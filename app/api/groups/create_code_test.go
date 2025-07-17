@@ -13,6 +13,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -22,7 +23,7 @@ import (
 func TestGenerateGroupCode(t *testing.T) {
 	got, err := GenerateGroupCode()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, got, 10)
 	assert.Regexp(t, `^[3-9a-kmnp-y]+$`, got)
 }

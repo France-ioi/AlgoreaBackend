@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMiddleware(t *testing.T) {
@@ -127,7 +128,7 @@ func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string,
 		_ = response.Body.Close()
 		body = string(bodyData)
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expectedBody, body)
 	assert.Equal(t, expectedStatusCode, response.StatusCode)
 	assert.Equal(t, shouldEnterService, enteredService)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -39,7 +40,7 @@ func TestItemStore_TimeLimitedByIDManagedByUser(t *testing.T) {
 	var id int64
 	err := NewDataStore(db).Items().TimeLimitedByIDManagedByUser(123, &User{GroupID: 2}).
 		PluckFirst("items.id", &id).Error()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, int64(123), id)
 }
 

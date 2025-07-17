@@ -3,10 +3,11 @@
 package database_test
 
 import (
-	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -53,7 +54,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 	assertAllPermissionsGeneratedAreDone(t, permissionGeneratedStore)
 
 	var result []permissionsGeneratedResultRow
-	assert.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
+	require.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
 	assertPermissionsGeneratedResultRowsEqual(t, []permissionsGeneratedResultRow{
 		{
 			GroupID:          1,
@@ -120,7 +121,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 	assert.NoError(t, permissionGrantedStore.ItemItems().UpdateColumn(map[string]interface{}{
 		"content_view_propagation": "as_info",
 	}).Error())
-	assert.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
+	require.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
 		return nil
 	}))
@@ -128,7 +129,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 	assertAllPermissionsGeneratedAreDone(t, permissionGeneratedStore)
 
 	var result []permissionsGeneratedResultRow
-	assert.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
+	require.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
 	assertPermissionsGeneratedResultRowsEqual(t, []permissionsGeneratedResultRow{
 		{
 			GroupID:          1,
@@ -203,7 +204,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 			assertAllPermissionsGeneratedAreDone(t, permissionGeneratedStore)
 
 			var result []permissionsGeneratedResultRow
-			assert.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
+			require.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
 			assertPermissionsGeneratedResultRowsEqual(t, []permissionsGeneratedResultRow{
 				{
 					GroupID:          1,
@@ -361,15 +362,19 @@ func testGeneratedPermission(t *testing.T, fixture string, testCase ...generated
 	defer func() { _ = db.Close() }()
 
 	permissionStore := database.NewDataStore(db).Permissions()
-	assert.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
+	require.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
 		ds.SchedulePermissionsPropagation()
 		return nil
 	}))
 	var result string
 	for _, test := range testCase {
-		assert.NoError(t, permissionStore.Where(test.where).
-			PluckFirst(test.columnToExamine, &result).Error())
-		assert.Equal(t, test.expectedValue, result)
+		test := test
+		t.Run(test.where, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+			require.NoError(t, permissionStore.Where(test.where).
+				PluckFirst(test.columnToExamine, &result).Error())
+			assert.Equal(t, test.expectedValue, result)
+		})
 	}
 }
 
@@ -708,7 +713,7 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 	t.Helper()
 
 	t.Run(valueForParent+" as "+expectedValue, func(t *testing.T) {
-		grantViewPropagationString := fmt.Sprint(propagationMode)
+		grantViewPropagationString := strconv.FormatBool(propagationMode)
 		testGeneratedPermission(t, `
 				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
 				groups: [{id: 1}]
@@ -740,6 +745,6 @@ func assertAllPermissionsGeneratedAreDone(t *testing.T, permissionGeneratedStore
 	t.Helper()
 
 	var cnt int
-	assert.NoError(t, permissionGeneratedStore.Table("permissions_propagate").Count(&cnt).Error())
+	require.NoError(t, permissionGeneratedStore.Table("permissions_propagate").Count(&cnt).Error())
 	assert.Zero(t, cnt, "found not done group-item pairs")
 }

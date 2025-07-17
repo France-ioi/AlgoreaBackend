@@ -25,9 +25,9 @@ func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
+	require.NoError(t, store.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
 		assertForeignKeysDBVars(t, store, 1, 0)
-		assert.NoError(t, store.WithForeignKeyChecksDisabled(func(innerStore *database.DataStore) error {
+		require.NoError(t, store.WithForeignKeyChecksDisabled(func(innerStore *database.DataStore) error {
 			assertForeignKeysDBVars(t, innerStore, 2, 0)
 			return nil
 		}))
@@ -35,9 +35,9 @@ func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
 		return nil
 	}))
 	assertForeignKeysDBVars(t, store, 0, 1)
-	assert.NoError(t, store.InTransaction(func(store *database.DataStore) error {
+	require.NoError(t, store.InTransaction(func(store *database.DataStore) error {
 		assertForeignKeysDBVars(t, store, 0, 1)
-		assert.NoError(t, store.WithForeignKeyChecksDisabled(func(innerStore *database.DataStore) error {
+		require.NoError(t, store.WithForeignKeyChecksDisabled(func(innerStore *database.DataStore) error {
 			assertForeignKeysDBVars(t, innerStore, 1, 0)
 			return nil
 		}))
@@ -53,7 +53,7 @@ func assertForeignKeysDBVars(t *testing.T, store *database.DataStore, expectedSt
 		StackCount       int64
 		ForeignKeyChecks int64
 	}
-	assert.NoError(t,
+	require.NoError(t,
 		store.Raw("SELECT @foreign_key_checks_stack_count AS stack_count, @@SESSION.foreign_key_checks AS foreign_key_checks").
 			Scan(&result).Error())
 	assert.Equal(t, expectedStackCount, result.StackCount, "wrong @foreign_key_checks_stack_count")

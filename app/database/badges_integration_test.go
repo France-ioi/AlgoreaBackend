@@ -3,12 +3,14 @@
 package database_test
 
 import (
+	"math"
 	"reflect"
 	"testing"
 	_ "unsafe"
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -282,17 +284,17 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			err := store.InTransaction(func(store *database.DataStore) error {
 				return store.Groups().StoreBadges(tt.badges, tt.userID, tt.newUser)
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			knownBadgeGroups := make(map[string]int64)
 			expectedGroups := append([]int64{5}, tt.existingGroups...)
 			for _, url := range tt.shouldCreateBadgeGroupsForURLs {
 				var groupID int64
-				assert.NoError(t, store.Groups().Where("text_id = ? and type='Other'", url).PluckFirst("id", &groupID).Error(),
+				require.NoError(t, store.Groups().Where("text_id = ? and type='Other'", url).PluckFirst("id", &groupID).Error(),
 					"a group for badge '%s' should have been created", url)
 				var found bool
 				found, err = store.ActiveGroupAncestors().Where("ancestor_group_id = ? and child_group_id = ?", groupID, groupID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found)
 				expectedGroups = append(expectedGroups, groupID)
 				knownBadgeGroups[url] = groupID
@@ -312,7 +314,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 					Where("can_manage = 'memberships'").
 					Where("can_grant_group_access").
 					Where("can_watch_members").HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the user should have become a manager of badge '%s'", url)
 				expectedGroupManagers = append(expectedGroupManagers, tt.userID, groupID)
 			}
@@ -332,12 +334,12 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				found, err = store.ActiveGroupGroups().
 					Where("parent_group_id = ?", groupID).
 					Where("child_group_id = ?", tt.userID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the user should have become a member of badge '%s'", url)
 				found, err = store.ActiveGroupAncestors().
 					Where("ancestor_group_id = ?", groupID).
 					Where("child_group_id = ?", tt.userID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the user should have become a descendant of badge '%s'", url)
 				expectedGroupsGroups = append(expectedGroupsGroups, groupID, tt.userID)
 			}
@@ -349,18 +351,18 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				found, err = store.ActiveGroupGroups().
 					Where("parent_group_id = ?", parentGroupID).
 					Where("child_group_id = ?", childGroupID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the badge '%s' should have become a subgroup of badge '%s'", childBadgeURL, parentBadgeURL)
 				found, err = store.ActiveGroupAncestors().
 					Where("ancestor_group_id = ?", parentGroupID).
 					Where("child_group_id = ?", childGroupID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the badge '%s' should have become a descendant of badge '%s'", childBadgeURL, parentBadgeURL)
 				expectedGroupsGroups = append(expectedGroupsGroups, parentGroupID, childGroupID)
 			}
 
 			found, err := store.Groups().Where("id NOT IN(?)", expectedGroups).HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, found, "some unexpected groups have been created")
 
 			groupManagersQuery := store.GroupManagers().DB
@@ -369,7 +371,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 					expectedGroupManagers[index], expectedGroupManagers[index+1])
 			}
 			found, err = groupManagersQuery.HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, found, "some unexpected group_managers have been created")
 
 			groupsGroupsQuery := store.GroupGroups().DB
@@ -378,7 +380,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 					expectedGroupsGroups[index], expectedGroupsGroups[index+1])
 			}
 			found, err = groupsGroupsQuery.HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, found, "some unexpected groups_groups have been created")
 		})
 	}
@@ -409,16 +411,16 @@ func TestGroupStore_StoreBadge_PropagatesResults(t *testing.T) {
 	err := store.InTransaction(func(store *database.DataStore) error {
 		return store.Groups().StoreBadges([]database.Badge{{URL: "badge_url"}}, 6, false)
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	found, err := store.Table("results_propagate").HasRows()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, found)
 
 	var score float32
-	assert.NoError(t, store.Results().ByID(6, 1, 100).
+	require.NoError(t, store.Results().ByID(6, 1, 100).
 		PluckFirst("score_computed", &score).Error())
-	assert.Equal(t, float32(10), score)
+	assert.InDelta(t, float32(10), score, math.SmallestNonzeroFloat32)
 }
 
 func getGroupIDByBadgeURL(store *database.DataStore, url string, knownBadgeGroups map[string]int64) int64 {

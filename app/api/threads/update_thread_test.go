@@ -11,9 +11,9 @@ import (
 func Test_userCanChangeThreadStatus_EdgeCases(t *testing.T) {
 	user := database.User{}
 
-	assert.Equal(t, false, userCanChangeThreadStatus(&user, "not_started", "", 1, &threadInfo{}))
-	assert.Equal(t, true, userCanChangeThreadStatus(
+	assert.False(t, userCanChangeThreadStatus(&user, "not_started", "", 1, &threadInfo{}))
+	assert.True(t, userCanChangeThreadStatus(
 		&user, "waiting_for_trainer", "waiting_for_trainer", 1, &threadInfo{}))
-	assert.Equal(t, true, userCanChangeThreadStatus(
+	assert.True(t, userCanChangeThreadStatus(
 		&user, "closed", "closed", 1, &threadInfo{}))
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
@@ -18,25 +19,25 @@ func TestBuildConfig_LoadsKeysFromFile(t *testing.T) {
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	config := viper.New()
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
 	config.Set("PublicKeyFile", tmpFilePublic.Name())
 	config.Set("PlatformName", "my platform")
 	tokenConfig, err := BuildConfig(config)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, &Config{
 		PrivateKey:   expectedPrivateKey,
 		PublicKey:    expectedPublicKey,
@@ -46,16 +47,16 @@ func TestBuildConfig_LoadsKeysFromFile(t *testing.T) {
 
 func TestBuildConfig_LoadsKeysFromString(t *testing.T) {
 	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	config := viper.New()
 	config.Set("PrivateKey", tokentest.AlgoreaPlatformPrivateKey)
 	config.Set("PublicKey", tokentest.AlgoreaPlatformPublicKey)
 	config.Set("PlatformName", "my platform")
 	tokenConfig, err := BuildConfig(config)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, &Config{
 		PrivateKey:   expectedPrivateKey,
 		PublicKey:    expectedPublicKey,
@@ -68,7 +69,7 @@ func TestBuildConfig_CannotLoadPublicKey(t *testing.T) {
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	config := viper.New()
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
@@ -83,7 +84,7 @@ func TestBuildConfig_CannotLoadPrivateKey(t *testing.T) {
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	config := viper.New()
 	config.Set("PrivateKeyFile", "nosuchfile.pem")
@@ -99,13 +100,13 @@ func TestBuildConfig_CannotParsePublicKey(t *testing.T) {
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tmpFilePublic, err := createTmpPublicKeyFile([]byte{})
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	config := viper.New()
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())
@@ -121,13 +122,13 @@ func TestBuildConfig_CannotParsePrivateKey(t *testing.T) {
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	config := viper.New()
 	config.Set("PrivateKeyFile", tmpFilePrivate.Name())

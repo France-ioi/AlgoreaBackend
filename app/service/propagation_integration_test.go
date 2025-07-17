@@ -1,12 +1,14 @@
 package service_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -50,7 +52,7 @@ func TestSchedulePropagation(t *testing.T) {
 				endpoint: "https://example.com",
 			},
 			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
-			endpointCallErr: fmt.Errorf("error"),
+			endpointCallErr: errors.New("error"),
 			propagated:      false,
 		},
 		{
@@ -110,7 +112,7 @@ func TestSchedulePropagation(t *testing.T) {
 			service.SchedulePropagation(store, tt.args.endpoint, []string{"permissions"})
 
 			exists, err := store.Permissions().Where("item_id = 1").HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.propagated, exists)
 
 			// Verify that all stubs were called.

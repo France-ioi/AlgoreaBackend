@@ -40,7 +40,7 @@ func Test_mysqlConnWrapper_Prepare(t *testing.T) {
 	expectedStmt := &stmtMock{}
 	expectedErr := errors.New("error")
 	monkey.Patch(mysqlConnPrepare, func(c unsafe.Pointer, query string) (driver.Stmt, error) {
-		assert.Equal(t, conn, (*mysqlConnWrapper)(c))
+		assert.Equal(t, conn, (*mysqlConnWrapper)(c)) //nolint:testifylint // conn is expected
 		assert.Equal(t, expectedQuery, query)
 		return expectedStmt, expectedErr //nolint:nilnil // We return the value among with the error for test purposes.
 	})

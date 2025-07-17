@@ -9,6 +9,7 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
@@ -39,7 +40,7 @@ func Test_createParticipantsGroupForItemRequiringExplicitEntry_Duplicate(t *test
 		Name string
 	}
 	var group groupData
-	assert.NoError(t, dataStore.Groups().Take(&group, "id = ?", groupID).Error())
+	require.NoError(t, dataStore.Groups().Take(&group, "id = ?", groupID).Error())
 	assert.Equal(t, groupData{
 		Type: "ContestParticipants",
 		Name: "123-participants",

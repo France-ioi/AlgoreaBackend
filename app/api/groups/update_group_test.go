@@ -7,6 +7,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -121,7 +122,7 @@ func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectati
 	if err == nil {
 		_ = response.Body.Close()
 	}
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, 500, response.StatusCode)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

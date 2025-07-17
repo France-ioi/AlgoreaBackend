@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/items"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -445,8 +446,8 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			var got []map[string]interface{}
-			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
-				assert.NoError(t, s.GroupGroups().CreateNewAncestors())
+			require.NoError(t, store.InTransaction(func(s *database.DataStore) error {
+				require.NoError(t, s.GroupGroups().CreateNewAncestors())
 				got = items.GetDataForResultPathStart(s, tt.args.participantID, tt.args.ids)
 				return nil
 			}))

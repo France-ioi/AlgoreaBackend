@@ -1,7 +1,5 @@
 package database
 
-import "fmt"
-
 // WhereUserHasViewPermissionOnItems returns a subview of the items
 // on that the given user has `can_view_generated` >= `viewPermission`
 // basing on the given view.
@@ -43,7 +41,7 @@ func (conn *DB) WhereGroupHasPermissionOnItems(groupID int64, permissionKind, ne
 	itemsPerms := NewDataStore(conn.New()).Permissions().
 		MatchingGroupAncestors(groupID).
 		Where("permissions.item_id = items.id").
-		Where(fmt.Sprintf("%s >= ?", permissionColumnByKind(permissionKind)),
+		Where(permissionColumnByKind(permissionKind)+" >= ?",
 			NewDataStore(conn).PermissionsGranted().PermissionIndexByKindAndName(permissionKind, neededPermission)).
 		Select("1").Limit(1)
 	return conn.Where("EXISTS(?)", itemsPerms.QueryExpr())

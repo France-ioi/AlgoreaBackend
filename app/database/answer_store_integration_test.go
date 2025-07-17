@@ -45,7 +45,7 @@ func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 
 			newID, err := answerStore.SubmitNewAnswer(test.authorID, test.participantID, test.attemptID, test.itemID, test.answer)
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotZero(t, newID)
 
 			type answer struct {
@@ -58,7 +58,7 @@ func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 				CreatedAtSet  bool
 			}
 			var insertedAnswer answer
-			assert.NoError(t,
+			require.NoError(t,
 				answerStore.ByID(newID).
 					Select("author_id, participant_id, attempt_id, item_id, type, answer, "+
 						"ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
@@ -138,6 +138,6 @@ func TestAnswerStore_CreateNewAnswer_Duplicate(t *testing.T) {
 
 	answerStore := database.NewDataStore(db).Answers()
 	newID, err := answerStore.CreateNewAnswer(int64(121), int64(121), int64(56), int64(456), "Saved", "my answer", nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, int64(2), newID)
 }

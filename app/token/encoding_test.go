@@ -10,6 +10,7 @@ import (
 	"bou.ke/monkey"
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
@@ -121,12 +122,12 @@ func TestParseAndValidate(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
 			defer monkey.UnpatchAll()
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			payload, err := ParseAndValidate(tt.token, publicKey)
 			if tt.wantError == nil {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			} else {
-				assert.EqualError(t, err, tt.wantError.Error())
+				require.EqualError(t, err, tt.wantError.Error())
 			}
 			assert.Equal(t, tt.wantPayload, payload)
 		})
@@ -167,12 +168,12 @@ func TestGenerate(t *testing.T) {
 
 			var err error
 			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			token := Generate(patchedPayload, privateKey)
 			payload, err := ParseAndValidate(token, publicKey)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.payload, payload)
 		})
 	}

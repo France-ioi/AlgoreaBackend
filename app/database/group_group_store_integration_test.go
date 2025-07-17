@@ -184,7 +184,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			err := dataStore.InTransaction(func(s *database.DataStore) error {
 				return s.GroupGroups().DeleteRelation(1, 2, tt.shouldDeleteOrphans)
 			})
-			assert.Nil(t, err)
+			require.NoError(t, err)
 			assertGroupRelations(t, dataStore, tt.remainingGroupIDs, tt.remainingGroupsGroups, tt.remainingGroupsAncestors)
 			assertGroupLinkedObjects(t, dataStore, tt.remainingGroupIDs, tt.expectedGrantedPermissions, tt.expectedGeneratedPermissions)
 		})
@@ -202,16 +202,16 @@ func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
 	totalRemainingGroupIDs := make([]int64, 0, len(remainingGroupIDs)+1)
 	totalRemainingGroupIDs = append(totalRemainingGroupIDs, remainingGroupIDs...)
 	totalRemainingGroupIDs = append(totalRemainingGroupIDs, int64(111))
-	assert.NoError(t, dataStore.Groups().Order("id").Pluck("id", &ids).Error())
+	require.NoError(t, dataStore.Groups().Order("id").Pluck("id", &ids).Error())
 	assert.Equal(t, totalRemainingGroupIDs, ids)
-	assert.NoError(t, dataStore.ActiveGroupGroups().Select("parent_group_id, child_group_id").Order("parent_group_id, child_group_id").
+	require.NoError(t, dataStore.ActiveGroupGroups().Select("parent_group_id, child_group_id").Order("parent_group_id, child_group_id").
 		ScanIntoSliceOfMaps(&rows).Error())
 	assert.Equal(t, remainingGroupsGroups, rows)
-	assert.NoError(t, dataStore.ActiveGroupAncestors().Select("ancestor_group_id, child_group_id").Order("ancestor_group_id, child_group_id").
+	require.NoError(t, dataStore.ActiveGroupAncestors().Select("ancestor_group_id, child_group_id").Order("ancestor_group_id, child_group_id").
 		ScanIntoSliceOfMaps(&rows).Error())
 	assert.Equal(t, remainingGroupsAncestors, rows)
 	var count int64
-	assert.NoError(t, dataStore.Table("groups_propagate").Where("ancestors_computation_state != 'done'").Count(&count).Error())
+	require.NoError(t, dataStore.Table("groups_propagate").Where("ancestors_computation_state != 'done'").Count(&count).Error())
 	assert.Zero(t, count)
 }
 
@@ -229,37 +229,37 @@ func assertGroupLinkedObjects(t *testing.T, dataStore *database.DataStore, remai
 	t.Helper()
 
 	var ids []int64
-	assert.NoError(t, dataStore.Table("filters").Order("group_id").
+	require.NoError(t, dataStore.Table("filters").Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.Attempts().Order("participant_id").
+	require.NoError(t, dataStore.Attempts().Order("participant_id").
 		Pluck("participant_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.Results().Order("participant_id").
+	require.NoError(t, dataStore.Results().Order("participant_id").
 		Pluck("participant_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
 
 	var grantedPermissions []grantedPermission
-	assert.NoError(t, dataStore.PermissionsGranted().Order("group_id, item_id, source_group_id, origin").
+	require.NoError(t, dataStore.PermissionsGranted().Order("group_id, item_id, source_group_id, origin").
 		Select("group_id, item_id, source_group_id, origin, can_view").Scan(&grantedPermissions).Error())
 	assert.Equal(t, expectedGrantedPermissions, grantedPermissions)
 
 	var generatedPermissions []permissionsGeneratedResultRow
-	assert.NoError(t, dataStore.Permissions().Order("group_id, item_id").
+	require.NoError(t, dataStore.Permissions().Order("group_id, item_id").
 		Select("group_id, item_id, can_view_generated").Scan(&generatedPermissions).Error())
 	assert.Equal(t, expectedGeneratedPermissions, generatedPermissions)
 
 	assert.Equal(t, remainingGroupIDs, ids)
-	assert.NoError(t, dataStore.Permissions().Order("group_id").
+	require.NoError(t, dataStore.Permissions().Order("group_id").
 		Pluck("group_id", &ids).Error())
 	assert.Equal(t, remainingGroupIDs, ids)
 
 	var cnt int64
-	assert.NoError(t, dataStore.Table("groups_propagate").
+	require.NoError(t, dataStore.Table("groups_propagate").
 		Where("ancestors_computation_state <> 'done'").Count(&cnt).Error())
 	assert.Zero(t, cnt)
 
-	assert.NoError(t, dataStore.Table("permissions_propagate").Count(&cnt).Error())
+	require.NoError(t, dataStore.Table("permissions_propagate").Count(&cnt).Error())
 	assert.Zero(t, cnt)
 }
 
@@ -492,7 +492,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
-			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+			require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
 				return store.GroupGroups().CreateNewAncestors()
 			}))
 			groupGroupStore := dataStore.GroupGroups()
@@ -501,7 +501,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 				UpdateColumn(map[string]interface{}{
 					"expires_at": test.expiresAt,
 				})
-			assert.NoError(t, result.Error())
+			require.NoError(t, result.Error())
 			if test.noChanges {
 				assert.Zero(t, result.RowsAffected())
 			} else {
@@ -527,13 +527,13 @@ func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChild
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
 	result := groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
 		UpdateColumn("parent_group_id", 3)
-	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	require.EqualError(t, result.Error(), expectedErrorMessage)
 	result = groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
 		UpdateColumn("child_group_id", 3)
-	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	require.EqualError(t, result.Error(), expectedErrorMessage)
 	result = groupGroupStore.Where("parent_group_id = 1 AND child_group_id = 2").
 		UpdateColumn("is_team_membership", 1)
-	assert.EqualError(t, result.Error(), expectedErrorMessage)
+	require.EqualError(t, result.Error(), expectedErrorMessage)
 }
 
 type ResultPrimaryKey struct {

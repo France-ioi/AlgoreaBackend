@@ -3,12 +3,13 @@
 package service_test
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -29,7 +30,7 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 	`)
 	defer func() { _ = db.Close() }()
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
+	require.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
 		return trStore.GroupGroups().CreateNewAncestors()
 	}))
 
@@ -42,17 +43,17 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 		{
 			name:          "no team",
 			query:         "as_team_id=404",
-			expectedError: service.ErrForbidden(fmt.Errorf("can't use given as_team_id as a user's team")),
+			expectedError: service.ErrForbidden(errors.New("can't use given as_team_id as a user's team")),
 		},
 		{
 			name:          "as_team_id is not a team",
 			query:         "param&as_team_id=1",
-			expectedError: service.ErrForbidden(fmt.Errorf("can't use given as_team_id as a user's team")),
+			expectedError: service.ErrForbidden(errors.New("can't use given as_team_id as a user's team")),
 		},
 		{
 			name:          "the current user is not a member of as_team_id",
 			query:         "as_team_id=2",
-			expectedError: service.ErrForbidden(fmt.Errorf("can't use given as_team_id as a user's team")),
+			expectedError: service.ErrForbidden(errors.New("can't use given as_team_id as a user's team")),
 		},
 		{
 			name:           "okay",

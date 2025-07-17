@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -24,7 +25,7 @@ func TestResultStore_ByID(t *testing.T) {
 
 	var result []map[string]interface{}
 	err := NewDataStore(db).Results().ByID(1, 2, 3).ScanIntoSliceOfMaps(&result).Error()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, []map[string]interface{}{{"id": int64(123)}}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

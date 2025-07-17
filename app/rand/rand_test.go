@@ -9,13 +9,13 @@ import (
 
 func TestFloat64(t *testing.T) {
 	Seed(1)
-	assert.Equal(t, 0.6046602879796196, Float64())
-	assert.Equal(t, 0.9405090880450124, Float64())
+	assert.InDelta(t, 0.6046602879796196, Float64(), math.SmallestNonzeroFloat64)
+	assert.InDelta(t, 0.9405090880450124, Float64(), math.SmallestNonzeroFloat64)
 	Seed(2)
-	assert.Equal(t, 0.16729663442585624, Float64())
-	assert.Equal(t, 0.2650543054337802, Float64())
+	assert.InDelta(t, 0.16729663442585624, Float64(), math.SmallestNonzeroFloat64)
+	assert.InDelta(t, 0.2650543054337802, Float64(), math.SmallestNonzeroFloat64)
 	Seed(1)
-	assert.Equal(t, 0.6046602879796196, Float64())
+	assert.InDelta(t, 0.6046602879796196, Float64(), math.SmallestNonzeroFloat64)
 }
 
 func TestInt31n(t *testing.T) {

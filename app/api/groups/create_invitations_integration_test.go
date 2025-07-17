@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api/groups"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -263,7 +264,7 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 
 			store := database.NewDataStore(db)
 			var got []int64
-			assert.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
+			require.NoError(t, store.InTransaction(func(transactionStore *database.DataStore) error {
 				got = groups.FilterOtherTeamsMembersOutForLogins(transactionStore, 1, tt.groupsToInvite, results, groupIDToLoginMap)
 				return nil
 			}))

@@ -71,7 +71,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			mock.ExpectExec("^" + regexp.QuoteMeta(expectedQuery) + "$").
 				WillReturnResult(sqlmock.NewResult(-1, *expectedAffectedRows))
 			result, err := db.db.CommonDB().(*sqlDBWrapper).Exec(expectedQuery)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result)
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -98,7 +98,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
 				WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
 			rows, err := db.db.CommonDB().(*sqlDBWrapper).Query(expectedQuery)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, rows)
 			if rows != nil {
 				_ = rows.Close()
@@ -134,7 +134,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
 				WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
 			row := db.db.CommonDB().(*sqlDBWrapper).QueryRow(expectedQuery)
-			assert.NoError(t, row.Err())
+			require.NoError(t, row.Err())
 			_ = row.Scan()
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -166,7 +166,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			expectedQuery = beginTransactionLogMessage
 			mock.ExpectBegin()
 			tx, err := db.db.CommonDB().(*sqlDBWrapper).BeginTx(context.Background(), &sql.TxOptions{})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, tx)
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -206,7 +206,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			require.NoError(t, err)
 			defer func() { _ = conn.close(nil) }()
 			row := conn.QueryRowContext(context.Background(), expectedQuery)
-			assert.NoError(t, row.Err())
+			require.NoError(t, row.Err())
 			_ = row.Scan()
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -245,7 +245,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
 			result, err := stmtWrapper.ExecContext(context.Background())
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result)
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -378,7 +378,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			defer func() { _ = tx.Commit() }()
 			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
 			result, err := txWrapper.Exec(expectedQuery)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.NotNil(t, result)
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -691,7 +691,7 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackFailin
 		assert.Eventually(t, func() bool {
 			return mock.ExpectationsWereMet() == nil
 		}, 1*time.Second, 10*time.Millisecond)
-		require.Nil(t, mock.ExpectationsWereMet(), "cancelFunc() should have caused the rollback to be called")
+		require.NoError(t, mock.ExpectationsWereMet(), "cancelFunc() should have caused the rollback to be called")
 		err = callOnTxFunc(tx)
 		require.Equal(t, expectedError, err)
 		return expectedQueryLogMessage, expectedAffectedRows,
@@ -733,7 +733,7 @@ func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sql
 
 	expectedQuery, expectedAffectedRows, expectedError := test.funcToRun(t, db, mock, analyzeSQLQueries)
 
-	assert.NoError(t, mock.ExpectationsWereMet())
+	require.NoError(t, mock.ExpectationsWereMet())
 
 	logEntries := loggerHook.AllEntries()
 	expectedLen := 2
@@ -789,10 +789,8 @@ func assertDurationIsOK(t *testing.T, entry *logrus.Entry) {
 		assert.IsType(t, "", duration)
 		if durationStr, ok := duration.(string); ok {
 			parsedDuration, err := time.ParseDuration(durationStr)
-			assert.NoError(t, err)
-			if err == nil {
-				assert.Greater(t, parsedDuration, 0*time.Second)
-			}
+			require.NoError(t, err)
+			assert.Positive(t, parsedDuration)
 		}
 	}
 }
@@ -904,7 +902,7 @@ func Test_SQLQueryLogging_SQLError(t *testing.T) {
 	assert.Equal(t, "db", data["type"])
 	assertDurationIsOK(t, &entry)
 	assert.Nil(t, data["rows"])
-	assert.NoError(t, mock.ExpectationsWereMet())
+	require.NoError(t, mock.ExpectationsWereMet())
 
 	assert.Equal(t, "a query error", loggerHook.Entries[1].Message)
 	assert.Equal(t, "error", loggerHook.Entries[1].Level.String())

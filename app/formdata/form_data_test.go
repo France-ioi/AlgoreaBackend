@@ -10,6 +10,7 @@ import (
 	"github.com/France-ioi/validator"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
@@ -71,9 +72,9 @@ func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T
 	})
 	formData.RegisterTranslation("test", "failed for field %[2]s with parameter %[3]s (tag=%[1]s)")
 	err := formData.ParseMapData(map[string]interface{}{"id": int64(1)})
-	assert.Equal(t, err, FieldErrorsError{
+	assert.Equal(t, FieldErrorsError{
 		"ID": []string{"failed for field ID with parameter value (tag=test)"},
-	})
+	}, err)
 }
 
 func TestFormData_ValidatorSkippingUnsetFields(t *testing.T) {
@@ -88,7 +89,7 @@ func TestFormData_ValidatorSkippingUnsetFields(t *testing.T) {
 	}))
 	formData.RegisterTranslation("test", "failed")
 	err := formData.ParseMapData(map[string]interface{}{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": nil})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}}, err)
 	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
@@ -111,17 +112,17 @@ func TestFormData_ValidatorSkippingUnchangedFields(t *testing.T) {
 	formData.RegisterTranslation("test", "failed")
 
 	err := formData.ParseMapData(map[string]interface{}{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	formData.SetOldValues(&testStruct{})
 	err = formData.ParseMapData(map[string]interface{}{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
 	assert.Equal(t, FieldErrorsError{"Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 	i := int64(10)
 	j := int64(20)
 	formData.SetOldValues(&testStruct{ID: &i, Nested: &nestedStruct{ID: &j}})
 	err = formData.ParseMapData(map[string]interface{}{})
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": nil}})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 	err = formData.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
@@ -168,7 +169,7 @@ func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 			hook := stringToDatabaseTimeUTCHookFunc(time.RFC3339)
 			converted, err := mapstructure.DecodeHookExec(hook, tt.typeFrom, tt.typeTo, tt.data)
 			if tt.wantErr == nil {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, converted)
 			} else {
 				assert.Equal(t, tt.wantErr, err)

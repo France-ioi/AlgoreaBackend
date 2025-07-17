@@ -34,18 +34,18 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			var newID int64
 			var err error
 			dataStore := database.NewDataStore(db)
-			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
+			require.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
 				newID, err = store.Groups().CreateNew("Some group", test.groupType)
 				return err
 			}))
-			assert.True(t, newID > 0)
+			assert.Positive(t, newID)
 			type resultType struct {
 				Name         string
 				Type         string
 				CreatedAtSet bool
 			}
 			var result resultType
-			assert.NoError(t, dataStore.Groups().ByID(newID).
+			require.NoError(t, dataStore.Groups().ByID(newID).
 				Select("name, type, ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set").
 				Take(&result).Error())
 			assert.Equal(t, resultType{
@@ -57,11 +57,11 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			found, err := dataStore.GroupAncestors().
 				Where("ancestor_group_id = ?", newID).
 				Where("child_group_id = ?", newID).HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.True(t, found)
 
 			var attempts []map[string]interface{}
-			assert.NoError(t, dataStore.Attempts().
+			require.NoError(t, dataStore.Attempts().
 				Select(`
 					participant_id, id, creator_id, parent_attempt_id, root_item_id,
 					ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set`).
@@ -392,9 +392,9 @@ func TestGroupStore_DeleteGroup(t *testing.T) {
 		return store.Groups().DeleteGroup(1234)
 	}))
 	var ids []int64
-	assert.NoError(t, groupStore.Pluck("id", &ids).Error())
+	require.NoError(t, groupStore.Pluck("id", &ids).Error())
 	assert.Empty(t, ids)
-	assert.NoError(t, groupStore.Table("groups_propagate").Pluck("id", &ids).Error())
+	require.NoError(t, groupStore.Table("groups_propagate").Pluck("id", &ids).Error())
 	assert.Empty(t, ids)
 }
 

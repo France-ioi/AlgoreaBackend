@@ -27,7 +27,7 @@ func Test_fileWithLineNum(t *testing.T) {
 		return nil
 	}))
 
-	assert.Nil(t, mock.ExpectationsWereMet())
+	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func Test_fileWithLineNum_ReturnsEmptyStringWhenNoSuitableCallerFound(t *testing.T) {

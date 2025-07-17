@@ -300,7 +300,7 @@ Feature: Ask for a hint - robustness
     And the response error message should contain "No result or the attempt is expired"
     And the table "attempts" should remain unchanged
 
-  Scenario: missing askedHint
+  Scenario Outline: missing askedHint
     Given "priorUserTaskToken" is a token signed by the app with the following payload:
       """
       {
@@ -318,6 +318,7 @@ Feature: Ask for a hint - robustness
         "idItemLocal": "50",
         "idAttempt": "101/0",
         "itemURL": "https://platformwithkey/50"
+        <asked_hint_json_part>
       }
       """
     When I send a POST request to "/items/ask-hint" with the following body:
@@ -330,6 +331,10 @@ Feature: Ask for a hint - robustness
     Then the response code should be 400
     And the response error message should contain "Asked hint should not be empty"
     And the table "attempts" should remain unchanged
+  Examples:
+    | asked_hint_json_part |
+    |                      |
+    | , "askedHint": null  |
 
   Scenario: The attempt is expired (doesn't allow submissions anymore)
     Given "priorUserTaskToken" is a token signed by the app with the following payload:

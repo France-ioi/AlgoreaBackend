@@ -310,7 +310,7 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 
 	err := convertBadges(source, dest)
 	if err != nil {
-		return nil, fmt.Errorf("invalid badges data")
+		return nil, errors.New("invalid badges data")
 	}
 
 	return dest, nil

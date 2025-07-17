@@ -65,7 +65,7 @@ func TestUserStore_DeleteWithTraps(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.Users().DeleteWithTraps(
+	require.NoError(t, store.Users().DeleteWithTraps(
 		&database.User{GroupID: 5001}, false))
 
 	assertUserRelatedTablesAfterDeletingWithTraps(t, db, golang.NewSet[int64](5001), golang.NewSet[int64](2))
@@ -82,7 +82,7 @@ func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	store := database.NewDataStore(db)
-	assert.NoError(t, store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
+	require.NoError(t, store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
 		return store.Users().Where("group_id % 2 = 0")
 	}, false))
 
@@ -194,7 +194,7 @@ func assertTableColumn(t *testing.T, db *database.DB, table, column string, expe
 	t.Helper()
 
 	reflValues := reflect.New(reflect.TypeOf(expectedValues))
-	assert.NoError(t, db.Table(table).Order(column).Pluck("DISTINCT "+column, reflValues.Interface()).Error())
+	require.NoError(t, db.Table(table).Order(column).Pluck("DISTINCT "+column, reflValues.Interface()).Error())
 	assert.EqualValues(t, expectedValues, reflValues.Elem().Interface(), "wrong %s in %s", column, table)
 }
 
@@ -238,7 +238,7 @@ func assertUserRelatedTablesAfterDeletingWithTraps(
 
 	store := database.NewDataStore(db)
 	found, err := store.GroupAncestors().Where("ancestor_group_id = 1 AND child_group_id = 7000").HasRows()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, found, "No row for 1->7000 in groups_ancestors")
 }
 

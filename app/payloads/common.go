@@ -72,15 +72,24 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 	return out
 }
 
+const (
+	anythingTypeName = "Anything"
+	anythingPkgPath  = "github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+)
+
 func shouldConvert(fieldValue reflect.Value) bool {
 	return fieldValue.Kind() == reflect.Struct &&
-		(fieldValue.Type().Name() != "Anything" ||
-			fieldValue.Type().PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/formdata")
+		(fieldValue.Type().Name() != anythingTypeName || fieldValue.Type().PkgPath() != anythingPkgPath)
 }
 
 func resolvePointer(fieldValue reflect.Value) reflect.Value {
 	for fieldValue.IsValid() && fieldValue.Type().Kind() == reflect.Ptr && !fieldValue.IsNil() {
-		fieldValue = fieldValue.Elem()
+		newFieldValue := fieldValue.Elem()
+		if newFieldValue.Kind() == reflect.Struct &&
+			newFieldValue.Type().Name() == anythingTypeName && newFieldValue.Type().PkgPath() == anythingPkgPath {
+			return fieldValue
+		}
+		fieldValue = newFieldValue
 	}
 	return fieldValue
 }
