@@ -18,7 +18,7 @@ SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
 
 VERSION_FETCHING_CMD=git describe --always --dirty
-GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
+GOBUILD_VERSION_INJECTION=-ldflags="-X github.com/France-ioi/AlgoreaBackend/v2/app/version.version=$(shell $(VERSION_FETCHING_CMD))"
 
 # Don't cover the packages ending by test, and separate the packages by a comma
 COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | tr '\n' ',')
