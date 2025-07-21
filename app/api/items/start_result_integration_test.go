@@ -20,7 +20,7 @@ import (
 func TestService_startResult_concurrency(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		items: [{id: 1, type: Task, default_language_tag: 'fr', requires_explicit_entry: 0}]
 		groups: [{id: 3, type: User, root_activity_id: 1}]
 		users: [{group_id: 3, login: john}]

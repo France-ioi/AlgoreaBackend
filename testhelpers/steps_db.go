@@ -320,7 +320,7 @@ func (ctx *TestContext) loadColumnsFromDBTable(gormDB *database.DB, dbTableName 
 
 // DBGroupsAncestorsAreComputed computes the groups_ancestors table.
 func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
-	gormDB, err := database.Open(ctx.db)
+	gormDB, err := database.Open(ctx.application.Database.GetContext(), ctx.db)
 	if err != nil {
 		return err
 	}
@@ -346,7 +346,7 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 
 // DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
 func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
-	gormDB, err := database.Open(ctx.db)
+	gormDB, err := database.Open(ctx.application.Database.GetContext(), ctx.db)
 	if err != nil {
 		return err
 	}

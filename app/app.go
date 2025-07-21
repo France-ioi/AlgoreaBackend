@@ -33,7 +33,8 @@ type Application struct {
 }
 
 // New configures application resources and routes.
-func New() (*Application, error) {
+// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
+func New(loggerOptional ...*logging.Logger) (*Application, error) {
 	// Getting all configs, they will be used to init components and to be passed
 	config := LoadConfig()
 	application := &Application{}
@@ -46,14 +47,15 @@ func New() (*Application, error) {
 	// Init the PRNG with a random value
 	rand.Seed(int64(binary.LittleEndian.Uint64(randomBytes[:]))) //nolint:gosec // G115: we don't care if a big number becomes negative
 
-	if err := application.Reset(config); err != nil {
+	if err := application.Reset(config, loggerOptional...); err != nil {
 		return nil, err
 	}
 	return application, nil
 }
 
 // Reset reinitializes the application with the given config.
-func (app *Application) Reset(config *viper.Viper) error {
+// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
+func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Logger) error {
 	dbConfig, err := DBConfig(config)
 	if err != nil {
 		return fmt.Errorf("unable to load the 'database' configuration: %w", err)
@@ -70,17 +72,17 @@ func (app *Application) Reset(config *viper.Viper) error {
 	}
 	serverConfig := ServerConfig(config)
 
-	// Apply the config to the global logger
-	logging.SharedLogger.Configure(loggingConfig)
+	logger := resolveOrCreateLogger(loggingConfig, loggerOptional)
 
 	// Init DB
 	if dbConfig.Params == nil {
 		dbConfig.Params = make(map[string]string, 1)
 	}
 	dbConfig.Params["charset"] = "utf8mb4"
-	db, err := database.Open(dbConfig.FormatDSN())
+	ctx := logging.ContextWithLogger(context.Background(), logger)
+	db, err := database.Open(ctx, dbConfig.FormatDSN())
 	if err != nil {
-		logging.SharedLogger.WithContext(context.Background()).WithField("module", "database").Error(err)
+		logger.WithContext(ctx).WithField("module", "database").Error(err)
 		return err
 	}
 
@@ -94,6 +96,7 @@ func (app *Application) Reset(config *viper.Viper) error {
 	// Set up middlewares
 	router := chi.NewRouter()
 
+	router.Use(logging.ContextWithLoggerMiddleware(logger))
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(w, r.WithContext(database.NewDataStore(app.Database).MergeContext(r.Context())))
@@ -129,4 +132,13 @@ func (app *Application) Reset(config *viper.Viper) error {
 	app.Database = db
 	app.apiCtx = apiCtx
 	return nil
+}
+
+func resolveOrCreateLogger(loggingConfig *viper.Viper, loggerOptional []*logging.Logger) (logger *logging.Logger) {
+	if len(loggerOptional) > 0 && loggerOptional[0] != nil {
+		logger = loggerOptional[0]
+	} else {
+		logger = logging.NewLoggerFromConfig(loggingConfig)
+	}
+	return logger
 }

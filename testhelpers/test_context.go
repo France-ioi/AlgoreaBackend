@@ -12,12 +12,11 @@ import (
 	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
 	"github.com/cucumber/godog"
-	_ "github.com/go-sql-driver/mysql"      // use to force database/sql to use mysql
-	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
+	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
-	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
@@ -36,8 +35,8 @@ type TestContext struct {
 	featureQueries                  []dbquery
 	lastResponse                    *http.Response
 	lastResponseBody                string
+	logger                          *logging.Logger
 	logsHook                        *loggingtest.Hook
-	logsRestoreFunc                 func()
 	inScenario                      bool
 	db                              *sql.DB
 	dbTableData                     map[string]*godog.Table
@@ -59,10 +58,6 @@ const (
 
 // SetupTestContext initializes the test context. Called before each scenario.
 func (ctx *TestContext) SetupTestContext(scenario *godog.Scenario) {
-	var logHook *test.Hook
-	logHook, ctx.logsRestoreFunc = log.MockSharedLoggerHook()
-	ctx.logsHook = &loggingtest.Hook{Hook: logHook}
-
 	ctx.setupApp()
 	ctx.userID = 0 // not set
 	ctx.lastResponse = nil
@@ -145,7 +140,10 @@ func collectReferences(sc *godog.Scenario) []string {
 func (ctx *TestContext) setupApp() {
 	var err error
 	ctx.tearDownApp()
-	ctx.application, err = app.New()
+	logger, logsHook := logging.NewMockLogger()
+	ctx.logger = logger
+	ctx.logsHook = &loggingtest.Hook{Hook: logsHook}
+	ctx.application, err = app.New(ctx.logger)
 	if err != nil {
 		panic(fmt.Errorf("unable to load the app: %w", err))
 	}
@@ -162,7 +160,6 @@ func (ctx *TestContext) tearDownApp() {
 func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) (err error) {
 	RestoreDBTime()
 	monkey.UnpatchAll()
-	ctx.logsRestoreFunc()
 
 	defer func() {
 		err = httpmock.AllStubsCalled()

@@ -16,6 +16,8 @@ import (
 )
 
 func Test_findItemPaths(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	type args struct {
 		participantID int64
 		itemID        int64
@@ -690,12 +692,13 @@ func Test_findItemPaths(t *testing.T) {
 			- {participant_id: 100, id: 0}
 			- {participant_id: 101, id: 0}
 	`
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(globalFixture, tt.fixture)
+			db := testhelpers.SetupDBWithFixtureString(ctx, globalFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			require.NoError(t, store.InTransaction(func(s *database.DataStore) error {

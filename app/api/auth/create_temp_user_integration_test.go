@@ -24,7 +24,7 @@ const expectedTimestamp = "2019-05-30 11:00:00"
 func Test_createTempUserGroup_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, type: "User"}]`)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `groups: [{id: 1, type: "User"}]`)
 	defer func() { _ = db.Close() }()
 
 	var nextID int64
@@ -62,7 +62,7 @@ func Test_createTempUserGroup_Duplicate(t *testing.T) {
 func Test_createTempUser_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1, type: "User"}, {id: 2, type: "User"}]
 		users: [{group_id: 1, login: "tmp-50000000"}]`)
 	defer func() { _ = db.Close() }()

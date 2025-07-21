@@ -90,7 +90,7 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 	ctx.userID = userID
 	ctx.user = strconv.FormatInt(userID, 10)
 
-	db, err := database.Open(ctx.db)
+	db, err := database.Open(ctx.application.Database.GetContext(), ctx.db)
 	if err != nil {
 		return err
 	}

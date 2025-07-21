@@ -29,7 +29,7 @@ type unlocksResultRow struct {
 func TestResultStore_Propagate_Unlocks(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 
 	testRegularUnlocks(t, db)
@@ -38,7 +38,7 @@ func TestResultStore_Propagate_Unlocks(t *testing.T) {
 func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture(
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(),
 		"results_propagation/_common",
 		"results_propagation/unlocks",
 		"results_propagation/unlocks_old_records")
@@ -50,7 +50,7 @@ func TestResultStore_Propagate_Unlocks_UpdatesOldRecords(t *testing.T) {
 func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture(
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(),
 		"results_propagation/_common",
 		"results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
@@ -104,7 +104,7 @@ func generateGrantedPermissionsRow(itemID int64, canView, canEnterFrom, canEnter
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	require.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
 
@@ -114,7 +114,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry(t *testing.T)
 func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHasBeenSetAlready(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/unlocks")
 	defer func() { _ = db.Close() }()
 	require.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
 	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
@@ -163,7 +163,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/unlocks")
+			db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/unlocks")
 			defer func() { _ = db.Close() }()
 			require.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
 			oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)

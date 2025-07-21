@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	crand "crypto/rand"
 	"errors"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
@@ -35,7 +37,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(t, app.Database)
 	assert.NotNil(t, app.HTTPHandler)
 	assert.NotNil(t, app.apiCtx)
-	assert.Len(t, app.HTTPHandler.Middlewares(), 9)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 10)
 	require.NotEmpty(t, app.HTTPHandler.Routes())
 	assert.Equal(t, "/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
@@ -44,7 +46,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
-	assert.Len(t, app.HTTPHandler.Middlewares(), 8)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 9)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
@@ -56,15 +58,65 @@ func TestNew_NotDefaultRootPath(t *testing.T) {
 	assert.Equal(t, "/api/*", app.HTTPHandler.Routes()[0].Pattern)
 }
 
+func TestNew_AcceptsLogger(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
+	require.NoError(t, err)
+	require.NotNil(t, app)
+	assert.Equal(t, logger, logging.LoggerFromContext(app.Database.GetContext()))
+
+	var called bool
+	app.HTTPHandler.Get("/dummy", func(_ http.ResponseWriter, r *http.Request) {
+		called = true
+		assert.Equal(t, logger, logging.LoggerFromContext(r.Context()))
+	})
+
+	request, err := http.NewRequest(http.MethodGet, "/dummy", http.NoBody)
+	require.NoError(t, err)
+	app.HTTPHandler.ServeHTTP(httptest.NewRecorder(), request)
+
+	assert.True(t, called)
+}
+
+func TestNew_CreatesNewLogger(t *testing.T) {
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	app, err := New()
+	require.NoError(t, err)
+	require.NotNil(t, app)
+	logger := logging.LoggerFromContext(app.Database.GetContext())
+	require.NotNil(t, logger)
+	config := viper.New()
+	config.Set("level", "fatal")
+	logger.Configure(config)
+
+	var called bool
+	app.HTTPHandler.Get("/dummy", func(_ http.ResponseWriter, r *http.Request) {
+		called = true
+		assert.Equal(t, logger, logging.LoggerFromContext(r.Context()))
+	})
+
+	request, err := http.NewRequest(http.MethodGet, "/dummy", http.NoBody)
+	require.NoError(t, err)
+	app.HTTPHandler.ServeHTTP(httptest.NewRecorder(), request)
+
+	assert.True(t, called)
+}
+
 func TestNew_DBErr(t *testing.T) {
-	hook, restoreFct := logging.MockSharedLoggerHook()
-	defer restoreFct()
+	logger, hook := logging.NewMockLogger()
 	expectedError := errors.New("db opening error")
-	patch := monkey.Patch(database.Open, func(interface{}) (*database.DB, error) {
+	monkey.Patch(database.Open, func(context.Context, interface{}) (*database.DB, error) {
 		return nil, expectedError
 	})
-	defer patch.Unpatch()
-	app, err := New()
+	defer monkey.UnpatchAll()
+	app, err := New(logger)
 	assert.Nil(t, app)
 	require.Equal(t, expectedError, err)
 	logMsg := hook.LastEntry()
@@ -120,9 +172,9 @@ func TestNew_DomainsConfigError(t *testing.T) {
 // but their interaction (impacted by the order of definition)
 
 func TestMiddlewares_OnPanic(t *testing.T) {
-	hook, restoreFct := logging.MockSharedLoggerHook()
-	defer restoreFct()
-	app, _ := New()
+	logger, hook := logging.NewMockLogger()
+	app, err := New(logger)
+	require.NoError(t, err)
 	router := app.HTTPHandler
 	router.Get("/dummy", func(http.ResponseWriter, *http.Request) {
 		panic("error in service")
@@ -159,9 +211,8 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 
 func TestMiddlewares_OnSuccess(t *testing.T) {
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
-	hook, restoreFct := logging.MockSharedLoggerHook()
-	defer restoreFct()
-	app, _ := New()
+	logger, hook := logging.NewMockLogger()
+	app, _ := New(logger)
 	router := app.HTTPHandler
 	router.Get("/dummy", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -201,7 +252,8 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 	monkey.Patch(appenv.IsEnvDev, func() bool { return true })
 	defer monkey.UnpatchAll()
 
-	app, err := New()
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	require.NotNil(t, app)
 
@@ -221,7 +273,8 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
 	defer monkey.UnpatchAll()
 
-	app, err := New()
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	require.NotNil(t, app)
 
@@ -240,7 +293,8 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 		configSettingValue := configSettingValue
 		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
 			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", strconv.FormatBool(configSettingValue))
-			app, _ := New()
+			logger, _ := logging.NewMockLogger()
+			app, _ := New(logger)
 			assert.Equal(t, configSettingValue, database.NewDataStore(app.Database).IsResultsPropagationProhibited())
 
 			router := app.HTTPHandler
@@ -258,4 +312,14 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 			_ = response.Body.Close()
 		})
 	}
+}
+
+func mockDatabaseOpen() {
+	var openPatch *monkey.PatchGuard
+	openPatch = monkey.Patch(database.Open, func(ctx context.Context, _ interface{}) (*database.DB, error) {
+		defer openPatch.Restore()
+		openPatch.Unpatch()
+		db, _ := database.NewDBMock(ctx)
+		return db, nil
+	})
 }

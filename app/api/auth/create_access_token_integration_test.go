@@ -20,7 +20,7 @@ import (
 func Test_createGroupFromLogin_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1}, {id: 100}]`)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `groups: [{id: 1}, {id: 100}]`)
 	defer func() { _ = db.Close() }()
 
 	var nextID int64

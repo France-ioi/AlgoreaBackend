@@ -17,6 +17,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
@@ -292,9 +293,10 @@ func TestDomainsConfig_Error(t *testing.T) {
 func TestReplaceAuthConfig(t *testing.T) {
 	globalConfig := viper.New()
 	globalConfig.Set("auth.ClientID", "42")
-	application, err := New()
+	logger, _ := logging.NewMockLogger()
+	application, err := New(logger)
 	require.NoError(t, err)
-	application.ReplaceAuthConfig(globalConfig)
+	application.ReplaceAuthConfig(globalConfig, logger)
 	assert.Equal(t, "42", application.Config.Get("auth.ClientID"))
 	// not tested: that it is been pushed to the API
 }
@@ -302,8 +304,9 @@ func TestReplaceAuthConfig(t *testing.T) {
 func TestReplaceDomainsConfig(t *testing.T) {
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []map[string]interface{}{{"domains": []string{"localhost", "other"}}})
-	application, _ := New()
-	application.ReplaceDomainsConfig(globalConfig)
+	logger, _ := logging.NewMockLogger()
+	application, _ := New(logger)
+	application.ReplaceDomainsConfig(globalConfig, logger)
 	expected := []domain.ConfigItem{{
 		Domains:           []string{"localhost", "other"},
 		AllUsersGroup:     0,

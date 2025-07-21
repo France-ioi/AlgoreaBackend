@@ -20,6 +20,8 @@ import (
 )
 
 func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	expectedParsedPayload := payloads.HintToken{}
 	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedParsedPayload)
 	expectedToken := &token.Token[payloads.HintToken]{Payload: expectedParsedPayload}
@@ -122,12 +124,14 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 			expectedErr:            nil,
 		},
 	}
+
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(tt.fixtures...)
+			db := testhelpers.SetupDBWithFixtureString(ctx, tt.fixtures...)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			hasPlatformKey, err := token.UnmarshalDependingOnItemPlatform(store, tt.itemID, tt.target, tt.token, tt.tokenFieldName)

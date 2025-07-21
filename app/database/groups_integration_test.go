@@ -91,7 +91,7 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 		},
 	}
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 1, type: Class, code: abcd, is_public: 1}
 			- {id: 2, type: Team, code: efgh}

@@ -3,11 +3,9 @@
 package database_test
 
 import (
-	"reflect"
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,26 +19,27 @@ import (
 func Test_RawSQLQueryLogging_Duration(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(&viper.Viper{}), "GetBool",
-		func(_ *viper.Viper, key string) bool { return key == "LogRawSQLQueries" || key == "LogSQLQueries" })
-	defer monkey.UnpatchAll()
-
-	sqlDB := testhelpers.OpenRawDBConnection()
+	logger, loggerHook := logging.NewMockLogger()
+	conf := viper.New()
+	conf.Set("LogSQLQueries", true)
+	conf.Set("LogRawSQLQueries", true)
+	logger.Configure(conf)
+	ctx := testhelpers.CreateTestContextWithLogger(logger)
+	sqlDB := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = sqlDB.Close() }()
 
-	db, err := database.OpenWithLogConfig(sqlDB, database.LogConfig{LogSQLQueries: true}, true)
+	db, err := database.OpenWithLogConfig(ctx, sqlDB, database.LogConfig{LogSQLQueries: true}, true)
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
-
-	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-	defer loggerRestoreFunc()
 
 	var result []interface{}
 	require.NoError(t, db.Raw("SELECT 1").Scan(&result).Error())
 
 	entries := loggerHook.AllEntries()
-	expectedMessages := []string{"sql-conn-query", "SELECT 1", "sql-rows-next", "sql-rows-next"}
-	require.Len(t, entries, len(expectedMessages))
+	expectedMessages := []string{
+		"sql-connector-connect", "sql-ping",
+		"sql-conn-reset", "sql-conn-query", "SELECT 1", "sql-rows-next", "sql-rows-next",
+	}
 
 	for i, entry := range entries {
 		assert.Equal(t, expectedMessages[i], entry.Message)
@@ -60,17 +59,16 @@ func Test_RawSQLQueryLogging_Duration(t *testing.T) {
 func Test_RawSQLQueryLogging_ResetSession(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(&logging.Logger{}), "IsRawSQLQueriesLoggingEnabled",
-		func(_ *logging.Logger) bool { return true })
-	defer monkey.UnpatchAll()
-
-	sqlDB := testhelpers.OpenRawDBConnection()
+	logger, loggerHook := logging.NewMockLogger()
+	conf := viper.New()
+	conf.Set("LogSQLQueries", true)
+	conf.Set("LogRawSQLQueries", true)
+	logger.Configure(conf)
+	ctx := testhelpers.CreateTestContextWithLogger(logger)
+	sqlDB := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = sqlDB.Close() }()
 
-	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-	defer loggerRestoreFunc()
-
-	db, err := database.OpenWithLogConfig(sqlDB, database.LogConfig{LogSQLQueries: true}, true)
+	db, err := database.OpenWithLogConfig(ctx, sqlDB, database.LogConfig{LogSQLQueries: true}, true)
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 
@@ -78,10 +76,12 @@ func Test_RawSQLQueryLogging_ResetSession(t *testing.T) {
 	require.NoError(t, db.Raw("SELECT 1").Scan(&result).Error())
 	require.NoError(t, db.Raw("SELECT 1").Scan(&result).Error())
 
-	entries := loggerHook.AllEntries()
 	expectedMessages := []string{
-		"sql-conn-reset", "SELECT 1", "sql-conn-reset", "SELECT 1",
+		"sql-connector-connect", "sql-ping",
+		"sql-conn-reset", "sql-conn-query", "SELECT 1", "sql-rows-next", "sql-rows-next",
+		"sql-conn-reset", "sql-conn-query", "SELECT 1", "sql-rows-next", "sql-rows-next",
 	}
+	entries := loggerHook.AllEntries()
 	require.Len(t, entries, len(expectedMessages))
 
 	for i, entry := range entries {

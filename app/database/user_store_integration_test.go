@@ -92,7 +92,7 @@ func TestUserStore_DeleteWithTrapsByScope(t *testing.T) {
 func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *database.DB {
 	t.Helper()
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 			groups_propagate: [{id: 5000}, {id: 5001}, {id: 5002}, {id: 5003}]`, `
 			groups: [{id: 1}, {id: 5000}, {id: 5001}, {id: 5002}, {id: 5003}, {id: 7000}]
 			attempts:
@@ -169,7 +169,7 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 func TestUserStore_DeleteWithTrapsByScope_RecomputesAccessWhenPermissionIsRemovedViaSourceGroupID(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1}, {id: 5000}, {id: 5001}]
 		users: [{group_id: 5000}]
 		items: [{id: 10, default_language_tag: fr}]

@@ -27,12 +27,15 @@ type aggregatesResultRow struct {
 }
 
 func TestResultStore_Propagate_Aggregates(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, markAllResultsAsToBePropagated := range []bool{false, true} {
 		markAllResultsAsToBePropagated := markAllResultsAsToBePropagated
 		t.Run(fmt.Sprintf("mark all as to_be_propagated=%v", markAllResultsAsToBePropagated), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/aggregates")
+			db := testhelpers.SetupDBWithFixture(ctx, "results_propagation/_common", "results_propagation/aggregates")
 			defer func() { _ = db.Close() }()
 
 			resultStore := database.NewDataStore(db).Results()
@@ -117,7 +120,7 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -141,7 +144,7 @@ func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common")
 	defer func() { _ = db.Close() }()
 
 	expectedLatestActivityAt1 := database.Time(time.Date(2019, 5, 29, 11, 0, 0, 0, time.UTC))
@@ -167,6 +170,9 @@ func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *te
 }
 
 func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		name                  string
 		editRule              string
@@ -184,7 +190,7 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("results_propagation/_common")
+			db := testhelpers.SetupDBWithFixture(ctx, "results_propagation/_common")
 			defer func() { _ = db.Close() }()
 
 			resultStore := database.NewDataStore(db).Results()

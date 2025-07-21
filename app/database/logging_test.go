@@ -149,7 +149,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			expectedError = errors.New("some error")
 			expectedQuery = beginTransactionLogMessage
 			mock.ExpectBegin().WillReturnError(expectedError)
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).BeginTx(db.ctx(), &sql.TxOptions{})
 			assert.Equal(t, expectedError, err)
 			assert.Nil(t, tx)
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -165,7 +165,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 
 			expectedQuery = beginTransactionLogMessage
 			mock.ExpectBegin()
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			assert.NotNil(t, tx)
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -183,10 +183,10 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			expectedQuery = selectQueryForTesting
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").WillReturnError(expectedError)
-			conn, err := db.db.CommonDB().(*sqlDBWrapper).conn(context.Background())
+			conn, err := db.db.CommonDB().(*sqlDBWrapper).conn(db.ctx())
 			require.NoError(t, err)
 			defer func() { _ = conn.close(nil) }()
-			row := conn.QueryRowContext(context.Background(), expectedQuery)
+			row := conn.QueryRowContext(db.ctx(), expectedQuery)
 			assert.Equal(t, expectedError, row.Err())
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -202,10 +202,10 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
 				WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
-			conn, err := db.db.CommonDB().(*sqlDBWrapper).conn(context.Background())
+			conn, err := db.db.CommonDB().(*sqlDBWrapper).conn(db.ctx())
 			require.NoError(t, err)
 			defer func() { _ = conn.close(nil) }()
-			row := conn.QueryRowContext(context.Background(), expectedQuery)
+			row := conn.QueryRowContext(db.ctx(), expectedQuery)
 			require.NoError(t, row.Err())
 			_ = row.Scan()
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -218,7 +218,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 				prepareExpectation.ExpectExec().WillReturnError(expectedError)
 			},
 			func(stmtWrapper *SQLStmtWrapper) (interface{}, error) {
-				return stmtWrapper.ExecContext(context.Background())
+				return stmtWrapper.ExecContext(stmtWrapper.db.(*sqlTxWrapper).ctx)
 			}),
 	},
 	{
@@ -237,14 +237,14 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			prepareExpectation.ExpectExec().WillReturnResult(sqlmock.NewResult(-1, *expectedAffectedRows))
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
-			result, err := stmtWrapper.ExecContext(context.Background())
+			result, err := stmtWrapper.ExecContext(db.ctx())
 			require.NoError(t, err)
 			assert.NotNil(t, result)
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -257,7 +257,7 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 				prepareExpectation.ExpectQuery().WillReturnError(expectedError)
 			},
 			func(stmtWrapper *SQLStmtWrapper) (interface{}, error) {
-				return stmtWrapper.QueryContext(context.Background())
+				return stmtWrapper.QueryContext(stmtWrapper.db.(*sqlTxWrapper).ctx)
 			}),
 	},
 	{
@@ -275,14 +275,14 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			prepareExpectation.ExpectQuery().WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
-			rows, err := stmtWrapper.QueryContext(context.Background())
+			rows, err := stmtWrapper.QueryContext(db.ctx())
 			require.NoError(t, err)
 			if rows != nil {
 				_ = rows.Close()
@@ -306,14 +306,14 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			prepareExpectation.ExpectQuery().WillReturnError(expectedError)
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
-			row := stmtWrapper.QueryRowContext(context.Background())
+			row := stmtWrapper.QueryRowContext(db.ctx())
 			assert.Equal(t, expectedError, row.Err())
 			return expectedQuery, expectedAffectedRows, expectedError
 		},
@@ -333,14 +333,14 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			prepareExpectation.ExpectQuery().WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			stmtWrapper, err := txWrapper.prepare(expectedQuery)
 			require.NoError(t, err)
 			defer func() { _ = stmtWrapper.Close() }()
-			row := stmtWrapper.QueryRowContext(context.Background())
+			row := stmtWrapper.QueryRowContext(db.ctx())
 			require.NoError(t, row.Err())
 			_ = row.Scan()
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -373,10 +373,10 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 				WillReturnResult(sqlmock.NewResult(-1, *expectedAffectedRows))
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			result, err := txWrapper.Exec(expectedQuery)
 			require.NoError(t, err)
 			assert.NotNil(t, result)
@@ -408,10 +408,10 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 				WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			rows, err := txWrapper.Query(expectedQuery)
 			require.NoError(t, err)
 			if rows != nil {
@@ -435,10 +435,10 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 			mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").WillReturnError(expectedError)
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			row := txWrapper.QueryRow(expectedQuery)
 			assert.Equal(t, expectedError, row.Err())
 			return expectedQuery, expectedAffectedRows, expectedError
@@ -459,10 +459,10 @@ var sqlQueryLoggingTests = []sqlQueryLoggingTest{
 				WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
 			mock.ExpectCommit()
 
-			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+			tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 			require.NoError(t, err)
 			defer func() { _ = tx.Commit() }()
-			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+			txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 			row := txWrapper.QueryRow(expectedQuery)
 			require.NoError(t, row.Err())
 			_ = row.Scan()
@@ -576,10 +576,10 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLStmtWrapperQueryContextOrExecCo
 		mockCallOnPreparedStmtFunc(prepareExpectation, expectedError)
 		mock.ExpectCommit()
 
-		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 		require.NoError(t, err)
 		defer func() { _ = tx.Commit() }()
-		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 		stmtWrapper, err := txWrapper.prepare(expectedQuery)
 		require.NoError(t, err)
 		defer func() { _ = stmtWrapper.Close() }()
@@ -607,10 +607,10 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperExecOrQueryWithError(
 		mockCallOnTxFunc(mock, "^"+regexp.QuoteMeta(expectedQuery)+"$", expectedError)
 		mock.ExpectCommit()
 
-		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 		require.NoError(t, err)
 		defer func() { _ = tx.Commit() }()
-		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 		resultOrRows, err := callOnTxFunc(txWrapper, expectedQuery)
 		assert.Equal(t, expectedError, err)
 		assert.Nil(t, resultOrRows)
@@ -631,9 +631,9 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperSuccessfulCommitOrRoll
 		mock.ExpectBegin()
 		mockCallOnTxFunc(mock)
 
-		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 		require.NoError(t, err)
-		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 		err = callOnTxFunc(txWrapper)
 		require.NoError(t, err)
 		return expectedQueryLogMessage, expectedAffectedRows, expectedError
@@ -655,9 +655,9 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackWithEr
 		mock.ExpectBegin()
 		mockCallOnTxFunc(mock, expectedError)
 
-		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(context.Background(), &sql.TxOptions{})
+		tx, err := db.db.CommonDB().(*sqlDBWrapper).sqlDB.BeginTx(db.ctx(), &sql.TxOptions{})
 		require.NoError(t, err)
-		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: context.Background(), logConfig: db.logConfig()}
+		txWrapper := &sqlTxWrapper{sqlTx: tx, ctx: db.ctx(), logConfig: db.logConfig()}
 		err = callOnTxFunc(txWrapper)
 		assert.Equal(t, expectedError, err)
 		return expectedQueryLogMessage, expectedAffectedRows, expectedError
@@ -678,7 +678,7 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackFailin
 		mock.ExpectBegin()
 		mock.ExpectRollback()
 
-		ctx, cancelFunc := context.WithCancel(context.Background())
+		ctx, cancelFunc := context.WithCancel(db.ctx())
 		sqlDBWrapper := db.db.CommonDB().(*sqlDBWrapper)
 		oldLogSQLQueriesValue := sqlDBWrapper.logConfig.LogSQLQueries
 		sqlDBWrapper.logConfig.LogSQLQueries = false
@@ -722,10 +722,8 @@ func Test_SQLQueryLogging(t *testing.T) {
 func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sqlQueryLoggingTest) {
 	t.Helper()
 
-	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-	defer loggerRestoreFunc()
-
-	db, mock := NewDBMock()
+	ctx, _, loggerHook := logging.NewContextWithNewMockLogger()
+	db, mock := NewDBMock(ctx)
 	defer func() { _ = db.Close() }()
 
 	db.logConfig().LogSQLQueries = logSQLQueries
@@ -798,15 +796,13 @@ func assertDurationIsOK(t *testing.T, entry *logrus.Entry) {
 func Test_SQLQueryLogging_Select(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-	defer loggerRestoreFunc()
-
+	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
 	conf.Set("LogSQLQueries", true)
-	logging.SharedLogger.Configure(conf)
-	db, mock := NewDBMock()
+	logger.Configure(conf)
+	db, mock := NewDBMock(ctx)
 	defer func() { _ = db.Close() }()
 
 	timeParam := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
@@ -817,6 +813,7 @@ func Test_SQLQueryLogging_Select(t *testing.T) {
 
 	var result []interface{}
 	db.Raw("SELECT $1, $2, $3, $4, $5", 1, timeParam, "foo", []byte("bar"), nil).Scan(&result)
+	require.NotNil(t, loggerHook.LastEntry())
 	assert.Equal(t, `SELECT 1, '2009-11-10 23:00:00', 'foo', 'bar', NULL`, loggerHook.LastEntry().Message)
 	data := loggerHook.LastEntry().Data
 	assert.Equal(t, "db", data["type"])
@@ -828,15 +825,13 @@ func Test_SQLQueryLogging_Select(t *testing.T) {
 func Test_SQLQueryLogging_Update(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-	defer loggerRestoreFunc()
-
+	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
 	conf.Set("LogSQLQueries", true)
-	logging.SharedLogger.Configure(conf)
-	db, mock := NewDBMock()
+	logger.Configure(conf)
+	db, mock := NewDBMock(ctx)
 	defer func() { _ = db.Close() }()
 
 	timeParam := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
@@ -857,15 +852,13 @@ func Test_SQLQueryLogging_Update(t *testing.T) {
 func Test_SQLQueryLogging__SQLWithInterrogationMark(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-	defer loggerRestoreFunc()
-
+	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
 	conf.Set("LogSQLQueries", true)
-	logging.SharedLogger.Configure(conf)
-	db, mock := NewDBMock()
+	logger.Configure(conf)
+	db, mock := NewDBMock(ctx)
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectQuery(`^SELECT \?$`).WithArgs(1).WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
@@ -879,16 +872,14 @@ func Test_SQLQueryLogging__SQLWithInterrogationMark(t *testing.T) {
 func Test_SQLQueryLogging_SQLError(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-	defer loggerRestoreFunc()
-
+	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
 	conf := viper.New()
 	conf.Set("Format", "json")
 	conf.Set("Output", "stdout")
 	conf.Set("LogSQLQueries", true)
 	conf.Set("Level", "debug")
-	logging.SharedLogger.Configure(conf)
-	db, mock := NewDBMock()
+	logger.Configure(conf)
+	db, mock := NewDBMock(ctx)
 	defer func() { _ = db.Close() }()
 
 	mock.ExpectQuery("SELECT 2").WillReturnError(errors.New("a query error"))

@@ -97,7 +97,7 @@ func UnmarshalDependingOnItemPlatform[P any](
 
 	parsedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(*publicKey))
 	if err != nil {
-		logging.SharedLogger.WithContext(store.GetContext()).
+		logging.EntryFromContext(store.GetContext()).
 			Warnf("cannot parse platform's public key for item with id = %d: %s", itemID, err.Error())
 
 		return true, fmt.Errorf("invalid %s: wrong platform's key", tokenFieldName)

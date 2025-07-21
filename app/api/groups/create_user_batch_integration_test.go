@@ -21,7 +21,7 @@ import (
 func Test_createUserGroup_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, type: "User"}]`)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `groups: [{id: 1, type: "User"}]`)
 	defer func() { _ = db.Close() }()
 
 	expectedTimestamp := "2019-05-30 11:00:00"

@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -218,10 +219,11 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
 	defer patch.Unpatch()
 
-	db, mock := NewDBMock()
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	db, mock := NewDBMock(ctx)
 	defer func() { _ = db.Close() }()
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), ctxKey("key"), "value"), db)
+	db = cloneDBWithNewContext(context.WithValue(ctx, ctxKey("key"), "value"), db)
 
 	mock.ExpectBegin()
 	mock.ExpectCommit()
@@ -249,7 +251,7 @@ func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes(t *
 	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 	mock.ExpectCommit()
 
-	store := NewDataStoreWithContext(ContextWithTransactionRetrying(context.Background()), db)
+	store := NewDataStoreWithContext(ContextWithTransactionRetrying(db.GetContext()), db)
 	gotError := store.InTransaction(func(s *DataStore) error {
 		var result []interface{}
 		return s.Raw("SELECT 1").Scan(&result).Error()
@@ -282,7 +284,7 @@ func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes_Hoo
 	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 	mock.ExpectCommit()
 
-	store := NewDataStoreWithContext(ContextWithTransactionRetrying(context.Background()), db)
+	store := NewDataStoreWithContext(ContextWithTransactionRetrying(db.GetContext()), db)
 	gotError := store.InTransaction(func(s *DataStore) error {
 		var result []interface{}
 		called = append(called, "1")

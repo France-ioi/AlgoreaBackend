@@ -180,10 +180,10 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 
 	// Only 'domain' and 'auth' changes are currently supported
 	if config.IsSet("auth") {
-		ctx.application.ReplaceAuthConfig(config)
+		ctx.application.ReplaceAuthConfig(config, ctx.logger)
 	}
 	if config.IsSet("domains") {
-		ctx.application.ReplaceDomainsConfig(config)
+		ctx.application.ReplaceDomainsConfig(config, ctx.logger)
 	}
 
 	return nil

@@ -35,7 +35,7 @@ type attemptType struct {
 func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 10}
 			- {id: 100}

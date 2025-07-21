@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"context"
+
 	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
 )
 
@@ -10,11 +12,8 @@ func NewMockLogger() (*Logger, *test.Hook) {
 	return &Logger{l, nil}, h
 }
 
-// MockSharedLoggerHook set a null/mock logger as shared and return the hook and the function restoring the initial logger.
-func MockSharedLoggerHook() (hook *test.Hook, restoreFunc func()) {
-	previousShared := SharedLogger
-	SharedLogger, hook = NewMockLogger()
-	return hook, func() {
-		SharedLogger = previousShared
-	}
+// NewContextWithNewMockLogger creates a new context based on context.Background() with a new mock logger.
+func NewContextWithNewMockLogger() (context.Context, *Logger, *test.Hook) {
+	logger, hook := NewMockLogger()
+	return ContextWithLogger(context.Background(), logger), logger, hook
 }

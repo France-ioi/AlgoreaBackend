@@ -141,8 +141,7 @@ func callThroughParticipantMiddleware(userID, asTeamID int64, returnedError erro
 	})
 	defer guard.Unpatch()
 
-	hook, restoreFunc := logging.MockSharedLoggerHook()
-	defer restoreFunc()
+	logger, hook := logging.NewMockLogger()
 
 	// dummy server using the middleware
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +153,7 @@ func callThroughParticipantMiddleware(userID, asTeamID int64, returnedError erro
 	})
 	dataStore := database.NewDataStore(dbmock)
 	participantMiddleware := ParticipantMiddleware(&Base{store: dataStore})
-	mainSrv := httptest.NewServer(logging.NewStructuredLogger()(participantMiddleware(handler)))
+	mainSrv := httptest.NewServer(logging.ContextWithLoggerMiddleware(logger)(logging.NewStructuredLogger()(participantMiddleware(handler))))
 	defer mainSrv.Close()
 
 	// calling web server

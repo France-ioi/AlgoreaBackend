@@ -25,11 +25,11 @@ func logSQLQuery(ctx context.Context, duration time.Duration, sql string, args [
 	if rowsAffected != nil {
 		fields["rows"] = *rowsAffected
 	}
-	log.SharedLogger.WithContext(ctx).WithFields(fields).Info(strings.TrimSpace(fillSQLPlaceholders(sql, args)))
+	log.EntryFromContext(ctx).WithFields(fields).Info(strings.TrimSpace(fillSQLPlaceholders(sql, args)))
 }
 
 func logDBError(ctx context.Context, logConfig *LogConfig, err error) {
-	entry := log.SharedLogger.WithContext(ctx).WithFields(
+	entry := log.EntryFromContext(ctx).WithFields(
 		map[string]interface{}{"type": "db", "fileline": fileWithLineNum()})
 	if logConfig.LogRetryableErrorsAsInfo && isRetryableError(err) {
 		entry.Info(err)
@@ -57,7 +57,7 @@ func getSQLExecutionPlanLoggingFunc(
 	planStartTime := gorm.NowFunc()
 	if err := db.queryRowWithoutLogging("EXPLAIN ANALYZE "+query, args...).Scan(&plan); err != nil {
 		return func() {
-			log.SharedLogger.WithContext(ctx).WithFields(
+			log.EntryFromContext(ctx).WithFields(
 				map[string]interface{}{"type": "db", "fileline": fileWithLineNum()}).
 				Errorf("Failed to get an execution plan for a SQL query: %v", err)
 		}
@@ -65,7 +65,7 @@ func getSQLExecutionPlanLoggingFunc(
 
 	planDuration := gorm.NowFunc().Sub(planStartTime)
 	return func() {
-		log.SharedLogger.WithContext(ctx).WithFields(
+		log.EntryFromContext(ctx).WithFields(
 			map[string]interface{}{
 				"type":     "db",
 				"fileline": fileWithLineNum(),

@@ -33,6 +33,8 @@ func NewClient(loginModuleURL string) *Client {
 }
 
 // GetUserProfile returns a user profile for given access token.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise GetUserProfile will panic on logging.
 func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile map[string]interface{}, err error) {
 	defer recoverPanics(&err)
 
@@ -46,7 +48,7 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.SharedLogger.WithContext(ctx).
+		logging.EntryFromContext(ctx).
 			Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
 		return nil, fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode)
 	}
@@ -55,14 +57,14 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	decoder.UseNumber()
 	err = decoder.Decode(&decoded)
 	if err != nil {
-		logging.SharedLogger.WithContext(ctx).
+		logging.EntryFromContext(ctx).
 			Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
 		return nil, errors.New("can't parse user's profile")
 	}
 
 	profile, err = convertUserProfile(decoded)
 	if err != nil {
-		logging.SharedLogger.WithContext(ctx).
+		logging.EntryFromContext(ctx).
 			Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
 		return nil, errors.New("user's profile is invalid")
 	}
@@ -87,6 +89,8 @@ type CreateUsersResponseDataRow struct {
 }
 
 // CreateUsers creates a batch of users in the login module.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise CreateUsers will panic on logging.
 func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey string,
 	params *CreateUsersParams,
 ) (bool, []CreateUsersResponseDataRow, error) {
@@ -122,6 +126,8 @@ func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey strin
 }
 
 // DeleteUsers deletes users specified by the given login prefix from the login module.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise DeleteUsers will panic on logging.
 func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, loginPrefix string) (bool, error) {
 	params := map[string]string{
 		"prefix": loginPrefix,
@@ -135,6 +141,8 @@ func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, logi
 }
 
 // UnlinkClient discards our client authorization for the login module user.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise UnlinkClient will panic on logging.
 func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey string, userLoginID int64) (bool, error) {
 	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/unlink_client",
 		map[string]string{"user_id": strconv.FormatInt(userLoginID, 10)}, clientID, clientKey)
@@ -145,6 +153,8 @@ func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey stri
 }
 
 // SendLTIResult sends item score to LTI.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise SendLTIResult will panic on logging.
 func (client *Client) SendLTIResult(
 	ctx context.Context, clientID, clientKey string, userLoginID, itemID int64, score float32,
 ) (bool, error) {
@@ -188,7 +198,7 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.SharedLogger.WithContext(ctx).
+		logging.EntryFromContext(ctx).
 			Warnf("Login module returned a bad status code for %s (status code = %d, response = %q)",
 				urlPath, response.StatusCode, responseBody)
 		panic(errors.New("bad response code"))
@@ -198,7 +208,7 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	n, err := base64.StdEncoding.Decode(decodedBody, responseBody)
 	decodedBody = decodedBody[0:n]
 	if err != nil {
-		logging.SharedLogger.WithContext(ctx).
+		logging.EntryFromContext(ctx).
 			Warnf("Can't decode response from the login module for %s (status code = %d, response = %q): %s",
 				urlPath, response.StatusCode, responseBody, err)
 		panic(err)
@@ -208,13 +218,13 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	decoder.UseNumber()
 	err = decoder.Decode(&decodedResponse)
 	if err != nil {
-		logging.SharedLogger.WithContext(ctx).
+		logging.EntryFromContext(ctx).
 			Warnf("Can't parse response from the login module for %s (decrypted response = %q, encrypted response = %q): %s",
 				urlPath, decryptedBody, decodedBody, err)
 		panic(err)
 	}
 	if !decodedResponse.Success {
-		logging.SharedLogger.WithContext(ctx).
+		logging.EntryFromContext(ctx).
 			Warnf("The login module returned an error for %s: %s", urlPath, decodedResponse.Error)
 	}
 	return decodedResponse, nil

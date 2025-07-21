@@ -98,10 +98,9 @@ func Test_getSQLExecutionPlanLoggingFunc_RunsExplainAnalyzeForSuitableQueries(t 
 		t.Run(query, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db, mock := NewDBMock()
+			ctx, _, loggerHook := logging.NewContextWithNewMockLogger()
+			db, mock := NewDBMock(ctx)
 			defer func() { _ = db.Close() }()
-			loggerHook, loggerRestoreFunc := logging.MockSharedLoggerHook()
-			defer loggerRestoreFunc()
 
 			logConfig := &LogConfig{
 				LogSQLQueries:     true,

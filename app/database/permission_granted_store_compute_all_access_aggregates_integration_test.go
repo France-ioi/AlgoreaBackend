@@ -29,7 +29,7 @@ var expectedRow14 = permissionsGeneratedResultRow{
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
 	permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
@@ -103,7 +103,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
 	permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
@@ -176,12 +176,15 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, access := range []string{"solution", "content_with_descendants"} {
 		access := access
 		t.Run(access, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+			db := testhelpers.SetupDBWithFixture(ctx, "permission_granted_store/compute_all_access/_common")
 			defer func() { _ = db.Close() }()
 
 			permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
@@ -358,7 +361,7 @@ func testGeneratedPermission(t *testing.T, fixture string, testCase ...generated
 	t.Helper()
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(fixture)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), fixture)
 	defer func() { _ = db.Close() }()
 
 	permissionStore := database.NewDataStore(db).Permissions()

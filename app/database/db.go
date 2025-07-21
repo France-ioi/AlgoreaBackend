@@ -59,23 +59,24 @@ func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
 }
 
 // Open connects to the database and tests the connection.
-func Open(source interface{}) (*DB, error) {
+// The context must contain a logger (set by logging.ContextWithLogger), otherwise Open will panic.
+func Open(ctx context.Context, source interface{}) (*DB, error) {
+	logger := log.LoggerFromContext(ctx)
 	logConfig := LogConfig{
-		LogSQLQueries:     log.SharedLogger.IsSQLQueriesLoggingEnabled(),
-		AnalyzeSQLQueries: log.SharedLogger.IsSQLQueriesAnalyzingEnabled(),
+		LogSQLQueries:     logger.IsSQLQueriesLoggingEnabled(),
+		AnalyzeSQLQueries: logger.IsSQLQueriesAnalyzingEnabled(),
 	}
 
-	rawSQLQueriesLoggingEnabled := log.SharedLogger.IsRawSQLQueriesLoggingEnabled()
-	return OpenWithLogConfig(source, logConfig, rawSQLQueriesLoggingEnabled)
+	rawSQLQueriesLoggingEnabled := logger.IsRawSQLQueriesLoggingEnabled()
+	return OpenWithLogConfig(ctx, source, logConfig, rawSQLQueriesLoggingEnabled)
 }
 
 // OpenWithLogConfig connects to the database and tests the connection. It uses the given logging settings.
-func OpenWithLogConfig(source interface{}, logConfig LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, error) {
+// The context must contain a logger (set by logging.ContextWithLogger), otherwise OpenWithLogConfig will panic.
+func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	driverName := "mysql"
-
-	ctx := context.Background()
 
 	var rawConnection gorm.SQLCommon
 	var ownSQLDBConnection bool
@@ -272,7 +273,7 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 			*returnErr = errors.New("transaction retries limit exceeded")
 			return true
 		}
-		log.SharedLogger.WithContext(conn.ctx()).WithField("type", "db").
+		log.EntryFromContext(conn.ctx()).WithField("type", "db").
 			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
 		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
 		return true
@@ -324,7 +325,8 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	defer func() {
 		var releaseLockResult *int64
 		// call RELEASE_LOCK() even if the context is canceled or timed out
-		releaseErr := namedLockDBConnection.QueryRowContext(context.Background(),
+		releaseErr := namedLockDBConnection.QueryRowContext(
+			log.ContextWithLogger(context.Background(), log.LoggerFromContext(conn.ctx())),
 			"SELECT RELEASE_LOCK(?)", lockName).Scan(&releaseLockResult)
 		if releaseErr != nil || releaseLockResult == nil || *releaseLockResult != 1 {
 			// on error we just close the connection to release the lock
@@ -335,7 +337,7 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 		}
 	}()
 
-	log.SharedLogger.WithContext(conn.ctx()).WithField("type", "db").
+	log.EntryFromContext(conn.ctx()).WithField("type", "db").
 		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
 
 	return funcToCall(conn)

@@ -399,6 +399,8 @@ func testTransitionRemovingUserFromGroup(name string, action database.GroupGroup
 }
 
 func TestGroupGroupStore_Transition(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []transitionTest{
 		{
 			name:                        "AdminCreatesInvitation",
@@ -803,12 +805,13 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			shouldRunListeners: true,
 		},
 	}
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("group_group_store/transition/")
+			db := testhelpers.SetupDBWithFixture(ctx, "group_group_store/transition/")
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)
 
@@ -1014,13 +1017,16 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 }
 
 func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoinRequests(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range generateApprovalsTests(expectedTime) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(fmt.Sprintf(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, fmt.Sprintf(`
 				groups:
 					- {id: 3}
 					- {id: 20, require_personal_info_access_approval: %s, require_lock_membership_approval_until: %s, require_watch_approval: %d}
@@ -1079,6 +1085,9 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 }
 
 func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExists(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		name   string
 		action database.GroupGroupTransitionAction
@@ -1091,7 +1100,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				groups:
 					- {id: 3}
 					- {id: 20, require_personal_info_access_approval: view,
@@ -1129,7 +1138,7 @@ func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEno
 ) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 3}
 			- {id: 20, require_personal_info_access_approval: view,
@@ -1162,17 +1171,20 @@ func TestGroupGroupStore_Transition_ReplacesJoinRequestByInvitationWhenNotNotEno
 }
 
 func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvitations(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	const success = "success"
 	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 6, 1, 0, 0, 0, 0, time.UTC)))
 	database.MockNow("2019-06-01 00:00:00")
 	defer database.RestoreNow()
 
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range generateApprovalsTests(expectedTime) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(fmt.Sprintf(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, fmt.Sprintf(`
 				groups:
 					- {id: 3}
 					- {id: 20, require_personal_info_access_approval: %s, require_lock_membership_approval_until: %s, require_watch_approval: %d}
@@ -1459,7 +1471,7 @@ func assertGeneratedPermissionsEqual(
 func Test_insertGroupMembershipChanges_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1}, {id: 2}, {id: 3}]
 		users: [{group_id: 3}]
 		group_membership_changes: [{group_id: 1, member_id: 2, action: join_request_created, initiator_id: 3, at: 2019-05-30 11:00:00.123}]`)

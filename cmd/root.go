@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"os"
 
 	"github.com/akrylysov/algnhsa"
@@ -29,9 +28,10 @@ var rootCmd = &cobra.Command{
 
 		lambdaHandler := algnhsa.New(application.HTTPHandler, nil)
 		lambda.StartWithOptions(lambdaHandler, lambda.WithEnableSIGTERM(func() {
-			log.SharedLogger.WithContext(context.Background()).Info("Got SIGTERM, closing the DB connection")
+			ctx := application.Database.GetContext()
+			log.EntryFromContext(ctx).Info("Got SIGTERM, closing the DB connection")
 			closeDB()
-			log.SharedLogger.WithContext(context.Background()).Info("Closed the DB connection after receiving SIGTERM")
+			log.EntryFromContext(ctx).Info("Closed the DB connection after receiving SIGTERM")
 		}))
 
 		return nil
