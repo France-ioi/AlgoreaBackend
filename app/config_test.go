@@ -25,7 +25,7 @@ func init() { //nolint:gochecknoinits
 	appenv.SetDefaultEnvToTest()
 }
 
-var devEnv = "dev"
+const devEnv = "dev"
 
 func TestLoadConfigFrom(t *testing.T) {
 	// the test environment doesn't allow the merge of the config with a main config file for security reasons
