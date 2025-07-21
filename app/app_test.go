@@ -193,7 +193,7 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	// check that the compression has been applied but the length in the logs is not altered by compression i
 	assert.Equal(t, 23, hook.LastEntry().Data["resp_bytes_length"])
 	assert.Equal(t, "gzip", response.Header.Get("Content-Encoding"))
-	assert.Equal(t, version.GetVersion(), response.Header.Get("Backend-Version"))
+	assert.Equal(t, version.Get(), response.Header.Get("Backend-Version"))
 }
 
 func TestNew_MountsPprofInDev(t *testing.T) {
