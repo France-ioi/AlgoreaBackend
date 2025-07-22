@@ -35,8 +35,8 @@ func Test_createTempUserGroup_Duplicate(t *testing.T) {
 	defer monkey.UnpatchAll()
 
 	expectedTime, _ := time.Parse(time.DateTime, expectedTimestamp)
-	testhelpers.MockDBTime(expectedTimestamp)
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime(expectedTimestamp)
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
 	dataStore := database.NewDataStore(db)
 	selfGroupID := createTempUserGroup(dataStore)
@@ -76,8 +76,8 @@ func Test_createTempUser_Duplicate(t *testing.T) {
 	defer monkey.UnpatchAll()
 
 	expectedTime, _ := time.Parse(time.DateTime, expectedTimestamp)
-	testhelpers.MockDBTime(expectedTimestamp)
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime(expectedTimestamp)
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
 	dataStore := database.NewDataStore(db)
 	expectedIP := "1.2.3.4"

@@ -40,6 +40,7 @@ type TestContext struct {
 	inScenario                      bool
 	db                              *sql.DB
 	dbTableData                     map[string]*godog.Table
+	dbTimePatches                   []*DBTimePatch
 	templateSet                     *jet.Set
 	requestHeaders                  map[string][]string
 	referenceToIDMap                map[string]int64
@@ -66,6 +67,7 @@ func (ctx *TestContext) SetupTestContext(scenario *godog.Scenario) {
 	ctx.requestHeaders = map[string][]string{}
 	ctx.db = ctx.openDB()
 	ctx.dbTableData = make(map[string]*godog.Table)
+	ctx.dbTimePatches = make([]*DBTimePatch, 0)
 	ctx.templateSet = ctx.constructTemplateSet()
 	ctx.needPopulateDatabase = false
 
@@ -158,7 +160,10 @@ func (ctx *TestContext) tearDownApp() {
 
 // ScenarioTeardown is called after each scenario to remove stubs.
 func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) (err error) {
-	RestoreDBTime()
+	for i := len(ctx.dbTimePatches) - 1; i >= 0; i-- {
+		RestoreDBTime(ctx.dbTimePatches[i])
+	}
+	ctx.dbTimePatches = make([]*DBTimePatch, 0)
 	monkey.UnpatchAll()
 
 	defer func() {

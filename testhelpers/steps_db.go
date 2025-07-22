@@ -849,7 +849,7 @@ func constructWhereForColumnValues(columnNames, columnValues []string, whereIn b
 // DBTimeNow sets the current time in the database to the provided time.
 func (ctx *TestContext) DBTimeNow(timeStrRaw string) error {
 	timeStrRaw = ctx.preprocessString(timeStrRaw)
-	MockDBTime(timeStrRaw)
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(timeStrRaw))
 	return nil
 }
 

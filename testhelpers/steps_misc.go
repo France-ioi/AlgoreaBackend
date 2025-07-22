@@ -30,7 +30,7 @@ func (ctx *TestContext) TimeNow(timeStr string) error {
 	if err := ctx.ServerTimeNow(timeStr); err != nil {
 		return err
 	}
-	MockDBTime(time.Now().UTC().Format(time.DateTime + ".999999999"))
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(time.Now().UTC().Format(time.DateTime+".999999999")))
 	return nil
 }
 
@@ -49,7 +49,7 @@ func (ctx *TestContext) TimeIsFrozen() error {
 	if err := ctx.ServerTimeIsFrozen(); err != nil {
 		return err
 	}
-	MockDBTime(time.Now().UTC().Format(time.DateTime + ".999999999"))
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(time.Now().UTC().Format(time.DateTime+".999999999")))
 	return nil
 }
 

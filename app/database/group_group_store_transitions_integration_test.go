@@ -1175,8 +1175,8 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 
 	const success = "success"
 	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 6, 1, 0, 0, 0, 0, time.UTC)))
-	database.MockNow("2019-06-01 00:00:00")
-	defer database.RestoreNow()
+	oldNow := database.MockNow("2019-06-01 00:00:00")
+	defer database.RestoreNow(oldNow)
 
 	ctx := testhelpers.CreateTestContext()
 	for _, tt := range generateApprovalsTests(expectedTime) {
@@ -1485,8 +1485,8 @@ func Test_insertGroupMembershipChanges_Duplicate(t *testing.T) {
 		defer patchGuard.Restore()
 		timeMs++
 		callsCount++
-		testhelpers.MockDBTime(fmt.Sprintf("2019-05-30 11:00:00.%03d", timeMs))
-		defer testhelpers.RestoreDBTime()
+		dbTimePatch := testhelpers.MockDBTime(fmt.Sprintf("2019-05-30 11:00:00.%03d", timeMs))
+		defer testhelpers.RestoreDBTime(dbTimePatch)
 		return db.Exec(sql, values...)
 	})
 	defer patchGuard.Unpatch()
