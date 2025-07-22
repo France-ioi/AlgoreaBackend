@@ -17,11 +17,6 @@ const (
 	referencePrefix = '@'
 )
 
-var (
-	itemPermissionKeys  = []string{"can_view", "can_grant_view", "can_watch", "can_edit", "is_owner", "can_request_help_to"}
-	itemPropagationKeys = []string{"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation"}
-)
-
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
 	preprocessed := ctx.preprocessString(parameters)
@@ -463,7 +458,9 @@ func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]str
 		origin = definedOrigin
 	}
 
-	for _, permissionKey := range itemPermissionKeys {
+	for _, permissionKey := range []string{
+		"can_view", "can_grant_view", "can_watch", "can_edit", "is_owner", "can_request_help_to",
+	} {
 		if permissionValue, ok := itemPermission[permissionKey]; ok {
 			err := ctx.SetGroupPermissionWithSourceGroupAndOriginOnItem(
 				permissionKey,
@@ -499,7 +496,9 @@ func (ctx *TestContext) ThereAreTheFollowingItemRelations(itemPermissions *godog
 func (ctx *TestContext) applyItemRelation(itemRelation map[string]string) error {
 	ctx.addItemItem(itemRelation["parent"], itemRelation["item"])
 
-	for _, propagationKey := range itemPropagationKeys {
+	for _, propagationKey := range []string{
+		"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation",
+	} {
 		if propagationValue, ok := itemRelation[propagationKey]; ok {
 			boolValue, err := strconv.ParseBool(propagationValue)
 			if err != nil {
