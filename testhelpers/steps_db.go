@@ -15,6 +15,7 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type rowTransformation int
@@ -693,7 +694,7 @@ func (ctx *TestContext) dataRowMatchesDBRow(dataRow *messages.PickleTableRow,
 
 		columnValue := columnValues[colIndex]
 		if columnValue == nil {
-			columnValue = pTableValueNull
+			columnValue = golang.Ptr(tableValueNull)
 		}
 
 		if (dataValue == tableValueTrue && *columnValue == "1") || (dataValue == tableValueFalse && *columnValue == "0") {
@@ -857,11 +858,6 @@ const (
 	tableValueFalse = "false"
 	tableValueTrue  = "true"
 	tableValueNull  = "null"
-)
-
-var (
-	tableValueNullVar = tableValueNull
-	pTableValueNull   = &tableValueNullVar
 )
 
 // dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db
