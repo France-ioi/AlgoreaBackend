@@ -35,9 +35,9 @@ func bindGodogCmdFlags() {
 	godog.BindFlags("godog.", flag.CommandLine, golang.Ptr(defaultGodogOptions()))
 }
 
-type contextKey string
+type contextKey int
 
-var outputRestorerFuncKey = contextKey("outputRestorerFunc")
+const outputRestorerFuncKey contextKey = iota
 
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package).
