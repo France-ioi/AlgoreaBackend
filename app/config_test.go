@@ -185,12 +185,19 @@ func TestLoadConfig_Concurrent(t *testing.T) {
 	t.Setenv("ALGOREA_ENV", "")
 	_ = os.Unsetenv("ALGOREA_ENV")
 	appenv.SetDefaultEnvToTest()
-	assert.NotPanics(t, func() {
-		LoadConfig()
-		for i := 0; i < 1000; i++ {
-			go func() { LoadConfig() }()
-		}
-	})
+
+	assert.NotPanics(t, func() { LoadConfig() })
+	const numGoroutines = 1000
+	done := make(chan struct{}, numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			assert.NotPanics(t, func() { LoadConfig() })
+			done <- struct{}{}
+		}()
+	}
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
 }
 
 func TestDBConfig_Success(t *testing.T) {
