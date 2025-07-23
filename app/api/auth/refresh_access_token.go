@@ -34,6 +34,9 @@ func (m *sessionIDsInProgressMap) WithLock(sessionID int64, httpRequest *http.Re
 	return funcToRun()
 }
 
+// (See https://github.com/France-ioi/AlgoreaBackend/issues/1219)
+//
+//nolint:gochecknoglobals // This variable stores locked sessions. It's going to be removed after rewriting the lock mechanism.
 var sessionIDsInProgress sessionIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {

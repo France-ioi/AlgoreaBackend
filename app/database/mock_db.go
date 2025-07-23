@@ -104,6 +104,9 @@ func MockDBEnumQueries(sqlMock sqlmock.Sqlmock) {
 
 // ClearAllDBEnums clears all cached permission enums.
 func ClearAllDBEnums() {
+	enumsMutex.Lock()
+	defer enumsMutex.Unlock()
+
 	enumValueIndex2Name = nil
 	enumValueName2Index = nil
 }

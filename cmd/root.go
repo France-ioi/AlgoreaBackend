@@ -12,6 +12,7 @@ import (
 	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
+//nolint:gochecknoglobals // spf13/cobra's style is to use a global variable the root command
 var rootCmd = &cobra.Command{
 	Use: "AlgoreaBackend",
 	RunE: func(_ *cobra.Command, _ []string) error {
@@ -47,7 +48,9 @@ func Execute() {
 	}
 }
 
+/*
 func init() { //nolint:gochecknoinits
 	// persistent flags will be available for every sub-commands
 	// here you can bind command line flags to variables
 }
+*/

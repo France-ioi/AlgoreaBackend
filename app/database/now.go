@@ -2,6 +2,7 @@ package database
 
 import "github.com/jinzhu/gorm"
 
+//nolint:gochecknoglobals // we use nowExpr instead of just gorm.Expr() for testing purposes
 var nowExpr = gorm.Expr("NOW()")
 
 // Now returns a DB expression that returns current DB time (it is usually gorm.Expr("NOW()")).

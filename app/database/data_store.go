@@ -223,6 +223,7 @@ const (
 	logErrorAsInfoFuncContextKey     = dbContextKey("logErrorAsInfoFunc")
 )
 
+//nolint:gochecknoglobals // for testing purposes only
 var (
 	onStartOfTransactionToBeRetriedForcefullyHook atomic.Value
 	onForcefulRetryOfTransactionHook              atomic.Value

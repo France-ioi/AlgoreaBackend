@@ -53,5 +53,6 @@ func TestService_startResult_concurrency(t *testing.T) {
 		"POST", "/items/1/start-result?attempt_id=0", nil, nil)
 }
 
+//nolint:gochecknoglobals // this is a link to a global variable to store the default hook, used for testing purposes only
 //go:linkname onBeforeInsertingResultInResultStartHook github.com/France-ioi/AlgoreaBackend/v2/app/api/items.onBeforeInsertingResultInResultStartHook
 var onBeforeInsertingResultInResultStartHook atomic.Value

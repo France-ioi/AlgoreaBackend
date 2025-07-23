@@ -44,6 +44,7 @@ var _ queryRowWithoutLogging = &sqlDBWrapper{}
 
 var explainableStatementRegexp = regexp.MustCompile(`(?i)^\s*(SELECT|DELETE|INSERT|REPLACE|UPDATE|TABLE)\s`)
 
+//nolint:gochecknoglobals // emptyFunc is a function that does nothing, the variable is used for testing purposes
 var emptyFunc = func() {}
 
 func getSQLExecutionPlanLoggingFunc(
