@@ -3,7 +3,6 @@
 package testhelpers
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -19,26 +18,17 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
-
-type dbquery struct {
-	sql    string
-	values []interface{}
-}
 
 // TestContext implements context for tests.
 type TestContext struct {
 	application                     *app.Application // do NOT call it directly, use `app()`
 	userID                          int64            // userID that will be used for the next requests
 	user                            string           // user reference of the logged user
-	featureQueries                  []dbquery
 	lastResponse                    *http.Response
 	lastResponseBody                string
 	logger                          *logging.Logger
 	logsHook                        *loggingtest.Hook
-	inScenario                      bool
-	db                              *sql.DB
 	dbTableData                     map[string]*godog.Table
 	dbTimePatches                   []*DBTimePatch
 	templateSet                     *jet.Set
@@ -60,16 +50,9 @@ const (
 // SetupTestContext initializes the test context. Called before each scenario.
 func (ctx *TestContext) SetupTestContext(scenario *godog.Scenario) {
 	ctx.setupApp()
-	ctx.userID = 0 // not set
-	ctx.lastResponse = nil
-	ctx.lastResponseBody = ""
-	ctx.inScenario = true
 	ctx.requestHeaders = map[string][]string{}
-	ctx.db = ctx.openDB()
 	ctx.dbTableData = make(map[string]*godog.Table)
-	ctx.dbTimePatches = make([]*DBTimePatch, 0)
 	ctx.templateSet = ctx.constructTemplateSet()
-	ctx.needPopulateDatabase = false
 
 	ctx.initReferences(scenario)
 
@@ -141,7 +124,6 @@ func collectReferences(sc *godog.Scenario) []string {
 
 func (ctx *TestContext) setupApp() {
 	var err error
-	ctx.tearDownApp()
 	logger, logsHook := logging.NewMockLogger()
 	ctx.logger = logger
 	ctx.logsHook = &loggingtest.Hook{Hook: logsHook}
@@ -175,31 +157,9 @@ func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) (err error) {
 	return nil
 }
 
-// openDB opens a connection to the database.
-// We use instrumented-mysql driver to log all queries.
-func (ctx *TestContext) openDB() *sql.DB {
-	if ctx.db == nil {
-		var err error
-		config, _ := app.DBConfig(ctx.application.Config)
-		loggingConfig := app.LoggingConfig(ctx.application.Config)
-		if config.Params == nil {
-			config.Params = make(map[string]string, 1)
-		}
-		config.Params["charset"] = utf8mb4
-		ctx.db, err = sql.Open(
-			golang.IfElse(loggingConfig.GetBool("LogRawSQLQueries"), "instrumented-mysql", "mysql"),
-			config.FormatDSN())
-		if err != nil {
-			panic(fmt.Errorf("unable to connect to the database: %w", err))
-		}
-	}
-
-	return ctx.db
-}
-
 func (ctx *TestContext) emptyDB() error {
 	config, _ := app.DBConfig(ctx.application.Config)
-	return emptyDB(ctx.db, config.DBName)
+	return emptyDB(ctx.application.Database.GetContext(), ctx.application.Database.GetSQLDB(), config.DBName)
 }
 
 func (ctx *TestContext) initDB() error {

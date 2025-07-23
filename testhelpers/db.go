@@ -227,13 +227,13 @@ func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[s
 }
 
 //nolint:gosec
-func emptyDB(db *sql.DB, dbName string) error {
+func emptyDB(ctx context.Context, db *sql.DB, dbName string) error {
 	appenv.ForceTestEnv()
 
-	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+	rows, err := db.QueryContext(ctx, `SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
                          WHERE  table_type   = 'BASE TABLE'
-                           AND  table_schema = '` + dbName + `'
+                           AND  table_schema = '`+dbName+`'
                            AND  table_name  != 'gorp_migrations'
                            AND  table_name  != 'user_batches'
                          ORDER BY table_name`)
@@ -288,5 +288,5 @@ func emptyDBFromContextConfig(ctx context.Context, db *sql.DB) {
 	config := GetConfigFromContext(ctx)
 	dbConfig, err := app.DBConfig(config)
 	mustNotBeError(err)
-	mustNotBeError(emptyDB(db, dbConfig.DBName))
+	mustNotBeError(emptyDB(ctx, db, dbConfig.DBName))
 }

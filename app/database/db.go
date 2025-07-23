@@ -291,15 +291,7 @@ func (conn *DB) isInTransaction() bool {
 func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall func(*DB) error) (err error) {
 	initGetLockTime := time.Now()
 
-	var sqlDB *sql.DB
-	if conn.isInTransaction() {
-		type sqlTxDBAccessor struct {
-			db *sql.DB
-		}
-		sqlDB = (*sqlTxDBAccessor)((unsafe.Pointer)(conn.db.CommonDB().(*sqlTxWrapper).sqlTx)).db
-	} else {
-		sqlDB = conn.db.CommonDB().(*sqlDBWrapper).sqlDB
-	}
+	sqlDB := conn.GetSQLDB()
 	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig()}
 
 	var shouldDiscardNamedLockDBConnection bool
@@ -341,6 +333,21 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
 
 	return funcToCall(conn)
+}
+
+// GetSQLDB returns the underlying *sql.DB connection.
+// Warning: This method is only exposed for testing purposes. Do not use it in production code.
+func (conn *DB) GetSQLDB() *sql.DB {
+	var sqlDB *sql.DB
+	if conn.isInTransaction() {
+		type sqlTxDBAccessor struct {
+			db *sql.DB
+		}
+		sqlDB = (*sqlTxDBAccessor)((unsafe.Pointer)(conn.db.CommonDB().(*sqlTxWrapper).sqlTx)).db
+	} else {
+		sqlDB = conn.db.CommonDB().(*sqlDBWrapper).sqlDB
+	}
+	return sqlDB
 }
 
 // Close closes current db connection.  If database connection is not an io.Closer, returns an error.

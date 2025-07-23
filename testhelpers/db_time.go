@@ -202,17 +202,29 @@ func patchDatabaseDBMethodsWithStringQueryAndArgs(nowReplacer func(string) strin
 				defer stringAndArgsDBGuards[methodName].Restore()
 				query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
-				reflArgs := make([]reflect.Value, 0, len(args))
-				reflArgs = append(reflArgs, reflect.ValueOf(query))
-				for _, arg := range args {
-					arg := arg
-					reflArgs = append(reflArgs, reflect.ValueOf(arg))
-				}
+				reflArgs := constructReflArgsForQueryAndArgs(query, args)
 
 				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
 			})
 		patch.patchedMethods = append(patch.patchedMethods, stringAndArgsDBGuards[methodName])
 	}
+}
+
+func constructReflArgsForQueryAndArgs(query interface{}, args []interface{}) []reflect.Value {
+	reflArgs := make([]reflect.Value, 0, len(args))
+	reflArgs = append(reflArgs, reflect.ValueOf(query))
+	nilReflValue := reflect.New(reflect.TypeOf((*string)(nil))).Elem()
+	for _, arg := range args {
+		arg := arg
+		var reflValue reflect.Value
+		if arg == nil {
+			reflValue = nilReflValue
+		} else {
+			reflValue = reflect.ValueOf(arg)
+		}
+		reflArgs = append(reflArgs, reflValue)
+	}
+	return reflArgs
 }
 
 func patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer func(string) string, patch *DBTimePatch) {
@@ -231,12 +243,7 @@ func patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer func(string) string, 
 					query = nowRegexp.ReplaceAllStringFunc(queryStr, nowReplacer)
 				}
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
-				reflArgs := make([]reflect.Value, 0, len(args))
-				reflArgs = append(reflArgs, reflect.ValueOf(query))
-				for _, arg := range args {
-					arg := arg
-					reflArgs = append(reflArgs, reflect.ValueOf(arg))
-				}
+				reflArgs := constructReflArgsForQueryAndArgs(query, args)
 
 				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
 			})

@@ -10,11 +10,11 @@ import (
 	"github.com/zenovich/flowmingo"
 )
 
-var ctx = &TestContext{}
-
 // InitializeScenario binds the supported steps to the verifying functions.
 func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 	var restoreFunc flowmingo.RestoreFunc
+	ctx := &TestContext{}
+
 	scenarioContext.Before(func(contextCtx context.Context, sc *godog.Scenario) (context.Context, error) {
 		if !testing.Verbose() { // Do not suppress output in verbose mode
 			restoreFunc = flowmingo.CaptureStdoutAndStderr() // Suppress the output of the scenario
