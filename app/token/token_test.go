@@ -18,52 +18,56 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
-var marshalAndSignTests = []struct {
+type marshalAndSignTest struct {
 	name        string
 	currentTime time.Time
 	structType  reflect.Type
 	payloadMap  map[string]interface{}
 	payloadType reflect.Type
-}{
-	{
-		name:        "task token",
-		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Token[payloads.TaskToken]{}),
-		payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform(),
-		payloadType: reflect.TypeOf(payloads.TaskToken{}),
-	},
-	{
-		name:        "answer token",
-		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Token[payloads.AnswerToken]{}),
-		payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform(),
-		payloadType: reflect.TypeOf(payloads.AnswerToken{}),
-	},
-	{
-		name:        "hint token",
-		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Token[payloads.HintToken]{}),
-		payloadMap:  payloadstest.HintPayloadFromTaskPlatform(),
-		payloadType: reflect.TypeOf(payloads.HintToken{}),
-	},
-	{
-		name:        "score token",
-		currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Token[payloads.ScoreToken]{}),
-		payloadMap:  payloadstest.ScorePayloadFromGrader(),
-		payloadType: reflect.TypeOf(payloads.ScoreToken{}),
-	},
-	{
-		name:        "thread token",
-		currentTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-		structType:  reflect.TypeOf(Token[payloads.ThreadToken]{}),
-		payloadMap:  payloadstest.ThreadPayloadFromAlgoreaPlatformOriginal(),
-		payloadType: reflect.TypeOf(payloads.ThreadToken{}),
-	},
+}
+
+func marshalAndSignTests() []marshalAndSignTest {
+	return []marshalAndSignTest{
+		{
+			name:        "task token",
+			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+			structType:  reflect.TypeOf(Token[payloads.TaskToken]{}),
+			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform(),
+			payloadType: reflect.TypeOf(payloads.TaskToken{}),
+		},
+		{
+			name:        "answer token",
+			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+			structType:  reflect.TypeOf(Token[payloads.AnswerToken]{}),
+			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform(),
+			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
+		},
+		{
+			name:        "hint token",
+			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+			structType:  reflect.TypeOf(Token[payloads.HintToken]{}),
+			payloadMap:  payloadstest.HintPayloadFromTaskPlatform(),
+			payloadType: reflect.TypeOf(payloads.HintToken{}),
+		},
+		{
+			name:        "score token",
+			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
+			structType:  reflect.TypeOf(Token[payloads.ScoreToken]{}),
+			payloadMap:  payloadstest.ScorePayloadFromGrader(),
+			payloadType: reflect.TypeOf(payloads.ScoreToken{}),
+		},
+		{
+			name:        "thread token",
+			currentTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
+			structType:  reflect.TypeOf(Token[payloads.ThreadToken]{}),
+			payloadMap:  payloadstest.ThreadPayloadFromAlgoreaPlatformOriginal(),
+			payloadType: reflect.TypeOf(payloads.ThreadToken{}),
+		},
+	}
 }
 
 func TestToken_MarshalJSON(t *testing.T) {
-	for _, test := range marshalAndSignTests {
+	for _, test := range marshalAndSignTests() {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
@@ -95,7 +99,7 @@ func TestToken_MarshalJSON(t *testing.T) {
 }
 
 func TestToken_Sign(t *testing.T) {
-	for _, test := range marshalAndSignTests {
+	for _, test := range marshalAndSignTests() {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
@@ -126,7 +130,7 @@ func TestToken_Sign(t *testing.T) {
 }
 
 func TestToken_MarshalString(t *testing.T) {
-	for _, test := range marshalAndSignTests {
+	for _, test := range marshalAndSignTests() {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
