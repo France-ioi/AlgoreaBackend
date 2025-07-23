@@ -463,10 +463,10 @@ func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	for i := 1; i < keyTriesCount; i++ {
-		dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+		dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(i).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.PRIMARY'"})
 	}
-	dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(keyTriesCount).
+	dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0

@@ -20,10 +20,12 @@ type permissionsGeneratedResultRow struct {
 	CanViewGenerated string
 }
 
-var expectedRow14 = permissionsGeneratedResultRow{
-	GroupID:          1,
-	ItemID:           4,
-	CanViewGenerated: "solution",
+func expectedRow14() permissionsGeneratedResultRow {
+	return permissionsGeneratedResultRow{
+		GroupID:          1,
+		ItemID:           4,
+		CanViewGenerated: "solution",
+	}
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *testing.T) {
@@ -71,7 +73,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 			ItemID:           3,
 			CanViewGenerated: "content",
 		},
-		expectedRow14,
+		expectedRow14(),
 		{
 			GroupID:          1,
 			ItemID:           11,
@@ -146,7 +148,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 			ItemID:           3,
 			CanViewGenerated: "content",
 		},
-		expectedRow14,
+		expectedRow14(),
 		{
 			GroupID:          1,
 			ItemID:           11,
@@ -224,7 +226,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 					ItemID:           3,
 					CanViewGenerated: access,
 				},
-				expectedRow14,
+				expectedRow14(),
 				{
 					GroupID:          1,
 					ItemID:           11,

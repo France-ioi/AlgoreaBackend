@@ -25,7 +25,7 @@ type groupPropagateResultRow struct {
 	AncestorsComputationState string
 }
 
-var maxExpiresAt = "9999-12-31 23:59:59"
+const maxExpiresAt = "9999-12-31 23:59:59"
 
 func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	testoutput.SuppressIfPasses(t)

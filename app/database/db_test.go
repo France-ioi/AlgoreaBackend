@@ -1880,7 +1880,9 @@ func TestDB_WithExclusiveWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-var retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp = "^" + regexp.QuoteMeta("INSERT INTO users (id) VALUES (?)") + "$"
+func retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp() string {
+	return "^" + regexp.QuoteMeta("INSERT INTO users (id) VALUES (?)") + "$"
+}
 
 func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
@@ -1889,10 +1891,10 @@ func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	for i := 1; i < keyTriesCount; i++ {
-		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(i).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.PRIMARY'"})
 	}
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(keyTriesCount).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
@@ -1911,7 +1913,7 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ErrorsWhenLimitExceeded(t *testing.T
 	defer func() { _ = db.Close() }()
 
 	for i := 1; i < keyTriesCount+1; i++ {
-		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(i).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.PRIMARY'"})
 	}
 
@@ -1946,7 +1948,7 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+			mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 				WillReturnError(testCase.expectedError)
 
 			err := db.retryOnDuplicatePrimaryKeyError("users", func(db *DB) error {
@@ -1965,11 +1967,11 @@ func TestDB_retryOnDuplicateKeyError_LogsRetryableErrorsAsInfo(t *testing.T) {
 	db, mock := NewDBMockWithLogConfig(ctx, LogConfig{LogSQLQueries: false, AnalyzeSQLQueries: false}, false)
 	defer func() { _ = db.Close() }()
 
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry 'login-1' for key 'users.login'"})
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '1' for key 'users.PRIMARY'"})
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := db.retryOnDuplicateKeyError("users", "login", "user's login", func(db *DB) error {
