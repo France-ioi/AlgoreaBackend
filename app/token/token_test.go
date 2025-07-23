@@ -72,9 +72,9 @@ func TestToken_MarshalJSON(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
 			defer monkey.UnpatchAll()
-			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.AlgoreaPlatformPrivateKey))
 			require.NoError(t, err)
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.AlgoreaPlatformPublicKey))
 			require.NoError(t, err)
 
 			payloadRefl := reflect.New(test.payloadType)
@@ -104,9 +104,9 @@ func TestToken_Sign(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
 			defer monkey.UnpatchAll()
-			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.AlgoreaPlatformPrivateKey))
 			require.NoError(t, err)
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.AlgoreaPlatformPublicKey))
 			require.NoError(t, err)
 
 			tokenStructRefl := reflect.New(test.structType)
@@ -135,9 +135,9 @@ func TestToken_MarshalString(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
 			defer monkey.UnpatchAll()
-			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.AlgoreaPlatformPrivateKey))
 			require.NoError(t, err)
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.AlgoreaPlatformPublicKey))
 			require.NoError(t, err)
 
 			payloadRefl := reflect.New(test.payloadType)

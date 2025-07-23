@@ -101,7 +101,7 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 				          default_language_tag: fr}]`,
 			},
 			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform(),
-				tokentest.TaskPlatformPrivateKeyParsed))),
+				tokentest.TaskPlatformPrivateKeyParsed()))),
 			tokenFieldName:         "hint_requested",
 			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
 			expected:               expectedToken,

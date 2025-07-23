@@ -113,7 +113,7 @@ func (ctx *TestContext) getPrivateKeyOf(signerName string) *rsa.PrivateKey {
 		config, _ := app.TokenConfig(ctx.application.Config)
 		privateKey = config.PrivateKey
 	case "the task platform":
-		privateKey = tokentest.TaskPlatformPrivateKeyParsed
+		privateKey = tokentest.TaskPlatformPrivateKeyParsed()
 	default:
 		panic(fmt.Errorf("unknown signer: %q. Only \"the app\" and \"the task platform\" are supported", signerName))
 	}

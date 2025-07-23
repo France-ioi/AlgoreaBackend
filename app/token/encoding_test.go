@@ -123,7 +123,7 @@ func TestParseAndValidate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
 			defer monkey.UnpatchAll()
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.AlgoreaPlatformPublicKey))
 			require.NoError(t, err)
 			payload, err := ParseAndValidate(tt.token, publicKey)
 			if tt.wantError == nil {
@@ -169,9 +169,9 @@ func TestGenerate(t *testing.T) {
 			delete(patchedPayload, "date")
 
 			var err error
-			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+			privateKey, err := crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.AlgoreaPlatformPrivateKey))
 			require.NoError(t, err)
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.AlgoreaPlatformPublicKey))
 			require.NoError(t, err)
 			token := Generate(patchedPayload, privateKey)
 			payload, err := ParseAndValidate(token, publicKey)
