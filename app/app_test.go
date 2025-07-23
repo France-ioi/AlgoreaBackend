@@ -30,6 +30,9 @@ import (
 func TestNew_Success(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
 	app, err := New()
@@ -47,6 +50,9 @@ func TestNew_Success(t *testing.T) {
 func TestNew_SuccessNoCompress(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
@@ -55,6 +61,9 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
 
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__ROOTPATH", "/api")
@@ -188,6 +197,9 @@ func TestNew_DomainsConfigError(t *testing.T) {
 func TestMiddlewares_OnPanic(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	logger, hook := logging.NewMockLogger()
 	app, err := New(logger)
 	require.NoError(t, err)
@@ -227,6 +239,9 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 
 func TestMiddlewares_OnSuccess(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
 
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
 	logger, hook := logging.NewMockLogger()
@@ -268,9 +283,11 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 func TestNew_MountsPprofInDev(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	appenv.SetDefaultEnvToTest()
 	monkey.Patch(appenv.IsEnvDev, func() bool { return true })
-	defer monkey.UnpatchAll()
 
 	logger, _ := logging.NewMockLogger()
 	app, err := New(logger)
@@ -292,8 +309,10 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
+	mockDatabaseOpen()
 	defer monkey.UnpatchAll()
+
+	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
 
 	logger, _ := logging.NewMockLogger()
 	app, err := New(logger)
@@ -315,6 +334,9 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 		configSettingValue := configSettingValue
 		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
+
+			mockDatabaseOpen()
+			defer monkey.UnpatchAll()
 
 			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", strconv.FormatBool(configSettingValue))
 			logger, _ := logging.NewMockLogger()

@@ -94,7 +94,7 @@ test: $(TEST_REPORT_DIR)
 test-dev:
 	$(Q)$(GOTEST) -gcflags=all=-l $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
-	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
+	ALGOREA_DATABASE__ADDR=no_host $(GOTEST) -gcflags=all=-l -race -tags=unit $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
 	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_BDD_DIR) -p 1 -parallel 1 $(TEST_TAGS)

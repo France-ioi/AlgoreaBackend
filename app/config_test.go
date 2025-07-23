@@ -309,6 +309,9 @@ func TestDomainsConfig_Error(t *testing.T) {
 func TestReplaceAuthConfig(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	globalConfig := viper.New()
 	globalConfig.Set("auth.ClientID", "42")
 	logger, _ := logging.NewMockLogger()
@@ -321,6 +324,9 @@ func TestReplaceAuthConfig(t *testing.T) {
 
 func TestReplaceDomainsConfig(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
 
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []map[string]interface{}{{"domains": []string{"localhost", "other"}}})
@@ -340,6 +346,9 @@ func TestReplaceDomainsConfig(t *testing.T) {
 
 func TestReplaceDomainsConfig_Panic(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
 
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []int{1, 2})
