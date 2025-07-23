@@ -32,8 +32,8 @@ func Test_saveGradeRequestParsed_UnmarshalJSON(t *testing.T) {
 	}
 	assert.PanicsWithError(t, expectedError.Error(), func() {
 		_ = r.UnmarshalJSON([]byte(fmt.Sprintf(`{"score_token": %q, "answer_token": %q}`,
-			token.Generate(payloadstest.ScorePayloadFromGrader, tokentest.AlgoreaPlatformPrivateKeyParsed),
-			token.Generate(payloadstest.AnswerPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
+			token.Generate(payloadstest.ScorePayloadFromGrader(), tokentest.AlgoreaPlatformPrivateKeyParsed),
+			token.Generate(payloadstest.AnswerPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed),
 		)))
 	})
 	assert.NoError(t, mock.ExpectationsWereMet())

@@ -22,14 +22,14 @@ import (
 
 func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 	expectedTaskToken := token.Token[payloads.TaskToken]{}
-	_ = payloads.ParseMap(payloadstest.TaskPayloadFromAlgoreaPlatform, &expectedTaskToken.Payload)
+	_ = payloads.ParseMap(payloadstest.TaskPayloadFromAlgoreaPlatform(), &expectedTaskToken.Payload)
 	expectedTaskToken.Payload.Converted.UserID = 556371821693219925
 	expectedTaskToken.Payload.Converted.LocalItemID = 901756573345831409
 	expectedTaskToken.Payload.Converted.AttemptID = 100
 	expectedTaskToken.Payload.Converted.ParticipantID = 556371821693219925
 	expectedHintToken := token.Token[payloads.HintToken]{}
 	expectedHintToken.Payload.Converted.UserID = 556371821693219925
-	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedHintToken.Payload)
+	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform(), &expectedHintToken.Payload)
 	monkey.Patch(time.Now,
 		func() time.Time { return time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC) })
 	defer monkey.UnpatchAll()
@@ -64,13 +64,13 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		{
 			name: "missing hint_requested token",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed))),
+				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed))),
 			wantErr: errors.New("missing hint_requested"),
 		},
 		{
 			name: "missing platform",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": "ABC.DEF.ABC"}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed))),
+				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed))),
 			wantErr: errors.New("cannot find the platform for item 901756573345831409"),
 			mockDB:  true,
 			itemID:  901756573345831409,
@@ -78,7 +78,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		{
 			name: "wrong platform's public key",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": "ABC.DEF.ABC"}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed))),
+				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed))),
 			wantErr:  errors.New("invalid hint_requested: wrong platform's key"),
 			mockDB:   true,
 			itemID:   901756573345831409,
@@ -87,7 +87,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		{
 			name: "hint_requested is not a string, but it should be a token",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": 1234}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed))),
+				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed))),
 			wantErr:  errors.New("invalid hint_requested: json: cannot unmarshal number into Go value of type string"),
 			mockDB:   true,
 			itemID:   901756573345831409,
@@ -96,7 +96,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		{
 			name: "invalid hint_requested token",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": "ABC.DEF.ABC"}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed))),
+				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed))),
 			wantErr:  errors.New("invalid hint_requested: invalid character '\\x00' looking for beginning of value"),
 			mockDB:   true,
 			platform: &platform{publicKey: string(tokentest.AlgoreaPlatformPublicKey)},
@@ -105,8 +105,8 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		{
 			name: "everything is okay",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": %q}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
-				token.Generate(payloadstest.HintPayloadFromTaskPlatform, tokentest.TaskPlatformPrivateKeyParsed),
+				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed),
+				token.Generate(payloadstest.HintPayloadFromTaskPlatform(), tokentest.TaskPlatformPrivateKeyParsed),
 			)),
 			mockDB:   true,
 			platform: &platform{publicKey: string(tokentest.TaskPlatformPublicKey)},
@@ -119,7 +119,7 @@ func TestAskHintRequest_UnmarshalJSON(t *testing.T) {
 		{
 			name: "plain hint_requested should not be accepted",
 			raw: []byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": {"idUser":"556371821693219925","askedHint":"123"}}`,
-				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
+				token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed),
 			)),
 			mockDB:   true,
 			itemID:   901756573345831409,
@@ -207,8 +207,8 @@ func TestAskHintRequest_UnmarshalJSON_DBError(t *testing.T) {
 	}
 	assert.PanicsWithError(t, expectedError.Error(), func() {
 		_ = r.UnmarshalJSON([]byte(fmt.Sprintf(`{"task_token": %q, "hint_requested": %q}`,
-			token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform, tokentest.AlgoreaPlatformPrivateKeyParsed),
-			token.Generate(payloadstest.HintPayloadFromTaskPlatform, tokentest.TaskPlatformPrivateKeyParsed),
+			token.Generate(payloadstest.TaskPayloadFromAlgoreaPlatform(), tokentest.AlgoreaPlatformPrivateKeyParsed),
+			token.Generate(payloadstest.HintPayloadFromTaskPlatform(), tokentest.TaskPlatformPrivateKeyParsed),
 		)))
 	})
 	assert.NoError(t, mock.ExpectationsWereMet())

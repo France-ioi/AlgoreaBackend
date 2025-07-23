@@ -16,7 +16,7 @@ import (
 
 func TestToken_HintToken_UnmarshalString(t *testing.T) {
 	hint := Token[payloads.HintToken]{}
-	err := payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &hint.Payload)
+	err := payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform(), &hint.Payload)
 	require.NoError(t, err)
 
 	hint.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(tokentest.TaskPlatformPrivateKey)
