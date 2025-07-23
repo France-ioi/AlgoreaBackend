@@ -1,3 +1,5 @@
+//go:build !prod && !unit
+
 package testhelpers
 
 import (
