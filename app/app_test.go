@@ -28,6 +28,8 @@ import (
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
 
 func TestNew_Success(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
 	app, err := New()
@@ -43,6 +45,8 @@ func TestNew_Success(t *testing.T) {
 }
 
 func TestNew_SuccessNoCompress(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
@@ -50,6 +54,8 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__ROOTPATH", "/api")
 	app, err := New()
@@ -110,6 +116,8 @@ func TestNew_CreatesNewLogger(t *testing.T) {
 }
 
 func TestNew_DBErr(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	logger, hook := logging.NewMockLogger()
 	expectedError := errors.New("db opening error")
 	monkey.Patch(database.Open, func(context.Context, interface{}) (*database.DB, error) {
@@ -136,6 +144,8 @@ func TestNew_RandSeedingFailed(t *testing.T) {
 }
 
 func TestNew_DBConfigError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	patch := monkey.Patch(DBConfig, func(_ *viper.Viper) (config *mysql.Config, err error) {
 		return nil, errors.New("dberror")
 	})
@@ -145,6 +155,8 @@ func TestNew_DBConfigError(t *testing.T) {
 }
 
 func TestNew_TokenConfigError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
 		globalConfig := viper.New()
 		globalConfig.Set("token.PublicKeyFile", "notafile")
@@ -157,6 +169,8 @@ func TestNew_TokenConfigError(t *testing.T) {
 }
 
 func TestNew_DomainsConfigError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
 		globalConfig := viper.New()
 		globalConfig.Set("domains", []int{1, 2})
@@ -172,6 +186,8 @@ func TestNew_DomainsConfigError(t *testing.T) {
 // but their interaction (impacted by the order of definition)
 
 func TestMiddlewares_OnPanic(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	logger, hook := logging.NewMockLogger()
 	app, err := New(logger)
 	require.NoError(t, err)
@@ -210,6 +226,8 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 }
 
 func TestMiddlewares_OnSuccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
 	logger, hook := logging.NewMockLogger()
 	app, _ := New(logger)
@@ -248,6 +266,8 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 }
 
 func TestNew_MountsPprofInDev(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	appenv.SetDefaultEnvToTest()
 	monkey.Patch(appenv.IsEnvDev, func() bool { return true })
 	defer monkey.UnpatchAll()
@@ -270,6 +290,8 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 }
 
 func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
 	defer monkey.UnpatchAll()
 
@@ -292,6 +314,8 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 	for _, configSettingValue := range []bool{true, false} {
 		configSettingValue := configSettingValue
 		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", strconv.FormatBool(configSettingValue))
 			logger, _ := logging.NewMockLogger()
 			app, _ := New(logger)
