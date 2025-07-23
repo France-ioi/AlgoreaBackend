@@ -93,7 +93,6 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
     - wsl              # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
     - err113           # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)

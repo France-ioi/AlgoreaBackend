@@ -10,6 +10,7 @@ const (
 	testEnv        = "test"
 )
 
+//nolint:gochecknoglobals // we use a global variable to force the environment (looks like an unnecessary dirty hack)
 var forcedEnv = ""
 
 // Env returns the deployment environment set for this app ("prod", "dev", or "test"). Default to "dev".

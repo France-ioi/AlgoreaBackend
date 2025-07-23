@@ -16,13 +16,13 @@ import (
 
 func TestToken_HintToken_UnmarshalString(t *testing.T) {
 	hint := Token[payloads.HintToken]{}
-	err := payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &hint.Payload)
+	err := payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform(), &hint.Payload)
 	require.NoError(t, err)
 
-	hint.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(tokentest.TaskPlatformPrivateKey)
+	hint.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.TaskPlatformPrivateKey))
 	require.NoError(t, err)
 
-	hint.PublicKey, err = crypto.ParseRSAPublicKeyFromPEM(tokentest.TaskPlatformPublicKey)
+	hint.PublicKey, err = crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.TaskPlatformPublicKey))
 	require.NoError(t, err)
 
 	marshaled, err := hint.MarshalJSON()

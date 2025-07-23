@@ -20,7 +20,7 @@ import (
 func TestGetParticipantIDFromRequest(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1, type: Class}, {id: 2, type: Team}, {id: 3, type: Team}, {id: 4, type: User}, {id: 5, type: User}]
 		users: [{group_id: 4, login: john}, {group_id: 5, login: jane}]
 		groups_groups:

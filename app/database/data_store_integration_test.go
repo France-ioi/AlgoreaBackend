@@ -19,8 +19,9 @@ import (
 func TestDataStore_WithForeignKeyChecksDisabled(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	rawDB := testhelpers.OpenRawDBConnection()
-	db, err := database.Open(rawDB)
+	testContext := testhelpers.CreateTestContext()
+	rawDB := testhelpers.OpenRawDBConnection(testContext)
+	db, err := database.Open(testContext, rawDB)
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 
@@ -63,10 +64,10 @@ func assertForeignKeysDBVars(t *testing.T, store *database.DataStore, expectedSt
 func TestDataStore_WithNamedLock_WorksOutsideOfTransaction(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	testHook, restoreFunc := logging.MockSharedLoggerHook()
-	defer restoreFunc()
-	rawDB := testhelpers.OpenRawDBConnection()
-	db, err := database.OpenWithLogConfig(rawDB, database.LogConfig{LogSQLQueries: false}, true)
+	logger, testHook := logging.NewMockLogger()
+	ctx := testhelpers.CreateTestContextWithLogger(logger)
+	rawDB := testhelpers.OpenRawDBConnection(ctx)
+	db, err := database.OpenWithLogConfig(ctx, rawDB, database.LogConfig{LogSQLQueries: false}, true)
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 

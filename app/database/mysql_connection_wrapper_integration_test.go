@@ -19,10 +19,10 @@ import (
 )
 
 func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
-	db := testhelpers.OpenRawDBConnection()
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = db.Close() }()
 
-	ctx := context.Background()
 	conn, err := db.Conn(ctx)
 	require.NoError(t, err)
 	defer func() { _ = conn.Close() }()
@@ -36,7 +36,7 @@ func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
 	require.Equal(t, int64(1), *result)
 
 	err = conn.Raw(func(driverConn any) error {
-		return driverConn.(driver.SessionResetter).ResetSession(context.Background())
+		return driverConn.(driver.SessionResetter).ResetSession(ctx)
 	})
 	require.NoError(t, err)
 
@@ -46,10 +46,10 @@ func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
 }
 
 func TestMysqlConnectionWrapper_ResetSession_ResetsForeignKeyChecks(t *testing.T) {
-	db := testhelpers.OpenRawDBConnection()
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = db.Close() }()
 
-	ctx := context.Background()
 	conn, err := db.Conn(ctx)
 	require.NoError(t, err)
 	defer func() { _ = conn.Close() }()
@@ -63,7 +63,7 @@ func TestMysqlConnectionWrapper_ResetSession_ResetsForeignKeyChecks(t *testing.T
 	require.Equal(t, int64(0), *result)
 
 	err = conn.Raw(func(driverConn any) error {
-		return driverConn.(driver.SessionResetter).ResetSession(context.Background())
+		return driverConn.(driver.SessionResetter).ResetSession(ctx)
 	})
 	require.NoError(t, err)
 
@@ -74,17 +74,17 @@ func TestMysqlConnectionWrapper_ResetSession_ResetsForeignKeyChecks(t *testing.T
 }
 
 func TestMysqlConnectionWrapper_ResetSession_FailsOnClosedConnection(t *testing.T) {
-	db := testhelpers.OpenRawDBConnection()
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = db.Close() }()
 
-	ctx := context.Background()
 	conn, err := db.Conn(ctx)
 	require.NoError(t, err)
 	defer func() { _ = conn.Close() }()
 
 	err = conn.Raw(func(driverConn any) error {
 		require.NoError(t, driverConn.(driver.Conn).Close())
-		return driverConn.(driver.SessionResetter).ResetSession(context.Background())
+		return driverConn.(driver.SessionResetter).ResetSession(ctx)
 	})
 	require.Equal(t, driver.ErrBadConn, err)
 }
@@ -98,17 +98,17 @@ func TestMysqlConnectionWrapper_Reset_FailsOnClosedConnection(t *testing.T) {
 		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
-	db := testhelpers.OpenRawDBConnection()
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = db.Close() }()
 
-	ctx := context.Background()
 	conn, err := db.Conn(ctx)
 	require.NoError(t, err)
 	defer func() { _ = conn.Close() }()
 
 	err = conn.Raw(func(driverConn any) error {
 		require.NoError(t, driverConn.(driver.Conn).Close())
-		return driverConn.(resetter).Reset(context.Background())
+		return driverConn.(resetter).Reset(ctx)
 	})
 	require.Equal(t, driver.ErrBadConn, err)
 }
@@ -118,10 +118,12 @@ func TestMysqlConnectionWrapper_Reset_FailsWhenContextIsCancelled(t *testing.T) 
 		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
-	db := testhelpers.OpenRawDBConnection()
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = db.Close() }()
 
-	ctx, cancelFunc := context.WithCancel(context.Background())
+	var cancelFunc context.CancelFunc
+	ctx, cancelFunc = context.WithCancel(ctx)
 	conn, err := db.Conn(ctx)
 	require.NoError(t, err)
 	defer func() { _ = conn.Close() }()
@@ -138,10 +140,10 @@ func TestMysqlConnectionWrapper_Reset_FailsWhenWriteCommandPacketFails(t *testin
 		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
-	db := testhelpers.OpenRawDBConnection()
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.OpenRawDBConnection(ctx)
 	defer func() { _ = db.Close() }()
 
-	ctx := context.Background()
 	conn, err := db.Conn(ctx)
 	require.NoError(t, err)
 	defer func() { _ = conn.Close() }()

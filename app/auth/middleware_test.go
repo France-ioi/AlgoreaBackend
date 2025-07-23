@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -207,10 +208,9 @@ func TestUserMiddleware(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assert := assertlib.New(t)
-			logHook, restoreFunc := logging.MockSharedLoggerHook()
-			defer restoreFunc()
+			ctx, logger, logHook := logging.NewContextWithNewMockLogger()
 
-			serviceWasCalled, resp, mock := callAuthThroughMiddleware(tt.expectedAccessToken, tt.authHeaders, tt.cookieHeaders,
+			serviceWasCalled, resp, mock := callAuthThroughMiddleware(ctx, logger, tt.expectedAccessToken, tt.authHeaders, tt.cookieHeaders,
 				tt.userIDReturnedByDB, tt.dbError)
 			defer func() { _ = resp.Body.Close() }()
 			bodyBytes, _ := io.ReadAll(resp.Body)
@@ -238,10 +238,12 @@ func (sp *storeProvider) GetStore(*http.Request) *database.DataStore { return sp
 
 var _ GetStorer = &storeProvider{}
 
-func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders, cookieHeaders []string,
+func callAuthThroughMiddleware(
+	ctx context.Context, logger *logging.Logger,
+	expectedAccessToken string, authorizationHeaders, cookieHeaders []string,
 	userID int64, dbError error,
 ) (bool, *http.Response, sqlmock.Sqlmock) {
-	dbmock, mock := database.NewDBMock()
+	dbmock, mock := database.NewDBMock(ctx)
 	defer func() { _ = dbmock.Close() }()
 	if expectedAccessToken != "" {
 		expectation := mock.ExpectQuery("^" +
@@ -286,7 +288,7 @@ func callAuthThroughMiddleware(expectedAccessToken string, authorizationHeaders,
 		responseWriter.WriteHeader(http.StatusOK)
 		_, _ = responseWriter.Write([]byte(body))
 	})
-	mainSrv := httptest.NewServer(logging.NewStructuredLogger()(middleware(handler)))
+	mainSrv := httptest.NewServer(logging.ContextWithLoggerMiddleware(logger)(logging.NewStructuredLogger()(middleware(handler))))
 	defer mainSrv.Close()
 
 	// calling web server

@@ -102,7 +102,7 @@ func (srv *Service) removeUserBatch(responseWriter http.ResponseWriter, httpRequ
 		HasRows()
 	service.MustNotBeError(err)
 	if found {
-		logging.SharedLogger.WithContext(httpRequest.Context()).Warnf(
+		logging.EntryFromContext(httpRequest.Context()).Warnf(
 			"User with group_id = %d failed to delete a user batch because of locked membership (group_prefix = '%s', custom_prefix = '%s')",
 			user.GroupID, groupPrefix, customPrefix)
 		return service.ErrUnprocessableEntity(errors.New("there are users with locked membership"))

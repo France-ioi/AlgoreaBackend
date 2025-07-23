@@ -19,7 +19,7 @@ import (
 func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 121}]
 		users: [{group_id: 121}]
 		attempts: [{id: 56, participant_id: 121}]
@@ -78,7 +78,7 @@ func TestAnswerStore_SubmitNewAnswer(t *testing.T) {
 
 func TestAnswerStore_CreateNewAnswer(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 121}, {id: 122}]
 		users: [{group_id: 122}]
 		attempts: [{id: 56, participant_id: 121}]
@@ -120,7 +120,7 @@ func TestAnswerStore_CreateNewAnswer(t *testing.T) {
 
 func TestAnswerStore_CreateNewAnswer_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 121}]
 		users: [{group_id: 121}]
 		attempts: [{id: 56, participant_id: 121}]

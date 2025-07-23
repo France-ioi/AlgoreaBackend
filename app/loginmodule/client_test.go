@@ -199,11 +199,9 @@ func TestClient_GetUserProfile(t *testing.T) {
 			httpmock.RegisterStubRequests(httpmock.NewStubRequest("GET",
 				moduleURL+"/user_api/account", responder,
 				httpmock.WithHeader(&http.Header{"Authorization": {"Bearer accesstoken"}})))
+			ctx, _, hook := logging.NewContextWithNewMockLogger()
 
-			hook, restoreLogFunc := logging.MockSharedLoggerHook()
-			defer restoreLogFunc()
-
-			gotProfile, err := client.GetUserProfile(context.Background(), "accesstoken")
+			gotProfile, err := client.GetUserProfile(ctx, "accesstoken")
 
 			assert.Equal(t, tt.expectedErr, err)
 			assert.Equal(t, tt.expectedProfile, gotProfile)
@@ -394,30 +392,30 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 		endpoint     string
 		errorMessage string
 		params       string
-		action       func(*Client) (bool, error)
+		action       func(context.Context, *Client) (bool, error)
 	}{
 		{
 			endpoint:     "accounts_manager/unlink_client",
 			errorMessage: "can't unlink the user",
 			params:       "user_id=123456",
-			action: func(client *Client) (bool, error) {
-				return client.UnlinkClient(context.Background(), "clientID", "clientKeyclientKey", 123456)
+			action: func(ctx context.Context, client *Client) (bool, error) {
+				return client.UnlinkClient(ctx, "clientID", "clientKeyclientKey", 123456)
 			},
 		},
 		{
 			endpoint:     "accounts_manager/delete",
 			errorMessage: "can't delete users",
 			params:       "prefix=prefix_subprefix_",
-			action: func(client *Client) (bool, error) {
-				return client.DeleteUsers(context.Background(), "clientID", "clientKeyclientKey", "prefix_subprefix_")
+			action: func(ctx context.Context, client *Client) (bool, error) {
+				return client.DeleteUsers(ctx, "clientID", "clientKeyclientKey", "prefix_subprefix_")
 			},
 		},
 		{
 			endpoint:     "lti_result/send",
 			errorMessage: "can't publish score",
 			params:       "user_id=1234&content_id=5678&score=99.9",
-			action: func(client *Client) (bool, error) {
-				return client.SendLTIResult(context.Background(), "clientID", "clientKeyclientKey", 1234, 5678, 99.9)
+			action: func(ctx context.Context, client *Client) (bool, error) {
+				return client.SendLTIResult(ctx, "clientID", "clientKeyclientKey", 1234, 5678, 99.9)
 			},
 		},
 	} {
@@ -493,11 +491,9 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 						moduleURL+"/platform_api/"+testSuite.endpoint, responder,
 						httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
 						httpmock.WithBody(bytes.NewReader(requestBody))))
+					ctx, _, hook := logging.NewContextWithNewMockLogger()
 
-					hook, restoreLogFunc := logging.MockSharedLoggerHook()
-					defer restoreLogFunc()
-
-					result, err := testSuite.action(client)
+					result, err := testSuite.action(ctx, client)
 
 					assert.Equal(t, tt.expectedResult, result)
 					assert.Equal(t, tt.expectedErr, err)
@@ -632,13 +628,12 @@ func TestClient_CreateUsers(t *testing.T) {
 				httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
 				httpmock.WithBody(bytes.NewReader(requestBody))))
 
-			hook, restoreLogFunc := logging.MockSharedLoggerHook()
-			defer restoreLogFunc()
+			ctx, _, hook := logging.NewContextWithNewMockLogger()
 
 			if tt.params == nil {
 				tt.params = &CreateUsersParams{}
 			}
-			result, data, err := client.CreateUsers(context.Background(), "clientID", "clientKeyclientKey", tt.params)
+			result, data, err := client.CreateUsers(ctx, "clientID", "clientKeyclientKey", tt.params)
 			assert.Equal(t, tt.expectedResult, result)
 			assert.Equal(t, tt.expectedErr, err)
 			assert.Equal(t, tt.expectedData, data)

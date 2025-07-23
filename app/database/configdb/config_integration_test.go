@@ -12,9 +12,12 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestCheckConfig_Integration(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name          string
 		config        []domain.ConfigItem
@@ -131,10 +134,13 @@ groups_groups:
 		},
 	}
 
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(tt.fixtures)
+			testoutput.SuppressIfPasses(t)
+
+			db := testhelpers.SetupDBWithFixtureString(ctx, tt.fixtures)
 			defer func() { _ = db.Close() }()
 
 			conf := viper.New()
@@ -151,6 +157,8 @@ groups_groups:
 }
 
 func TestCreateMissingData_Integration(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name                  string
 		config                []domain.ConfigItem
@@ -188,10 +196,11 @@ groups_groups:
 		},
 	}
 
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(tt.fixtures)
+			db := testhelpers.SetupDBWithFixtureString(ctx, tt.fixtures)
 			defer func() { _ = db.Close() }()
 
 			conf := viper.New()

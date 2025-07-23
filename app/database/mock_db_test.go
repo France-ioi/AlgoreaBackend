@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"reflect"
@@ -10,16 +11,22 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
 	for _, test := range []struct {
 		name string
 		f    func()
 	}{
 		{"NewDBMock", func() { _, _ = NewDBMock() }},
-		{"NewDBMockWithLogConfig", func() { _, _ = NewDBMockWithLogConfig(LogConfig{}, false) }},
+		{"NewDBMockWithLogConfig", func() {
+			_, _ = NewDBMockWithLogConfig(ctx, LogConfig{}, false)
+		}},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
@@ -49,12 +56,17 @@ func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
 }
 
 func TestNewDBMock_ExitsOnGettingErrorFromOpen(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
 	for _, test := range []struct {
 		name string
 		f    func()
 	}{
 		{"NewDBMock", func() { _, _ = NewDBMock() }},
-		{"NewDBMockWithLogConfig", func() { _, _ = NewDBMockWithLogConfig(LogConfig{}, false) }},
+		{"NewDBMockWithLogConfig", func() {
+			_, _ = NewDBMockWithLogConfig(ctx, LogConfig{}, false)
+		}},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
@@ -62,7 +74,7 @@ func TestNewDBMock_ExitsOnGettingErrorFromOpen(t *testing.T) {
 
 			someError := errors.New("some error")
 
-			monkey.Patch(OpenWithLogConfig, func(interface{}, LogConfig, bool) (*DB, error) { return nil, someError })
+			monkey.Patch(OpenWithLogConfig, func(context.Context, interface{}, LogConfig, bool) (*DB, error) { return nil, someError })
 			defer monkey.UnpatchAll()
 
 			assert.PanicsWithError(t, "unable to create the gorm connection to the mock: some error", func() {

@@ -15,21 +15,21 @@ import (
 )
 
 func TestBuildConfig_LoadsKeysFromFile(t *testing.T) {
-	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
+	tmpFilePublic, err := createTmpPublicKeyFile([]byte(tokentest.AlgoreaPlatformPublicKey))
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
 	require.NoError(t, err)
 
-	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
+	tmpFilePrivate, err := createTmpPrivateKeyFile([]byte(tokentest.AlgoreaPlatformPrivateKey))
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
 	require.NoError(t, err)
 
-	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.AlgoreaPlatformPrivateKey))
 	require.NoError(t, err)
-	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.AlgoreaPlatformPublicKey))
 	require.NoError(t, err)
 
 	config := viper.New()
@@ -46,9 +46,9 @@ func TestBuildConfig_LoadsKeysFromFile(t *testing.T) {
 }
 
 func TestBuildConfig_LoadsKeysFromString(t *testing.T) {
-	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM(tokentest.AlgoreaPlatformPrivateKey)
+	expectedPrivateKey, err := crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.AlgoreaPlatformPrivateKey))
 	require.NoError(t, err)
-	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM(tokentest.AlgoreaPlatformPublicKey)
+	expectedPublicKey, err := crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.AlgoreaPlatformPublicKey))
 	require.NoError(t, err)
 
 	config := viper.New()
@@ -65,7 +65,7 @@ func TestBuildConfig_LoadsKeysFromString(t *testing.T) {
 }
 
 func TestBuildConfig_CannotLoadPublicKey(t *testing.T) {
-	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
+	tmpFilePrivate, err := createTmpPrivateKeyFile([]byte(tokentest.AlgoreaPlatformPrivateKey))
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
@@ -80,7 +80,7 @@ func TestBuildConfig_CannotLoadPublicKey(t *testing.T) {
 }
 
 func TestBuildConfig_CannotLoadPrivateKey(t *testing.T) {
-	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
+	tmpFilePublic, err := createTmpPublicKeyFile([]byte(tokentest.AlgoreaPlatformPublicKey))
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}
@@ -96,7 +96,7 @@ func TestBuildConfig_CannotLoadPrivateKey(t *testing.T) {
 }
 
 func TestBuildConfig_CannotParsePublicKey(t *testing.T) {
-	tmpFilePrivate, err := createTmpPrivateKeyFile(tokentest.AlgoreaPlatformPrivateKey)
+	tmpFilePrivate, err := createTmpPrivateKeyFile([]byte(tokentest.AlgoreaPlatformPrivateKey))
 	if tmpFilePrivate != nil {
 		defer func() { _ = os.Remove(tmpFilePrivate.Name()) }()
 	}
@@ -124,7 +124,7 @@ func TestBuildConfig_CannotParsePrivateKey(t *testing.T) {
 	}
 	require.NoError(t, err)
 
-	tmpFilePublic, err := createTmpPublicKeyFile(tokentest.AlgoreaPlatformPublicKey)
+	tmpFilePublic, err := createTmpPublicKeyFile([]byte(tokentest.AlgoreaPlatformPublicKey))
 	if tmpFilePublic != nil {
 		defer func() { _ = os.Remove(tmpFilePublic.Name()) }()
 	}

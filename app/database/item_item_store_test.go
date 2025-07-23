@@ -73,9 +73,9 @@ func TestItemItemStore_PropagationEnums(t *testing.T) {
 			var oldLock *monkey.PatchGuard
 			oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 				oldLock.Unpatch()
+				fakeDBEnums(test.columnName, test.name2index, test.index2name)
 				mutex.Lock()
 				oldLock.Restore()
-				fakeDBEnums(test.columnName, test.name2index, test.index2name)
 			})
 			defer monkey.UnpatchAll()
 			defer ClearAllDBEnums()

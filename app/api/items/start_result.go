@@ -152,6 +152,7 @@ func (srv *Service) startResult(responseWriter http.ResponseWriter, httpRequest 
 	return nil
 }
 
+//nolint:gochecknoglobals // this is a global variable to store the default hook, used for testing purposes only
 var onBeforeInsertingResultInResultStartHook atomic.Value
 
 func init() { //nolint:gochecknoinits // this is an initialization function to store the default hook

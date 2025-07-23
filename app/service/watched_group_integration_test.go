@@ -21,7 +21,7 @@ import (
 func TestBase_ResolveWatchedGroupID(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1, type: Class}, {id: 2, type: Team}, {id: 3, type: Other}, {id: 4, type: User}, {id: 5, type: User}, {id: 6, type: Team}]
 		groups_groups:
 			- {parent_group_id: 1, child_group_id: 4}
@@ -65,6 +65,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			req, _ := http.NewRequest(http.MethodGet, tt.url, http.NoBody)
+			req = req.WithContext(db.GetContext())
 			watchedGroupID, watchedGroupIDIsSet, gotError := srv.ResolveWatchedGroupID(req)
 			assert.Equal(t, tt.wantWatchedGroupID, watchedGroupID)
 			assert.Equal(t, tt.wantWatchedGroupIDIsSet, watchedGroupIDIsSet)

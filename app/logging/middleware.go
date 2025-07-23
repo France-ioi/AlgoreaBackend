@@ -43,7 +43,7 @@ func NewStructuredLogger() func(next http.Handler) http.Handler {
 
 // NewLogEntry sets default request log fields.
 func (l *StructuredLogger) NewLogEntry(httpRequest *http.Request) middleware.LogEntry {
-	entry := &StructuredLoggerEntry{Logger: SharedLogger.WithContext(httpRequest.Context())}
+	entry := &StructuredLoggerEntry{Logger: EntryFromContext(httpRequest.Context())}
 	logFields := logrus.Fields{}
 
 	logFields["type"] = "web"

@@ -14,6 +14,9 @@ import (
 )
 
 func TestUser_CanSeeAnswer(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name           string
 		userID         int64
@@ -76,7 +79,7 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				groups: [{id: 101}, {id: 102}, {id: 111}, {id: 121}]
 				users:
 					- {login: "john", group_id: 101}

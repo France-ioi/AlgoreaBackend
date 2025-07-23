@@ -153,137 +153,139 @@ type groupGroupTransitionRule struct {
 	IfNotEnoughApprovalsDowngradeTo GroupMembershipAction
 }
 
-var groupGroupTransitionRules = map[GroupGroupTransitionAction]groupGroupTransitionRule{
-	AdminCreatesInvitation: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:          InvitationCreated,
-			InvitationCreated:   InvitationCreated,
-			JoinRequestCreated:  JoinRequestAccepted,
-			LeaveRequestExpired: InvitationCreated,
+func groupGroupTransitionRuleForAction(action GroupGroupTransitionAction) groupGroupTransitionRule {
+	return map[GroupGroupTransitionAction]groupGroupTransitionRule{
+		AdminCreatesInvitation: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				NoRelation:          InvitationCreated,
+				InvitationCreated:   InvitationCreated,
+				JoinRequestCreated:  JoinRequestAccepted,
+				LeaveRequestExpired: InvitationCreated,
+			},
+			IfNotEnoughApprovalsDowngradeTo: InvitationCreated, // only JoinRequestAccepted requires approvals.
 		},
-		IfNotEnoughApprovalsDowngradeTo: InvitationCreated, // only JoinRequestAccepted requires approvals.
-	},
-	UserCreatesJoinRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:          JoinRequestCreated,
-			JoinRequestCreated:  JoinRequestCreated,
-			LeaveRequestExpired: JoinRequestCreated,
+		UserCreatesJoinRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				NoRelation:          JoinRequestCreated,
+				JoinRequestCreated:  JoinRequestCreated,
+				LeaveRequestExpired: JoinRequestCreated,
+			},
 		},
-	},
-	UserCreatesAcceptedJoinRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:          JoinRequestAccepted,
-			JoinRequestCreated:  JoinRequestAccepted,
-			InvitationCreated:   JoinRequestAccepted,
-			LeaveRequestExpired: JoinRequestAccepted,
+		UserCreatesAcceptedJoinRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				NoRelation:          JoinRequestAccepted,
+				JoinRequestCreated:  JoinRequestAccepted,
+				InvitationCreated:   JoinRequestAccepted,
+				LeaveRequestExpired: JoinRequestAccepted,
+			},
 		},
-	},
-	UserJoinsGroupByBadge: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:          JoinedByBadge,
-			JoinRequestCreated:  JoinedByBadge,
-			InvitationCreated:   JoinedByBadge,
-			LeaveRequestExpired: JoinedByBadge,
+		UserJoinsGroupByBadge: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				NoRelation:          JoinedByBadge,
+				JoinRequestCreated:  JoinedByBadge,
+				InvitationCreated:   JoinedByBadge,
+				LeaveRequestExpired: JoinedByBadge,
+			},
 		},
-	},
-	UserJoinsGroupByCode: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			NoRelation:          JoinedByCode,
-			JoinRequestCreated:  JoinedByCode,
-			InvitationCreated:   JoinedByCode,
-			LeaveRequestExpired: JoinedByCode,
+		UserJoinsGroupByCode: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				NoRelation:          JoinedByCode,
+				JoinRequestCreated:  JoinedByCode,
+				InvitationCreated:   JoinedByCode,
+				LeaveRequestExpired: JoinedByCode,
+			},
 		},
-	},
-	UserAcceptsInvitation: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			InvitationCreated: InvitationAccepted,
+		UserAcceptsInvitation: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				InvitationCreated: InvitationAccepted,
+			},
 		},
-	},
-	AdminAcceptsJoinRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			JoinRequestCreated: JoinRequestAccepted,
+		AdminAcceptsJoinRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				JoinRequestCreated: JoinRequestAccepted,
+			},
 		},
-	},
-	AdminAcceptsLeaveRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			LeaveRequestCreated: LeaveRequestAccepted,
+		AdminAcceptsLeaveRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				LeaveRequestCreated: LeaveRequestAccepted,
+			},
 		},
-	},
-	UserRefusesInvitation: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			InvitationCreated: InvitationRefused,
+		UserRefusesInvitation: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				InvitationCreated: InvitationRefused,
+			},
 		},
-	},
-	AdminRefusesJoinRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			JoinRequestCreated: JoinRequestRefused,
+		AdminRefusesJoinRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				JoinRequestCreated: JoinRequestRefused,
+			},
 		},
-	},
-	AdminRefusesLeaveRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			LeaveRequestCreated: LeaveRequestRefused,
+		AdminRefusesLeaveRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				LeaveRequestCreated: LeaveRequestRefused,
+			},
 		},
-	},
-	AdminRemovesUser: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			IsMember:            Removed,
-			LeaveRequestCreated: Removed,
+		AdminRemovesUser: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				IsMember:            Removed,
+				LeaveRequestCreated: Removed,
+			},
 		},
-	},
-	AdminWithdrawsInvitation: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			InvitationCreated: InvitationWithdrawn,
+		AdminWithdrawsInvitation: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				InvitationCreated: InvitationWithdrawn,
+			},
 		},
-	},
-	UserLeavesGroup: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			IsMember:            Left,
-			LeaveRequestCreated: Left,
+		UserLeavesGroup: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				IsMember:            Left,
+				LeaveRequestCreated: Left,
+			},
 		},
-	},
-	UserCreatesLeaveRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			IsMember:            LeaveRequestCreated,
-			LeaveRequestCreated: LeaveRequestCreated,
+		UserCreatesLeaveRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				IsMember:            LeaveRequestCreated,
+				LeaveRequestCreated: LeaveRequestCreated,
+			},
 		},
-	},
-	UserCancelsJoinRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			JoinRequestCreated: JoinRequestWithdrawn,
+		UserCancelsJoinRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				JoinRequestCreated: JoinRequestWithdrawn,
+			},
 		},
-	},
-	UserCancelsLeaveRequest: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			LeaveRequestCreated: LeaveRequestWithdrawn,
+		UserCancelsLeaveRequest: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				LeaveRequestCreated: LeaveRequestWithdrawn,
+			},
 		},
-	},
-	AdminRemovesDirectRelation: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			IsMember:            NoRelation,
-			NoRelation:          NoRelation,
-			LeaveRequestCreated: NoRelation,
+		AdminRemovesDirectRelation: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				IsMember:            NoRelation,
+				NoRelation:          NoRelation,
+				LeaveRequestCreated: NoRelation,
+			},
 		},
-	},
-	AdminStrengthensApprovalWithEmpty: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			IsMember:            RemovedDueToApprovalChange,
-			NoRelation:          NoRelation,
-			JoinRequestCreated:  NoRelation,
-			LeaveRequestCreated: RemovedDueToApprovalChange,
-			LeaveRequestExpired: RemovedDueToApprovalChange,
-			InvitationCreated:   NoRelation,
+		AdminStrengthensApprovalWithEmpty: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				IsMember:            RemovedDueToApprovalChange,
+				NoRelation:          NoRelation,
+				JoinRequestCreated:  NoRelation,
+				LeaveRequestCreated: RemovedDueToApprovalChange,
+				LeaveRequestExpired: RemovedDueToApprovalChange,
+				InvitationCreated:   NoRelation,
+			},
 		},
-	},
-	AdminStrengthensApprovalWithReinvite: {
-		Transitions: map[GroupMembershipAction]GroupMembershipAction{
-			IsMember:            InvitationCreated,
-			NoRelation:          NoRelation,
-			JoinRequestCreated:  NoRelation,
-			LeaveRequestCreated: RemovedDueToApprovalChange,
-			LeaveRequestExpired: RemovedDueToApprovalChange,
-			InvitationCreated:   InvitationCreated,
+		AdminStrengthensApprovalWithReinvite: {
+			Transitions: map[GroupMembershipAction]GroupMembershipAction{
+				IsMember:            InvitationCreated,
+				NoRelation:          NoRelation,
+				JoinRequestCreated:  NoRelation,
+				LeaveRequestCreated: RemovedDueToApprovalChange,
+				LeaveRequestExpired: RemovedDueToApprovalChange,
+				InvitationCreated:   InvitationCreated,
+			},
 		},
-	},
+	}[action]
 }
 
 // GroupGroupTransitionResult is an enum{cycle, invalid, success, unchanged}.
@@ -673,7 +675,7 @@ func buildTransitionsPlan(parentGroupID int64, childGroupIDs []int64, results Gr
 
 		oldState := oldStatesMap[childGroupID]
 
-		toAction, toActionOK := groupGroupTransitionRules[action].Transitions[oldState.Action]
+		toAction, toActionOK := groupGroupTransitionRuleForAction(action).Transitions[oldState.Action]
 		if !toActionOK || !checkIfApprovalsAreOK(
 			oldState, &toAction, results, groupRequiredApprovals, approvals, approvalsToRequest, action, childGroupID) {
 			continue
@@ -696,8 +698,9 @@ func checkIfApprovalsAreOK(oldState stateInfo, toAction *GroupMembershipAction,
 	if ok {
 		return true
 	}
-	if groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo != NoRelation {
-		*toAction = groupGroupTransitionRules[action].IfNotEnoughApprovalsDowngradeTo
+	transitionRule := groupGroupTransitionRuleForAction(action)
+	if transitionRule.IfNotEnoughApprovalsDowngradeTo != NoRelation {
+		*toAction = transitionRule.IfNotEnoughApprovalsDowngradeTo
 		return true
 	}
 

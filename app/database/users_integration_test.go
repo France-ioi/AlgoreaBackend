@@ -48,7 +48,7 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 			want:   true,
 		},
 	}
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 1, type: Class}
 			- {id: 2, type: Team}

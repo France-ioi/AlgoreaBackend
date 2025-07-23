@@ -19,7 +19,7 @@ import (
 func Test_createParticipantsGroupForItemRequiringExplicitEntry_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1, type: "ContestParticipants"}]
 		items: [{id: 123, default_language_tag: fr}]`)
 	defer func() { _ = db.Close() }()

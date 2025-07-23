@@ -16,7 +16,7 @@ import (
 func TestDB_WhereSearchStringMatches_Integration(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 111, name: 'précédente'}
 			- {id: 222, name: 'jusqu''à'}

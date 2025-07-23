@@ -16,6 +16,8 @@ import (
 )
 
 func Test_filterOtherTeamsMembersOut(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name           string
 		fixture        string
@@ -246,12 +248,14 @@ func Test_filterOtherTeamsMembersOut(t *testing.T) {
 			wantWrongIDs:   []int64{10, 11, 12, 13},
 		},
 	}
+
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(tt.fixture)
+			db := testhelpers.SetupDBWithFixtureString(ctx, tt.fixture)
 			defer func() { _ = db.Close() }()
 
 			results := make(map[string]string, len(tt.groupsToInvite))

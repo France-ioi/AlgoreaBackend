@@ -37,7 +37,7 @@ func CreateNewTempSession(store *database.DataStore, userID int64) (
 	})
 
 	if err == nil {
-		logging.SharedLogger.WithContext(store.GetContext()).
+		logging.EntryFromContext(store.GetContext()).
 			Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
 				expiresIn, userID)
 	}
@@ -58,7 +58,7 @@ func RefreshTempUserSession(store *database.DataStore, userID, sessionID int64) 
 	})
 
 	if err == nil {
-		logging.SharedLogger.WithContext(store.GetContext()).
+		logging.EntryFromContext(store.GetContext()).
 			Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
 				expiresIn, userID)
 	}

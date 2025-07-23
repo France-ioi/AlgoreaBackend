@@ -48,6 +48,7 @@ func PropagationStepSetResults() *golang.Set[PropagationStep] {
 // BeforePropagationStepHookFunc is a type of a function that is called before each propagation step.
 type BeforePropagationStepHookFunc func(step PropagationStep)
 
+//nolint:gochecknoglobals // this hook is for testing purposes only
 var (
 	// beforePropagationStepHook is a hook that is called before each propagation step.
 	beforePropagationStepHook BeforePropagationStepHookFunc = func(_ PropagationStep) {}

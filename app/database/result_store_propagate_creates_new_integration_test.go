@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,7 @@ type resultStorePropagateCreatesNewTestCase struct {
 	rootItemID         *int64
 }
 
-func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropagateCreatesNewTestCase) {
+func testResultStorePropagateCreatesNew(ctx context.Context, t *testing.T, testCase *resultStorePropagateCreatesNewTestCase) {
 	t.Helper()
 
 	mergedFixtures := make([]string, 0, len(testCase.fixtures)+1)
@@ -66,7 +67,7 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 			- {participant_id: 3, attempt_id: 1, item_id: 333, state: to_be_propagated}
 	`)
 	mergedFixtures = append(mergedFixtures, testCase.fixtures...)
-	db := testhelpers.SetupDBWithFixtureString(mergedFixtures...)
+	db := testhelpers.SetupDBWithFixtureString(ctx, mergedFixtures...)
 	defer func() { _ = db.Close() }()
 
 	if testCase.rootItemID != nil {
@@ -147,7 +148,9 @@ func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
-			testResultStorePropagateCreatesNew(t, &test)
+
+			ctx := testhelpers.CreateTestContext()
+			testResultStorePropagateCreatesNew(ctx, t, &test)
 		})
 	}
 }

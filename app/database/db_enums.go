@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+//nolint:gochecknoglobals // these variables are used to store the enums loaded from the DB
 var (
 	enumsMutex  sync.RWMutex
 	enumColumns = []string{

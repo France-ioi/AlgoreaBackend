@@ -17,6 +17,8 @@ import (
 )
 
 func Test_checkPreconditionsForGroupRequests(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name      string
 		fixture   string
@@ -177,12 +179,14 @@ func Test_checkPreconditionsForGroupRequests(t *testing.T) {
 			wantError: service.ErrUnprocessableEntity(errors.New("team's participations are in conflict with the user's participations")),
 		},
 	}
+
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(tt.fixture)
+			db := testhelpers.SetupDBWithFixtureString(ctx, tt.fixture)
 			defer func() { _ = db.Close() }()
 
 			store := database.NewDataStore(db)

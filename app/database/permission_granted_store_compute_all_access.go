@@ -149,7 +149,7 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 			mustNotBeError(result.Error())
 			rowsAffected := result.RowsAffected()
 
-			logging.SharedLogger.WithContext(store.ctx()).
+			logging.EntryFromContext(store.ctx()).
 				Debugf("Duration of permissions propagation step: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
 
 			hasChanges = rowsAffected > 0

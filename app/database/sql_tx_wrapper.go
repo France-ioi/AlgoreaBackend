@@ -163,7 +163,7 @@ func (sqlTX *sqlTxWrapper) handleCommitOrRollbackError(err error) error {
 		if errorWasPatched {
 			errString += " (the transaction has been rolled back implicitly)"
 		}
-		log.SharedLogger.WithContext(sqlTX.ctx).WithFields(
+		log.EntryFromContext(sqlTX.ctx).WithFields(
 			map[string]interface{}{"type": "db", "fileline": fileWithLineNum()}).Error(errString)
 	}
 	return err

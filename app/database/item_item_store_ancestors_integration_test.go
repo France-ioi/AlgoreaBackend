@@ -3,7 +3,6 @@
 package database_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,11 +26,11 @@ type itemPropagateResultRow struct {
 func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
-		dataStore := database.NewDataStoreWithContext(context.Background(), db)
+		dataStore := database.NewDataStoreWithContext(db.GetContext(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
 			return ds.ItemItems().CreateNewAncestors()
 		}))
@@ -62,7 +61,8 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common", "item_item_store/ancestors/cyclic")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(),
+		"item_item_store/ancestors/_common", "item_item_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
 
 	itemItemStore := database.NewDataStore(db).ItemItems()
@@ -90,7 +90,7 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	itemItemStore := database.NewDataStore(db).ItemItems()

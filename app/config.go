@@ -13,6 +13,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
@@ -94,15 +95,17 @@ func configDirectory() string {
 }
 
 // ReplaceAuthConfig replaces the auth part of the config by the given one.
-func (app *Application) ReplaceAuthConfig(newGlobalConfig *viper.Viper) {
+// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
+func (app *Application) ReplaceAuthConfig(newGlobalConfig *viper.Viper, loggerOptional ...*logging.Logger) {
 	app.Config.Set(authConfigKey, newGlobalConfig.Get(authConfigKey))
-	_ = app.Reset(app.Config) // cannot return an error in this case
+	_ = app.Reset(app.Config, loggerOptional...) // cannot return an error in this case
 }
 
 // ReplaceDomainsConfig replaces the domains part of the config by the given one.
-func (app *Application) ReplaceDomainsConfig(newGlobalConfig *viper.Viper) {
+// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
+func (app *Application) ReplaceDomainsConfig(newGlobalConfig *viper.Viper, loggerOptional ...*logging.Logger) {
 	app.Config.Set(domainsConfigKey, newGlobalConfig.Get(domainsConfigKey))
-	if err := app.Reset(app.Config); err != nil {
+	if err := app.Reset(app.Config, loggerOptional...); err != nil {
 		panic(err)
 	}
 }

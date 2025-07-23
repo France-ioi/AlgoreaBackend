@@ -3,7 +3,6 @@
 package database_test
 
 import (
-	"context"
 	"database/sql/driver"
 	"testing"
 
@@ -14,20 +13,22 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 )
 
 func Test_ConnectionOfWrappedDriverImplementsDriverSessionResetter(t *testing.T) {
 	appenv.ForceTestEnv()
 
+	ctx := testhelpers.CreateTestContext()
 	// needs actual config for connection to DB
-	config := app.LoadConfig()
+	config := testhelpers.GetConfigFromContext(ctx)
 	dbConfig, _ := app.DBConfig(config)
 	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN(), true)
 	require.NoError(t, err)
 	defer func() { assert.NoError(t, rawDB.Close()) }()
 
 	assert.IsType(t, (*instrumentedsql.WrappedDriver)(nil), rawDB.Driver())
-	connection, err := rawDB.Conn(context.Background())
+	connection, err := rawDB.Conn(ctx)
 	require.NoError(t, err)
 	defer func() { assert.NoError(t, connection.Close()) }()
 

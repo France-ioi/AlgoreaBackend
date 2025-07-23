@@ -3,6 +3,7 @@
 package database_test
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"testing"
@@ -29,7 +30,7 @@ func (r validatedResultRow) LessThan(other validatedResultRow) bool {
 		r.ParticipantID == other.ParticipantID && r.AttemptID == other.AttemptID && r.ItemID < other.ItemID
 }
 
-func testResultStorePropagateValidated(t *testing.T, fixtures []string,
+func testResultStorePropagateValidated(ctx context.Context, t *testing.T, fixtures []string,
 	validationType string,
 	prepareFunc func(*testing.T, *database.ResultStore), expectedResults []validatedResultRow,
 ) {
@@ -37,7 +38,7 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture(fixtures...)
+	db := testhelpers.SetupDBWithFixture(ctx, fixtures...)
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -60,6 +61,8 @@ func testResultStorePropagateValidated(t *testing.T, fixtures []string,
 }
 
 func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name string
 	}{
@@ -67,12 +70,13 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 		{name: "Manual"},
 	}
 
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			testResultStorePropagateValidated(t,
+			testResultStorePropagateValidated(ctx, t,
 				[]string{"results_propagation/_common"},
 				tt.name,
 				func(t *testing.T, resultStore *database.ResultStore) {
@@ -91,7 +95,7 @@ func TestResultStore_Propagate_ValidatedWithValidationTypeOneBecomesValidatedWhe
 ) {
 	testoutput.SuppressIfPasses(t)
 
-	testResultStorePropagateValidated(t,
+	testResultStorePropagateValidated(testhelpers.CreateTestContext(), t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
 		func(t *testing.T, resultStore *database.ResultStore) {
@@ -108,7 +112,7 @@ func TestResultStore_Propagate_ValidatedWithValidationTypeOneStaysNonValidatedWh
 ) {
 	testoutput.SuppressIfPasses(t)
 
-	testResultStorePropagateValidated(t,
+	testResultStorePropagateValidated(testhelpers.CreateTestContext(), t,
 		[]string{"results_propagation/_common", "results_propagation/validated/one"},
 		"One",
 		nil,
@@ -118,6 +122,9 @@ func TestResultStore_Propagate_ValidatedWithValidationTypeOneStaysNonValidatedWh
 }
 
 func TestResultStore_Propagate_Validated(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name            string
 		fixtures        []string
@@ -267,8 +274,8 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
-			testResultStorePropagateValidated(t, testCase.fixtures,
-				testCase.validationType, testCase.prepareFunc, testCase.expectedResults)
+			testResultStorePropagateValidated(ctx, t,
+				testCase.fixtures, testCase.validationType, testCase.prepareFunc, testCase.expectedResults)
 		})
 	}
 }

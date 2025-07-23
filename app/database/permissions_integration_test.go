@@ -38,7 +38,7 @@ const joinsPermissionsForGroupToItemsFixture = `
 func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(joinsPermissionsForGroupToItemsFixture)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), joinsPermissionsForGroupToItemsFixture)
 	defer func() { _ = db.Close() }()
 
 	itemStore := database.NewDataStore(db).Items()
@@ -87,7 +87,7 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(joinsPermissionsForGroupToItemsFixture)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), joinsPermissionsForGroupToItemsFixture)
 	defer func() { _ = db.Close() }()
 
 	itemStore := database.NewDataStore(db).Items()

@@ -20,8 +20,10 @@ import (
 )
 
 func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	expectedParsedPayload := payloads.HintToken{}
-	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &expectedParsedPayload)
+	_ = payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform(), &expectedParsedPayload)
 	expectedToken := &token.Token[payloads.HintToken]{Payload: expectedParsedPayload}
 	tests := []struct {
 		name                   string
@@ -98,8 +100,8 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 				`items: [{id: 50, platform_id: 10, url: "http://taskplatform4.mblockelet.info/task.html?taskId=403449543672183936",
 				          default_language_tag: fr}]`,
 			},
-			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform,
-				tokentest.TaskPlatformPrivateKeyParsed))),
+			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform(),
+				tokentest.TaskPlatformPrivateKeyParsed()))),
 			tokenFieldName:         "hint_requested",
 			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
 			expected:               expectedToken,
@@ -122,12 +124,14 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 			expectedErr:            nil,
 		},
 	}
+
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(tt.fixtures...)
+			db := testhelpers.SetupDBWithFixtureString(ctx, tt.fixtures...)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			hasPlatformKey, err := token.UnmarshalDependingOnItemPlatform(store, tt.itemID, tt.target, tt.token, tt.tokenFieldName)

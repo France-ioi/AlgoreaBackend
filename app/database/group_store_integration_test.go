@@ -17,6 +17,9 @@ import (
 )
 
 func TestGroupStore_CreateNew(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		groupType            string
 		shouldCreateAttempts bool
@@ -28,7 +31,7 @@ func TestGroupStore_CreateNew(t *testing.T) {
 		t.Run(test.groupType, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString()
+			db := testhelpers.SetupDBWithFixtureString(ctx)
 			defer func() { _ = db.Close() }()
 
 			var newID int64
@@ -82,7 +85,7 @@ func TestGroupStore_CreateNew(t *testing.T) {
 
 func TestGroupStore_CreateNew_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
-	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, name: "Some group"}]`)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `groups: [{id: 1, name: "Some group"}]`)
 	defer func() { _ = db.Close() }()
 
 	var nextID int64
@@ -102,6 +105,8 @@ func TestGroupStore_CreateNew_Duplicate(t *testing.T) {
 }
 
 func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	const mainFixture = `
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
 		groups_groups:
@@ -111,6 +116,9 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 		attempts: [{participant_id: 2, id: 100, root_item_id: 10}]
 		results: [{participant_id: 2, attempt_id: 100, item_id: 10, started_at: 2019-05-30 11:00:00}]
 	`
+
+	ctx := testhelpers.CreateTestContext()
+
 	type args struct {
 		teamGroupID int64
 		userID      int64
@@ -354,7 +362,7 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(mainFixture, tt.fixture)
+			db := testhelpers.SetupDBWithFixtureString(ctx, mainFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			for _, withLock := range []bool{true, false} {
 				withLock := withLock
@@ -385,7 +393,7 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 func TestGroupStore_DeleteGroup(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1234}]`)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `groups: [{id: 1234}]`)
 	defer func() { _ = db.Close() }()
 	groupStore := database.NewDataStore(db).Groups()
 	assert.NoError(t, groupStore.InTransaction(func(store *database.DataStore) error {
@@ -401,6 +409,7 @@ func TestGroupStore_DeleteGroup(t *testing.T) {
 func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		name    string
 		fixture string
@@ -432,7 +441,7 @@ func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(test.fixture)
+			db := testhelpers.SetupDBWithFixtureString(ctx, test.fixture)
 			defer func() { _ = db.Close() }()
 
 			store := database.NewDataStore(db)
@@ -448,8 +457,11 @@ func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
 }
 
 func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	const expectedErrorMessage = "Error 1644 (45000): Unable to change groups.type from/to User/Team"
 
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		oldType     string
 		newType     string
@@ -469,7 +481,7 @@ func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
 		t.Run(fmt.Sprintf("%s to %s", test.oldType, test.newType), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, type: ` + test.oldType + `}]`)
+			db := testhelpers.SetupDBWithFixtureString(ctx, `groups: [{id: 1, type: `+test.oldType+`}]`)
 			defer func() { _ = db.Close() }()
 
 			groupGroupStore := database.NewDataStore(db).Groups()

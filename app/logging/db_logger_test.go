@@ -26,11 +26,10 @@ func TestLogger_BooleanConfigFlags(t *testing.T) {
 
 			for _, value := range []bool{true, false} {
 				t.Run("value="+strconv.FormatBool(value), func(t *testing.T) {
-					logger := createLogger()
 					config := viper.New()
 					config.Set(test.flagName, value)
 					config.Set("Output", "stdout")
-					logger.Configure(config)
+					logger := NewLoggerFromConfig(config)
 					assert.Equal(t, value, test.funcToCall(logger))
 				})
 			}

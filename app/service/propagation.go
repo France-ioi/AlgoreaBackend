@@ -24,18 +24,18 @@ func SchedulePropagation(store *database.DataStore, endpoint string, types []str
 		callTime := time.Now()
 		req, _ := http.NewRequestWithContext(store.GetContext(), http.MethodGet, endpoint+"?types="+strings.Join(types, ","), http.NoBody)
 		response, err := client.Do(req)
-		logging.SharedLogger.WithContext(store.GetContext()).
+		logging.EntryFromContext(store.GetContext()).
 			Infof("Propagation endpoint called: %v, types=%v, duration=%v", endpoint, types, time.Since(callTime))
 
 		if err != nil {
-			logging.SharedLogger.WithContext(store.GetContext()).Errorf("Propagation endpoint error: %v", err)
+			logging.EntryFromContext(store.GetContext()).Errorf("Propagation endpoint error: %v", err)
 		} else {
 			defer func(response *http.Response) {
 				_ = response.Body.Close()
 			}(response)
 
 			if response.StatusCode != http.StatusOK {
-				logging.SharedLogger.WithContext(store.GetContext()).
+				logging.EntryFromContext(store.GetContext()).
 					Errorf("Propagation endpoint error: status=%v", response.StatusCode)
 			}
 		}

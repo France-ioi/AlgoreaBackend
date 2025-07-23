@@ -21,13 +21,13 @@ import (
 func Test_createUserGroup_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`groups: [{id: 1, type: "User"}]`)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `groups: [{id: 1, type: "User"}]`)
 	defer func() { _ = db.Close() }()
 
 	expectedTimestamp := "2019-05-30 11:00:00"
 	expectedTime, _ := time.Parse(time.DateTime, expectedTimestamp)
-	testhelpers.MockDBTime(expectedTimestamp)
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime(expectedTimestamp)
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
 	var nextID int64
 	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(*database.DataStore) int64 {

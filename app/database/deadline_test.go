@@ -252,15 +252,14 @@ func Test_Deadline(t *testing.T) {
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db, mock := NewDBMock()
+			ctx, _, logHook := logging.NewContextWithNewMockLogger()
+			db, mock := NewDBMock(ctx)
 			defer func() { _ = db.Close() }()
-			logHook, logRestoreFunc := logging.MockSharedLoggerHook()
-			defer logRestoreFunc()
 
 			if test.setupMock != nil {
 				test.setupMock(mock)
 			}
-			ctx, cancel := context.WithDeadline(context.Background(),
+			ctx, cancel := context.WithDeadline(ctx,
 				time.Now().Add(golang.IfElse(test.timeoutHasPassed, 0, 1*time.Hour)))
 			defer cancel()
 			dataStore := NewDataStoreWithContext(ctx, db)

@@ -93,10 +93,10 @@ const comResetConnection byte = 31
 // but it sends a comResetConnection command instead of a comPing command.
 // Also, it logs the command if raw SQL queries logging is enabled.
 func (mc *mysqlConn) Reset(ctx context.Context) (err error) {
-	if log.SharedLogger.IsRawSQLQueriesLoggingEnabled() {
+	if log.LoggerFromContext(ctx).IsRawSQLQueriesLoggingEnabled() {
 		startTime := time.Now()
 		defer func() {
-			log.SharedLogger.WithContext(ctx).WithFields(map[string]interface{}{
+			log.EntryFromContext(ctx).WithFields(map[string]interface{}{
 				"type": "db", "err": err, "duration": time.Since(startTime).String(),
 			}).Info("sql-conn-reset")
 		}()

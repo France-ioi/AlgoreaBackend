@@ -4,6 +4,7 @@ package logging
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -19,10 +20,6 @@ type Logger struct {
 	config       *viper.Viper
 }
 
-// SharedLogger is the global scope logger
-// It should not be used directly by other packages (except for testing) which should prefer shorthands functions.
-var SharedLogger = createLogger()
-
 const (
 	formatJSON    = "json"
 	formatText    = "text"
@@ -34,6 +31,44 @@ const (
 	outputStderr = "stderr"
 	outputFile   = "file"
 )
+
+type loggerContextKeyType int
+
+const loggerContextKey loggerContextKeyType = iota
+
+// EntryFromContext returns a new logrus entry of the logger from the given context with the context set.
+// The context must have been created with ContextWithLogger, otherwise EntryFromContext will panic.
+func EntryFromContext(ctx context.Context) *logrus.Entry {
+	return LoggerFromContext(ctx).WithContext(ctx)
+}
+
+// LoggerFromContext returns the logger from the given context.
+// The context must have been created with ContextWithLogger, otherwise LoggerFromContext will panic.
+func LoggerFromContext(ctx context.Context) *Logger {
+	return ctx.Value(loggerContextKey).(*Logger)
+}
+
+// ContextWithLogger returns a copy of the given context with the logger set.
+func ContextWithLogger(ctx context.Context, logger *Logger) context.Context {
+	return context.WithValue(ctx, loggerContextKey, logger)
+}
+
+// ContextWithLoggerMiddleware returns a middleware that sets the logger in the request context.
+func ContextWithLoggerMiddleware(logger *Logger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r.WithContext(ContextWithLogger(r.Context(), logger)))
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+// NewLoggerFromConfig creates a new logger from the given configuration.
+func NewLoggerFromConfig(config *viper.Viper) *Logger {
+	logger := createLogger()
+	logger.Configure(config)
+	return logger
+}
 
 // Configure applies the given logging configuration to the logger
 // (may panic if the configuration is invalid).
@@ -95,11 +130,6 @@ func (l *Logger) setOutput(config *viper.Viper) {
 	default:
 		panic("Logging output must be either 'stdout', 'stderr' or 'file'. Got: " + config.GetString("output"))
 	}
-}
-
-// ResetShared reset the global logger to its default settings before its configuration.
-func ResetShared() {
-	SharedLogger = createLogger()
 }
 
 // WithContext returns a new entry with the given context.

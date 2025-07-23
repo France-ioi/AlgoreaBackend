@@ -34,6 +34,9 @@ func (m *sessionIDsInProgressMap) WithLock(sessionID int64, httpRequest *http.Re
 	return funcToRun()
 }
 
+// (See https://github.com/France-ioi/AlgoreaBackend/issues/1219)
+//
+//nolint:gochecknoglobals // This variable stores locked sessions. It's going to be removed after rewriting the lock mechanism.
 var sessionIDsInProgress sessionIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
@@ -91,8 +94,7 @@ func (srv *Service) refreshTokens(
 	err = store.Sessions().Where("session_id = ?", sessionID).
 		PluckFirst("refresh_token", &refreshToken).Error()
 	if refreshToken == "" {
-		logging.SharedLogger.WithContext(ctx).
-			Warnf("No refresh token found in the DB for user %d", user.GroupID)
+		logging.EntryFromContext(ctx).Warnf("No refresh token found in the DB for user %d", user.GroupID)
 		return "", 0, service.ErrNotFound(errors.New("no refresh token found in the DB for the authenticated user"))
 	}
 	service.MustNotBeError(err)
@@ -109,8 +111,7 @@ func (srv *Service) refreshTokens(
 	if errors.As(err, &retrieveError) &&
 		retrieveError.Response.StatusCode == http.StatusUnauthorized {
 		// The refresh token is invalid
-		logging.SharedLogger.WithContext(ctx).
-			Warnf("The refresh token is invalid for user %d", user.GroupID)
+		logging.EntryFromContext(ctx).Warnf("The refresh token is invalid for user %d", user.GroupID)
 
 		deleteSessionFunc()
 		return "", 0, service.ErrNotFound(errors.New("the refresh token is invalid"))

@@ -7,6 +7,7 @@ import (
 	"unsafe"
 )
 
+//nolint:gochecknoglobals // we intentionally use a global random number generator, but make it thread-safe
 var (
 	globalRand = mr.New(mr.NewSource(1)) //nolint:gosec // math/rand is okay as the package is not used for security purposes
 	globalLock sync.Mutex

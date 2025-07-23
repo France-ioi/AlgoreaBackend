@@ -22,11 +22,11 @@ func TestPermissionGrantedStore_ViewIndexByName(t *testing.T) {
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
-		mutex.Lock()
-		oldLock.Restore()
 		fakeDBEnums("permissions_granted.can_view",
 			map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5},
 			map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"})
+		mutex.Lock()
+		oldLock.Restore()
 	})
 	defer monkey.UnpatchAll()
 	defer ClearAllDBEnums()
@@ -46,11 +46,11 @@ func TestPermissionGrantedStore_ViewNameByIndex(t *testing.T) {
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
-		mutex.Lock()
-		oldLock.Restore()
 		fakeDBEnums("permissions_granted.can_view",
 			map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5},
 			map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"})
+		mutex.Lock()
+		oldLock.Restore()
 	})
 	defer monkey.UnpatchAll()
 	defer ClearAllDBEnums()
@@ -86,11 +86,11 @@ func TestPermissionGrantedStore_GrantViewEnum(t *testing.T) {
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
-		mutex.Lock()
-		oldLock.Restore()
 		fakeDBEnums("permissions_granted.can_grant_view",
 			map[string]int{"none": 1, "content": 2, "content_with_descendants": 3, "solution": 4, "solution_with_grant": 5},
 			map[int]string{1: "none", 2: "content", 3: "content_with_descendants", 4: "solution", 5: "solution_with_grant"})
+		mutex.Lock()
+		oldLock.Restore()
 	})
 	defer monkey.UnpatchAll()
 	defer ClearAllDBEnums()
@@ -132,14 +132,14 @@ func TestPermissionGrantedStore_EditEnum(t *testing.T) {
 	var oldLock *monkey.PatchGuard
 	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
-		mutex.Lock()
-		oldLock.Restore()
 		fakeDBEnums("permissions_granted.can_view",
 			map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5},
 			map[int]string{1: "none", 2: "info", 3: "content", 4: "content_with_descendants", 5: "solution"})
 		fakeDBEnums("permissions_granted.can_edit",
 			map[string]int{"none": 1, "children": 2, "all": 3, "all_with_grant": 4},
 			map[int]string{1: "none", 2: "children", 3: "all", 4: "all_with_grant"})
+		mutex.Lock()
+		oldLock.Restore()
 	})
 	defer monkey.UnpatchAll()
 	defer ClearAllDBEnums()
