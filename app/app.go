@@ -3,8 +3,6 @@ package app
 
 import (
 	"context"
-	crand "crypto/rand"
-	"encoding/binary"
 	"fmt"
 	"net/http"
 
@@ -19,7 +17,6 @@ import (
 	_ "github.com/France-ioi/AlgoreaBackend/v2/app/doc" // for doc generation
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
 )
@@ -38,14 +35,6 @@ func New(loggerOptional ...*logging.Logger) (*Application, error) {
 	// Getting all configs, they will be used to init components and to be passed
 	config := LoadConfig()
 	application := &Application{}
-
-	var randomBytes [8]byte
-	_, err := crand.Read(randomBytes[:])
-	if err != nil {
-		panic("cannot seed the randomizer")
-	}
-	// Init the PRNG with a random value
-	rand.Seed(int64(binary.LittleEndian.Uint64(randomBytes[:]))) //nolint:gosec // G115: we don't care if a big number becomes negative
 
 	if err := application.Reset(config, loggerOptional...); err != nil {
 		return nil, err
