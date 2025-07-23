@@ -19,6 +19,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func init() { //nolint:gochecknoinits
@@ -28,6 +29,8 @@ func init() { //nolint:gochecknoinits
 const devEnv = "dev"
 
 func TestLoadConfigFrom(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	// the test environment doesn't allow the merge of the config with a main config file for security reasons
 	// so here we mock the function that returns the current environment, because we want to test the merge
 	// of the config with the main config file
@@ -65,6 +68,8 @@ func TestLoadConfigFrom(t *testing.T) {
 }
 
 func TestLoadConfigFrom_ShouldLogWarningWhenNonTestEnvAndNoMainConfigFile(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	origStdErr := os.Stderr
 	stdErrReader, stdErrWriter, _ := os.Pipe()
 	os.Stderr = stdErrWriter
@@ -96,6 +101,8 @@ func TestLoadConfigFrom_ShouldLogWarningWhenNonTestEnvAndNoMainConfigFile(t *tes
 }
 
 func TestLoadConfigFrom_IgnoresMainConfigFileIfMissing(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
 	// create a temp config file
@@ -110,6 +117,8 @@ func TestLoadConfigFrom_IgnoresMainConfigFileIfMissing(t *testing.T) {
 }
 
 func TestLoadConfigFrom_MustNotUseMainConfigFileInTestEnv(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	appenv.ForceTestEnv() // to ensure it tries to find the config.test file
 
 	// create a temp dir to hold the config files
@@ -132,6 +141,8 @@ func TestLoadConfigFrom_MustNotUseMainConfigFileInTestEnv(t *testing.T) {
 }
 
 func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	appenv.SetDefaultEnvToTest() // to ensure it tries to find the config.test file
 
 	// create a temp config dir
@@ -147,6 +158,8 @@ func TestLoadConfigFrom_ShouldCrashIfTestEnvAndConfigTestNotPresent(t *testing.T
 }
 
 func TestLoadConfigFrom_IgnoresEnvConfigFileIfMissing(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	// the test environment doesn't allow the merge of the config with a main config file for security reasons
 	// so here we mock the function that returns the current environment, because we want to test the merge
 	// of the config with the main config file
@@ -167,14 +180,24 @@ func TestLoadConfigFrom_IgnoresEnvConfigFileIfMissing(t *testing.T) {
 }
 
 func TestLoadConfig_Concurrent(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	t.Setenv("ALGOREA_ENV", "")
 	_ = os.Unsetenv("ALGOREA_ENV")
 	appenv.SetDefaultEnvToTest()
-	assert.NotPanics(t, func() {
-		LoadConfig()
-		for i := 0; i < 1000; i++ {
-			go func() { LoadConfig() }()
-		}
-	})
+
+	assert.NotPanics(t, func() { LoadConfig() })
+	const numGoroutines = 1000
+	done := make(chan struct{}, numGoroutines)
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			assert.NotPanics(t, func() { LoadConfig() })
+			done <- struct{}{}
+		}()
+	}
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
 }
 
 func TestDBConfig_Success(t *testing.T) {
@@ -291,6 +314,11 @@ func TestDomainsConfig_Error(t *testing.T) {
 }
 
 func TestReplaceAuthConfig(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	globalConfig := viper.New()
 	globalConfig.Set("auth.ClientID", "42")
 	logger, _ := logging.NewMockLogger()
@@ -302,6 +330,11 @@ func TestReplaceAuthConfig(t *testing.T) {
 }
 
 func TestReplaceDomainsConfig(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []map[string]interface{}{{"domains": []string{"localhost", "other"}}})
 	logger, _ := logging.NewMockLogger()
@@ -319,6 +352,11 @@ func TestReplaceDomainsConfig(t *testing.T) {
 }
 
 func TestReplaceDomainsConfig_Panic(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	globalConfig := viper.New()
 	globalConfig.Set("domains", []int{1, 2})
 	application := &Application{Config: viper.New()}
