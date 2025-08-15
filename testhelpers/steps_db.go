@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -15,6 +15,7 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type rowTransformation int
@@ -199,33 +200,9 @@ func constructGodogTableFromData(data []stringKeyValuePair) *godog.Table {
 }
 
 func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
-	if !ctx.inScenario {
-		ctx.featureQueries = append(ctx.featureQueries, dbquery{query, vals})
-		return nil
-	}
-
-	tx, err := ctx.db.Begin()
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	_, err = tx.Exec(query, vals...)
-	if err != nil {
-		_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-		_ = tx.Rollback()
-		return err
-	}
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-	err = tx.Commit()
-	return err
+	return database.NewDataStore(ctx.application.Database).WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
+		return store.Exec(query, vals...).Error()
+	})
 }
 
 func getColumnIndex(table *godog.Table, columnName string) int {
@@ -281,7 +258,7 @@ func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 
 // loadColumnsFromDBTable loads the content of a table from the database for some columns in order to check if the table
 // had changed after some manipulations later.
-func (ctx *TestContext) loadColumnsFromDBTable(gormDB *database.DB, dbTableName string, dbColumnNames []string) error {
+func (ctx *TestContext) loadColumnsFromDBTable(dbTableName string, dbColumnNames []string) error {
 	headerCells := make([]*messages.PickleTableCell, len(dbColumnNames))
 	for i, columnName := range dbColumnNames {
 		headerCells[i] = &messages.PickleTableCell{
@@ -296,7 +273,7 @@ func (ctx *TestContext) loadColumnsFromDBTable(gormDB *database.DB, dbTableName 
 	}
 
 	var rows []map[string]interface{}
-	err := gormDB.Table(dbTableName).Select(strings.Join(dbColumnNames, ",")).
+	err := ctx.application.Database.Table(dbTableName).Select(strings.Join(dbColumnNames, ",")).
 		Order(strings.Join(dbColumnNames, ",")).ScanIntoSliceOfMaps(&rows).Error()
 	if err != nil {
 		return err
@@ -320,19 +297,14 @@ func (ctx *TestContext) loadColumnsFromDBTable(gormDB *database.DB, dbTableName 
 
 // DBGroupsAncestorsAreComputed computes the groups_ancestors table.
 func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
-	gormDB, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-
-	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
 		return store.GroupGroups().CreateNewAncestors()
 	})
 	if err != nil {
 		return err
 	}
 
-	err = ctx.loadColumnsFromDBTable(gormDB, "groups_ancestors", []string{
+	err = ctx.loadColumnsFromDBTable("groups_ancestors", []string{
 		"ancestor_group_id",
 		"child_group_id",
 		"expires_at",
@@ -346,18 +318,13 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 
 // DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
 func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
-	gormDB, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-
-	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
 		// We can consider keeping foreign_key_checks,
 		// but it'll break all tests that didn't define items while having permissions.
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
-		err = store.ItemItems().CreateNewAncestors()
+		err := store.ItemItems().CreateNewAncestors()
 		if err != nil {
 			return err
 		}
@@ -370,7 +337,7 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 		return err
 	}
 
-	err = ctx.loadColumnsFromDBTable(gormDB, "items_ancestors", []string{
+	err = ctx.loadColumnsFromDBTable("items_ancestors", []string{
 		"ancestor_item_id",
 		"child_item_id",
 	})
@@ -378,7 +345,7 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 		return err
 	}
 
-	err = ctx.loadColumnsFromDBTable(gormDB, "permissions_generated", []string{
+	err = ctx.loadColumnsFromDBTable("permissions_generated", []string{
 		"group_id",
 		"item_id",
 		"can_view_generated",
@@ -400,18 +367,11 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 
 // TableShouldBeEmpty verifies that the DB table is empty.
 func (ctx *TestContext) TableShouldBeEmpty(tableName string) error {
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName))
+	found, err := ctx.application.Database.Table(tableName).HasRows()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = sqlRows.Close()
-
-		if sqlRows.Err() != nil {
-			panic(sqlRows.Err())
-		}
-	}()
-	if sqlRows.Next() {
+	if found {
 		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
 	}
 
@@ -424,18 +384,12 @@ func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(tableName, columnName, v
 	values := parseMultipleValuesString(valuesStr)
 
 	where, parameters := constructWhereForColumnValues([]string{columnName}, values, true)
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...)
+	var found []int64
+	err := ctx.application.Database.Raw(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...).Scan(&found).Error()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = sqlRows.Close()
-
-		if sqlRows.Err() != nil {
-			panic(sqlRows.Err())
-		}
-	}()
-	if sqlRows.Next() {
+	if len(found) > 0 {
 		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
 	}
 
@@ -693,7 +647,7 @@ func (ctx *TestContext) dataRowMatchesDBRow(dataRow *messages.PickleTableRow,
 
 		columnValue := columnValues[colIndex]
 		if columnValue == nil {
-			columnValue = pTableValueNull
+			columnValue = golang.Ptr(tableValueNull)
 		}
 
 		if (dataValue == tableValueTrue && *columnValue == "1") || (dataValue == tableValueFalse && *columnValue == "0") {
@@ -771,8 +725,8 @@ func (ctx *TestContext) queryDBRowsMatching(tableName string, dbColumnNames, fil
 	where, parameters := constructWhereForColumnValues(filterColumnNames, filterColumnValues, whereIn)
 
 	// exec sql
-	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, tableName, where, selectsJoined) //nolint: gosec
-	sqlRows, err := ctx.db.Query(query, parameters...)
+	query := fmt.Sprintf("SELECT %s FROM %s %s ORDER BY %s", selectsJoined, database.QuoteName(tableName), where, selectsJoined)
+	sqlRows, err := ctx.application.Database.GetSQLDB().QueryContext(ctx.application.Database.GetContext(), query, parameters...)
 
 	closer := func() { _ = sqlRows.Close() }
 	return sqlRows, closer, err
@@ -784,11 +738,14 @@ func (ctx *TestContext) getNbRowsMatching(tableName string, columnNames, columnV
 	where, parameters := constructWhereForColumnValues(columnNames, columnValues, true)
 
 	// exec sql
-	var nbRows int
-	selectValuesInQuery := fmt.Sprintf("SELECT COUNT(*) FROM `%s` %s", tableName, where) //nolint: gosec
-	err := ctx.db.QueryRow(selectValuesInQuery, parameters...).Scan(&nbRows)
+	var nbRows []int
+	selectValuesInQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s %s", database.QuoteName(tableName), where)
+	err := ctx.application.Database.Raw(selectValuesInQuery, parameters...).Scan(&nbRows).Error()
+	if err != nil {
+		return 0, err
+	}
 
-	return nbRows, err
+	return nbRows[0], err
 }
 
 func shouldSkipRow(data *godog.Table, rowIndex int, columnIndexes []int,
@@ -849,7 +806,7 @@ func constructWhereForColumnValues(columnNames, columnValues []string, whereIn b
 // DBTimeNow sets the current time in the database to the provided time.
 func (ctx *TestContext) DBTimeNow(timeStrRaw string) error {
 	timeStrRaw = ctx.preprocessString(timeStrRaw)
-	MockDBTime(timeStrRaw)
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(timeStrRaw))
 	return nil
 }
 
@@ -857,11 +814,6 @@ const (
 	tableValueFalse = "false"
 	tableValueTrue  = "true"
 	tableValueNull  = "null"
-)
-
-var (
-	tableValueNullVar = tableValueNull
-	pTableValueNull   = &tableValueNullVar
 )
 
 // dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db

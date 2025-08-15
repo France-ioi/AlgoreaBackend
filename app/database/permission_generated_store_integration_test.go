@@ -17,7 +17,7 @@ import (
 func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}, {id: 5}]
 		users: [{group_id: 5}]
 		groups_ancestors:
@@ -47,6 +47,9 @@ func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
 }
 
 func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		name            string
 		groupID         int64
@@ -102,7 +105,7 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
+			db := testhelpers.SetupDBWithFixtureString(ctx, groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
@@ -119,6 +122,9 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 }
 
 func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		name            string
 		groupID         int64
@@ -205,7 +211,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 					fmt.Sprintf("permissions_generated: [{group_id: %d, item_id: %d}]", test.groupID, test.itemID))
 			}
 			fixures = append(fixures, groupGroupMarksResultsAsChangedFixture)
-			db := testhelpers.SetupDBWithFixtureString(fixures...)
+			db := testhelpers.SetupDBWithFixtureString(ctx, fixures...)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStoreWithTable(db, "permissions_generated")
@@ -231,7 +237,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 func TestPermissionGeneratedStore_TriggerBeforeUpdate_RefusesToModifyGroupIDOrItemID(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1}]
 		items: [{id: 2, default_language_tag: 2}]
 		permissions_generated: [{group_id: 1, item_id: 2, can_view_generated: none}]

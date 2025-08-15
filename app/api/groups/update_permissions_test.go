@@ -15,12 +15,21 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-var (
-	canViewValues      = [...]string{"none", "info", "content", "content_with_descendants", "solution"}
-	canGrantViewValues = [...]string{"none", "enter", "content", "content_with_descendants", "solution", "solution_with_grant"}
-	canWatchValues     = [...]string{"none", "result", "answer", "answer_with_grant"}
-	canEditValues      = [...]string{"none", "children", "all", "all_with_grant"}
-)
+func canViewValues() []string {
+	return []string{"none", "info", "content", "content_with_descendants", "solution"}
+}
+
+func canGrantViewValues() []string {
+	return []string{"none", "enter", "content", "content_with_descendants", "solution", "solution_with_grant"}
+}
+
+func canWatchValues() []string {
+	return []string{"none", "result", "answer", "answer_with_grant"}
+}
+
+func canEditValues() []string {
+	return []string{"none", "children", "all", "all_with_grant"}
+}
 
 func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 	type args struct {
@@ -43,11 +52,11 @@ func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for _, currentCanView := range canViewValues {
+	for _, currentCanView := range canViewValues() {
 		var newValueIsGreater bool
-		for _, newCanViewValue := range canViewValues {
+		for _, newCanViewValue := range canViewValues() {
 			if newValueIsGreater {
-				for _, canGrantViewValue := range canGrantViewValues {
+				for _, canGrantViewValue := range canGrantViewValues() {
 					tests = append(tests, testStruct{
 						name: fmt.Sprintf("requires the manager to have can_grant_view_generated >= new value (%s -> %s, %s)",
 							currentCanView, newCanViewValue, canGrantViewValue),
@@ -88,7 +97,7 @@ func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 }
 
 func Test_checkIfPossibleToModifyCanGrantView_AllowsSettingLowerOrSameValue(t *testing.T) {
-	testCheckerAllowsSettingLowerOrSameValue(t, canGrantViewValues[:],
+	testCheckerAllowsSettingLowerOrSameValue(t, canGrantViewValues(),
 		checkIfPossibleToModifyCanGrantView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string))}
@@ -137,14 +146,14 @@ func Test_checkIfPossibleToModifyCanGrantView_RequiresCanViewBeGreaterOrEqualToC
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for currentCanGrantViewIndex, currentCanGrantView := range canGrantViewValues {
+	for currentCanGrantViewIndex, currentCanGrantView := range canGrantViewValues() {
 		currentCanGrantView := currentCanGrantView
-		for newCanGrantViewIndex := currentCanGrantViewIndex + 1; newCanGrantViewIndex < len(canGrantViewValues); newCanGrantViewIndex++ {
-			newCanGrantViewValue := canGrantViewValues[newCanGrantViewIndex]
+		for newCanGrantViewIndex := currentCanGrantViewIndex + 1; newCanGrantViewIndex < len(canGrantViewValues()); newCanGrantViewIndex++ {
+			newCanGrantViewValue := canGrantViewValues()[newCanGrantViewIndex]
 			if newCanGrantViewValue == solutionWithGrant {
 				break
 			}
-			for _, currentCanViewValue := range canViewValues {
+			for _, currentCanViewValue := range canViewValues() {
 				currentCanViewValue := currentCanViewValue
 				t.Run(fmt.Sprintf("%s -> %s, %s", currentCanGrantView, newCanGrantViewValue, currentCanViewValue),
 					func(t *testing.T) {
@@ -208,7 +217,7 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 			CanGrantViewGeneratedValue: permissionGrantedStore.GrantViewIndexByName(solutionWithGrant),
 		}, dataStore))
 
-	for _, canGrantView := range canGrantViewValues {
+	for _, canGrantView := range canGrantViewValues() {
 		canGrantView := canGrantView
 		t.Run(canGrantView, func(t *testing.T) {
 			assert.Equal(t, canGrantView == solutionWithGrant, checkIfPossibleToModifyCanGrantView(
@@ -228,7 +237,7 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 
 func Test_checkIfPossibleToModifyCanGrantView_RequiresManagerToHaveSolutionWithGrantPermission(t *testing.T) {
 	testCheckerRequiresManagerToHaveSpecificPermission(
-		t, canGrantViewValues[:], solutionWithGrant, solution,
+		t, canGrantViewValues(), solutionWithGrant, solution,
 		checkIfPossibleToModifyCanGrantView,
 		func(newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
 			return &managerGeneratedPermissions{
@@ -271,7 +280,7 @@ func testCheckerRequiresManagerToHaveSpecificPermission(
 }
 
 func Test_checkIfPossibleToModifyCanWatch_AllowsSettingLowerOrSameValue(t *testing.T) {
-	testCheckerAllowsSettingLowerOrSameValue(t, canWatchValues[:],
+	testCheckerAllowsSettingLowerOrSameValue(t, canWatchValues(),
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string))}
@@ -279,7 +288,7 @@ func Test_checkIfPossibleToModifyCanWatch_AllowsSettingLowerOrSameValue(t *testi
 }
 
 func Test_checkIfPossibleToModifyCanWatch_RequiresCanViewBeGreaterOrEqualToContent(t *testing.T) {
-	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canWatchValues[:], answerWithGrant,
+	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canWatchValues(), answerWithGrant,
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, viewValue string, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{
@@ -318,7 +327,7 @@ func testCheckerRequiresCanViewBeGreaterOrEqualToContent(
 			if newValue == stopValue {
 				break
 			}
-			for _, currentCanViewValue := range canViewValues {
+			for _, currentCanViewValue := range canViewValues() {
 				currentCanViewValue := currentCanViewValue
 				t.Run(fmt.Sprintf("%s -> %s, %s",
 					currentValue, newValue, currentCanViewValue), func(t *testing.T) {
@@ -367,7 +376,7 @@ func Test_checkIfPossibleToModifyCanWatch_AnswerWithGrant(t *testing.T) {
 			})
 	}
 
-	for _, canWatch := range canWatchValues {
+	for _, canWatch := range canWatchValues() {
 		canWatch := canWatch
 		t.Run(canWatch, func(t *testing.T) {
 			assert.Equal(t, canWatch == answerWithGrant, checkIfPossibleToModifyCanWatch(
@@ -384,7 +393,7 @@ func Test_checkIfPossibleToModifyCanWatch_AnswerWithGrant(t *testing.T) {
 
 func Test_checkIfPossibleToModifyCanWatch_RequiresManagerToHaveAnswerWithGrantPermission(t *testing.T) {
 	testCheckerRequiresManagerToHaveSpecificPermission(
-		t, canWatchValues[:], answerWithGrant, content,
+		t, canWatchValues(), answerWithGrant, content,
 		checkIfPossibleToModifyCanWatch,
 		func(newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
 			return &managerGeneratedPermissions{
@@ -395,7 +404,7 @@ func Test_checkIfPossibleToModifyCanWatch_RequiresManagerToHaveAnswerWithGrantPe
 }
 
 func Test_checkIfPossibleToModifyCanEdit_AllowsSettingLowerOrSameValue(t *testing.T) {
-	testCheckerAllowsSettingLowerOrSameValue(t, canEditValues[:],
+	testCheckerAllowsSettingLowerOrSameValue(t, canEditValues(),
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanEditValue: permissionGrantedStore.EditIndexByName(value.(string))}
@@ -403,7 +412,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllowsSettingLowerOrSameValue(t *testin
 }
 
 func Test_checkIfPossibleToModifyCanEdit_RequiresCanViewBeGreaterOrEqualToContent(t *testing.T) {
-	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canEditValues[:], allWithGrant,
+	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canEditValues(), allWithGrant,
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, viewValue string, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{
@@ -451,7 +460,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 			CanEditGeneratedValue: permissionGrantedStore.EditIndexByName(allWithGrant),
 		}, dataStore))
 
-	for _, canEdit := range canEditValues {
+	for _, canEdit := range canEditValues() {
 		canEdit := canEdit
 		t.Run(canEdit, func(t *testing.T) {
 			assert.Equal(t, canEdit == allWithGrant, checkIfPossibleToModifyCanEdit(
@@ -468,7 +477,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 
 func Test_checkIfPossibleToModifyCanEdit_RequiresManagerToHaveAllWithGrantPermission(t *testing.T) {
 	testCheckerRequiresManagerToHaveSpecificPermission(
-		t, canEditValues[:], allWithGrant, content,
+		t, canEditValues(), allWithGrant, content,
 		checkIfPossibleToModifyCanEdit,
 		func(newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
 			return &managerGeneratedPermissions{
@@ -506,7 +515,7 @@ func Test_checkIfPossibleToModifyCanMakeSessionOfficial_RequiresCanViewBeGreater
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for _, currentCanViewValue := range canViewValues {
+	for _, currentCanViewValue := range canViewValues() {
 		currentCanViewValue := currentCanViewValue
 		t.Run(currentCanViewValue, func(t *testing.T) {
 			assert.Equal(t,
@@ -582,7 +591,7 @@ func testCheckerRequiresManagerToHaveCanGrantViewGreaterOrEqualToEnter(
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for _, canGrantView := range canGrantViewValues {
+	for _, canGrantView := range canGrantViewValues() {
 		canGrantView := canGrantView
 		t.Run(canGrantView, func(t *testing.T) {
 			assert.Equal(t,
@@ -695,7 +704,7 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 }
 
 func Test_CanViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canViewValues[:], "can_view", checkIfPossibleToModifyCanView,
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canViewValues(), "can_view", checkIfPossibleToModifyCanView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(value.(string))}
 		}, true)
@@ -773,7 +782,7 @@ func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string
 }
 
 func Test_CanGrantViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canGrantViewValues[:], "can_grant_view",
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canGrantViewValues(), "can_grant_view",
 		checkIfPossibleToModifyCanGrantView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string))}
@@ -785,7 +794,7 @@ func Test_CanGrantViewValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
 }
 
 func Test_CanWatchValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canWatchValues[:], "can_watch",
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canWatchValues(), "can_watch",
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string))}
@@ -797,7 +806,7 @@ func Test_CanWatchValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
 }
 
 func Test_CanEditValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canEditValues[:], "can_edit",
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canEditValues(), "can_edit",
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanEditValue: permissionGrantedStore.EditIndexByName(value.(string))}

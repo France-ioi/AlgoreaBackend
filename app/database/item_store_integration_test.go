@@ -16,11 +16,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func setupDB() *database.DB {
-	return testhelpers.SetupDBWithFixture("visibility")
-}
-
 func TestItemStore_VisibleMethods(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		methodToCall string
 		args         []interface{}
@@ -35,7 +34,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 		t.Run(testCase.methodToCall, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := setupDB()
+			db := testhelpers.SetupDBWithFixture(ctx, "visibility")
 			defer func() { _ = db.Close() }()
 
 			groupID := int64(11)
@@ -60,7 +59,7 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 func TestItemStore_CheckSubmissionRights(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("item_store/check_submission_rights")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "item_store/check_submission_rights")
 	defer func() { _ = db.Close() }()
 
 	tests := []struct {
@@ -106,7 +105,7 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		items: [
 			{id: 11, text_id: "id11", default_language_tag: fr},
 			{id: 12, text_id: "id12", default_language_tag: fr},
@@ -150,7 +149,7 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_BreadcrumbsHierarchyForParentAttempt(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		items:
 			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
 			- {id: 2, default_language_tag: fr}
@@ -612,7 +611,7 @@ func assertBreadcrumbsHierarchy(t *testing.T,
 func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		items:
 			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
 			- {id: 2, default_language_tag: fr}
@@ -1052,6 +1051,9 @@ func testEachWriteLockMode(t *testing.T, testName string, testFunc func(t *testi
 }
 
 func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name           string
 		url            *string
@@ -1066,7 +1068,7 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
 					- {id: 4, regexp: "^2.*", priority: 2}
@@ -1101,6 +1103,9 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 }
 
 func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name           string
 		updateMap      map[string]interface{}
@@ -1119,7 +1124,7 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				platforms:
 					- {id: 1, regexp: "^4.*", priority: 4}
 					- {id: 2, regexp: "^1.*", priority: 3}
@@ -1150,6 +1155,9 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 }
 
 func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name            string
 		regexp          string
@@ -1177,7 +1185,7 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
 					- {id: 4, regexp: "^2.*", priority: 2}
@@ -1206,6 +1214,9 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 }
 
 func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name            string
 		regexp          string
@@ -1243,7 +1254,7 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				platforms:
 					- {id: 3, regexp: "^1.*", priority: 1}
 					- {id: 4, regexp: "^2.*", priority: 2}
@@ -1274,7 +1285,7 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 func Test_ItemStore_DeleteItem(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		languages: [{tag: fr}]
 		items: [{id: 1234, default_language_tag: fr},{id: 1235, default_language_tag: fr}]
 		items_items: [{parent_item_id: 1234, child_item_id: 1235, child_order: 1}]

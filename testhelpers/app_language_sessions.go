@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -90,15 +90,11 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 	ctx.userID = userID
 	ctx.user = strconv.FormatInt(userID, 10)
 
-	db, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-	return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+	return database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
-		err = store.Sessions().InsertMap(map[string]interface{}{
+		err := store.Sessions().InsertMap(map[string]interface{}{
 			"session_id": testSessionID,
 			"user_id":    ctx.userID,
 		})
@@ -135,8 +131,7 @@ func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) err
 	userID := ctx.getIDOfReference(user)
 
 	var sessionCount int
-	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?", userID).
-		Scan(&sessionCount)
+	err := ctx.application.Database.Table("sessions").Where("user_id = ?", userID).Count(&sessionCount).Error()
 	if err != nil {
 		return err
 	}
@@ -153,8 +148,7 @@ func (ctx *TestContext) ThereIsNoSessionID(session string) error {
 	sessionID := ctx.getIDOfReference(session)
 
 	var sessionCount int
-	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE session_id = ?", sessionID).
-		Scan(&sessionCount)
+	err := ctx.application.Database.Table("sessions").Where("session_id = ?", sessionID).Count(&sessionCount).Error()
 	if err != nil {
 		return err
 	}
@@ -187,11 +181,10 @@ func (ctx *TestContext) ThereAreCountAccessTokensForUser(count int, user string)
 	userID := ctx.getIDOfReference(user)
 
 	var accessTokensCount int
-	err := ctx.db.QueryRow(`
-		SELECT COUNT(*) as count FROM access_tokens
-			JOIN sessions ON sessions.session_id = access_tokens.session_id
-		 WHERE sessions.user_id = ?`, userID).
-		Scan(&accessTokensCount)
+	err := ctx.application.Database.Table("access_tokens").
+		Joins("JOIN sessions ON sessions.session_id = access_tokens.session_id").
+		Where(`sessions.user_id = ?`, userID).
+		Count(&accessTokensCount).Error()
 	if err != nil {
 		return err
 	}
@@ -206,8 +199,7 @@ func (ctx *TestContext) ThereAreCountAccessTokensForUser(count int, user string)
 // ThereIsNoAccessToken checks that an access token doesn't exist.
 func (ctx *TestContext) ThereIsNoAccessToken(accessToken string) error {
 	var accessTokensCount int
-	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM access_tokens WHERE token = ?", accessToken).
-		Scan(&accessTokensCount)
+	err := ctx.application.Database.Table("access_tokens").Where("token = ?", accessToken).Count(&accessTokensCount).Error()
 	if err != nil {
 		return err
 	}

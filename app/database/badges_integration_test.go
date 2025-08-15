@@ -18,6 +18,8 @@ import (
 )
 
 func TestGroupStore_StoreBadges(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name                            string
 		fixture                         string
@@ -271,14 +273,15 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			shouldCreateBadgeGroupRelations: [][2]string{{"ghi", "abc"}},
 		},
 	}
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				groups: [{id: 5}]
-				users: [{group_id: 5}]` + tt.fixture)
+				users: [{group_id: 5}]`+tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			err := store.InTransaction(func(store *database.DataStore) error {
@@ -389,7 +392,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 func TestGroupStore_StoreBadge_PropagatesResults(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 				groups: [{id: 1, text_id: badge_url}, {id: 5}, {id: 6}]
 				users: [{group_id: 5, login: john}, {group_id: 6, login: jane}]
 				groups_groups: [{parent_group_id: 1, child_group_id: 5}]
@@ -439,7 +442,7 @@ func getGroupIDByBadgeURL(store *database.DataStore, url string, knownBadgeGroup
 func TestGroupStore_createBadgeGroup_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1, text_id: badge_url}]`)
 	defer func() { _ = db.Close() }()
 	groupStore := database.NewDataStore(db).Groups()

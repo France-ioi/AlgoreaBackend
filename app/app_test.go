@@ -1,7 +1,7 @@
 package app
 
 import (
-	crand "crypto/rand"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -21,11 +21,17 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 /* note that the tests of app.New() are very incomplete (even if all exec path are covered) */
 
 func TestNew_Success(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
 	app, err := New()
@@ -35,19 +41,29 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(t, app.Database)
 	assert.NotNil(t, app.HTTPHandler)
 	assert.NotNil(t, app.apiCtx)
-	assert.Len(t, app.HTTPHandler.Middlewares(), 9)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 10)
 	require.NotEmpty(t, app.HTTPHandler.Routes())
 	assert.Equal(t, "/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
 
 func TestNew_SuccessNoCompress(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
-	assert.Len(t, app.HTTPHandler.Middlewares(), 8)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 9)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__ROOTPATH", "/api")
 	app, err := New()
@@ -56,15 +72,67 @@ func TestNew_NotDefaultRootPath(t *testing.T) {
 	assert.Equal(t, "/api/*", app.HTTPHandler.Routes()[0].Pattern)
 }
 
+func TestNew_AcceptsLogger(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
+	require.NoError(t, err)
+	require.NotNil(t, app)
+	assert.Equal(t, logger, logging.LoggerFromContext(app.Database.GetContext()))
+
+	var called bool
+	app.HTTPHandler.Get("/dummy", func(_ http.ResponseWriter, r *http.Request) {
+		called = true
+		assert.Equal(t, logger, logging.LoggerFromContext(r.Context()))
+	})
+
+	request, err := http.NewRequest(http.MethodGet, "/dummy", http.NoBody)
+	require.NoError(t, err)
+	app.HTTPHandler.ServeHTTP(httptest.NewRecorder(), request)
+
+	assert.True(t, called)
+}
+
+func TestNew_CreatesNewLogger(t *testing.T) {
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	app, err := New()
+	require.NoError(t, err)
+	require.NotNil(t, app)
+	logger := logging.LoggerFromContext(app.Database.GetContext())
+	require.NotNil(t, logger)
+	config := viper.New()
+	config.Set("level", "fatal")
+	logger.Configure(config)
+
+	var called bool
+	app.HTTPHandler.Get("/dummy", func(_ http.ResponseWriter, r *http.Request) {
+		called = true
+		assert.Equal(t, logger, logging.LoggerFromContext(r.Context()))
+	})
+
+	request, err := http.NewRequest(http.MethodGet, "/dummy", http.NoBody)
+	require.NoError(t, err)
+	app.HTTPHandler.ServeHTTP(httptest.NewRecorder(), request)
+
+	assert.True(t, called)
+}
+
 func TestNew_DBErr(t *testing.T) {
-	hook, restoreFct := logging.MockSharedLoggerHook()
-	defer restoreFct()
+	testoutput.SuppressIfPasses(t)
+
+	logger, hook := logging.NewMockLogger()
 	expectedError := errors.New("db opening error")
-	patch := monkey.Patch(database.Open, func(interface{}) (*database.DB, error) {
+	monkey.Patch(database.Open, func(context.Context, interface{}) (*database.DB, error) {
 		return nil, expectedError
 	})
-	defer patch.Unpatch()
-	app, err := New()
+	defer monkey.UnpatchAll()
+	app, err := New(logger)
 	assert.Nil(t, app)
 	require.Equal(t, expectedError, err)
 	logMsg := hook.LastEntry()
@@ -74,16 +142,9 @@ func TestNew_DBErr(t *testing.T) {
 	assert.Equal(t, "database", logMsg.Data["module"])
 }
 
-func TestNew_RandSeedingFailed(t *testing.T) {
-	expectedError := errors.New("some error")
-	patch := monkey.Patch(crand.Read, func([]byte) (int, error) {
-		return 1, expectedError
-	})
-	defer patch.Unpatch()
-	assert.PanicsWithValue(t, "cannot seed the randomizer", func() { _, _ = New() })
-}
-
 func TestNew_DBConfigError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	patch := monkey.Patch(DBConfig, func(_ *viper.Viper) (config *mysql.Config, err error) {
 		return nil, errors.New("dberror")
 	})
@@ -93,6 +154,8 @@ func TestNew_DBConfigError(t *testing.T) {
 }
 
 func TestNew_TokenConfigError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
 		globalConfig := viper.New()
 		globalConfig.Set("token.PublicKeyFile", "notafile")
@@ -105,6 +168,8 @@ func TestNew_TokenConfigError(t *testing.T) {
 }
 
 func TestNew_DomainsConfigError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	patch := monkey.Patch(LoadConfig, func() *viper.Viper {
 		globalConfig := viper.New()
 		globalConfig.Set("domains", []int{1, 2})
@@ -120,9 +185,14 @@ func TestNew_DomainsConfigError(t *testing.T) {
 // but their interaction (impacted by the order of definition)
 
 func TestMiddlewares_OnPanic(t *testing.T) {
-	hook, restoreFct := logging.MockSharedLoggerHook()
-	defer restoreFct()
-	app, _ := New()
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, hook := logging.NewMockLogger()
+	app, err := New(logger)
+	require.NoError(t, err)
 	router := app.HTTPHandler
 	router.Get("/dummy", func(http.ResponseWriter, *http.Request) {
 		panic("error in service")
@@ -158,10 +228,14 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 }
 
 func TestMiddlewares_OnSuccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "1")
-	hook, restoreFct := logging.MockSharedLoggerHook()
-	defer restoreFct()
-	app, _ := New()
+	logger, hook := logging.NewMockLogger()
+	app, _ := New(logger)
 	router := app.HTTPHandler
 	router.Get("/dummy", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -193,15 +267,20 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	// check that the compression has been applied but the length in the logs is not altered by compression i
 	assert.Equal(t, 23, hook.LastEntry().Data["resp_bytes_length"])
 	assert.Equal(t, "gzip", response.Header.Get("Content-Encoding"))
-	assert.Equal(t, version.Version, response.Header.Get("Backend-Version"))
+	assert.Equal(t, version.Get(), response.Header.Get("Backend-Version"))
 }
 
 func TestNew_MountsPprofInDev(t *testing.T) {
-	appenv.SetDefaultEnvToTest()
-	monkey.Patch(appenv.IsEnvDev, func() bool { return true })
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
 	defer monkey.UnpatchAll()
 
-	app, err := New()
+	appenv.SetDefaultEnvToTest()
+	monkey.Patch(appenv.IsEnvDev, func() bool { return true })
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	require.NotNil(t, app)
 
@@ -218,10 +297,15 @@ func TestNew_MountsPprofInDev(t *testing.T) {
 }
 
 func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
-	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
 	defer monkey.UnpatchAll()
 
-	app, err := New()
+	monkey.Patch(appenv.IsEnvDev, func() bool { return false })
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	require.NotNil(t, app)
 
@@ -239,8 +323,14 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 	for _, configSettingValue := range []bool{true, false} {
 		configSettingValue := configSettingValue
 		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			mockDatabaseOpen()
+			defer monkey.UnpatchAll()
+
 			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", strconv.FormatBool(configSettingValue))
-			app, _ := New()
+			logger, _ := logging.NewMockLogger()
+			app, _ := New(logger)
 			assert.Equal(t, configSettingValue, database.NewDataStore(app.Database).IsResultsPropagationProhibited())
 
 			router := app.HTTPHandler
@@ -258,4 +348,14 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 			_ = response.Body.Close()
 		})
 	}
+}
+
+func mockDatabaseOpen() {
+	var openPatch *monkey.PatchGuard
+	openPatch = monkey.Patch(database.Open, func(ctx context.Context, _ interface{}) (*database.DB, error) {
+		defer openPatch.Restore()
+		openPatch.Unpatch()
+		db, _ := database.NewDBMock(ctx)
+		return db, nil
+	})
 }

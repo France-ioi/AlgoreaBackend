@@ -3,7 +3,6 @@
 package database_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,16 +25,16 @@ type groupPropagateResultRow struct {
 	AncestorsComputationState string
 }
 
-var maxExpiresAt = "9999-12-31 23:59:59"
+const maxExpiresAt = "9999-12-31 23:59:59"
 
 func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
-		dataStore := database.NewDataStoreWithContext(context.Background(), db)
+		dataStore := database.NewDataStoreWithContext(db.GetContext(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
 			return ds.GroupGroups().CreateNewAncestors()
 		}))
@@ -71,7 +70,8 @@ func TestGroupGroupStore_CreateNewAncestors_Concurrent(t *testing.T) {
 func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common", "group_group_store/ancestors/cyclic")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(),
+		"group_group_store/ancestors/_common", "group_group_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
@@ -103,7 +103,7 @@ func TestGroupGroupStore_CreateNewAncestors_Cyclic(t *testing.T) {
 func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
@@ -143,7 +143,7 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresDoneGroups(t *testing.T) {
 func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAcceptedRequestsAndInvitations(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
@@ -181,7 +181,7 @@ func TestGroupGroupStore_CreateNewAncestors_ProcessesOnlyDirectRelationsOrAccept
 func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()
@@ -230,7 +230,7 @@ func TestGroupGroupStore_CreateNewAncestors_PropagatesExpiresAt(t *testing.T) {
 func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("group_group_store/ancestors/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "group_group_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	groupGroupStore := database.NewDataStore(db).GroupGroups()

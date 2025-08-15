@@ -18,7 +18,7 @@ SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
 
 VERSION_FETCHING_CMD=git describe --always --dirty
-GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
+GOBUILD_VERSION_INJECTION=-ldflags="-X github.com/France-ioi/AlgoreaBackend/v2/app/version.version=$(shell $(VERSION_FETCHING_CMD))"
 
 # Don't cover the packages ending by test, and separate the packages by a comma
 COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | tr '\n' ',')
@@ -94,7 +94,7 @@ test: $(TEST_REPORT_DIR)
 test-dev:
 	$(Q)$(GOTEST) -gcflags=all=-l $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
-	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
+	ALGOREA_DATABASE__ADDR=no_host $(GOTEST) -gcflags=all=-l -race -tags=unit $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
 	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_BDD_DIR) -p 1 -parallel 1 $(TEST_TAGS)

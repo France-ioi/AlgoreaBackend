@@ -38,7 +38,7 @@ func constructExpectedResultsForValidatedAtTests(t11, t12, t13, t14, t23, t24 *t
 func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -81,7 +81,7 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 ) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -114,7 +114,7 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 ) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -149,7 +149,7 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 ) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -189,7 +189,7 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 ) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()

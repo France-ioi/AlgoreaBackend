@@ -20,16 +20,18 @@ type permissionsGeneratedResultRow struct {
 	CanViewGenerated string
 }
 
-var expectedRow14 = permissionsGeneratedResultRow{
-	GroupID:          1,
-	ItemID:           4,
-	CanViewGenerated: "solution",
+func expectedRow14() permissionsGeneratedResultRow {
+	return permissionsGeneratedResultRow{
+		GroupID:          1,
+		ItemID:           4,
+		CanViewGenerated: "solution",
+	}
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
 	permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
@@ -71,7 +73,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 			ItemID:           3,
 			CanViewGenerated: "content",
 		},
-		expectedRow14,
+		expectedRow14(),
 		{
 			GroupID:          1,
 			ItemID:           11,
@@ -103,7 +105,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
 	permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
@@ -146,7 +148,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 			ItemID:           3,
 			CanViewGenerated: "content",
 		},
-		expectedRow14,
+		expectedRow14(),
 		{
 			GroupID:          1,
 			ItemID:           11,
@@ -176,12 +178,15 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, access := range []string{"solution", "content_with_descendants"} {
 		access := access
 		t.Run(access, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+			db := testhelpers.SetupDBWithFixture(ctx, "permission_granted_store/compute_all_access/_common")
 			defer func() { _ = db.Close() }()
 
 			permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
@@ -221,7 +226,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 					ItemID:           3,
 					CanViewGenerated: access,
 				},
-				expectedRow14,
+				expectedRow14(),
 				{
 					GroupID:          1,
 					ItemID:           11,
@@ -358,7 +363,7 @@ func testGeneratedPermission(t *testing.T, fixture string, testCase ...generated
 	t.Helper()
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(fixture)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), fixture)
 	defer func() { _ = db.Close() }()
 
 	permissionStore := database.NewDataStore(db).Permissions()

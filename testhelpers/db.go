@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -27,25 +27,26 @@ const (
 func init() { //nolint:gochecknoinits
 	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
 		appenv.ForceTestEnv()
-		// Apply the config to the global logger
-		logging.SharedLogger.Configure(app.LoggingConfig(app.LoadConfig()))
 	}
 }
 
 // SetupDBWithFixture creates a new DB connection, empties the DB, and loads a fixture.
-func SetupDBWithFixture(fixtureNames ...string) *database.DB {
+// Note that the context must have a logger (set by logging.ContextWithLogger) and a config
+// (set by testhelpers.CreateTestContext or testhelpers.CreateTestContextWithLogger),
+// otherwise SetupDBWithFixture will panic.
+func SetupDBWithFixture(ctx context.Context, fixtureNames ...string) *database.DB {
 	appenv.ForceTestEnv()
 
-	rawDB := OpenRawDBConnection()
+	rawDB := OpenRawDBConnection(ctx)
 
 	// Seed the DB
-	EmptyDB(rawDB)
+	emptyDBFromContextConfig(ctx, rawDB)
 	for _, fixtureName := range fixtureNames {
-		LoadFixture(rawDB, fixtureName)
+		LoadFixture(ctx, rawDB, fixtureName)
 	}
 
 	// Return a new db connection
-	db, err := database.Open(rawDB)
+	db, err := database.Open(ctx, rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -55,20 +56,22 @@ func SetupDBWithFixture(fixtureNames ...string) *database.DB {
 
 // SetupDBWithFixtureString creates a new DB connection, empties the DB,
 // and loads fixtures from the strings (yaml with a tableName->[]dataRow map).
-func SetupDBWithFixtureString(fixtures ...string) *database.DB {
+// Note that the context must have a logger (set by logging.ContextWithLogger) and a config
+// (set by testhelpers.CreateTestContext or testhelpers.CreateTestContextWithLogger),
+// otherwise SetupDBWithFixtureString will panic.
+func SetupDBWithFixtureString(ctx context.Context, fixtures ...string) *database.DB {
 	appenv.ForceTestEnv()
 
-	rawDB := OpenRawDBConnection()
+	rawDB := OpenRawDBConnection(ctx)
 
 	// Seed the DB
-	EmptyDB(rawDB)
-
+	emptyDBFromContextConfig(ctx, rawDB)
 	for _, fixture := range fixtures {
-		loadFixtureChainFromString(rawDB, fixture)
+		loadFixtureChainFromString(ctx, rawDB, fixture)
 	}
 
 	// Return a new db connection
-	db, err := database.Open(rawDB)
+	db, err := database.Open(ctx, rawDB)
 	if err != nil {
 		panic(err)
 	}
@@ -77,18 +80,21 @@ func SetupDBWithFixtureString(fixtures ...string) *database.DB {
 }
 
 // OpenRawDBConnection creates a new connection to the DB specified in the config.
-func OpenRawDBConnection() *sql.DB {
+// Note that the context must have a logger (set by logging.ContextWithLogger) and a config
+// (set by testhelpers.CreateTestContext or testhelpers.CreateTestContextWithLogger),
+// otherwise OpenRawDBConnection will panic.
+func OpenRawDBConnection(ctx context.Context) *sql.DB {
 	appenv.ForceTestEnv()
 
 	// needs actual config for connection to DB
-	config := app.LoadConfig()
+	config := GetConfigFromContext(ctx)
 	dbConfig, _ := app.DBConfig(config)
-	loggingConfig := app.LoggingConfig(config)
 	if dbConfig.Params == nil {
 		dbConfig.Params = make(map[string]string, 1)
 	}
 	dbConfig.Params["charset"] = utf8mb4
-	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN(), loggingConfig.GetBool("LogRawSQLQueries"))
+	logger := logging.LoggerFromContext(ctx)
+	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN(), logger.IsRawSQLQueriesLoggingEnabled())
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +107,9 @@ func OpenRawDBConnection() *sql.DB {
 // If a file name satisfies '*.chain.yaml' mask, the file is treated as a tableName->[]dataRow map.
 // Otherwise, data will be loaded into table with the same name as the filename (without extension).
 // Note that you should probably empty the DB before using this function.
-func LoadFixture(db *sql.DB, fileName string) {
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise LoadFixture will panic on logging.
+func LoadFixture(ctx context.Context, db *sql.DB, fileName string) {
 	appenv.ForceTestEnv()
 
 	var filenames []string
@@ -134,7 +142,7 @@ func LoadFixture(db *sql.DB, fileName string) {
 		}
 		name := strings.TrimSuffix(filename, filepath.Ext(filename))
 		if strings.HasSuffix(name, ".chain") {
-			loadFixtureChainFromString(db, string(data))
+			loadFixtureChainFromString(ctx, db, string(data))
 		} else {
 			var content []map[string]interface{}
 			err = yaml.Unmarshal(data, &content)
@@ -142,21 +150,21 @@ func LoadFixture(db *sql.DB, fileName string) {
 				panic(err)
 			}
 			tableName := name
-			logging.SharedLogger.WithContext(context.Background()).
+			logging.EntryFromContext(ctx).
 				Infof("Loading data into %q:\n%s", tableName, string(data))
-			InsertBatch(db, tableName, content)
+			InsertBatch(ctx, db, tableName, content)
 		}
 	}
 }
 
-func loadFixtureChainFromString(db *sql.DB, fixture string) {
+func loadFixtureChainFromString(ctx context.Context, db *sql.DB, fixture string) {
 	appenv.ForceTestEnv()
 
 	var content yaml.MapSlice
 	fixture = dedent.Dedent(fixture)
 	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
 	bytesFixture := []byte(fixture)
-	logging.SharedLogger.WithContext(context.Background()).Infof("Loading data chain:\n%s", bytesFixture)
+	logging.EntryFromContext(ctx).Infof("Loading data chain:\n%s", bytesFixture)
 	err := yaml.Unmarshal(bytesFixture, &content)
 	if err != nil {
 		panic(err)
@@ -171,15 +179,17 @@ func loadFixtureChainFromString(db *sql.DB, fixture string) {
 			}
 			data = append(data, rowData)
 		}
-		InsertBatch(db, item.Key.(string), data)
+		InsertBatch(ctx, db, item.Key.(string), data)
 	}
 }
 
 // InsertBatch insert the data into the table with the name given.
-func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise InsertBatch will panic on logging.
+func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[string]interface{}) {
 	appenv.ForceTestEnv()
 
-	tx, err := db.Begin()
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -217,13 +227,13 @@ func InsertBatch(db *sql.DB, tableName string, data []map[string]interface{}) {
 }
 
 //nolint:gosec
-func emptyDB(db *sql.DB, dbName string) error {
+func emptyDB(ctx context.Context, db *sql.DB, dbName string) error {
 	appenv.ForceTestEnv()
 
-	rows, err := db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+	rows, err := db.QueryContext(ctx, `SELECT CONCAT(table_schema, '.', table_name)
                          FROM   information_schema.tables
                          WHERE  table_type   = 'BASE TABLE'
-                           AND  table_schema = '` + dbName + `'
+                           AND  table_schema = '`+dbName+`'
                            AND  table_name  != 'gorp_migrations'
                            AND  table_name  != 'user_batches'
                          ORDER BY table_name`)
@@ -274,11 +284,9 @@ func emptyDB(db *sql.DB, dbName string) error {
 	return tx.Commit()
 }
 
-// EmptyDB empties all tables of the database specified in the config.
-func EmptyDB(db *sql.DB) {
-	appenv.ForceTestEnv()
-	dbConfig, _ := app.DBConfig(app.LoadConfig())
-	if err := emptyDB(db, dbConfig.DBName); err != nil {
-		panic(err)
-	}
+func emptyDBFromContextConfig(ctx context.Context, db *sql.DB) {
+	config := GetConfigFromContext(ctx)
+	dbConfig, err := app.DBConfig(config)
+	mustNotBeError(err)
+	mustNotBeError(emptyDB(ctx, db, dbConfig.DBName))
 }

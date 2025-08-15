@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -30,7 +30,7 @@ func (ctx *TestContext) TimeNow(timeStr string) error {
 	if err := ctx.ServerTimeNow(timeStr); err != nil {
 		return err
 	}
-	MockDBTime(time.Now().UTC().Format(time.DateTime + ".999999999"))
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(time.Now().UTC().Format(time.DateTime+".999999999")))
 	return nil
 }
 
@@ -49,7 +49,7 @@ func (ctx *TestContext) TimeIsFrozen() error {
 	if err := ctx.ServerTimeIsFrozen(); err != nil {
 		return err
 	}
-	MockDBTime(time.Now().UTC().Format(time.DateTime + ".999999999"))
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(time.Now().UTC().Format(time.DateTime+".999999999")))
 	return nil
 }
 
@@ -113,7 +113,7 @@ func (ctx *TestContext) getPrivateKeyOf(signerName string) *rsa.PrivateKey {
 		config, _ := app.TokenConfig(ctx.application.Config)
 		privateKey = config.PrivateKey
 	case "the task platform":
-		privateKey = tokentest.TaskPlatformPrivateKeyParsed
+		privateKey = tokentest.TaskPlatformPrivateKeyParsed()
 	default:
 		panic(fmt.Errorf("unknown signer: %q. Only \"the app\" and \"the task platform\" are supported", signerName))
 	}
@@ -180,10 +180,10 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 
 	// Only 'domain' and 'auth' changes are currently supported
 	if config.IsSet("auth") {
-		ctx.application.ReplaceAuthConfig(config)
+		ctx.application.ReplaceAuthConfig(config, ctx.logger)
 	}
 	if config.IsSet("domains") {
-		ctx.application.ReplaceDomainsConfig(config)
+		ctx.application.ReplaceDomainsConfig(config, ctx.logger)
 	}
 
 	return nil

@@ -17,7 +17,7 @@ import (
 func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		attempts:
 			- {participant_id: 11, id: 1, root_item_id: 112, allows_submissions_until: 3019-05-30 12:00:00}
 			- {participant_id: 11, id: 2, root_item_id: 112}
@@ -75,7 +75,7 @@ func TestResultStore_Propagate(t *testing.T) {
 		{name: "basic", wantErr: false},
 	}
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/main")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/main")
 	defer func() { _ = db.Close() }()
 
 	for _, tt := range tests {
@@ -97,11 +97,11 @@ func TestResultStore_Propagate(t *testing.T) {
 // Works locally but fails twice for every run on CI, losing 20 minutes each time.
 // Comment for now until the current emergency is over.
 // func TestResultStore_Propagate_Concurrent(t *testing.T) {
-//	db := testhelpers.SetupDBWithFixture("results_propagation/main")
+//	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/main")
 //	defer func() { _ = db.Close() }()
 //
 //	testhelpers.RunConcurrently(func() {
-//		s := database.NewDataStoreWithContext(context.Background(), db)
+//		s := database.NewDataStoreWithContext(db.GetContext(), db)
 //		err := s.InTransaction(func(st *database.DataStore) error {
 //			st.ScheduleResultsPropagation()
 //			return nil

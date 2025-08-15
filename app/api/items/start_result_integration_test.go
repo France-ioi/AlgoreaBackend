@@ -20,7 +20,7 @@ import (
 func TestService_startResult_concurrency(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		items: [{id: 1, type: Task, default_language_tag: 'fr', requires_explicit_entry: 0}]
 		groups: [{id: 3, type: User, root_activity_id: 1}]
 		users: [{group_id: 3, login: john}]
@@ -53,5 +53,6 @@ func TestService_startResult_concurrency(t *testing.T) {
 		"POST", "/items/1/start-result?attempt_id=0", nil, nil)
 }
 
+//nolint:gochecknoglobals // this is a link to a global variable to store the default hook, used for testing purposes only
 //go:linkname onBeforeInsertingResultInResultStartHook github.com/France-ioi/AlgoreaBackend/v2/app/api/items.onBeforeInsertingResultInResultStartHook
 var onBeforeInsertingResultInResultStartHook atomic.Value

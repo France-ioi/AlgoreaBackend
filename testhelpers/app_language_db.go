@@ -1,51 +1,33 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
+import (
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+)
+
 func (ctx *TestContext) databaseCountRows(table string, datamap map[string]string) int {
-	query, values := ctx.buildDatabaseCountRowQuery(table, datamap)
-
-	return ctx.queryScalar(query, values)
-}
-
-// buildDatabaseCountRowQuery builds a query to count the rows in a table that match the map.
-func (ctx *TestContext) buildDatabaseCountRowQuery(table string, datamap map[string]string) (query string, values []interface{}) {
-	var conditions string
+	query := ctx.application.Database.Table(table)
 	for key, value := range datamap {
-		if conditions != "" {
-			conditions += " AND "
-		}
-
+		columnName := database.QuoteName(key)
 		switch {
 		case value == nullValue:
-			conditions += "`" + key + "` IS NULL "
+			query = query.Where(columnName + " IS NULL")
 		case value == tableValueFalse:
-			conditions += "`" + key + "` = 0 "
+			query = query.Where(columnName + " = 0")
 		case value == tableValueTrue:
-			conditions += "`" + key + "` = 1 "
+			query = query.Where(columnName + " = 1")
 		default:
-			conditions += "`" + key + "`" + " = ? "
+			var processedValue interface{} = value
 			if value[0] == referencePrefix {
-				values = append(values, ctx.getIDOfReference(value))
-			} else {
-				values = append(values, value)
+				processedValue = ctx.getIDOfReference(value)
 			}
+			query = query.Where(columnName+" = ?", processedValue)
 		}
 	}
 
-	table = "`" + table + "`"
-	query = "SELECT COUNT(*) as count FROM " + table + " WHERE " + conditions
-
-	return query, values
-}
-
-// queryScalar returns a single value from the database as the result of the query.
-func (ctx *TestContext) queryScalar(query string, values []interface{}) int {
 	var resultCount int
-	err := ctx.db.
-		QueryRow(query, values...).
-		Scan(&resultCount)
-	mustNotBeError(err)
+	mustNotBeError(query.Count(&resultCount).Error())
 
 	return resultCount
 }

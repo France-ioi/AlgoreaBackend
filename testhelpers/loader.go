@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 // Package testhelpers provides the interface and features to run the Gherkin tests.
 package testhelpers
@@ -15,12 +15,15 @@ import (
 	"github.com/zenovich/flowmingo"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
-var defaultGodogOptions = godog.Options{
-	Output: colors.Colored(os.Stdout),
-	Format: "progress",
-	Strict: true,
+func defaultGodogOptions() godog.Options {
+	return godog.Options{
+		Output: colors.Colored(os.Stdout),
+		Format: "progress",
+		Strict: true,
+	}
 }
 
 func init() { //nolint:gochecknoinits // bind Godog flags only once before running tests
@@ -29,12 +32,12 @@ func init() { //nolint:gochecknoinits // bind Godog flags only once before runni
 
 // bindGodogCmdFlags binds the command arguments into the Godog options.
 func bindGodogCmdFlags() {
-	godog.BindFlags("godog.", flag.CommandLine, &defaultGodogOptions)
+	godog.BindFlags("godog.", flag.CommandLine, golang.Ptr(defaultGodogOptions()))
 }
 
-type contextKey string
+type contextKey int
 
-var outputRestorerFuncKey = contextKey("outputRestorerFunc")
+const outputRestorerFuncKey contextKey = iota
 
 // RunGodogTests launches GoDog tests (bdd tests) for the current directory
 // (the one from the tested package).
@@ -47,7 +50,7 @@ func RunGodogTests(t *testing.T, tags string) {
 		panic(err)
 	}
 
-	options := defaultGodogOptions
+	options := defaultGodogOptions()
 	featureFiles := featureFilesInCurrentDir()
 
 	if tags != "" {

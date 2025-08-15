@@ -21,7 +21,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 	}{
 		{
 			name: "task token",
-			raw:  payloadstest.TaskPayloadFromAlgoreaPlatform,
+			raw:  payloadstest.TaskPayloadFromAlgoreaPlatform(),
 			want: &TaskToken{
 				Date:               "02-05-2019",
 				UserID:             "556371821693219925",
@@ -49,7 +49,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 		},
 		{
 			name: "answer token",
-			raw:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
+			raw:  payloadstest.AnswerPayloadFromAlgoreaPlatform(),
 			want: &AnswerToken{
 				Date:            "02-05-2019",
 				UserID:          "556371821693219925",
@@ -73,7 +73,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 		},
 		{
 			name: "hint token",
-			raw:  payloadstest.HintPayloadFromTaskPlatform,
+			raw:  payloadstest.HintPayloadFromTaskPlatform(),
 			want: &HintToken{
 				Date:      "02-05-2019",
 				UserID:    "556371821693219925",

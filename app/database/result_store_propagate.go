@@ -232,7 +232,7 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
 		}
 
-		logging.SharedLogger.WithContext(store.ctx()).Debugf(
+		logging.EntryFromContext(store.ctx()).Debugf(
 			"Duration of step of results propagation: %d rows affected, took %v",
 			result.RowsAffected,
 			time.Since(initTransactionTime),
@@ -404,7 +404,7 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(store *Da
 			// Finally we unmark all unchanged results marked as 'recomputing'.
 			mustNotBeError(store.Exec(`DELETE FROM ` + resultsPropagateTableName + ` WHERE state = 'recomputing'`).Error())
 
-			logging.SharedLogger.WithContext(store.ctx()).
+			logging.EntryFromContext(store.ctx()).
 				Debugf("Duration of step of results propagation: %d rows affected, %d rows modified, took %v",
 					rowsAffected, rowsModified, time.Since(initTransactionTime))
 
@@ -493,7 +493,7 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(store *DataSt
 
 		mustNotBeError(store.Exec("DELETE FROM " + resultsPropagateTableName + " WHERE state = 'propagating'").Error())
 
-		logging.SharedLogger.WithContext(store.ctx()).Debugf(
+		logging.EntryFromContext(store.ctx()).Debugf(
 			"Duration of final step of results propagation: %d rows affected, took %v",
 			result.RowsAffected,
 			time.Since(initTransactionTime),
@@ -544,7 +544,7 @@ func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 
 			return nil
 		}))
-		logging.SharedLogger.WithContext(store.ctx()).Debugf(
+		logging.EntryFromContext(store.ctx()).Debugf(
 			"Duration of step of results propagation insertion from results_recompute_for_items: took %v with %d rows affected",
 			time.Since(initTransactionTime),
 			rowsAffected,

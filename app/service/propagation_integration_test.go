@@ -1,3 +1,5 @@
+//go:build !unit
+
 package service_test
 
 import (
@@ -20,6 +22,8 @@ import (
 )
 
 func TestSchedulePropagation(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	type args struct {
 		endpoint string
 	}
@@ -66,11 +70,15 @@ func TestSchedulePropagation(t *testing.T) {
 		},
 	}
 
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(`
+			logger, logHook := logging.NewMockLogger()
+			ctx := logging.ContextWithLogger(ctx, logger)
+
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				groups:
 					- {id: 1, type: Class}
 				items:
@@ -83,9 +91,6 @@ func TestSchedulePropagation(t *testing.T) {
 
 			httpmock.Activate()
 			defer httpmock.DeactivateAndReset()
-
-			logHook, restoreFunc := logging.MockSharedLoggerHook()
-			defer restoreFunc()
 
 			if tt.args.endpoint != "" {
 				if tt.endpointCallErr == nil {

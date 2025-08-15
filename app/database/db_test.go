@@ -179,15 +179,13 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db, mock := NewDBMock()
+			ctx, _, logHook := logging.NewContextWithNewMockLogger()
+			db, mock := NewDBMock(ctx)
 			defer func() { _ = db.Close() }()
 
 			var duration time.Duration
 			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
 			defer monkey.UnpatchAll()
-
-			logHook, restoreLoggerFunc := logging.MockSharedLoggerHook()
-			defer restoreLoggerFunc()
 
 			mock.ExpectBegin()
 			mock.ExpectQuery("SELECT 1").
@@ -462,14 +460,12 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db, mock := NewDBMock()
-			defer func() { _ = db.Close() }()
-
-			loggerHook, restoreLoggerFunc := logging.MockSharedLoggerHook()
-			defer restoreLoggerFunc()
+			ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
 			conf := viper.New()
 			conf.Set("Level", "error")
-			logging.SharedLogger.Configure(conf)
+			logger.Configure(conf)
+			db, mock := NewDBMock(ctx)
+			defer func() { _ = db.Close() }()
 
 			var duration time.Duration
 			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
@@ -505,14 +501,12 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db, mock := NewDBMock()
-			defer func() { _ = db.Close() }()
-
-			loggerHook, restoreLoggerFunc := logging.MockSharedLoggerHook()
-			defer restoreLoggerFunc()
+			ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
 			conf := viper.New()
 			conf.Set("Level", "error")
-			logging.SharedLogger.Configure(conf)
+			logger.Configure(conf)
+			db, mock := NewDBMock(ctx)
+			defer func() { _ = db.Close() }()
 
 			var duration time.Duration
 			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
@@ -641,7 +635,7 @@ func TestDB_QueryConstructors(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+			db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 			db = db.Table("myTable")
 			db.ctes = make([]cte, 0, 1)
 			if testCase.funcToPrepare != nil {
@@ -697,7 +691,7 @@ func TestDB_Count(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT count(*) FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"count"}).AddRow(1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -744,7 +738,7 @@ func TestDB_Take(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable` WHERE (id = 1) LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -830,7 +824,7 @@ func TestDB_Pluck(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -918,7 +912,7 @@ func TestDB_PluckFirst(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id FROM `myTable` LIMIT 1")).
 		WillReturnRows(mock.NewRows([]string{"id"}).AddRow(1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -986,7 +980,7 @@ func TestDB_Scan(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `myTable`")).
 		WillReturnRows(mock.NewRows([]string{"id", "value"}).AddRow(int64(1), "value"))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -1089,7 +1083,7 @@ func TestDB_Delete(t *testing.T) {
 		regexp.QuoteMeta("WHERE (id = 1)")).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -1116,7 +1110,7 @@ func TestDB_Exec(t *testing.T) {
 		WithArgs(1, 2).
 		WillReturnResult(sqlmock.NewResult(-1, 1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db.ctes = make([]cte, 0, 1)
 
 	execDB := db.Exec(query, 1, 2)
@@ -1505,7 +1499,7 @@ func TestDB_UpdateColumn(t *testing.T) {
 		WithArgs(someName).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -1528,7 +1522,7 @@ func TestDB_Set(t *testing.T) {
 	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR UPDATE").
 		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
-	db = cloneDBWithNewContext(context.WithValue(context.Background(), testContextKey("k"), "v"), db)
+	db = cloneDBWithNewContext(context.WithValue(db.GetContext(), testContextKey("k"), "v"), db)
 	db = db.Table("myTable")
 	db.ctes = make([]cte, 0, 1)
 
@@ -1558,13 +1552,15 @@ func TestOpen_DSN(t *testing.T) {
 		func(*logging.Logger) bool { return true })
 	defer patchGuard.Unpatch()
 
-	db, err := Open("/db")
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	db, err := Open(ctx, "/db")
 	require.Error(t, err)
 	assert.Nil(t, db)
 }
 
 func TestOpen_WrongSourceType(t *testing.T) {
-	db, err := Open(1234)
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	db, err := Open(ctx, 1234)
 	assert.Equal(t, errors.New("unknown database source type: int (1234)"), err)
 	assert.Nil(t, db)
 }
@@ -1574,7 +1570,8 @@ func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 	monkey.Patch(OpenRawDBConnection, func(string, bool) (*sql.DB, error) { return nil, expectedError })
 	defer monkey.UnpatchAll()
 
-	db, err := Open("mydsn")
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	db, err := Open(ctx, "mydsn")
 	assert.Equal(t, expectedError, err)
 	assert.Nil(t, db)
 }
@@ -1813,10 +1810,9 @@ func TestDB_withNamedLock_HandlesReleaseError(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db, dbMock := NewDBMock()
+			ctx, _, logHook := logging.NewContextWithNewMockLogger()
+			db, dbMock := NewDBMock(ctx)
 			defer func() { _ = db.Close() }()
-			logHook, logRestoreFunc := logging.MockSharedLoggerHook()
-			defer logRestoreFunc()
 
 			lockName := someName
 			timeout := 1234 * time.Millisecond
@@ -1884,7 +1880,9 @@ func TestDB_WithExclusiveWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-var retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp = "^" + regexp.QuoteMeta("INSERT INTO users (id) VALUES (?)") + "$"
+func retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp() string {
+	return "^" + regexp.QuoteMeta("INSERT INTO users (id) VALUES (?)") + "$"
+}
 
 func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
@@ -1893,10 +1891,10 @@ func TestDB_retryOnDuplicatePrimaryKeyError(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	for i := 1; i < keyTriesCount; i++ {
-		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(i).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.PRIMARY'"})
 	}
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(keyTriesCount).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
@@ -1915,7 +1913,7 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ErrorsWhenLimitExceeded(t *testing.T
 	defer func() { _ = db.Close() }()
 
 	for i := 1; i < keyTriesCount+1; i++ {
-		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
+		mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(i).
 			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.PRIMARY'"})
 	}
 
@@ -1950,7 +1948,7 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+			mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 				WillReturnError(testCase.expectedError)
 
 			err := db.retryOnDuplicatePrimaryKeyError("users", func(db *DB) error {
@@ -1965,16 +1963,15 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 func TestDB_retryOnDuplicateKeyError_LogsRetryableErrorsAsInfo(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db, mock := NewDBMockWithLogConfig(LogConfig{LogSQLQueries: false, AnalyzeSQLQueries: false}, false)
+	ctx, _, logHook := logging.NewContextWithNewMockLogger()
+	db, mock := NewDBMockWithLogConfig(ctx, LogConfig{LogSQLQueries: false, AnalyzeSQLQueries: false}, false)
 	defer func() { _ = db.Close() }()
-	logHook, logRestoreFunc := logging.MockSharedLoggerHook()
-	defer logRestoreFunc()
 
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry 'login-1' for key 'users.login'"})
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 		WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '1' for key 'users.PRIMARY'"})
-	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(1).
+	mock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(1).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := db.retryOnDuplicateKeyError("users", "login", "user's login", func(db *DB) error {
@@ -2077,7 +2074,7 @@ func TestDB_GetContext(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectCommit()
 
-	expectedContext := context.WithValue(context.Background(), testContextKey("key"), "value")
+	expectedContext := context.WithValue(db.GetContext(), testContextKey("key"), "value")
 	db = cloneDBWithNewContext(expectedContext, db)
 
 	assert.Equal(t, expectedContext, db.GetContext())

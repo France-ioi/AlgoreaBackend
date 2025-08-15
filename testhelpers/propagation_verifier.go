@@ -1,6 +1,9 @@
+//go:build !prod && !unit
+
 package testhelpers
 
 import (
+	"context"
 	"net/http/httptest"
 	"testing"
 
@@ -64,12 +67,12 @@ func (pv *PropagationVerifier) WithHook(hookFunc PropagationVerifierHookFunc) *P
 
 // Run runs the propagation verifier.
 func (pv *PropagationVerifier) Run(
-	t *testing.T,
+	ctx context.Context, t *testing.T,
 	codeTriggeringPropagations func(dataStore *database.DataStore, appServer *httptest.Server),
 ) {
 	t.Helper()
 
-	db := SetupDBWithFixtureString(pv.fixture)
+	db := SetupDBWithFixtureString(ctx, pv.fixture)
 
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(dataStore *database.DataStore) error {

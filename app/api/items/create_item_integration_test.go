@@ -19,7 +19,7 @@ import (
 func Test_insertItemRow_Duplicate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`items: [{id: 1, default_language_tag: fr}]`)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `items: [{id: 1, default_language_tag: fr}]`)
 	defer func() { _ = db.Close() }()
 
 	var nextID int64

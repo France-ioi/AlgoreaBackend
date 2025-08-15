@@ -17,7 +17,7 @@ import (
 func TestResultStore_Propagate_RecomputesResultsForItemsFromTableResultsRecomputeForItems(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1}, {id: 2}, {id: 3}]
 		items:
 			- {id: 111, default_language_tag: fr}

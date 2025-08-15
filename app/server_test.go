@@ -14,10 +14,19 @@ import (
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestServer_Start(t *testing.T) {
-	app, err := New()
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	srv, err := NewServer(app)
 	require.NoError(t, err)
@@ -42,7 +51,13 @@ func TestServer_Start(t *testing.T) {
 }
 
 func TestServer_Start_HandlesListenerError(t *testing.T) {
-	app, err := New()
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	app.Config.Set("server.port", -1)
 	srv, err := NewServer(app)
@@ -61,7 +76,13 @@ func TestServer_Start_HandlesListenerError(t *testing.T) {
 }
 
 func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
-	app, err := New()
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	srv, err := NewServer(app)
 	require.NoError(t, err)
@@ -91,7 +112,6 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 			defer shutdownGuard.Restore()
 			return srv.Shutdown(ctx)
 		})
-	defer monkey.UnpatchAll()
 
 	doneChannel := srv.Start()
 	defer close(doneChannel)
@@ -106,7 +126,13 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 }
 
 func TestServer_Start_CanBeStoppedByShutdown(t *testing.T) {
-	app, err := New()
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	srv, err := NewServer(app)
 	require.NoError(t, err)
@@ -125,7 +151,13 @@ func TestServer_Start_CanBeStoppedByShutdown(t *testing.T) {
 }
 
 func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
-	app, err := New()
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
 	require.NoError(t, err)
 	srv, err := NewServer(app)
 	require.NoError(t, err)
@@ -141,7 +173,6 @@ func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
 			_ = server.Shutdown(ctx)
 			return expectedError
 		})
-	defer monkey.UnpatchAll()
 
 	doneChannel := srv.Start()
 	defer close(doneChannel)

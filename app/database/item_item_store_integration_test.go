@@ -17,7 +17,7 @@ import (
 func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), groupGroupMarksResultsAsChangedFixture)
 	defer func() { _ = db.Close() }()
 
 	dataStore := database.NewDataStore(db)
@@ -53,7 +53,7 @@ func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 func TestItemItemStore_TriggerAfterInsert_MarksPermissionsForRecomputing(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
 	dataStore := database.NewDataStore(db)
@@ -82,6 +82,9 @@ func TestItemItemStore_TriggerAfterInsert_MarksPermissionsForRecomputing(t *test
 }
 
 func TestItemItemStore_TriggerAfterUpdate_MarksPermissionsForRecomputing(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		column   string
 		newValue interface{}
@@ -96,7 +99,7 @@ func TestItemItemStore_TriggerAfterUpdate_MarksPermissionsForRecomputing(t *test
 		t.Run(fmt.Sprintf("%s=%v", test.column, test.newValue), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+			db := testhelpers.SetupDBWithFixture(ctx, "permission_granted_store/compute_all_access/_common")
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -128,7 +131,7 @@ func TestItemItemStore_TriggerAfterUpdate_MarksPermissionsForRecomputing(t *test
 func TestItemItemStore_TriggerBeforeDelete_MarksPermissionsForRecomputing(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
 	dataStore := database.NewDataStore(db)

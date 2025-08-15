@@ -16,6 +16,8 @@ import (
 )
 
 func TestGroupGroupStore_DeleteRelation(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name                         string
 		fixture                      string
@@ -167,12 +169,13 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			},
 		},
 	}
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixture("group_group_store/delete_relation/" + tt.fixture)
+			db := testhelpers.SetupDBWithFixture(ctx, "group_group_store/delete_relation/"+tt.fixture)
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)
 			assert.NoError(t, dataStore.Table("groups_propagate").UpdateColumn("ancestors_computation_state", "done").Error())
@@ -334,6 +337,9 @@ const (
 )
 
 func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		name            string
 		parentGroupID   int64
@@ -393,7 +399,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			db := testhelpers.SetupDBWithFixtureString(groupGroupMarksResultsAsChangedFixture)
+			db := testhelpers.SetupDBWithFixtureString(ctx, groupGroupMarksResultsAsChangedFixture)
 			defer func() { _ = db.Close() }()
 
 			dataStore := database.NewDataStore(db)
@@ -410,6 +416,9 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 }
 
 func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		name            string
 		parentGroupID   int64
@@ -485,7 +494,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			if test.doNotSetExpired {
 				expiresAt = maxDateTime
 			}
-			db := testhelpers.SetupDBWithFixtureString(
+			db := testhelpers.SetupDBWithFixtureString(ctx,
 				groupGroupMarksResultsAsChangedFixture,
 				fmt.Sprintf("groups_groups: [{parent_group_id: %d, child_group_id: %d, expires_at: %s}]",
 					test.parentGroupID, test.childGroupID, expiresAt))
@@ -515,7 +524,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 func TestGroupGroupStore_TriggerBeforeUpdate_RefusesToModifyParentGroupIDOrChildGroupIDOrIsTeamMembership(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1}, {id: 2}]
 		groups_groups: [{parent_group_id: 1, child_group_id: 2}]
 	`)
@@ -589,7 +598,7 @@ func queryResultsAndStatesForTests(t *testing.T, resultStore *database.ResultSto
 func TestGroupGroupStore_TriggerBeforeDelete(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 1}, {id: 2}, {id: 3, type: Team}, {id: 4}]
 		groups_groups: [{parent_group_id: 1, child_group_id: 2}, {parent_group_id: 3, child_group_id: 4}]`)
 	defer func() { _ = db.Close() }()

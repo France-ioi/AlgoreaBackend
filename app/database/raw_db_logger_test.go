@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"database/sql/driver"
 	"testing"
 
@@ -13,11 +12,9 @@ import (
 )
 
 func TestNewRawDBLogger(t *testing.T) {
-	hook, restoreFunc := logging.MockSharedLoggerHook()
-	defer restoreFunc()
-
+	ctx, _, hook := logging.NewContextWithNewMockLogger()
 	rawLogger := NewRawDBLogger()
-	rawLogger.Log(context.TODO(), "some message", "err", nil)
+	rawLogger.Log(ctx, "some message", "err", nil)
 	entries := hook.AllEntries()
 	require.Len(t, entries, 1)
 	assert.Equal(t, "info", entries[0].Level.String())
@@ -27,10 +24,9 @@ func TestNewRawDBLogger(t *testing.T) {
 }
 
 func TestRawDBLogger_ShouldSkipSkippedActions(t *testing.T) {
-	hook, restoreFunc := logging.MockSharedLoggerHook()
-	defer restoreFunc()
+	ctx, _, hook := logging.NewContextWithNewMockLogger()
 	rawLogger := NewRawDBLogger()
-	rawLogger.Log(context.TODO(), "sql-stmt-exec", "err", driver.ErrSkip)
+	rawLogger.Log(ctx, "sql-stmt-exec", "err", driver.ErrSkip)
 	assert.Empty(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 }
 

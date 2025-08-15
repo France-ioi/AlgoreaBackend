@@ -29,7 +29,7 @@ func NewRawDBLogger() instrumentedsql.Logger {
 
 		valuesMap["type"] = "db"
 
-		log.SharedLogger.WithContext(ctx).WithFields(valuesMap).Info(msg)
+		log.EntryFromContext(ctx).WithFields(valuesMap).Info(msg)
 	})
 }
 

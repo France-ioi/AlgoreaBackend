@@ -25,10 +25,10 @@ func TestAccessTokenStore_InsertNewToken(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	timeNow, _ := time.Parse(time.DateTime, "2021-01-02 03:04:05")
-	testhelpers.MockDBTime(timeNow.Format(time.DateTime))
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime(timeNow.Format(time.DateTime))
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 123}]
 		sessions: [{session_id: 456, user_id: 123, refresh_token: 'refresh_token'}]`)
 	defer func() { _ = db.Close() }()
@@ -50,10 +50,10 @@ func TestAccessTokenStore_GetMostRecentValidTokenForSession(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	timeNow, _ := time.Parse(time.DateTime, "2021-01-02 03:04:05")
-	testhelpers.MockDBTime(timeNow.Format(time.DateTime))
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime(timeNow.Format(time.DateTime))
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 123}]
 		sessions:
 			- {session_id: 456, user_id: 123, refresh_token: 'refresh_token1'}
@@ -86,10 +86,10 @@ func TestAccessTokenStore_DeleteExpiredTokensOfUser(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	timeNow, _ := time.Parse(time.DateTime, "2021-01-02 03:09:08")
-	testhelpers.MockDBTime(timeNow.Format(time.DateTime))
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime(timeNow.Format(time.DateTime))
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups: [{id: 123}, {id: 124}]
 		sessions:
 			- {session_id: 456, user_id: 123, refresh_token: 'refresh_token1'}

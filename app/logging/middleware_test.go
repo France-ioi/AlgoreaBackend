@@ -12,10 +12,9 @@ import (
 
 func TestMiddleware_Success(t *testing.T) {
 	assert := assertlib.New(t)
-	hook, restoreFct := MockSharedLoggerHook()
-	defer restoreFct()
+	logger, hook := NewMockLogger()
 
-	doRequest(false)
+	doRequest(logger, false)
 
 	assert.Len(hook.AllEntries(), 3)
 
@@ -43,10 +42,9 @@ func TestMiddleware_Success(t *testing.T) {
 
 func TestMiddleware_Panic(t *testing.T) {
 	assert := assertlib.New(t)
-	hook, restoreFct := MockSharedLoggerHook()
-	defer restoreFct()
+	logger, hook := NewMockLogger()
 
-	doRequest(true)
+	doRequest(logger, true)
 
 	assert.Len(hook.AllEntries(), 3)
 
@@ -57,7 +55,7 @@ func TestMiddleware_Panic(t *testing.T) {
 	assert.Equal("my panic msg", entryData["panic"])
 }
 
-func doRequest(forcePanic bool) {
+func doRequest(logger *Logger, forcePanic bool) {
 	// setting up the server with 1 service and using the logger middleware
 	loggerMiddleware := NewStructuredLogger()
 	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
@@ -73,7 +71,8 @@ func doRequest(forcePanic bool) {
 	// use the chi `Recoverer` middleware to catch panic and log it
 	// use the chi `RequestID` middleware to include request id in it (appear in logs)
 	// The order of the middlewares is crucial!
-	mainSrv := httptest.NewTLSServer(middleware.RequestID(loggerMiddleware(middleware.Recoverer(handler))))
+	mainSrv := httptest.NewTLSServer(ContextWithLoggerMiddleware(logger)(
+		middleware.RequestID(loggerMiddleware(middleware.Recoverer(handler)))))
 	defer mainSrv.Close()
 
 	// calling web server

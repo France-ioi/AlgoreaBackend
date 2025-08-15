@@ -35,7 +35,7 @@ type attemptType struct {
 func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 10}
 			- {id: 100}
@@ -51,8 +51,8 @@ func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
 			- {attempt_id: 0, participant_id: 20, item_id: 20}`)
 	defer func() { _ = db.Close() }()
 
-	testhelpers.MockDBTime("2019-05-30 11:00:00")
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime("2019-05-30 11:00:00")
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
 	var newAttemptID int64
 	var err error
