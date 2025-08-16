@@ -98,9 +98,9 @@ linters:
     - err113           # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
     - contextcheck     # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
     - forcetypeassert  # For update to go1.20
-    - ireturn          # For update to go1.20
-    - maintidx         # For update to go1.20
-    - nlreturn         # For update to go1.20
+    - ireturn          # Forces functions to accept Interfaces and return concrete types. (Very subjective, complains about many implementations of interfaces from third-party libraries, the benefit is questionable. Disabled by default in golangci-lint)
+    - maintidx         # Measures the maintainability index of each function. (It only complains about some out test functions, but it is not very useful. Disabled by default in golangci-lint)
+    - nlreturn         # Checks for a new line before return and branch statements. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
     - nonamedreturns   # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
     - tenv             # Deprecated in golangci-lint v1.64.0, replaced by `usetesting`
     - wrapcheck        # Requires all errors from external packages are wrapped during return. (It requires many changes without any real benefit for now. Disabled by default in golangci-lint.)
