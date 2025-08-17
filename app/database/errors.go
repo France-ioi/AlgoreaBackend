@@ -16,9 +16,10 @@ func IsDuplicateEntryErrorForKey(err error, table, key string) bool {
 	return IsDuplicateEntryError(err) && mysqldb.ErrorContains(err, fmt.Sprintf("for key '%s.%s'", table, key))
 }
 
-// IsForeignConstraintError checks whether an error corresponds to a foreign key constraint fail on insert/update.
-func IsForeignConstraintError(err error) bool {
-	return mysqldb.IsMysqlError(err, mysqldb.ForeignConstraintError)
+// IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError checks whether an error corresponds to a foreign key constraint failure
+// on inserting/updating a child row.
+func IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(err error) bool {
+	return mysqldb.IsMysqlError(err, mysqldb.ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError)
 }
 
 // IsDeadlockError checks whether an error corresponds to a deadlock when trying to get a lock.

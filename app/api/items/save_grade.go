@@ -231,7 +231,7 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 	})
 
 	// ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (the answer has been removed)
-	if insertError != nil && database.IsForeignConstraintError(insertError) {
+	if insertError != nil && database.IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(insertError) {
 		return false
 	}
 

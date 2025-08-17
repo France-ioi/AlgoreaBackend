@@ -221,7 +221,7 @@ func updateItemInDB(
 			return service.ErrForbidden(formdata.FieldErrorsError{"text_id": []string{
 				"text_id must be unique",
 			}})
-		} else if database.IsForeignConstraintError(err) {
+		} else if database.IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(err) {
 			return service.ErrInvalidRequest(formdata.FieldErrorsError{"default_language_tag": []string{
 				"default language should exist and there should be item's strings in this language",
 			}})
