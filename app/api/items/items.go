@@ -64,6 +64,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuthAndParticipant.Get("/items/log", service.AppHandler(srv.getActivityLogForAllItems).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
 	routerWithAuth.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
+	routerWithAuth.Delete("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.deleteItemString).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
 	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)

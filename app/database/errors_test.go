@@ -100,29 +100,56 @@ func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
 	}
 }
 
-func TestIsForeignConstraintError_matchError(t *testing.T) {
-	foreignConstraintError := mysql.MySQLError{
-		Number:  uint16(mysqldb.ForeignConstraintError),
-		Message: "Foreign Constraint Error",
+func TestIsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError_matchError(t *testing.T) {
+	foreignKeyConstraintFailedError := mysql.MySQLError{
+		Number:  uint16(mysqldb.ForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError),
+		Message: "Some message",
 	}
 
-	if !IsForeignConstraintError(error(&foreignConstraintError)) {
-		t.Error("should be a ForeignConstraintError")
+	if !IsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError(error(&foreignKeyConstraintFailedError)) {
+		t.Error("should be a ForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError")
 	}
 }
 
-func TestIsForeignConstraintError_otherError(t *testing.T) {
+func TestIsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError_otherError(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
 	}
 
-	if IsForeignConstraintError(error(&duplicateEntryError)) {
+	if IsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError(error(&duplicateEntryError)) {
 		t.Error("should not match a Duplicate Entry Error")
 	}
 
 	nonMysqlError := errors.New("other error")
-	if IsForeignConstraintError(nonMysqlError) {
+	if IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(nonMysqlError) {
+		t.Error("should not match a non-mysql error")
+	}
+}
+
+func TestIsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError_matchError(t *testing.T) {
+	foreignKeyConstraintError := mysql.MySQLError{
+		Number:  uint16(mysqldb.ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError),
+		Message: "Some message",
+	}
+
+	if !IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(error(&foreignKeyConstraintError)) {
+		t.Error("should be a ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError")
+	}
+}
+
+func TestIsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError_otherError(t *testing.T) {
+	duplicateEntryError := mysql.MySQLError{
+		Number:  uint16(mysqldb.DuplicateEntryError),
+		Message: "Duplicate Error",
+	}
+
+	if IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(error(&duplicateEntryError)) {
+		t.Error("should not match a Duplicate Entry Error")
+	}
+
+	nonMysqlError := errors.New("other error")
+	if IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(nonMysqlError) {
 		t.Error("should not match a non-mysql error")
 	}
 }
@@ -139,12 +166,12 @@ func TestIsLockDeadlockError_matchError(t *testing.T) {
 }
 
 func TestIsLockDeadlockError_otherError(t *testing.T) {
-	foreignConstraintError := mysql.MySQLError{
-		Number:  uint16(mysqldb.ForeignConstraintError),
-		Message: "Foreign Constraint Error",
+	foreignKeyConstraintError := mysql.MySQLError{
+		Number:  uint16(mysqldb.ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError),
+		Message: "Some message",
 	}
 
-	if IsDeadlockError(error(&foreignConstraintError)) {
+	if IsDeadlockError(error(&foreignKeyConstraintError)) {
 		t.Error("should not match a Foreign Constraint Error")
 	}
 
