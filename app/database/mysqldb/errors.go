@@ -18,6 +18,9 @@ const (
 	LockWaitTimeoutExceededError MysqlErrorNumber = 1205
 	// DeadlockError represents the mysql error "Deadlock found when trying to get lock; try restarting transaction".
 	DeadlockError MysqlErrorNumber = 1213
+	// ForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError represents a mysql foreign constraint error
+	// of deleting or updating a parent row.
+	ForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError MysqlErrorNumber = 1451
 	// ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError represents a mysql foreign constraint error
 	// of adding or updating a child row.
 	ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError MysqlErrorNumber = 1452
