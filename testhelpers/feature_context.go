@@ -4,6 +4,7 @@ package testhelpers
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -158,6 +159,8 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 				(*parentOutputRestorerFunc)(true)
 				*parentOutputRestorerFunc = nil
 			}
+
+			fmt.Printf("\nLogs: \n%s\n", ctx.logsHook.GetAllStructuredLogs()) //nolint:forbidigo // Print the app logs of the failed test
 		}
 		return contextCtx, tearDownErr //nolint:nilnil // It looks like we really want to return the context even if there is an error.
 	})
