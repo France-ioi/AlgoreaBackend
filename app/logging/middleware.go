@@ -69,7 +69,9 @@ func (l *StructuredLogger) NewLogEntry(httpRequest *http.Request) middleware.Log
 	return entry
 }
 
-// StructuredLoggerEntry is a logrus.FieldLogger.
+var _ middleware.LogFormatter = &StructuredLogger{}
+
+// StructuredLoggerEntry wraps a logrus.FieldLogger.
 type StructuredLoggerEntry struct {
 	Logger logrus.FieldLogger
 }
