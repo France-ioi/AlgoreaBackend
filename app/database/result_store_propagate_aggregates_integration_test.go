@@ -73,10 +73,13 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 				"latest_activity_at": oldDate,
 			}).Error())
 
-			err := resultStore.InTransaction(func(s *database.DataStore) error {
-				require.NoError(t, resultStore.Exec(
-					"INSERT IGNORE INTO results_propagate SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state FROM results").Error())
-				s.ScheduleResultsPropagation()
+			err := resultStore.InTransaction(func(store *database.DataStore) error {
+				require.NoError(t, resultStore.Exec(`
+					INSERT INTO results_propagate
+					SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state
+					FROM results
+					ON DUPLICATE KEY UPDATE state = IF(state='propagating', 'to_be_propagated', state)`).Error())
+				store.ScheduleResultsPropagation()
 				return nil
 			})
 			require.NoError(t, err)
