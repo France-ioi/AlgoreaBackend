@@ -135,5 +135,5 @@ func updateItemStringData(store *database.DataStore, itemID int64, languageTag s
 	dbMap["item_id"] = itemID
 	dbMap["language_tag"] = languageTag
 
-	service.MustNotBeError(store.ItemStrings().InsertOrUpdateMap(dbMap, columnsToUpdate))
+	service.MustNotBeError(store.ItemStrings().InsertOrUpdateMap(dbMap, columnsToUpdate, nil))
 }

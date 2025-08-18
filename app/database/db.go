@@ -745,11 +745,13 @@ func (conn *DB) constructInsertMapsStatement(
 	return query, values
 }
 
-// insertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
+// InsertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
 // (so all the maps should have the same keys)
 // into the given table (like insertMaps does). If it is a duplicate, the listed columns will be updated.
 // If updateColumns is nil, all the columns in dataMaps will be updated.
-func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]interface{}, updateColumns []string) error {
+func (conn *DB) InsertOrUpdateMaps(
+	tableName string, dataMaps []map[string]interface{}, updateColumns []string, customColumnUpdates map[string]string,
+) error {
 	if len(dataMaps) == 0 {
 		return nil
 	}
@@ -772,9 +774,14 @@ func (conn *DB) insertOrUpdateMaps(tableName string, dataMaps []map[string]inter
 			_, _ = builder.WriteString(", ")
 		}
 		_, _ = builder.WriteString(quotedColumn)
-		_, _ = builder.WriteString(" = VALUES(")
-		_, _ = builder.WriteString(quotedColumn)
-		_, _ = builder.WriteRune(')')
+		_, _ = builder.WriteString(" = ")
+		if customColumnUpdate, ok := customColumnUpdates[column]; ok {
+			_, _ = builder.WriteString(customColumnUpdate)
+		} else {
+			_, _ = builder.WriteString("VALUES(")
+			_, _ = builder.WriteString(quotedColumn)
+			_, _ = builder.WriteRune(')')
+		}
 	}
 	return conn.db.Exec(builder.String(), values...).Error
 }

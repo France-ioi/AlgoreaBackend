@@ -1169,7 +1169,7 @@ func TestDB_insertMaps_WithEmptyArray(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_insertOrUpdateMaps(t *testing.T) {
+func TestDB_InsertOrUpdateMaps(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, mock := NewDBMock()
@@ -1183,11 +1183,11 @@ func TestDB_insertOrUpdateMaps(t *testing.T) {
 		WithArgs(int64(1), "some value", nil).
 		WillReturnError(expectedError)
 
-	assert.Equal(t, expectedError, db.insertOrUpdateMaps("myTable", dataRows, []string{"sField", "sNullField"}))
+	assert.Equal(t, expectedError, db.InsertOrUpdateMaps("myTable", dataRows, []string{"sField", "sNullField"}, nil))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_insertOrUpdateMaps_WithNilUpdateColumnsList(t *testing.T) {
+func TestDB_InsertOrUpdateMaps_WithNilUpdateColumnsList(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, mock := NewDBMock()
@@ -1201,15 +1201,35 @@ func TestDB_insertOrUpdateMaps_WithNilUpdateColumnsList(t *testing.T) {
 		WithArgs(int64(1), "some value", nil).
 		WillReturnError(expectedError)
 
-	assert.Equal(t, expectedError, db.insertOrUpdateMaps("myTable", dataRows, nil))
+	assert.Equal(t, expectedError, db.InsertOrUpdateMaps("myTable", dataRows, nil, nil))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_insertOrUpdateMaps_WithEmptyArray(t *testing.T) {
+func TestDB_InsertOrUpdateMaps_WithEmptyArray(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	var dataRows []map[string]interface{}
-	assert.NoError(t, db.insertOrUpdateMaps("myTable", dataRows, []string{"sField", "sNullField"}))
+	assert.NoError(t, db.InsertOrUpdateMaps("myTable", dataRows, []string{"sField", "sNullField"}, nil))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_InsertOrUpdateMaps_withCustomColumnUpdates(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataRows := []map[string]interface{}{{"id": int64(1), "sField": "some value", "sNullField": nil}}
+
+	expectedError := errors.New("some error")
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?)"+
+		" ON DUPLICATE KEY UPDATE `sField` = IF(sField='a', 'b', sField), `sNullField` = NULL")).
+		WithArgs(int64(1), "some value", nil).
+		WillReturnError(expectedError)
+
+	assert.Equal(t, expectedError, db.InsertOrUpdateMaps(
+		"myTable", dataRows, []string{"sField", "sNullField"},
+		map[string]string{"sField": "IF(sField='a', 'b', sField)", "sNullField": "NULL"}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

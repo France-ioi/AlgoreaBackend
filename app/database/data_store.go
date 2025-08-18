@@ -417,16 +417,20 @@ func (s *DataStore) InsertMaps(dataMaps []map[string]interface{}) error {
 
 // InsertOrUpdateMap reads fields from the given map and inserts the values which have been set
 // into the store's table (like InsertMap does). If it is a duplicate, the listed columns will be updated.
-func (s *DataStore) InsertOrUpdateMap(dataMap map[string]interface{}, updateColumns []string) error {
-	return s.DB.insertOrUpdateMaps(s.tableName, []map[string]interface{}{dataMap}, updateColumns)
+func (s *DataStore) InsertOrUpdateMap(
+	dataMap map[string]interface{}, updateColumns []string, customColumnUpdates map[string]string,
+) error {
+	return s.DB.InsertOrUpdateMaps(s.tableName, []map[string]interface{}{dataMap}, updateColumns, customColumnUpdates)
 }
 
 // InsertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
 // (so all the maps should have the same keys)
 // into the store's table (like InsertMaps does). If it is a duplicate, the listed columns will be updated.
 // If updateColumns is nil, all the columns in dataMaps will be updated.
-func (s *DataStore) InsertOrUpdateMaps(dataMap []map[string]interface{}, updateColumns []string) error {
-	return s.DB.insertOrUpdateMaps(s.tableName, dataMap, updateColumns)
+func (s *DataStore) InsertOrUpdateMaps(
+	dataMap []map[string]interface{}, updateColumns []string, customColumnUpdates map[string]string,
+) error {
+	return s.DB.InsertOrUpdateMaps(s.tableName, dataMap, updateColumns, customColumnUpdates)
 }
 
 // ContextWithTransactionRetrying wraps the given context with a flag to retry each transaction once.
