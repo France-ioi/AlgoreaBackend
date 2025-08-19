@@ -193,7 +193,7 @@ func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[s
 	if err != nil {
 		panic(err)
 	}
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+	_, err = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS=0")
 	if err != nil {
 		panic(err)
 	}
@@ -210,13 +210,13 @@ func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[s
 		//nolint:gosec
 		query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)",
 			tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", "))
-		_, err = tx.Exec(query, values...)
+		_, err = tx.ExecContext(ctx, query, values...)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+	_, err = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS=1")
 	if err != nil {
 		panic(err)
 	}
@@ -248,12 +248,12 @@ func emptyDB(ctx context.Context, db *sql.DB, dbName string) error {
 		}
 	}()
 
-	tx, err := db.Begin()
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
+	_, err = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS=0")
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -262,20 +262,20 @@ func emptyDB(ctx context.Context, db *sql.DB, dbName string) error {
 	for rows.Next() {
 		var tableName string
 		if scanErr := rows.Scan(&tableName); scanErr != nil {
-			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+			_, _ = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return scanErr
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
-		_, err = tx.Exec("DELETE FROM " + tableName)
+		_, err = tx.ExecContext(ctx, "DELETE FROM "+tableName)
 		if err != nil {
-			_, _ = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+			_, _ = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()
 			return err
 		}
 	}
 
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
+	_, err = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS=1")
 	if err != nil {
 		_ = tx.Rollback()
 		return err
