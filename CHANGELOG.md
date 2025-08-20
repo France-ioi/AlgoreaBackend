@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.29.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.3...v2.29.0) - 2025-08-20
+- new service: `itemStringDelete`
+- suppress output in tests of `./app/`, mock the DB in unit-tests of `./app/`, skip integration tests and testhelpers on building `prod/unit`, fix `TestLoadConfig_Concurrent`
+- print related app logs of failed cucumber tests
+- move initialization of the global random number generator with random bytes from `app.New()` into `init()` function of `app/rand` package
+- (re)enable more linters
+
 ## [v2.28.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.2...v2.28.3) - 2025-07-08
 - fix and rework marking permissions for recomputing in triggers of `items_items`
 - optimize permissions marking in `after_update_items_items` even more
