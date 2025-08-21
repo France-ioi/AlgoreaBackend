@@ -530,12 +530,12 @@ func TestDataStore_InsertOrUpdateMap(t *testing.T) {
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?) "+
-		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = NULL")).
 		WithArgs(int64(1), "some value", nil).
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
-		InsertOrUpdateMap(dataRow, []string{"sField", "sNullField"}))
+		InsertOrUpdateMap(dataRow, []string{"sField", "sNullField"}, map[string]string{"sNullField": "NULL"}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -552,12 +552,12 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?), (?, ?, ?) "+
-		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = NULL")).
 		WithArgs(int64(1), "some value", "value", int64(2), "another value", nil).
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
-		InsertOrUpdateMaps(dataRows, []string{"sField", "sNullField"}))
+		InsertOrUpdateMaps(dataRows, []string{"sField", "sNullField"}, map[string]string{"sNullField": "NULL"}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

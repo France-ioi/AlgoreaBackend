@@ -725,7 +725,7 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 	dbMap["origin"] = "group_membership"
 
 	permissionGrantedStore := store.PermissionsGranted()
-	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate))
+	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate, nil))
 	store.SchedulePermissionsPropagation()
 	if dbMap["can_view"] != nil && dbMap["can_view"] != none || dbMap["is_owner"] != nil && dbMap["is_owner"].(bool) {
 		// the permissions propagation implicitly (via triggers) marks some results as to_be_propagated

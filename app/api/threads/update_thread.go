@@ -173,7 +173,7 @@ func (srv *Service) updateThread(responseWriter http.ResponseWriter, httpRequest
 
 		threadData := computeNewThreadData(
 			formData, oldThreadInfo.ThreadMessageCount, oldThreadInfo.ThreadHelperGroupID, input, itemID, participantID)
-		service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil))
+		service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil, nil))
 
 		return nil
 	})

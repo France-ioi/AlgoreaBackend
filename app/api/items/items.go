@@ -459,7 +459,7 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 		[]string{
 			"child_order", "category", "score_weight", "content_view_propagation", "upper_view_levels_propagation",
 			"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation",
-		}))
+		}, nil))
 }
 
 // createParticipantsGroupForItemRequiringExplicitEntry creates a new contest participants group for the given item and
