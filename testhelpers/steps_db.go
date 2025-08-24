@@ -222,7 +222,7 @@ func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 		}
 		groupsToCreate.Rows[0] = &messages.PickleTableRow{
 			Cells: []*messages.PickleTableCell{
-				{Value: "id"}, {Value: "name"}, {Value: "type"},
+				{Value: idString}, {Value: "name"}, {Value: "type"},
 			},
 		}
 
@@ -238,7 +238,7 @@ func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 			if groupIDColumnIndex != -1 &&
 				ctx.getDBTableRowIndexForPrimaryKey(
 					"groups",
-					map[string]string{"id": data.Rows[rowIndex].Cells[groupIDColumnIndex].Value},
+					map[string]string{idString: data.Rows[rowIndex].Cells[groupIDColumnIndex].Value},
 				) == -1 {
 				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleTableRow{
 					Cells: []*messages.PickleTableCell{

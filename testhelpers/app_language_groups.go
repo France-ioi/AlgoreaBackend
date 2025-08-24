@@ -33,7 +33,7 @@ func (ctx *TestContext) registerFeaturesForGroups(scenarioContext *godog.Scenari
 
 // getGroupPrimaryKey returns the primary key of a group.
 func (ctx *TestContext) getGroupPrimaryKey(groupID int64) map[string]string {
-	return map[string]string{"id": strconv.FormatInt(groupID, 10)}
+	return map[string]string{idString: strconv.FormatInt(groupID, 10)}
 }
 
 // addGroup adds a group to the database.
@@ -45,7 +45,7 @@ func (ctx *TestContext) addGroup(group, groupType string) {
 		ctx.needPopulateDatabase = true
 		err := ctx.DBHasTable("groups",
 			constructGodogTableFromData([]stringKeyValuePair{
-				{"id", strconv.FormatInt(groupID, 10)},
+				{idString, strconv.FormatInt(groupID, 10)},
 				{"name", "Group " + referenceToName(group)},
 				{"type", groupType},
 				{"require_personal_info_access_approval", "none"},
@@ -191,8 +191,8 @@ func (ctx *TestContext) UserIsAMemberOfTheGroupWhoHasApprovedAccessToHisPersonal
 // TheFieldOfTheGroupShouldBe checks that the field of a group in the database is equal to a value.
 func (ctx *TestContext) TheFieldOfTheGroupShouldBe(field, group, value string) error {
 	resultCount := ctx.databaseCountRows("groups", map[string]string{
-		"id":  group,
-		field: value,
+		idString: group,
+		field:    value,
 	})
 
 	if resultCount != 1 {

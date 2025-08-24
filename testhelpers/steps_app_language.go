@@ -15,6 +15,7 @@ import (
 
 const (
 	referencePrefix = '@'
+	idString        = "id"
 )
 
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
@@ -208,7 +209,7 @@ func (ctx *TestContext) addAttempt(item, participant string) {
 	ctx.needPopulateDatabase = true
 	err := ctx.DBHasTable("attempts",
 		constructGodogTableFromData([]stringKeyValuePair{
-			{"id", strconv.FormatInt(itemID, 10)},
+			{idString, strconv.FormatInt(itemID, 10)},
 			{"participant_id", strconv.FormatInt(participantID, 10)},
 		}))
 	if err != nil {
@@ -290,11 +291,11 @@ func (ctx *TestContext) constructDBFieldsForAddItem(fields map[string]string) (
 	dbFields = make(map[string]string, len(fields))
 	for key, value := range fields {
 		if key == "item" {
-			key = "id"
+			key = idString
 		}
 
 		switch {
-		case strings.HasSuffix(key, "id"):
+		case strings.HasSuffix(key, idString):
 			dbFields[key] = strconv.FormatInt(ctx.getIDOrIDByReference(value), 10)
 		case value[0] == referencePrefix:
 			dbFields[key] = value[1:]
@@ -303,7 +304,7 @@ func (ctx *TestContext) constructDBFieldsForAddItem(fields map[string]string) (
 		}
 	}
 
-	primaryKey = map[string]string{"id": dbFields["id"]}
+	primaryKey = map[string]string{idString: dbFields[idString]}
 	oldRowIndex = ctx.getDBTableRowIndexForPrimaryKey("items", primaryKey)
 	ctx.setDefaultValuesInDBFieldsForAddItem(dbFields, fields, oldRowIndex)
 
