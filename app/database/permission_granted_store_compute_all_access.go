@@ -158,3 +158,15 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 		}))
 	}
 }
+
+// ComputeAllAccess allows to call computeAllAccess() from outside.
+//
+// Note: The method propagates permissions synchronously. It does not use propagations scheduling.
+// Callers probably want to call this method inside a transaction and mark the transaction with DataStore.SetPropagationsModeToSync()
+// to ensure it will not process permissions that are marked for propagation by other transactions.
+func (s *PermissionGrantedStore) ComputeAllAccess() (err error) {
+	defer recoverPanics(&err)
+
+	s.computeAllAccess()
+	return nil
+}

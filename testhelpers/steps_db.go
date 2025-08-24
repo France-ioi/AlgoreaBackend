@@ -316,22 +316,10 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 	return nil
 }
 
-// DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
-func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
+// DBItemsAncestorsAreComputed computes the items_ancestors table.
+func (ctx *TestContext) DBItemsAncestorsAreComputed() error {
 	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
-		// We can consider keeping foreign_key_checks,
-		// but it'll break all tests that didn't define items while having permissions.
-		store.Exec("SET FOREIGN_KEY_CHECKS=0")
-		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-
-		err := store.ItemItems().CreateNewAncestors()
-		if err != nil {
-			return err
-		}
-		store.SchedulePermissionsPropagation()
-		store.ScheduleResultsPropagation()
-
-		return nil
+		return store.ItemItems().CreateNewAncestors()
 	})
 	if err != nil {
 		return err
@@ -345,18 +333,44 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 		return err
 	}
 
+	return nil
+}
+
+// DBGeneratedPermissionsAreComputed computes the generated permissions.
+func (ctx *TestContext) DBGeneratedPermissionsAreComputed() error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.PermissionsGranted().ComputeAllAccess()
+	})
+	if err != nil {
+		return err
+	}
+
 	err = ctx.loadColumnsFromDBTable("permissions_generated", []string{
-		"group_id",
-		"item_id",
-		"can_view_generated",
-		"can_grant_view_generated",
-		"can_watch_generated",
-		"can_edit_generated",
-		"is_owner_generated",
-		"can_view_generated_value",
-		"can_grant_view_generated_value",
-		"can_watch_generated_value",
-		"can_edit_generated_value",
+		"group_id", "item_id",
+		"can_view_generated", "can_grant_view_generated", "can_watch_generated", "can_edit_generated", "is_owner_generated",
+		"can_view_generated_value", "can_grant_view_generated_value", "can_watch_generated_value", "can_edit_generated_value",
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DBResultsAreComputed computes the results.
+func (ctx *TestContext) DBResultsAreComputed() error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.Results().Propagate()
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ctx.loadColumnsFromDBTable("results", []string{
+		"participant_id", "attempt_id", "item_id", "score_computed", "score_edit_rule", "score_edit_value",
+		"score_edit_comment", "submissions", "tasks_tried", "started", "validated", "tasks_with_help",
+		"hints_requested", "hints_cached", "started_at", "validated_at", "latest_activity_at", "score_obtained_at",
+		"latest_submission_at", "latest_hint_at", "help_requested", "recomputing_state",
 	})
 	if err != nil {
 		return err

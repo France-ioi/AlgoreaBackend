@@ -181,8 +181,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			assert.NoError(t, dataStore.Table("groups_propagate").UpdateColumn("ancestors_computation_state", "done").Error())
 
 			assert.NoError(t, dataStore.InTransaction(func(s *database.DataStore) error {
-				s.SchedulePermissionsPropagation()
-				return nil
+				return s.PermissionsGranted().ComputeAllAccess()
 			}))
 			err := dataStore.InTransaction(func(s *database.DataStore) error {
 				return s.GroupGroups().DeleteRelation(1, 2, tt.shouldDeleteOrphans)

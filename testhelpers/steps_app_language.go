@@ -87,12 +87,22 @@ func (ctx *TestContext) populateDatabase() error {
 		return nil
 	}
 
-	err := ctx.DBItemsAncestorsAndPermissionsAreComputed()
+	err := ctx.DBItemsAncestorsAreComputed()
 	if err != nil {
 		return err
 	}
 
-	return ctx.DBGroupsAncestorsAreComputed()
+	err = ctx.DBGroupsAncestorsAreComputed()
+	if err != nil {
+		return err
+	}
+
+	err = ctx.DBGeneratedPermissionsAreComputed()
+	if err != nil {
+		return err
+	}
+
+	return ctx.DBResultsAreComputed()
 }
 
 func (ctx *TestContext) isInDatabase(tableName string, primaryKey map[string]string) bool {

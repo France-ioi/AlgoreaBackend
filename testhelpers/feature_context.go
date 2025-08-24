@@ -31,6 +31,8 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 	scenarioContext.Step(`^the database table "([^"]+)"(?: also)? has the following rows?:$`, ctx.DBHasTable)
 	scenarioContext.Step(`^the database(?: also)? has the following users?:$`, ctx.DBHasUsers)
 	scenarioContext.Step(`^the groups ancestors are computed$`, ctx.DBGroupsAncestorsAreComputed)
+	scenarioContext.Step(`^the generated permissions are computed$`, ctx.DBGeneratedPermissionsAreComputed)
+	scenarioContext.Step(`^the results are computed$`, ctx.DBResultsAreComputed)
 
 	ctx.registerFeaturesForSessions(scenarioContext)
 	ctx.registerFeaturesForUsers(scenarioContext)

@@ -704,8 +704,8 @@ func Test_findItemPaths(t *testing.T) {
 			require.NoError(t, store.InTransaction(func(s *database.DataStore) error {
 				require.NoError(t, s.GroupGroups().CreateNewAncestors())
 				require.NoError(t, s.ItemItems().CreateNewAncestors())
-				s.SchedulePermissionsPropagation()
-				s.ScheduleResultsPropagation()
+				require.NoError(t, s.PermissionsGranted().ComputeAllAccess())
+				require.NoError(t, s.Results().Propagate())
 				return nil
 			}))
 			got := findItemPaths(store, tt.args.participantID, tt.args.itemID, tt.args.limit)

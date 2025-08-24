@@ -69,8 +69,7 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	prepareDependencies(t, db)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
 	require.NoError(t, err)
 
@@ -131,8 +130,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 	prepareDependencies(t, db)
 	dataStore := database.NewDataStore(db)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
 	assert.NoError(t, err)
 	var result []map[string]interface{}

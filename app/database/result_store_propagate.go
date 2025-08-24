@@ -45,6 +45,18 @@ func (s *ResultStore) PropagateAndCollectUnlockedItemsForParticipant(participant
 	return s.Results().propagate(&participantID)
 }
 
+// Propagate recomputes fields of results and propagates permissions for unlocked items.
+//
+// Note: The method propagates results and permissions synchronously. It does not use propagations scheduling.
+// Callers probably want to call this method inside a transaction and mark the transaction with DataStore.SetPropagationsModeToSync()
+// to ensure it will not process results and permissions that are marked for propagation by other transactions.
+//
+// Note 2: The method does not process the results_recompute_for_items table.
+func (s *ResultStore) Propagate() error {
+	_, err := s.Results().propagate(nil)
+	return err
+}
+
 // propagate recomputes fields of results
 // For results marked as 'to_be_propagated':
 //  1. We take the first chunk of them and mark them as 'propagating'.
