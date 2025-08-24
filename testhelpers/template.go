@@ -24,12 +24,17 @@ var (
 	referenceRegexp = regexp.MustCompile(`(^|\W)(@\w+)`)
 )
 
-// getIDOfReference returns the ID of a reference.
-func (ctx *TestContext) getIDOfReference(reference string) int64 {
-	if id, err := strconv.ParseInt(reference, 10, 64); err == nil {
+// getIDOrIDByReference returns the ID if the ID is given, or the ID for the given reference otherwise.
+func (ctx *TestContext) getIDOrIDByReference(idOrReference string) int64 {
+	if id, err := strconv.ParseInt(idOrReference, 10, 64); err == nil {
 		return id
 	}
 
+	return ctx.getIDByReference(idOrReference)
+}
+
+// getIDByReference returns the ID of the given reference.
+func (ctx *TestContext) getIDByReference(reference string) int64 {
 	if value, ok := ctx.referenceToIDMap[reference]; ok {
 		return value
 	}
@@ -47,10 +52,10 @@ func (ctx *TestContext) replaceReferencesWithIDs(str string) string {
 		// - /@Reference (or another non-alphanum character in front)
 
 		if capture[0] == referencePrefix {
-			return strconv.FormatInt(ctx.getIDOfReference(capture), 10)
+			return strconv.FormatInt(ctx.getIDByReference(capture), 10)
 		}
 
-		return string(capture[0]) + strconv.FormatInt(ctx.getIDOfReference(capture[1:]), 10)
+		return string(capture[0]) + strconv.FormatInt(ctx.getIDByReference(capture[1:]), 10)
 	})
 }
 

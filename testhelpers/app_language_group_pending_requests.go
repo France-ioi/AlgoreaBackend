@@ -32,8 +32,8 @@ func (ctx *TestContext) getGroupPendingRequestPrimaryKey(groupID, memberID int64
 
 // addGroup adds a group to the database.
 func (ctx *TestContext) addGroupPendingRequest(group, member, requestType string) {
-	groupID := ctx.getIDOfReference(group)
-	memberID := ctx.getIDOfReference(member)
+	groupID := ctx.getIDOrIDByReference(group)
+	memberID := ctx.getIDOrIDByReference(member)
 
 	primaryKey := ctx.getGroupPendingRequestPrimaryKey(groupID, memberID)
 

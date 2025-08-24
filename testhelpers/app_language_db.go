@@ -20,7 +20,7 @@ func (ctx *TestContext) databaseCountRows(table string, datamap map[string]strin
 		default:
 			var processedValue interface{} = value
 			if value[0] == referencePrefix {
-				processedValue = ctx.getIDOfReference(value)
+				processedValue = ctx.getIDByReference(value)
 			}
 			query = query.Where(columnName+" = ?", processedValue)
 		}

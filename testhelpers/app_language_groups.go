@@ -38,7 +38,7 @@ func (ctx *TestContext) getGroupPrimaryKey(groupID int64) map[string]string {
 
 // addGroup adds a group to the database.
 func (ctx *TestContext) addGroup(group, groupType string) {
-	groupID := ctx.getIDOfReference(group)
+	groupID := ctx.getIDOrIDByReference(group)
 	primaryKey := ctx.getGroupPrimaryKey(groupID)
 
 	if !ctx.isInDatabase("groups", primaryKey) {
@@ -67,7 +67,7 @@ func (ctx *TestContext) setGroupFieldInDatabase(primaryKey map[string]string, fi
 func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 	for i := 1; i < len(groups.Rows); i++ {
 		group := ctx.getRowMap(i, groups)
-		groupID := ctx.getIDOfReference(group["group"])
+		groupID := ctx.getIDOrIDByReference(group["group"])
 
 		err := ctx.ThereIsAGroup(group["group"])
 		mustNotBeError(err)

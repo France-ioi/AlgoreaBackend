@@ -21,7 +21,7 @@ func (ctx *TestContext) getUserPrimaryKey(groupID int64) map[string]string {
 
 // addUser adds a user to the database.
 func (ctx *TestContext) addUser(user string) {
-	userGroupID := ctx.getIDOfReference(user)
+	userGroupID := ctx.getIDOrIDByReference(user)
 	primaryKey := ctx.getUserPrimaryKey(userGroupID)
 
 	if !ctx.isInDatabase("users", primaryKey) {
@@ -60,7 +60,7 @@ func (ctx *TestContext) ThereAreTheFollowingUsers(users *godog.Table) error {
 	for i := 1; i < len(users.Rows); i++ {
 		user := ctx.getRowMap(i, users)
 
-		groupID := ctx.getIDOfReference(user["user"])
+		groupID := ctx.getIDOrIDByReference(user["user"])
 
 		err := ctx.ThereIsAUser(user["user"])
 		mustNotBeError(err)

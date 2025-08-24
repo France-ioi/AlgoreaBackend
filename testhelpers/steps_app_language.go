@@ -100,8 +100,8 @@ func (ctx *TestContext) isInDatabase(tableName string, primaryKey map[string]str
 
 // addPersonalInfoViewApprovedFor adds a permission generated in the database.
 func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroup, parentGroup string) {
-	parentGroupID := ctx.getIDOfReference(parentGroup)
-	childGroupID := ctx.getIDOfReference(childGroup)
+	parentGroupID := ctx.getIDOrIDByReference(parentGroup)
+	childGroupID := ctx.getIDOrIDByReference(childGroup)
 
 	const groupGroupTable = "groups_groups"
 	key := ctx.getGroupGroupKey(parentGroupID, childGroupID)
@@ -122,8 +122,8 @@ func (ctx *TestContext) getGroupGroupKey(parentGroupID, childGroupID int64) map[
 
 // addGroupGroup adds a group-group in the database.
 func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
-	parentGroupID := ctx.getIDOfReference(parentGroup)
-	childGroupID := ctx.getIDOfReference(childGroup)
+	parentGroupID := ctx.getIDOrIDByReference(parentGroup)
+	childGroupID := ctx.getIDOrIDByReference(childGroup)
 
 	ctx.needPopulateDatabase = true
 	err := ctx.DBHasTable("groups_groups",
@@ -143,8 +143,8 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 		return err
 	}
 
-	managerID := ctx.getIDOfReference(manager)
-	groupID := ctx.getIDOfReference(group)
+	managerID := ctx.getIDOrIDByReference(manager)
+	groupID := ctx.getIDOrIDByReference(group)
 
 	ctx.needPopulateDatabase = true
 	err = ctx.DBHasTable("group_managers",
@@ -163,9 +163,9 @@ func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGran
 
 // setGrantedPermission sets a granted permission in the database.
 func (ctx *TestContext) setGrantedPermission(group, item, sourceGroup, origin, permission, permissionValue string) {
-	groupIDString := strconv.FormatInt(ctx.getIDOfReference(group), 10)
-	sourceGroupIDString := strconv.FormatInt(ctx.getIDOfReference(sourceGroup), 10)
-	itemIDString := strconv.FormatInt(ctx.getIDOfReference(item), 10)
+	groupIDString := strconv.FormatInt(ctx.getIDOrIDByReference(group), 10)
+	sourceGroupIDString := strconv.FormatInt(ctx.getIDOrIDByReference(sourceGroup), 10)
+	itemIDString := strconv.FormatInt(ctx.getIDOrIDByReference(item), 10)
 
 	const permissionsGrantedTable = "permissions_granted"
 	primaryKey := map[string]string{
@@ -187,7 +187,7 @@ func (ctx *TestContext) setGrantedPermission(group, item, sourceGroup, origin, p
 	}
 
 	if permission == "can_request_help_to" {
-		canRequestHelpToGroupID := ctx.getIDOfReference(permissionValue)
+		canRequestHelpToGroupID := ctx.getIDOrIDByReference(permissionValue)
 
 		err := ctx.ThereIsAGroup(permissionValue)
 		if err != nil {
@@ -202,8 +202,8 @@ func (ctx *TestContext) setGrantedPermission(group, item, sourceGroup, origin, p
 
 // addAttempt adds an attempt to the database.
 func (ctx *TestContext) addAttempt(item, participant string) {
-	itemID := ctx.getIDOfReference(item)
-	participantID := ctx.getIDOfReference(participant)
+	itemID := ctx.getIDOrIDByReference(item)
+	participantID := ctx.getIDOrIDByReference(participant)
 
 	ctx.needPopulateDatabase = true
 	err := ctx.DBHasTable("attempts",
@@ -218,8 +218,8 @@ func (ctx *TestContext) addAttempt(item, participant string) {
 
 // addValidatedResult adds a validated result to the database.
 func (ctx *TestContext) addValidatedResult(attemptID, participant, item string, validatedAt time.Time) {
-	participantID := ctx.getIDOfReference(participant)
-	itemID := ctx.getIDOfReference(item)
+	participantID := ctx.getIDOrIDByReference(participant)
+	itemID := ctx.getIDOrIDByReference(item)
 
 	ctx.needPopulateDatabase = true
 	err := ctx.DBHasTable("results",
@@ -243,8 +243,8 @@ func (ctx *TestContext) getItemItemPrimaryKey(parentItemID, childItemID int64) m
 
 // addItemItem adds an item-item in the database.
 func (ctx *TestContext) addItemItem(parentItem, childItem string) {
-	parentItemID := ctx.getIDOfReference(parentItem)
-	childItemID := ctx.getIDOfReference(childItem)
+	parentItemID := ctx.getIDOrIDByReference(parentItem)
+	childItemID := ctx.getIDOrIDByReference(childItem)
 
 	ctx.needPopulateDatabase = true
 	err := ctx.DBHasTable("items_items",
@@ -259,7 +259,7 @@ func (ctx *TestContext) addItemItem(parentItem, childItem string) {
 }
 
 func (ctx *TestContext) addItemItemPropagation(parent, child, propagation, propagationValue string) {
-	primaryKey := ctx.getItemItemPrimaryKey(ctx.getIDOfReference(parent), ctx.getIDOfReference(child))
+	primaryKey := ctx.getItemItemPrimaryKey(ctx.getIDOrIDByReference(parent), ctx.getIDOrIDByReference(child))
 	ctx.setDBTableRowColumnValue("items_items", primaryKey, propagation, propagationValue)
 }
 
@@ -295,7 +295,7 @@ func (ctx *TestContext) constructDBFieldsForAddItem(fields map[string]string) (
 
 		switch {
 		case strings.HasSuffix(key, "id"):
-			dbFields[key] = strconv.FormatInt(ctx.getIDOfReference(value), 10)
+			dbFields[key] = strconv.FormatInt(ctx.getIDOrIDByReference(value), 10)
 		case value[0] == referencePrefix:
 			dbFields[key] = value[1:]
 		default:
@@ -343,9 +343,9 @@ func (ctx *TestContext) getThreadKey(itemID, participantID int64) map[string]str
 
 // addThread adds a thread to the database.
 func (ctx *TestContext) addThread(item, participant, helperGroup, status, messageCount, latestUpdateAt string) {
-	itemID := ctx.getIDOfReference(item)
-	participantID := ctx.getIDOfReference(participant)
-	helperGroupID := ctx.getIDOfReference(helperGroup)
+	itemID := ctx.getIDOrIDByReference(item)
+	participantID := ctx.getIDOrIDByReference(participant)
+	helperGroupID := ctx.getIDOrIDByReference(helperGroup)
 
 	_, err := time.Parse(time.DateTime, latestUpdateAt)
 	if err != nil {
@@ -713,8 +713,8 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	}
 
 	ctx.currentThreadKey = ctx.getThreadKey(
-		ctx.getIDOfReference(thread["item_id"]),
-		ctx.getIDOfReference(thread["participant_id"]),
+		ctx.getIDOrIDByReference(thread["item_id"]),
+		ctx.getIDOrIDByReference(thread["participant_id"]),
 	)
 
 	ctx.addThread(
