@@ -178,15 +178,25 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 		return err
 	}
 
-	// Only 'domain' and 'auth' changes are currently supported
-	if config.IsSet("auth") {
-		ctx.application.ReplaceAuthConfig(config, ctx.logger)
-	}
-	if config.IsSet("domains") {
-		ctx.application.ReplaceDomainsConfig(config, ctx.logger)
+	newConfig := viper.New()
+	for key, value := range ctx.application.Config.AllSettings() {
+		newConfig.Set(key, value)
 	}
 
-	return nil
+	// Only 'server', 'domain' and 'auth' changes are currently supported
+	if config.IsSet("auth") {
+		newConfig.Set("auth", config.Get("auth"))
+	}
+	if config.IsSet("domains") {
+		newConfig.Set("domains", config.Get("domains"))
+	}
+	if config.IsSet("server") {
+		newSettings := config.GetStringMap("server")
+		for settingName, settingValue := range newSettings {
+			newConfig.Set("server."+settingName, settingValue)
+		}
+	}
+	return ctx.application.Reset(newConfig, ctx.logger)
 }
 
 // TheContextVariableIs sets a context variable in the request http.Request as the provided value.

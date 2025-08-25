@@ -58,8 +58,7 @@ func TestItemItemStore_TriggerAfterInsert_MarksPermissionsForRecomputing(t *test
 
 	dataStore := database.NewDataStore(db)
 	require.NoError(t, dataStore.InTransaction(func(dataStore *database.DataStore) error {
-		dataStore.SchedulePermissionsPropagation()
-		return nil
+		return dataStore.PermissionsGranted().ComputeAllAccess()
 	}))
 
 	var markedPermissions []groupItemsResultRow
@@ -104,8 +103,7 @@ func TestItemItemStore_TriggerAfterUpdate_MarksPermissionsForRecomputing(t *test
 
 			dataStore := database.NewDataStore(db)
 			require.NoError(t, dataStore.InTransaction(func(dataStore *database.DataStore) error {
-				dataStore.SchedulePermissionsPropagation()
-				return nil
+				return dataStore.PermissionsGranted().ComputeAllAccess()
 			}))
 
 			var markedPermissions []groupItemsResultRow
@@ -136,8 +134,7 @@ func TestItemItemStore_TriggerBeforeDelete_MarksPermissionsForRecomputing(t *tes
 
 	dataStore := database.NewDataStore(db)
 	require.NoError(t, dataStore.InTransaction(func(dataStore *database.DataStore) error {
-		dataStore.SchedulePermissionsPropagation()
-		return nil
+		return dataStore.PermissionsGranted().ComputeAllAccess()
 	}))
 
 	var markedPermissions []groupItemsResultRow

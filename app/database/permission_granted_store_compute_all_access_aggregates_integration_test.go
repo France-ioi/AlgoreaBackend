@@ -49,8 +49,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11").
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
-		ds.SchedulePermissionsPropagation()
-		return nil
+		return ds.PermissionsGranted().ComputeAllAccess()
 	}))
 
 	assertAllPermissionsGeneratedAreDone(t, permissionGeneratedStore)
@@ -124,8 +123,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 		"content_view_propagation": "as_info",
 	}).Error())
 	require.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
-		ds.SchedulePermissionsPropagation()
-		return nil
+		return ds.PermissionsGranted().ComputeAllAccess()
 	}))
 
 	assertAllPermissionsGeneratedAreDone(t, permissionGeneratedStore)
@@ -202,8 +200,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 			assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11").
 				UpdateColumn("can_view", access).Error())
 			assert.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
-				ds.SchedulePermissionsPropagation()
-				return nil
+				return ds.PermissionsGranted().ComputeAllAccess()
 			}))
 
 			assertAllPermissionsGeneratedAreDone(t, permissionGeneratedStore)
@@ -368,8 +365,7 @@ func testGeneratedPermission(t *testing.T, fixture string, testCase ...generated
 
 	permissionStore := database.NewDataStore(db).Permissions()
 	require.NoError(t, permissionStore.InTransaction(func(ds *database.DataStore) error {
-		ds.SchedulePermissionsPropagation()
-		return nil
+		return ds.PermissionsGranted().ComputeAllAccess()
 	}))
 	var result string
 	for _, test := range testCase {

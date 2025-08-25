@@ -84,8 +84,7 @@ func TestResultStore_Propagate(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
-				s.ScheduleResultsPropagation()
-				return nil
+				return s.Results().Propagate()
 			})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ResultStore.propagate() error = %v, wantErr %v", err, tt.wantErr)

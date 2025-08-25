@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -65,9 +66,11 @@ func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 
 func (ctx *TestContext) initializeOrCombineDBTableData(tableName string, data *godog.Table) {
 	if ctx.dbTableData[tableName] == nil {
+		ctx.sortGodogTable(data)
 		ctx.dbTableData[tableName] = data
 	} else if len(data.Rows) > 1 {
-		ctx.dbTableData[tableName] = combinePickleTables(ctx.dbTableData[tableName], data)
+		ctx.dbTableData[tableName] = combineGodogTables(ctx.dbTableData[tableName], data)
+		ctx.sortGodogTable(ctx.dbTableData[tableName])
 	}
 }
 
@@ -86,7 +89,7 @@ func (ctx *TestContext) setDBTableRowColumnValues(tableName string, primaryKey, 
 	columnIndexes := getColumnIndexes(ctx.dbTableData[tableName], columns)
 	for columnNumber, columnIndex := range columnIndexes {
 		if columnIndex == -1 {
-			ctx.dbTableData[tableName] = combinePickleTables(
+			ctx.dbTableData[tableName] = combineGodogTables(
 				ctx.dbTableData[tableName],
 				&godog.Table{Rows: []*messages.PickleTableRow{{Cells: []*messages.PickleTableCell{{Value: columns[columnNumber]}}}}},
 			)
@@ -106,6 +109,8 @@ func (ctx *TestContext) setDBTableRowColumnValues(tableName string, primaryKey, 
 		}
 		row.Cells[columnIndex].Value = values[i]
 	}
+
+	ctx.sortGodogTable(ctx.dbTableData[tableName])
 
 	ctx.executeOrQueueDBDataRowUpdate(tableName, primaryKey, columns, values)
 }
@@ -222,7 +227,7 @@ func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 		}
 		groupsToCreate.Rows[0] = &messages.PickleTableRow{
 			Cells: []*messages.PickleTableCell{
-				{Value: "id"}, {Value: "name"}, {Value: "type"},
+				{Value: idString}, {Value: "name"}, {Value: "type"},
 			},
 		}
 
@@ -238,7 +243,7 @@ func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
 			if groupIDColumnIndex != -1 &&
 				ctx.getDBTableRowIndexForPrimaryKey(
 					"groups",
-					map[string]string{"id": data.Rows[rowIndex].Cells[groupIDColumnIndex].Value},
+					map[string]string{idString: data.Rows[rowIndex].Cells[groupIDColumnIndex].Value},
 				) == -1 {
 				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleTableRow{
 					Cells: []*messages.PickleTableCell{
@@ -316,22 +321,10 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 	return nil
 }
 
-// DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
-func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
+// DBItemsAncestorsAreComputed computes the items_ancestors table.
+func (ctx *TestContext) DBItemsAncestorsAreComputed() error {
 	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
-		// We can consider keeping foreign_key_checks,
-		// but it'll break all tests that didn't define items while having permissions.
-		store.Exec("SET FOREIGN_KEY_CHECKS=0")
-		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-
-		err := store.ItemItems().CreateNewAncestors()
-		if err != nil {
-			return err
-		}
-		store.SchedulePermissionsPropagation()
-		store.ScheduleResultsPropagation()
-
-		return nil
+		return store.ItemItems().CreateNewAncestors()
 	})
 	if err != nil {
 		return err
@@ -345,18 +338,44 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 		return err
 	}
 
+	return nil
+}
+
+// DBGeneratedPermissionsAreComputed computes the generated permissions.
+func (ctx *TestContext) DBGeneratedPermissionsAreComputed() error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.PermissionsGranted().ComputeAllAccess()
+	})
+	if err != nil {
+		return err
+	}
+
 	err = ctx.loadColumnsFromDBTable("permissions_generated", []string{
-		"group_id",
-		"item_id",
-		"can_view_generated",
-		"can_grant_view_generated",
-		"can_watch_generated",
-		"can_edit_generated",
-		"is_owner_generated",
-		"can_view_generated_value",
-		"can_grant_view_generated_value",
-		"can_watch_generated_value",
-		"can_edit_generated_value",
+		"group_id", "item_id",
+		"can_view_generated", "can_grant_view_generated", "can_watch_generated", "can_edit_generated", "is_owner_generated",
+		"can_view_generated_value", "can_grant_view_generated_value", "can_watch_generated_value", "can_edit_generated_value",
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DBResultsAreComputed computes the results.
+func (ctx *TestContext) DBResultsAreComputed() error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.Results().Propagate()
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ctx.loadColumnsFromDBTable("results", []string{
+		"participant_id", "attempt_id", "item_id", "score_computed", "score_edit_rule", "score_edit_value",
+		"score_edit_comment", "submissions", "tasks_tried", "started", "validated", "tasks_with_help",
+		"hints_requested", "hints_cached", "started_at", "validated_at", "latest_activity_at", "score_obtained_at",
+		"latest_submission_at", "latest_hint_at", "help_requested", "recomputing_state",
 	})
 	if err != nil {
 		return err
@@ -465,7 +484,7 @@ func (ctx *TestContext) TableShouldNotContainColumnValue(
 		})
 }
 
-func combinePickleTables(table1, table2 *godog.Table) *godog.Table {
+func combineGodogTables(table1, table2 *godog.Table) *godog.Table {
 	table1FieldMap := map[string]int{}
 	combinedFieldMap := map[string]bool{}
 	columnNumber := len(table1.Rows[0].Cells)
@@ -500,6 +519,76 @@ func combinePickleTables(table1, table2 *godog.Table) *godog.Table {
 	copyCellsIntoCombinedTable(table1, combinedColumnNames, table1FieldMap, combinedTable)
 	copyCellsIntoCombinedTable(table2, combinedColumnNames, table2FieldMap, combinedTable)
 	return combinedTable
+}
+
+func (ctx *TestContext) sortGodogTable(table *godog.Table) {
+	columnNumber := len(table.Rows[0].Cells)
+
+	sort.Slice(table.Rows[1:], func(leftRowIndex, rightRowIndex int) bool {
+		for columnIndex := 0; columnIndex < columnNumber; columnIndex++ {
+			var leftCellValue, rightCellValue string
+			if table.Rows[leftRowIndex+1].Cells[columnIndex] != nil {
+				leftCellValue = table.Rows[leftRowIndex+1].Cells[columnIndex].Value
+			}
+			if table.Rows[rightRowIndex+1].Cells[columnIndex] != nil {
+				rightCellValue = table.Rows[rightRowIndex+1].Cells[columnIndex].Value
+			}
+
+			columnName := table.Rows[0].Cells[columnIndex].Value
+			isIntegerColumn := columnName == idString || strings.HasSuffix(columnName, "_id") && columnName != "text_id"
+
+			cmpResult := ctx.compareCellValues(leftCellValue, rightCellValue, isIntegerColumn)
+			if cmpResult == 0 {
+				continue
+			}
+			return cmpResult == -1
+		}
+		return false
+	})
+}
+
+func (ctx *TestContext) compareCellValues(leftCellValue, rightCellValue string, isIntegerColumn bool) int {
+	if !isIntegerColumn {
+		return strings.Compare(leftCellValue, rightCellValue)
+	}
+
+	leftCellValueIsNull := leftCellValue == "" || leftCellValue == tableValueNull
+	rightCellValueIsNull := rightCellValue == "" || rightCellValue == tableValueNull
+	if leftCellValueIsNull && rightCellValueIsNull {
+		return 0
+	}
+	if leftCellValueIsNull {
+		return -1
+	}
+	if rightCellValueIsNull {
+		return 1
+	}
+
+	leftIntValue := ctx.parseIntColumnValue(leftCellValue)
+	rightIntValue := ctx.parseIntColumnValue(rightCellValue)
+	return compareInt64Values(leftIntValue, rightIntValue)
+}
+
+func compareInt64Values(l, r int64) int {
+	switch {
+	case l < r:
+		return -1
+	case l > r:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func (ctx *TestContext) parseIntColumnValue(value string) (intValue int64) {
+	var err error
+	if value[0] == referencePrefix {
+		intValue = ctx.getIDByReference(value)
+	} else {
+		intValue, err = strconv.ParseInt(value, 10, 64)
+		mustNotBeError(err)
+	}
+	return intValue
 }
 
 func copyCellsIntoCombinedTable(sourceTable *godog.Table, combinedColumnNames []string,

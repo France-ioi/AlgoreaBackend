@@ -14,7 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func TestResultStore_Propagate_RecomputesResultsForItemsFromTableResultsRecomputeForItems(t *testing.T) {
+func TestResultStore_ScheduledResultsPropagationRecomputesResultsForItemsFromTableResultsRecomputeForItems(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `

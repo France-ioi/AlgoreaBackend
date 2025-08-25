@@ -19,9 +19,9 @@ Feature: Get group invitations for the current user
       | 36 | Class   | Group without inviting user   | Group without inviting user   | edit                                  | null                                   | false                  |
     And the database has the following users:
       | group_id | login       | first_name  | last_name | grade |
-      | 21       | owner       | Jean-Michel | Blanquer  | 3     |
       | 12       | user        | John        | Doe       | 1     |
       | 13       | anotheruser | Another     | User      | 1     |
+      | 21       | owner       | Jean-Michel | Blanquer  | 3     |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 5               | 21             |
@@ -31,33 +31,33 @@ Feature: Get group invitations for the current user
     And the time now is "2020-01-01T01:00:00.001Z"
     And the database has the following table "group_membership_changes":
       | group_id | member_id | action                | at                            | initiator_id |
+      | 1        | 12        | invitation_created    | {{relativeTimeDBMs("-170h")}} | 12           |
       | 1        | 21        | invitation_created    | {{relativeTimeDBMs("-169h")}} | 12           |
       | 2        | 21        | invitation_refused    | {{relativeTimeDBMs("-168h")}} | 21           |
       | 3        | 21        | join_request_created  | {{relativeTimeDBMs("-167h")}} | 21           |
-      | 33       | 21        | invitation_created    | {{relativeTimeDBMs("-167h")}} | 13           |
       | 4        | 21        | join_request_refused  | {{relativeTimeDBMs("-166h")}} | 12           |
-      | 34       | 21        | invitation_created    | {{relativeTimeDBMs("-190h")}} | 13           |
-      | 34       | 21        | invitation_refused    | {{relativeTimeDBMs("-180h")}} | 21           |
-      | 34       | 21        | invitation_created    | {{relativeTimeDBMs("-166h")}} | 12           |
-      | 35       | 21        | invitation_accepted   | {{relativeTimeDBMs("-186h")}} | 12           |
-      | 36       | 21        | invitation_created    | {{relativeTimeDBMs("-200h")}} | null         |
       | 5        | 21        | invitation_accepted   | {{relativeTimeDBMs("-165h")}} | 12           |
       | 6        | 21        | join_request_accepted | {{relativeTimeDBMs("-164h")}} | 12           |
       | 7        | 21        | removed               | {{relativeTimeDBMs("-163h")}} | 21           |
       | 8        | 21        | left                  | {{relativeTimeDBMs("-162h")}} | 21           |
       | 9        | 21        | added_directly        | {{relativeTimeDBMs("-161h")}} | 12           |
-      | 1        | 12        | invitation_created    | {{relativeTimeDBMs("-170h")}} | 12           |
       | 10       | 21        | joined_by_code        | {{relativeTimeDBMs("-180h")}} | null         |
       | 11       | 21        | joined_by_badge       | {{relativeTimeDBMs("-190h")}} | null         |
+      | 34       | 21        | invitation_created    | {{relativeTimeDBMs("-190h")}} | 13           |
+      | 33       | 21        | invitation_created    | {{relativeTimeDBMs("-167h")}} | 13           |
+      | 34       | 21        | invitation_created    | {{relativeTimeDBMs("-166h")}} | 12           |
+      | 34       | 21        | invitation_refused    | {{relativeTimeDBMs("-180h")}} | 21           |
+      | 35       | 21        | invitation_accepted   | {{relativeTimeDBMs("-186h")}} | 12           |
+      | 36       | 21        | invitation_created    | {{relativeTimeDBMs("-200h")}} | null         |
     And the database has the following table "group_pending_requests":
       | group_id | member_id | type         | at                            |
+      | 1        | 12        | invitation   | {{currentTimeDBMs()}}         |
       | 1        | 21        | invitation   | {{currentTimeDBMs()}}         |
+      | 3        | 21        | join_request | {{currentTimeDBMs()}}         |
       | 33       | 21        | invitation   | {{currentTimeDBMs()}}         |
       | 34       | 21        | invitation   | {{currentTimeDBMs()}}         |
       | 35       | 21        | invitation   | {{relativeTimeDBMs("-200h")}} |
       | 36       | 21        | invitation   | {{currentTimeDBMs()}}         |
-      | 3        | 21        | join_request | {{currentTimeDBMs()}}         |
-      | 1        | 12        | invitation   | {{currentTimeDBMs()}}         |
 
   Scenario: Show all invitations
     Given I am the user with id "21"
@@ -83,7 +83,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[8][at]"))}}"
+        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[15][at]"))}}"
       },
       {
         "group_id": "33",
@@ -121,7 +121,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": "{{timeDBToRFC3339(db("groups[1][require_lock_membership_approval_until]"))}}",
           "require_watch_approval": true
         },
-        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[1][at]"))}}"
+        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[2][at]"))}}"
       },
       {
         "group_id": "35",
@@ -135,7 +135,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBMsToRFC3339(db("group_pending_requests[4][at]"))}}"
+        "at": "{{timeDBMsToRFC3339(db("group_pending_requests[6][at]"))}}"
       },
       {
         "group_id": "36",
@@ -149,7 +149,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[10][at]"))}}"
+        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[18][at]"))}}"
       }
     ]
     """
@@ -178,7 +178,7 @@ Feature: Get group invitations for the current user
           "require_lock_membership_approval_until": null,
           "require_watch_approval": false
         },
-        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[8][at]"))}}"
+        "at": "{{timeDBMsToRFC3339(db("group_membership_changes[15][at]"))}}"
       }
     ]
     """

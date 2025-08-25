@@ -160,7 +160,9 @@ func setupDBForDeleteWithTrapsTests(t *testing.T, currentTime time.Time) *databa
 		if err := trStore.GroupGroups().CreateNewAncestors(); err != nil {
 			return err
 		}
-		trStore.SchedulePermissionsPropagation()
+		if err := trStore.PermissionsGranted().ComputeAllAccess(); err != nil {
+			return err
+		}
 		return nil
 	}))
 	return db

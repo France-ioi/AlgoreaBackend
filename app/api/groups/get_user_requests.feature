@@ -47,10 +47,10 @@ Feature: Get pending requests for managed groups
     And the groups ancestors are computed
     And the database has the following table "group_pending_requests":
       | group_id | member_id | type          | at                          | personal_info_view_approved |
+      | 13       | 11        | leave_request | {{relativeTimeDB("-171h")}} | false                       |
       | 13       | 21        | invitation    | {{relativeTimeDB("-170h")}} | true                        |
       | 13       | 31        | join_request  | {{relativeTimeDB("-168h")}} | false                       |
       | 13       | 41        | join_request  | {{relativeTimeDB("-169h")}} | true                        |
-      | 13       | 11        | leave_request | {{relativeTimeDB("-171h")}} | false                       |
       | 14       | 11        | invitation    | 2017-05-28 06:38:38         | false                       |
       | 14       | 21        | join_request  | 2017-05-27 06:38:38         | false                       |
       | 14       | 31        | leave_request | 2017-05-27 06:38:38         | false                       |
@@ -75,7 +75,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -90,7 +90,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -115,7 +115,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -130,7 +130,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       },
       {
@@ -185,7 +185,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -200,7 +200,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -225,7 +225,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -240,7 +240,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -265,7 +265,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       },
       {
@@ -295,7 +295,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -320,7 +320,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -345,7 +345,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -360,7 +360,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -400,7 +400,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -415,7 +415,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -440,7 +440,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -455,7 +455,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       }
     ]
@@ -516,7 +516,7 @@ Feature: Get pending requests for managed groups
           "group_id": "11",
           "login": "user"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[1][at]"))}}",
         "type": "leave_request"
       }
     ]
@@ -541,7 +541,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Doe",
           "login": "jane"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[2][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
         "type": "join_request"
       },
       {
@@ -556,7 +556,7 @@ Feature: Get pending requests for managed groups
           "last_name": "Roe",
           "login": "richard"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[3][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
         "type": "join_request"
       },
       {
@@ -569,7 +569,7 @@ Feature: Get pending requests for managed groups
           "group_id": "11",
           "login": "user"
         },
-        "at": "{{timeDBToRFC3339(db("group_pending_requests[4][at]"))}}",
+        "at": "{{timeDBToRFC3339(db("group_pending_requests[1][at]"))}}",
         "type": "leave_request"
       }
     ]

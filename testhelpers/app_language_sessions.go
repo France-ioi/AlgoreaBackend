@@ -28,8 +28,8 @@ func (ctx *TestContext) registerFeaturesForSessions(scenarioContext *godog.Scena
 
 // addSession adds a session to the database.
 func (ctx *TestContext) addSession(session, user, refreshToken string) {
-	sessionID := ctx.getIDOfReference(session)
-	userID := ctx.getIDOfReference(user)
+	sessionID := ctx.getIDOrIDByReference(session)
+	userID := ctx.getIDOrIDByReference(user)
 
 	err := ctx.DBHasTable("sessions",
 		constructGodogTableFromData([]stringKeyValuePair{
@@ -44,7 +44,7 @@ func (ctx *TestContext) addSession(session, user, refreshToken string) {
 
 // addAccessToken adds an access token to the database.
 func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt string) {
-	sessionID := ctx.getIDOfReference(session)
+	sessionID := ctx.getIDOrIDByReference(session)
 
 	_, err := time.Parse(time.DateTime, issuedAt)
 	if err != nil {
@@ -75,7 +75,7 @@ func (ctx *TestContext) IAm(name string) error {
 		return err
 	}
 
-	err = ctx.IAmUserWithID(ctx.getIDOfReference(name))
+	err = ctx.IAmUserWithID(ctx.getIDOrIDByReference(name))
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *godog.Table) erro
 
 // ThereAreCountSessionsForUser checks if there are a given number of sessions for a given user.
 func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) error {
-	userID := ctx.getIDOfReference(user)
+	userID := ctx.getIDOrIDByReference(user)
 
 	var sessionCount int
 	err := ctx.application.Database.Table("sessions").Where("user_id = ?", userID).Count(&sessionCount).Error()
@@ -145,7 +145,7 @@ func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) err
 
 // ThereIsNoSessionID checks that a session with given session ID doesn't exist.
 func (ctx *TestContext) ThereIsNoSessionID(session string) error {
-	sessionID := ctx.getIDOfReference(session)
+	sessionID := ctx.getIDOrIDByReference(session)
 
 	var sessionCount int
 	err := ctx.application.Database.Table("sessions").Where("session_id = ?", sessionID).Count(&sessionCount).Error()
@@ -178,7 +178,7 @@ func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *godog.Tab
 
 // ThereAreCountAccessTokensForUser checks if there are a given number of access tokens for a given user.
 func (ctx *TestContext) ThereAreCountAccessTokensForUser(count int, user string) error {
-	userID := ctx.getIDOfReference(user)
+	userID := ctx.getIDOrIDByReference(user)
 
 	var accessTokensCount int
 	err := ctx.application.Database.Table("access_tokens").

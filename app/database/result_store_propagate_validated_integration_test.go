@@ -50,8 +50,7 @@ func testResultStorePropagateValidated(ctx context.Context, t *testing.T, fixtur
 	}
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
 	require.NoError(t, err)
 
