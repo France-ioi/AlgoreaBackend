@@ -71,6 +71,10 @@ Feature: Create item
     And the table "groups" should remain unchanged
     And the table "attempts" should remain unchanged
     And the table "results" should remain unchanged
+    And the table "permissions_propagate" should be empty
+    And the table "permissions_propagate_sync" should be empty
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (not a skill)
     Given I am the user with id "11"
@@ -120,6 +124,10 @@ Feature: Create item
       | 11 | jdoe    | User    | null                | null          |
     And the table "attempts" should remain unchanged
     And the table "results" should remain unchanged
+    And the table "permissions_propagate" should be empty
+    And the table "permissions_propagate_sync" should be empty
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (skill with children)
     Given I am the user with id "11"
@@ -187,6 +195,10 @@ Feature: Create item
       | 11 | jdoe    | User    | null             | null                |
     And the table "attempts" should remain unchanged
     And the table "results" should remain unchanged
+    And the table "permissions_propagate" should be empty
+    And the table "permissions_propagate_sync" should be empty
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Set can_request_help for children
     Given I am the user with id "11"
@@ -370,7 +382,10 @@ Feature: Create item
       | attempt_id | participant_id | item_id |
       | 0          | 11             | 12      |
       | 0          | 11             | 21      |
+    And the table "permissions_propagate" should be empty
+    And the table "permissions_propagate_sync" should be empty
     And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
   Examples:
     | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
     | true                   | false             | true             | true                     |
@@ -454,6 +469,10 @@ Feature: Create item
       | 11                  | 34                  | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
       | 11                  | 50                  | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 0                  |
       | 11                  | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
+    And the table "permissions_propagate" should be empty
+    And the table "permissions_propagate_sync" should be empty
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
 
   Scenario: Recomputes the score of a parent item
     Given the database table "items" also has the following rows:
