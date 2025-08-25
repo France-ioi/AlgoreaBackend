@@ -17,7 +17,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -311,58 +310,6 @@ func TestDomainsConfig_Error(t *testing.T) {
 	globalConfig.Set("domains", []int{1, 2})
 	_, err := DomainsConfig(globalConfig)
 	assert.EqualError(t, err, "2 error(s) decoding:\n\n* '[0]' expected a map, got 'int'\n* '[1]' expected a map, got 'int'")
-}
-
-func TestReplaceAuthConfig(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	mockDatabaseOpen()
-	defer monkey.UnpatchAll()
-
-	globalConfig := viper.New()
-	globalConfig.Set("auth.ClientID", "42")
-	logger, _ := logging.NewMockLogger()
-	application, err := New(logger)
-	require.NoError(t, err)
-	application.ReplaceAuthConfig(globalConfig, logger)
-	assert.Equal(t, "42", application.Config.Get("auth.ClientID"))
-	// not tested: that it is been pushed to the API
-}
-
-func TestReplaceDomainsConfig(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	mockDatabaseOpen()
-	defer monkey.UnpatchAll()
-
-	globalConfig := viper.New()
-	globalConfig.Set("domains", []map[string]interface{}{{"domains": []string{"localhost", "other"}}})
-	logger, _ := logging.NewMockLogger()
-	application, _ := New(logger)
-	application.ReplaceDomainsConfig(globalConfig, logger)
-	expected := []domain.ConfigItem{{
-		Domains:           []string{"localhost", "other"},
-		AllUsersGroup:     0,
-		TempUsersGroup:    0,
-		NonTempUsersGroup: 0,
-	}}
-	config, _ := DomainsConfig(application.Config)
-	assert.Equal(t, expected, config)
-	// not tested: that it is been pushed to the API
-}
-
-func TestReplaceDomainsConfig_Panic(t *testing.T) {
-	testoutput.SuppressIfPasses(t)
-
-	mockDatabaseOpen()
-	defer monkey.UnpatchAll()
-
-	globalConfig := viper.New()
-	globalConfig.Set("domains", []int{1, 2})
-	application := &Application{Config: viper.New()}
-	assert.Panics(t, func() {
-		application.ReplaceDomainsConfig(globalConfig)
-	})
 }
 
 func Test_configDirectory_StripsOnlyTheLastOccurrenceOfApp(t *testing.T) {
