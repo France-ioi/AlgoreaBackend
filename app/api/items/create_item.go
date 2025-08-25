@@ -553,6 +553,8 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 			UpdateColumn("participants_group_id", participantsGroupID).Error())
 	}
 
+	service.MustNotBeError(store.SetPropagationsModeToSync())
+	// We are going to propagate this permission synchronously
 	service.MustNotBeError(store.PermissionsGranted().InsertMap(
 		map[string]interface{}{
 			"item_id":         itemID,
@@ -598,12 +600,29 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 					RequestHelpPropagation: valueOrDefault(
 						formData, "parent.request_help_propagation", newItemRequest.Parent.RequestHelpPropagation, true).(bool),
 				})
+
+			// Mark results of the current user linked to the parent item (if any) to be recomputed synchronously
+			service.MustNotBeError(store.Exec(`
+				INSERT INTO results_propagate_sync
+				SELECT CONNECTION_ID(), participant_id, attempt_id, item_id, 'to_be_recomputed' AS state
+				FROM results
+				WHERE item_id = ? AND participant_id = ?
+				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`,
+				newItemRequest.Parent.ItemID, user.GroupID).Error())
 		}
 		parentChildSpec = append(parentChildSpec,
 			constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
 		insertItemItems(store, parentChildSpec)
 
 		service.MustNotBeError(store.ItemItems().CreateNewAncestors())
+	}
+
+	// Implicitly marks results linked to descendants of the created item (excluding the created item) and the current user
+	// to be propagated synchronously. For this reason, we do not need to mark results of the current user linked to
+	// child items to be propagated synchronously explicitly in the code.
+	service.MustNotBeError(store.PermissionsGranted().ComputeAllAccess())
+	if parentChildSpecLength > 0 {
+		service.MustNotBeError(store.Results().Propagate())
 	}
 
 	return itemID, nil
