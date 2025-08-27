@@ -10,6 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // GroupGetResponseCodePart contains fields related to the group's code.
@@ -95,6 +96,12 @@ type groupGetResponse struct {
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true
 	RequireWatchApproval bool `json:"require_watch_approval"`
+	// Only for joined groups
+	CurrentUserHasPendingLeaveRequest *bool `json:"current_user_has_pending_leave_request,omitempty"`
+	// Only for non-joined groups
+	CurrentUserHasPendingInvitation *bool `json:"current_user_has_pending_invitation,omitempty"`
+	// Only for non-joined groups
+	CurrentUserHasPendingJoinRequest *bool `json:"current_user_has_pending_join_request,omitempty"`
 }
 
 // swagger:operation GET /groups/{group_id} groups groupGet
@@ -170,7 +177,10 @@ func (srv *Service) getGroup(responseWriter http.ResponseWriter, httpRequest *ht
 					)
 				),
 				NULL
-			) AS can_leave_team`,
+			) AS can_leave_team,
+			`+currentUserHasPendingRequestSQLColumn("leave_request", user)+`,
+			`+currentUserHasPendingRequestSQLColumn("invitation", user)+`,
+			`+currentUserHasPendingRequestSQLColumn("join_request", user),
 			store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
 				gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
 		Joins(`
@@ -329,4 +339,19 @@ const currentUserManagershipSQLColumn = `
 // ancestorsOfUserQuery returns a query to get the ancestors of the given user (as ancestor_group_id).
 func ancestorsOfUserQuery(store *database.DataStore, user *database.User) *database.DB {
 	return store.ActiveGroupAncestors().Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
+}
+
+func currentUserHasPendingRequestSQLColumn(requestType string, user *database.User) string {
+	return fmt.Sprintf(`
+		IF(parent_group_id IS %sNULL,
+			EXISTS(
+				SELECT 1 FROM group_pending_requests
+				WHERE group_pending_requests.group_id = groups.id AND
+							group_pending_requests.member_id = %d AND
+							group_pending_requests.type = '%s'
+			),
+			NULL
+		) AS 'current_user_has_pending_%s'`,
+		golang.If(requestType == "leave_request", "NOT "),
+		user.GroupID, requestType, requestType)
 }
