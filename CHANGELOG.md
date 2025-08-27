@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.29.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.29.0...v2.29.1) - 2025-08-27
+- partially synchronous propagation in `itemCreate`
+- pass context when calling db methods in `testhelpers.InsertBatch()` and `testhelpers.emptyDB()`
+- remove the hack disabling `after_insert_groups_groups` trigger when `parent_group_id=4`
+- add support for `results_propagate.state="propagating"` in triggers and code
+
 ## [v2.29.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.28.3...v2.29.0) - 2025-08-20
 - new service: `itemStringDelete`
 - suppress output in tests of `./app/`, mock the DB in unit-tests of `./app/`, skip integration tests and testhelpers on building `prod/unit`, fix `TestLoadConfig_Concurrent`
