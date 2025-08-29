@@ -226,7 +226,7 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 
 		if authorized {
 			service.AppHandler(srv.refreshAccessToken).
-				ServeHTTP(responseWriter, httpRequest.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
+				ServeHTTP(responseWriter, httpRequest.WithContext(contextWithParsedRequestData(requestContext, requestData)))
 			return nil
 		}
 
@@ -498,4 +498,8 @@ func createGroupFromLogin(store *database.GroupStore, login string, domainConfig
 	}))
 
 	return selfGroupID
+}
+
+func contextWithParsedRequestData(ctx context.Context, requestData map[string]interface{}) context.Context {
+	return context.WithValue(ctx, parsedRequestData, requestData)
 }
