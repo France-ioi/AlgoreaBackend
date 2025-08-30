@@ -32,6 +32,11 @@ type membershipsViewResponseRow struct {
 		// required: true
 		// enum: Class,Team,Club,Friends,Other,Session,Base
 		Type string `json:"type"`
+		// required: true
+		// enum: none,view,edit
+		RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
+		// required: true
+		RequireWatchApproval bool `json:"require_watch_approval"`
 	} `json:"group" gorm:"embedded;embedded_prefix:group__"`
 
 	// required: true
@@ -94,6 +99,8 @@ func (srv *Service) getGroupMemberships(responseWriter http.ResponseWriter, http
 			groups.name AS group__name,
 			groups.description AS group__description,
 			groups.type AS group__type,
+			groups.require_personal_info_access_approval AS group__require_personal_info_access_approval,
+			groups.require_watch_approval AS group__require_watch_approval,
 			groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until AS is_membership_locked,
 			IF(groups.type = 'Team',
 				IF(groups.frozen_membership,
