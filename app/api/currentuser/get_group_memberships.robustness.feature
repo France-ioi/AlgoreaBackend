@@ -16,3 +16,8 @@ Feature: Get group memberships for the current user - robustness
     Then the response code should be 400
     And the response error message should contain "Unallowed field in sorting parameters: "myname""
 
+  Scenario: only_requiring_personal_info_access_approval is incorrect
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/group-memberships?only_requiring_personal_info_access_approval=wrong"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for only_requiring_personal_info_access_approval (should have a boolean value (0 or 1))"

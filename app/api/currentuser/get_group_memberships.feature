@@ -127,7 +127,43 @@ Feature: Get group memberships for the current user
     ]
     """
 
-  Scenario: Request the first row
+  Scenario: Show memberships requiring access to personal info
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/group-memberships?only_requiring_personal_info_access_approval=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "group": {
+          "id": "6",
+          "name": "Another Class",
+          "description": "Another class group",
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_watch_approval": false
+        },
+        "member_since": "2017-07-29T06:38:38.001Z",
+        "action": "join_request_accepted",
+        "is_membership_locked": true
+      },
+      {
+        "group": {
+          "id": "9",
+          "name": "Some other friends",
+          "description": "Another friends group",
+          "type": "Friends",
+          "require_personal_info_access_approval": "view",
+          "require_watch_approval": false
+        },
+        "action": "added_directly",
+        "member_since": null,
+        "is_membership_locked": false
+      }
+    ]
+    """
+
+  Scenario: Request the first row of all memberships
     Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships?limit=1"
     Then the response code should be 200
@@ -150,7 +186,7 @@ Feature: Get group memberships for the current user
     ]
     """
 
-  Scenario: Request the second row
+  Scenario: Request the second row of all memberships
     Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships?limit=1&from.id=6"
     Then the response code should be 200
@@ -168,6 +204,29 @@ Feature: Get group memberships for the current user
         },
         "member_since": "2017-06-29T06:38:38.001Z",
         "action": "invitation_accepted",
+        "is_membership_locked": false
+      }
+    ]
+    """
+
+  Scenario: Request the second row of memberships requiring access to personal info
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/group-memberships?only_requiring_personal_info_access_approval=1&limit=1&from.id=6"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "group": {
+          "id": "9",
+          "name": "Some other friends",
+          "description": "Another friends group",
+          "type": "Friends",
+          "require_personal_info_access_approval": "view",
+          "require_watch_approval": false
+        },
+        "action": "added_directly",
+        "member_since": null,
         "is_membership_locked": false
       }
     ]
