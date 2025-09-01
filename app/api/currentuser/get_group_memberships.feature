@@ -1,19 +1,19 @@
 Feature: Get group memberships for the current user
   Background:
     Given the database has the following table "groups":
-      | id | type                | name                       | description                | frozen_membership | require_lock_membership_approval_until |
-      | 1  | Class               | Our Class                  | Our class group            | false             | null                                   |
-      | 2  | Team                | Our Team                   | Our team group             | false             | null                                   |
-      | 3  | Club                | Our Club                   | Our club group             | false             | null                                   |
-      | 4  | Friends             | Our Friends                | Group for our friends      | false             | null                                   |
-      | 5  | Other               | Other people               | Group for other people     | false             | 2020-05-30 11:00:00                    |
-      | 6  | Class               | Another Class              | Another class group        | false             | 3020-05-30 11:00:00                    |
-      | 7  | Team                | Another Team               | Another team group         | false             | null                                   |
-      | 8  | Club                | Another Club               | Another club group         | false             | null                                   |
-      | 9  | Friends             | Some other friends         | Another friends group      | false             | null                                   |
-      | 30 | Team                | Frozen Team                | Frozen Team                | true              | null                                   |
-      | 31 | Team                | Team With Entry Conditions | Team With Entry Conditions | false             | null                                   |
-      | 32 | ContestParticipants |                            |                            | false             | null                                   |
+      | id | type                | name                       | description                | frozen_membership | require_lock_membership_approval_until | require_personal_info_access_approval | require_watch_approval |
+      | 1  | Class               | Our Class                  | Our class group            | false             | null                                   | none                                  | false                  |
+      | 2  | Team                | Our Team                   | Our team group             | false             | null                                   | none                                  | false                  |
+      | 3  | Club                | Our Club                   | Our club group             | false             | null                                   | none                                  | false                  |
+      | 4  | Friends             | Our Friends                | Group for our friends      | false             | null                                   | none                                  | false                  |
+      | 5  | Other               | Other people               | Group for other people     | false             | 2020-05-30 11:00:00                    | none                                  | false                  |
+      | 6  | Class               | Another Class              | Another class group        | false             | 3020-05-30 11:00:00                    | edit                                  | false                  |
+      | 7  | Team                | Another Team               | Another team group         | false             | null                                   | none                                  | false                  |
+      | 8  | Club                | Another Club               | Another club group         | false             | null                                   | none                                  | false                  |
+      | 9  | Friends             | Some other friends         | Another friends group      | false             | null                                   | view                                  | false                  |
+      | 30 | Team                | Frozen Team                | Frozen Team                | true              | null                                   | none                                  | false                  |
+      | 31 | Team                | Team With Entry Conditions | Team With Entry Conditions | false             | null                                   | none                                  | true                   |
+      | 32 | ContestParticipants |                            |                            | false             | null                                   | none                                  | false                  |
     And the database has the following users:
       | group_id | login | first_name  | last_name |
       | 21       | owner | Jean-Michel | Blanquer  |
@@ -62,7 +62,9 @@ Feature: Get group memberships for the current user
           "id": "6",
           "name": "Another Class",
           "description": "Another class group",
-          "type": "Class"
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_watch_approval": false
         },
         "member_since": "2017-07-29T06:38:38.001Z",
         "action": "join_request_accepted",
@@ -73,7 +75,9 @@ Feature: Get group memberships for the current user
           "id": "5",
           "name": "Other people",
           "description": "Group for other people",
-          "type": "Other"
+          "type": "Other",
+          "require_personal_info_access_approval": "none",
+          "require_watch_approval": false
         },
         "member_since": "2017-06-29T06:38:38.001Z",
         "action": "invitation_accepted",
@@ -84,7 +88,9 @@ Feature: Get group memberships for the current user
           "id": "9",
           "name": "Some other friends",
           "description": "Another friends group",
-          "type": "Friends"
+          "type": "Friends",
+          "require_personal_info_access_approval": "view",
+          "require_watch_approval": false
         },
         "action": "added_directly",
         "member_since": null,
@@ -96,7 +102,9 @@ Feature: Get group memberships for the current user
           "description": "Frozen Team",
           "id": "30",
           "name": "Frozen Team",
-          "type": "Team"
+          "type": "Team",
+          "require_personal_info_access_approval": "none",
+          "require_watch_approval": false
         },
         "member_since": null,
         "is_membership_locked": false,
@@ -108,7 +116,9 @@ Feature: Get group memberships for the current user
           "description": "Team With Entry Conditions",
           "id": "31",
           "name": "Team With Entry Conditions",
-          "type": "Team"
+          "type": "Team",
+          "require_personal_info_access_approval": "none",
+          "require_watch_approval": true
         },
         "member_since": null,
         "is_membership_locked": false,
@@ -117,7 +127,43 @@ Feature: Get group memberships for the current user
     ]
     """
 
-  Scenario: Request the first row
+  Scenario: Show memberships requiring access to personal info
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/group-memberships?only_requiring_personal_info_access_approval=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "group": {
+          "id": "6",
+          "name": "Another Class",
+          "description": "Another class group",
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_watch_approval": false
+        },
+        "member_since": "2017-07-29T06:38:38.001Z",
+        "action": "join_request_accepted",
+        "is_membership_locked": true
+      },
+      {
+        "group": {
+          "id": "9",
+          "name": "Some other friends",
+          "description": "Another friends group",
+          "type": "Friends",
+          "require_personal_info_access_approval": "view",
+          "require_watch_approval": false
+        },
+        "action": "added_directly",
+        "member_since": null,
+        "is_membership_locked": false
+      }
+    ]
+    """
+
+  Scenario: Request the first row of all memberships
     Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships?limit=1"
     Then the response code should be 200
@@ -129,7 +175,9 @@ Feature: Get group memberships for the current user
           "id": "6",
           "name": "Another Class",
           "description": "Another class group",
-          "type": "Class"
+          "type": "Class",
+          "require_personal_info_access_approval": "edit",
+          "require_watch_approval": false
         },
         "member_since": "2017-07-29T06:38:38.001Z",
         "action": "join_request_accepted",
@@ -138,7 +186,7 @@ Feature: Get group memberships for the current user
     ]
     """
 
-  Scenario: Request the second row
+  Scenario: Request the second row of all memberships
     Given I am the user with id "21"
     When I send a GET request to "/current-user/group-memberships?limit=1&from.id=6"
     Then the response code should be 200
@@ -150,10 +198,35 @@ Feature: Get group memberships for the current user
           "id": "5",
           "name": "Other people",
           "description": "Group for other people",
-          "type": "Other"
+          "type": "Other",
+          "require_personal_info_access_approval": "none",
+          "require_watch_approval": false
         },
         "member_since": "2017-06-29T06:38:38.001Z",
         "action": "invitation_accepted",
+        "is_membership_locked": false
+      }
+    ]
+    """
+
+  Scenario: Request the second row of memberships requiring access to personal info
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/group-memberships?only_requiring_personal_info_access_approval=1&limit=1&from.id=6"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "group": {
+          "id": "9",
+          "name": "Some other friends",
+          "description": "Another friends group",
+          "type": "Friends",
+          "require_personal_info_access_approval": "view",
+          "require_watch_approval": false
+        },
+        "action": "added_directly",
+        "member_since": null,
         "is_membership_locked": false
       }
     ]
