@@ -3,8 +3,9 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
-	"sync"
+	"time"
 
 	"golang.org/x/oauth2"
 
@@ -13,31 +14,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
-
-type sessionIDsInProgressMap sync.Map
-
-func (m *sessionIDsInProgressMap) WithLock(sessionID int64, httpRequest *http.Request, funcToRun func() error) error {
-	sessionMutex := make(chan bool)
-	defer close(sessionMutex)
-	sessionMutexInterface, loaded := (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex)
-	// retry storing our mutex into the map
-	for ; loaded; sessionMutexInterface, loaded = (*sync.Map)(m).LoadOrStore(sessionID, sessionMutex) {
-		select { // like mutex.Lock(), but with cancel/deadline
-		case <-sessionMutexInterface.(chan bool): // it is much better than <-time.After(...)
-		case <-httpRequest.Context().Done():
-			logging.GetLogEntry(httpRequest).Warnf("The request is canceled: %s", httpRequest.Context().Err())
-			return httpRequest.Context().Err()
-		}
-	}
-	defer (*sync.Map)(m).Delete(sessionID)
-
-	return funcToRun()
-}
-
-// (See https://github.com/France-ioi/AlgoreaBackend/issues/1219)
-//
-//nolint:gochecknoglobals // This variable stores locked sessions. It's going to be removed after rewriting the lock mechanism.
-var sessionIDsInProgress sessionIDsInProgressMap
 
 func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	requestData := httpRequest.Context().Value(parsedRequestData).(map[string]interface{})
@@ -70,10 +46,12 @@ func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpR
 			// We should not allow concurrency in this part because the login module generates not only
 			// a new access token, but also a new refresh token and revokes the old one. We want to prevent
 			// usage of the old refresh token for that reason.
-			service.MustNotBeError(sessionIDsInProgress.WithLock(sessionID, httpRequest, func() error {
-				newToken, expiresIn, err = srv.refreshTokens(httpRequest.Context(), store, user, sessionID)
-				return err
-			}))
+			service.MustNotBeError(store.WithNamedLock(
+				fmt.Sprintf("session_%d", sessionID), -1*time.Second, // we use the context timeout
+				func(store *database.DataStore) error {
+					newToken, expiresIn, err = srv.refreshTokens(httpRequest.Context(), store, user, sessionID)
+					return err
+				}))
 		}
 
 		service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
