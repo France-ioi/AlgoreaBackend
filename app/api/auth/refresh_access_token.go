@@ -26,6 +26,7 @@ func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpR
 
 	var newToken string
 	var expiresIn int32
+	var refreshed bool
 
 	service.MustNotBeError(store.WithNamedLock(
 		fmt.Sprintf("session_%d", sessionID), -1*time.Second, // we use the context timeout
@@ -48,11 +49,14 @@ func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpR
 					newToken, expiresIn, err = srv.refreshTokens(httpRequest.Context(), store, user, sessionID)
 				}
 				service.MustNotBeError(err)
+				refreshed = true
 			}
 			return nil
 		}))
 
-	service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
+	if refreshed {
+		service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
+	}
 
 	srv.respondWithNewAccessToken(
 		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], newToken, expiresIn, cookieAttributes)
