@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.30.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.29.1...v2.30.0) - 2025-09-03
+- add flags related to pending requests/invitations of the current user in `groupGet`
+- rework locking in `refreshAccessToken`
+- remove IGNORE flag from INSERTs inside DB triggers
+- `membershipsView`: show required approvals and allow filtering out memberships not requiring access to personal info + fix sorting
+
 ## [v2.29.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.29.0...v2.29.1) - 2025-08-27
 - partially synchronous propagation in `itemCreate`
 - pass context when calling db methods in `testhelpers.InsertBatch()` and `testhelpers.emptyDB()`
