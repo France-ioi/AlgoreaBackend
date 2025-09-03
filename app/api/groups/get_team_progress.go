@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model groupTeamProgressResponseTableCell
@@ -24,7 +24,6 @@ type groupTeamProgressResponseTableCell struct {
 	// Whether the team has the item validated
 	// required:true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required:true
 	LatestActivityAt *database.Time `json:"latest_activity_at"`
 	// Number of hints requested for the result with the best score (if multiple, take the first one, chronologically).
@@ -73,6 +72,7 @@ type groupTeamProgressResponseTableCell struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -80,10 +80,12 @@ type groupTeamProgressResponseTableCell struct {
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //		- name: from.id
 //			description: Start the page from the team next to the team with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display results for the first N teams (sorted by `name`)
 //			in: query
@@ -103,28 +105,29 @@ type groupTeamProgressResponseTableCell struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getTeamProgress(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	service.MustNotBeError(err)
+
 	if len(itemParentIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -137,8 +140,8 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
-	teamIDQuery, apiError = service.ApplySortingAndPaging(
-		r, teamIDQuery,
+	teamIDQuery, err = service.ApplySortingAndPaging(
+		httpRequest, teamIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -147,16 +150,15 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
-	teamIDQuery = service.NewQueryLimiter().Apply(r, teamIDQuery)
+	service.MustNotBeError(err)
+
+	teamIDQuery = service.NewQueryLimiter().Apply(httpRequest, teamIDQuery)
 	service.MustNotBeError(teamIDQuery.
 		Pluck("groups.id", &teamIDs).Error())
 
 	if len(teamIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		return nil
 	}
 
 	var result []*groupTeamProgressResponseTableCell
@@ -189,13 +191,13 @@ func (srv *Service) getTeamProgress(w http.ResponseWriter, r *http.Request) serv
 				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
 			) AS result_with_best_score ON 1`).
-		Where("groups.id IN (?)", teamIDs).
+		Where("groups.id IN (?)", teamIDs). //nolint:asasalint // teamIDs is a single argument
 		Order(gorm.Expr(
 			"FIELD(groups.id"+strings.Repeat(", ?", len(teamIDs))+")",
 			teamIDs...)),
 		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }

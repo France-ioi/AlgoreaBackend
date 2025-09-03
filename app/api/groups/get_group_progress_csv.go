@@ -9,7 +9,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 const csvExportGroupProgressBatchSize = 20
@@ -44,6 +44,7 @@ type idName struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -51,6 +52,7 @@ type idName struct {
 //			required: true
 //			items:
 //				type: integer
+//				format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with users progress on items
@@ -69,44 +71,44 @@ type idName struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getGroupProgressCSV(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	service.MustNotBeError(err)
 
-	w.Header().Set("Content-Type", "text/csv")
+	responseWriter.Header().Set("Content-Type", "text/csv")
 	itemParentIDsString := make([]string, len(itemParentIDs))
 	for i, id := range itemParentIDs {
 		itemParentIDsString[i] = strconv.FormatInt(id, 10)
 	}
-	w.Header().Set("Content-Disposition",
+	responseWriter.Header().Set("Content-Disposition",
 		fmt.Sprintf("attachment; filename=groups_progress_for_group_%d_and_child_items_of_%s.csv",
 			groupID, strings.Join(itemParentIDsString, "_")))
 	if len(itemParentIDs) == 0 {
-		_, err := w.Write([]byte("Group name\n"))
+		_, err := responseWriter.Write([]byte("Group name\n"))
 		service.MustNotBeError(err)
-		return service.NoError
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
 	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
-	csvWriter := csv.NewWriter(w)
+	csvWriter := csv.NewWriter(responseWriter)
 	defer csvWriter.Flush()
 	csvWriter.Comma = ';'
 
@@ -126,7 +128,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		Scan(&groups).Error())
 
 	if len(groups) == 0 {
-		return service.NoError
+		return nil
 	}
 
 	ancestorGroupIDs := make([]string, len(groups))
@@ -182,7 +184,7 @@ func (srv *Service) getGroupProgressCSV(w http.ResponseWriter, r *http.Request) 
 		writeEmptyRowsForSkippedGroupsAtTheEnd(groupNumber, batchBoundary, groups, len(orderedItemIDListWithDuplicates), csvWriter)
 	}
 
-	return service.NoError
+	return nil
 }
 
 func generateGroupNameAndWriteEmptyRowsForSkippedGroups(

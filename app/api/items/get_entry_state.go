@@ -6,9 +6,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 type itemGetEntryStateOtherMember struct {
@@ -131,37 +131,37 @@ type itemGetEntryStateResponse struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getEntryState(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) getEntryState(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	// We do not use the participant middleware as we get groups_groups.frozen_membership using the same SQL query
 	groupID := user.GroupID
-	if len(r.URL.Query()["as_team_id"]) != 0 {
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "as_team_id")
+	if len(httpRequest.URL.Query()["as_team_id"]) != 0 {
+		groupID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "as_team_id")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
 	}
 
-	result, apiError := getItemInfoAndEntryState(itemID, groupID, user, store, false)
-	if apiError != service.NoError {
-		return apiError
-	}
+	result, err := getItemInfoAndEntryState(itemID, groupID, user, store, false)
+	service.MustNotBeError(err)
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
 func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store *database.DataStore, lock bool) (
-	*itemGetEntryStateResponse, service.APIError,
+	*itemGetEntryStateResponse, error,
 ) {
 	var itemInfo struct {
 		IsTeamItem                   bool
@@ -177,12 +177,12 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 			items.entry_max_team_size, items.entry_min_admitted_members_ratio, items.entry_frozen_teams`).
 		Take(&itemInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return nil, service.InsufficientAccessRightsError
+		return nil, service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
 	if (groupID != user.GroupID) != itemInfo.IsTeamItem {
-		return nil, service.InsufficientAccessRightsError
+		return nil, service.ErrAPIInsufficientAccessRights
 	}
 
 	var currentTeamHasFrozenMembership bool
@@ -190,7 +190,7 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 		err = store.Groups().TeamGroupForUser(groupID, user).
 			PluckFirst("frozen_membership", &currentTeamHasFrozenMembership).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			return nil, service.InsufficientAccessRightsError
+			return nil, service.ErrAPIInsufficientAccessRights
 		}
 		service.MustNotBeError(err)
 	} else {
@@ -202,7 +202,7 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 		Where("attempts.root_item_id = ?", itemID).
 		Where("attempts.participant_id = ?", groupID)
 	if lock {
-		itemParticipationQuery = itemParticipationQuery.WithWriteLock()
+		itemParticipationQuery = itemParticipationQuery.WithExclusiveWriteLock()
 	}
 	var participationInfo struct {
 		IsStarted bool
@@ -214,19 +214,17 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 		Scan(&participationInfo).Error()
 	service.MustNotBeError(err)
 
-	membersCount, otherMembers, teamCanEnter, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound := getEntryStateInfo(
-		groupID, itemID, user, store, lock,
-	)
+	entryStateInfo := getEntryStateInfo(groupID, itemID, user, store, lock)
 	state := computeEntryState(
 		participationInfo.IsStarted, participationInfo.IsActive, itemInfo.AllowsMultipleAttempts, itemInfo.IsTeamItem,
-		itemInfo.EntryMaxTeamSize, itemInfo.EntryMinAdmittedMembersRatio, membersCount, admittedMembersCount, attemptsViolationsFound,
-		currentTeamHasFrozenMembership, itemInfo.EntryFrozenTeams, teamCanEnter)
+		itemInfo.EntryMaxTeamSize, itemInfo.EntryMinAdmittedMembersRatio, entryStateInfo.membersCount, entryStateInfo.admittedMembersCount,
+		entryStateInfo.attemptsViolationsFound, currentTeamHasFrozenMembership, itemInfo.EntryFrozenTeams, entryStateInfo.teamCanEnter)
 
 	result := &itemGetEntryStateResponse{
 		State:                        string(state),
 		EntryMinAdmittedMembersRatio: itemInfo.EntryMinAdmittedMembersRatio,
-		CurrentUserCanEnter:          currentUserCanEnter,
-		OtherMembers:                 otherMembers,
+		CurrentUserCanEnter:          entryStateInfo.currentUserCanEnter,
+		OtherMembers:                 entryStateInfo.otherMembers,
 		CurrentTeamIsFrozen:          currentTeamHasFrozenMembership,
 		FrozenTeamsRequired:          itemInfo.EntryFrozenTeams,
 		groupID:                      groupID,
@@ -235,10 +233,10 @@ func getItemInfoAndEntryState(itemID, groupID int64, user *database.User, store 
 	if itemInfo.IsTeamItem {
 		result.MaxTeamSize = &itemInfo.EntryMaxTeamSize
 	}
-	return result, service.NoError
+	return result, nil
 }
 
-func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamContest bool,
+func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTeamItem bool,
 	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, admittedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired, teamCanEnter bool,
 ) entryState {
@@ -246,7 +244,7 @@ func computeEntryState(hasAlreadyStarted, isActive, allowsMultipleAttempts, isTe
 		return alreadyStarted
 	}
 
-	if isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamContest,
+	if isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamItem,
 		maxTeamSize, entryMinAdmittedMembersRatio, membersCount, admittedMembersCount,
 		attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired, teamCanEnter) {
 		return ready
@@ -262,11 +260,11 @@ func isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio string
 		entryMinAdmittedMembersRatio == "One" && admittedMembersCount >= 1
 }
 
-func isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamContest bool,
+func isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamItem bool,
 	maxTeamSize int32, entryMinAdmittedMembersRatio string, membersCount, admittedMembersCount int32,
 	attemptsViolationsFound, currentTeamIsFrozen, frozenTeamsRequired, teamCanEnter bool,
 ) bool {
-	if isTeamContest && (!teamCanEnter && maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
+	if isTeamItem && (!teamCanEnter && maxTeamSize < membersCount || frozenTeamsRequired && !currentTeamIsFrozen) ||
 		!teamCanEnter && !isEntryMinAdmittedMembersRatioSatisfied(entryMinAdmittedMembersRatio, membersCount, admittedMembersCount) {
 		return false
 	}
@@ -274,12 +272,19 @@ func isReadyToEnter(hasAlreadyStarted, allowsMultipleAttempts, isTeamContest boo
 	return !attemptsViolationsFound && (!hasAlreadyStarted || allowsMultipleAttempts)
 }
 
-func getEntryStateInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) (
-	membersCount int32, otherMembers []itemGetEntryStateOtherMember, teamCanEnter, currentUserCanEnter bool, admittedMembersCount int32,
-	attemptsViolationsFound bool,
-) {
+type entryStateInfo struct {
+	membersCount            int32
+	otherMembers            []itemGetEntryStateOtherMember
+	teamCanEnter            bool
+	currentUserCanEnter     bool
+	admittedMembersCount    int32
+	attemptsViolationsFound bool
+}
+
+func getEntryStateInfo(groupID, itemID int64, user *database.User, store *database.DataStore, lock bool) *entryStateInfo {
+	var result entryStateInfo
 	if groupID != user.GroupID {
-		teamCanEnter = discoverIfTeamCanEnter(groupID, itemID, store, lock)
+		result.teamCanEnter = discoverIfTeamCanEnter(groupID, itemID, store, lock)
 
 		canEnterQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = groups_groups_active.child_group_id").
@@ -297,24 +302,26 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 				IF(MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name,
         users.group_id AS group_id, users.login,
 				(? OR IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0)) AND
-				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, teamCanEnter).
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, result.teamCanEnter).
 			WithPersonalInfoViewApprovals(user)
 		if lock {
-			canEnterQuery = canEnterQuery.WithWriteLock()
+			canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
 		}
-		service.MustNotBeError(canEnterQuery.Scan(&otherMembers).Error())
-		membersCount = int32(len(otherMembers))
+		service.MustNotBeError(canEnterQuery.Scan(&result.otherMembers).Error())
+		result.membersCount = int32(len(result.otherMembers)) //nolint:gosec // G115: it's impossible to have more than 2^31-1 members
 
 		participatingSomewhereElseQuery := store.ActiveGroupGroups().Where("groups_groups_active.parent_group_id = ?", groupID).
-			Joins("JOIN groups_groups_active AS all_teams_relations ON all_teams_relations.child_group_id = groups_groups_active.child_group_id").
-			Joins("JOIN `groups` AS groups_to_check ON groups_to_check.id = all_teams_relations.parent_group_id AND groups_to_check.type = 'Team'").
+			Joins(`
+				JOIN groups_groups_active AS all_teams_relations
+				  ON all_teams_relations.child_group_id = groups_groups_active.child_group_id AND
+				     all_teams_relations.is_team_membership = 1`).
 			Joins("JOIN items ON items.id = ?", itemID).
-			Joins("JOIN attempts ON attempts.participant_id = groups_to_check.id AND attempts.root_item_id = items.id").
-			Where("groups_to_check.id != groups_groups_active.parent_group_id"). // except for this team
+			Joins("JOIN attempts ON attempts.participant_id = all_teams_relations.parent_group_id AND attempts.root_item_id = items.id").
+			Where("all_teams_relations.parent_group_id != groups_groups_active.parent_group_id"). // except for this team
 			Group("groups_groups_active.child_group_id").
 			Having("MAX(NOW() < attempts.allows_submissions_until) OR NOT MAX(items.allows_multiple_attempts)")
 		if lock {
-			participatingSomewhereElseQuery = participatingSomewhereElseQuery.WithWriteLock()
+			participatingSomewhereElseQuery = participatingSomewhereElseQuery.WithExclusiveWriteLock()
 		}
 		var usersViolatingAttemptsRestriction []int64
 		service.MustNotBeError(participatingSomewhereElseQuery.
@@ -325,49 +332,51 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 			violationsMap[userID] = true
 		}
 
-		attemptsViolationsFound = len(usersViolatingAttemptsRestriction) > 0
+		result.attemptsViolationsFound = len(usersViolatingAttemptsRestriction) > 0
 
 		var currentUserIndex int
-		for index := range otherMembers {
-			otherMembers[index].AttemptsRestrictionViolated = violationsMap[otherMembers[index].GroupID]
-			if otherMembers[index].GroupID == user.GroupID {
-				currentUserCanEnter = otherMembers[index].CanEnter
+		for index := range result.otherMembers {
+			result.otherMembers[index].AttemptsRestrictionViolated = violationsMap[result.otherMembers[index].GroupID]
+			if result.otherMembers[index].GroupID == user.GroupID {
+				result.currentUserCanEnter = result.otherMembers[index].CanEnter
 				currentUserIndex = index
 			}
-			if otherMembers[index].CanEnter {
-				admittedMembersCount++
+			if result.otherMembers[index].CanEnter {
+				result.admittedMembersCount++
 			}
-			nilOtherMemberPersonalInfoIfNeeded(&otherMembers[index])
+			nilOtherMemberPersonalInfoIfNeeded(&result.otherMembers[index])
 		}
 
 		// remove the current user from the members list
-		otherMembers = append(otherMembers[:currentUserIndex], otherMembers[currentUserIndex+1:]...)
-	} else {
-		membersCount = 1
-		otherMembers = []itemGetEntryStateOtherMember{}
-		canEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
-			Joins("JOIN items ON items.id = ?", itemID).
-			Joins(`
+		result.otherMembers = append(result.otherMembers[:currentUserIndex], result.otherMembers[currentUserIndex+1:]...)
+
+		return &result
+	}
+
+	result.membersCount = 1
+	result.otherMembers = []itemGetEntryStateOtherMember{}
+	canEnterQuery := store.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Joins("JOIN items ON items.id = ?", itemID).
+		Joins(`
 				LEFT JOIN permissions_granted ON permissions_granted.group_id = groups_ancestors_active.ancestor_group_id
 					AND permissions_granted.item_id = items.id`).
-			Group("groups_ancestors_active.child_group_id")
-		if lock {
-			canEnterQuery = canEnterQuery.WithWriteLock()
-		}
+		Group("groups_ancestors_active.child_group_id")
+	if lock {
+		canEnterQuery = canEnterQuery.WithExclusiveWriteLock()
+	}
 
-		service.MustNotBeError(canEnterQuery.
-			PluckFirst(`
+	service.MustNotBeError(canEnterQuery.
+		PluckFirst(`
 				IFNULL(
 					MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0
 				) AND
-				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &currentUserCanEnter).
-			Error())
-		if currentUserCanEnter {
-			admittedMembersCount = 1
-		}
+				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, &result.currentUserCanEnter).
+		Error())
+	if result.currentUserCanEnter {
+		result.admittedMembersCount = 1
 	}
 
-	return membersCount, otherMembers, teamCanEnter, currentUserCanEnter, admittedMembersCount, attemptsViolationsFound
+	return &result
 }
 
 func nilOtherMemberPersonalInfoIfNeeded(otherMember *itemGetEntryStateOtherMember) {
@@ -383,7 +392,7 @@ func discoverIfTeamCanEnter(groupID, itemID int64, store *database.DataStore, lo
 					permissions_granted.item_id = ?`, itemID).
 		Joins("JOIN items ON items.id = ?", itemID)
 	if lock {
-		teamCanEnterQuery = teamCanEnterQuery.WithWriteLock()
+		teamCanEnterQuery = teamCanEnterQuery.WithExclusiveWriteLock()
 	}
 	service.MustNotBeError(teamCanEnterQuery.PluckFirst(`
 			IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0) AND

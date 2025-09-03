@@ -2,8 +2,6 @@ package groups
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // swagger:operation POST /groups/{parent_group_id}/leave-requests/reject group-memberships groupLeaveRequestsReject
@@ -31,12 +29,14 @@ import (
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: group_ids
 //			in: query
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //			required: true
 //	responses:
 //		"200":
@@ -47,8 +47,10 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) rejectLeaveRequests(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) rejectLeaveRequests(w http.ResponseWriter, r *http.Request) error {
 	return srv.performBulkMembershipAction(w, r, rejectLeaveRequestsAction)
 }

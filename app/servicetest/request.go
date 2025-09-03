@@ -12,11 +12,11 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // GetResponseForRouteWithMockedDBAndUser executes a route for unit tests
@@ -27,18 +27,18 @@ func GetResponseForRouteWithMockedDBAndUser(
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
 	setRouterFunc func(router *chi.Mux, baseService *service.Base),
 ) (*http.Response, sqlmock.Sqlmock, string, error) {
-	logger, hook := loggingtest.NewNullLogger()
-
 	db, mock := database.NewDBMock()
-	defer func() { _ = db.Close() }() // nolint: gosec
+	defer func() { _ = db.Close() }()
 
 	setMockExpectationsFunc(mock)
 
 	base := service.Base{}
 	base.SetGlobalStore(database.NewDataStore(db))
 	router := chi.NewRouter()
+	logger, logHook := logging.NewMockLogger()
+	router.Use(logging.ContextWithLoggerMiddleware(logger))
 	router.Use(auth.MockUserMiddleware(user))
-	router.Use(middleware.RequestLogger(&logging.StructuredLogger{Logger: logger}))
+	router.Use(middleware.RequestLogger(&logging.StructuredLogger{}))
 	setRouterFunc(router, &base)
 
 	ts := httptest.NewServer(router)
@@ -50,12 +50,12 @@ func GetResponseForRouteWithMockedDBAndUser(
 		response, err = http.DefaultClient.Do(request)
 	}
 
-	return response, mock, hook.GetAllLogs(), err
+	return response, mock, (&loggingtest.Hook{Hook: logHook}).GetAllLogs(), err
 }
 
 // WithLoggingMiddleware wraps the given handler in NullLogger with hook.
 func WithLoggingMiddleware(appHandler http.Handler) (http.Handler, *loggingtest.Hook) {
-	logger, hook := loggingtest.NewNullLogger()
-	loggingMiddleware := middleware.RequestLogger(&logging.StructuredLogger{Logger: logger})
-	return loggingMiddleware(appHandler), hook
+	logger, hook := logging.NewMockLogger()
+	loggingMiddleware := middleware.RequestLogger(&logging.StructuredLogger{})
+	return logging.ContextWithLoggerMiddleware(logger)(loggingMiddleware(appHandler)), &loggingtest.Hook{Hook: hook}
 }

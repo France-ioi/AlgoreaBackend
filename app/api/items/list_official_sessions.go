@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model officialSessionsListResponseRow
@@ -17,7 +17,6 @@ type officialSessionsListResponseRow struct {
 	GroupID int64 `json:"group_id,string"`
 	// required: true
 	Name string `json:"name"`
-	// Nullable
 	// required: true
 	Description *string `json:"description"`
 	// required: true
@@ -25,7 +24,6 @@ type officialSessionsListResponseRow struct {
 	// required: true
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true
@@ -34,25 +32,18 @@ type officialSessionsListResponseRow struct {
 	RequireMembersToJoinParent bool `json:"require_members_to_join_parent"`
 	// required: true
 	IsPublic bool `json:"is_public"`
-	// Nullable
 	// required: true
 	Organizer *string `json:"organizer"`
-	// Nullable
 	// required: true
 	AddressLine1 *string `json:"address_line1"`
-	// Nullable
 	// required: true
 	AddressLine2 *string `json:"address_line2"`
-	// Nullable
 	// required: true
 	AddressPostcode *string `json:"address_postcode"`
-	// Nullable
 	// required: true
 	AddressCity *string `json:"address_city"`
-	// Nullable
 	// required: true
 	AddressCountry *string `json:"address_country"`
-	// Nullable
 	// required: true
 	ExpectedStart *database.Time `json:"expected_start"`
 	// required:true
@@ -156,31 +147,33 @@ type rawOfficialSession struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) listOfficialSessions(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	found, err := store.Permissions().MatchingUserAncestors(user).
 		Where("item_id = ?", itemID).
 		WherePermissionIsAtLeast("view", "info").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	idsQuery := store.Groups().Where("type = 'Session'").
 		Where("is_official_session").
 		Where("is_public").
 		Where("root_activity_id = ?", itemID)
-	idsQuery = service.NewQueryLimiter().Apply(r, idsQuery)
-	idsQuery, apiError := service.ApplySortingAndPaging(
-		r, idsQuery,
+	idsQuery = service.NewQueryLimiter().Apply(httpRequest, idsQuery)
+	idsQuery, err = service.ApplySortingAndPaging(
+		httpRequest, idsQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"group_id":       {ColumnName: "groups.id"},
@@ -190,16 +183,15 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 			DefaultRules: "expected_start$,name,group_id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"group_id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var ids []interface{}
 	service.MustNotBeError(idsQuery.Pluck("groups.id", &ids).Error())
 
 	var rawData []rawOfficialSession
 	if len(ids) > 0 {
-		service.MustNotBeError(store.Groups().Where("groups.id IN (?)", ids).
+		service.MustNotBeError(store.Groups().
+			Where("groups.id IN (?)", ids). //nolint:asasalint // ids is a single argument
 			Select(`
 				groups.id AS group_id, groups.name, groups.description, groups.open_activity_when_joining,
 				groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until,
@@ -227,8 +219,8 @@ func (srv *Service) listOfficialSessions(w http.ResponseWriter, r *http.Request)
 	var result []officialSessionsListResponseRow
 	srv.fillOfficialSessionsWithParents(rawData, &result)
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
 func (srv *Service) fillOfficialSessionsWithParents(

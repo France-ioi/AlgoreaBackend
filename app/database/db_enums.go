@@ -6,6 +6,7 @@ import (
 	"sync"
 )
 
+//nolint:gochecknoglobals // these variables are used to store the enums loaded from the DB
 var (
 	enumsMutex  sync.RWMutex
 	enumColumns = []string{
@@ -23,7 +24,7 @@ var (
 )
 
 func (conn *DB) loadDBEnum(fullColumnName string) {
-	parsedColumn := strings.SplitN(fullColumnName, ".", 2)
+	parsedColumn := strings.SplitN(fullColumnName, ".", 2) //nolint:mnd // two parts: tableName.columnName
 	tableName := parsedColumn[0]
 	columnName := parsedColumn[1]
 

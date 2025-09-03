@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 type grantedPermissionsViewResultRowGroup struct {
@@ -25,7 +25,6 @@ type grantedPermissionsViewResultPermissions struct {
 	CanEnterFrom database.Time `json:"can_enter_from"`
 	// required: true
 	CanEnterUntil database.Time `json:"can_enter_until"`
-	// Nullable
 	// required: true
 	CanRequestHelpTo *int64 `json:"can_request_help_to"`
 }
@@ -33,26 +32,25 @@ type grantedPermissionsViewResultPermissions struct {
 // swagger:model grantedPermissionsViewResultRow
 type grantedPermissionsViewResultRow struct {
 	// required: true
-	SourceGroup grantedPermissionsViewResultRowGroup `json:"source_group" gorm:"embedded;embedded_prefix:source_group__"`
+	SourceGroup grantedPermissionsViewResultRowGroup `gorm:"embedded;embedded_prefix:source_group__" json:"source_group"`
 	// required: true
-	Group grantedPermissionsViewResultRowGroup `json:"group" gorm:"embedded;embedded_prefix:group__"`
+	Group grantedPermissionsViewResultRowGroup `gorm:"embedded;embedded_prefix:group__" json:"group"`
 	// required: true
 	Item struct {
 		// required: true
 		ID int64 `json:"id,string"`
-		// Nullable
 		// required: true
 		Title *string `json:"title"`
 		// required: true
 		// enum: Chapter,Task,Skill
-		Type *string `json:"type"`
+		Type string `json:"type"`
 		// required: true
 		LanguageTag string `json:"language_tag"`
 		// required: true
 		RequiresExplicitEntry bool `json:"requires_explicit_entry"`
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
 	// required: true
-	Permissions grantedPermissionsViewResultPermissions `json:"permissions" gorm:"embedded;embedded_prefix:permissions__"`
+	Permissions grantedPermissionsViewResultPermissions `gorm:"embedded;embedded_prefix:permissions__" json:"permissions"`
 }
 
 // swagger:operation GET /groups/{group_id}/granted_permissions groups grantedPermissionsView
@@ -77,6 +75,7 @@ type grantedPermissionsViewResultRow struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: descendants
 //			description: If equal to 1, the results are permissions granted to the group's descendants (not including the group itself),
 //							 otherwise the results are permissions granted to the group's ancestors (including the group itself).
@@ -97,16 +96,19 @@ type grantedPermissionsViewResultRow struct {
 //							 (`{from.item.id}` and `{from.group.id}` should be given too when `{from.source_group.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.group.id
 //			description: Start the page from permissions next to the permissions with `group_id`=`{from.group.id}`
 //							 (`{from.item.id}` and `{from.source_group.id}` should be given too when `{from.group.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.item.id
 //			description: Start the page from permissions next to the permissions with `item_id`=`{from.item.id}`
 //							 (`{from.group.id}` and `{from.source_group.id}` should be given too when `{from.item.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N permissions
 //			in: query
@@ -126,30 +128,32 @@ type grantedPermissionsViewResultRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) getGrantedPermissions(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	var forDescendants bool
-	if len(r.URL.Query()["descendants"]) > 0 {
-		forDescendants, err = service.ResolveURLQueryGetBoolField(r, "descendants")
+	if len(httpRequest.URL.Query()["descendants"]) > 0 {
+		forDescendants, err = service.ResolveURLQueryGetBoolField(httpRequest, "descendants")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
 		Where("groups.type != 'User'").Where("can_grant_group_access").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	itemsQuery := store.Permissions().MatchingUserAncestors(user).
@@ -160,7 +164,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	// Used to be a subquery, but it failed with MySQL-8.0.26 due to obscure bugs introduced in this version.
 	// It works when doing the query first and using the result in the second query.
 	// See commit 5a25fbded8134c93c72dc853f72071943a1bd24c
-	managedGroupsWithCanGrantGroupAccessIds := user.GetManagedGroupsWithCanGrantGroupAccessIds(store)
+	managedGroupsWithCanGrantGroupAccessIDs := user.GetManagedGroupsWithCanGrantGroupAccessIDs(store)
 
 	var sourceGroupsQuery, groupsQuery *database.DB
 	if forDescendants {
@@ -170,11 +174,11 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			Union(
 				store.ActiveGroupAncestors().
 					Select("child_group_id AS id").
-					Where("ancestor_group_id = ?", groupID).SubQuery())
+					Where("ancestor_group_id = ?", groupID))
 
 		sourceGroupsQuery = store.Groups().
 			Where("groups.type != 'User'").
-			Where("id IN (?)", managedGroupsWithCanGrantGroupAccessIds).
+			Where("id IN (?)", managedGroupsWithCanGrantGroupAccessIDs).
 			Where("id IN ?", ancestorsAndDescendantsQuery.SubQuery()).
 			Select("groups.id, groups.name")
 
@@ -186,7 +190,7 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 	} else {
 		sourceGroupsQuery = store.ActiveGroupAncestors().
 			Where("child_group_id = ?", groupID).
-			Where("ancestor_group_id IN (?)", managedGroupsWithCanGrantGroupAccessIds).
+			Where("ancestor_group_id IN (?)", managedGroupsWithCanGrantGroupAccessIDs).
 			Joins("JOIN `groups` ON groups.id = ancestor_group_id").
 			Where("groups.type != 'User'").
 			Select("groups.id, groups.name")
@@ -224,9 +228,9 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 			can_request_help_to AS permissions__can_request_help_to,
 			can_enter_until AS permissions__can_enter_until`)
 
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"source_group.name": {ColumnName: "source_group.name"},
@@ -246,11 +250,9 @@ func (srv *Service) getGrantedPermissions(w http.ResponseWriter, r *http.Request
 				"item.id":         service.FieldTypeInt64,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	service.MustNotBeError(query.Scan(&permissions).Error())
-	render.Respond(w, r, permissions)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, permissions)
+	return nil
 }

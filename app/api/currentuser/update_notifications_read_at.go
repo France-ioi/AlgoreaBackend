@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation PUT /current-user/notifications-read-at users userNotificationReadDateUpdate
@@ -19,16 +19,18 @@ import (
 //			"$ref": "#/responses/updatedResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateNotificationsReadAt(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) updateNotificationsReadAt(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
-	service.MustNotBeError(srv.GetStore(r).Users().ByID(user.GroupID).
+	service.MustNotBeError(srv.GetStore(httpRequest).Users().ByID(user.GroupID).
 		UpdateColumn("notifications_read_at", database.Now()).Error())
 
-	response := service.Response{Success: true, Message: "updated"}
-	render.Respond(w, r, &response)
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
+	render.Respond(responseWriter, httpRequest, &response)
 
-	return service.NoError
+	return nil
 }

@@ -6,27 +6,33 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
-		name     string
-		code     string
-		withLock bool
-		want     *database.GroupJoiningByCodeInfo
+		name      string
+		code      string
+		withLock  bool
+		wantFound bool
+		want      database.GroupJoiningByCodeInfo
 	}{
 		{name: "wrong code", code: "bcd"},
 		{name: "wrong code (the check is case-sensitive)", code: "UVWX"},
 		{name: "wrong code (wildcards do not work)", code: "%"},
 		{name: "wrong code (group is a user)", code: "xyza"},
 		{
-			name:     "group is not a team",
-			code:     "abcd",
-			withLock: true,
-			want: &database.GroupJoiningByCodeInfo{
+			name:      "group is not a team",
+			code:      "abcd",
+			withLock:  true,
+			wantFound: true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             1,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  true,
@@ -34,9 +40,10 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			},
 		},
 		{
-			name: "group is not public",
-			code: "efgh",
-			want: &database.GroupJoiningByCodeInfo{
+			name:      "group is not public",
+			code:      "efgh",
+			wantFound: true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             2,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  true,
@@ -45,10 +52,11 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 		},
 		{name: "expired code", code: "ijkl"},
 		{
-			name:     "ok",
-			code:     "mnop",
-			withLock: true,
-			want: &database.GroupJoiningByCodeInfo{
+			name:      "ok",
+			code:      "mnop",
+			withLock:  true,
+			wantFound: true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             4,
 				CodeExpiresAtIsNull: false,
 				CodeLifetimeIsNull:  true,
@@ -57,9 +65,10 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			},
 		},
 		{
-			name: "ok (expires at is null)",
-			code: "qrst",
-			want: &database.GroupJoiningByCodeInfo{
+			name:      "ok (expires at is null)",
+			code:      "qrst",
+			wantFound: true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             5,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  false,
@@ -68,10 +77,11 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 			},
 		},
 		{
-			name:     "ok (frozen membership)",
-			code:     "uvwx",
-			withLock: true,
-			want: &database.GroupJoiningByCodeInfo{
+			name:      "ok (frozen membership)",
+			code:      "uvwx",
+			withLock:  true,
+			wantFound: true,
+			want: database.GroupJoiningByCodeInfo{
 				GroupID:             6,
 				CodeExpiresAtIsNull: true,
 				CodeLifetimeIsNull:  true,
@@ -81,7 +91,7 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 		},
 	}
 
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 1, type: Class, code: abcd, is_public: 1}
 			- {id: 2, type: Team, code: efgh}
@@ -96,18 +106,22 @@ func TestDataStore_GetGroupJoiningByCodeInfoByCode(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			store := database.NewDataStore(db)
-			var got *database.GroupJoiningByCodeInfo
+			var got database.GroupJoiningByCodeInfo
+			var found bool
 			var err error
 			if tt.withLock {
-				assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
-					got, err = trStore.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
+				require.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
+					got, found, err = trStore.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 					return err
 				}))
 			} else {
-				got, err = store.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
+				got, found, err = store.GetGroupJoiningByCodeInfoByCode(tt.code, tt.withLock)
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantFound, found)
 			assert.Equal(t, tt.want, got)
 		})
 	}

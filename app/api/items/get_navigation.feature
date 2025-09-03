@@ -1,25 +1,21 @@
 Feature: Get navigation for an item
   Background:
-    Given the database has the following table 'groups':
-      | id | name      | grade | type  |
-      | 1  | all       | -2    | Base  |
-      | 11 | jdoe      | -2    | User  |
-      | 12 | Group A   | -2    | Class |
-      | 13 | Group B   | -2    | Team  |
-      | 14 | info_root | -2    | User  |
-      | 16 | info_mid  | -2    | User  |
-      | 18 | french    | -2    | User  |
-      | 19 | Group C   | -2    | Team  |
-    And the database has the following table 'languages':
+    Given the database has the following table "groups":
+      | id | name      | type  |
+      | 1  | all       | Base  |
+      | 12 | Group A   | Class |
+      | 13 | Group B   | Team  |
+      | 19 | Group C   | Team  |
+    And the database has the following table "languages":
       | tag |
       | fr  |
-    And the database has the following table 'users':
-      | login     | temp_user | group_id | default_language |
-      | jdoe      | 0         | 11       |                  |
-      | info_root | 0         | 14       |                  |
-      | info_mid  | 0         | 16       |                  |
-      | fr_user   | 0         | 18       | fr               |
-    And the database has the following table 'groups_groups':
+    And the database has the following users:
+      | group_id | login     | default_language |
+      | 11       | jdoe      |                  |
+      | 14       | info_root |                  |
+      | 16       | info_mid  |                  |
+      | 18       | fr_user   | fr               |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 1               | 12             |
       | 1               | 13             |
@@ -31,11 +27,11 @@ Feature: Get navigation for an item
       | 13              | 11             |
       | 19              | 11             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | manager_id | group_id | can_watch_members |
       | 12         | 1        | true              |
       | 12         | 19       | true              |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
       | 200 | Task    | en                   | false    | false                   | User                   |
       | 210 | Chapter | en                   | false    | false                   | User                   |
@@ -45,7 +41,7 @@ Feature: Get navigation for an item
       | 231 | Task    | en                   | false    | false                   | User                   |
       | 232 | Task    | en                   | false    | false                   | User                   |
       | 250 | Task    | en                   | false    | false                   | User                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 1        | 230     | none                     | none                     | result              | none               | false              |
       | 11       | 200     | solution                 | solution_with_grant      | none                | none               | true               |
@@ -89,7 +85,7 @@ Feature: Get navigation for an item
       | 19       | 200     | content                  | none                     | none                | none               | false              |
       | 19       | 210     | content                  | none                     | none                | none               | false              |
       | 19       | 211     | content                  | none                     | none                | none               | false              |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order | content_view_propagation |
       | 200            | 210           | 3           | none                     |
       | 200            | 220           | 2           | as_info                  |
@@ -97,7 +93,7 @@ Feature: Get navigation for an item
       | 210            | 211           | 1           | none                     |
       | 230            | 231           | 2           | none                     |
       | 230            | 232           | 1           | none                     |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title       |
       | 200     | en           | Category 1  |
       | 210     | en           | Chapter A   |
@@ -110,14 +106,14 @@ Feature: Get navigation for an item
       | 210     | fr           | Chapitre A  |
       | 230     | fr           | Chapitre C  |
       | 211     | fr           | Tâche 1     |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | root_item_id | parent_attempt_id | ended_at            |
       | 0  | 11             | 2019-01-30 08:26:41 | null         | null              | null                |
       | 1  | 11             | 2019-01-30 08:26:41 | 200          | 0                 | null                |
       | 2  | 11             | 2019-01-30 08:26:41 | 230          | 0                 | 2019-01-30 09:26:48 |
       | 0  | 13             | 2018-01-30 09:26:42 | null         | null              | null                |
       | 0  | 19             | 2018-01-30 09:26:42 | null         | null              | null                |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | score_computed | submissions | started_at          | validated_at        | latest_activity_at  |
       | 0          | 11             | 200     | 91             | 11          | 2019-01-30 09:26:41 | null                | 2019-01-30 09:36:41 |
       | 0          | 11             | 210     | 92             | 12          | 2019-01-30 09:26:42 | 2019-01-31 09:26:42 | 2019-01-30 09:36:42 |
@@ -222,14 +218,10 @@ Feature: Get navigation for an item
       """
 
   Scenario: Should only return Skills and compute has_visible children on Skills only when we get navigation on a Skill
-    Given the database has the following table 'groups':
-      | id   | name | type |
-      | 1000 | user | User |
-    And the database has the following table 'users':
-      | login | temp_user | group_id |
-      | user  | 0         | 1000     |
-    And the groups ancestors are computed
-    And the database has the following table 'items':
+    Given the database has the following user:
+      | login | group_id |
+      | user  | 1000     |
+    And the database has the following table "items":
       | id   | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
       | 1000 | Skill   | en                   | false    | false                   | User                   |
       | 1100 | Skill   | en                   | false    | false                   | User                   |
@@ -241,7 +233,7 @@ Feature: Get navigation for an item
       | 1300 | Skill   | en                   | false    | false                   | User                   |
       | 1400 | Chapter | en                   | false    | false                   | User                   |
       | 1500 | Task    | en                   | false    | false                   | User                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 1000     | 1000    | solution           | solution_with_grant      | none                | none               | false              |
       | 1000     | 1100    | solution           | solution_with_grant      | none                | none               | false              |
@@ -253,7 +245,7 @@ Feature: Get navigation for an item
       | 1000     | 1300    | solution           | solution_with_grant      | none                | none               | false              |
       | 1000     | 1400    | solution           | solution_with_grant      | none                | none               | false              |
       | 1000     | 1500    | solution           | solution_with_grant      | none                | none               | false              |
-      And the database has the following table 'items_items':
+      And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order | content_view_propagation |
       | 1000           | 1100          | 1           | none                     |
       | 1100           | 1110          | 1           | none                     |
@@ -264,7 +256,7 @@ Feature: Get navigation for an item
       | 1000           | 1300          | 3           | as_content               |
       | 1000           | 1400          | 4           | as_content               |
       | 1000           | 1500          | 5           | as_content               |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | item_id | language_tag | title              |
       | 1000    | en           | Parent Skill       |
       | 1100    | en           | Child lvl1 Skill 1 |
@@ -276,10 +268,10 @@ Feature: Get navigation for an item
       | 1300    | en           | Child lvl1 Skill 3 |
       | 1400    | en           | Child lvl1 Chapter |
       | 1500    | en           | Child lvl1 Task    |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | root_item_id | parent_attempt_id | ended_at |
       | 0  | 1000           | 2020-01-01 00:00:00 | null         | null              | null     |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | participant_id | item_id | score_computed | submissions | started_at          | validated_at        | latest_activity_at  |
       | 0          | 1000           | 1000    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |
       | 0          | 1000           | 1100    | 100            | 1           | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 | 2020-01-01 00:00:00 |

@@ -1,17 +1,14 @@
 Feature: Invite users - robustness
   Background:
-    Given the database has the following table 'groups':
-      | id  | type  |
-      | 11  | User  |
-      | 13  | Class |
-      | 21  | User  |
-      | 22  | User  |
-    And the database has the following table 'users':
-      | login | group_id | first_name  | last_name |
-      | owner | 21       | Jean-Michel | Blanquer  |
-      | user  | 11       | John        | Doe       |
-      | jane  | 22       | Jane        | Doe       |
-    And the database has the following table 'group_managers':
+    Given the database has the following table "groups":
+      | id | type  |
+      | 13 | Class |
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 11       | user  | John        | Doe       |
+      | 22       | jane  | Jane        | Doe       |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 13       | 22         | none        |
@@ -28,10 +25,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when the user is a manager of the parent group, but doesn't have enough rights to manage memberships
     Given I am the user with id "22"
@@ -43,10 +40,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when the user has enough rights to manage memberships, but the group is a user
     Given I am the user with id "22"
@@ -58,10 +55,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when the user doesn't exist
     Given I am the user with id "404"
@@ -73,10 +70,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 401
     And the response error message should contain "Invalid access token"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when the parent group id is wrong
     Given I am the user with id "21"
@@ -88,10 +85,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Wrong value for parent_group_id (should be int64)"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when logins are wrong
     Given I am the user with id "21"
@@ -103,10 +100,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 400
     And the response error message should contain "Json: cannot unmarshal number into Go struct field .logins of type string"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when logins are not present
     Given I am the user with id "21"
@@ -117,10 +114,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 400
     And the response error message should contain "There should be at least one login listed"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when logins are empty
     Given I am the user with id "21"
@@ -132,10 +129,10 @@ Feature: Invite users - robustness
       """
     Then the response code should be 400
     And the response error message should contain "There should be at least one login listed"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when too many logins
     Given I am the user with id "21"
@@ -159,7 +156,7 @@ Feature: Invite users - robustness
       """
     Then the response code should be 400
     And the response error message should contain "There should be no more than 100 logins"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be empty
     And the table "group_membership_changes" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged

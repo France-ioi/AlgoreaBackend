@@ -1,6 +1,6 @@
 Feature: Get group by groupID (groupView)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | grade | description     | created_at          | type  | root_activity_id    | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_personal_info_access_approval | require_watch_approval | require_lock_membership_approval_until | frozen_membership |
       | 8  | Other   | -4    | Parent of 9     | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | efghijklmn | null          | null                | false                      | none                                  | false                  | null                                   | false             |
       | 9  | Club    | -4    | Club            | 2019-04-06 09:26:40 | Other | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
@@ -12,23 +12,16 @@ Feature: Get group by groupID (groupView)
       | 17 | Team 1  | -4    | Team 1          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | true                   | 3019-05-30 11:00:00                    | false             |
       | 18 | Team 2  | -4    | Team 2          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | view                                  | false                  | 2019-05-30 11:00:00                    | true              |
       | 19 | Team 3  | -4    | Team 3          | 2019-04-06 09:26:40 | Team  | null                | null          | false   | false     | null       | null          | null                | false                      | edit                                  | false                  | null                                   | false             |
-      | 21 | owner   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 31 | john    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 41 | jane    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 51 | rick    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 61 | ian     | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 71 | dirk    | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-      | 81 | chuck   | 0     | null            | 2019-01-06 09:26:40 | User  | null                | null          | false   | false     | null       | null          | null                | false                      | none                                  | false                  | null                                   | false             |
-    And the database has the following table 'users':
-      | login | group_id |
-      | owner | 21       |
-      | john  | 31       |
-      | jane  | 41       |
-      | rick  | 51       |
-      | ian   | 61       |
-      | dirk  | 71       |
-      | chuck | 81       |
-    And the database has the following table 'groups_groups':
+    And the database has the following users:
+      | group_id | login |
+      | 21       | owner |
+      | 31       | john  |
+      | 41       | jane  |
+      | 51       | rick  |
+      | 61       | ian   |
+      | 71       | dirk  |
+      | 81       | chuck |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 8               | 9              | null                        |
       | 9               | 21             | null                        |
@@ -45,21 +38,27 @@ Feature: Get group by groupID (groupView)
       | 19              | 81             | null                        |
       | 15              | 11             | null                        |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 13       | 21         | none                  | false                  | false             |
       | 15       | 21         | memberships_and_group | true                   | true              |
       | 16       | 9          | none                  | false                  | false             |
       | 19       | 21         | none                  | false                  | false             |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table 'attempts' has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 17             | 1  | 2            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id | started_at          |
       | 17             | 1          | 2       | 2019-05-30 11:00:00 |
+    And the database has the following table "group_pending_requests":
+      | group_id | member_id | type          |
+      | 11       | 21        | leave_request |
+      | 13       | 51        | invitation    |
+      | 13       | 61        | join_request  |
+      | 13       | 81        | leave_request |
 
   Scenario: The user is a manager of the group
     Given I am the user with id "21"
@@ -93,7 +92,9 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "none",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": false,
+      "current_user_has_pending_join_request": false
     }
     """
 
@@ -129,7 +130,9 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "none",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": false,
+      "current_user_has_pending_join_request": false
     }
     """
 
@@ -159,7 +162,9 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "none",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": false,
+      "current_user_has_pending_join_request": false
     }
     """
 
@@ -189,7 +194,9 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "none",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": false,
+      "current_user_has_pending_join_request": false
     }
     """
 
@@ -219,7 +226,9 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "none",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": false,
+      "current_user_has_pending_join_request": false
     }
     """
 
@@ -249,15 +258,16 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "none",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_leave_request": <current_user_has_pending_leave_request>
     }
     """
   Examples:
-    | user_id |
-    | 51      |
-    | 61      |
-    | 71      |
-    | 81      |
+    | user_id | current_user_has_pending_leave_request |
+    | 51      | false                                  |
+    | 61      | false                                  |
+    | 71      | false                                  |
+    | 81      | true                                   |
 
   Scenario: The group has is_public = 1
     Given I am the user with id "41"
@@ -285,7 +295,9 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "none",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": false,
+      "current_user_has_pending_join_request": false
     }
     """
 
@@ -316,7 +328,8 @@ Feature: Get group by groupID (groupView)
       "can_leave_team": "<can_leave_team>",
       "require_lock_membership_approval_until": <require_lock_membership_approval_until>,
       "require_personal_info_access_approval": "<require_personal_info_access_approval>",
-      "require_watch_approval": <require_watch_approval>
+      "require_watch_approval": <require_watch_approval>,
+      "current_user_has_pending_leave_request": false
     }
     """
     Examples:
@@ -358,6 +371,54 @@ Feature: Get group by groupID (groupView)
       "is_membership_locked": false,
       "require_lock_membership_approval_until": null,
       "require_personal_info_access_approval": "edit",
-      "require_watch_approval": false
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": false,
+      "current_user_has_pending_join_request": false
     }
     """
+
+  Scenario Outline: The user is a manager of the group (check pending invitation and join request flags)
+    Given I am the user with id "21"
+    And the database table "group_pending_requests" also has the following rows:
+      | group_id | member_id | type                   |
+      | 13       | 21        | <pending_request_type> |
+    When I send a GET request to "/groups/13"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "13",
+      "name": "Group B",
+      "grade": -2,
+      "description": "Group B is here",
+      "created_at": "2019-03-06T09:26:40Z",
+      "type": "Class",
+      "root_activity_id": "1672978871462145461",
+      "root_skill_id": "789012",
+      "is_open": true,
+      "is_public": false,
+      "code": "ybabbxnlyo",
+      "code_lifetime": 3600,
+      "code_expires_at": "2017-10-14T05:39:48Z",
+      "open_activity_when_joining": true,
+      "current_user_managership": "direct",
+      "current_user_can_manage": "none",
+      "current_user_can_grant_group_access": false,
+      "current_user_can_watch_members": false,
+      "current_user_membership": "none",
+      "descendants_current_user_is_member_of": [],
+      "ancestors_current_user_is_manager_of": [],
+      "descendants_current_user_is_manager_of": [{"id": "11", "name": "Group A"}],
+      "is_membership_locked": false,
+      "require_lock_membership_approval_until": null,
+      "require_personal_info_access_approval": "none",
+      "require_watch_approval": false,
+      "current_user_has_pending_invitation": <current_user_has_pending_invitation>,
+      "current_user_has_pending_join_request": <current_user_has_pending_join_request>
+    }
+    """
+    Examples:
+      | pending_request_type | current_user_has_pending_invitation | current_user_has_pending_join_request |
+      | leave_request        | false                               | false                                 |
+      | invitation           | true                                | false                                 |
+      | join_request         | false                               | true                                  |

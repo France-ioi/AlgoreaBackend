@@ -1,19 +1,17 @@
 Feature: User leaves a group - robustness
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | type  | require_lock_membership_approval_until | frozen_membership |
       | 11 | Class | null                                   | false             |
       | 14 | Team  | null                                   | false             |
       | 15 | Club  | 2037-04-29                             | false             |
       | 16 | Club  | null                                   | true              |
       | 17 | Base  | null                                   | false             |
-      | 21 | User  | null                                   | false             |
-      | 31 | User  | null                                   | false             |
-    And the database has the following table 'users':
+    And the database has the following users:
       | group_id | login |
       | 21       | john  |
       | 31       | jane  |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 14              | 21             | null                        |
       | 14              | 31             | null                        |
@@ -21,7 +19,7 @@ Feature: User leaves a group - robustness
       | 16              | 31             | null                        |
       | 17              | 31             | null                        |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 11       | 21        | join_request |
 
@@ -37,16 +35,16 @@ Feature: User leaves a group - robustness
       "error_text": "No such relation"
     }
     """
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails when the group id is wrong
     Given I am the user with id "21"
     When I send a DELETE request to "/current-user/group-memberships/abc"
     Then the response code should be 400
     And the response error message should contain "Wrong value for group_id (should be int64)"
-    And the table "groups_groups" should stay unchanged
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "groups_ancestors" should remain unchanged
 
   Scenario: Fails if the user doesn't exist
     Given I am the user with id "404"
@@ -81,13 +79,13 @@ Feature: User leaves a group - robustness
 
   Scenario: Fails if leaving breaks entry conditions for the team
     Given I am the user with id "31"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id | default_language_tag | entry_min_admitted_members_ratio |
       | 2  | fr                   | All                              |
-    And the database table 'attempts' has also the following row:
+    And the database table "attempts" also has the following row:
       | participant_id | id | root_item_id |
       | 14             | 1  | 2            |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | participant_id | attempt_id | item_id | started_at          |
       | 14             | 1          | 2       | 2019-05-30 11:00:00 |
     When I send a DELETE request to "/current-user/group-memberships/14"

@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /items/{item_id} items itemDelete
@@ -18,7 +18,7 @@ import (
 //		Removes an item and objects linked to it.
 //
 //
-//		The service deletes `answers`, `groups_contest_items`,
+//		The service deletes `answers`, `group_item_additional_times`,
 //		`item_dependencies` (by `item_id` and `dependent_item_id`),
 //		`items_ancestors` (by `child_item_id`), `items_items` (by `child_item_id`), `items_strings`,
 //		`permissions_generated`, `permissions_granted`, `permissions_propagate`, `results`
@@ -43,44 +43,39 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"422":
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteItem(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+func (srv *Service) deleteItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	apiErr := service.NoError
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
-		found, err = s.Permissions().MatchingUserAncestors(user).Where("item_id = ?", itemID).
-			Where("is_owner_generated").WithWriteLock().HasRows()
+		found, err = store.Permissions().MatchingUserAncestors(user).Where("item_id = ?", itemID).
+			Where("is_owner_generated").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		found, err = s.ItemItems().ChildrenOf(itemID).WithWriteLock().HasRows()
+		found, err = store.ItemItems().ChildrenOf(itemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
-			apiErr = service.ErrUnprocessableEntity(errors.New("the item must not have children"))
-			return apiErr.Error // rollback
+			return service.ErrUnprocessableEntity(errors.New("the item must not have children")) // rollback
 		}
 
-		return s.Items().DeleteItem(itemID)
+		return store.Items().DeleteItem(itemID)
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

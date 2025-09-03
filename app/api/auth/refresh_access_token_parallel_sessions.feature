@@ -1,10 +1,9 @@
 Feature: Support for parallel sessions
   Background:
     Given there are the following groups:
-      | group     | parent | members               |
-      | @AllUsers |        | @User1,@UserUntouched |
+      | group         | parent    | members               |
+      | @NonTempUsers | @AllUsers | @User1,@UserUntouched |
     And the time now is "2020-01-01T01:00:00Z"
-    And the DB time now is "2020-01-01 01:00:00"
     And there are the following sessions:
       | session                | user           | refresh_token       |
       | @Session_User1_1       | @User1         | rt_user_1_session_1 |

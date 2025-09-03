@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 const (
@@ -41,10 +41,8 @@ type userViewResponse struct {
 	TempUser bool `json:"temp_user"`
 	// required: true
 	Login string `json:"login"`
-	// Nullable
 	// required: true
 	FreeText *string `json:"free_text"`
-	// Nullable
 	// required: true
 	WebSite *string `json:"web_site"`
 
@@ -86,6 +84,8 @@ type userViewResponse struct {
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 
@@ -116,15 +116,15 @@ type userViewResponse struct {
 //			"$ref": "#/responses/notFoundResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) getUser(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
 	var scope *database.DB
-	store := srv.GetStore(r)
-	if userLogin := chi.URLParam(r, "login"); userLogin != "" {
+	store := srv.GetStore(httpRequest)
+	if userLogin := chi.URLParam(httpRequest, "login"); userLogin != "" {
 		scope = store.Users().Where("login = ?", userLogin)
 	} else {
-		userID, err := service.ResolveURLQueryPathInt64Field(r, "user_id")
+		userID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "user_id")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -174,8 +174,8 @@ func (srv *Service) getUser(w http.ResponseWriter, r *http.Request) service.APIE
 
 	userInfo.IsCurrentUser = userInfo.GroupID == user.GroupID
 
-	render.Respond(w, r, &userInfo)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, &userInfo)
+	return nil
 }
 
 type groupInfo struct {

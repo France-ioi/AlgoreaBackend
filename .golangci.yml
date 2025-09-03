@@ -1,21 +1,15 @@
 linters-settings:
   govet:
-    check-shadowing: true
+    shadow: true
     settings:
       printf:
         funcs:
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Debugf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Infof
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Warnf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Errorf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Panicf
-          - (github.com/France-ioi/AlgoreaBackend/app/logging.SharedLogger).Fatalf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Debugf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Infof
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Warnf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Errorf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Panicf
-          - github.com/France-ioi/AlgoreaBackend/app/logging.Fatalf
+          - (github.com/github.com/sirupsen/logrus.Entry).Debugf
+          - (github.com/github.com/sirupsen/logrus.Entry).Infof
+          - (github.com/github.com/sirupsen/logrus.Entry).Warnf
+          - (github.com/github.com/sirupsen/logrus.Entry).Errorf
+          - (github.com/github.com/sirupsen/logrus.Entry).Panicf
+          - (github.com/github.com/sirupsen/logrus.Entry).Fatalf
   golint:
     min-confidence: 0
   gocyclo:
@@ -28,17 +22,23 @@ linters-settings:
     min-len: 2
     min-occurrences: 2
   depguard:
-    list-type: blacklist
-    packages:
-      # logging is allowed only by logutils.Log, logrus
-      # is allowed to be used only in logutils package
-      - github.com/sirupsen/logrus
+    rules:
+      main:
+        list-mode: original
+        deny:
+          # logging is allowed only by logutils.Log, logrus
+          # is allowed to be used only in logutils package
+          - pkg: "github.com/sirupsen/logrus"
+            desc: not allowed
+              - github.com/sirupsen/logrus
+          - pkg: "github.com/pkg/errors"
+            desc: Should be replaced by standard lib errors package
   misspell:
     locale: US
   lll:
     line-length: 140
   goimports:
-    local-prefixes: github.com/France-ioi/AlgoreaBackend
+    local-prefixes: github.com/France-ioi/AlgoreaBackend/v2
   gocritic:
     enabled-tags:
       - performance
@@ -47,128 +47,96 @@ linters-settings:
     disabled-checks:
       - wrapperFunc
       - whyNoLint # Requires an explanation for each nolint. requires many changes
+  gci:
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - prefix(github.com/France-ioi/AlgoreaBackend/v2/) # Custom section: groups all imports with the specified Prefix.
+    no-inline-comments: true
+    no-prefix-comments: true
+    custom-order: true
+    # Drops lexical ordering for custom sections.
+    # Default: false
+    no-lex-order: false
+  errchkjson:
+    check-error-free-encoding: true
+    report-no-exported: true
+  exhaustive:
+    default-signifies-exhaustive: true
+    package-scope-only: false
+  nilnil:
+    only-two: false
+    detect-opposite: true
+  paralleltest:
+    ignore-missing: true
+  tagliatelle:
+    case:
+      rules:
+        json: snake
+        yaml: camel
+        xml: camel
+        toml: camel
+        bson: camel
+        avro: snake
+        mapstructure: kebab
+        env: upperSnake
+        envconfig: upperSnake
+        whatever: snake
+      overrides:
+        - pkg: app/payloads
+          ignore: true
+  varnamelen:
+    ignore-names:
+      - db
+      - tx
 
 linters:
   enable-all: true
   disable:
-    - deadcode         # Deprecated.
-    - exhaustivestruct # Deprecated.
-    - golint           # Deprecated.
-    - ifshort          # Deprecated.
-    - interfacer       # Deprecated.
-    - maligned         # Deprecated.
-    - nosnakecase      # Deprecated.
-    - scopelint        # Deprecated.
-    - structcheck      # Deprecated.
-    - varcheck         # Deprecated.
-    - prealloc         # Note from authors: For most programs usage of prealloc will be a premature optimization.
-    - gochecknoglobals
     - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
-    - wsl              # Requires whitelines between blocks. requires many changes, enable it later
-    - nolintlint       # Requires explanation for each "nolint" directive. requires many changes
-    - gomnd            # Flags all "magic numbers" in the code. requires many changes
-    - goerr113         # Don't allow dynamic errors, requires wrapped static errors. requires many changes
-    - nestif           # Doesn't allow too long nested if. requires complex changes
-    - forbidigo        # For update to go1.20
-    - gci              # For update to go1.20
-    - gochecknoinits   # For update to go1.20
-    - revive           # For update to go1.20
-    - asasalint        # For update to go1.20
-    - containedctx     # For update to go1.20
-    - contextcheck     # For update to go1.20
-    - cyclop           # For update to go1.20
-    - dupword          # For update to go1.20
-    - revive           # For update to go1.20
-    - errchkjson       # For update to go1.20
-    - errorlint        # For update to go1.20
-    - errname          # For update to go1.20
-    - execinquery      # For update to go1.20
-    - exhaustive       # For update to go1.20
+    - wsl              # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+    - err113           # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
+    - contextcheck     # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
     - forcetypeassert  # For update to go1.20
-    - ireturn          # For update to go1.20
-    - maintidx         # For update to go1.20
-    - musttag          # For update to go1.20
-    - nilnil           # For update to go1.20
-    - nlreturn         # For update to go1.20
-    - noctx            # For update to go1.20
-    - nonamedreturns   # For update to go1.20
-    - paralleltest     # For update to go1.20
-    - sqlclosecheck    # For update to go1.20
-    - tagliatelle      # For update to go1.20
-    - tenv             # For update to go1.20
-    - thelper          # For update to go1.20
-    - usestdlibvars    # For update to go1.20
-    - varnamelen       # For update to go1.20
-    - wrapcheck        # For update to go1.20
-    - exhaustruct      # For update to go1.20
-    - gomoddirectives  # For update to go1.20
-    - dupl             # For update to go1.20
-
-run:
-  skip-dirs:
-    - db
-    - app/database/testdata
-    - test-results
-    - pkg/golinters/goanalysis/(checker|passes)
-    - app/doc
+    - ireturn          # Forces functions to accept Interfaces and return concrete types. (Very subjective, complains about many implementations of interfaces from third-party libraries, the benefit is questionable. Disabled by default in golangci-lint)
+    - maintidx         # Measures the maintainability index of each function. (It only complains about some out test functions, but it is not very useful. Disabled by default in golangci-lint)
+    - nlreturn         # Checks for a new line before return and branch statements. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+    - nonamedreturns   # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+    - tenv             # Deprecated in golangci-lint v1.64.0, replaced by `usetesting`
+    - wrapcheck        # Requires all errors from external packages are wrapped during return. (It requires many changes without any real benefit for now. Disabled by default in golangci-lint.)
+    - exhaustruct      # Requires all structure fields to be initialized. (Requires many changes without any real benefit. Disabled by default in golangci-lint.)
 
 issues:
   exclude-use-default: false
+  exclude-dirs:
+    - ^db$
+    - ^app/database/testdata$
+    - ^test-results$
+    - ^pkg/golinters/goanalysis/(checker|passes)$
+    - ^app/doc$
   exclude-rules:
-    # Exclude some linters from running on tests files.
-    - path: _test\.go
+    - path: _test\.go$
       linters:
-        - gosec
-        - gocognit
-    - text: "weak cryptographic primitive"
+        - noctx
+    - path: _test\.go$
+      text: "name 'tt' is too short for the scope of its usage"
       linters:
-        - gosec
-    - text: "should have a package comment, unless it's in another file for this package"
+        - varnamelen
+    - path: ^app/servicetest/
       linters:
-        - golint
+        - noctx
     - text: "is too long"
       linters:
         - funlen
     - text: "has too many statements"
       linters:
         - funlen
-    - text: "unknown JSON option" # requires update of package "mapstructure"
+    - text: unknown JSON option "squash" # an option provided by the mapstructure library and the formdata package
       linters:
         - staticcheck
-    - text: "function has more than 5 results, consider to simplify the function"
+    - text: "Duplicate words \\(.*[:,].*\\) found"
       linters:
-        - gocritic
-    - text: "to be of non-pointer type"
-      linters:
-        - gocritic
-    - text: "SA1019:" # io/util has been deprecated since Go 1.19
-      linters:
-        - staticcheck
-    - text: "SA1029:" # should not use built'in type string as key for value; define your own type to avoid collisions
-      linters:
-        - staticcheck
-    - text: "ptrToRefParam:"
-      linters:
-        - gocritic
-    - text: "G404:" # Use of weak random number generator (math/rang instead of crypto/rand)
-      linters:
-        - gosec
-    - text: "deferInLoop:" # Possible resource leak, 'defer' is called in the 'for' loop.
-      linters:
-        - gocritic
-    - text: "type .answerSubmitResponse. is unused"
-      linters:
-        - unused
-    - text: "uncheckedInlineErr: err error is unchecked, maybe intended to check it instead of conn.db.AddError.err."
-      linters:
-        - gocritic
-    - text: "timeCmpSimplify:"
-      linters:
-        - gocritic
-
-  exclude:
-    - "not declared by package utf8"
-    - "unicode/utf8/utf8.go"
+        - dupword
   max-issues-per-linter: 0
   max-same-issues: 0
   #fix: true # Enable to try auto fix.
@@ -176,4 +144,4 @@ issues:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.52.2 # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.64.7 # use the fixed version to not introduce new linters unexpectedly

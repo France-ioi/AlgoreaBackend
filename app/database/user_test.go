@@ -7,22 +7,22 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestUser_Clone(t *testing.T) {
 	ts := time.Now()
 	user := &User{
-		Login: "login", LoginID: utils.Ptr(int64(5)), DefaultLanguage: "fr",
-		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: utils.Ptr(int64(4)), NotificationsReadAt: (*Time)(&ts),
+		Login: "login", LoginID: golang.Ptr(int64(5)), DefaultLanguage: "fr",
+		IsTempUser: true, IsAdmin: true, GroupID: 2, AccessGroupID: golang.Ptr(int64(4)), NotificationsReadAt: (*Time)(&ts),
 	}
 	userClone := user.Clone()
-	assert.False(t, userClone == user)
-	assert.False(t, user.NotificationsReadAt == userClone.NotificationsReadAt)
+	assert.NotSame(t, userClone, user)
+	assert.NotSame(t, user.NotificationsReadAt, userClone.NotificationsReadAt)
 	assert.Equal(t, *user.NotificationsReadAt, *userClone.NotificationsReadAt)
-	assert.False(t, user.LoginID == userClone.LoginID)
+	assert.NotSame(t, user.LoginID, userClone.LoginID)
 	assert.Equal(t, *user.LoginID, *userClone.LoginID)
-	assert.False(t, user.AccessGroupID == userClone.AccessGroupID)
+	assert.NotSame(t, user.AccessGroupID, userClone.AccessGroupID)
 	assert.Equal(t, *user.AccessGroupID, *userClone.AccessGroupID)
 	userClone.NotificationsReadAt = nil
 	userClone.LoginID = nil

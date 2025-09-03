@@ -6,28 +6,29 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
-
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/oauth2"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 type ctxKey int
 
-const parsedRequestData ctxKey = iota
+const (
+	parsedRequestData             ctxKey = iota
+	maxNumberOfUserSessionsToKeep        = 10
+)
 
 // swagger:operation POST /auth/token auth accessTokenCreate
 //
@@ -80,7 +81,7 @@ const parsedRequestData ctxKey = iota
 //				Since the login module responds with both access and refresh tokens, the service updates the user's
 //				refresh token in this case as well.
 //				We also delete all the expired tokens of the user to keep the database leaner.
-//				If there is no refresh token for the user in the DB,
+//				If there is no refresh token for the user in the DB or if the refresh token has expired,
 //				the 'not found' error is returned.
 //
 //
@@ -196,55 +197,61 @@ const parsedRequestData ctxKey = iota
 //			"$ref": "#/responses/badRequestResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) service.APIError {
-	requestData, apiError := parseRequestParametersForCreateAccessToken(r)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	requestData, err := parseRequestParametersForCreateAccessToken(httpRequest)
+	service.MustNotBeError(err)
 
-	cookieAttributes, apiError := srv.resolveCookieAttributes(r, requestData)
-	if apiError != service.NoError {
-		return apiError
-	}
+	cookieAttributes, err := srv.resolveCookieAttributes(httpRequest, requestData)
+	service.MustNotBeError(err)
 
 	code, codeGiven := requestData["code"]
-	if codeGiven {
-		if len(r.Header["Authorization"]) != 0 {
-			return service.ErrInvalidRequest(
-				errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
-		}
-	} else {
+	if codeGiven && len(httpRequest.Header["Authorization"]) != 0 {
+		return service.ErrInvalidRequest(
+			errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
+	}
+
+	if !codeGiven {
+		var (
+			requestContext context.Context
+			authorized     bool
+			reason         string
+		)
 		// The code is not given, requesting a new token from the given token.
-		requestContext, isSuccess, authErr := auth.ValidatesUserAuthentication(srv.Base, w, r)
-		if isSuccess {
+		requestContext, authorized, reason, err = auth.ValidatesUserAuthentication(srv.Base, responseWriter, httpRequest)
+		service.MustNotBeError(err)
+
+		if authorized {
 			service.AppHandler(srv.refreshAccessToken).
-				ServeHTTP(w, r.WithContext(context.WithValue(requestContext, parsedRequestData, requestData)))
-		} else {
-			createTempUser, err := service.ResolveURLQueryGetBoolFieldWithDefault(r, "create_temp_user_if_not_authorized", false)
-			if err != nil {
-				return service.ErrInvalidRequest(err)
-			}
+				ServeHTTP(responseWriter, httpRequest.WithContext(contextWithParsedRequestData(requestContext, requestData)))
+			return nil
+		}
 
-			if createTempUser {
-				// createTempUser checks that the Authorization header is not present.
-				// But from here, we want to be able to create a temporary user if the authorization is invalid,
-				// for example, because it expired.
-				// Since we don't need its value anymore, we just delete it.
-				r.Header.Del("Authorization")
+		var createTempUser bool
+		createTempUser, err = service.ResolveURLQueryGetBoolFieldWithDefault(httpRequest, "create_temp_user_if_not_authorized", false)
+		if err != nil {
+			return service.ErrInvalidRequest(err)
+		}
 
-				service.AppHandler(srv.createTempUser).
-					ServeHTTP(w, r)
-			} else {
-				return service.APIError{
-					HTTPStatusCode: auth.GetAuthErrorCodeFromError(authErr),
-					Error:          authErr,
-				}
+		if !createTempUser {
+			return &service.APIError{
+				HTTPStatusCode: http.StatusUnauthorized,
+				EmbeddedError:  errors.New(reason),
 			}
 		}
 
-		return service.NoError
+		// createTempUser checks that the Authorization header is not present.
+		// But from here, we want to be able to create a temporary user if the authorization is invalid,
+		// for example, because it expired.
+		// Since we don't need its value anymore, we just delete it.
+		httpRequest.Header.Del("Authorization")
+
+		service.AppHandler(srv.createTempUser).ServeHTTP(responseWriter, httpRequest)
+
+		return nil
 	}
 
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
@@ -256,70 +263,71 @@ func (srv *Service) createAccessToken(w http.ResponseWriter, r *http.Request) se
 		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", redirectURI.(string)))
 	}
 
-	token, err := oauthConfig.Exchange(r.Context(), code.(string), oauthOptions...)
+	token, err := oauthConfig.Exchange(httpRequest.Context(), code.(string), oauthOptions...)
 	service.MustNotBeError(err)
 
-	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(r.Context(), token.AccessToken)
+	expiresIn, err := validateAndGetExpiresInFromOAuth2Token(token)
 	service.MustNotBeError(err)
-	userProfile["last_ip"] = strings.SplitN(r.RemoteAddr, ":", 2)[0]
 
-	domainConfig := domain.ConfigFromContext(r.Context())
+	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
+		GetUserProfile(httpRequest.Context(), token.AccessToken)
+	service.MustNotBeError(err)
+	userProfile["last_ip"] = strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
 
-	service.MustNotBeError(srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	domainConfig := domain.ConfigFromContext(httpRequest.Context())
+
+	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
+		logging.LogEntrySetField(httpRequest, "user_id", userID)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), userID, true))
 
 		sessionID := rand.Int63()
 		service.MustNotBeError(store.Exec(
 			"INSERT INTO sessions (session_id, user_id, refresh_token) VALUES (?, ?, ?)",
 			sessionID, userID, token.RefreshToken).Error())
-		service.MustNotBeError(store.AccessTokens().InsertNewToken(
-			sessionID,
-			token.AccessToken,
-			int32(time.Until(token.Expiry)/time.Second),
-		))
+		service.MustNotBeError(store.AccessTokens().InsertNewToken(sessionID, token.AccessToken, expiresIn))
 
-		// Delete the oldest sessions of the user to keep a maximum of 10 sessions.
-		store.Sessions().DeleteOldSessionsToKeepMaximum(userID, 10)
+		// Delete the oldest sessions of the user keeping up to maxNumberOfUserSessionsToKeep sessions.
+		store.Sessions().DeleteOldSessionsToKeepMaximum(userID, maxNumberOfUserSessionsToKeep)
 
 		return nil
 	}))
 
-	srv.respondWithNewAccessToken(r, w, service.CreationSuccess, token.AccessToken, token.Expiry, cookieAttributes)
-	return service.NoError
+	srv.respondWithNewAccessToken(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token.AccessToken, expiresIn, cookieAttributes)
+	return nil
 }
 
-func (srv *Service) respondWithNewAccessToken(r *http.Request, w http.ResponseWriter,
-	rendererGenerator func(interface{}) render.Renderer, token string, expiresIn time.Time,
+func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request,
+	rendererGenerator func(map[string]interface{}) render.Renderer, token string, expiresIn int32,
 	cookieAttributes *auth.SessionCookieAttributes,
 ) {
-	secondsUntilExpiry := int32(time.Until(expiresIn).Round(time.Second) / time.Second)
 	response := map[string]interface{}{
-		"expires_in": secondsUntilExpiry,
+		"expires_in": expiresIn,
 	}
-	oldCookieAttributes := auth.SessionCookieAttributesFromContext(r.Context())
+	oldCookieAttributes := auth.SessionCookieAttributesFromContext(httpRequest.Context())
 	if oldCookieAttributes == nil {
 		oldCookieAttributes = &auth.SessionCookieAttributes{}
-		_, *oldCookieAttributes = auth.ParseSessionCookie(r)
+		_, *oldCookieAttributes = auth.ParseSessionCookie(httpRequest)
 	}
 	if oldCookieAttributes != nil && oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
-		http.SetCookie(w, oldCookieAttributes.SessionCookie("", -1000))
+		http.SetCookie(responseWriter, oldCookieAttributes.SessionCookie("", -1000))
 	}
 	if cookieAttributes.UseCookie {
-		http.SetCookie(w, cookieAttributes.SessionCookie(token, secondsUntilExpiry))
+		http.SetCookie(responseWriter, cookieAttributes.SessionCookie(token, expiresIn))
 	} else {
 		response["access_token"] = token
 	}
-	service.MustNotBeError(render.Render(w, r, rendererGenerator(response)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, rendererGenerator(response)))
 }
 
-func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[string]interface{}) (
-	cookieAttributes *auth.SessionCookieAttributes, apiError service.APIError,
+func (srv *Service) resolveCookieAttributes(httpRequest *http.Request, requestData map[string]interface{}) (
+	cookieAttributes *auth.SessionCookieAttributes, err error,
 ) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
 	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
 		cookieAttributes.UseCookie = true
-		cookieAttributes.Domain = domain.CurrentDomainFromContext(r.Context())
+		cookieAttributes.Domain = domain.CurrentDomainFromContext(httpRequest.Context())
 		cookieAttributes.Path = srv.ServerConfig.GetString("rootPath")
 		if value, ok := requestData["cookie_secure"]; ok && value.(bool) {
 			cookieAttributes.Secure = true
@@ -331,39 +339,40 @@ func (srv *Service) resolveCookieAttributes(r *http.Request, requestData map[str
 			return nil, service.ErrInvalidRequest(errors.New("one of cookie_secure and cookie_same_site must be true when use_cookie is true"))
 		}
 	}
-	return cookieAttributes, service.NoError
+	return cookieAttributes, nil
 }
 
-func parseRequestParametersForCreateAccessToken(r *http.Request) (map[string]interface{}, service.APIError) {
+func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (map[string]interface{}, error) {
 	allowedParameters := []string{
 		"code", "code_verifier", "redirect_uri",
 		"use_cookie", "cookie_secure", "cookie_same_site",
 	}
-	requestData := make(map[string]interface{}, 2)
-	query := r.URL.Query()
+	requestData := make(map[string]interface{}, len(allowedParameters))
+	query := httpRequest.URL.Query()
 	for _, parameterName := range allowedParameters {
 		extractOptionalParameter(query, parameterName, requestData)
 	}
 
-	contentType := strings.ToLower(strings.TrimSpace(strings.SplitN(r.Header.Get("Content-Type"), ";", 2)[0]))
+	contentType := strings.ToLower(strings.TrimSpace(
+		strings.SplitN(httpRequest.Header.Get("Content-Type"), ";", 2)[0])) //nolint:mnd // cut off the parameters, keep only the media type
 	switch contentType {
 	case "application/json":
-		if apiError := parseJSONParams(r, requestData); apiError != service.NoError {
-			return nil, apiError
+		if err := parseJSONParams(httpRequest, requestData); err != nil {
+			return nil, err
 		}
 	case "application/x-www-form-urlencoded":
-		err := r.ParseForm()
+		err := httpRequest.ParseForm()
 		if err != nil {
 			return nil, service.ErrInvalidRequest(err)
 		}
 		for _, parameterName := range allowedParameters {
-			extractOptionalParameter(r.PostForm, parameterName, requestData)
+			extractOptionalParameter(httpRequest.PostForm, parameterName, requestData)
 		}
 	}
 	return preprocessBooleanCookieAttributes(requestData)
 }
 
-func parseJSONParams(r *http.Request, requestData map[string]interface{}) service.APIError {
+func parseJSONParams(httpRequest *http.Request, requestData map[string]interface{}) error {
 	var jsonPayload struct {
 		Code           *string `json:"code"`
 		CodeVerifier   *string `json:"code_verifier"`
@@ -372,8 +381,8 @@ func parseJSONParams(r *http.Request, requestData map[string]interface{}) servic
 		CookieSecure   *bool   `json:"cookie_secure"`
 		CookieSameSite *bool   `json:"cookie_same_site"`
 	}
-	defer func() { _, _ = io.Copy(ioutil.Discard, r.Body) }()
-	err := json.NewDecoder(r.Body).Decode(&jsonPayload)
+	defer func() { _, _ = io.Copy(io.Discard, httpRequest.Body) }()
+	err := json.NewDecoder(httpRequest.Body).Decode(&jsonPayload)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -396,10 +405,10 @@ func parseJSONParams(r *http.Request, requestData map[string]interface{}) servic
 	if jsonPayload.CookieSameSite != nil {
 		requestData["cookie_same_site"] = bool2String[*jsonPayload.CookieSameSite]
 	}
-	return service.NoError
+	return nil
 }
 
-func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, service.APIError) {
+func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, error) {
 	for _, flagName := range []string{"use_cookie", "cookie_secure", "cookie_same_site"} {
 		if stringValue, ok := requestData[flagName]; ok {
 			if _, ok = map[string]bool{"0": false, "1": true}[stringValue.(string)]; !ok {
@@ -411,7 +420,7 @@ func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[
 			}
 		}
 	}
-	return requestData, service.NoError
+	return requestData, nil
 }
 
 func extractOptionalParameter(query url.Values, paramName string, requestData map[string]interface{}) {
@@ -420,9 +429,9 @@ func extractOptionalParameter(query url.Values, paramName string, requestData ma
 	}
 }
 
-func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
+func createOrUpdateUser(userStore *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
 	var groupID int64
-	err := s.WithWriteLock().
+	err := userStore.WithExclusiveWriteLock().
 		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
 
 	userData["latest_login_at"] = database.Now()
@@ -438,13 +447,13 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	defer func() { userData["badges"] = badges }()
 
 	if gorm.IsRecordNotFoundError(err) {
-		selfGroupID := createGroupsFromLogin(s.Groups(), userData["login"].(string), domainConfig)
+		selfGroupID := createGroupFromLogin(userStore.Groups(), userData["login"].(string), domainConfig)
 		userData["temp_user"] = 0
 		userData["registered_at"] = database.Now()
 		userData["group_id"] = selfGroupID
 
-		service.MustNotBeError(s.Users().InsertMap(userData))
-		service.MustNotBeError(s.Attempts().InsertMap(map[string]interface{}{
+		service.MustNotBeError(userStore.InsertMap(userData))
+		service.MustNotBeError(userStore.Attempts().InsertMap(map[string]interface{}{
 			"participant_id": selfGroupID,
 			"id":             0,
 			"creator_id":     selfGroupID,
@@ -455,23 +464,23 @@ func createOrUpdateUser(s *database.UserStore, userData map[string]interface{}, 
 	}
 	service.MustNotBeError(err)
 
-	found, err := s.GroupGroups().WithWriteLock().Where("parent_group_id = ?", domainConfig.AllUsersGroupID).
+	found, err := userStore.GroupGroups().WithExclusiveWriteLock().Where("parent_group_id = ?", domainConfig.NonTempUsersGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
-	groupsToCreate := make([]map[string]interface{}, 0, 2)
+	groupsGroupsToCreate := make([]map[string]interface{}, 0, 1)
 	if !found {
-		groupsToCreate = append(groupsToCreate,
-			map[string]interface{}{"parent_group_id": domainConfig.AllUsersGroupID, "child_group_id": groupID})
+		groupsGroupsToCreate = append(groupsGroupsToCreate,
+			map[string]interface{}{"parent_group_id": domainConfig.NonTempUsersGroupID, "child_group_id": groupID})
 	}
 
-	service.MustNotBeError(s.GroupGroups().CreateRelationsWithoutChecking(groupsToCreate))
+	service.MustNotBeError(userStore.GroupGroups().CreateRelationsWithoutChecking(groupsGroupsToCreate))
 	delete(userData, "default_language")
-	service.MustNotBeError(s.ByID(groupID).UpdateColumn(userData).Error())
+	service.MustNotBeError(userStore.ByID(groupID).UpdateColumn(userData).Error())
 	return groupID
 }
 
-func createGroupsFromLogin(store *database.GroupStore, login string, domainConfig *domain.CtxConfig) (selfGroupID int64) {
-	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *database.DataStore) error {
+func createGroupFromLogin(store *database.GroupStore, login string, domainConfig *domain.CtxConfig) (selfGroupID int64) {
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
 			"id":          selfGroupID,
@@ -485,8 +494,12 @@ func createGroupsFromLogin(store *database.GroupStore, login string, domainConfi
 	}))
 
 	service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking([]map[string]interface{}{
-		{"parent_group_id": domainConfig.AllUsersGroupID, "child_group_id": selfGroupID},
+		{"parent_group_id": domainConfig.NonTempUsersGroupID, "child_group_id": selfGroupID},
 	}))
 
 	return selfGroupID
+}
+
+func contextWithParsedRequestData(ctx context.Context, requestData map[string]interface{}) context.Context {
+	return context.WithValue(ctx, parsedRequestData, requestData)
 }

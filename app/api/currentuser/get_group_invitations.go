@@ -5,21 +5,67 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
+
+// swagger:model
+type invitationsViewResponseRow struct {
+	// `group_membership_changes.group_id`
+	// required: true
+	GroupID int64 `json:"group_id,string"`
+
+	// `groups_groups.type_changed_at`
+	// required: true
+	At database.Time `json:"at"`
+
+	// the user who invited
+	// required: true
+	InvitingUser *invitingUser `gorm:"embedded;embedded_prefix:inviting_user__" json:"inviting_user"`
+
+	// required: true
+	Group groupWithApprovals `gorm:"embedded;embedded_prefix:group__" json:"group"`
+}
+
+type invitingUser struct {
+	// `users.group_id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	Login string `json:"login"`
+	// required: true
+	FirstName *string `json:"first_name"`
+	// required: true
+	LastName *string `json:"last_name"`
+}
+
+type groupWithApprovals struct {
+	// `groups.id`
+	// required: true
+	ID int64 `json:"id,string"`
+	// required: true
+	Name string `json:"name"`
+	// required: true
+	Description *string `json:"description"`
+	// required: true
+	// enum: Class,Team,Club,Friends,Other,Session,Base
+	Type string `json:"type"`
+	// enum: none,view,edit
+	// required: true
+	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
+	// required: true
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
+	// required: true
+	RequireWatchApproval bool `json:"require_watch_approval"`
+}
 
 // swagger:operation GET /current-user/group-invitations group-memberships invitationsView
 //
 //	---
-//	summary: List current invitations and requests to groups
+//	summary: List current invitations to groups
 //	description:
-//		Returns the list of invitations that the current user received and requests sent by him
-//		(`group_membership_changes.action` is “invitation_created” or “join_request_created” or “join_request_refused”)
-//		with `group_membership_changes.at` within `within_weeks` back from now (if `within_weeks` is present).
+//		Returns the list of invitations that the current user received with `group_membership_changes.at`.
 //	parameters:
-//		- name: within_weeks
-//			in: query
-//			type: integer
 //		- name: sort
 //			in: query
 //			default: [-at,group_id]
@@ -39,6 +85,7 @@ import (
 //							 (`{from.at}` is required when `{from.group_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N requests/invitations
 //			in: query
@@ -47,7 +94,7 @@ import (
 //			default: 500
 //	responses:
 //		"200":
-//			description: OK. Success response with an array of invitations/requests
+//			description: OK. Success response with an array of invitations.
 //			schema:
 //				type: array
 //				items:
@@ -56,16 +103,18 @@ import (
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) getGroupInvitations(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	query := srv.GetStore(r).GroupMembershipChanges().
+	query := store.GroupPendingRequests().
 		Select(`
-			group_membership_changes.group_id,
-			group_membership_changes.at,
-			action,
+			group_pending_requests.group_id,
+			IFNULL(latest_change.at, group_pending_requests.at) AS at,
 			users.group_id AS inviting_user__id,
 			users.login AS inviting_user__login,
 			users.first_name AS inviting_user__first_name,
@@ -73,38 +122,35 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 			groups.id AS group__id,
 			groups.name AS group__name,
 			groups.description AS group__description,
-			groups.type AS group__type`).
-		Joins("LEFT JOIN users ON users.group_id = initiator_id AND action = 'invitation_created'").
-		Joins("JOIN `groups` ON `groups`.id = group_membership_changes.group_id").
+			groups.type AS group__type,
+			groups.require_personal_info_access_approval AS group__require_personal_info_access_approval,
+			groups.require_lock_membership_approval_until AS group__require_lock_membership_approval_until,
+			groups.require_watch_approval AS group__require_watch_approval
+		`).
+		// 'LEFT JOIN' as there can be no corresponding membership change
 		Joins(`
-			LEFT JOIN group_pending_requests
-				ON group_pending_requests.group_id = group_membership_changes.group_id AND
-					group_pending_requests.member_id = group_membership_changes.member_id AND
-					IF(group_pending_requests.type = 'invitation', 'invitation_created', 'join_request_created') =
-						group_membership_changes.action AND
-					(SELECT MAX(latest_change.at) FROM group_membership_changes AS latest_change
-					 WHERE latest_change.group_id = group_pending_requests.group_id AND
-						latest_change.member_id = group_pending_requests.member_id AND
-						latest_change.action = group_membership_changes.action) = group_membership_changes.at`).
-		Where("action IN ('invitation_created', 'join_request_created', 'join_request_refused')").
-		Where("action = 'join_request_refused' OR group_pending_requests.group_id IS NOT NULL").
-		Where("group_membership_changes.member_id = ?", user.GroupID)
+			LEFT JOIN LATERAL (?) AS latest_change
+				ON latest_change.action = 'invitation_created'`,
+			store.GroupMembershipChanges().
+				Select("initiator_id, action, at").
+				Where("group_membership_changes.group_id = group_pending_requests.group_id").
+				Where("group_membership_changes.member_id = group_pending_requests.member_id").
+				Order("group_membership_changes.at DESC").
+				Limit(1).QueryExpr()).
+		// 'LEFT JOIN' as there can be no corresponding membership change and
+		// 'initiator_id' can be NULL even if there is an invitation_created action
+		Joins("LEFT JOIN users ON users.group_id = initiator_id").
+		Joins("JOIN `groups` ON `groups`.id = group_pending_requests.group_id").
+		Where("group_pending_requests.member_id = ?", user.GroupID).
+		Where("group_pending_requests.type='invitation'")
 
-	if len(r.URL.Query()["within_weeks"]) > 0 {
-		withinWeeks, err := service.ResolveURLQueryGetInt64Field(r, "within_weeks")
-		if err != nil {
-			return service.ErrInvalidRequest(err)
-		}
-		query = query.Where("NOW() - INTERVAL ? WEEK < group_membership_changes.at", withinWeeks)
-	}
-
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err := service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"at":       {ColumnName: "group_membership_changes.at"},
-				"group_id": {ColumnName: "group_membership_changes.group_id"},
+				"at":       {ColumnName: "IFNULL(latest_change.at, group_pending_requests.at)"},
+				"group_id": {ColumnName: "group_pending_requests.group_id"},
 			},
 			DefaultRules: "-at,group_id",
 			TieBreakers: service.SortingAndPagingTieBreakers{
@@ -112,14 +158,17 @@ func (srv *Service) getGroupInvitations(w http.ResponseWriter, r *http.Request) 
 				"at":       service.FieldTypeTime,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
+	service.MustNotBeError(err)
+
+	var result []invitationsViewResponseRow
+	service.MustNotBeError(query.Scan(&result).Error())
+
+	for index := range result {
+		if result[index].InvitingUser.ID == 0 {
+			result[index].InvitingUser = nil
+		}
 	}
 
-	var result []map[string]interface{}
-	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
-	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
-
-	render.Respond(w, r, convertedResult)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }

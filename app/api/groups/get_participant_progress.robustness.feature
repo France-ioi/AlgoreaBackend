@@ -1,28 +1,28 @@
 Feature: Display the current progress of a participant on children of an item (groupParticipantProgress) - robustness
   Background:
     Given the database has the following users:
-      | login | group_id |
-      | owner | 21       |
-      | user  | 11       |
-    And the database has the following table 'groups':
+      | group_id | login |
+      | 21       | owner |
+      | 11       | user  |
+    And the database has the following table "groups":
       | id | type |
       | 13 | Base |
       | 14 | Team |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 14              | 21             |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 13       | 11         | false             |
       | 13       | 21         | true              |
       | 14       | 21         | true              |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type    | default_language_tag |
       | 200 | Task    | fr                   |
       | 210 | Chapter | fr                   |
       | 211 | Task    | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_watch_generated |
       | 11       | 210     | content                  | result              |
       | 14       | 200     | info                     | answer              |
@@ -30,7 +30,7 @@ Feature: Display the current progress of a participant on children of an item (g
       | 21       | 200     | content                  | answer              |
       | 21       | 210     | content                  | answer_with_grant   |
       | 21       | 211     | info                     | none                |
-    And the database has the following table 'items_items':
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order |
       | 200            | 210           | 0           |
       | 200            | 220           | 1           |

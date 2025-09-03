@@ -6,9 +6,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:model attemptsListResponseRow
@@ -21,10 +21,8 @@ type attemptsListResponseRow struct {
 	ScoreComputed float32 `json:"score_computed"`
 	// required: true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required: true
 	StartedAt *database.Time `json:"started_at"`
-	// Nullable
 	// required: true
 	EndedAt *database.Time `json:"ended_at"`
 	// required: true
@@ -33,7 +31,8 @@ type attemptsListResponseRow struct {
 	LatestActivityAt database.Time `json:"latest_activity_at"`
 	// required: true
 	HelpRequested bool `json:"help_requested"`
-	UserCreator   *struct {
+	// required: true
+	UserCreator *struct {
 		// required: true
 		Login string `json:"login"`
 
@@ -42,7 +41,7 @@ type attemptsListResponseRow struct {
 
 		// required: true
 		GroupID *int64 `json:"group_id,string"`
-	} `json:"user_creator" gorm:"embedded;embedded_prefix:user_creator__"`
+	} `gorm:"embedded;embedded_prefix:user_creator__" json:"user_creator"`
 }
 
 // swagger:operation GET /items/{item_id}/attempts items attemptsList
@@ -75,14 +74,17 @@ type attemptsListResponseRow struct {
 //			description: "`id` of a parent attempt. This parameter is incompatible with `attempt_id`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: attempt_id
 //			description: "`id` of an attempt for the `{item_id}`.
 //								This parameter is incompatible with `parent_attempt_id`."
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [id]
@@ -114,33 +116,22 @@ type attemptsListResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service.APIError {
-	itemID, groupID, parentAttemptID, apiError := srv.resolveParametersForListAttempts(r)
-	if apiError != service.NoError {
-		return apiError
-	}
-	user := srv.GetUser(r)
+func (srv *Service) listAttempts(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, participantID, parentAttemptID, err := srv.resolveParametersForListAttempts(httpRequest)
+	service.MustNotBeError(err)
 
-	query := srv.GetStore(r).Results().Where("results.participant_id = ?", groupID).
-		Where("item_id = ?", itemID).
-		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
-		Joins("LEFT JOIN users ON users.group_id = attempts.creator_id").
-		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID).
-		WithPersonalInfoViewApprovals(user).
-		Select(`
-			attempts.id, attempts.created_at, attempts.allows_submissions_until,
-			results.score_computed, results.validated, attempts.ended_at,
-			results.started_at, results.latest_activity_at, results.help_requested,
-			users.login AS user_creator__login,
-			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
-			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError = service.ApplySortingAndPaging(
-		r, query,
+	user := srv.GetUser(httpRequest)
+
+	query := constructQueryForGettingAttemptsList(srv.GetStore(httpRequest), participantID, itemID, user).
+		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID)
+
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"id": {ColumnName: "results.attempt_id"},
@@ -148,9 +139,8 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 			DefaultRules: "id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
+
 	var result []attemptsListResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
@@ -162,25 +152,42 @@ func (srv *Service) listAttempts(w http.ResponseWriter, r *http.Request) service
 		}
 	}
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
-func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
-	itemID, participantID, parentAttemptID int64, apiError service.APIError,
+func constructQueryForGettingAttemptsList(store *database.DataStore, participantID, itemID int64, user *database.User) *database.DB {
+	return store.Results().Where("results.participant_id = ?", participantID).
+		Where("item_id = ?", itemID).
+		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
+		Joins("LEFT JOIN users ON users.group_id = attempts.creator_id").
+		WithPersonalInfoViewApprovals(user).
+		Select(`
+			attempts.id, attempts.created_at, attempts.allows_submissions_until,
+			results.score_computed, results.validated, attempts.ended_at,
+			results.started_at, results.latest_activity_at, results.help_requested,
+			users.login AS user_creator__login,
+			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
+			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
+}
+
+func (srv *Service) resolveParametersForListAttempts(httpRequest *http.Request) (
+	itemID, participantID, parentAttemptID int64, err error,
 ) {
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err = service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return 0, 0, 0, service.ErrInvalidRequest(err)
 	}
 
-	attemptID, parentAttemptID, attemptIDSet, apiError := attemptIDOrParentAttemptID(r)
-	if apiError != service.NoError {
-		return 0, 0, 0, apiError
+	attemptID, parentAttemptID, attemptIDSet, err := attemptIDOrParentAttemptID(httpRequest)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	participantID = service.ParticipantIDFromContext(r.Context())
-	store := srv.GetStore(r)
+	participantID = service.ParticipantIDFromContext(httpRequest.Context())
+	store := srv.GetStore(httpRequest)
 
 	if attemptIDSet {
 		if attemptID != 0 {
@@ -190,7 +197,7 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
 				Select("IF(attempts.root_item_id = ?, attempts.parent_attempt_id, attempts.id) AS parent_attempt_id", itemID).
 				Take(&result).Error()
 			if gorm.IsRecordNotFoundError(err) {
-				return 0, 0, 0, service.InsufficientAccessRightsError
+				return 0, 0, 0, service.ErrAPIInsufficientAccessRights
 			}
 			service.MustNotBeError(err)
 			parentAttemptID = result.ParentAttemptID
@@ -203,7 +210,7 @@ func (srv *Service) resolveParametersForListAttempts(r *http.Request) (
 
 	service.MustNotBeError(err)
 	if !found {
-		return 0, 0, 0, service.InsufficientAccessRightsError
+		return 0, 0, 0, service.ErrAPIInsufficientAccessRights
 	}
-	return itemID, participantID, parentAttemptID, service.NoError
+	return itemID, participantID, parentAttemptID, nil
 }

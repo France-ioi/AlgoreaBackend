@@ -10,9 +10,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 const (
@@ -24,31 +24,26 @@ const (
 // Information of the group to be modified
 // swagger:model
 type groupUpdateInput struct {
-	Name  string `json:"name" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	Grade int32  `json:"grade" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
+	Name        string  `json:"name"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Grade       int32   `json:"grade"       validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	Description *string `json:"description" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	IsOpen      bool    `json:"is_open" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	IsOpen      bool    `json:"is_open"     validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// If changed from true to false, is automatically switches all requests to join this group from requestSent to requestRefused
 	IsPublic bool `json:"is_public" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Duration after the first use of the code when it will expire (in seconds)
-	// Nullable
-	CodeLifetime *int32 `json:"code_lifetime" validate:"changing_requires_can_manage_at_least=memberships,null|gte=0"`
-	// Nullable
-	CodeExpiresAt *database.Time `json:"code_expires_at" validate:"changing_requires_can_manage_at_least=memberships"`
-	// Nullable
-	RootActivityID *int64 `json:"root_activity_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
-	RootSkillID *int64 `json:"root_skill_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	CodeLifetime   *int32         `json:"code_lifetime"    validate:"changing_requires_can_manage_at_least=memberships,null|gte=0"`
+	CodeExpiresAt  *database.Time `json:"code_expires_at"  validate:"changing_requires_can_manage_at_least=memberships"`
+	RootActivityID *int64         `json:"root_activity_id" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	RootSkillID    *int64         `json:"root_skill_id"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	// Can be set only if root_activity_id is set and
 	// the current user has the 'can_make_session_official' permission on the activity item
-	IsOfficialSession       bool `json:"is_official_session" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	IsOfficialSession       bool `json:"is_official_session"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 	OpenActivityWhenJoining bool `json:"open_activity_when_joining" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
 	// Can be changed only from false to true
 	// (changing auto-rejects all pending join/leave requests and withdraws all pending invitations)
-	FrozenMembership bool `json:"frozen_membership"  validate:"changing_requires_can_manage_at_least=memberships,frozen_membership"`
-	// Nullable; cannot be set to null when enforce_max_participant is true
+	FrozenMembership bool `json:"frozen_membership" validate:"changing_requires_can_manage_at_least=memberships,frozen_membership"`
+	// Cannot be set to null when enforce_max_participant is true
 	MaxParticipants *int `json:"max_participants" validate:"changing_requires_can_manage_at_least=memberships,max_participants"`
 	// Cannot be set to true when max_participants is null
 	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll
@@ -62,8 +57,6 @@ type groupUpdateInput struct {
 	//
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit,strengthening_requires_approval_change_action"` //nolint:lll
-	// Nullable
-	//
 	// Strengthened if the new value is > `NOW()` and > the old value, or if the new value is > `NOW()` and the old value is `null`.
 	//
 	// Not considered strengthened if the group doesn't have any participants.
@@ -75,8 +68,8 @@ type groupUpdateInput struct {
 	// Not considered strengthened if the group doesn't have any participants.
 	//
 	// If it is strengthened, `approval_change_action` must be set.
-	RequireWatchApproval       bool `json:"require_watch_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
-	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                       //nolint:lll
+	RequireWatchApproval       bool `json:"require_watch_approval"         validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                               //nolint:lll
 
 	// Must be present only if a `require_*` field is strengthened.
 	//
@@ -93,20 +86,13 @@ type groupUpdateInput struct {
 	// enum: empty,reinvite
 	ApprovalChangeAction string `json:"approval_change_action" validate:"omitempty,oneof=empty reinvite,not_set_when_no_field_strengthened"`
 
-	// Nullable
-	Organizer *string `json:"organizer" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
-	AddressLine1 *string `json:"address_line1" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
-	AddressLine2 *string `json:"address_line2" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
-	AddressPostcode *string `json:"address_postcode" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
-	AddressCity *string `json:"address_city" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
-	AddressCountry *string `json:"address_country" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
-	// Nullable
-	ExpectedStart *database.Time `json:"expected_start" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	Organizer       *string        `json:"organizer"        validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressLine1    *string        `json:"address_line1"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressLine2    *string        `json:"address_line2"    validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressPostcode *string        `json:"address_postcode" validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressCity     *string        `json:"address_city"     validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	AddressCountry  *string        `json:"address_country"  validate:"changing_requires_can_manage_at_least=memberships_and_group"`
+	ExpectedStart   *database.Time `json:"expected_start"   validate:"changing_requires_can_manage_at_least=memberships_and_group"`
 
 	CanManageValue int `json:"-"`
 }
@@ -148,6 +134,7 @@ type groupUpdateInput struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: group information
 //			in: body
 //			required: true
@@ -162,20 +149,23 @@ type groupUpdateInput struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) updateGroup(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	apiErr := service.NoError
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(httpRequest)
+	service.MustNotBeError(err)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
-		groupStore := s.Groups()
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
+		groupStore := store.Groups()
 
 		var currentGroupData groupUpdateInput
 
@@ -189,21 +179,21 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 				groups.max_participants, groups.enforce_max_participants, groups.require_personal_info_access_approval,
 				groups.require_lock_membership_approval_until, groups.require_watch_approval,
 				groups.require_members_to_join_parent,
-				MAX(can_manage_value) AS can_manage_value`).WithWriteLock().
+				MAX(can_manage_value) AS can_manage_value`).WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).Group("groups.id").Scan(&currentGroupData).Error()
 		if gorm.IsRecordNotFoundError(err) {
-			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		service.MustNotBeError(err)
 
-		groupHasParticipants := groupStore.HasParticipants(groupID)
+		var groupHasParticipants bool
+		groupHasParticipants, err = groupStore.HasParticipants(groupID)
+		service.MustNotBeError(err)
 
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(r, groupHasParticipants, &currentGroupData, s)
+		formData, err = validateUpdateGroupInput(rawRequestData, groupHasParticipants, &currentGroupData, store)
 		if err != nil {
-			apiErr = service.ErrInvalidRequest(err)
-			return apiErr.Error // rollback
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
 		dbMap := formData.ConstructMapForDB()
@@ -214,23 +204,22 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			delete(dbMap, "approval_change_action")
 		}
 
-		apiErr = validateRootActivityIDAndIsOfficial(s, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
-		apiErr = validateRootSkillID(s, user, currentGroupData.RootSkillID, dbMap)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
+		err = validateRootActivityIDAndIsOfficial(store, user, currentGroupData.RootActivityID, currentGroupData.IsOfficialSession, dbMap)
+		service.MustNotBeError(err)
+
+		err = validateRootSkillID(store, user, currentGroupData.RootSkillID, dbMap)
+		service.MustNotBeError(err)
 
 		if approvalChangeAction != "" {
-			participantIDs := s.Groups().GetDirectParticipantIDsOf(groupID)
-			s.GroupMembershipChanges().InsertEntries(user.GroupID, groupID, participantIDs, "removed_due_to_approval_change")
-			s.GroupGroups().RemoveMembersOfGroup(groupID, participantIDs)
+			participantIDs := store.Groups().GetDirectParticipantIDsOf(groupID)
 
 			// If the approval_change_action is 'reinvite', we need to reinvite the participants.
 			if approvalChangeAction == "reinvite" {
-				s.GroupPendingRequests().InviteParticipants(groupID, participantIDs)
+				_, _, err = store.GroupGroups().Transition(database.AdminStrengthensApprovalWithReinvite, groupID, participantIDs, nil, user.GroupID)
+				service.MustNotBeError(err)
+			} else {
+				_, _, err = store.GroupGroups().Transition(database.AdminStrengthensApprovalWithEmpty, groupID, participantIDs, nil, user.GroupID)
+				service.MustNotBeError(err)
 			}
 		}
 
@@ -238,35 +227,32 @@ func (srv *Service) updateGroup(w http.ResponseWriter, r *http.Request) service.
 			groupStore, groupID, user.GroupID, dbMap, &currentGroupData, approvalChangeAction))
 
 		// update the group
-		service.MustNotBeError(groupStore.Where("id = ?", groupID).Updates(dbMap).Error())
+		service.MustNotBeError(groupStore.Where("id = ?", groupID).UpdateColumns(dbMap).Error())
 
 		return nil // commit
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
 	service.MustNotBeError(err)
 
-	response := service.Response{Success: true, Message: "updated"}
-	render.Respond(w, r, &response)
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
+	render.Respond(responseWriter, httpRequest, &response)
 
-	return service.NoError
+	return nil
 }
 
 func validateRootActivityIDAndIsOfficial(
 	store *database.DataStore, user *database.User, oldRootActivityID *int64, oldIsOfficialSession bool,
 	dbMap map[string]interface{},
-) service.APIError {
+) error {
 	rootActivityIDToCheck := oldRootActivityID
 	rootActivityID, rootActivityIDSet := dbMap["root_activity_id"]
 	rootActivityIDChanged := rootActivityIDSet && !int64PtrEqualValues(oldRootActivityID, rootActivityID.(*int64))
 	if rootActivityIDChanged {
 		rootActivityIDToCheck = rootActivityID.(*int64)
 		if rootActivityIDToCheck != nil {
-			apiError := validateRootActivityID(store, user, rootActivityIDToCheck)
-			if apiError != service.NoError {
-				return apiError
+			err := validateRootActivityID(store, user, rootActivityIDToCheck)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -275,7 +261,7 @@ func validateRootActivityIDAndIsOfficial(
 		if rootActivityIDToCheck == nil {
 			return service.ErrInvalidRequest(errors.New("the root_activity_id should be set for official sessions"))
 		}
-		found, err := store.PermissionsGranted().WithWriteLock().
+		found, err := store.PermissionsGranted().WithExclusiveWriteLock().
 			Joins(`
 				JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions_granted.group_id AND
 				     groups_ancestors_active.child_group_id = ?`, user.GroupID).
@@ -287,24 +273,24 @@ func validateRootActivityIDAndIsOfficial(
 			return service.ErrForbidden(errors.New("not enough permissions for attaching the group to the activity as an official session"))
 		}
 	}
-	return service.NoError
+	return nil
 }
 
-func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) service.APIError {
+func validateRootActivityID(store *database.DataStore, user *database.User, rootActivityIDToCheck *int64) error {
 	if rootActivityIDToCheck != nil {
-		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithWriteLock().
+		found, errorInTransaction := store.Items().ByID(*rootActivityIDToCheck).Where("type != 'Skill'").WithExclusiveWriteLock().
 			WhereUserHasViewPermissionOnItems(user, "info").HasRows()
 		service.MustNotBeError(errorInTransaction)
 		if !found {
 			return service.ErrForbidden(errors.New("no access to the root activity or it is a skill"))
 		}
 	}
-	return service.NoError
+	return nil
 }
 
 func validateRootSkillID(store *database.DataStore, user *database.User, oldRootSkillID *int64,
 	dbMap map[string]interface{},
-) service.APIError {
+) error {
 	newRootSkillIDInterface, newRootSkillIDSet := dbMap["root_skill_id"]
 	if newRootSkillIDSet && newRootSkillIDInterface != nil {
 		newRootSkillID := newRootSkillIDInterface.(*int64)
@@ -314,7 +300,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 			found, errorInTransaction := store.Items().
 				ByID(*newRootSkillID).
 				Where("type = 'Skill'").
-				WithWriteLock().
+				WithExclusiveWriteLock().
 				WhereUserHasViewPermissionOnItems(user, "info").
 				HasRows()
 			service.MustNotBeError(errorInTransaction)
@@ -324,7 +310,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 		}
 	}
 
-	return service.NoError
+	return nil
 }
 
 // refuseSentGroupRequestsIfNeeded automatically refuses all requests to join this group
@@ -345,7 +331,7 @@ func refuseSentGroupRequestsIfNeeded(
 					WHEN 'leave_request' THEN 'leave_request_refused'
 					WHEN 'invitation' THEN 'invitation_withdrawn'
 				END,
-				NOW(), ?
+				NOW(3), ?
 			FROM group_pending_requests
 			WHERE group_id = ? AND type IN (?)
 			FOR UPDATE`, initiatorID, groupID, pendingTypesToRefuse).Error())
@@ -408,7 +394,7 @@ func shouldRefuseGroupPendingRequests(
 }
 
 func validateUpdateGroupInput(
-	r *http.Request, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
+	rawRequestData map[string]interface{}, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
 ) (*formdata.FormData, error) {
 	input := &groupUpdateInput{}
 	formData := formdata.NewFormData(input)
@@ -440,8 +426,12 @@ func validateUpdateGroupInput(
 
 	formData.RegisterTranslation("null|gte=0", "can be null or an integer between 0 and 2147483647 inclusively")
 
-	err := formData.ParseJSONRequestData(r)
-	return formData, err
+	err := formData.ParseMapData(rawRequestData)
+	if err != nil {
+		return nil, err
+	}
+
+	return formData, nil
 }
 
 func int64PtrEqualValues(a, b *int64) bool {
@@ -538,18 +528,18 @@ func requireLockMembershipApprovalUntilIsStrengthened(groupHasParticipants bool,
 
 		// The field is considered strengthened only if the new value is > NOW().
 		return newValueDate.After(time.Now())
-	} else {
-		newValueDate := (*time.Time)(newValue)
-
-		// The field is not considered strengthened if the new value is <= NOW().
-		if newValueDate != nil && newValueDate.Before(time.Now().Add(time.Second)) {
-			return false
-		}
-
-		oldValueDate := (*time.Time)(oldValue)
-
-		return newValue != nil && newValueDate.Compare(*oldValueDate) == 1
 	}
+
+	newValueDate := (*time.Time)(newValue)
+
+	// The field is not considered strengthened if the new value is <= NOW().
+	if newValueDate != nil && newValueDate.Before(time.Now().Add(time.Second)) {
+		return false
+	}
+
+	oldValueDate := (*time.Time)(oldValue)
+
+	return newValue != nil && newValueDate.Compare(*oldValueDate) == 1
 }
 
 // requireWatchApprovalIsStrengthened checks whether the field `require_watch_approval` is strengthened.
@@ -561,10 +551,10 @@ func requireWatchApprovalIsStrengthened(groupHasParticipants, oldValue, newValue
 	return !oldValue && newValue
 }
 
-func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, currentGroupData *groupUpdateInput) bool {
-	switch fl.FieldName() {
+func fieldIsStrengthened(fieldInfo validator.FieldLevel, groupHasParticipants bool, currentGroupData *groupUpdateInput) bool {
+	switch fieldInfo.FieldName() {
 	case "require_personal_info_access_approval":
-		newValue := fl.Field().String()
+		newValue := fieldInfo.Field().String()
 
 		return requirePersonalInfoAccessApprovalIsStrengthened(
 			groupHasParticipants,
@@ -572,7 +562,7 @@ func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, cur
 			newValue,
 		)
 	case "require_lock_membership_approval_until":
-		newValue := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+		newValue := fieldInfo.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
 
 		return requireLockMembershipApprovalUntilIsStrengthened(
 			groupHasParticipants,
@@ -580,7 +570,7 @@ func fieldIsStrengthened(fl validator.FieldLevel, groupHasParticipants bool, cur
 			newValue,
 		)
 	case "require_watch_approval":
-		newValue := fl.Field().Bool()
+		newValue := fieldInfo.Field().Bool()
 
 		return requireWatchApprovalIsStrengthened(
 			groupHasParticipants,
@@ -600,11 +590,10 @@ func constructStrengtheningRequiresFieldValidator(
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
 		if !fieldIsStrengthened(fl, groupHasParticipants, currentGroupData) {
 			return true
-		} else {
-			approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").String()
-
-			return approvalChangeAction != ""
 		}
+
+		approvalChangeAction := fl.Top().Elem().FieldByName("ApprovalChangeAction").String()
+		return approvalChangeAction != ""
 	})
 }
 
@@ -618,7 +607,7 @@ func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, 
 		// because this validator is called only if it is (it has omitempty).
 
 		// There must be no require_* fields strengthened.
-		if requirePersonalInfoAccessApprovalIsStrengthened(
+		return requirePersonalInfoAccessApprovalIsStrengthened(
 			groupHasParticipants,
 			currentGroupData.RequirePersonalInfoAccessApproval,
 			newRequirePersonalInfoAccessApproval,
@@ -632,10 +621,6 @@ func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, 
 				groupHasParticipants,
 				currentGroupData.RequireWatchApproval,
 				newRequireWatchApproval,
-			) {
-			return true
-		} else {
-			return false
-		}
+			)
 	}
 }

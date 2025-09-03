@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -6,87 +6,61 @@ import (
 	"strconv"
 
 	"github.com/cucumber/godog"
-	"github.com/cucumber/messages-go/v10"
 )
 
 // registerFeaturesForUsers registers the Gherkin features related to users.
-func (ctx *TestContext) registerFeaturesForUsers(s *godog.Suite) {
+func (ctx *TestContext) registerFeaturesForUsers(s *godog.ScenarioContext) {
 	s.Step(`^there is a user (@\w+)$`, ctx.ThereIsAUser)
 	s.Step(`^there are the following users:$`, ctx.ThereAreTheFollowingUsers)
 }
 
-// addUsersIntoAllUsersGroup adds all users in the AllUsers group if it is defined.
-func (ctx *TestContext) addUsersIntoAllUsersGroup() error {
-	if ctx.allUsersGroup == "" {
-		return nil
-	}
-
-	for userID := range ctx.dbTables["users"] {
-		err := ctx.UserIsAMemberOfTheGroup(userID, ctx.allUsersGroup)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // getUserPrimaryKey returns the primary key of a group.
-func (ctx *TestContext) getUserPrimaryKey(groupID int64) string {
-	return strconv.FormatInt(groupID, 10)
+func (ctx *TestContext) getUserPrimaryKey(groupID int64) map[string]string {
+	return map[string]string{"group_id": strconv.FormatInt(groupID, 10)}
 }
 
-// addUser adds a user in database.
+// addUser adds a user to the database.
 func (ctx *TestContext) addUser(user string) {
-	primaryKey := ctx.getUserPrimaryKey(ctx.getReference(user))
+	userGroupID := ctx.getIDOrIDByReference(user)
+	primaryKey := ctx.getUserPrimaryKey(userGroupID)
 
 	if !ctx.isInDatabase("users", primaryKey) {
-		ctx.addInDatabase("users", primaryKey, map[string]interface{}{
-			"group_id": ctx.getReference(user),
-			"login":    referenceToName(user),
-			// All the other fields are set to default values.
-			"login_id":   nil,
-			"temp_user":  false,
-			"first_name": nil,
-			"last_name":  nil,
-		})
+		err := ctx.DBHasTable("users",
+			constructGodogTableFromData([]stringKeyValuePair{
+				{"group_id", strconv.FormatInt(userGroupID, 10)},
+				{"login", referenceToName(user)},
+				{"login_id", "null"},
+				{"temp_user", "false"},
+				{"first_name", "null"},
+				{"last_name", "null"},
+			}))
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
 // setUserFieldInDatabase sets a specific field of a user in the database.
-func (ctx *TestContext) setUserFieldInDatabase(primaryKey, field string, value interface{}) {
-	if value == tableValueNull {
-		value = nil
-	}
-	if value == tableValueFalse {
-		value = false
-	}
-	if value == tableValueTrue {
-		value = true
-	}
-
-	ctx.dbTables["users"][primaryKey][field] = value
+func (ctx *TestContext) setUserFieldInDatabase(primaryKey map[string]string, field, value string) {
+	ctx.setDBTableRowColumnValue("users", primaryKey, field, value)
 }
 
 // ThereIsAUser create a user.
-func (ctx *TestContext) ThereIsAUser(name string) error {
+func (ctx *TestContext) ThereIsAUser(name string) (err error) {
+	defer recoverPanics(&err)
+
 	ctx.addUser(name)
-
-	err := ctx.ThereIsAGroup(name)
-	mustNotBeError(err)
-
-	groupPrimaryKey := ctx.getGroupPrimaryKey(ctx.getReference(name))
-	ctx.setGroupFieldInDatabase(groupPrimaryKey, "type", "User")
+	ctx.addGroup(name, "User")
 
 	return nil
 }
 
 // ThereAreTheFollowingUsers defines users.
-func (ctx *TestContext) ThereAreTheFollowingUsers(users *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingUsers(users *godog.Table) error {
 	for i := 1; i < len(users.Rows); i++ {
 		user := ctx.getRowMap(i, users)
 
-		groupID := ctx.getReference(user["user"])
+		groupID := ctx.getIDOrIDByReference(user["user"])
 
 		err := ctx.ThereIsAUser(user["user"])
 		mustNotBeError(err)

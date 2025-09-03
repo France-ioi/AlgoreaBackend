@@ -3,13 +3,14 @@
 package database_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type itemAncestorsResultRow struct {
@@ -23,20 +24,21 @@ type itemPropagateResultRow struct {
 }
 
 func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
-		dataStore := database.NewDataStoreWithContext(context.Background(), db)
+		dataStore := database.NewDataStoreWithContext(db.GetContext(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
-			ds.ScheduleItemsAncestorsPropagation()
-			return nil
+			return ds.ItemItems().CreateNewAncestors()
 		}))
 	}, 30)
 
 	itemItemStore := database.NewDataStore(db).ItemItems()
 	var result []itemAncestorsResultRow
-	assert.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
+	require.NoError(t, itemItemStore.ItemAncestors().Order("child_item_id, ancestor_item_id").Scan(&result).Error())
 
 	assert.Equal(t, []itemAncestorsResultRow{
 		{ChildItemID: 2, AncestorItemID: 1},
@@ -48,9 +50,8 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
-		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},
 		{ID: 3, AncestorsComputationState: "done"},
 		{ID: 4, AncestorsComputationState: "done"},
@@ -58,13 +59,15 @@ func TestItemItemStore_CreateNewAncestors_Concurrent(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common", "item_item_store/ancestors/cyclic")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(),
+		"item_item_store/ancestors/_common", "item_item_store/ancestors/cyclic")
 	defer func() { _ = db.Close() }()
 
 	itemItemStore := database.NewDataStore(db).ItemItems()
 	assert.NoError(t, itemItemStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleItemsAncestorsPropagation()
-		return nil
+		return ds.ItemItems().CreateNewAncestors()
 	}))
 
 	var result []itemAncestorsResultRow
@@ -75,7 +78,7 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "todo"},
 		{ID: 2, AncestorsComputationState: "todo"},
@@ -85,21 +88,22 @@ func TestItemItemStore_CreateNewAncestors_Cyclic(t *testing.T) {
 }
 
 func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("item_item_store/ancestors/_common")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "item_item_store/ancestors/_common")
 	defer func() { _ = db.Close() }()
 
 	itemItemStore := database.NewDataStore(db).ItemItems()
 
 	for i := 1; i <= 4; i++ {
-		assert.NoError(t, itemItemStore.Exec(
+		require.NoError(t, itemItemStore.Exec(
 			"INSERT INTO items_propagate (id, ancestors_computation_state) VALUES (?, 'done') "+
 				"ON DUPLICATE KEY UPDATE ancestors_computation_state='done'", i).
 			Error())
 	}
 
 	assert.NoError(t, itemItemStore.InTransaction(func(ds *database.DataStore) error {
-		ds.ScheduleItemsAncestorsPropagation()
-		return nil
+		return ds.ItemItems().CreateNewAncestors()
 	}))
 
 	var result []itemAncestorsResultRow
@@ -110,7 +114,7 @@ func TestItemItemStore_CreateNewAncestors_IgnoresDoneItems(t *testing.T) {
 	}, result)
 
 	var propagateResult []itemPropagateResultRow
-	assert.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
+	require.NoError(t, itemItemStore.Table("items_propagate").Order("id").Scan(&propagateResult).Error())
 	assert.Equal(t, []itemPropagateResultRow{
 		{ID: 1, AncestorsComputationState: "done"},
 		{ID: 2, AncestorsComputationState: "done"},

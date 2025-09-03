@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model prerequisiteOrDependencyItem
@@ -77,9 +77,11 @@ type rawPrerequisiteOrDependencyItem struct {
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with prerequisite items
@@ -93,29 +95,29 @@ type rawPrerequisiteOrDependencyItem struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemPrerequisites(rw http.ResponseWriter, httpReq *http.Request) error {
 	return srv.getItemPrerequisitesOrDependencies(rw, httpReq, "dependent_item_id", "item_id")
 }
 
 func (srv *Service) getItemPrerequisitesOrDependencies(
-	rw http.ResponseWriter, httpReq *http.Request,
+	responseWriter http.ResponseWriter, httpRequest *http.Request,
 	givenColumn, joinToColumn string,
-) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
-	participantID := service.ParticipantIDFromContext(httpReq.Context())
-	store := srv.GetStore(httpReq)
+	user := srv.GetUser(httpRequest)
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	store := srv.GetStore(httpRequest)
 
-	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
+	service.MustNotBeError(err)
 
 	found, err := store.Permissions().
 		MatchingGroupAncestors(participantID).
@@ -124,13 +126,13 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var rawData []rawPrerequisiteOrDependencyItem
 	service.MustNotBeError(
 		constructItemListWithoutResultsQuery(
-			store, participantID, "info", watchedGroupIDSet, watchedGroupID,
+			store, participantID, "info", watchedGroupIDIsSet, watchedGroupID,
 			`items.allows_multiple_attempts, items.id, items.type, items.default_language_tag,
 				validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
 				can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
@@ -156,14 +158,14 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 			Order("title, subtitle, id").
 			Scan(&rawData).Error())
 
-	response := prerequisiteOrDependencyItemsFromRawData(rawData, watchedGroupIDSet, store.PermissionsGranted())
+	response := prerequisiteOrDependencyItemsFromRawData(rawData, watchedGroupIDIsSet, store.PermissionsGranted())
 
-	render.Respond(rw, httpReq, response)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, response)
+	return nil
 }
 
 func prerequisiteOrDependencyItemsFromRawData(
-	rawData []rawPrerequisiteOrDependencyItem, watchedGroupIDSet bool,
+	rawData []rawPrerequisiteOrDependencyItem, watchedGroupIDIsSet bool,
 	permissionGrantedStore *database.PermissionGrantedStore,
 ) []prerequisiteOrDependencyItem {
 	result := make([]prerequisiteOrDependencyItem, 0, len(rawData))
@@ -182,7 +184,7 @@ func prerequisiteOrDependencyItemsFromRawData(
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, permissionGrantedStore)
+		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 		result = append(result, item)
 	}
 	return result

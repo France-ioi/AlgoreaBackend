@@ -3,13 +3,16 @@
 package database_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type existingResultsRow struct {
@@ -27,18 +30,16 @@ type resultStorePropagateCreatesNewTestCase struct {
 	rootItemID         *int64
 }
 
-func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropagateCreatesNewTestCase) {
+func testResultStorePropagateCreatesNew(ctx context.Context, t *testing.T, testCase *resultStorePropagateCreatesNewTestCase) {
+	t.Helper()
+
 	mergedFixtures := make([]string, 0, len(testCase.fixtures)+1)
 	mergedFixtures = append(mergedFixtures, `
 		groups: [{id: 1}, {id: 2}, {id: 3}, {id: 4}]
 		groups_ancestors:
-			- {ancestor_group_id: 1, child_group_id: 1}
-			- {ancestor_group_id: 2, child_group_id: 2}
-			- {ancestor_group_id: 3, child_group_id: 3}
 			- {ancestor_group_id: 1, child_group_id: 2}
 			- {ancestor_group_id: 1, child_group_id: 3}
 			- {ancestor_group_id: 2, child_group_id: 3}
-			- {ancestor_group_id: 4, child_group_id: 4}
 			- {ancestor_group_id: 4, child_group_id: 3, expires_at: 2019-05-30 11:00:00}
 		items:
 			- {id: 111, default_language_tag: fr}
@@ -66,19 +67,18 @@ func testResultStorePropagateCreatesNew(t *testing.T, testCase *resultStorePropa
 			- {participant_id: 3, attempt_id: 1, item_id: 333, state: to_be_propagated}
 	`)
 	mergedFixtures = append(mergedFixtures, testCase.fixtures...)
-	db := testhelpers.SetupDBWithFixtureString(mergedFixtures...)
+	db := testhelpers.SetupDBWithFixtureString(ctx, mergedFixtures...)
 	defer func() { _ = db.Close() }()
 
 	if testCase.rootItemID != nil {
-		assert.NoError(t, database.NewDataStore(db).Attempts().Where("participant_id = 3 AND id = 1").
+		require.NoError(t, database.NewDataStore(db).Attempts().Where("participant_id = 3 AND id = 1").
 			UpdateColumn("root_item_id", testCase.rootItemID).Error())
 	}
 	resultStore := database.NewDataStore(db).Results()
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	const expectedDate = "2019-05-30 11:00:00"
 	for i := range testCase.expectedNewResults {
@@ -141,12 +141,15 @@ func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 			name:               "should not create new results for items above the root_item_id",
 			fixtures:           []string{`permissions_generated: [{group_id: 3, item_id: 111, can_view_generated: info}]`},
 			expectedNewResults: []existingResultsRow{{ParticipantID: 3, AttemptID: 1, ItemID: 222}},
-			rootItemID:         utils.Ptr(int64(222)),
+			rootItemID:         golang.Ptr(int64(222)),
 		},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			testResultStorePropagateCreatesNew(t, &test)
+			testoutput.SuppressIfPasses(t)
+
+			ctx := testhelpers.CreateTestContext()
+			testResultStorePropagateCreatesNew(ctx, t, &test)
 		})
 	}
 }

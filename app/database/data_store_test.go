@@ -1,15 +1,24 @@
 package database
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"regexp"
 	"strconv"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-sql-driver/mysql"
+	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
@@ -27,7 +36,10 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"GroupGroups", func(store *DataStore) *DB { return store.GroupGroups().Where("") }, "`groups_groups`"},
 		{"ActiveGroupGroups", func(store *DataStore) *DB { return store.ActiveGroupGroups().Where("") }, "`groups_groups_active`"},
 		{"GroupMembershipChanges", func(store *DataStore) *DB { return store.GroupMembershipChanges().Where("") }, "`group_membership_changes`"},
-		{"GroupContestItems", func(store *DataStore) *DB { return store.GroupContestItems().Where("") }, "`groups_contest_items`"},
+		{
+			"GroupItemAdditionalTimes", func(store *DataStore) *DB { return store.GroupItemAdditionalTimes().Where("") },
+			"`group_item_additional_times`",
+		},
 		{"GroupManagers", func(store *DataStore) *DB { return store.GroupManagers().Where("") }, "`group_managers`"},
 		{"GroupPendingRequests", func(store *DataStore) *DB { return store.GroupPendingRequests().Where("") }, "`group_pending_requests`"},
 		{"Permissions", func(store *DataStore) *DB { return store.Permissions().Where("") }, "permissions_generated AS permissions"},
@@ -44,12 +56,14 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"AccessTokens", func(store *DataStore) *DB { return store.AccessTokens().Where("") }, "`access_tokens`"},
 		{"Threads", func(store *DataStore) *DB { return store.Threads().Where("") }, "`threads`"},
 		{"Users", func(store *DataStore) *DB { return store.Users().Where("") }, "`users`"},
-		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches`"},
+		{"UserBatches", func(store *DataStore) *DB { return store.UserBatches().Where("") }, "`user_batches_v2`"},
 		{"UserBatchPrefixes", func(store *DataStore) *DB { return store.UserBatchPrefixes().Where("") }, "`user_batch_prefixes`"},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 			mock.ExpectQuery("SELECT \\* FROM " + tt.wantTable).
@@ -77,7 +91,10 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"GroupGroups", func(store *DataStore) interface{} { return store.GroupGroups() }, &GroupGroupStore{}},
 		{"ActiveGroupGroups", func(store *DataStore) interface{} { return store.ActiveGroupGroups() }, &GroupGroupStore{}},
 		{"GroupMembershipChanges", func(store *DataStore) interface{} { return store.GroupMembershipChanges() }, &GroupMembershipChangeStore{}},
-		{"GroupContestItems", func(store *DataStore) interface{} { return store.GroupContestItems() }, &GroupContestItemStore{}},
+		{
+			"GroupItemAdditionalTimes", func(store *DataStore) interface{} { return store.GroupItemAdditionalTimes() },
+			&GroupItemAdditionalTimeStore{},
+		},
 		{"GroupManagers", func(store *DataStore) interface{} { return store.GroupManagers() }, &GroupManagerStore{}},
 		{"GroupPendingRequests", func(store *DataStore) interface{} { return store.GroupPendingRequests() }, &GroupPendingRequestStore{}},
 		{"Permissions", func(store *DataStore) interface{} { return store.Permissions() }, &PermissionGeneratedStore{}},
@@ -110,16 +127,18 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 }
 
 func TestDataStore_ByID(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	const id = 123
+	const idToFetch = 123
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `tableName` WHERE (tableName.id = ?)")).
-		WithArgs(id).
+		WithArgs(idToFetch).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
 	var result []interface{}
-	err := NewDataStoreWithTable(db, "tableName").ByID(id).Scan(&result).Error()
+	err := NewDataStoreWithTable(db, "tableName").ByID(idToFetch).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -134,6 +153,8 @@ func TestDataStore_ByID_ForAbstractDataStore(t *testing.T) {
 }
 
 func TestDataStore_InTransaction_NoErrors(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -156,12 +177,14 @@ func TestDataStore_InTransaction_NoErrors(t *testing.T) {
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, []resultStruct{{1}}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDataStore_InTransaction_DBError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -185,7 +208,97 @@ func TestDataStore_InTransaction_DBError(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	var callsCount int
+
+	type ctxKey string
+
+	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
+	defer patch.Unpatch()
+
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	db, mock := NewDBMock(ctx)
+	defer func() { _ = db.Close() }()
+
+	db = cloneDBWithNewContext(context.WithValue(ctx, ctxKey("key"), "value"), db)
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	store := NewDataStoreWithTable(db, "myTable")
+	gotError := store.InTransaction(func(_ *DataStore) error {
+		return nil
+	}, txOptions)
+
+	require.NoError(t, gotError)
+	require.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, 1, callsCount)
+}
+
+func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectRollback()
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	store := NewDataStoreWithContext(ContextWithTransactionRetrying(db.GetContext()), db)
+	gotError := store.InTransaction(func(s *DataStore) error {
+		var result []interface{}
+		return s.Raw("SELECT 1").Scan(&result).Error()
+	})
+
+	assert.NoError(t, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes_Hooks(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	var called []string
+	SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {
+		called = append(called, "start")
+	})
+	defer SetOnStartOfTransactionToBeRetriedForcefullyHook(func() {})
+	SetOnForcefulRetryOfTransactionHook(func() {
+		called = append(called, "retry")
+	})
+	defer SetOnForcefulRetryOfTransactionHook(func() {})
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectRollback()
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	store := NewDataStoreWithContext(ContextWithTransactionRetrying(db.GetContext()), db)
+	gotError := store.InTransaction(func(s *DataStore) error {
+		var result []interface{}
+		called = append(called, "1")
+		return s.Raw("SELECT 1").Scan(&result).Error()
+	})
+
+	assert.NoError(t, gotError)
+	assert.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, []string{"start", "1", "retry", "1"}, called)
+}
+
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -205,7 +318,35 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnStartingTransaction(t *
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestDataStore_WithForeignKeyChecksDisabled_WithTxOptions(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	var callsCount int
+	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, nil)
+	defer patch.Unpatch()
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^SET").WithArgs().WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectExec("^SET").WithArgs().WillReturnResult(sqlmock.NewResult(-1, -1))
+	mock.ExpectCommit()
+
+	store := NewDataStore(db)
+	gotError := store.WithForeignKeyChecksDisabled(func(*DataStore) error {
+		return nil
+	}, txOptions)
+
+	require.NoError(t, gotError)
+	require.NoError(t, mock.ExpectationsWereMet())
+	assert.Equal(t, 1, callsCount)
+}
+
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnCommittingTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -228,6 +369,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnCommittingTransaction(t
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorInsideTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -248,6 +391,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorInsideTransaction(t *test
 }
 
 func TestDataStore_WithForeignKeyChecksDisabled_DBErrorWithoutTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -270,6 +415,8 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorWithoutTransaction(t *tes
 }
 
 func TestDataStore_WithNamedLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	lockName := "some lock name"
 	timeout := 1234 * time.Millisecond
 	expectedTimeout := int(timeout.Round(time.Second).Seconds())
@@ -284,6 +431,8 @@ func TestDataStore_WithNamedLock(t *testing.T) {
 func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeout int, expectedTableName string,
 	funcToTestGenerator func(store *DataStore) func(func(store *DataStore) error) error,
 ) {
+	t.Helper()
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -292,14 +441,14 @@ func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeou
 		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	dbMock.ExpectQuery("SELECT 1 AS id").
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(int64(1)))
-	dbMock.ExpectExec("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
-		WithArgs(expectedLockName).WillReturnResult(sqlmock.NewResult(-1, -1))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(expectedLockName).WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
 
 	store := NewDataStoreWithTable(db, "tableName")
 	err := funcToTestGenerator(store)(func(s *DataStore) error {
 		assert.Equal(t, expectedTableName, s.tableName)
 		assert.NotEqual(t, store, s)
-		assert.Equal(t, store.db.DB(), s.db.DB())
+		assert.Equal(t, store.db.CommonDB(), s.db.CommonDB())
 		var result []interface{}
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})
@@ -308,20 +457,22 @@ func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeou
 }
 
 func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	for i := 1; i < keyTriesCount; i++ {
-		dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(i).
-			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'PRIMARY'"})
+		dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(i).
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.PRIMARY'"})
 	}
-	dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp).WithArgs(keyTriesCount).
+	dbMock.ExpectExec(retryOnDuplicatePrimaryKeyErrorExpectedQueryRegexp()).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
-	err := NewDataStore(db).RetryOnDuplicatePrimaryKeyError(func(store *DataStore) error {
+	err := NewDataStore(db).RetryOnDuplicatePrimaryKeyError("users", func(store *DataStore) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
+		return store.Exec("INSERT INTO users (id) VALUES (?)", retryCount).Error()
 	})
 
 	assert.NoError(t, err)
@@ -329,21 +480,23 @@ func TestDataStore_RetryOnDuplicatePrimaryKeyError(t *testing.T) {
 }
 
 func TestDataStore_RetryOnDuplicateKeyError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, dbMock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	queryRegexp := "^" + regexp.QuoteMeta("INSERT INTO users (login) VALUES (?)") + "$"
 	for i := 1; i < keyTriesCount; i++ {
 		dbMock.ExpectExec(queryRegexp).WithArgs(i).
-			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'login'"})
+			WillReturnError(&mysql.MySQLError{Number: 1062, Message: "Duplicate entry '" + strconv.Itoa(i) + "' for key 'users.login'"})
 	}
 	dbMock.ExpectExec(queryRegexp).WithArgs(keyTriesCount).
 		WillReturnResult(sqlmock.NewResult(keyTriesCount, 1))
 
 	retryCount := 0
-	err := NewDataStore(db).RetryOnDuplicateKeyError("login", "login", func(store *DataStore) error {
+	err := NewDataStore(db).RetryOnDuplicateKeyError("users", "login", "login", func(store *DataStore) error {
 		retryCount++
-		return db.Exec("INSERT INTO users (login) VALUES (?)", retryCount).Error()
+		return store.Exec("INSERT INTO users (login) VALUES (?)", retryCount).Error()
 	})
 
 	assert.NoError(t, err)
@@ -351,6 +504,8 @@ func TestDataStore_RetryOnDuplicateKeyError(t *testing.T) {
 }
 
 func TestDataStore_InsertMap(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -366,6 +521,8 @@ func TestDataStore_InsertMap(t *testing.T) {
 }
 
 func TestDataStore_InsertOrUpdateMap(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -373,16 +530,18 @@ func TestDataStore_InsertOrUpdateMap(t *testing.T) {
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?) "+
-		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = NULL")).
 		WithArgs(int64(1), "some value", nil).
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
-		InsertOrUpdateMap(dataRow, []string{"sField", "sNullField"}))
+		InsertOrUpdateMap(dataRow, []string{"sField", "sNullField"}, map[string]string{"sNullField": "NULL"}))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -393,12 +552,82 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?), (?, ?, ?) "+
-		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = VALUES(`sNullField`)")).
+		"ON DUPLICATE KEY UPDATE `sField` = VALUES(`sField`), `sNullField` = NULL")).
 		WithArgs(int64(1), "some value", "value", int64(2), "another value", nil).
 		WillReturnError(expectedError)
 
 	assert.Equal(t, expectedError, NewDataStoreWithTable(db, "myTable").
-		InsertOrUpdateMaps(dataRows, []string{"sField", "sNullField"}))
+		InsertOrUpdateMaps(dataRows, []string{"sField", "sNullField"}, map[string]string{"sNullField": "NULL"}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithSharedWriteLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT \\* FROM `myTable` FOR SHARE").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	dataStore := NewDataStoreWithTable(db, "myTable")
+	err := dataStore.inTransaction(func(db *DB) error {
+		newDataStore := NewDataStore(db).WithSharedWriteLock()
+		assert.NotEqual(t, newDataStore, dataStore)
+		assert.NoError(t, newDataStore.Error())
+		var result []interface{}
+		assert.NoError(t, newDataStore.Scan(&result).Error())
+		return nil
+	})
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithSharedWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() { NewDataStore(db).WithSharedWriteLock() })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithCustomWriteLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(
+		"SELECT `t1`.\\* FROM `t1` JOIN `t2` JOIN `t3` JOIN `t4` FOR SHARE OF `t1`, `t2` FOR UPDATE OF `t3`, `t4`").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	dataStore := NewDataStoreWithTable(db, "t1").Joins("JOIN `t2`").Joins("JOIN `t3`").Joins("JOIN `t4`")
+	err := dataStore.inTransaction(func(db *DB) error {
+		newDataStore := NewDataStore(db).WithCustomWriteLocks(golang.NewSet("t1", "t2"), golang.NewSet("t3", "t4"))
+		assert.NotEqual(t, newDataStore, dataStore)
+		assert.NoError(t, newDataStore.Error())
+		var result []interface{}
+		assert.NoError(t, newDataStore.Scan(&result).Error())
+		return nil
+	})
+
+	assert.NoError(t, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_WithCustomWriteLock_PanicsWhenNotInTransaction(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrNoTransaction, func() {
+		NewDataStore(db).WithCustomWriteLocks(
+			golang.NewSet[string](), golang.NewSet[string]())
+	})
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -407,12 +636,6 @@ func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		NewDataStore(db).ScheduleGroupsAncestorsPropagation()
-	})
-	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		NewDataStore(db).ScheduleItemsAncestorsPropagation()
-	})
-	assert.PanicsWithValue(t, ErrNoTransaction, func() {
 		NewDataStore(db).SchedulePermissionsPropagation()
 	})
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
@@ -420,4 +643,187 @@ func TestDataStore_PropagationsSchedules_MustBeInTransaction(t *testing.T) {
 	})
 
 	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestProhibitResultsPropagation(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataStore := NewDataStore(db)
+	assert.False(t, dataStore.IsResultsPropagationProhibited())
+
+	dbMock.ExpectBegin()
+	dbMock.ExpectCommit()
+
+	ProhibitResultsPropagation(db)
+	assert.True(t, dataStore.IsResultsPropagationProhibited())
+	assert.NoError(t, dataStore.InTransaction(func(dataStore *DataStore) error {
+		dataStore.ScheduleResultsPropagation()
+		return nil
+	}))
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDataStore_MergeContext(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataStoreWithEmptyContext := NewDataStore(db)
+	newContext := dataStoreWithEmptyContext.MergeContext(context.Background())
+	assert.Equal(t, propagationsBitField{}, newContext.Value(prohibitedPropagationsContextKey))
+
+	expectedBitField := propagationsBitField{
+		Permissions: false,
+		Results:     true,
+	}
+	dataStoreWithProhibitedResultsPropagation := NewDataStoreWithContext(
+		context.WithValue(context.Background(), prohibitedPropagationsContextKey, expectedBitField), db)
+	newContext = dataStoreWithProhibitedResultsPropagation.MergeContext(context.Background())
+	assert.Equal(t, expectedBitField, newContext.Value(prohibitedPropagationsContextKey))
+}
+
+func TestDataStore_IsInTransaction_ReturnsTrue(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		assert.True(t, store.isInTransaction())
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_IsInTransaction_ReturnsFalse(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.False(t, NewDataStore(db).IsInTransaction())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+type gormDialectDBAccessor struct {
+	_ unsafe.Pointer
+	v *struct {
+		db gorm.SQLCommon
+		gorm.DefaultForeignKeyNamer
+	}
+}
+
+type testContextKey string
+
+func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	ctx := context.WithValue(context.Background(), testContextKey("key"), "value")
+	dataStore := NewDataStoreWithContext(ctx, db)
+
+	assert.Equal(t, db.ctes, dataStore.ctes)
+	assert.Equal(t, db.logConfig(), dataStore.logConfig())
+	assert.Equal(t, ctx, dataStore.ctx())
+
+	dbWrapper := dataStore.DB.db.CommonDB().(*sqlDBWrapper)
+	assert.Equal(t, ctx, dbWrapper.ctx)
+	assert.Equal(t, db.logConfig(), dbWrapper.logConfig)
+	assert.Equal(t, db.db.CommonDB().(*sqlDBWrapper).sqlDB, dbWrapper.sqlDB)
+	dialect := dataStore.DB.db.Dialect()
+	//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
+	assert.Equal(t, dbWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	err := db.inTransaction(func(db *DB) error {
+		ctx := context.WithValue(context.Background(), testContextKey("key"), "value")
+		dataStore := NewDataStoreWithContext(ctx, db)
+
+		assert.Equal(t, db.ctes, dataStore.ctes)
+		assert.Equal(t, db.logConfig(), dataStore.logConfig())
+		assert.Equal(t, ctx, dataStore.ctx())
+
+		txWrapper := dataStore.DB.db.CommonDB().(*sqlTxWrapper)
+		assert.Equal(t, db.logConfig(), txWrapper.logConfig)
+		assert.Equal(t, ctx, txWrapper.ctx)
+		assert.Equal(t, db.db.CommonDB().(*sqlTxWrapper).sqlTx, txWrapper.sqlTx)
+		dialect := dataStore.DB.db.Dialect()
+		//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
+		assert.Equal(t, txWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
+
+		return nil
+	})
+	require.NoError(t, err)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_EnsureTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, NewDataStore(db).EnsureTransaction(func(store *DataStore) error {
+		assert.True(t, store.isInTransaction())
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_EnsureTransaction_InsideTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		return store.EnsureTransaction(func(store *DataStore) error {
+			assert.True(t, store.isInTransaction())
+			return nil
+		})
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDataStore_SetPropagationsModeToSync(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^" + regexp.QuoteMeta("SET @synchronous_propagations_connection_id = CONNECTION_ID()") + "$").
+		WillReturnResult(sqlmock.NewResult(-1, 0))
+	mock.ExpectCommit()
+
+	require.Nil(t, db.ctx().Value(propagationsAreSyncContextKey))
+
+	require.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
+		require.NoError(t, store.SetPropagationsModeToSync())
+		assert.Equal(t, true, store.DB.ctx().Value(propagationsAreSyncContextKey))
+		assert.Equal(t, true, store.DB.db.CommonDB().(*sqlTxWrapper).ctx.Value(propagationsAreSyncContextKey))
+		return nil
+	}))
+	assert.NoError(t, mock.ExpectationsWereMet())
 }

@@ -1,46 +1,46 @@
 Feature: Get activity log - robustness
   Background:
     Given the database has the following users:
-      | login   | temp_user | group_id | first_name  | last_name |
-      | someone | 0         | 21       | Bill        | Clinton   |
-      | user    | 0         | 11       | John        | Doe       |
-      | owner   | 0         | 23       | Jean-Michel | Blanquer  |
-    And the database has the following table 'groups':
+      | group_id | login   | first_name  | last_name |
+      | 21       | someone | Bill        | Clinton   |
+      | 11       | user    | John        | Doe       |
+      | 23       | owner   | Jean-Michel | Blanquer  |
+    And the database has the following table "groups":
       | id | type  |
       | 13 | Class |
       | 30 | Team  |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 30              | 23             |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 13       | 21         | false             |
       | 13       | 23         | true              |
     And the groups ancestors are computed
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id |
       | 0  | 11             |
       | 1  | 11             |
-    And the database has the following table 'results':
+    And the database has the following table "results":
       | attempt_id | item_id | participant_id |
       | 0          | 200     | 11             |
       | 1          | 200     | 11             |
-    And the database has the following table 'answers':
+    And the database has the following table "answers":
       | id | author_id | participant_id | attempt_id | item_id | type       | state  | created_at          |
       | 1  | 11        | 11             | 0          | 200     | Submission | State1 | 2017-05-29 06:38:38 |
       | 2  | 11        | 11             | 1          | 200     | Submission | State2 | 2017-05-29 06:38:38 |
-    And the database has the following table 'gradings':
+    And the database has the following table "gradings":
       | answer_id | graded_at           | score |
       | 1         | 2017-05-29 06:38:38 | 100   |
       | 2         | 2017-05-29 06:38:38 | 100   |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | type    | no_score | default_language_tag |
       | 200 | Chapter | false    | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 21       | 200     | content_with_descendants |
       | 23       | 200     | none                     |
-    And the database has the following table 'items_ancestors':
+    And the database has the following table "items_ancestors":
       | ancestor_item_id | child_item_id |
       | 200              | 200           |
 

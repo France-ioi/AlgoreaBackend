@@ -4,13 +4,15 @@ import (
 	"errors"
 	"regexp"
 	"testing"
-	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGroupStore_ManagedBy(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -31,28 +33,9 @@ func TestGroupStore_ManagedBy(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGroupStore_TeamGroupForTeamItemAndUser(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mockUser := &User{GroupID: 2, DefaultLanguage: "fr"}
-
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT `groups`.* FROM `groups` "+
-		"JOIN groups_groups_active ON groups_groups_active.parent_group_id = groups.id AND "+
-		"groups_groups_active.child_group_id = ? "+
-		"JOIN attempts ON attempts.participant_id = groups.id AND attempts.root_item_id = ? AND "+
-		"NOW() < attempts.allows_submissions_until "+
-		"WHERE (groups.type = 'Team') ORDER BY `groups`.`id` LIMIT 1")).
-		WithArgs(2, 1234).
-		WillReturnRows(mock.NewRows([]string{"id"}))
-
-	var result []interface{}
-	err := NewDataStore(db).Groups().TeamGroupForTeamItemAndUser(1234, mockUser).Scan(&result).Error()
-	assert.NoError(t, err)
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestGroupStore_TeamGroupForUser(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -72,6 +55,8 @@ func TestGroupStore_TeamGroupForUser(t *testing.T) {
 }
 
 func TestGroupStore_CreateNew_MustBeRunInTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -82,6 +67,8 @@ func TestGroupStore_CreateNew_MustBeRunInTransaction(t *testing.T) {
 }
 
 func TestGroupStore_DeleteGroup_MustBeRunInTransaction(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -92,34 +79,15 @@ func TestGroupStore_DeleteGroup_MustBeRunInTransaction(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGroupStore_DeleteGroup_ShouldUseNamedLock(t *testing.T) {
-	db, mock := NewDBMock()
-	defer func() { _ = db.Close() }()
-
-	mock.ExpectBegin()
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
-		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(0)))
-	mock.ExpectRollback()
-
-	store := NewDataStore(db)
-	_ = store.InTransaction(func(store *DataStore) error {
-		return store.Groups().DeleteGroup(1)
-	})
-
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
 func TestGroupStore_DeleteGroup_HandlesErrorOfInnerMethod(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
 	expectedError := errors.New("some error")
 
 	mock.ExpectBegin()
-	mock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
-		WithArgs("groups_groups", groupsRelationsLockTimeout/time.Second).
-		WillReturnRows(sqlmock.NewRows([]string{"SELECT GET_LOCK(?, ?)"}).AddRow(int64(1)))
 	mock.ExpectQuery("^SELECT").WithArgs(int64(1234)).WillReturnError(expectedError)
 	mock.ExpectRollback()
 

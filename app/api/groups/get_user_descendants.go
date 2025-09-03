@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:operation GET /groups/{group_id}/user-descendants group-memberships groupUserDescendantView
@@ -26,10 +26,12 @@ import (
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: from.id
 //			description: Start the page from the user next to the user with `group_id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [name,id]
@@ -56,20 +58,20 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getUserDescendants(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroup(store, user, groupID))
 
 	query := store.Groups().
 		Select(`
@@ -85,9 +87,9 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		Joins("JOIN users ON users.group_id = groups.id").
 		Group("groups.id").
 		WithPersonalInfoViewApprovals(user)
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -96,9 +98,7 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []userDescendant
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -129,8 +129,8 @@ func (srv *Service) getUserDescendants(w http.ResponseWriter, r *http.Request) s
 		resultMap[parentsRow.LinkedGroupID].Parents = append(resultMap[parentsRow.LinkedGroupID].Parents, parentsRow)
 	}
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
 type userDescendantUser struct {
@@ -139,7 +139,6 @@ type userDescendantUser struct {
 
 	// required:true
 	Login string `json:"login"`
-	// Nullable
 	// required:true
 	Grade *int32 `json:"grade"`
 }
@@ -153,9 +152,9 @@ type userDescendant struct {
 	// required:true
 	Name string `json:"name"`
 	// required:true
-	User userDescendantUser `json:"user" gorm:"embedded"`
+	User userDescendantUser `gorm:"embedded" json:"user"`
 
 	// User's parent groups among the input group's descendants
 	// required:true
-	Parents []descendantParent `sql:"-" json:"parents"`
+	Parents []descendantParent `json:"parents" sql:"-"`
 }

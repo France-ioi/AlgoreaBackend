@@ -1,21 +1,26 @@
 package rand
 
 import (
+	crand "crypto/rand"
+	"errors"
 	"math"
 	"testing"
 
+	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestFloat64(t *testing.T) {
 	Seed(1)
-	assert.Equal(t, 0.6046602879796196, Float64())
-	assert.Equal(t, 0.9405090880450124, Float64())
+	assert.InDelta(t, 0.6046602879796196, Float64(), math.SmallestNonzeroFloat64)
+	assert.InDelta(t, 0.9405090880450124, Float64(), math.SmallestNonzeroFloat64)
 	Seed(2)
-	assert.Equal(t, 0.16729663442585624, Float64())
-	assert.Equal(t, 0.2650543054337802, Float64())
+	assert.InDelta(t, 0.16729663442585624, Float64(), math.SmallestNonzeroFloat64)
+	assert.InDelta(t, 0.2650543054337802, Float64(), math.SmallestNonzeroFloat64)
 	Seed(1)
-	assert.Equal(t, 0.6046602879796196, Float64())
+	assert.InDelta(t, 0.6046602879796196, Float64(), math.SmallestNonzeroFloat64)
 }
 
 func TestInt31n(t *testing.T) {
@@ -42,13 +47,29 @@ func TestInt63(t *testing.T) {
 	assert.Equal(t, int64(5577006791947779410), Int63())
 }
 
-func TestString(t *testing.T) {
+func TestGetSource_SetSource(t *testing.T) {
 	Seed(1)
-	assert.Equal(t, "", String(0))
-	assert.Equal(t, "BpLnfgDsc2", String(10))
-	Seed(2)
-	assert.Equal(t, "KSiOW4eQ7s", String(10))
-	assert.Equal(t, "klpgstrQZt", String(10))
-	Seed(1)
-	assert.Equal(t, "BpLnfgDsc2W", String(11))
+	Int63()
+	Float64()
+	oldSource := GetSource()
+	values := make([]interface{}, 0, 4)
+	values = append(values, Float64(), Int63(), Float64(), Int63())
+	SetSource(oldSource)
+	newValues := make([]interface{}, 0, 4)
+	newValues = append(newValues, Float64(), Int63(), Float64(), Int63())
+	assert.Equal(t, values, newValues)
+	SetSource(oldSource)
+	newValues = []interface{}{Float64(), Int63(), Float64(), Int63()}
+	assert.Equal(t, values, newValues)
+}
+
+func Test_seedWithRandomBytes(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	expectedError := errors.New("some error")
+	patch := monkey.Patch(crand.Read, func([]byte) (int, error) {
+		return 1, expectedError
+	})
+	defer patch.Unpatch()
+	assert.PanicsWithValue(t, "cannot seed the randomizer", seedWithRandomBytes)
 }

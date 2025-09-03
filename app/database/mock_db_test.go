@@ -1,57 +1,85 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"errors"
-	"os"
 	"reflect"
 	"testing"
 
 	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
-	someError := errors.New("some error")
+	testoutput.SuppressIfPasses(t)
 
-	var patch *monkey.PatchGuard
-	patch = monkey.Patch(sqlmock.New, reflect.MakeFunc(reflect.TypeOf(sqlmock.New),
-		func(args []reflect.Value) (results []reflect.Value) {
-			patch.Unpatch()
-			_, mock, _ := sqlmock.New()
-			patch.Restore()
-			return []reflect.Value{
-				reflect.ValueOf((*sql.DB)(nil)),
-				reflect.ValueOf(mock),
-				reflect.ValueOf(someError),
-			}
-		}).Interface())
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	for _, test := range []struct {
+		name string
+		f    func()
+	}{
+		{"NewDBMock", func() { _, _ = NewDBMock() }},
+		{"NewDBMockWithLogConfig", func() {
+			_, _ = NewDBMockWithLogConfig(ctx, LogConfig{}, false)
+		}},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 
-	var exitCode int
-	var exitCalled bool
-	monkey.Patch(os.Exit, func(code int) { exitCalled = true; exitCode = code; panic(someError) })
-	defer monkey.UnpatchAll()
+			someError := errors.New("some error")
 
-	assert.PanicsWithValue(t, someError, func() {
-		_, _ = NewDBMock()
-	})
-	assert.True(t, exitCalled)
-	assert.Equal(t, 1, exitCode)
+			var patch *monkey.PatchGuard
+			patch = monkey.Patch(sqlmock.New, reflect.MakeFunc(reflect.TypeOf(sqlmock.New),
+				func(_ []reflect.Value) (results []reflect.Value) {
+					patch.Unpatch()
+					_, mock, _ := sqlmock.New()
+					patch.Restore()
+					return []reflect.Value{
+						reflect.ValueOf((*sql.DB)(nil)),
+						reflect.ValueOf(mock),
+						reflect.ValueOf(someError),
+					}
+				}).Interface())
+			defer monkey.UnpatchAll()
+
+			assert.PanicsWithError(t, "unable to create the mock db: some error", func() {
+				test.f()
+			})
+		})
+	}
 }
 
 func TestNewDBMock_ExitsOnGettingErrorFromOpen(t *testing.T) {
-	someError := errors.New("some error")
+	testoutput.SuppressIfPasses(t)
 
-	monkey.Patch(Open, func(interface{}) (*DB, error) { return nil, someError })
-	var exitCode int
-	var exitCalled bool
-	monkey.Patch(os.Exit, func(code int) { exitCalled = true; exitCode = code; panic(someError) })
-	defer monkey.UnpatchAll()
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	for _, test := range []struct {
+		name string
+		f    func()
+	}{
+		{"NewDBMock", func() { _, _ = NewDBMock() }},
+		{"NewDBMockWithLogConfig", func() {
+			_, _ = NewDBMockWithLogConfig(ctx, LogConfig{}, false)
+		}},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
 
-	assert.PanicsWithValue(t, someError, func() {
-		_, _ = NewDBMock()
-	})
-	assert.True(t, exitCalled)
-	assert.Equal(t, 1, exitCode)
+			someError := errors.New("some error")
+
+			monkey.Patch(OpenWithLogConfig, func(context.Context, interface{}, LogConfig, bool) (*DB, error) { return nil, someError })
+			defer monkey.UnpatchAll()
+
+			assert.PanicsWithError(t, "unable to create the gorm connection to the mock: some error", func() {
+				test.f()
+			})
+		})
+	}
 }

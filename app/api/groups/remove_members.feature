@@ -1,36 +1,25 @@
 Feature: Remove members from a group (groupRemoveMembers)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id  |
       | 13  |
       | 14  |
-      | 21  |
-      | 31  |
-      | 41  |
-      | 51  |
-      | 61  |
-      | 71  |
-      | 81  |
-      | 91  |
-      | 101 |
-      | 111 |
-      | 121 |
       | 131 |
       | 132 |
-    And the database has the following table 'users':
-      | login  | group_id |
-      | owner  | 21       |
-      | john   | 31       |
-      | jane   | 41       |
-      | jack   | 51       |
-      | james  | 61       |
-      | jacob  | 71       |
-      | janis  | 81       |
-      | jeff   | 91       |
-      | jenna  | 101      |
-      | jannet | 111      |
-      | judith | 121      |
-    And the database has the following table 'groups_groups':
+    And the database has the following users:
+      | group_id | login  |
+      | 21       | owner  |
+      | 31       | john   |
+      | 41       | jane   |
+      | 51       | jack   |
+      | 61       | james  |
+      | 71       | jacob  |
+      | 81       | janis  |
+      | 91       | jeff   |
+      | 101      | jenna  |
+      | 111      | jannet |
+      | 121      | judith |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 51             |
       | 13              | 61             |
@@ -39,7 +28,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | 13              | 131            |
       | 14              | 41             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         |
       | 13       | 21        | invitation   |
       | 13       | 41        | join_request |
@@ -48,7 +37,7 @@ Feature: Remove members from a group (groupRemoveMembers)
 
   Scenario Outline: Remove members
     Given I am the user with id "21"
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage   |
       | 13       | 21         | <can_manage> |
     When I send a DELETE request to "/groups/13/members?user_ids=31,41,51,61,71,81,91,101,111,121,131,404"
@@ -77,7 +66,7 @@ Feature: Remove members from a group (groupRemoveMembers)
       | parent_group_id | child_group_id |
       | 13              | 131            |
       | 14              | 41             |
-    And the table "group_pending_requests" should stay unchanged
+    And the table "group_pending_requests" should remain unchanged
     And the table "group_membership_changes" should be:
       | group_id | member_id | action  | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 13       | 51        | removed | 21           | 1                                         |

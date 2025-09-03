@@ -6,12 +6,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestUser_CanSeeAnswer(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name           string
 		userID         int64
@@ -72,8 +77,10 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(`
-				groups: [{id: 101}, {id: 111}, {id: 121}]
+			testoutput.SuppressIfPasses(t)
+
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
+				groups: [{id: 101}, {id: 102}, {id: 111}, {id: 121}]
 				users:
 					- {login: "john", group_id: 101}
 					- {login: "jane", group_id: 111}
@@ -81,11 +88,7 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 				groups_groups:
 					- {parent_group_id: 102, child_group_id: 101}
 				groups_ancestors:
-					- {ancestor_group_id: 101, child_group_id: 101}
 					- {ancestor_group_id: 102, child_group_id: 101}
-					- {ancestor_group_id: 102, child_group_id: 102}
-					- {ancestor_group_id: 111, child_group_id: 111}
-					- {ancestor_group_id: 121, child_group_id: 121}
 				languages: [{tag: fr}]
 				items:
 					- {id: 10, default_language_tag: fr}
@@ -99,7 +102,7 @@ func TestUser_CanSeeAnswer(t *testing.T) {
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			user := &database.User{}
-			assert.NoError(t, user.LoadByID(store, test.userID))
+			require.NoError(t, user.LoadByID(store, test.userID))
 
 			canSeeAnswer := user.CanSeeAnswer(store, test.participantID, test.itemID)
 			assert.Equal(t, test.expectedResult, canSeeAnswer)

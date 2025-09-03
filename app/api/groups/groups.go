@@ -8,9 +8,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // Service is the mount point for services related to `groups`.
@@ -83,17 +84,17 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/user-batch-prefixes", service.AppHandler(srv.getUserBatchPrefixes).ServeHTTP)
 }
 
-func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.User, groupID int64) service.APIError {
+func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.User, groupID int64) error {
 	found, err := store.GroupAncestors().ManagedByUser(user).
 		Where("groups_ancestors.child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
-	return service.NoError
+	return nil
 }
 
-func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *database.User, groupID int64) service.APIError {
+func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *database.User, groupID int64) error {
 	found, err := store.GroupAncestors().ManagedByUser(user).
 		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id").
 		Where("groups_ancestors.child_group_id = ?", groupID).
@@ -101,9 +102,9 @@ func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *
 		Where("groups.type != 'User'").HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
-	return service.NoError
+	return nil
 }
 
 type createOrDeleteRelation bool
@@ -121,7 +122,7 @@ const (
 func checkThatUserHasRightsForDirectRelation(
 	store *database.DataStore, user *database.User,
 	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation,
-) service.APIError {
+) error {
 	groupStore := store.Groups()
 
 	var groupData []struct {
@@ -130,7 +131,7 @@ func checkThatUserHasRightsForDirectRelation(
 	}
 
 	query := groupStore.ManagedBy(user).
-		WithWriteLock().
+		WithCustomWriteLocks(golang.NewSet("groups"), golang.NewSet[string]()).
 		Select("groups.id, type").
 		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
 		Where("IF(groups.id = ?, group_managers.can_manage != 'none', 1)", parentGroupID)
@@ -144,18 +145,19 @@ func checkThatUserHasRightsForDirectRelation(
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 
+	//nolint:mnd // one row for the parent group, one for the child group
 	if len(groupData) < 2 {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	for _, groupRow := range groupData {
 		if (groupRow.ID == parentGroupID && map[string]bool{"User": true, "Team": true}[groupRow.Type]) ||
 			(groupRow.ID == childGroupID &&
 				map[string]bool{"Base": true, "User": true}[groupRow.Type]) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 	}
-	return service.NoError
+	return nil
 }
 
 type bulkMembershipAction string
@@ -174,51 +176,46 @@ const (
 	team          = "Team"
 )
 
-func (srv *Service) performBulkMembershipAction(w http.ResponseWriter, r *http.Request,
-	action bulkMembershipAction,
-) service.APIError {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+func (srv *Service) performBulkMembershipAction(
+	responseWriter http.ResponseWriter, httpRequest *http.Request, action bulkMembershipAction,
+) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "group_ids")
+	groupIDs, err := service.ResolveURLQueryGetInt64SliceField(httpRequest, "group_ids")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	apiError := service.NoError
+	user := srv.GetUser(httpRequest)
 	var results database.GroupGroupTransitionResults
 	if len(groupIDs) > 0 {
-		err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
-			var groupType string
-			groupType, apiError = checkPreconditionsForBulkMembershipAction(action, user, store, parentGroupID, groupIDs)
-			if apiError != service.NoError {
-				return apiError.Error // rollback
+		err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
+			groupType, err1 := checkPreconditionsForBulkMembershipAction(action, user, store, parentGroupID, groupIDs)
+			if err1 != nil {
+				return err1 // rollback
 			}
 
-			results, err = performBulkMembershipActionTransition(store, action, parentGroupID, groupIDs, groupType, user)
-			return err
+			results = performBulkMembershipActionTransition(store, action, parentGroupID, groupIDs, groupType, user)
+			return nil
 		})
 	}
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
-	renderGroupGroupTransitionResults(w, r, results)
-	return service.NoError
+	renderGroupGroupTransitionResults(responseWriter, httpRequest, results)
+	return nil
 }
 
 func performBulkMembershipActionTransition(store *database.DataStore, action bulkMembershipAction, parentGroupID int64,
 	groupIDs []int64, groupType string, user *database.User,
-) (database.GroupGroupTransitionResults, error) {
+) database.GroupGroupTransitionResults {
 	groupID := groupIDs[0]
 	if groupType == team {
 		if action == acceptJoinRequestsAction && isOtherTeamMember(store, parentGroupID, groupID) {
-			return database.GroupGroupTransitionResults{groupID: inAnotherTeam}, nil
+			return database.GroupGroupTransitionResults{groupID: inAnotherTeam}
 		}
 
 		if map[bulkMembershipAction]bool{acceptJoinRequestsAction: true, acceptLeaveRequestsAction: true}[action] {
@@ -226,7 +223,7 @@ func performBulkMembershipActionTransition(store *database.DataStore, action bul
 				parentGroupID, groupID, action == acceptJoinRequestsAction, true)
 			service.MustNotBeError(err)
 			if !ok {
-				return database.GroupGroupTransitionResults{groupID: "entry_condition_failed"}, nil
+				return database.GroupGroupTransitionResults{groupID: "entry_condition_failed"}
 			}
 		}
 	}
@@ -239,14 +236,16 @@ func performBulkMembershipActionTransition(store *database.DataStore, action bul
 			acceptLeaveRequestsAction: database.AdminAcceptsLeaveRequest,
 			rejectLeaveRequestsAction: database.AdminRefusesLeaveRequest,
 		}[action], parentGroupID, groupIDs, nil, user.GroupID)
-	return results, err
+	service.MustNotBeError(err)
+
+	return results
 }
 
 func checkPreconditionsForBulkMembershipAction(action bulkMembershipAction, user *database.User, store *database.DataStore,
 	parentGroupID int64, groupIDs []int64,
-) (groupType string, apiError service.APIError) {
-	if apiError = checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiError != service.NoError {
-		return "", apiError
+) (groupType string, err error) {
+	if err := checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); err != nil {
+		return "", err
 	}
 
 	var groupInfo struct {
@@ -264,7 +263,7 @@ func checkPreconditionsForBulkMembershipAction(action bulkMembershipAction, user
 				errors.New("there should be no more than one id in group_ids when the parent group is a team"))
 		}
 	}
-	return groupInfo.Type, service.NoError
+	return groupInfo.Type, nil
 }
 
 type descendantParent struct {

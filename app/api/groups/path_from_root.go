@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /groups/{group_id}/path-from-root group-memberships groupPathFromRootFind
@@ -55,21 +55,23 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getPathFromRoot(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) getPathFromRoot(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	ids := findGroupPath(srv.GetStore(r), groupID, user)
+	ids := findGroupPath(srv.GetStore(httpRequest), groupID, user)
 	if ids == nil {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
-	render.Respond(w, r, map[string]interface{}{"path": ids})
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, map[string]interface{}{"path": ids})
+	return nil
 }
 
 func findGroupPath(store *database.DataStore, groupID int64, user *database.User) []string {

@@ -12,10 +12,9 @@ import (
 
 func TestMiddleware_Success(t *testing.T) {
 	assert := assertlib.New(t)
-	hook, restoreFct := MockSharedLoggerHook()
-	defer restoreFct()
+	logger, hook := NewMockLogger()
 
-	doRequest(false)
+	doRequest(logger, false)
 
 	assert.Len(hook.AllEntries(), 3)
 
@@ -37,16 +36,15 @@ func TestMiddleware_Success(t *testing.T) {
 	checkCommon(assert, entryData)
 	assert.Equal("request complete", hook.AllEntries()[2].Message)
 	assert.Equal(10, entryData["resp_bytes_length"])
-	assert.True(entryData["resp_elapsed_ms"].(float64) < 3.0, "Expected <3.0s, got: %f", entryData["resp_elapsed_ms"].(float64))
+	assert.Less(entryData["resp_elapsed_ms"].(float64), 3000.0, "Expected <3.0s, got: %f", entryData["resp_elapsed_ms"].(float64))
 	assert.Equal(200, entryData["resp_status"])
 }
 
 func TestMiddleware_Panic(t *testing.T) {
 	assert := assertlib.New(t)
-	hook, restoreFct := MockSharedLoggerHook()
-	defer restoreFct()
+	logger, hook := NewMockLogger()
 
-	doRequest(true)
+	doRequest(logger, true)
 
 	assert.Len(hook.AllEntries(), 3)
 
@@ -57,28 +55,28 @@ func TestMiddleware_Panic(t *testing.T) {
 	assert.Equal("my panic msg", entryData["panic"])
 }
 
-func doRequest(forcePanic bool) {
+func doRequest(logger *Logger, forcePanic bool) {
 	// setting up the server with 1 service and using the logger middleware
 	loggerMiddleware := NewStructuredLogger()
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		LogEntrySetField(r, "my_key", 42)
-		LogEntrySetFields(r, map[string]interface{}{"opt_one": 1, "foo": "bar"})
-		GetLogEntry(r).Print("in service log")
+	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		LogEntrySetField(httpRequest, "my_key", 42)
+		LogEntrySetFields(httpRequest, map[string]interface{}{"opt_one": 1, "foo": "bar"})
+		GetLogEntry(httpRequest).Print("in service log")
 		if forcePanic {
 			panic("my panic msg")
-		} else {
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte("dummy body"))
 		}
+		responseWriter.WriteHeader(http.StatusOK)
+		_, _ = responseWriter.Write([]byte("dummy body"))
 	})
 	// use the chi `Recoverer` middleware to catch panic and log it
 	// use the chi `RequestID` middleware to include request id in it (appear in logs)
 	// The order of the middlewares is crucial!
-	mainSrv := httptest.NewTLSServer(middleware.RequestID(loggerMiddleware(middleware.Recoverer(handler))))
+	mainSrv := httptest.NewTLSServer(ContextWithLoggerMiddleware(logger)(
+		middleware.RequestID(loggerMiddleware(middleware.Recoverer(handler)))))
 	defer mainSrv.Close()
 
 	// calling web server
-	mainRequest, _ := http.NewRequest("GET", mainSrv.URL+"/a_path", http.NoBody)
+	mainRequest, _ := http.NewRequest(http.MethodGet, mainSrv.URL+"/a_path", http.NoBody)
 	client := mainSrv.Client()
 	response, err := client.Do(mainRequest)
 	if err == nil {
@@ -87,7 +85,6 @@ func doRequest(forcePanic bool) {
 }
 
 func checkCommon(assert *assertlib.Assertions, entryData logrus.Fields) {
-	assert.NotNil(entryData["ts"])
 	assert.Equal("web", entryData["type"])
 	assert.Equal("https", entryData["http_scheme"])
 	assert.Equal("HTTP/1.1", entryData["http_proto"])

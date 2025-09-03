@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -7,61 +7,65 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
-
+	"github.com/cucumber/godog"
 	"github.com/jinzhu/gorm"
 
-	"github.com/cucumber/godog"
-
-	"github.com/cucumber/messages-go/v10"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // registerFeaturesForSessions registers the Gherkin features related to sessions and access tokens.
-func (ctx *TestContext) registerFeaturesForSessions(s *godog.Suite) {
-	s.Step(`^I am (@\w+)$`, ctx.IAm)
-	s.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
+func (ctx *TestContext) registerFeaturesForSessions(scenarioContext *godog.ScenarioContext) {
+	scenarioContext.Step(`^I am (@\w+)$`, ctx.IAm)
+	scenarioContext.Step(`^I am the user with id "([^"]*)"$`, ctx.IAmUserWithID)
 
-	s.Step(`^there are the following sessions:$`, ctx.ThereAreTheFollowingSessions)
-	s.Step(`^there are the following access tokens:$`, ctx.ThereAreTheFollowingAccessTokens)
-	s.Step(`^there are (\d+) sessions for user (@\w+)$`, ctx.ThereAreCountSessionsForUser)
-	s.Step(`^there is no session (@\w+)$`, ctx.ThereIsNoSessionID)
-	s.Step(`^there are (\d+) access tokens for user (@\w+)$`, ctx.ThereAreCountAccessTokensForUser)
-	s.Step(`^there is no access token "([^"]*)"$`, ctx.ThereIsNoAccessToken)
+	scenarioContext.Step(`^there are the following sessions:$`, ctx.ThereAreTheFollowingSessions)
+	scenarioContext.Step(`^there are the following access tokens:$`, ctx.ThereAreTheFollowingAccessTokens)
+	scenarioContext.Step(`^there are (\d+) sessions for user (@\w+)$`, ctx.ThereAreCountSessionsForUser)
+	scenarioContext.Step(`^there is no session (@\w+)$`, ctx.ThereIsNoSessionID)
+	scenarioContext.Step(`^there are (\d+) access tokens for user (@\w+)$`, ctx.ThereAreCountAccessTokensForUser)
+	scenarioContext.Step(`^there is no access token "([^"]*)"$`, ctx.ThereIsNoAccessToken)
 }
 
-// addSession adds a session in database.
+// addSession adds a session to the database.
 func (ctx *TestContext) addSession(session, user, refreshToken string) {
-	sessionID := ctx.getReference(session)
-	userID := ctx.getReference(user)
+	sessionID := ctx.getIDOrIDByReference(session)
+	userID := ctx.getIDOrIDByReference(user)
 
-	ctx.addInDatabase("sessions", strconv.FormatInt(sessionID, 10), map[string]interface{}{
-		"session_id":    sessionID,
-		"user_id":       userID,
-		"refresh_token": refreshToken,
-	})
+	err := ctx.DBHasTable("sessions",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"session_id", strconv.FormatInt(sessionID, 10)},
+			{"user_id", strconv.FormatInt(userID, 10)},
+			{"refresh_token", refreshToken},
+		}))
+	if err != nil {
+		panic(err)
+	}
 }
 
-// addAccessToken adds an access token in database.
+// addAccessToken adds an access token to the database.
 func (ctx *TestContext) addAccessToken(session, token, issuedAt, expiresAt string) {
-	sessionID := ctx.getReference(session)
+	sessionID := ctx.getIDOrIDByReference(session)
 
-	issuedAtDate, err := time.Parse(utils.DateTimeFormat, issuedAt)
+	_, err := time.Parse(time.DateTime, issuedAt)
 	if err != nil {
 		panic(err)
 	}
 
-	expiresAtDate, err := time.Parse(utils.DateTimeFormat, expiresAt)
+	_, err = time.Parse(time.DateTime, expiresAt)
 	if err != nil {
 		panic(err)
 	}
 
-	ctx.addInDatabase("access_tokens", token, map[string]interface{}{
-		"session_id": sessionID,
-		"token":      token,
-		"issued_at":  issuedAtDate,
-		"expires_at": expiresAtDate,
-	})
+	err = ctx.DBHasTable("access_tokens",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"session_id", strconv.FormatInt(sessionID, 10)},
+			{"token", token},
+			{"issued_at", issuedAt},
+			{"expires_at", expiresAt},
+		}))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // IAm Sets the current user.
@@ -71,7 +75,7 @@ func (ctx *TestContext) IAm(name string) error {
 		return err
 	}
 
-	err = ctx.IAmUserWithID(ctx.getReference(name))
+	err = ctx.IAmUserWithID(ctx.getIDOrIDByReference(name))
 	if err != nil {
 		return err
 	}
@@ -86,15 +90,11 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 	ctx.userID = userID
 	ctx.user = strconv.FormatInt(userID, 10)
 
-	db, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-	return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+	return database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
-		err = store.Sessions().InsertMap(map[string]interface{}{
+		err := store.Sessions().InsertMap(map[string]interface{}{
 			"session_id": testSessionID,
 			"user_id":    ctx.userID,
 		})
@@ -112,7 +112,7 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 }
 
 // ThereAreTheFollowingSessions create sessions.
-func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *godog.Table) error {
 	for i := 1; i < len(sessions.Rows); i++ {
 		session := ctx.getRowMap(i, sessions)
 
@@ -128,11 +128,10 @@ func (ctx *TestContext) ThereAreTheFollowingSessions(sessions *messages.PickleSt
 
 // ThereAreCountSessionsForUser checks if there are a given number of sessions for a given user.
 func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) error {
-	userID := ctx.getReference(user)
+	userID := ctx.getIDOrIDByReference(user)
 
 	var sessionCount int
-	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE user_id = ?", userID).
-		Scan(&sessionCount)
+	err := ctx.application.Database.Table("sessions").Where("user_id = ?", userID).Count(&sessionCount).Error()
 	if err != nil {
 		return err
 	}
@@ -144,12 +143,12 @@ func (ctx *TestContext) ThereAreCountSessionsForUser(count int, user string) err
 	return nil
 }
 
+// ThereIsNoSessionID checks that a session with given session ID doesn't exist.
 func (ctx *TestContext) ThereIsNoSessionID(session string) error {
-	sessionID := ctx.getReference(session)
+	sessionID := ctx.getIDOrIDByReference(session)
 
 	var sessionCount int
-	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM sessions WHERE session_id = ?", sessionID).
-		Scan(&sessionCount)
+	err := ctx.application.Database.Table("sessions").Where("session_id = ?", sessionID).Count(&sessionCount).Error()
 	if err != nil {
 		return err
 	}
@@ -162,7 +161,7 @@ func (ctx *TestContext) ThereIsNoSessionID(session string) error {
 }
 
 // ThereAreTheFollowingAccessTokens create access tokens.
-func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *godog.Table) error {
 	for i := 1; i < len(accessTokens.Rows); i++ {
 		accessToken := ctx.getRowMap(i, accessTokens)
 
@@ -179,14 +178,13 @@ func (ctx *TestContext) ThereAreTheFollowingAccessTokens(accessTokens *messages.
 
 // ThereAreCountAccessTokensForUser checks if there are a given number of access tokens for a given user.
 func (ctx *TestContext) ThereAreCountAccessTokensForUser(count int, user string) error {
-	userID := ctx.getReference(user)
+	userID := ctx.getIDOrIDByReference(user)
 
 	var accessTokensCount int
-	err := ctx.db.QueryRow(`
-		SELECT COUNT(*) as count FROM access_tokens
-			JOIN sessions ON sessions.session_id = access_tokens.session_id
-		 WHERE sessions.user_id = ?`, userID).
-		Scan(&accessTokensCount)
+	err := ctx.application.Database.Table("access_tokens").
+		Joins("JOIN sessions ON sessions.session_id = access_tokens.session_id").
+		Where(`sessions.user_id = ?`, userID).
+		Count(&accessTokensCount).Error()
 	if err != nil {
 		return err
 	}
@@ -201,8 +199,7 @@ func (ctx *TestContext) ThereAreCountAccessTokensForUser(count int, user string)
 // ThereIsNoAccessToken checks that an access token doesn't exist.
 func (ctx *TestContext) ThereIsNoAccessToken(accessToken string) error {
 	var accessTokensCount int
-	err := ctx.db.QueryRow("SELECT COUNT(*) as count FROM access_tokens WHERE token = ?", accessToken).
-		Scan(&accessTokensCount)
+	err := ctx.application.Database.Table("access_tokens").Where("token = ?", accessToken).Count(&accessTokensCount).Error()
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /current-user/group-memberships-history group-memberships groupsMembershipHistory
@@ -35,6 +35,7 @@ import (
 //							 (`{from.at}` is required when `{from.group_id}` is present)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Return the first N invitations/requests
 //			in: query
@@ -52,12 +53,14 @@ import (
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) getGroupMembershipsHistory(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
-	query := srv.GetStore(r).GroupMembershipChanges().
+	query := srv.GetStore(httpRequest).GroupMembershipChanges().
 		Select(`
 			group_membership_changes.at,
 			group_membership_changes.action,
@@ -72,9 +75,9 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 		query = query.Where("group_membership_changes.at >= ?", user.NotificationsReadAt)
 	}
 
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err := service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"at":       {ColumnName: "group_membership_changes.at"},
@@ -86,14 +89,12 @@ func (srv *Service) getGroupMembershipsHistory(w http.ResponseWriter, r *http.Re
 				"at":       service.FieldTypeTime,
 			},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
-	render.Respond(w, r, convertedResult)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, convertedResult)
+	return nil
 }

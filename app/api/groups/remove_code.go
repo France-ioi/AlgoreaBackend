@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /groups/{group_id}/code groups groupCodeRemove
@@ -23,6 +23,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":
@@ -33,26 +34,26 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) removeCode(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	store := srv.GetStore(r)
-	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	store := srv.GetStore(httpRequest)
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 	service.MustNotBeError(
 		store.Groups().Where("id = ?", groupID).
 			UpdateColumn("code", nil).Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

@@ -8,10 +8,10 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // Access rights to be set
@@ -56,7 +56,6 @@ type setCanRequestHelpTo struct {
 	// The given group must be visible by both the current user and `group_id`.
 	// Can be set to `null` to set the helper group to no group.
 	// Optional
-	// Nullable
 	ID *int64 `json:"id" sql:"column:can_request_help_to"`
 	// Optional
 	IsAllUsersGroup bool `json:"is_all_users_group"`
@@ -100,14 +99,17 @@ type managerGeneratedPermissions struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: source_group_id
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: item_id
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: access rights information
 //			in: body
 //			required: true
@@ -122,38 +124,40 @@ type managerGeneratedPermissions struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) service.APIError {
-	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(r, "source_group_id")
+func (srv *Service) updatePermissions(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	sourceGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "source_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	apiErr := service.NoError
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
-		apiErr = checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s, user, sourceGroupID, groupID, itemID)
-		if apiErr != service.NoError {
-			return apiErr.Error
-		}
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(httpRequest)
+	service.MustNotBeError(err)
+
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
+		err = checkIfUserIsManagerAllowedToGrantPermissionsOnItem(store, user, sourceGroupID, groupID, itemID)
+		service.MustNotBeError(err)
 
 		// Even if we select a single row from permissions_granted,
 		// MAX() is used so that a row with the default values is returned even if no row exists.
 		var currentPermissions userPermissions
-		err = s.PermissionsGranted().
-			WithWriteLock().
+		err = store.PermissionsGranted().
+			WithExclusiveWriteLock().
 			Where("group_id = ?", groupID).
 			Where("item_id = ?", itemID).
 			Where("source_group_id = ?", sourceGroupID).
@@ -175,7 +179,7 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 		}
 
 		var managerPermissions managerGeneratedPermissions
-		err = s.Permissions().Select(`
+		err = store.Permissions().Select(`
 			MAX(can_grant_view_generated_value) AS can_grant_view_generated_value,
 			MAX(can_watch_generated_value) AS can_watch_generated_value,
 			MAX(can_edit_generated_value) AS can_edit_generated_value,
@@ -188,35 +192,29 @@ func (srv *Service) updatePermissions(w http.ResponseWriter, r *http.Request) se
 
 		var dataMap map[string]interface{}
 		var modified bool
-		dataMap, modified, apiErr = parsePermissionsInputData(s, &managerPermissions, &currentPermissions, user, groupID, r)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
+		dataMap, modified, err = parsePermissionsInputData(store, &managerPermissions, &currentPermissions, user, groupID, rawRequestData)
+		service.MustNotBeError(err)
 
 		if modified {
-			allUsersGroupID := domain.ConfigFromContext(r.Context()).AllUsersGroupID
+			allUsersGroupID := domain.ConfigFromContext(httpRequest.Context()).AllUsersGroupID
 
-			correctPermissionsDataMap(s, dataMap, &currentPermissions)
+			correctPermissionsDataMap(store, dataMap, &currentPermissions)
 			if _, ok := dataMap["is_all_users_group"]; ok {
 				delete(dataMap, "is_all_users_group")
 				dataMap["can_request_help_to"] = &allUsersGroupID
 			}
 
-			savePermissionsIntoDB(groupID, itemID, sourceGroupID, dataMap, s)
+			savePermissionsIntoDB(groupID, itemID, sourceGroupID, dataMap, store)
 		}
 		return nil
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
 
-	response := service.Response{Success: true, Message: "updated"}
-	render.Respond(w, r, &response)
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
+	render.Respond(responseWriter, httpRequest, &response)
 
-	return service.NoError
+	return nil
 }
 
 func registerOptionalValidator(data *formdata.FormData, tag, message string, validatorFunc func(fl validator.FieldLevel) bool) {
@@ -225,27 +223,27 @@ func registerOptionalValidator(data *formdata.FormData, tag, message string, val
 }
 
 func parsePermissionsInputData(
-	s *database.DataStore,
+	store *database.DataStore,
 	managerPermissions *managerGeneratedPermissions,
 	currentPermissions *userPermissions,
 	user *database.User,
 	groupID int64,
-	r *http.Request,
+	rawRequestData map[string]interface{},
 ) (
-	dataMap map[string]interface{}, modified bool, apiError service.APIError,
+	dataMap map[string]interface{}, modified bool, err error,
 ) {
 	data := formdata.NewFormData(&updatePermissionsInput{})
-	modifiedPtr := registerPermissionsValidators(s, managerPermissions, currentPermissions, user, groupID, data)
+	modifiedPtr := registerPermissionsValidators(store, managerPermissions, currentPermissions, user, groupID, data)
 
-	err := data.ParseJSONRequestData(r)
+	err = data.ParseMapData(rawRequestData)
 	if err != nil {
 		return nil, false, service.ErrInvalidRequest(err)
 	}
-	return data.ConstructMapForDB(), *modifiedPtr, service.NoError
+	return data.ConstructMapForDB(), *modifiedPtr, nil
 }
 
 func registerPermissionsValidators(
-	s *database.DataStore,
+	store *database.DataStore,
 	managerPermissions *managerGeneratedPermissions,
 	currentPermissions *userPermissions,
 	user *database.User,
@@ -254,17 +252,17 @@ func registerPermissionsValidators(
 ) *bool {
 	var modified bool
 	registerIsOwnerValidator(data, managerPermissions, currentPermissions, &modified)
-	registerCanViewValidator(data, managerPermissions, currentPermissions, &modified, s)
-	registerCanGrantViewValidator(data, managerPermissions, currentPermissions, &modified, s)
-	registerCanWatchValidator(data, managerPermissions, currentPermissions, &modified, s)
-	registerCanEditValidator(data, managerPermissions, currentPermissions, &modified, s)
-	registerCanMakeSessionOfficialValidator(data, managerPermissions, currentPermissions, &modified, s)
-	registerCanEnterFromValidator(data, managerPermissions, currentPermissions, &modified, s)
-	registerCanEnterUntilValidator(data, managerPermissions, currentPermissions, &modified, s)
+	registerCanViewValidator(data, managerPermissions, currentPermissions, &modified, store)
+	registerCanGrantViewValidator(data, managerPermissions, currentPermissions, &modified, store)
+	registerCanWatchValidator(data, managerPermissions, currentPermissions, &modified, store)
+	registerCanEditValidator(data, managerPermissions, currentPermissions, &modified, store)
+	registerCanMakeSessionOfficialValidator(data, managerPermissions, currentPermissions, &modified, store)
+	registerCanEnterFromValidator(data, managerPermissions, currentPermissions, &modified, store)
+	registerCanEnterUntilValidator(data, managerPermissions, currentPermissions, &modified, store)
 	registerCanRequestHelpToSetValidator(data, currentPermissions, &modified)
 	registerCanRequestHelpToConsistentValidator(data)
-	registerCanRequestHelpToVisibleValidator(data, currentPermissions, user, groupID, s)
-	registerCanRequestHelpToCanGrantViewContent(data, managerPermissions, s)
+	registerCanRequestHelpToVisibleValidator(data, currentPermissions, user, groupID, store)
+	registerCanRequestHelpToCanGrantViewContent(data, managerPermissions, store)
 	return &modified
 }
 
@@ -284,14 +282,14 @@ func registerIsOwnerValidator(data *formdata.FormData, managerPermissions *manag
 }
 
 func registerCanViewValidator(data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore,
+	modified *bool, store *database.DataStore,
 ) {
 	registerOptionalValidator(data, "can_view", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
-		if !checkIfPossibleToModifyCanView(newValue, currentPermissions, managerPermissions, s) {
+		if !checkIfPossibleToModifyCanView(newValue, currentPermissions, managerPermissions, store) {
 			return false
 		}
-		newValueIndex := s.PermissionsGranted().ViewIndexByName(newValue)
+		newValueIndex := store.PermissionsGranted().ViewIndexByName(newValue)
 		if currentPermissions.CanViewValue != newValueIndex {
 			currentPermissions.CanViewValue = newValueIndex
 			*modified = true
@@ -302,14 +300,14 @@ func registerCanViewValidator(data *formdata.FormData, managerPermissions *manag
 
 func registerCanGrantViewValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore,
+	modified *bool, store *database.DataStore,
 ) {
 	registerOptionalValidator(data, "can_grant_view", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
-		if !checkIfPossibleToModifyCanGrantView(newValue, currentPermissions, managerPermissions, s) {
+		if !checkIfPossibleToModifyCanGrantView(newValue, currentPermissions, managerPermissions, store) {
 			return false
 		}
-		newValueIndex := s.PermissionsGranted().GrantViewIndexByName(newValue)
+		newValueIndex := store.PermissionsGranted().GrantViewIndexByName(newValue)
 		if currentPermissions.CanGrantViewValue != newValueIndex {
 			currentPermissions.CanGrantViewValue = newValueIndex
 			*modified = true
@@ -320,14 +318,14 @@ func registerCanGrantViewValidator(
 
 func registerCanWatchValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore,
+	modified *bool, store *database.DataStore,
 ) {
 	registerOptionalValidator(data, "can_watch", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
-		if !checkIfPossibleToModifyCanWatch(newValue, currentPermissions, managerPermissions, s) {
+		if !checkIfPossibleToModifyCanWatch(newValue, currentPermissions, managerPermissions, store) {
 			return false
 		}
-		newValueIndex := s.PermissionsGranted().WatchIndexByName(newValue)
+		newValueIndex := store.PermissionsGranted().WatchIndexByName(newValue)
 		if currentPermissions.CanWatchValue != newValueIndex {
 			currentPermissions.CanWatchValue = newValueIndex
 			*modified = true
@@ -338,14 +336,14 @@ func registerCanWatchValidator(
 
 func registerCanEditValidator(
 	data *formdata.FormData, managerPermissions *managerGeneratedPermissions, currentPermissions *userPermissions,
-	modified *bool, s *database.DataStore,
+	modified *bool, store *database.DataStore,
 ) {
 	registerOptionalValidator(data, "can_edit", "the value is not permitted", func(fl validator.FieldLevel) bool {
 		newValue := fl.Field().String()
-		if !checkIfPossibleToModifyCanEdit(newValue, currentPermissions, managerPermissions, s) {
+		if !checkIfPossibleToModifyCanEdit(newValue, currentPermissions, managerPermissions, store) {
 			return false
 		}
-		newValueIndex := s.PermissionsGranted().EditIndexByName(newValue)
+		newValueIndex := store.PermissionsGranted().EditIndexByName(newValue)
 		if currentPermissions.CanEditValue != newValueIndex {
 			currentPermissions.CanEditValue = newValueIndex
 			*modified = true
@@ -439,7 +437,7 @@ func registerCanRequestHelpToVisibleValidator(
 	currentPermissions *userPermissions,
 	user *database.User,
 	groupID int64,
-	s *database.DataStore,
+	store *database.DataStore,
 ) {
 	registerOptionalValidator(
 		data,
@@ -464,7 +462,7 @@ func registerCanRequestHelpToVisibleValidator(
 				//   and is therefore visible too.
 				// - It is managed by the receiving group, or an ancestor of a managed group.
 				//   In this case only, can_request_help_to might not be visible by the current-user.
-				if !s.Groups().IsVisibleFor(*value.ID, user) || !s.Groups().IsVisibleForGroup(*value.ID, groupID) {
+				if !store.Groups().IsVisibleFor(*value.ID, user) || !store.Groups().IsVisibleForGroup(*value.ID, groupID) {
 					return false
 				}
 			}
@@ -476,16 +474,16 @@ func registerCanRequestHelpToVisibleValidator(
 func registerCanRequestHelpToCanGrantViewContent(
 	data *formdata.FormData,
 	managerPermissions *managerGeneratedPermissions,
-	s *database.DataStore,
+	store *database.DataStore,
 ) {
 	registerOptionalValidator(
 		data,
 		"can_request_help_to_can_grant_view_content",
 		"the current user doesn't have the right to update can_request_help_to",
-		func(fl validator.FieldLevel) bool {
+		func(_ validator.FieldLevel) bool {
 			// The current user must have can_grant_view >= content.
 
-			return managerPermissions.CanGrantViewGeneratedValue >= s.PermissionsGranted().GrantViewIndexByName(content)
+			return managerPermissions.CanGrantViewGeneratedValue >= store.PermissionsGranted().GrantViewIndexByName(content)
 		})
 }
 
@@ -510,28 +508,28 @@ const (
 	content           = "content"
 	solution          = "solution"
 	solutionWithGrant = "solution_with_grant"
-	answer            = "answer" //nolint:unused
+	answer            = "answer"
 	answerWithGrant   = "answer_with_grant"
 	allWithGrant      = "all_with_grant"
 )
 
-func checkIfUserIsManagerAllowedToGrantPermissionsOnItem(s *database.DataStore, user *database.User,
+func checkIfUserIsManagerAllowedToGrantPermissionsOnItem(store *database.DataStore, user *database.User,
 	sourceGroupID, groupID, itemID int64,
-) service.APIError {
-	apiError := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(s, user, sourceGroupID, groupID)
-	if apiError != service.NoError {
-		return apiError
+) error {
+	err := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(store, user, sourceGroupID, groupID)
+	if err != nil {
+		return err
 	}
 
-	return checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(s, groupID, itemID)
+	return checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(store, groupID, itemID)
 }
 
 func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
-	s *database.DataStore, user *database.User, sourceGroupID, groupID int64,
-) service.APIError {
+	store *database.DataStore, user *database.User, sourceGroupID, groupID int64,
+) error {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
 	// the 'sourceGroupID' should be an ancestor of 'groupID'
-	found, err := s.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
+	found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
 		Where("groups.type != 'User'").
 		Joins(`
 				JOIN groups_ancestors_active AS descendants
@@ -540,14 +538,14 @@ func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
-	return service.NoError
+	return nil
 }
 
-func checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(s *database.DataStore, groupID, itemID int64) service.APIError {
+func checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(store *database.DataStore, groupID, itemID int64) error {
 	// at least one of the item's parents should be visible to the group
-	found, err := s.Permissions().MatchingGroupAncestors(groupID).
+	found, err := store.Permissions().MatchingGroupAncestors(groupID).
 		WherePermissionIsAtLeast("view", info).
 		Joins("JOIN items_items ON items_items.parent_item_id = permissions.item_id").
 		Where("items_items.child_item_id = ?", itemID).
@@ -555,22 +553,22 @@ func checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(s *database.DataSt
 	service.MustNotBeError(err)
 	if !found {
 		// if not, the item itself should be visible to the group
-		found, err = s.Permissions().MatchingGroupAncestors(groupID).WherePermissionIsAtLeast("view", info).
+		found, err = store.Permissions().MatchingGroupAncestors(groupID).WherePermissionIsAtLeast("view", info).
 			Where("item_id = ?", itemID).HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			// if not, the item should be a root item for one of the group's ancestors
-			found, err = s.Groups().
+			found, err = store.Groups().
 				Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups.id").
 				Where("groups_ancestors_active.child_group_id = ?", groupID).
 				Where("root_activity_id = ? OR root_skill_id = ?", itemID, itemID).HasRows()
 			service.MustNotBeError(err)
 			if !found {
-				return service.InsufficientAccessRightsError
+				return service.ErrAPIInsufficientAccessRights
 			}
 		}
 	}
-	return service.NoError
+	return nil
 }
 
 func checkIfPossibleToModifyCanView(viewPermissionToSet string, currentPermissions *userPermissions,
@@ -713,7 +711,7 @@ func correctPermissionsDataMap(store *database.DataStore, dataMap map[string]int
 	}
 }
 
-func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, s *database.DataStore) {
+func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, store *database.DataStore) {
 	dbMap["latest_update_at"] = database.Now()
 
 	columnsToUpdate := make([]string, 0, len(dbMap))
@@ -726,12 +724,12 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 	dbMap["source_group_id"] = sourceGroupID
 	dbMap["origin"] = "group_membership"
 
-	permissionGrantedStore := s.PermissionsGranted()
-	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate))
-	s.SchedulePermissionsPropagation()
+	permissionGrantedStore := store.PermissionsGranted()
+	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate, nil))
+	store.SchedulePermissionsPropagation()
 	if dbMap["can_view"] != nil && dbMap["can_view"] != none || dbMap["is_owner"] != nil && dbMap["is_owner"].(bool) {
-		// permissionGrantedStore.After() implicitly (via triggers) marks some attempts as to_be_propagated
-		// when an item becomes visible, so we should propagate attempts here
-		s.ScheduleResultsPropagation()
+		// the permissions propagation implicitly (via triggers) marks some results as to_be_propagated
+		// when an item becomes visible, so we should propagate results here
+		store.ScheduleResultsPropagation()
 	}
 }

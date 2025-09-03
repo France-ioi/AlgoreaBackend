@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /groups/{parent_group_id}/relations/{child_group_id} group-memberships groupAddChild
@@ -31,10 +31,12 @@ import (
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: child_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"201":
@@ -47,14 +49,16 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.APIError {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+func (srv *Service) addChild(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	childGroupID, err := service.ResolveURLQueryPathInt64Field(r, "child_group_id")
+	childGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "child_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -63,29 +67,21 @@ func (srv *Service) addChild(w http.ResponseWriter, r *http.Request) service.API
 		return service.ErrInvalidRequest(errors.New("a group cannot become its own parent"))
 	}
 
-	user := srv.GetUser(r)
-	apiErr := service.NoError
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(s *database.DataStore) error {
 		var errInTransaction error
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
+		service.MustNotBeError(checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, createRelation))
 
 		errInTransaction = s.GroupGroups().CreateRelation(parentGroupID, childGroupID)
-		if errInTransaction == database.ErrRelationCycle {
-			apiErr = service.ErrForbidden(errInTransaction)
+		if errors.Is(errInTransaction, database.ErrRelationCycle) {
+			return service.ErrForbidden(errInTransaction) // rollback
 		}
 		return errInTransaction
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(nil)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess[*struct{}](nil)))
 
-	return service.NoError
+	return nil
 }

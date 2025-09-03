@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model
@@ -30,23 +30,25 @@ type userDataUpdateRequest struct {
 //			"$ref": "#/responses/updatedResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) update(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) update(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
 	var requestData userDataUpdateRequest
 	formData := formdata.NewFormData(&requestData)
-	err := formData.ParseJSONRequestData(r)
+	err := formData.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	// the user middleware has already checked that the user exists so we just ignore the case where nothing is updated
-	service.MustNotBeError(srv.GetStore(r).Users().ByID(user.GroupID).UpdateColumn(requestData).Error())
+	service.MustNotBeError(srv.GetStore(httpRequest).Users().ByID(user.GroupID).UpdateColumn(requestData).Error())
 
-	response := service.Response{Success: true, Message: "updated"}
-	render.Respond(w, r, &response)
+	response := service.Response[*struct{}]{Success: true, Message: "updated"}
+	render.Respond(responseWriter, httpRequest, &response)
 
-	return service.NoError
+	return nil
 }

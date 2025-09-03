@@ -8,8 +8,8 @@ import (
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
@@ -23,9 +23,9 @@ func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
 		return &database.User{GroupID: 123}
 	})
 	defer patch.Unpatch()
-	request, _ := http.NewRequest("GET", "", http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, "", http.NoBody)
 	result := srv.getInfo(nil, request)
-	assert.Equal(t, service.InsufficientAccessRightsError, result)
+	assert.Equal(t, service.ErrAPIInsufficientAccessRights, result)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

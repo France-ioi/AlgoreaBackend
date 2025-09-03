@@ -78,19 +78,19 @@ func (u *User) CanViewItemInfo(s *DataStore, itemID int64) bool {
 }
 
 // CanRequestHelpTo checks whether the user can request help on an item to a group.
-func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool {
+func (u *User) CanRequestHelpTo(store *DataStore, itemID, helperGroupID int64) bool {
 	// in order to verify that the user “can request help to” a group on an item, we need to verify whether
 	// one of the ancestors (including himself) of User has the can_request_help_to(Group) on Item,
 	// recursively on Item’s ancestors while request_help_propagation=1, for each Group being a descendant of Group.
 	// additionally, if the user owns the item, he can request help to any group.
 
-	if u.IsItemOwner(s, itemID) {
+	if u.IsItemOwner(store, itemID) {
 		return true
 	}
 
-	itemAncestorsRequestHelpPropagationQuery := s.Items().GetAncestorsRequestHelpPropagatedQuery(itemID)
+	itemAncestorsRequestHelpPropagationQuery := store.Items().GetAncestorsRequestHelpPropagationQuery(itemID)
 
-	canRequestHelpTo, err := s.Users().
+	canRequestHelpTo, err := store.Users().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = ?", u.GroupID).
 		Joins(`JOIN permissions_granted ON
 			permissions_granted.group_id = groups_ancestors_active.ancestor_group_id AND
@@ -106,18 +106,18 @@ func (u *User) CanRequestHelpTo(s *DataStore, itemID, helperGroupID int64) bool 
 	return canRequestHelpTo
 }
 
-// GetManagedGroupsWithCanGrantGroupAccessIds retrieves all group ids that the user manages and for which
+// GetManagedGroupsWithCanGrantGroupAccessIDs retrieves all group ids that the user manages and for which
 // he can_grant_group_access.
-func (u *User) GetManagedGroupsWithCanGrantGroupAccessIds(store *DataStore) []int64 {
-	var managedGroupsWithCanGrantGroupAccessIds []int64
+func (u *User) GetManagedGroupsWithCanGrantGroupAccessIDs(store *DataStore) []int64 {
+	var managedGroupsWithCanGrantGroupAccessIDs []int64
 
 	store.ActiveGroupAncestors().ManagedByUser(u).
 		Group("groups_ancestors_active.child_group_id").
 		Having("MAX(group_managers.can_grant_group_access)").
 		Select("groups_ancestors_active.child_group_id AS id").
-		Pluck("id", &managedGroupsWithCanGrantGroupAccessIds)
+		Pluck("id", &managedGroupsWithCanGrantGroupAccessIDs)
 
-	return managedGroupsWithCanGrantGroupAccessIds
+	return managedGroupsWithCanGrantGroupAccessIDs
 }
 
 // CanWatchGroupMembers checks whether the user can watch a group / a participant.
@@ -137,24 +137,12 @@ func (u *User) CanWatchGroupMembers(s *DataStore, groupID int64) bool {
 func (u *User) HasStartedResultOnItem(s *DataStore, itemID int64) bool {
 	hasStartedResultOntem, err := s.Items().
 		Where("items.id = ?", itemID).
-		WhereUserHaveStartedResultOnItem(u).
+		WhereItemHasResultStartedByUser(u).
 		Limit(1).
 		HasRows()
 	mustNotBeError(err)
 
 	return hasStartedResultOntem
-}
-
-// HasValidatedItem checks whether the user has validated an item.
-func (u *User) HasValidatedItem(s *DataStore, itemID int64) bool {
-	hasValidatedItem, err := s.Results().
-		Where("results.item_id = ?", itemID).
-		Where("results.validated").
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-
-	return hasValidatedItem
 }
 
 // IsMemberOfGroupOrSelf checks whether the user is a member of a group, or is the group.
@@ -180,24 +168,4 @@ func (u *User) IsMemberOfGroupOrSelf(s *DataStore, groupID int64) bool {
 //     participantID should be equal to the user's self group
 func (u *User) CanSeeAnswer(s *DataStore, participantID, itemID int64) bool {
 	return u.CanViewItemContent(s, itemID) && u.IsMemberOfGroupOrSelf(s, participantID)
-}
-
-// CanEditProfile checks whether the user can edit the profile of another user.
-// The user needs to:
-//  1. be a manager of a group of which the target user is a member, and
-//  2. the group must have `require_personal_info_access_approval` set to `edit`.
-func (u *User) CanEditProfile(s *DataStore, targetUserID int64) bool {
-	userCanEditProfile, err := s.ActiveGroupAncestors().
-		ManagedByUser(u).
-		Joins(`JOIN groups_ancestors AS target_user_group_ancestor
-									 ON target_user_group_ancestor.ancestor_group_id = groups_ancestors_active.child_group_id AND
-											target_user_group_ancestor.child_group_id = ?`, targetUserID).
-		Joins("JOIN `groups` AS target_user_group ON target_user_group.id = target_user_group_ancestor.ancestor_group_id").
-		Where("target_user_group.require_personal_info_access_approval = 'edit'").
-		Select("1").
-		Limit(1).
-		HasRows()
-	mustNotBeError(err)
-
-	return userCanEditProfile
 }

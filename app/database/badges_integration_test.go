@@ -3,15 +3,23 @@
 package database_test
 
 import (
+	"math"
+	"reflect"
 	"testing"
+	_ "unsafe"
 
+	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestGroupStore_StoreBadges(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name                            string
 		fixture                         string
@@ -41,7 +49,6 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				groups: [{id: 1, text_id: abc}]
 				groups_groups: [{parent_group_id: 1, child_group_id: 5}]
 				groups_ancestors:
-					- {ancestor_group_id: 1, child_group_id: 1}
 					- {ancestor_group_id: 1, child_group_id: 5}`,
 			existingGroups:      []int64{1},
 			existingGroupGroups: [][2]int64{{1, 5}},
@@ -60,7 +67,6 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			userID: 5,
 			fixture: `
 				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]
 				group_managers: [{manager_id: 5, group_id: 1}]`,
 			existingGroups:        []int64{1},
 			existingGroupManagers: [][2]int64{{5, 1}},
@@ -77,8 +83,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			},
 			userID: 5,
 			fixture: `
-				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc}]`,
 			existingGroups:     []int64{1},
 			shouldMakeMemberOf: []string{"abc"},
 		},
@@ -95,8 +100,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			userID:  5,
 			newUser: true,
 			fixture: `
-				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc}]`,
 			existingGroups:     []int64{1},
 			shouldMakeMemberOf: []string{"abc"},
 		},
@@ -113,8 +117,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			},
 			userID: 5,
 			fixture: `
-				groups: [{id: 1, text_id: abc}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc}]`,
 			existingGroups:      []int64{1},
 			shouldMakeManagerOf: []string{"abc"},
 		},
@@ -131,8 +134,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			},
 			userID: 5,
 			fixture: `
-				groups: [{id: 1, text_id: def}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: def}]`,
 			existingGroups:                  []int64{1},
 			shouldCreateBadgeGroupsForURLs:  []string{"abc"},
 			shouldMakeManagerOf:             []string{"abc"},
@@ -206,8 +208,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				},
 			},
 			fixture: `
-				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]`,
 			existingGroups: []int64{1},
 			userID:         5,
 		},
@@ -222,8 +223,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				},
 			},
 			fixture: `
-				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}]`,
+				groups: [{id: 1, text_id: abc, require_personal_info_access_approval: edit}]`,
 			existingGroups:                  []int64{1},
 			shouldCreateBadgeGroupsForURLs:  []string{"def"},
 			shouldMakeMemberOf:              []string{"def"},
@@ -265,8 +265,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				},
 			},
 			fixture: `
-				groups: [{id: 1, text_id: ghi}, {id: 2, text_id: jkl}]
-				groups_ancestors: [{ancestor_group_id: 1, child_group_id: 1}, {ancestor_group_id: 2, child_group_id: 2}]`,
+				groups: [{id: 1, text_id: ghi}, {id: 2, text_id: jkl}]`,
 			userID:                          5,
 			existingGroups:                  []int64{1, 2},
 			shouldCreateBadgeGroupsForURLs:  []string{"abc"},
@@ -274,30 +273,31 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 			shouldCreateBadgeGroupRelations: [][2]string{{"ghi", "abc"}},
 		},
 	}
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(`
+			testoutput.SuppressIfPasses(t)
+
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				groups: [{id: 5}]
-				users: [{group_id: 5}]
-				groups_ancestors:
-					- {ancestor_group_id: 5, child_group_id: 5}` + tt.fixture)
+				users: [{group_id: 5}]`+tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			err := store.InTransaction(func(store *database.DataStore) error {
 				return store.Groups().StoreBadges(tt.badges, tt.userID, tt.newUser)
 			})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			knownBadgeGroups := make(map[string]int64)
 			expectedGroups := append([]int64{5}, tt.existingGroups...)
 			for _, url := range tt.shouldCreateBadgeGroupsForURLs {
 				var groupID int64
-				assert.NoError(t, store.Groups().Where("text_id = ? and type='Other'", url).PluckFirst("id", &groupID).Error(),
+				require.NoError(t, store.Groups().Where("text_id = ? and type='Other'", url).PluckFirst("id", &groupID).Error(),
 					"a group for badge '%s' should have been created", url)
 				var found bool
 				found, err = store.ActiveGroupAncestors().Where("ancestor_group_id = ? and child_group_id = ?", groupID, groupID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found)
 				expectedGroups = append(expectedGroups, groupID)
 				knownBadgeGroups[url] = groupID
@@ -317,7 +317,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 					Where("can_manage = 'memberships'").
 					Where("can_grant_group_access").
 					Where("can_watch_members").HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the user should have become a manager of badge '%s'", url)
 				expectedGroupManagers = append(expectedGroupManagers, tt.userID, groupID)
 			}
@@ -337,12 +337,12 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				found, err = store.ActiveGroupGroups().
 					Where("parent_group_id = ?", groupID).
 					Where("child_group_id = ?", tt.userID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the user should have become a member of badge '%s'", url)
 				found, err = store.ActiveGroupAncestors().
 					Where("ancestor_group_id = ?", groupID).
 					Where("child_group_id = ?", tt.userID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the user should have become a descendant of badge '%s'", url)
 				expectedGroupsGroups = append(expectedGroupsGroups, groupID, tt.userID)
 			}
@@ -354,18 +354,18 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 				found, err = store.ActiveGroupGroups().
 					Where("parent_group_id = ?", parentGroupID).
 					Where("child_group_id = ?", childGroupID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the badge '%s' should have become a subgroup of badge '%s'", childBadgeURL, parentBadgeURL)
 				found, err = store.ActiveGroupAncestors().
 					Where("ancestor_group_id = ?", parentGroupID).
 					Where("child_group_id = ?", childGroupID).HasRows()
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.True(t, found, "the badge '%s' should have become a descendant of badge '%s'", childBadgeURL, parentBadgeURL)
 				expectedGroupsGroups = append(expectedGroupsGroups, parentGroupID, childGroupID)
 			}
 
 			found, err := store.Groups().Where("id NOT IN(?)", expectedGroups).HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, found, "some unexpected groups have been created")
 
 			groupManagersQuery := store.GroupManagers().DB
@@ -374,7 +374,7 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 					expectedGroupManagers[index], expectedGroupManagers[index+1])
 			}
 			found, err = groupManagersQuery.HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, found, "some unexpected group_managers have been created")
 
 			groupsGroupsQuery := store.GroupGroups().DB
@@ -383,22 +383,21 @@ func TestGroupStore_StoreBadges(t *testing.T) {
 					expectedGroupsGroups[index], expectedGroupsGroups[index+1])
 			}
 			found, err = groupsGroupsQuery.HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.False(t, found, "some unexpected groups_groups have been created")
 		})
 	}
 }
 
 func TestGroupStore_StoreBadge_PropagatesResults(t *testing.T) {
-	db := testhelpers.SetupDBWithFixtureString(`
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 				groups: [{id: 1, text_id: badge_url}, {id: 5}, {id: 6}]
 				users: [{group_id: 5, login: john}, {group_id: 6, login: jane}]
 				groups_groups: [{parent_group_id: 1, child_group_id: 5}]
 				groups_ancestors:
-					- {ancestor_group_id: 1, child_group_id: 1}
 					- {ancestor_group_id: 1, child_group_id: 5}
-					- {ancestor_group_id: 5, child_group_id: 5}
-					- {ancestor_group_id: 6, child_group_id: 6}
 				items: [{id: 100, default_language_tag: fr}, {id: 101, default_language_tag: fr}]
 				items_items: [{parent_item_id: 100, child_item_id: 101, child_order: 1}]
 				items_ancestors: [{ancestor_item_id: 100, child_item_id: 101}]
@@ -415,27 +414,49 @@ func TestGroupStore_StoreBadge_PropagatesResults(t *testing.T) {
 	err := store.InTransaction(func(store *database.DataStore) error {
 		return store.Groups().StoreBadges([]database.Badge{{URL: "badge_url"}}, 6, false)
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	found, err := store.Table("results_propagate").HasRows()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, found)
 
 	var score float32
-	assert.NoError(t, store.Results().ByID(6, 1, 100).
+	require.NoError(t, store.Results().ByID(6, 1, 100).
 		PluckFirst("score_computed", &score).Error())
-	assert.Equal(t, float32(10), score)
+	assert.InDelta(t, float32(10), score, math.SmallestNonzeroFloat32)
 }
 
 func getGroupIDByBadgeURL(store *database.DataStore, url string, knownBadgeGroups map[string]int64) int64 {
-	if id, ok := knownBadgeGroups[url]; ok {
-		return id
+	if groupID, ok := knownBadgeGroups[url]; ok {
+		return groupID
 	}
-	var id int64
-	err := store.Groups().Where("text_id = ?", url).PluckFirst("id", &id).Error()
+	var groupID int64
+	err := store.Groups().Where("text_id = ?", url).PluckFirst("id", &groupID).Error()
 	if err != nil {
 		panic(err)
 	}
-	knownBadgeGroups[url] = id
-	return id
+	knownBadgeGroups[url] = groupID
+	return groupID
 }
+
+func TestGroupStore_createBadgeGroup_Duplicate(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
+		groups: [{id: 1, text_id: badge_url}]`)
+	defer func() { _ = db.Close() }()
+	groupStore := database.NewDataStore(db).Groups()
+
+	var nextID int64
+	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(_ *database.DataStore) int64 {
+		nextID++
+		return nextID
+	})
+	defer monkey.UnpatchAll()
+
+	newID := groupStoreCreateBadgeGroup(groupStore, "url", "name")
+	assert.Equal(t, int64(2), newID)
+}
+
+//go:linkname groupStoreCreateBadgeGroup github.com/France-ioi/AlgoreaBackend/v2/app/database.(*GroupStore).createBadgeGroup
+func groupStoreCreateBadgeGroup(store *database.GroupStore, badgeURL, badgeName string) int64

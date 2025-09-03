@@ -7,10 +7,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /user-batches/{group_prefix}/{custom_prefix} groups userBatchRemove
@@ -61,16 +61,18 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"422":
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupPrefix := chi.URLParam(r, "group_prefix")
-	customPrefix := chi.URLParam(r, "custom_prefix")
+func (srv *Service) removeUserBatch(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupPrefix := chi.URLParam(httpRequest, "group_prefix")
+	customPrefix := chi.URLParam(httpRequest, "custom_prefix")
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	managedByUser := store.ActiveGroupAncestors().ManagedByUser(user).
 		Where("can_manage != 'none'").
 		Select("groups_ancestors_active.child_group_id AS id")
@@ -85,7 +87,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	// There should not be users with locked membership in the groups the current user cannot manage
@@ -100,7 +102,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 		HasRows()
 	service.MustNotBeError(err)
 	if found {
-		logging.Warnf(
+		logging.EntryFromContext(httpRequest.Context()).Warnf(
 			"User with group_id = %d failed to delete a user batch because of locked membership (group_prefix = '%s', custom_prefix = '%s')",
 			user.GroupID, groupPrefix, customPrefix)
 		return service.ErrUnprocessableEntity(errors.New("there are users with locked membership"))
@@ -108,7 +110,7 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 
 	result, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
 		DeleteUsers(
-			r.Context(),
+			httpRequest.Context(),
 			srv.AuthConfig.GetString("clientID"),
 			srv.AuthConfig.GetString("clientSecret"),
 			groupPrefix+"_"+customPrefix+"_",
@@ -120,12 +122,12 @@ func (srv *Service) removeUserBatch(w http.ResponseWriter, r *http.Request) serv
 	}
 	service.MustNotBeError(store.Users().DeleteWithTrapsByScope(func(store *database.DataStore) *database.DB {
 		return store.Users().Where("login LIKE CONCAT(?, '\\_', ?, '\\_%')", groupPrefix, customPrefix)
-	}))
+	}, false))
 	service.MustNotBeError(
 		store.UserBatches().
 			Where("group_prefix = ?", groupPrefix).
 			Where("custom_prefix = ?", customPrefix).Delete().Error())
 
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

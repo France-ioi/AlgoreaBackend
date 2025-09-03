@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 func TestRenderGroupGroupTransitionResult(t *testing.T) {
@@ -116,11 +116,11 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 		for _, action := range tt.actions {
 			action := action
 			t.Run(tt.name+": "+string(action), func(t *testing.T) {
-				var fn service.AppHandler = func(respW http.ResponseWriter, req *http.Request) service.APIError {
+				var fn service.AppHandler = func(respW http.ResponseWriter, req *http.Request) error {
 					return RenderGroupGroupTransitionResult(respW, req, tt.result, tt.approvalsToRequest, action)
 				}
 				handler := http.HandlerFunc(fn.ServeHTTP)
-				req, _ := http.NewRequest("GET", "/dummy", http.NoBody)
+				req, _ := http.NewRequest(http.MethodGet, "/dummy", http.NoBody)
 				recorder := httptest.NewRecorder()
 				handler.ServeHTTP(recorder, req)
 

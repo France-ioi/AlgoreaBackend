@@ -2,24 +2,23 @@
 package app
 
 import (
-	crand "crypto/rand"
-	"encoding/binary"
+	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/api"
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	_ "github.com/France-ioi/AlgoreaBackend/app/doc" // for doc generation
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	_ "github.com/France-ioi/AlgoreaBackend/v2/app/doc" // for doc generation
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
 )
 
 // Application is the core state of the app.
@@ -31,27 +30,21 @@ type Application struct {
 }
 
 // New configures application resources and routes.
-func New() (*Application, error) {
+// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
+func New(loggerOptional ...*logging.Logger) (*Application, error) {
 	// Getting all configs, they will be used to init components and to be passed
 	config := LoadConfig()
 	application := &Application{}
 
-	var b [8]byte
-	_, err := crand.Read(b[:])
-	if err != nil {
-		panic("cannot seed the randomizer")
-	}
-	// Init the PRNG with a random value
-	rand.Seed(int64(binary.LittleEndian.Uint64(b[:])))
-
-	if err := application.Reset(config); err != nil {
+	if err := application.Reset(config, loggerOptional...); err != nil {
 		return nil, err
 	}
 	return application, nil
 }
 
 // Reset reinitializes the application with the given config.
-func (app *Application) Reset(config *viper.Viper) error {
+// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
+func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Logger) error {
 	dbConfig, err := DBConfig(config)
 	if err != nil {
 		return fmt.Errorf("unable to load the 'database' configuration: %w", err)
@@ -68,14 +61,22 @@ func (app *Application) Reset(config *viper.Viper) error {
 	}
 	serverConfig := ServerConfig(config)
 
-	// Apply the config to the global logger
-	logging.SharedLogger.Configure(loggingConfig)
+	logger := resolveOrCreateLogger(loggingConfig, loggerOptional)
 
 	// Init DB
-	db, err := database.Open(dbConfig.FormatDSN())
+	if dbConfig.Params == nil {
+		dbConfig.Params = make(map[string]string, 1)
+	}
+	dbConfig.Params["charset"] = "utf8mb4"
+	ctx := logging.ContextWithLogger(context.Background(), logger)
+	db, err := database.Open(ctx, dbConfig.FormatDSN())
 	if err != nil {
-		logging.WithField("module", "database").Error(err)
+		logger.WithContext(ctx).WithField("module", "database").Error(err)
 		return err
+	}
+
+	if serverConfig.GetBool("disableResultsPropagation") {
+		database.ProhibitResultsPropagation(db)
 	}
 
 	// Set up responder.
@@ -83,6 +84,13 @@ func (app *Application) Reset(config *viper.Viper) error {
 
 	// Set up middlewares
 	router := chi.NewRouter()
+
+	router.Use(logging.ContextWithLoggerMiddleware(logger))
+	router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			next.ServeHTTP(w, r.WithContext(database.NewDataStore(app.Database).MergeContext(r.Context())))
+		})
+	})
 
 	router.Use(version.AddVersionHeader)
 
@@ -113,4 +121,13 @@ func (app *Application) Reset(config *viper.Viper) error {
 	app.Database = db
 	app.apiCtx = apiCtx
 	return nil
+}
+
+func resolveOrCreateLogger(loggingConfig *viper.Viper, loggerOptional []*logging.Logger) (logger *logging.Logger) {
+	if len(loggerOptional) > 0 && loggerOptional[0] != nil {
+		logger = loggerOptional[0]
+	} else {
+		logger = logging.NewLoggerFromConfig(loggingConfig)
+	}
+	return logger
 }

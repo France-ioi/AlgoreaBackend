@@ -7,9 +7,11 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type validationDateResultRow struct {
@@ -34,7 +36,9 @@ func constructExpectedResultsForValidatedAtTests(t11, t12, t13, t14, t23, t24 *t
 }
 
 func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValidatedAts(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -60,10 +64,9 @@ func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValid
 		UpdateColumn("validated_at", skippedDate).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var result []validationDateResultRow
 	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
@@ -75,7 +78,9 @@ func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValid
 func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren(
 	t *testing.T,
 ) {
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -92,10 +97,9 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 			Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var result []validationDateResultRow
 	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
@@ -106,7 +110,9 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategoriesAreNotValidated(
 	t *testing.T,
 ) {
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -125,10 +131,9 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 		UpdateColumn("category", "Validation").Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var result []validationDateResultRow
 	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
@@ -139,7 +144,9 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithCategoryValidation_IfAllAreValidated(
 	t *testing.T,
 ) {
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -163,10 +170,9 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 		UpdateColumn("category", "Validation").Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var result []validationDateResultRow
 	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
@@ -177,7 +183,9 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems(
 	t *testing.T,
 ) {
-	db := testhelpers.SetupDBWithFixture("results_propagation/_common", "results_propagation/validated_at")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/_common", "results_propagation/validated_at")
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
@@ -187,30 +195,29 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 	oldDatePlusOneDay := oldDate.Add(24 * time.Hour)
 
 	itemStore := database.NewDataStore(db).Items()
-	assert.NoError(t, resultStore.Where("item_id = 3 AND participant_id = 101 AND attempt_id = 1").
+	require.NoError(t, resultStore.Where("item_id = 3 AND participant_id = 101 AND attempt_id = 1").
 		UpdateColumn("validated_at", oldDate).Error())
-	assert.NoError(t, resultStore.Where("item_id = 4 AND participant_id = 101 AND attempt_id = 1").
+	require.NoError(t, resultStore.Where("item_id = 4 AND participant_id = 101 AND attempt_id = 1").
 		UpdateColumn("validated_at", oldDate).Error())
-	assert.NoError(t, resultStore.Where("item_id = 3 AND participant_id = 101 AND attempt_id = 2").
+	require.NoError(t, resultStore.Where("item_id = 3 AND participant_id = 101 AND attempt_id = 2").
 		UpdateColumn("validated_at", oldDatePlusOneDay).Error()) // should be ignored
-	assert.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
+	require.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
 		UpdateColumn("validated_at", expectedDate).Error())
-	assert.NoError(t, itemStore.Where("id=2").UpdateColumn("validation_type", "Categories").Error())
-	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (1, 3, 4)").
+	require.NoError(t, itemStore.Where("id=2").UpdateColumn("validation_type", "Categories").Error())
+	require.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (1, 3, 4)").
 		UpdateColumn("category", "Validation").Error())
 
-	assert.NoError(t, itemStore.Where("id=1").Updates(map[string]interface{}{
+	require.NoError(t, itemStore.Where("id=1").UpdateColumn(map[string]interface{}{
 		"type": "Task",
 	}).Error())
-	assert.NoError(t, itemStore.Where("id=3").Updates(map[string]interface{}{
+	require.NoError(t, itemStore.Where("id=3").UpdateColumn(map[string]interface{}{
 		"no_score": true,
 	}).Error())
 
 	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		s.ScheduleResultsPropagation()
-		return nil
+		return s.Results().Propagate()
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var result []validationDateResultRow
 	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")

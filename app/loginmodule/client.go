@@ -9,17 +9,18 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"runtime"
 	"strconv"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
+
+const oneMegabyte = 1 << 20
 
 // A Client is the login module client.
 type Client struct {
@@ -32,20 +33,23 @@ func NewClient(loginModuleURL string) *Client {
 }
 
 // GetUserProfile returns a user profile for given access token.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise GetUserProfile will panic on logging.
 func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile map[string]interface{}, err error) {
 	defer recoverPanics(&err)
 
-	request, err := http.NewRequest("GET", client.url+"/user_api/account", http.NoBody)
+	request, err := http.NewRequest(http.MethodGet, client.url+"/user_api/account", http.NoBody)
 	mustNotBeError(err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
 	request = request.WithContext(ctx)
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
-	body, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
+	body, err := io.ReadAll(io.LimitReader(response.Body, oneMegabyte))
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
+		logging.EntryFromContext(ctx).
+			Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
 		return nil, fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode)
 	}
 	var decoded map[string]interface{}
@@ -53,13 +57,15 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 	decoder.UseNumber()
 	err = decoder.Decode(&decoded)
 	if err != nil {
-		logging.Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
+		logging.EntryFromContext(ctx).
+			Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
 		return nil, errors.New("can't parse user's profile")
 	}
 
 	profile, err = convertUserProfile(decoded)
 	if err != nil {
-		logging.Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
+		logging.EntryFromContext(ctx).
+			Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
 		return nil, errors.New("user's profile is invalid")
 	}
 	return profile, nil
@@ -83,6 +89,8 @@ type CreateUsersResponseDataRow struct {
 }
 
 // CreateUsers creates a batch of users in the login module.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise CreateUsers will panic on logging.
 func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey string,
 	params *CreateUsersParams,
 ) (bool, []CreateUsersResponseDataRow, error) {
@@ -118,6 +126,8 @@ func (client *Client) CreateUsers(ctx context.Context, clientID, clientKey strin
 }
 
 // DeleteUsers deletes users specified by the given login prefix from the login module.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise DeleteUsers will panic on logging.
 func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, loginPrefix string) (bool, error) {
 	params := map[string]string{
 		"prefix": loginPrefix,
@@ -131,6 +141,8 @@ func (client *Client) DeleteUsers(ctx context.Context, clientID, clientKey, logi
 }
 
 // UnlinkClient discards our client authorization for the login module user.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise UnlinkClient will panic on logging.
 func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey string, userLoginID int64) (bool, error) {
 	response, err := client.requestAccountsManagerAndDecode(ctx, "/platform_api/accounts_manager/unlink_client",
 		map[string]string{"user_id": strconv.FormatInt(userLoginID, 10)}, clientID, clientKey)
@@ -141,6 +153,8 @@ func (client *Client) UnlinkClient(ctx context.Context, clientID, clientKey stri
 }
 
 // SendLTIResult sends item score to LTI.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise SendLTIResult will panic on logging.
 func (client *Client) SendLTIResult(
 	ctx context.Context, clientID, clientKey string, userLoginID, itemID int64, score float32,
 ) (bool, error) {
@@ -174,18 +188,19 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 
 	params, err := EncodeBody(requestParams, clientID, clientKey)
 
-	request, err := http.NewRequest("POST", apiURL.String(), bytes.NewBuffer(params))
+	request, err := http.NewRequest(http.MethodPost, apiURL.String(), bytes.NewBuffer(params))
 	mustNotBeError(err)
 	request = request.WithContext(ctx)
 	request.Header.Add("Content-Type", "application/json")
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
-	responseBody, err := ioutil.ReadAll(io.LimitReader(response.Body, 1<<20)) // 1Mb
+	responseBody, err := io.ReadAll(io.LimitReader(response.Body, oneMegabyte))
 	_ = response.Body.Close()
 	mustNotBeError(err)
 	if response.StatusCode != http.StatusOK {
-		logging.Warnf("Login module returned a bad status code for %s (status code = %d, response = %q)",
-			urlPath, response.StatusCode, responseBody)
+		logging.EntryFromContext(ctx).
+			Warnf("Login module returned a bad status code for %s (status code = %d, response = %q)",
+				urlPath, response.StatusCode, responseBody)
 		panic(errors.New("bad response code"))
 	}
 
@@ -193,8 +208,9 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	n, err := base64.StdEncoding.Decode(decodedBody, responseBody)
 	decodedBody = decodedBody[0:n]
 	if err != nil {
-		logging.Warnf("Can't decode response from the login module for %s (status code = %d, response = %q): %s",
-			urlPath, response.StatusCode, responseBody, err)
+		logging.EntryFromContext(ctx).
+			Warnf("Can't decode response from the login module for %s (status code = %d, response = %q): %s",
+				urlPath, response.StatusCode, responseBody, err)
 		panic(err)
 	}
 	decryptedBody := decryptAes128Ecb(decodedBody, []byte(clientKey)[:16]) // note that only the first 16 bytes are used
@@ -202,12 +218,14 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 	decoder.UseNumber()
 	err = decoder.Decode(&decodedResponse)
 	if err != nil {
-		logging.Warnf("Can't parse response from the login module for %s (decrypted response = %q, encrypted response = %q): %s",
-			urlPath, decryptedBody, decodedBody, err)
+		logging.EntryFromContext(ctx).
+			Warnf("Can't parse response from the login module for %s (decrypted response = %q, encrypted response = %q): %s",
+				urlPath, decryptedBody, decodedBody, err)
 		panic(err)
 	}
 	if !decodedResponse.Success {
-		logging.Warnf("The login module returned an error for %s: %s", urlPath, decodedResponse.Error)
+		logging.EntryFromContext(ctx).
+			Warnf("The login module returned an error for %s: %s", urlPath, decodedResponse.Error)
 	}
 	return decodedResponse, nil
 }
@@ -215,11 +233,9 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 // EncodeBody forms a request body with the given parameters for the login module: `{"client_id": ..., "data": _encoded_}`.
 func EncodeBody(requestParams map[string]string, clientID, clientKey string) (result []byte, err error) {
 	defer recoverPanics(&err)
-	paramsJSON, err := json.Marshal(requestParams)
-	mustNotBeError(err)
+	paramsJSON, _ := json.Marshal(requestParams)
 	encodedParams := Encode(paramsJSON, clientKey)
-	params, err := json.Marshal(map[string]string{"client_id": clientID, "data": encodedParams})
-	mustNotBeError(err)
+	params, _ := json.Marshal(map[string]string{"client_id": clientID, "data": encodedParams})
 	return params, err
 }
 
@@ -230,6 +246,7 @@ func Encode(data []byte, clientKey string) string {
 }
 
 func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {
+	//nolint:mnd // we are going to add two fields: public_first_name and public_last_name
 	dest := make(map[string]interface{}, len(source)+2)
 	/*
 	 We ignore fields: birthday_year, client_id, created_at, creator_client_id,
@@ -303,7 +320,7 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 
 	err := convertBadges(source, dest)
 	if err != nil {
-		return nil, fmt.Errorf("invalid badges data")
+		return nil, errors.New("invalid badges data")
 	}
 
 	return dest, nil
@@ -348,7 +365,9 @@ func mustNotBeError(err error) {
 	}
 }
 
-func recoverPanics(returnErr *error) { // nolint:gocritic
+func recoverPanics(
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
+) {
 	if p := recover(); p != nil {
 		switch e := p.(type) {
 		case runtime.Error:

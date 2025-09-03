@@ -8,11 +8,11 @@ import (
 )
 
 func TestConfigFromContext(t *testing.T) {
-	expectedConfig := &CtxConfig{AllUsersGroupID: 101, TempUsersGroupID: 103}
+	expectedConfig := &CtxConfig{AllUsersGroupID: 101, NonTempUsersGroupID: 102, TempUsersGroupID: 103}
 	ctx := context.WithValue(context.Background(), ctxDomainConfig, expectedConfig)
 	conf := ConfigFromContext(ctx)
 
-	assert.False(t, expectedConfig == conf)
+	assert.NotSame(t, expectedConfig, conf)
 	assert.EqualValues(t, expectedConfig, conf)
 }
 

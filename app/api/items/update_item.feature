@@ -1,54 +1,53 @@
 Feature: Update item
 Background:
-  Given the database has the following table 'groups':
+  Given the database has the following table "groups":
     | id | name | type |
     | 10 | Club | Club |
-    | 11 | jdoe | User |
-  And the database has the following table 'users':
-    | login | temp_user | group_id |
-    | jdoe  | 0         | 11       |
-  And the database has the following table 'items':
+  And the database has the following user:
+    | group_id | login |
+    | 11       | jdoe  |
+  And the database has the following table "items":
     | id | type    | url                  | options   | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
     | 21 | Chapter | http://someurl1.com/ | {"opt":1} | en                   | 1        | Task1   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
     | 50 | Chapter | http://someurl2.com/ | {"opt":2} | en                   | 1        | Task2   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
     | 60 | Chapter | http://someurl2.com/ | {"opt":2} | en                   | 1        | Task3   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
     | 70 | Skill   | http://someurl3.com/ | {"opt":3} | en                   | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
-  And the database has the following table 'items_items':
+  And the database has the following table "items_items":
     | parent_item_id | child_item_id | child_order |
     | 21             | 60            | 0           |
     | 50             | 21            | 0           |
-  And the database has the following table 'items_ancestors':
+  And the database has the following table "items_ancestors":
     | ancestor_item_id | child_item_id |
     | 21               | 60            |
     | 50               | 21            |
     | 50               | 60            |
-  And the database has the following table 'permissions_generated':
+  And the database has the following table "permissions_generated":
     | group_id | item_id | can_view_generated       | can_grant_view_generated | can_edit_generated | is_owner_generated |
     | 10       | 50      | content_with_descendants | solution_with_grant      | all                | true               |
     | 11       | 21      | content                  | none                     | children           | false              |
     | 11       | 50      | none                     | none                     | none               | false              |
     | 11       | 60      | solution                 | solution_with_grant      | all_with_grant     | true               |
     | 11       | 70      | content                  | solution_with_grant      | all_with_grant     | true               |
-  And the database has the following table 'permissions_granted':
+  And the database has the following table "permissions_granted":
     | group_id | item_id | can_view | is_owner | source_group_id | latest_update_at    |
     | 10       | 50      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 21      | content  | false    | 11              | 2019-05-30 11:00:00 |
     | 11       | 50      | none     | false    | 11              | 2019-05-30 11:00:00 |
     | 11       | 60      | none     | true     | 11              | 2019-05-30 11:00:00 |
     | 11       | 70      | none     | true     | 11              | 2019-05-30 11:00:00 |
-  And the database has the following table 'groups_groups':
+  And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 10              | 11             |
   And the groups ancestors are computed
-  And the database has the following table 'attempts':
+  And the database has the following table "attempts":
     | id | participant_id |
     | 0  | 11             |
-  And the database has the following table 'results':
+  And the database has the following table "results":
     | attempt_id | participant_id | item_id | score_computed |
-    | 0          | 11             | 21      | 0              |
+    | 0          | 11             | 21      | 1              |
     | 0          | 11             | 50      | 10             |
     | 0          | 11             | 70      | 20             |
-  And the database has the following table 'languages':
+  And the database has the following table "languages":
     | tag |
     | en  |
     | sl  |
@@ -63,16 +62,16 @@ Background:
       }
       """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "50"
+    And the table "items" should remain unchanged, regardless of the row with id "50"
     And the table "items" at id "50" should be:
       | id | type    | url                  | options   | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
       | 50 | Chapter | http://someurl3.com/ | {"opt":3} | en                   | 1        | Task2   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
 
   Scenario: Valid (set nullable fields to null)
     Given I am the user with id "11"
@@ -83,35 +82,35 @@ Background:
       }
       """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "50"
+    And the table "items" should remain unchanged, regardless of the row with id "50"
     And the table "items" at id "50" should be:
       | id | type    | url  | options | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
       | 50 | Chapter | null | null    | en                   | 1        | null    | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | null     | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
 
   Scenario: Valid (all the fields are set)
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
       | 134 | fr                   |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | language_tag | item_id |
       | sl           | 50      |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
       | 11       | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
-    And the database table 'results' has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 112     | 50             |
       | 0          | 11             | 134     | 60             |
@@ -147,11 +146,11 @@ Background:
       }
       """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "50"
+    And the table "items" should remain unchanged, regardless of the row with id "50"
     And the table "items" at id "50" should be:
       | id | type    | url               | options      | default_language_tag | entry_frozen_teams | no_score | text_id     | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
       | 50 | Chapter | http://myurl.com/ | {"opt":true} | sl                   | 1                  | 0        | Tasknumber1 | 1                 | 0                         | 1        | 0         | forceYes    | Grid            | 0             | 0           | AllButOne       | All                              | 1                  | 2345                | 0                        | 01:02:03 | 1                       | 0               | 0                            | 5577006791947779410   |
-    And the table "items_strings" should stay unchanged
+    And the table "items_strings" should remain unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 60            | Undefined   | 1            | none                     | use_content_view_propagation  | 0                      | 0                 | 0                |
@@ -179,7 +178,9 @@ Background:
       | 5577006791947779410 | 50      | content  | none           | none      | none     | false    | 5577006791947779410 | 1                                                       |
     And the table "permissions_generated" should be:
       | group_id            | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
+      | 10                  | 21      | none               | none                     | none                | none               | false              |
       | 10                  | 50      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
+      | 10                  | 60      | none               | none                     | none                | none               | false              |
       | 10                  | 112     | info               | none                     | none                | none               | false              |
       | 10                  | 134     | solution           | solution                 | answer              | all                | false              |
       | 11                  | 21      | content            | none                     | none                | none               | false              |
@@ -191,8 +192,8 @@ Background:
       | 5577006791947779410 | 50      | content            | none                     | none                | none               | false              |
       | 5577006791947779410 | 112     | info               | none                     | none                | none               | false              |
       | 5577006791947779410 | 134     | info               | none                     | none                | none               | false              |
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged, regardless of the row with item_id "50"
     And the table "results" at item_id "50" should be:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 50      | 56.666668      |
@@ -200,22 +201,22 @@ Background:
 
   Scenario: Valid (with skill items)
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag | type    |
       | 112 | fr                   | Skill   |
       | 134 | fr                   | Chapter |
-    And the database has the following table 'items_strings':
+    And the database has the following table "items_strings":
       | language_tag | item_id |
       | sl           | 50      |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
       | 11       | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
       | 11       | 134     | none     | none           | none      | none     | true     | 11              | 2019-05-30 11:00:00 |
-    And the database table 'results' has also the following rows:
+    And the database table "results" also has the following rows:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 112     | 50             |
       | 0          | 11             | 134     | 60             |
@@ -229,11 +230,11 @@ Background:
       }
       """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "70"
+    And the table "items" should remain unchanged, regardless of the row with id "70"
     And the table "items" at id "70" should be:
       | id | type  | url                  | options   | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
       | 70 | Skill | http://someurl3.com/ | {"opt":3} | en                   | 0                  | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | 1234                  |
-    And the table "items_strings" should stay unchanged
+    And the table "items_strings" should remain unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 60            | Undefined   | 1            | none                     | use_content_view_propagation  | 0                      | 0                 | 0                |
@@ -251,7 +252,7 @@ Background:
       | id | type | name |
       | 10 | Club | Club |
       | 11 | User | jdoe |
-    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_granted" should remain unchanged
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 10       | 21      | none               | none                     | none                | none               | false              |
@@ -263,8 +264,8 @@ Background:
       | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
       | 11       | 134     | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "70"
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged, regardless of the row with item_id "70"
     And the table "results" at item_id "70" should be:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 70      | 56.666668      |
@@ -272,13 +273,13 @@ Background:
 
   Scenario: Should set content_view_propagation to 'none' by default if can_grant_view = 'none' for the parent item
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | can_grant_view | can_watch | can_edit | is_owner | source_group_id | latest_update_at    |
       | 11       | 112     | solution | content        | answer    | all      | false    | 11              | 2019-05-30 11:00:00 |
     When I send a PUT request to "/items/21" with the following body:
@@ -290,8 +291,8 @@ Background:
       }
       """
     Then the response should be "updated"
-    And the table "items" should stay unchanged
-    And the table "items_strings" should stay unchanged
+    And the table "items" should remain unchanged
+    And the table "items_strings" should remain unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 112           | Undefined | 1            | as_info                  | use_content_view_propagation  | 0                      | 0                 | 0                |
@@ -305,7 +306,7 @@ Background:
       | id | type | name |
       | 10 | Club | Club |
       | 11 | User | jdoe |
-    And the table "permissions_granted" should stay unchanged
+    And the table "permissions_granted" should remain unchanged
     And the table "permissions_generated" should be:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 10       | 21      | none               | none                     | none                | none               | false              |
@@ -316,10 +317,11 @@ Background:
       | 11       | 60      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 70      | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | true               |
       | 11       | 112     | solution           | content                  | answer              | all                | false              |
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "50"
-    And the table "results" at item_id "50" should be:
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged, regardless of the rows with item_ids "21,50"
+    And the table "results" at item_ids "21,50" should be:
       | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 21      | 0              |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
 
@@ -331,12 +333,12 @@ Background:
     }
     """
     Then the response should be "updated"
-    And the table "items" should stay unchanged
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
+    And the table "items" should remain unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
 
   Scenario: Valid with empty children array
     Given I am the user with id "11"
@@ -347,20 +349,21 @@ Background:
     }
     """
     Then the response should be "updated"
-    And the table "items" should stay unchanged
-    And the table "items_strings" should stay unchanged
+    And the table "items" should remain unchanged
+    And the table "items_strings" should remain unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id |
       | 50             | 21            |
     And the table "items_ancestors" should be:
       | ancestor_item_id | child_item_id |
       | 50               | 21            |
-    And the table "groups" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "50"
-    And the table "results" at item_id "50" should be:
+    And the table "groups" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged, regardless of the rows with item_ids "21,50"
+    And the table "results" at item_ids "21,50" should be:
       | attempt_id | participant_id | item_id | score_computed |
+      | 0          | 11             | 21      | 0              |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
 
@@ -374,15 +377,15 @@ Background:
     }
     """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "60"
+    And the table "items" should remain unchanged, regardless of the row with id "60"
     And the table "items" at id "60" should be:
       | id | duration | requires_explicit_entry | participants_group_id |
       | 60 | null     | false                   | 1234                  |
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
     When I send a PUT request to "/items/60" with the following body:
     """
     {
@@ -390,11 +393,11 @@ Background:
     }
     """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "60"
+    And the table "items" should remain unchanged, regardless of the row with id "60"
     And the table "items" at id "60" should be:
       | id | duration | requires_explicit_entry | participants_group_id |
       | 60 | null     | true                    | 1234                  |
-    And the table "groups" should stay unchanged
+    And the table "groups" should remain unchanged
 
   Scenario: Recomputes results if no_score is given
     Given I am the user with id "11"
@@ -405,17 +408,17 @@ Background:
     }
     """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "50"
+    And the table "items" should remain unchanged, regardless of the row with id "50"
     And the table "items" at id "50" should be:
       | id | no_score |
       | 50 | false    |
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "items_strings" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged, regardless of the row with item_id "50"
     And the table "results" at item_id "50" should be:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 50      | 0              |
@@ -430,17 +433,17 @@ Background:
     }
     """
     Then the response should be "updated"
-    And the table "items" should stay unchanged but the row with id "50"
+    And the table "items" should remain unchanged, regardless of the row with id "50"
     And the table "items" at id "50" should be:
       | id | validation_type |
       | 50 | All             |
-    And the table "items_strings" should stay unchanged
-    And the table "items_items" should stay unchanged
-    And the table "items_ancestors" should stay unchanged
-    And the table "groups" should stay unchanged
-    And the table "permissions_granted" should stay unchanged
-    And the table "attempts" should stay unchanged
-    And the table "results" should stay unchanged but the row with item_id "50"
+    And the table "items_strings" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged, regardless of the row with item_id "50"
     And the table "results" at item_id "50" should be:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 50      | 0              |
@@ -448,13 +451,13 @@ Background:
 
   Scenario Outline: Sets default values of items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly for each can_grant_view
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | can_grant_view_generated |
       | 11       | 112     | info               | <can_grant_view>         |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_view | can_grant_view   | source_group_id |
       | 11       | 112     | info     | <can_grant_view> | 11              |
     When I send a PUT request to "/items/21" with the following body:
@@ -478,10 +481,10 @@ Background:
 
   Scenario Outline: Sets default values of items_items.watch_propagation/edit_propagation correctly
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated | <parent_permission_column> |
       | 11       | 112     | info               | <parent_permission_value>  |
     When I send a PUT request to "/items/21" with the following body:
@@ -507,10 +510,10 @@ Background:
 
   Scenario Outline: Sets items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 11       | 112     | info               | <can_grant_view>         | none                | none               | 0                  |
     When I send a PUT request to "/items/21" with the following body:
@@ -562,10 +565,10 @@ Background:
 
   Scenario Outline: Sets items_items.watch_propagation/edit_propagation correctly
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated | <parent_permission_column> |
       | 11       | 112     | info               | <parent_permission_value>  |
     When I send a PUT request to "/items/21" with the following body:
@@ -597,7 +600,7 @@ Background:
 
   Scenario: Sets items_items.request_help_propagation correctly
     Given I am the user with id "11"
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag |
       | 112 | fr                   |
       | 113 | fr                   |
@@ -615,7 +618,7 @@ Background:
       | 125 | fr                   |
       | 126 | fr                   |
       | 127 | fr                   |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_grant_view_generated | can_view_generated |
       | 11       | 112     | content                  | content            |
       | 11       | 113     | content                  | content            |
@@ -719,13 +722,13 @@ Background:
 
   Scenario Outline: Allows setting items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation/watch_propagation/edit_propagation to the same of a lower value
     Given I am the user with id "11"
-    And the database table 'items' has also the following rows:
+    And the database table "items" also has the following rows:
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table 'items_items' has also the following rows:
+    And the database table "items_items" also has the following rows:
       | parent_item_id | child_item_id | child_order | <field_name> |
       | 21             | 112           | 1           | <old_value>  |
-    And the database table 'permissions_generated' has also the following row:
+    And the database table "permissions_generated" also has the following row:
       | group_id | item_id | can_view_generated |
       | 11       | 112     | info               |
     When I send a PUT request to "/items/21" with the following body:
@@ -755,10 +758,10 @@ Background:
 
   Scenario: Allows keeping old values in items_items
     Given I am the user with id "11"
-    And the database table 'items' has also the following rows:
+    And the database table "items" also has the following rows:
       | id  | default_language_tag |
       | 112 | fr                   |
-    And the database table 'items_items' has also the following rows:
+    And the database table "items_items" also has the following rows:
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 112           | 1           | Challenge | 2            | as_content               | as_is                         | true                   | true              | true             |
     When I send a PUT request to "/items/21" with the following body:

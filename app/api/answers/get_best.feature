@@ -1,45 +1,41 @@
 Feature: Get a current answer
 Background:
-  Given the database has the following table 'groups':
+  Given the database has the following table "groups":
     | id  | name         | type  |
-    | 11  | jdoe         | User  |
-    | 12  | jdoenoanswer | User  |
     | 13  | Team         | Team  |
     | 14  | Group B      | Class |
     | 15  | TeamNoAnswer | Team     |
-    | 21  | manager      | User  |
     | 23  | Group C      | Class |
-    | 100 | top          | User  |
-  And the database has the following table 'users':
-    | login        | group_id | first_name   | last_name |
-    | jdoe         | 11       | John         | Doe       |
-    | jdoenoanswer | 12       | JohnNoAnswer | Doe       |
-    | manager      | 21       | Man          | Ager      |
-    | top          | 100      | Top          | Score     |
-  And the database has the following table 'groups_groups':
+  And the database has the following users:
+    | group_id | login        | first_name   | last_name |
+    | 11       | jdoe         | John         | Doe       |
+    | 12       | jdoenoanswer | JohnNoAnswer | Doe       |
+    | 21       | manager      | Man          | Ager      |
+    | 100      | top          | Top          | Score     |
+  And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 14              | 11             |
     | 13              | 21             |
     | 15              | 21             |
     | 23              | 21             |
   And the groups ancestors are computed
-  And the database has the following table 'group_managers':
+  And the database has the following table "group_managers":
     | group_id | manager_id | can_watch_members |
     | 13       | 21         | true              |
     | 15       | 21         | true              |
   And the groups ancestors are computed
-  And the database has the following table 'items':
+  And the database has the following table "items":
     | id  | default_language_tag |
     | 200 | fr                   |
     | 210 | fr                   |
-  And the database has the following table 'permissions_generated':
+  And the database has the following table "permissions_generated":
     | group_id | item_id | can_view_generated       | can_watch_generated |
     | 12       | 200     | content                  | answer              |
     | 13       | 200     | content                  | answer              |
     | 14       | 200     | content                  | none                |
     | 15       | 200     | content                  | answer              |
     | 23       | 210     | content_with_descendants | answer              |
-  And the database has the following table 'results':
+  And the database has the following table "results":
     | attempt_id | participant_id | item_id |
     | 1          | 11             | 200     |
     | 2          | 11             | 200     |
@@ -49,7 +45,7 @@ Background:
     | 1          | 13             | 210     |
     | 1          | 11             | 210     |
     | 1          | 100            | 210     |
-  And the database has the following table 'answers':
+  And the database has the following table "answers":
     | id  | author_id | participant_id | attempt_id | item_id | type       | state    | answer    | created_at          |
     | 101 | 11        | 11             | 1          | 200     | Submission | State101 | print(1)  | 2020-01-01 06:00:00 |
     | 102 | 11        | 11             | 2          | 200     | Submission | State102 | print(2)  | 2020-01-01 07:00:00 |
@@ -62,7 +58,7 @@ Background:
     | 109 | 11        | 11             | 1          | 210     | Submission | State109 | print(9)  | 2020-01-01 14:00:00 |
     | 110 | 100       | 100            | 1          | 200     | Submission | State110 | print(10) | 2020-01-01 15:00:00 |
     | 111 | 100       | 100            | 1          | 210     | Submission | State111 | print(11) | 2020-01-01 16:00:00 |
-  And the database has the following table 'gradings':
+  And the database has the following table "gradings":
     | answer_id | score | graded_at           |
     | 101       | 91    | 2020-01-01 06:00:01 |
     | 102       | 97    | 2020-01-01 07:00:01 |

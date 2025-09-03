@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /items/{dependent_item_id}/prerequisites/{prerequisite_item_id}/apply items itemDependencyApply
@@ -46,39 +46,38 @@ import (
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
+func (srv *Service) applyDependency(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "prerequisite_item_id")
+	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "prerequisite_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
+	user := srv.GetUser(httpRequest)
 
-	apiError := service.NoError
-	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.ItemDependencies().
 			Where("dependent_item_id = ?", dependentItemID).
 			Where("item_id = ?", prerequisiteItemID).
-			Where("grant_content_view").WithWriteLock().HasRows()
+			Where("grant_content_view").WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.ErrNotFound(errors.New("no such dependency"))
-			return apiError.Error // rollback
+			return service.ErrNotFound(errors.New("no such dependency")) // rollback
 		}
 		found, err = store.Permissions().AggregatedPermissionsForItemsOnWhichGroupHasPermission(user.GroupID, "edit", "all").
 			HavingMaxPermissionAtLeast("grant_view", "content").
-			Where("item_id = ?", dependentItemID).WithWriteLock().HasRows()
+			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		canViewContentIndex := store.PermissionsGranted().ViewIndexByName("content")
 		result := store.Exec(`
@@ -122,12 +121,9 @@ func (srv *Service) applyDependency(rw http.ResponseWriter, httpReq *http.Reques
 		return err
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.UpdateSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
+	return nil
 }

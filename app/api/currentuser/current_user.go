@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // Service is the mount point for services related to `currentuser`.
@@ -74,18 +74,19 @@ const (
 
 const team = "Team"
 
-func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Request, action userGroupRelationAction) service.APIError {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) performGroupRelationAction(
+	responseWriter http.ResponseWriter, httpRequest *http.Request, action userGroupRelationAction,
+) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	apiError := service.NoError
 	var result database.GroupGroupTransitionResult
 	var approvalsToRequest database.GroupApprovals
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		if action == leaveGroupAction {
 			var found bool
 			found, err = store.Groups().ByID(groupID).
@@ -98,8 +99,7 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 					groups.frozen_membership OR groups.type = 'Base'`).HasRows()
 			service.MustNotBeError(err)
 			if found {
-				apiError = service.ErrForbidden(errors.New("user deletion is locked for this group"))
-				return apiError.Error // rollback
+				return service.ErrForbidden(errors.New("user deletion is locked for this group")) // rollback
 			}
 		}
 
@@ -114,43 +114,34 @@ func (srv *Service) performGroupRelationAction(w http.ResponseWriter, r *http.Re
 				Where("NOW() < require_lock_membership_approval_until AND NOT groups.frozen_membership").HasRows()
 			service.MustNotBeError(err)
 			if !found {
-				apiError = service.ErrForbidden(
+				return service.ErrForbidden(
 					errors.New(
-						"user is not a member of the group or the group doesn't require approval for leaving or its membership is frozen"))
-				return apiError.Error // rollback
+						"user is not a member of the group or the group doesn't require approval for leaving or its membership is frozen")) // rollback
 			}
 		}
 
 		var approvals database.GroupApprovals
 		if map[userGroupRelationAction]bool{createGroupJoinRequestAction: true, acceptInvitationAction: true}[action] {
 			if user.IsTempUser {
-				apiError = service.InsufficientAccessRightsError
-				return apiError.Error // rollback
+				return service.ErrAPIInsufficientAccessRights // rollback
 			}
 
-			approvals.FromString(r.URL.Query().Get("approvals"))
+			approvals.FromString(httpRequest.URL.Query().Get("approvals"))
 		}
 
-		apiError, result, approvalsToRequest = performUserGroupRelationAction(action, store, user, groupID, approvals)
-		if apiError != service.NoError {
-			return apiError.Error // rollback
-		}
-		return nil
+		result, approvalsToRequest, err = performUserGroupRelationAction(action, store, user, groupID, approvals)
+		return err
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
-	return RenderGroupGroupTransitionResult(w, r, result, approvalsToRequest, action)
+	return RenderGroupGroupTransitionResult(responseWriter, httpRequest, result, approvalsToRequest, action)
 }
 
 func performUserGroupRelationAction(action userGroupRelationAction, store *database.DataStore, user *database.User,
 	groupID int64, approvals database.GroupApprovals,
-) (service.APIError, database.GroupGroupTransitionResult, database.GroupApprovals) {
+) (database.GroupGroupTransitionResult, database.GroupApprovals, error) {
 	var err error
-	apiError := service.NoError
 
 	if action == createGroupJoinRequestAction {
 		var found bool
@@ -163,21 +154,21 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 	if map[userGroupRelationAction]bool{
 		createGroupJoinRequestAction: true, acceptInvitationAction: true, createAcceptedGroupJoinRequestAction: true,
 	}[action] {
-		apiError = checkPreconditionsForGroupRequests(store, user, groupID, action)
-		if apiError != service.NoError {
-			return apiError, "", database.GroupApprovals{}
+		err = checkPreconditionsForGroupRequests(store, user, groupID, action)
+		if err != nil {
+			return "", database.GroupApprovals{}, err
 		}
 	}
 	if action == leaveGroupAction {
 		var groupType string
 		groupStore := store.Groups()
-		service.MustNotBeError(groupStore.ByID(groupID).WithWriteLock().PluckFirst("type", &groupType).Error())
+		service.MustNotBeError(groupStore.ByID(groupID).WithExclusiveWriteLock().PluckFirst("type", &groupType).Error())
 		if groupType == team {
 			var ok bool
 			ok, err = groupStore.CheckIfEntryConditionsStillSatisfiedForAllActiveParticipations(groupID, user.GroupID, true, true)
 			service.MustNotBeError(err)
 			if !ok {
-				return service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied")), "", database.GroupApprovals{}
+				return "", database.GroupApprovals{}, service.ErrUnprocessableEntity(errors.New("entry conditions would not be satisfied"))
 			}
 		}
 	}
@@ -195,15 +186,15 @@ func performUserGroupRelationAction(action userGroupRelationAction, store *datab
 			createGroupLeaveRequestAction:        database.UserCreatesLeaveRequest,
 		}[action], groupID, []int64{user.GroupID}, map[int64]database.GroupApprovals{user.GroupID: approvals}, user.GroupID)
 	service.MustNotBeError(err)
-	return apiError, results[user.GroupID], approvalsToRequest[user.GroupID]
+	return results[user.GroupID], approvalsToRequest[user.GroupID], nil
 }
 
 func checkPreconditionsForGroupRequests(store *database.DataStore, user *database.User,
 	groupID int64, action userGroupRelationAction,
-) service.APIError {
+) error {
 	// The group should exist (and optionally should have `is_public` = 1)
 	query := store.Groups().ByID(groupID).
-		Where("type != 'User'").Select("type, frozen_membership").WithWriteLock()
+		Where("type != 'User'").Select("type, frozen_membership").WithExclusiveWriteLock()
 	if action == createGroupJoinRequestAction {
 		query = query.Where("is_public")
 	}
@@ -213,7 +204,7 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	}
 	err := query.Take(&groupInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -222,7 +213,7 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 	}
 
 	// If the group is a team, ensure that the current user is not a member of
-	// another team having attempts for the same contests.
+	// another team having attempts for the same item requiring explicit entry.
 	if groupInfo.Type == team {
 		found, err := store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(groupID, user.GroupID, true)
 		service.MustNotBeError(err)
@@ -237,5 +228,5 @@ func checkPreconditionsForGroupRequests(store *database.DataStore, user *databas
 		}
 	}
 
-	return service.NoError
+	return nil
 }

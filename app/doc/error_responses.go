@@ -46,6 +46,14 @@ type notFoundResponse struct {
 	Body struct{ notFound }
 }
 
+// Request Timeout. The request sent from the client takes a longer time to be processed
+// than how long the server was prepared to wait.
+// swagger:response requestTimeoutResponse
+type requestTimeoutResponse struct {
+	// in: body
+	Body struct{ requestTimeout }
+}
+
 // Unprocessable Entity. Returned by services performing groups relations transitions to indicate
 // that the transition is impossible.
 // swagger:response unprocessableEntityResponse

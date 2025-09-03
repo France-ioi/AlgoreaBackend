@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // resultUpdateRequest is the expected input for result updating
@@ -60,44 +60,42 @@ type resultUpdateRequest struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateResult(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
 
-	itemID, err := service.ResolveURLQueryPathInt64Field(r, "item_id")
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+	attemptID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	participantID := service.ParticipantIDFromContext(r.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
 	input := resultUpdateRequest{}
 	formData := formdata.NewFormData(&input)
+	err = formData.ParseJSONRequestData(httpRequest)
+	if err != nil {
+		return service.ErrInvalidRequest(err)
+	}
 
-	apiError := service.NoError
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		resultScope := store.Results().
 			Where("participant_id = ?", participantID).
 			Where("attempt_id = ?", attemptID).
 			Where("item_id = ?", itemID)
 		var found bool
-		found, err = resultScope.WithWriteLock().HasRows()
+		found, err = resultScope.WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
-		}
-
-		err = formData.ParseJSONRequestData(r)
-		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		data := formData.ConstructMapForDB()
@@ -106,11 +104,8 @@ func (srv *Service) updateResult(w http.ResponseWriter, r *http.Request) service
 		}
 		return nil
 	})
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
+	return nil
 }

@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation POST /attempts/{attempt_id}/end items itemAttemptEnd
@@ -42,10 +42,12 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.APIError {
-	attemptID, err := service.ResolveURLQueryPathInt64Field(r, "attempt_id")
+func (srv *Service) endAttempt(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	attemptID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -54,21 +56,19 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 		return service.ErrForbidden(errors.New("implicit attempts cannot be ended"))
 	}
 
-	participantID := service.ParticipantIDFromContext(r.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
-	apiError := service.NoError
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Attempts().
 			Where("participant_id = ?", participantID).
 			Where("id = ?", attemptID).
 			Where("allows_submissions_until > NOW()").
 			Where("ended_at IS NULL").
-			WithWriteLock().HasRows()
+			WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.ErrForbidden(errors.New("active attempt not found"))
-			return apiError.Error // rollback
+			return service.ErrForbidden(errors.New("active attempt not found")) // rollback
 		}
 
 		// End this and descendant attempts, expire participations
@@ -91,16 +91,11 @@ func (srv *Service) endAttempt(w http.ResponseWriter, r *http.Request) service.A
 			participantID, attemptID, participantID, participantID).
 			Error())
 
-		store.ScheduleGroupsAncestorsPropagation()
-
-		return nil
+		return store.GroupGroups().CreateNewAncestors()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
+	return nil
 }

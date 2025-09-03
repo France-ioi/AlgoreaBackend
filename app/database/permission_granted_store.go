@@ -1,6 +1,10 @@
 package database
 
-import "github.com/jinzhu/gorm"
+import (
+	"github.com/jinzhu/gorm"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+)
 
 // PermissionGrantedStore implements database operations on `permissions_granted`.
 type PermissionGrantedStore struct {
@@ -64,4 +68,8 @@ func (s *PermissionGrantedStore) EditIndexByName(name string) int {
 // EditNameByIndex returns the 'edit' permission name with the given index from 'can_edit' enum.
 func (s *PermissionGrantedStore) EditNameByIndex(index int) string {
 	return s.PermissionNameByKindAndIndex("edit", index)
+}
+
+func (s *PermissionGrantedStore) permissionsPropagateTableName() string {
+	return golang.IfElse(s.arePropagationsSync(), "permissions_propagate_sync_conn", "permissions_propagate")
 }

@@ -5,10 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/go-chi/render"
-
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 type participantMiddlewareKey int
@@ -26,17 +24,28 @@ type GetStorer interface {
 // the 'forbidden' error is returned.
 func ParticipantMiddleware(srv GetStorer) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			user := auth.UserFromContext(r.Context())
-			participantID, apiError := GetParticipantIDFromRequest(r, user, srv.GetStore(r))
-			if apiError != NoError {
-				w.Header().Set("Content-Type", "application/json; charset=utf-8")
-				_ = render.Render(w, r, apiError.httpResponse())
+		return http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+			var participantID int64
+			var failed bool
+			AppHandler(func(_ http.ResponseWriter, httpRequest *http.Request) error {
+				var err error
+				defer func() {
+					failed = err != nil
+					if p := recover(); p != nil {
+						failed = true
+						panic(p)
+					}
+				}()
+				user := auth.UserFromContext(httpRequest.Context())
+				participantID, err = GetParticipantIDFromRequest(httpRequest, user, srv.GetStore(httpRequest))
+				return err
+			}).ServeHTTP(responseWriter, httpRequest)
+			if failed {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ctxParticipant, participantID)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			ctx := context.WithValue(httpRequest.Context(), ctxParticipant, participantID)
+			next.ServeHTTP(responseWriter, httpRequest.WithContext(ctx))
 		})
 	}
 }
@@ -49,7 +58,7 @@ func ParticipantIDFromContext(ctx context.Context) int64 {
 // GetParticipantIDFromRequest returns `as_team_id` parameter value if it is given or the user's `group_id` otherwise.
 // If `as_team_id` is given, it should be an id of a team and the user should be a member of this team, otherwise
 // the 'forbidden' error is returned.
-func GetParticipantIDFromRequest(httpReq *http.Request, user *database.User, store *database.DataStore) (int64, APIError) {
+func GetParticipantIDFromRequest(httpReq *http.Request, user *database.User, store *database.DataStore) (int64, error) {
 	groupID := user.GroupID
 	var err error
 	if len(httpReq.URL.Query()["as_team_id"]) != 0 {
@@ -65,5 +74,5 @@ func GetParticipantIDFromRequest(httpReq *http.Request, user *database.User, sto
 			return 0, ErrForbidden(errors.New("can't use given as_team_id as a user's team"))
 		}
 	}
-	return groupID, NoError
+	return groupID, nil
 }

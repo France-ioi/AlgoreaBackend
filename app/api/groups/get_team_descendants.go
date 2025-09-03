@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:operation GET /groups/{group_id}/team-descendants group-memberships groupTeamDescendantView
@@ -26,10 +26,12 @@ import (
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: from.id
 //			description: Start the page from the team next to the team with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [name,id]
@@ -56,20 +58,20 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getTeamDescendants(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroup(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroup(store, user, groupID))
 
 	query := store.Groups().
 		Select("groups.id, groups.name, groups.grade").
@@ -78,9 +80,9 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 				groups_ancestors_active.ancestor_group_id != groups_ancestors_active.child_group_id AND
 				groups_ancestors_active.ancestor_group_id = ?`, groupID).
 		Where("groups.type = 'Team'")
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -89,9 +91,7 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []teamDescendant
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -147,8 +147,8 @@ func (srv *Service) getTeamDescendants(w http.ResponseWriter, r *http.Request) s
 		resultMap[membersRow.LinkedGroupID].Members = append(resultMap[membersRow.LinkedGroupID].Members, membersRow)
 	}
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
 type teamDescendantMember struct {
@@ -160,7 +160,6 @@ type teamDescendantMember struct {
 
 	// required:true
 	Login string `json:"login"`
-	// Nullable
 	// required:true
 	Grade *int32 `json:"grade"`
 
@@ -179,8 +178,8 @@ type teamDescendant struct {
 
 	// Team's parent groups among the input group's descendants
 	// required:true
-	Parents []descendantParent `sql:"-" json:"parents"`
+	Parents []descendantParent `json:"parents" sql:"-"`
 	// Team's member users
 	// required:true
-	Members []teamDescendantMember `sql:"-" json:"members"`
+	Members []teamDescendantMember `json:"members" sql:"-"`
 }

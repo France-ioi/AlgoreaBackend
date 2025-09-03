@@ -9,18 +9,19 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateKey(t *testing.T) {
 	got1, err := GenerateKey()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, got1, 32)
 	assert.Regexp(t, `^[0-9a-z]{32}$`, got1)
 
 	got2, err := GenerateKey()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, got2, 32)
 	assert.Regexp(t, `^[0-9a-z]{32}$`, got2)
 
@@ -29,7 +30,7 @@ func TestGenerateKey(t *testing.T) {
 
 func TestGenerateKey_HandlesError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(rand.Int, func(rand io.Reader, max *big.Int) (n *big.Int, err error) {
+	monkey.Patch(rand.Int, func(_ io.Reader, _ *big.Int) (n *big.Int, err error) {
 		return nil, expectedError
 	})
 	defer monkey.UnpatchAll()

@@ -8,8 +8,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 const minSearchStringLength = 3
@@ -22,6 +21,13 @@ const minSearchStringLength = 3
 //		Searches for groups that can be added as subgroups, based on a substring of their name.
 //		Returns groups for which the user is a manager with `can_manage` = 'memberships_and_group',
 //		whose `name` has `{search}` as a substring.
+//
+//
+//		All the words of the search query must appear in the name for the group to be returned.
+//
+//
+//		Note: MySQL Full-Text Search IN BOOLEAN MODE is used for the search, "amazing team" is transformed to "+amazing* +team*",
+//		so the words must all appear, as a prefix of a word.
 //	parameters:
 //		- name: search
 //			in: query
@@ -39,6 +45,7 @@ const minSearchStringLength = 3
 //			description: Start the page from the group next to one with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N groups
 //			in: query
@@ -73,10 +80,12 @@ const minSearchStringLength = 3
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Request) service.APIError {
-	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
+func (srv *Service) searchForPossibleSubgroups(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	searchString, err := service.ResolveURLQueryGetStringField(httpRequest, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -88,36 +97,25 @@ func (srv *Service) searchForPossibleSubgroups(w http.ResponseWriter, r *http.Re
 			fmt.Errorf("the search string should be at least %d characters long", minSearchStringLength))
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := srv.GetStore(r).Groups().ManagedBy(user).
-		Where("group_managers.can_manage = 'memberships_and_group'").
-		Group("groups.id").
-		Where("groups.type != 'User'").
-		Select(`
-			groups.id,
-			groups.name,
-			groups.type,
-			groups.description`).
-		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
+	query := store.Groups().PossibleSubgroupsBySearchString(user, searchString)
 
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields:       service.SortingAndPagingFields{"id": {ColumnName: "groups.id"}},
 			DefaultRules: "id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
-	render.Respond(w, r, convertedResult)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, convertedResult)
+	return nil
 }

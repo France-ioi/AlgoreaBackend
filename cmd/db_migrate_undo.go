@@ -9,8 +9,8 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 	"github.com/spf13/cobra"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 )
 
 func init() { //nolint:gochecknoinits
@@ -18,7 +18,7 @@ func init() { //nolint:gochecknoinits
 		Use:   "db-migrate-undo [environment]",
 		Short: "undo the last schema-change migration applied to the database",
 		Args:  cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
 			// if arg given, replace the env
@@ -33,33 +33,31 @@ func init() { //nolint:gochecknoinits
 			var db *sql.DB
 			databaseConfig, err := app.DBConfig(app.LoadConfig())
 			if err != nil {
-				fmt.Println("Unable to load the database config: ", err)
+				cmd.Println("Unable to load the database config: ", err)
 				os.Exit(1)
 			}
 			databaseConfig.ParseTime = true
 			db, err = sql.Open("mysql", databaseConfig.FormatDSN())
 			if err != nil {
-				fmt.Println("Unable to connect to the database: ", err)
+				cmd.Println("Unable to connect to the database: ", err)
 				os.Exit(1)
 			}
+
+			defer func() { _ = db.Close() }()
 
 			// migrate
 			var n int
 			n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Down, 1)
 			switch {
 			case err != nil:
-				fmt.Println("Unable to undo a migration:", err)
-				os.Exit(1)
+				return fmt.Errorf("unable to undo a migration: %w", err)
 			case n == 0:
-				fmt.Println("No migrations to undo!")
+				cmd.Println("No migrations to undo!")
 			default:
-				fmt.Println("1 migration undone successfully!")
+				cmd.Println("1 migration undone successfully!")
 			}
 
-			if db.Close() != nil {
-				fmt.Println("Cannot close DB connection:", err)
-				os.Exit(1)
-			}
+			return nil
 		},
 	}
 

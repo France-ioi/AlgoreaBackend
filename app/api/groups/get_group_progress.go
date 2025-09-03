@@ -10,8 +10,13 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+)
+
+const (
+	defaultGroupProgressLimit    = 10
+	maxAllowedGroupProgressLimit = 20
 )
 
 // swagger:model groupGroupProgressResponseTableCell
@@ -80,6 +85,7 @@ type groupGroupProgressResponseTableCell struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			in: query
@@ -87,10 +93,12 @@ type groupGroupProgressResponseTableCell struct {
 //			required: true
 //			items:
 //				type: integer
+//				format: int64
 //		- name: from.id
 //			description: Start the page from the group next to the group with `id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display results for the first N groups (sorted by `name`)
 //			in: query
@@ -116,28 +124,29 @@ type groupGroupProgressResponseTableCell struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	service.MustNotBeError(err)
+
 	if len(itemParentIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		return nil
 	}
 
 	// Preselect item IDs since we want to use them twice (for end members stats and for final stats)
@@ -153,8 +162,8 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins(`
 			JOIN ` + "`groups`" + ` AS group_child
 			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'User')`)
-	ancestorGroupIDQuery, apiError = service.ApplySortingAndPaging(
-		r, ancestorGroupIDQuery,
+	ancestorGroupIDQuery, err = service.ApplySortingAndPaging(
+		httpRequest, ancestorGroupIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "group_child.name"},
@@ -163,17 +172,16 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
+
 	ancestorGroupIDQuery = service.NewQueryLimiter().
-		SetDefaultLimit(10).SetMaxAllowedLimit(20).
-		Apply(r, ancestorGroupIDQuery)
+		SetDefaultLimit(defaultGroupProgressLimit).SetMaxAllowedLimit(maxAllowedGroupProgressLimit).
+		Apply(httpRequest, ancestorGroupIDQuery)
 	service.MustNotBeError(ancestorGroupIDQuery.
 		Pluck("group_child.id", &ancestorGroupIDs).Error())
 	if len(ancestorGroupIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		return nil
 	}
 
 	endMembers := store.Groups().
@@ -181,7 +189,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		Joins(`
 			JOIN groups_ancestors_active
 			ON groups_ancestors_active.ancestor_group_id IN (?) AND
-				groups_ancestors_active.child_group_id = groups.id`, ancestorGroupIDs).
+				groups_ancestors_active.child_group_id = groups.id`, ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
 		Where("groups.type = 'Team' OR groups.type = 'User'").
 		Group("groups.id")
 
@@ -228,7 +236,7 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 				AVG(member_stats.submissions) AS avg_submissions,
 				AVG(member_stats.time_spent) AS avg_time_spent`).
 			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors_active.child_group_id", endMembersStats.SubQuery()).
-			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs).
+			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
 			Group("groups_ancestors_active.ancestor_group_id, member_stats.item_id").
 			Order(gorm.Expr(
 				"FIELD(groups_ancestors_active.ancestor_group_id"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
@@ -236,8 +244,8 @@ func (srv *Service) getGroupProgress(w http.ResponseWriter, r *http.Request) ser
 		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
 func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64, user *database.User) (
@@ -278,15 +286,15 @@ func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64
 	orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, itemParentIDs[0])
 	itemOrder = append(itemOrder, 0)
 	currentChildNumber := 0
-	for i := range parentChildPairs {
-		for itemParentIDs[currentParentIDIndex] != parentChildPairs[i].ParentItemID {
+	for parentChildPairIndex := range parentChildPairs {
+		for itemParentIDs[currentParentIDIndex] != parentChildPairs[parentChildPairIndex].ParentItemID {
 			currentParentIDIndex++
 			currentChildNumber = 0
 			orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, itemParentIDs[currentParentIDIndex])
 			itemOrder = append(itemOrder, 0)
 		}
-		orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, parentChildPairs[i].ChildItemID)
-		childItemIDMap[parentChildPairs[i].ChildItemID] = true
+		orderedItemIDListWithDuplicates = append(orderedItemIDListWithDuplicates, parentChildPairs[parentChildPairIndex].ChildItemID)
+		childItemIDMap[parentChildPairs[parentChildPairIndex].ChildItemID] = true
 		currentChildNumber++
 		itemOrder = append(itemOrder, currentChildNumber)
 	}
@@ -342,7 +350,8 @@ func scanAndBuildProgressResults(
 				// Convert it by parsing
 				result := &database.Time{}
 				err := result.ScanString(data.(string))
-				return *result, err
+				service.MustNotBeError(err)
+				return *result, nil
 			},
 		),
 		Result:           reflDecodedTableCell.Addr().Interface(),
@@ -389,7 +398,7 @@ func scanAndBuildProgressResults(
 	appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 }
 
-func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *database.User) ([]int64, service.APIError) {
+func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *database.User) ([]int64, error) {
 	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
 	if err != nil {
 		return nil, service.ErrInvalidRequest(err)
@@ -401,10 +410,10 @@ func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *
 			WherePermissionIsAtLeast("watch", "result").Where("item_id IN(?)", itemParentIDs).
 			PluckFirst("COUNT(DISTINCT item_id)", &cnt).Error())
 		if cnt != len(itemParentIDs) {
-			return nil, service.InsufficientAccessRightsError
+			return nil, service.ErrAPIInsufficientAccessRights
 		}
 	}
-	return itemParentIDs, service.NoError
+	return itemParentIDs, nil
 }
 
 func uniqueIDs(ids []int64) []int64 {

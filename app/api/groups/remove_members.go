@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /groups/{group_id}/members group-memberships groupRemoveMembers
@@ -34,6 +34,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: user_ids
 //			in: query
@@ -68,24 +69,24 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) service.APIError {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) removeMembers(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	userIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "user_ids")
+	userIDs, err := service.ResolveURLQueryGetInt64SliceField(httpRequest, "user_ids")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
-	if apiErr := checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiErr != service.NoError {
-		return apiErr
-	}
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID))
 
 	results := make(database.GroupGroupTransitionResults, len(userIDs))
 	for _, userID := range userIDs {
@@ -110,11 +111,11 @@ func (srv *Service) removeMembers(w http.ResponseWriter, r *http.Request) servic
 		results[id] = result
 	}
 
-	response := service.Response{
+	response := service.Response[database.GroupGroupTransitionResults]{
 		Success: true,
 		Message: "deleted",
 		Data:    results,
 	}
-	render.Respond(w, r, &response)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, &response)
+	return nil
 }

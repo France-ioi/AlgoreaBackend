@@ -2,8 +2,6 @@ package items
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // swagger:operation GET /items/{item_id}/dependencies items itemDependenciesView
@@ -34,9 +32,11 @@ import (
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with dependent items
@@ -50,8 +50,10 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemDependencies(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
+func (srv *Service) getItemDependencies(rw http.ResponseWriter, httpReq *http.Request) error {
 	return srv.getItemPrerequisitesOrDependencies(rw, httpReq, "item_id", "dependent_item_id")
 }

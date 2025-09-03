@@ -1,7 +1,6 @@
 Feature: Search for items
-
   Background:
-    Given the database has the following table 'items':
+    Given the database has the following table "items":
       | id | type    | default_language_tag |
       | 1  | Chapter | en                   |
       | 2  | Task    | en                   |
@@ -31,43 +30,43 @@ Feature: Search for items
       | 29 | Chapter | en                   |
       | 30 | Chapter | en                   |
       | 31 | Chapter | en                   |
-    And the database has the following table 'items_strings':
-      | item_id | language_tag | title                                   |
-      | 1       | fr           | (the) Our Chapter                       |
-      | 2       | fr           | (the) Our Task ___                      |
-      | 3       | en           | (the) Our Task                          |
-      | 4       | fr           | (the) \|\|\|Our Skill \\\\\\%\\\\%\\ :) |
-      | 6       | en           | Another Chapter                         |
-      | 6       | fr           | Un autre chapitre                       |
-      | 7       | en           | Another %%%Task                         |
-      | 10      | en           | The third chapter                       |
-      | 10      | fr           | Le troisième chapitre                   |
-      | 11      | en           | chapter                                 |
-      | 12      | en           | chapter                                 |
-      | 13      | en           | chapter                                 |
-      | 14      | en           | chapter                                 |
-      | 15      | en           | chapter                                 |
-      | 16      | en           | chapter                                 |
-      | 17      | en           | chapter                                 |
-      | 18      | en           | chapter                                 |
-      | 19      | en           | chapter                                 |
-      | 20      | en           | chapter                                 |
-      | 21      | en           | chapter                                 |
-      | 22      | en           | chapter                                 |
-      | 23      | en           | chapter                                 |
-      | 24      | en           | chapter                                 |
-      | 25      | en           | chapter                                 |
-      | 26      | en           | chapter                                 |
-      | 27      | en           | chapter                                 |
-      | 28      | en           | chapter                                 |
-      | 29      | en           | chapter                                 |
-      | 30      | en           | chapter                                 |
-      | 31      | en           | chapter                                 |
+    And the database has the following table "items_strings":
+      | item_id | language_tag | title                                     |
+      | 1       | fr           | amazing Chapter                           |
+      | 2       | fr           | amazing Task                              |
+      | 3       | en           | amazing Task                              |
+      | 4       | fr           | amazing \|\|\|Our Skill \\\\\\%\\\\%\\ :) |
+      | 6       | en           | Another amazing Chapter                   |
+      | 6       | fr           | Un autre chapitre                         |
+      | 7       | en           | Another amazing Task                      |
+      | 10      | en           | amazing third chapter                     |
+      | 10      | fr           | Le troisième chapitre                     |
+      | 11      | en           | chapter                                   |
+      | 12      | en           | chapter                                   |
+      | 13      | en           | chapter                                   |
+      | 14      | en           | chapter                                   |
+      | 15      | en           | chapter                                   |
+      | 16      | en           | chapter                                   |
+      | 17      | en           | chapter                                   |
+      | 18      | en           | chapter                                   |
+      | 19      | en           | chapter                                   |
+      | 20      | en           | chapter                                   |
+      | 21      | en           | chapter                                   |
+      | 22      | en           | chapter                                   |
+      | 23      | en           | chapter                                   |
+      | 24      | en           | chapter                                   |
+      | 25      | en           | chapter                                   |
+      | 26      | en           | chapter                                   |
+      | 27      | en           | chapter                                   |
+      | 28      | en           | chapter                                   |
+      | 29      | en           | chapter                                   |
+      | 30      | en           | chapter                                   |
+      | 31      | en           | chapter                                   |
     And the database has the following users:
       | login | default_language | temp_user | group_id | first_name  | last_name | grade |
       | owner | fr               | 0         | 21       | Jean-Michel | Blanquer  | 3     |
     And the groups ancestors are computed
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
       | 22       | 1       | info                     |
       | 21       | 2       | content                  |
@@ -98,168 +97,136 @@ Feature: Search for items
       | 21       | 30      | content_with_descendants |
       | 21       | 31      | content_with_descendants |
 
-  Scenario: Search for items with "the"
+  Scenario: Search for items with "amazing"
     Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=the"
+    When I send a GET request to "/items/search?search=amazing"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
         "id": "2",
-        "title": "(the) Our Task ___",
+        "title": "amazing Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "4",
-        "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
+        "title": "amazing |||Our Skill \\\\\\%\\\\%\\ :)",
         "type": "Skill",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "7",
-        "title": "Another %%%Task",
+        "title": "Another amazing Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
 
-  Scenario: Search for items with "the" (limit=2)
+  Scenario: Should treat the words in the search string as "AND", and work with accents
     Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=the&limit=2"
+    When I send a GET request to "/items/search?search=chapitre%20troisième"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "10",
+        "title": "Le troisième chapitre",
+        "type": "Chapter",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}
+      }
+    ]
+    """
+
+  Scenario: Should treat the words in the search string as "AND", and work without accents
+    Given I am the user with id "21"
+    When I send a GET request to "/items/search?search=chapitre%20troisieme"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "10",
+        "title": "Le troisième chapitre",
+        "type": "Chapter",
+        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false}
+      }
+    ]
+    """
+
+  Scenario: Search for items with "amazing" (limit=2)
+    Given I am the user with id "21"
+    When I send a GET request to "/items/search?search=amazing&limit=2"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
         "id": "2",
-        "title": "(the) Our Task ___",
+        "title": "amazing Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "4",
-        "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
+        "title": "amazing |||Our Skill \\\\\\%\\\\%\\ :)",
         "type": "Skill",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
 
-  Scenario: Search for items with percent signs ("%%%")
+  Scenario: Search for items with "amazing", include only items of specified types
     Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=%25%25%25"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "id": "7",
-        "title": "Another %%%Task",
-        "type": "Task",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      }
-    ]
-    """
-
-  Scenario: Search for items with underscore signs
-    Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=___"
+    When I send a GET request to "/items/search?search=amazing&types_include=Task"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
         "id": "2",
-        "title": "(the) Our Task ___",
-        "type": "Task",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
-      }
-    ]
-    """
-
-  Scenario: Search for items with pipe signs ("|||")
-    Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=%7C%7C%7C"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "id": "4",
-        "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      }
-    ]
-    """
-
-  Scenario: Search with percent sign and slashes ("\\\%\\%\")
-    Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=%5C%5C%5C%25%5C%5C%25%5C"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "id": "4",
-        "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
-        "type": "Skill",
-        "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
-      }
-    ]
-    """
-
-  Scenario: Search for items with "the", include only items of specified types
-    Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=the&types_include=Task"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "id": "2",
-        "title": "(the) Our Task ___",
+        "title": "amazing Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "content", "can_watch": "none", "is_owner": false}
       },
       {
         "id": "7",
-        "title": "Another %%%Task",
+        "title": "Another amazing Task",
         "type": "Task",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
 
-  Scenario: Search for items with "the", exclude items of specified types
+  Scenario: Search for items with "amazing", exclude items of specified types
     Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=the&types_exclude=Task"
+    When I send a GET request to "/items/search?search=amazing&types_exclude=Task"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
         "id": "4",
-        "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
+        "title": "amazing |||Our Skill \\\\\\%\\\\%\\ :)",
         "type": "Skill",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }
     ]
     """
 
-  Scenario: Search for items with "the", combination of types_include & types_exclude
+  Scenario: Search for items with "amazing", combination of types_include & types_exclude
     Given I am the user with id "21"
-    When I send a GET request to "/items/search?search=the&types_include=Task,Skill&types_exclude=Task"
+    When I send a GET request to "/items/search?search=amazing&types_include=Task,Skill&types_exclude=Task"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
     [
       {
         "id": "4",
-        "title": "(the) |||Our Skill \\\\\\%\\\\%\\ :)",
+        "title": "amazing |||Our Skill \\\\\\%\\\\%\\ :)",
         "type": "Skill",
         "permissions": {"can_edit": "none", "can_grant_view": "none", "can_view": "info", "can_watch": "none", "is_owner": false}
       }

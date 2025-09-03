@@ -8,25 +8,26 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func TestBase_GetUser(t *testing.T) {
 	middleware := auth.MockUserMiddleware(&database.User{GroupID: 42})
 	called := false
-	ts := httptest.NewServer(middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	testServer := httptest.NewServer(middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		called = true
 		srv := &Base{}
 		user := srv.GetUser(r)
 		assert.Equal(t, int64(42), user.GroupID)
 	})))
-	defer ts.Close()
+	defer testServer.Close()
 
-	request, _ := http.NewRequest("GET", ts.URL, http.NoBody)
+	request, _ := http.NewRequest(http.MethodGet, testServer.URL, http.NoBody)
 	response, err := http.DefaultClient.Do(request)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	if err == nil {
 		_ = response.Body.Close()
 	}
@@ -35,7 +36,9 @@ func TestBase_GetUser(t *testing.T) {
 }
 
 func TestBase_GetStore(t *testing.T) {
-	expectedDB := &database.DB{}
+	db, _ := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	expectedDB := db
 	expectedContext := context.Background()
 	expectedStore := database.NewDataStoreWithContext(expectedContext, expectedDB)
 	req := (&http.Request{}).WithContext(expectedContext)

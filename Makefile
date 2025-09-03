@@ -12,12 +12,13 @@ LOCAL_BIN_DIR=./bin
 
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
+GOLANGCILINT_VERSION=1.64.7
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
 
 VERSION_FETCHING_CMD=git describe --always --dirty
-GOBUILD_VERSION_INJECTION=-ldflags="-X main.version=$(shell $(VERSION_FETCHING_CMD))"
+GOBUILD_VERSION_INJECTION=-ldflags="-X github.com/France-ioi/AlgoreaBackend/v2/app/version.version=$(shell $(VERSION_FETCHING_CMD))"
 
 # Don't cover the packages ending by test, and separate the packages by a comma
 COVER_PACKAGES=$(shell $(GOLIST) ./app/... | grep -v "test$$" | tr '\n' ',')
@@ -30,6 +31,11 @@ ifdef DIRECTORY
 	TEST_DIR=$(DIRECTORY)
 else
 	TEST_DIR=./app/...
+endif
+ifdef DIRECTORY
+	TEST_BDD_DIR=$(DIRECTORY)
+else
+	TEST_BDD_DIR=./app/api/...
 endif
 ifdef TAGS
 	TEST_TAGS=--godog.tags=$(TAGS)
@@ -85,19 +91,28 @@ test: $(TEST_REPORT_DIR)
 	$(Q)# add FILTER=functionToTest to only test a certain function. functionToTest is a Regex.
 
 	$(Q)$(GOTEST) -gcflags=all=-l -race -coverpkg=$(COVER_PACKAGES) -coverprofile=$(TEST_REPORT_DIR)/coverage.txt -covermode=atomic -v $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
+test-dev:
+	$(Q)$(GOTEST) -gcflags=all=-l $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-unit:
-	$(GOTEST) -gcflags=all=-l -race -cover -v -tags=unit $(TEST_DIR) $(TEST_FILTER)
+	ALGOREA_DATABASE__ADDR=no_host $(GOTEST) -gcflags=all=-l -race -tags=unit $(TEST_DIR) -p 1 -parallel 1 $(TEST_FILTER)
 test-bdd:
 	# to pass args: make TAGS=wip test-bdd
-	$(Q)$(GOTEST) -v -tags=!unit -run TestBDD $(TEST_DIR) -p 1 -parallel 1 $(TEST_TAGS)
-lint: $(GOLANGCILINT)
-	$(GOLANGCILINT) run -v --deadline 10m0s
+	$(Q)$(GOTEST) -gcflags=all=-l -race -v -tags=!unit -run TestBDD $(TEST_BDD_DIR) -p 1 -parallel 1 $(TEST_TAGS)
+lint:
+	@[ -e $(GOLANGCILINT) ] && \
+		($(GOLANGCILINT) --version | grep -F "version $(GOLANGCILINT_VERSION) built" > /dev/null || rm $(GOLANGCILINT)) || true
+	$(MAKE) $(GOLANGCILINT)
+	$(GOLANGCILINT) run -v --timeout 10m0s
 
-validate-swagger:
-	swagger generate spec --scan-models -o ./swagger.yaml && swagger validate ./swagger.yaml
+swagger-generate:
+	swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
+		swagger validate ./swagger.yaml && \
+		swagger2openapi --refSiblings allOf --yaml swagger.yaml | sed 's/x-nullable:/nullable:/g' > openapi3.yaml && \
+		mv openapi3.yaml swagger.yaml && \
+		redocly lint --skip-rule security-defined --skip-rule spec --skip-rule no-identical-paths swagger.yaml
 
-serve-swagger: validate-swagger
-	swagger serve ./swagger.yaml --no-open
+swagger-serve: swagger-generate
+	redocly preview-docs swagger.yaml
 
 dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBNAME)
@@ -122,7 +137,7 @@ version:
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
 $(GOLANGCILINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v1.52.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v$(GOLANGCILINT_VERSION)
 $(MYSQL_CONNECTOR_JAVA):
 	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)

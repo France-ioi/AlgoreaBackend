@@ -8,8 +8,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 const minSearchStringLength = 3
@@ -24,10 +23,11 @@ const minSearchStringLength = 3
 //		and for that the current user is not already a member and don’t have pending requests/invitations.
 //
 //
-//		Note: The current implementation may be very slow because it uses `LIKE` with a percentage wildcard
-//		at the beginning. This causes MySQL to explore every row having `is_public`=1. Moreover, actually
-//		it has to examine every row of the `groups` table since there is no index for the `is_public` column.
-//		But since there are not too many groups and the result rows count is limited, the search works almost well.
+//		All the words of the search query must appear in the name for the group to be returned.
+//
+//
+//		Note: MySQL Full-Text Search IN BOOLEAN MODE is used for the search, "amazing team" is transformed to "+amazing* +team*",
+//		so the words must all appear, as a prefix of a word.
 //	parameters:
 //		- name: search
 //			in: query
@@ -45,6 +45,7 @@ const minSearchStringLength = 3
 //			description: Start the page from the group next to one with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N groups
 //			in: query
@@ -79,10 +80,12 @@ const minSearchStringLength = 3
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Request) service.APIError {
-	searchString, err := service.ResolveURLQueryGetStringField(r, "search")
+func (srv *Service) searchForAvailableGroups(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	searchString, err := service.ResolveURLQueryGetStringField(httpRequest, "search")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -94,49 +97,25 @@ func (srv *Service) searchForAvailableGroups(w http.ResponseWriter, r *http.Requ
 			fmt.Errorf("the search string should be at least %d characters long", minSearchStringLength))
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	skipGroups := store.ActiveGroupGroups().
-		Select("groups_groups_active.parent_group_id").
-		Where("groups_groups_active.child_group_id = ?", user.GroupID).
-		SubQuery()
+	query := store.Groups().AvailableGroupsBySearchString(user, searchString)
 
-	skipPending := store.GroupPendingRequests().
-		Select("group_pending_requests.group_id").
-		Where("group_pending_requests.member_id = ?", user.GroupID).
-		Where("group_pending_requests.type IN ('join_request', 'invitation')").
-		SubQuery()
-
-	escapedSearchString := database.EscapeLikeString(searchString, '|')
-	query := store.Groups().
-		Select(`
-			groups.id,
-			groups.name,
-			groups.type,
-			groups.description`).
-		Where("groups.is_public").
-		Where("type != 'User' AND type != 'ContestParticipants'").
-		Where("groups.id NOT IN ?", skipGroups).
-		Where("groups.id NOT IN ?", skipPending).
-		Where("groups.name LIKE CONCAT('%', ?, '%') ESCAPE '|'", escapedSearchString)
-
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields:       service.SortingAndPagingFields{"id": {ColumnName: "groups.id"}},
 			DefaultRules: "id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []map[string]interface{}
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
-	render.Respond(w, r, convertedResult)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, convertedResult)
+	return nil
 }

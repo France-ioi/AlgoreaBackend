@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -12,23 +12,23 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/encrypt"
-
 	"github.com/PaesslerAG/jsonpath"
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pmezard/go-difflib/difflib"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/payloads"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/encrypt"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 func (ctx *TestContext) ItShouldBeAJSONArrayWithEntries(count int) error { //nolint
 	var objmap []map[string]*json.RawMessage
 
 	if err := json.Unmarshal([]byte(ctx.lastResponseBody), &objmap); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s\nData:%v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w\nData:%v", err, ctx.lastResponseBody)
 	}
 
 	if count != len(objmap) {
@@ -43,7 +43,7 @@ func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, err
 	var JSONResponse interface{}
 	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
 	if err != nil {
-		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %v", err)
+		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %w", err)
 	}
 
 	return jsonpath.Get(jsonPath, JSONResponse)
@@ -58,10 +58,10 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 			return nil
 		}
 
-		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %v", jsonPath, value, err)
+		return fmt.Errorf("TheResponseAtShouldBeTheValue: JSONPath %v doesn't match value %v: %w", jsonPath, value, err)
 	}
 
-	value = ctx.replaceReferencesByIDs(value)
+	value = ctx.replaceReferencesWithIDs(value)
 	if jsonPathResultMatchesValue(jsonPathRes, value) {
 		return nil
 	}
@@ -104,7 +104,7 @@ func jsonPathValueConsideredNil(value string) bool {
 }
 
 // TheResponseAtShouldBe checks that the response at a JSONPath matches multiple values.
-func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *godog.Table) error {
 	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
 	if err != nil {
 		return err
@@ -121,11 +121,19 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 
 		// The result is an array (eg. "element": [...])
 		if len(typedJSONRes) != wantLength {
+			expectedJSONRows := make([]interface{}, len(typedJSONRes))
+			for index, row := range typedJSONRes {
+				if strValue, ok := row.(string); ok {
+					expectedJSONRows[index] = ctx.readableValue(strValue)
+				} else {
+					expectedJSONRows[index] = row
+				}
+			}
 			return fmt.Errorf(
 				"TheResponseAtShouldBe: The JsonPath result length should be %v but is %v for %v",
 				wantLength,
 				len(typedJSONRes),
-				typedJSONRes,
+				expectedJSONRows,
 			)
 		}
 
@@ -144,7 +152,7 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *messages.P
 }
 
 // TheResponseAtInJSONShouldBe checks that the response in JSON at a JSONPath matches.
-func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *godog.DocString) error {
 	jsonPathRes, err := ctx.getJSONPathOnResponse(jsonPath)
 	if err != nil {
 		return err
@@ -155,10 +163,7 @@ func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *mess
 		return err
 	}
 
-	preprocessedWants, err := ctx.preprocessString(wants.Content)
-	if err != nil {
-		return err
-	}
+	preprocessedWants := ctx.preprocessString(wants.Content)
 
 	expected, err := indentJSON(preprocessedWants)
 	if err != nil {
@@ -172,7 +177,7 @@ func (ctx *TestContext) TheResponseAtInJSONShouldBe(jsonPath string, wants *mess
 // an AES256GCM encrypted JSON object.
 func (ctx *TestContext) TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSONObjectContaining(
 	jsonPath string,
-	expectedJSONParam *messages.PickleStepArgument_PickleDocString,
+	expectedJSONParam *godog.DocString,
 ) error {
 	hexCipher, err := ctx.getJSONPathOnResponse(jsonPath)
 	if err != nil {
@@ -192,11 +197,7 @@ func (ctx *TestContext) TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSON
 
 	expectedJSON := strings.ReplaceAll(expectedJSONParam.Content, " ", "")
 	expectedJSON = strings.ReplaceAll(expectedJSON, "\n", "")
-
-	expectedJSON, err = ctx.preprocessString(expectedJSON)
-	if err != nil {
-		return err
-	}
+	expectedJSON = ctx.preprocessString(expectedJSON)
 
 	return compareStrings(expectedJSON, string(plainJSON))
 }
@@ -219,7 +220,7 @@ func indentJSON(preprocessedWants string) ([]byte, error) {
 }
 
 func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
-	wants *messages.PickleStepArgument_PickleTable,
+	wants *godog.Table,
 	jsonPathResArr []interface{},
 ) error {
 	// The jsonPathResult and want rows are put in a slice of maps with the fields that are wanted.
@@ -230,25 +231,25 @@ func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 	sortedResults := make([]map[string]string, len(wants.Rows)-1)
 	sortedWants := make([]map[string]string, len(wants.Rows)-1)
 
-	for i := 1; i < len(wants.Rows); i++ {
+	for rowIndex := 1; rowIndex < len(wants.Rows); rowIndex++ {
 		curWant := make(map[string]string)
 		curResult := make(map[string]string)
 
-		wantRow := wants.Rows[i]
-		for j := 0; j < len(headerCells); j++ {
-			curHeader := headerCells[j].Value
+		wantRow := wants.Rows[rowIndex]
+		for cellIndex := 0; cellIndex < len(headerCells); cellIndex++ {
+			curHeader := headerCells[cellIndex].Value
 
-			curWant[curHeader] = ctx.replaceReferencesByIDs(wantRow.Cells[j].Value)
-			sortedWants[i-1] = curWant
+			curWant[curHeader] = ctx.replaceReferencesWithIDs(wantRow.Cells[cellIndex].Value)
+			sortedWants[rowIndex-1] = curWant
 
 			// The header is a JSONPath (e.g. "title", "strings.title").
-			curJSONPathResult, err := jsonpath.Get(curHeader, jsonPathResArr[i-1])
+			curJSONPathResult, err := jsonpath.Get(curHeader, jsonPathResArr[rowIndex-1])
 			if err != nil {
-				return fmt.Errorf("wantRowsMatchesJSONPathResult: Couldn't retrieve JSONPath %v at %v", curHeader, jsonPathResArr[i-1])
+				return fmt.Errorf("wantRowsMatchesJSONPathResult: Couldn't retrieve JSONPath %v at %v", curHeader, jsonPathResArr[rowIndex-1])
 			}
 
 			curResult[curHeader] = stringifyJSONPathResultValue(curJSONPathResult)
-			sortedResults[i-1] = curResult
+			sortedResults[rowIndex-1] = curResult
 		}
 	}
 
@@ -264,7 +265,7 @@ func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 
 func sortSliceForEasyComparison(
 	slice []map[string]string,
-	headerCells []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell,
+	headerCells []*messages.PickleTableCell,
 ) []map[string]string {
 	sort.Slice(slice, func(i, j int) bool {
 		for curHeader := 0; curHeader < len(headerCells); curHeader++ {
@@ -285,7 +286,7 @@ func sortSliceForEasyComparison(
 }
 
 func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
-	wants *messages.PickleStepArgument_PickleTable,
+	wants *godog.Table,
 	jsonPathResArr []interface{},
 ) error {
 	// Sort the jsonPath and wants values so that we can check them sequentially.
@@ -295,7 +296,7 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 	sortedWants := make([]string, len(wants.Rows))
 	for i := 0; i < len(wants.Rows); i++ {
 		sortedResults[i] = stringifyJSONPathResultValue(jsonPathResArr[i])
-		sortedWants[i] = ctx.replaceReferencesByIDs(wants.Rows[i].Cells[0].Value)
+		sortedWants[i] = ctx.replaceReferencesWithIDs(wants.Rows[i].Cells[0].Value)
 	}
 
 	sort.Strings(sortedResults)
@@ -330,20 +331,19 @@ func (ctx *TestContext) TheResponseCodeShouldBe(code int) error { //nolint
 	return nil
 }
 
-func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+// TheResponseBodyShouldBeJSON checks that the response body is a valid JSON and matches the given JSON.
+func (ctx *TestContext) TheResponseBodyShouldBeJSON(body *godog.DocString) (err error) {
 	return ctx.TheResponseDecodedBodyShouldBeJSON("", body)
 }
 
-func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *messages.PickleStepArgument_PickleDocString) (err error) { // nolint
+// TheResponseDecodedBodyShouldBeJSON checks that the response body, after being decoded, is a valid JSON and matches the given JSON.
+func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, body *godog.DocString) error {
 	// verify the content type
-	if err = ValidateJSONContentType(ctx.lastResponse); err != nil {
-		return
-	}
-
-	expectedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
+	if err := ValidateJSONContentType(ctx.lastResponse); err != nil {
 		return err
 	}
+
+	expectedBody := ctx.preprocessString(body.Content)
 
 	expected, err := indentJSON(expectedBody)
 	if err != nil {
@@ -365,7 +365,7 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 
 	// re-encode actual response too
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), act); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)
 	}
 
 	if responseType != "" {
@@ -373,18 +373,15 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 	}
 	actual, err := json.MarshalIndent(act, "", "\t")
 	if err != nil {
-		return
+		return err
 	}
 
 	return compareStrings(string(expected), string(actual))
 }
 
 // TheResponseBodyShouldBe checks that the response is the same as the one provided.
-func (ctx *TestContext) TheResponseBodyShouldBe(body *messages.PickleStepArgument_PickleDocString) (err error) {
-	expectedBody, err := ctx.preprocessString(body.Content)
-	if err != nil {
-		return err
-	}
+func (ctx *TestContext) TheResponseBodyShouldBe(body *godog.DocString) (err error) {
+	expectedBody := ctx.preprocessString(body.Content)
 	return compareStrings(expectedBody, ctx.lastResponseBody)
 }
 
@@ -420,10 +417,7 @@ func (ctx *TestContext) TheResponseHeaderShouldBe(headerName, headerValue string
 		return ctx.TheResponseHeaderShouldNotBeSet(headerName)
 	}
 
-	headerValue, err = ctx.preprocessString(headerValue)
-	if err != nil {
-		return err
-	}
+	headerValue = ctx.preprocessString(headerValue)
 	headerName = http.CanonicalHeaderKey(headerName)
 
 	if len(ctx.lastResponse.Header[headerName]) == 0 {
@@ -452,12 +446,9 @@ func (ctx *TestContext) TheResponseHeaderShouldNotBeSet(headerName string) (err 
 // TheResponseHeadersShouldBe checks that the response header matches the multiline provided value.
 func (ctx *TestContext) TheResponseHeadersShouldBe(
 	headerName string,
-	headersValue *messages.PickleStepArgument_PickleDocString,
+	headersValue *godog.DocString,
 ) (err error) {
-	headerValue, err := ctx.preprocessString(headersValue.Content)
-	if err != nil {
-		return err
-	}
+	headerValue := ctx.preprocessString(headersValue.Content)
 	lines := strings.Split(headerValue, "\n")
 	trimmed := make([]string, 0, len(lines))
 	for i := range lines {
@@ -471,14 +462,14 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(
 }
 
 // TheResponseErrorMessageShouldContain checks that the response contains the provided string.
-func (ctx *TestContext) TheResponseErrorMessageShouldContain(s string) (err error) {
-	errorResp := service.ErrorResponse{}
+func (ctx *TestContext) TheResponseErrorMessageShouldContain(needle string) (err error) {
+	errorResp := service.ErrorResponse[interface{}]{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
-		return fmt.Errorf("unable to decode the response as JSON: %s -- Data: %v", err, ctx.lastResponseBody)
+		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)
 	}
-	if !strings.Contains(errorResp.ErrorText, s) {
-		return fmt.Errorf("cannot find expected `%s` in error text: `%s`", s, errorResp.ErrorText)
+	if !strings.Contains(errorResp.ErrorText, needle) {
+		return fmt.Errorf("cannot find expected `%s` in error text: `%s`", needle, errorResp.ErrorText)
 	}
 
 	return nil
@@ -498,14 +489,11 @@ func (ctx *TestContext) TheResponseShouldBe(kind string) error {
 	if err := ctx.TheResponseCodeShouldBe(expectedCode); err != nil {
 		return err
 	}
-	if err := ctx.TheResponseBodyShouldBeJSON(&messages.PickleStepArgument_PickleDocString{
+	return ctx.TheResponseBodyShouldBeJSON(&godog.DocString{
 		Content: `
 		{
 			"message": "` + kind + `",
 			"success": true
 		}`,
-	}); err != nil {
-		return err
-	}
-	return nil
+	})
 }

@@ -6,7 +6,7 @@ import (
 
 	assertlib "github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func TestUserFromContext(t *testing.T) {
@@ -16,7 +16,7 @@ func TestUserFromContext(t *testing.T) {
 	ctx := context.WithValue(context.Background(), ctxUser, myUser)
 	user := UserFromContext(ctx)
 
-	assert.False(myUser == user)
+	assert.NotSame(myUser, user)
 	assert.EqualValues(myUser, user)
 }
 
@@ -43,7 +43,7 @@ func TestSessionCookieAttributesFromContext(t *testing.T) {
 	ctx := context.WithValue(context.Background(), ctxSessionCookieAttributes, expectedCookieAttributes)
 	cookieAttributes := SessionCookieAttributesFromContext(ctx)
 
-	assert.False(expectedCookieAttributes == cookieAttributes)
+	assert.NotSame(expectedCookieAttributes, cookieAttributes)
 	assert.EqualValues(expectedCookieAttributes, cookieAttributes)
 
 	ctx = context.WithValue(context.Background(), ctxSessionCookieAttributes, nil)

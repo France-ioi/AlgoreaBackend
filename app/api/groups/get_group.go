@@ -1,25 +1,27 @@
 package groups
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // GroupGetResponseCodePart contains fields related to the group's code.
 // These fields are only displayed if the current user is a manager of the group.
 // swagger:ignore
 type GroupGetResponseCodePart struct {
-	// Nullable; returned only if the current user is a manager
+	// Returned only if the current user is a manager
 	Code *string `json:"code"`
-	// Nullable; returned only if the current user is a manager
+	// Returned only if the current user is a manager
 	CodeLifetime *int32 `json:"code_lifetime"`
-	// Nullable; returned only if the current user is a manager
+	// Returned only if the current user is a manager
 	CodeExpiresAt *database.Time `json:"code_expires_at"`
 }
 
@@ -41,19 +43,15 @@ type ManagerPermissionsPart struct {
 type groupGetResponse struct {
 	// required:true
 	Grade int32 `json:"grade"`
-	// Nullable
 	// required:true
 	Description *string `json:"description"`
-	// Nullable
 	// required:true
 	CreatedAt *database.Time `json:"created_at"`
 	// required:true
 	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
-	// Nullable
 	// required:true
 	RootActivityID *int64 `json:"root_activity_id,string"`
-	// Nullable
 	// required:true
 	RootSkillID *int64 `json:"root_skill_id,string"`
 	// required:true
@@ -94,11 +92,16 @@ type groupGetResponse struct {
 	// required: true
 	// enum: none,view,edit
 	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval"`
-	// Nullable
 	// required: true
 	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until"`
 	// required: true
 	RequireWatchApproval bool `json:"require_watch_approval"`
+	// Only for joined groups
+	CurrentUserHasPendingLeaveRequest *bool `json:"current_user_has_pending_leave_request,omitempty"`
+	// Only for non-joined groups
+	CurrentUserHasPendingInvitation *bool `json:"current_user_has_pending_invitation,omitempty"`
+	// Only for non-joined groups
+	CurrentUserHasPendingJoinRequest *bool `json:"current_user_has_pending_join_request,omitempty"`
 }
 
 // swagger:operation GET /groups/{group_id} groups groupGet
@@ -122,6 +125,7 @@ type groupGetResponse struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":
@@ -134,18 +138,51 @@ type groupGetResponse struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) getGroup(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
+		With("user_ancestors", ancestorsOfUserQuery(store, user)).
+		Select(`
+			groups.id, groups.type, groups.name,
+			`+currentUserMembershipSQLColumn(user)+`,
+			`+currentUserManagershipSQLColumn+`,
+			groups.grade, groups.description, groups.created_at,
+			groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
+			groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until, groups.require_watch_approval,
+			IF(manager_access.found, groups.code, NULL) AS code,
+			IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
+			IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
+			groups.open_activity_when_joining,
+			IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
+			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
+			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
+			groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until AS is_membership_locked,
+			IF(parent_group_id IS NOT NULL AND groups.type = 'Team',
+				IF(groups.frozen_membership,
+					'frozen_membership',
+					IF(?,
+						'would_break_entry_conditions',
+						'free_to_leave'
+					)
+				),
+				NULL
+			) AS can_leave_team,
+			`+currentUserHasPendingRequestSQLColumn("leave_request", user)+`,
+			`+currentUserHasPendingRequestSQLColumn("invitation", user)+`,
+			`+currentUserHasPendingRequestSQLColumn("join_request", user),
+			store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
+				gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
 		Joins(`
 			LEFT JOIN ? AS manager_access ON child_group_id = groups.id`,
 			store.GroupAncestors().ManagedByUser(user).
@@ -166,33 +203,9 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 		Limit(1)
 
 	var result groupGetResponse
-	err = selectGroupsDataForMenu(store, query, user,
-		`groups.grade, groups.description, groups.created_at,
-		groups.root_activity_id, groups.root_skill_id, groups.is_open, groups.is_public,
-		groups.require_personal_info_access_approval, groups.require_lock_membership_approval_until, groups.require_watch_approval,
-		IF(manager_access.found, groups.code, NULL) AS code,
-		IF(manager_access.found, groups.code_lifetime, NULL) AS code_lifetime,
-		IF(manager_access.found, groups.code_expires_at, NULL) AS code_expires_at,
-		groups.open_activity_when_joining,
-		IF(manager_access.found, manager_access.can_manage_value, 0) AS current_user_can_manage_value,
-		IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_group_access,
-		IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_members,
-		groups_groups_active.lock_membership_approved AND NOW() < groups.require_lock_membership_approval_until AS is_membership_locked,
-		IF(parent_group_id IS NOT NULL AND groups.type = 'Team',
-			IF(groups.frozen_membership,
-				'frozen_membership',
-				IF(?,
-					'would_break_entry_conditions',
-					'free_to_leave'
-				)
-			),
-			NULL
-		) AS can_leave_team`,
-		store.Groups().GenerateQueryCheckingIfActionBreaksEntryConditionsForActiveParticipations(
-			gorm.Expr("groups.id"), user.GroupID, false, false).SubQuery()).
-		Scan(&result).Error()
+	err = query.Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -254,7 +267,91 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) service.API
 	if result.DescendantsCurrentUserIsManagerOf == nil {
 		result.DescendantsCurrentUserIsManagerOf = make([]structures.GroupShortInfo, 0)
 	}
-	render.Respond(w, r, result)
+	render.Respond(responseWriter, httpRequest, result)
 
-	return service.NoError
+	return nil
+}
+
+// currentUserMembershipSQLColumn returns an SQL column expression to get the current user membership
+// (direct/descendant/none) in the group. The column name is `current_user_membership`.
+func currentUserMembershipSQLColumn(currentUser *database.User) string {
+	return fmt.Sprintf(`
+		IF(
+			EXISTS(
+				SELECT 1 FROM groups_groups_active
+				WHERE groups_groups_active.parent_group_id = groups.id AND
+				      groups_groups_active.child_group_id = %d
+			),
+			'direct',
+			IF(
+				EXISTS(
+					SELECT 1 FROM groups_groups_active
+					JOIN groups_ancestors_active AS group_descendants
+						ON group_descendants.ancestor_group_id = groups.id AND
+						   group_descendants.child_group_id = groups_groups_active.parent_group_id
+					WHERE groups_groups_active.child_group_id = %d
+				),
+				'descendant',
+				'none'
+			)
+		) AS 'current_user_membership'`, currentUser.GroupID, currentUser.GroupID)
+}
+
+// currentUserManagershipSQLColumn is an SQL column expression to get the current user managership
+// (direct/ancestor/descendant/none) of the group. The column name is `current_user_managership`.
+const currentUserManagershipSQLColumn = `
+		IF(
+			EXISTS(
+				SELECT 1 FROM user_ancestors
+				JOIN group_managers
+					ON group_managers.group_id = groups.id AND
+					   group_managers.manager_id = user_ancestors.ancestor_group_id
+			),
+			'direct',
+			IF(
+				EXISTS(
+					SELECT 1 FROM user_ancestors
+					JOIN groups_ancestors_active AS group_ancestors ON group_ancestors.child_group_id = groups.id
+					JOIN group_managers
+						ON group_managers.group_id = group_ancestors.ancestor_group_id AND
+						   group_managers.manager_id = user_ancestors.ancestor_group_id
+				),
+				'ancestor',
+				IF(
+					EXISTS(
+						SELECT 1 FROM user_ancestors
+						JOIN group_managers ON group_managers.manager_id = user_ancestors.ancestor_group_id
+						JOIN groups_ancestors_active AS managed_groups
+							ON managed_groups.ancestor_group_id = group_managers.group_id
+						JOIN ` + "`groups`" + ` AS managed_descendant
+							ON managed_descendant.id = managed_groups.child_group_id AND
+							   managed_descendant.type != 'User'
+						JOIN groups_ancestors_active AS group_descendants
+							ON group_descendants.ancestor_group_id = groups.id AND
+							   group_descendants.child_group_id = managed_descendant.id
+					),
+					'descendant',
+					'none'
+				)
+			)
+		) AS 'current_user_managership'`
+
+// ancestorsOfUserQuery returns a query to get the ancestors of the given user (as ancestor_group_id).
+func ancestorsOfUserQuery(store *database.DataStore, user *database.User) *database.DB {
+	return store.ActiveGroupAncestors().Where("child_group_id = ?", user.GroupID).Select("ancestor_group_id")
+}
+
+func currentUserHasPendingRequestSQLColumn(requestType string, user *database.User) string {
+	return fmt.Sprintf(`
+		IF(parent_group_id IS %sNULL,
+			EXISTS(
+				SELECT 1 FROM group_pending_requests
+				WHERE group_pending_requests.group_id = groups.id AND
+							group_pending_requests.member_id = %d AND
+							group_pending_requests.type = '%s'
+			),
+			NULL
+		) AS 'current_user_has_pending_%s'`,
+		golang.If(requestType == "leave_request", "NOT "),
+		user.GroupID, requestType, requestType)
 }

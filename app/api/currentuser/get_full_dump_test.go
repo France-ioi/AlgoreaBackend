@@ -2,17 +2,18 @@ package currentuser
 
 import (
 	"errors"
-	"io/ioutil"
+	"io"
 	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
 )
 
 func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
@@ -32,13 +33,14 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 			srv := &Service{Base: baseService}
 			router.Get("/current-user/full-dump", service.AppHandler(srv.getFullDump).ServeHTTP)
 		})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, 200, response.StatusCode)
 	assert.Equal(t, "attachment; filename=user_data.json", response.Header.Get("Content-Disposition"))
 	assert.Equal(t, "application/json; charset=utf-8", response.Header.Get("Content-Type"))
-	body, _ := ioutil.ReadAll(response.Body)
+	body, _ := io.ReadAll(response.Body)
 	_ = response.Body.Close()
-	assert.Equal(t, `{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Some error"}`+"\n",
-		string(body)) // Note that the response is a malformed JSON in case of error
+	//nolint:testifylint // Note that the response is a malformed JSON in case of error
+	assert.Equal(t, `{"current_user":{"success":false,"message":"Internal Server Error","error_text":"Unknown error"}`+"\n",
+		string(body))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

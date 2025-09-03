@@ -1,13 +1,14 @@
 package currentuser
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model userData
@@ -18,56 +19,41 @@ type getInfoData struct {
 	TempUser bool `json:"temp_user"`
 	// required: true
 	Login string `json:"login"`
-	// Nullable
 	// required: true
 	RegisteredAt *database.Time `json:"registered_at"`
-	// Nullable
 	// required: true
 	LatestProfileSyncAt *database.Time `json:"latest_profile_sync_at"`
-	// Nullable
 	// required: true
 	Email *string `json:"email"`
 	// required: true
 	EmailVerified bool `json:"email_verified"`
-	// Nullable
 	// required: true
 	FirstName *string `json:"first_name"`
-	// Nullable
 	// required: true
 	LastName *string `json:"last_name"`
-	// Nullable
 	// required: true
 	StudentID *string `json:"student_id"`
 	// required: true
 	CountryCode string `json:"country_code"`
-	// Nullable
 	// required: true
 	TimeZone *string `json:"time_zone"`
-	// Nullable
 	// required: true
 	BirthDate *string `json:"birth_date"`
 	// required: true
 	GraduationYear int32 `json:"graduation_year"`
-	// Nullable
 	// required: true
 	Grade *int32 `json:"grade"`
-	// Nullable
 	// required: true
 	// enum: Male,Female
 	Sex *string `json:"sex"`
-	// Nullable
 	// required: true
 	Address *string `json:"address"`
-	// Nullable
 	// required: true
 	ZipCode *string `gorm:"column:zipcode" json:"zip_code"`
-	// Nullable
 	// required: true
 	City *string `json:"city"`
-	// Nullable
 	// required: true
 	LandLineNumber *string `json:"land_line_number"`
-	// Nullable
 	// required: true
 	CellPhoneNumber *string `json:"cell_phone_number"`
 	// required: true
@@ -82,15 +68,12 @@ type getInfoData struct {
 	// required: true
 	// enum: Never,Answers,Concerned
 	Notify string `json:"notify"`
-	// Nullable
 	// required: true
 	FreeText *string `json:"free_text"`
-	// Nullable
 	// required: true
 	WebSite *string `json:"web_site"`
 	// required: true
 	PhotoAutoload bool `json:"photo_autoload"`
-	// Nullable
 	// required: true
 	LangProg *string `json:"lang_prog"`
 	// required: true
@@ -119,13 +102,15 @@ type getInfoData struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) getInfo(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 
 	var userInfo getInfoData
-	err := srv.GetStore(r).Users().ByID(user.GroupID).
+	err := srv.GetStore(httpRequest).Users().ByID(user.GroupID).
 		Select(`group_id, temp_user, login, registered_at, email, email_verified, first_name, last_name,
 			student_id, country_code, time_zone, latest_profile_sync_at,
 			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,
@@ -135,11 +120,11 @@ func (srv *Service) getInfo(w http.ResponseWriter, r *http.Request) service.APIE
 		Scan(&userInfo).Error()
 
 	// This is very unlikely since the user middleware has already checked that the user exists
-	if err == gorm.ErrRecordNotFound {
-		return service.InsufficientAccessRightsError
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, &userInfo)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, &userInfo)
+	return nil
 }

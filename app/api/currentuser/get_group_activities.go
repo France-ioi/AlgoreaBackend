@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // rawRootItem represents one row with a root activity/skill returned from the DB.
@@ -109,9 +109,11 @@ type rootItem struct {
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with an array of root activities
@@ -125,34 +127,35 @@ type rootItem struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getRootActivities(w http.ResponseWriter, r *http.Request) service.APIError {
-	return srv.getRootItems(w, r, true)
+func (srv *Service) getRootActivities(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	return srv.getRootItems(responseWriter, httpRequest, true)
 }
 
-func (srv *Service) getRootItems(w http.ResponseWriter, r *http.Request, getActivities bool) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getRootItems(responseWriter http.ResponseWriter, httpRequest *http.Request, getActivities bool) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	participantID := service.ParticipantIDFromContext(r.Context())
-	watchedGroupID, watchedGroupIDSet, apiError := srv.ResolveWatchedGroupID(r)
-	if apiError != service.NoError {
-		return apiError
-	}
-	if watchedGroupIDSet && len(r.URL.Query()["as_team_id"]) != 0 {
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
+	service.MustNotBeError(err)
+
+	if watchedGroupIDIsSet && len(httpRequest.URL.Query()["as_team_id"]) != 0 {
 		return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
 	}
 
-	rawData := getRootItemsFromDB(store, participantID, watchedGroupID, watchedGroupIDSet, user, getActivities)
+	rawData := getRootItemsFromDB(store, participantID, watchedGroupID, watchedGroupIDIsSet, user, getActivities)
 	activitiesResult, skillsResult := generateRootItemListFromRawData(store, rawData, getActivities)
 
 	if getActivities {
-		render.Respond(w, r, activitiesResult)
+		render.Respond(responseWriter, httpRequest, activitiesResult)
 	} else {
-		render.Respond(w, r, skillsResult)
+		render.Respond(responseWriter, httpRequest, skillsResult)
 	}
-	return service.NoError
+	return nil
 }
 
 func generateRootItemListFromRawData(
@@ -229,7 +232,7 @@ func generateRootItemInfoFromRawData(store *database.DataStore, rawData *rawRoot
 }
 
 func getRootItemsFromDB(
-	store *database.DataStore, watcherID, watchedGroupID int64, watchedGroupIDSet bool,
+	store *database.DataStore, watcherID, watchedGroupID int64, watchedGroupIDIsSet bool,
 	user *database.User, selectActivities bool,
 ) []rawRootItem {
 	hasVisibleChildrenQuery := store.Permissions().
@@ -250,7 +253,7 @@ func getRootItemsFromDB(
 					groups_ancestors_active.child_group_id = ?`, user.GroupID).
 		Select("group_managers.group_id AS id")
 
-	if !watchedGroupIDSet {
+	if !watchedGroupIDIsSet {
 		groupManagedByUserOrCurrentQuery := store.Raw(`
 			SELECT id FROM (
 				SELECT ? AS id
@@ -263,12 +266,12 @@ func getRootItemsFromDB(
 			Where("groups_ancestors_active.child_group_id IN(?)",
 				groupManagedByUserOrCurrentQuery.SubQuery())
 	} else {
-		groupsQuery := store.Raw("WITH managed_groups AS ? ? UNION ALL ?",
-			groupsManagedByUserQuery.SubQuery(),
-			store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
-				Select("child_group_id").QueryExpr(), // descendants of managed groups
-			store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
-				Select("ancestor_group_id").QueryExpr()) // ancestors of managed groups
+		groupsQuery := store.ActiveGroupAncestors().Where("ancestor_group_id IN(SELECT id FROM managed_groups)").
+			Select("child_group_id"). // descendants of managed groups
+			UnionAll(
+				store.ActiveGroupAncestors().Where("child_group_id IN(SELECT id FROM managed_groups)").
+					Select("ancestor_group_id")). // ancestors of managed groups
+			With("managed_groups", groupsManagedByUserQuery)
 		itemsWithResultsQuery = itemsWithResultsQuery.
 			Where("groups_ancestors_active.ancestor_group_id IN (?)", groupsQuery.QueryExpr())
 		groupID = watchedGroupID

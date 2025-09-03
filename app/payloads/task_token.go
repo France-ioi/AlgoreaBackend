@@ -1,7 +1,6 @@
 package payloads
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,13 +9,13 @@ import (
 // TaskToken represents data inside a task token.
 type TaskToken struct {
 	// Nullable fields are of pointer types
-	Date               string  `json:"date" validate:"set,dmy-date"` // dd-mm-yyyy
+	Date               string  `json:"date"                          validate:"set,dmy-date"` // dd-mm-yyyy
 	UserID             string  `json:"idUser"`
 	ItemID             *string `json:"idItem,omitempty"` // always is nil?
 	AttemptID          string  `json:"idAttempt"`
 	ItemURL            string  `json:"itemUrl"`
 	LocalItemID        string  `json:"idItemLocal"`
-	PlatformName       string  `json:"platformName" validate:"min=1,max=200"` // 1 <= length <= 200
+	PlatformName       string  `json:"platformName"                  validate:"min=1,max=200"` // 1 <= length <= 200
 	RandomSeed         string  `json:"randomSeed"`
 	TaskID             *string `json:"idTask,omitempty"` // always is nil?
 	HintsAllowed       *bool   `json:"bHintsAllowed,omitempty"`
@@ -31,9 +30,6 @@ type TaskToken struct {
 	IsAdmin            *bool   `json:"bIsAdmin,omitempty"`
 
 	Converted TaskTokenConverted
-
-	PublicKey  *rsa.PublicKey
-	PrivateKey *rsa.PrivateKey
 }
 
 // TaskTokenConverted contains converted field values of TaskToken payload.

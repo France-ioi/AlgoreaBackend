@@ -1,15 +1,14 @@
 Feature: User withdraws a request to join a group
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id |
       | 11 |
       | 14 |
-      | 21 |
-    And the database has the following table 'users':
+    And the database has the following user:
       | group_id |
       | 21       |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type         | at                  |
       | 11       | 21        | join_request | 2019-05-30 11:00:00 |
       | 14       | 21        | join_request | 2019-05-30 11:00:00 |
@@ -33,4 +32,4 @@ Feature: User withdraws a request to join a group
       | group_id | member_id | action                 | initiator_id | ABS(TIMESTAMPDIFF(SECOND, at, NOW())) < 3 |
       | 11       | 21        | join_request_withdrawn | 21           | 1                                         |
     And the table "groups_groups" should be empty
-    And the table "groups_ancestors" should stay unchanged
+    And the table "groups_ancestors" should remain unchanged

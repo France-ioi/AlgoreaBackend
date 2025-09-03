@@ -6,9 +6,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDB_WhereUsersAreDescendantsOfGroup(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -28,6 +32,8 @@ func TestDB_WhereUsersAreDescendantsOfGroup(t *testing.T) {
 }
 
 func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships_WithLock(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -42,6 +48,8 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships_
 }
 
 func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships_Error(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 

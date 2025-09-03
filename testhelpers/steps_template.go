@@ -1,27 +1,19 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
 import (
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 )
 
 func (ctx *TestContext) TheTemplateConstantIsString(name, value string) error { //nolint
-	value, err := ctx.preprocessString(value)
-	if err != nil {
-		return err
-	}
-
+	value = ctx.preprocessString(value)
 	ctx.templateSet.AddGlobal(name, value)
 	return nil
 }
 
-func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *messages.PickleStepArgument_PickleDocString) error { // nolint
-	preprocessedValue, err := ctx.preprocessString(value.Content)
-	if err != nil {
-		return err
-	}
-
+func (ctx *TestContext) TheTemplateConstantIsDocString(name string, value *godog.DocString) error { //nolint
+	preprocessedValue := ctx.preprocessString(value.Content)
 	ctx.templateSet.AddGlobal(name, preprocessedValue)
 	return nil
 }

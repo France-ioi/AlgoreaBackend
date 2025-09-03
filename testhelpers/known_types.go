@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/France-ioi/AlgoreaBackend/app/api/answers"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api/answers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 type answersSubmitResponse struct {
 	Data struct {
-		AnswerToken token.Answer `json:"answer_token"`
+		AnswerToken token.Token[payloads.AnswerToken] `json:"answer_token"`
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
@@ -46,7 +47,7 @@ func (resp *answersSubmitResponse) UnmarshalJSON(raw []byte) error {
 
 type responseWithTaskToken struct {
 	Data struct {
-		TaskToken token.Task `json:"task_token"`
+		TaskToken token.Token[payloads.TaskToken] `json:"task_token"`
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
@@ -78,8 +79,8 @@ func (resp *responseWithTaskToken) UnmarshalJSON(raw []byte) error {
 
 type saveGradeResponse struct {
 	Data struct {
-		TaskToken token.Task `json:"task_token"`
-		Validated bool       `json:"validated"`
+		TaskToken token.Token[payloads.TaskToken] `json:"task_token"`
+		Validated bool                            `json:"validated"`
 	} `json:"data"`
 	Message string `json:"message"`
 	Success bool   `json:"success"`
@@ -116,7 +117,7 @@ type threadGetResponse struct {
 	ItemID        int64  `json:"item_id"`
 	Status        string `json:"status"`
 
-	ThreadToken token.Thread `json:"token"`
+	ThreadToken token.Token[payloads.ThreadToken] `json:"token"`
 
 	PublicKey *rsa.PublicKey
 }
@@ -147,6 +148,7 @@ func (resp *threadGetResponse) UnmarshalJSON(raw []byte) error {
 	return nil
 }
 
+//nolint:gochecknoglobals // knownTypes is a map of type names to their reflect.Type.
 var knownTypes = map[string]reflect.Type{
 	"AnswersSubmitRequest":      reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
 	"AnswersSubmitResponse":     reflect.TypeOf(&answersSubmitResponse{}).Elem(),
@@ -157,8 +159,9 @@ var knownTypes = map[string]reflect.Type{
 }
 
 func getZeroStructPtr(typeName string) (interface{}, error) {
-	if _, ok := knownTypes[typeName]; !ok {
+	reflType, ok := knownTypes[typeName]
+	if !ok {
 		return nil, fmt.Errorf("unknown type: %q", typeName)
 	}
-	return reflect.New(knownTypes[typeName]).Interface(), nil
+	return reflect.New(reflType).Interface(), nil
 }

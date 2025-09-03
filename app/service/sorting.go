@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // FieldType represents a type of tie-breaker field's value.
@@ -103,9 +103,9 @@ type SortingAndPagingParameters struct {
 // When `parameters.IgnoreSortParameter` is true, the 'sort' request parameter is ignored.
 //
 // When `parameters.StartFromRowSubQuery` is set, the 'from.*' request parameters are ignored.
-func ApplySortingAndPaging(r *http.Request, query *database.DB, parameters *SortingAndPagingParameters) (*database.DB, APIError) {
+func ApplySortingAndPaging(httpRequest *http.Request, query *database.DB, parameters *SortingAndPagingParameters) (*database.DB, error) {
 	mustHaveValidTieBreakerFieldsList(parameters.Fields, parameters.TieBreakers)
-	sortingRules := chooseSortingRules(r, parameters.DefaultRules, parameters.IgnoreSortParameter)
+	sortingRules := chooseSortingRules(httpRequest, parameters.DefaultRules, parameters.IgnoreSortParameter)
 
 	usedFields, fieldsSortingTypes, err := parseSortingRules(sortingRules, parameters.Fields, parameters.TieBreakers)
 	if err != nil {
@@ -116,14 +116,14 @@ func ApplySortingAndPaging(r *http.Request, query *database.DB, parameters *Sort
 
 	var fromValues map[string]interface{}
 	if parameters.StartFromRowSubQuery == nil {
-		fromValues, err = ParsePagingParameters(r, parameters.TieBreakers)
+		fromValues, err = ParsePagingParameters(httpRequest, parameters.TieBreakers)
 		if err != nil {
 			return nil, ErrInvalidRequest(err)
 		}
 	}
 
 	query = applyPagingConditions(query, usedFields, fieldsSortingTypes, parameters.Fields, fromValues, parameters.StartFromRowSubQuery)
-	return query, NoError
+	return query, nil
 }
 
 // chooseSortingRules chooses which sorting rules to use.
@@ -212,19 +212,19 @@ func validateSortingField(
 // "-date$ -> ("date", {-1, 1}) # null last.
 func getFieldNameAndSortingTypeFromSortStatement(sortStatement string) (string, sortingType) {
 	var direction sortingDirection
-	var np nullPlacement
-	if len(sortStatement) > 0 && sortStatement[0] == '-' {
+	var computedNullPlacement nullPlacement
+	if sortStatement != "" && sortStatement[0] == '-' {
 		sortStatement = sortStatement[1:]
 		direction = desc
 	} else {
 		direction = asc
 	}
-	if len(sortStatement) > 0 && sortStatement[len(sortStatement)-1] == '$' {
-		np = last
+	if sortStatement != "" && sortStatement[len(sortStatement)-1] == '$' {
+		computedNullPlacement = last
 		sortStatement = sortStatement[:len(sortStatement)-1]
 	}
 	fieldName := sortStatement
-	return fieldName, sortingType{direction, np}
+	return fieldName, sortingType{direction, computedNullPlacement}
 }
 
 // applyOrder appends the "ORDER BY" statement to given query according to the given list of used fields,
@@ -244,13 +244,13 @@ func applyOrder(query *database.DB, usedFields []string, configuredFields map[st
 }
 
 // ParsePagingParameters returns a map with values provided for paging in a request URL (none or all should be present).
-func ParsePagingParameters(r *http.Request, expectedFromFields map[string]FieldType) (map[string]interface{}, error) {
+func ParsePagingParameters(httpRequest *http.Request, expectedFromFields map[string]FieldType) (map[string]interface{}, error) {
 	fromValueIsMissing := false
 	fromValueAccepted := false
 	fromValues := make(map[string]interface{}, len(expectedFromFields))
 
 	const fromPrefix = "from."
-	urlQuery := r.URL.Query()
+	urlQuery := httpRequest.URL.Query()
 	var unknownFromFields []string
 	for fieldName := range urlQuery {
 		if strings.HasPrefix(fieldName, fromPrefix) {
@@ -269,9 +269,9 @@ func ParsePagingParameters(r *http.Request, expectedFromFields map[string]FieldT
 		expectedFromFieldNames = append(expectedFromFieldNames, fieldName)
 		var value interface{}
 		fromFieldName := fromPrefix + fieldName
-		if len(r.URL.Query()[fromFieldName]) > 0 {
+		if len(urlQuery[fromFieldName]) > 0 {
 			var err error
-			value, err = getFromValueForField(r, fieldName, fieldType)
+			value, err = getFromValueForField(httpRequest, fieldName, fieldType)
 			if err != nil {
 				return nil, err
 			}
@@ -293,21 +293,24 @@ func ParsePagingParameters(r *http.Request, expectedFromFields map[string]FieldT
 
 // getFromValueForField returns a 'from' value (a paging parameter) for a given field.
 // The value is converted according to fieldType.
-func getFromValueForField(r *http.Request, fieldName string, fieldType FieldType) (result interface{}, err error) {
+func getFromValueForField(httpRequest *http.Request, fieldName string, fieldType FieldType) (result interface{}, err error) {
 	fromFieldName := "from." + fieldName
 	switch fieldType {
 	case FieldTypeString:
-		result, err = r.URL.Query()[fromFieldName][0], nil
+		result, err = httpRequest.URL.Query()[fromFieldName][0], nil
 	case FieldTypeInt64:
-		result, err = ResolveURLQueryGetInt64Field(r, fromFieldName)
+		result, err = ResolveURLQueryGetInt64Field(httpRequest, fromFieldName)
 	case FieldTypeBool:
-		result, err = ResolveURLQueryGetBoolField(r, fromFieldName)
+		result, err = ResolveURLQueryGetBoolField(httpRequest, fromFieldName)
 	case FieldTypeTime:
 		var timeResult time.Time
-		timeResult, err = ResolveURLQueryGetTimeField(r, fromFieldName)
+		timeResult, err = ResolveURLQueryGetTimeField(httpRequest, fromFieldName)
 		result = (*database.Time)(&timeResult)
 	}
-	return result, err
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 var safeColumnNameRegexp = regexp.MustCompile("[^a-zA-Z_0-9]")
@@ -346,6 +349,7 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 	safeColumnNames = make([]string, usedFieldsNumber)
 	conditions = make([]string, 0, usedFieldsNumber)
 	queryValuesPart := make([]interface{}, 0, usedFieldsNumber)
+	//nolint:mnd // sum of 1..usedFieldsNumber = usedFieldsNumber*(usedFieldsNumber+1)/2
 	queryValues = make([]interface{}, 0, (usedFieldsNumber+1)*usedFieldsNumber/2)
 	var conditionPrefix string
 
@@ -355,7 +359,7 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 		safeColumnName := safeColumnNameRegexp.ReplaceAllLiteralString(fieldName, "_")
 		safeColumnNames[index] = safeColumnName
 
-		if len(conditionPrefix) > 0 {
+		if conditionPrefix != "" {
 			conditionPrefix += " AND "
 		}
 		columnName := configuredFields[fieldName].ColumnName
@@ -395,7 +399,7 @@ func joinSubQueryForPaging(query *database.DB, usedFields []string, configuredFi
 		}
 		for fieldName := range fromValues {
 			startFromRowQuery = startFromRowQuery.
-				Where(fmt.Sprintf("%s <=> ?", configuredFields[fieldName].ColumnName), fromValues[fieldName])
+				Where(configuredFields[fieldName].ColumnName+" <=> ?", fromValues[fieldName])
 		}
 		startFromRowQuery = startFromRowQuery.Select(strings.Join(fieldsToSelect, ", "))
 		startFromRowSubQuery = startFromRowQuery.Limit(1).SubQuery()

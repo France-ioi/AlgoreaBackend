@@ -1,7 +1,9 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,12 +19,12 @@ func ResolveURLQueryGetInt64SliceField(req *http.Request, paramName string) ([]i
 		return nil, err
 	}
 
-	var ids []int64
 	paramValue := req.URL.Query().Get(paramName)
 	if paramValue == "" {
-		return ids, nil
+		return []int64(nil), nil
 	}
 	idsStr := strings.Split(paramValue, ",")
+	ids := make([]int64, 0, len(idsStr))
 	for _, idStr := range idsStr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
@@ -73,10 +75,10 @@ func ResolveURLQueryGetStringSliceField(req *http.Request, paramName string) ([]
 //
 // All values from both the request parameters are checked against the list of known values.
 func ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(
-	r *http.Request, fieldName string, knownValuesMap map[string]bool,
+	httpRequest *http.Request, fieldName string, knownValuesMap map[string]bool,
 ) ([]string, error) {
 	var valuesMap map[string]bool
-	valuesToInclude, err := ResolveURLQueryGetStringSliceField(r, fieldName+"_include")
+	valuesToInclude, err := ResolveURLQueryGetStringSliceField(httpRequest, fieldName+"_include")
 	if err == nil {
 		valuesMap = make(map[string]bool, len(valuesToInclude))
 		for _, value := range valuesToInclude {
@@ -92,7 +94,7 @@ func ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(
 		}
 	}
 
-	valuesToExclude, err := ResolveURLQueryGetStringSliceField(r, fieldName+"_exclude")
+	valuesToExclude, err := ResolveURLQueryGetStringSliceField(httpRequest, fieldName+"_exclude")
 	if err == nil && len(valuesToExclude) != 0 {
 		for _, valueToExclude := range valuesToExclude {
 			if !knownValuesMap[valueToExclude] {
@@ -113,9 +115,9 @@ func ResolveURLQueryGetTimeField(httpReq *http.Request, name string) (time.Time,
 	if err := checkQueryGetFieldIsNotMissing(httpReq, name); err != nil {
 		return time.Time{}, err
 	}
-	result, err := time.Parse(time.RFC3339, httpReq.URL.Query().Get(name))
+	result, err := time.Parse(time.RFC3339Nano, httpReq.URL.Query().Get(name))
 	if err != nil {
-		return time.Time{}, fmt.Errorf("wrong value for %s (should be time (rfc3339))", name)
+		return time.Time{}, fmt.Errorf("wrong value for %s (should be time (rfc3339Nano))", name)
 	}
 	return result, nil
 }
@@ -184,11 +186,11 @@ func checkQueryGetFieldIsNotMissing(httpReq *http.Request, name string) error {
 func ResolveURLQueryPathInt64SliceField(req *http.Request, paramName string) ([]int64, error) {
 	paramValue := chi.URLParam(req, paramName)
 	paramValue = strings.Trim(paramValue, "/")
-	var ids []int64
 	if paramValue == "" {
-		return ids, nil
+		return []int64(nil), nil
 	}
 	idsStr := strings.Split(paramValue, "/")
+	ids := make([]int64, 0, len(idsStr))
 	for _, idStr := range idsStr {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil {
@@ -210,4 +212,16 @@ func ResolveURLQueryPathInt64SliceFieldWithLimit(r *http.Request, paramName stri
 		return nil, fmt.Errorf("no more than %d %s expected", limit, paramName)
 	}
 	return ids, nil
+}
+
+// ResolveJSONBodyIntoMap reads the request body and parses it as JSON into a map.
+// As it reads out the body, it can only be called once.
+func ResolveJSONBodyIntoMap(r *http.Request) (map[string]interface{}, error) {
+	var rawRequestData map[string]interface{}
+	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
+	err := json.NewDecoder(r.Body).Decode(&rawRequestData)
+	if err != nil {
+		return nil, ErrInvalidRequest(fmt.Errorf("invalid input JSON: %w", err))
+	}
+	return rawRequestData, nil
 }

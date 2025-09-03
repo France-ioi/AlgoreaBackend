@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loginmodule"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /current-user users currentUserDeletion
@@ -28,13 +28,14 @@ import (
 //							 3. [`permissions_granted`, `permissions_generated`, `attempts`]
 //									having `group_id` = `users.group_id`;
 //
-//							 4. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
-//							 5. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
+//							 4. `permissions_granted` having `source_group_id` = `users.group_id`;
+//							 5. `groups_groups` having `parent_group_id` or `child_group_id` equal to `users.group_id`;
+//							 6. `group_pending_requests`/`group_membership_changes` having `group_id` or `member_id` equal
 //									to `users.group_id`;
-//							 6. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
+//							 7. `groups_ancestors` having `ancestor_group_id` or `child_group_id` equal
 //									to `users.group_id`;
-//							 7. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`;
-//							 8. `users` having `group_id` = `users.group_id`.
+//							 8. [`groups_propagate`, `groups`] having `id` equal to `users.group_id`;
+//							 9. `users` having `group_id` = `users.group_id`.
 //
 //
 //							 The deletion is rejected if the user is a member of at least one group with
@@ -46,11 +47,13 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) delete(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	doNotDelete, err := store.ActiveGroupGroups().WhereUserIsMember(user).
 		Where("groups_groups_active.lock_membership_approved").
@@ -59,7 +62,7 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 	service.MustNotBeError(err)
 
 	if doNotDelete {
-		logging.GetLogEntry(r).
+		logging.GetLogEntry(httpRequest).
 			Infof("A user with group_id = %d tried to delete himself, but he is a member of a group with lock_user_deletion_until >= NOW()",
 				user.GroupID)
 		return service.ErrForbidden(errors.New("you cannot delete yourself right now"))
@@ -70,19 +73,19 @@ func (srv *Service) delete(w http.ResponseWriter, r *http.Request) service.APIEr
 		service.MustNotBeError(store.Users().ByID(user.GroupID).
 			PluckFirst("login_id", &loginID).Error())
 	}
-	service.MustNotBeError(store.Users().DeleteWithTraps(user))
+	service.MustNotBeError(store.Users().DeleteWithTraps(user, user.IsTempUser))
 
 	if !user.IsTempUser {
 		var result bool
 		result, err = loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
-			UnlinkClient(r.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"), loginID)
+			UnlinkClient(httpRequest.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"), loginID)
 		service.MustNotBeError(err)
 		if !result {
 			return service.ErrUnexpected(errors.New("login module failed"))
 		}
 	}
 
-	render.Respond(w, r, service.DeletionSuccess(nil))
+	render.Respond(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil))
 
-	return service.NoError
+	return nil
 }

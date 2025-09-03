@@ -1,7 +1,7 @@
 package items
 
 import (
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 // RawWatchedGroupStatFields represents DB data fields for watched group stats used by itemNavigationView & itemChildrenView.
@@ -13,9 +13,9 @@ type RawWatchedGroupStatFields struct {
 }
 
 func (stat *RawWatchedGroupStatFields) asItemWatchedGroupStat(
-	watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore,
+	watchedGroupIDIsSet bool, permissionGrantedStore *database.PermissionGrantedStore,
 ) *itemWatchedGroupStat {
-	if !watchedGroupIDSet {
+	if !watchedGroupIDIsSet {
 		return nil
 	}
 	result := &itemWatchedGroupStat{

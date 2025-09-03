@@ -10,7 +10,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestQueryLimiter_Apply(t *testing.T) {
@@ -72,9 +73,11 @@ func TestQueryLimiter_Apply(t *testing.T) {
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
-			r := chi.NewRouter()
+			testoutput.SuppressIfPasses(t)
+
+			router := chi.NewRouter()
 			called := false
-			handler := func(w http.ResponseWriter, r *http.Request) {
+			handler := func(_ http.ResponseWriter, httpRequest *http.Request) {
 				called = true
 				db, mock := database.NewDBMock()
 				defer func() { _ = db.Close() }()
@@ -84,19 +87,19 @@ func TestQueryLimiter_Apply(t *testing.T) {
 					WillReturnRows(mock.NewRows([]string{"id"}))
 
 				var result []interface{}
-				err := testCase.queryLimiter.Apply(r, db.Table("users")).Scan(&result).Error()
+				err := testCase.queryLimiter.Apply(httpRequest, db.Table("users")).Scan(&result).Error()
 				assert.NoError(t, err)
 				assert.NoError(t, mock.ExpectationsWereMet())
 			}
-			r.Get("/", handler)
+			router.Get("/", handler)
 
-			ts := httptest.NewServer(r)
-			request, _ := http.NewRequest("GET", ts.URL+testCase.queryString, http.NoBody)
+			testServer := httptest.NewServer(router)
+			request, _ := http.NewRequest(http.MethodGet, testServer.URL+testCase.queryString, http.NoBody)
 			response, err := http.DefaultClient.Do(request)
 			if err == nil {
 				_ = response.Body.Close()
 			}
-			ts.Close()
+			testServer.Close()
 			assert.True(t, called, "The handler was not called")
 		})
 	}

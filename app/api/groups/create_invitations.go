@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // for each login a result can be one of:
@@ -51,8 +51,8 @@ const maxAllowedLoginsToInvite = 100
 //		* Logins not corresponding to valid users or corresponding to temporary users are ignored (result = "not_found").
 //
 //		* If the `parent_group_id` corresponds to a team, the service skips users
-//			who are members of other teams participating in same contests as `parent_group_id`
-//			(expired/ended attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
+//			who are members of other teams participating in solving same items requiring explicit entry as `parent_group_id`
+//			(expired/ended attempts are ignored for items allowing multiple attempts, result = "in_another_team").
 //
 //		* Pending group requests from users listed in `logins` become accepted (result = "success")
 //			if all needed approvals are given, or replaced by invitations otherwise.
@@ -83,6 +83,7 @@ const maxAllowedLoginsToInvite = 100
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- in: body
 //			name: logins_info
@@ -104,10 +105,12 @@ const maxAllowedLoginsToInvite = 100
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Request) service.APIError {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+func (srv *Service) createGroupInvitations(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -115,7 +118,7 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 	var requestData struct {
 		Logins []string `json:"logins"`
 	}
-	err = render.Decode(r, &requestData)
+	err = render.Decode(httpRequest, &requestData)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -126,11 +129,9 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 		return service.ErrInvalidRequest(fmt.Errorf("there should be no more than %d logins", maxAllowedLoginsToInvite))
 	}
 
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
-	if apiErr := checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID); apiErr != service.NoError {
-		return apiErr
-	}
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, parentGroupID))
 
 	results := make(map[string]string, len(requestData.Logins))
 	for _, login := range requestData.Logins {
@@ -170,9 +171,9 @@ func (srv *Service) createGroupInvitations(w http.ResponseWriter, r *http.Reques
 		results[groupIDToLoginMap[id]] = string(result)
 	}
 
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(results)))
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(results)))
 
-	return service.NoError
+	return nil
 }
 
 func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupID int64, groupsToCheck []int64,
@@ -198,33 +199,32 @@ func filterOtherTeamsMembersOutForLogins(store *database.DataStore, parentGroupI
 }
 
 func getOtherTeamsMembers(store *database.DataStore, parentGroupID int64, groupsToCheck []int64) []int64 {
-	found, err := store.Groups().ByID(parentGroupID).Where("type = 'Team'").WithWriteLock().HasRows()
+	found, err := store.Groups().ByID(parentGroupID).Where("type = 'Team'").WithExclusiveWriteLock().HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return nil
 	}
 
-	contestsQuery := store.Attempts().
+	teamAttemptsQuery := store.Attempts().
 		Where("participant_id = ?", parentGroupID).
 		Where("root_item_id IS NOT NULL").
-		Group("root_item_id").WithWriteLock()
+		Group("root_item_id").WithExclusiveWriteLock()
 
 	var otherTeamsMembers []int64
 	service.MustNotBeError(store.ActiveGroupGroups().Where("child_group_id IN (?)", groupsToCheck).
-		Joins("JOIN `groups` ON groups.id = groups_groups_active.parent_group_id").
-		Joins("JOIN (?) AS teams_contests",
-			contestsQuery. // all the team's attempts (not only active ones)
-					Select(`
-					  root_item_id AS item_id,
-					  MAX(NOW() < attempts.allows_submissions_until AND attempts.ended_at IS NULL) AS is_active`).QueryExpr()).
-		Joins("JOIN items ON items.id = teams_contests.item_id").
-		Joins("JOIN attempts ON attempts.participant_id = groups.id AND attempts.root_item_id = items.id").
-		Where("groups.type = 'Team'").
+		Joins("JOIN (?) AS team_attempts", // all the team's attempts (not only active ones)
+			teamAttemptsQuery.
+				Select(`
+					root_item_id AS item_id,
+					MAX(NOW() < attempts.allows_submissions_until AND attempts.ended_at IS NULL) AS is_active`).QueryExpr()).
+		Joins("JOIN items ON items.id = team_attempts.item_id").
+		Joins("JOIN attempts ON attempts.participant_id = groups_groups_active.parent_group_id AND attempts.root_item_id = items.id").
+		Where("groups_groups_active.is_team_membership = 1").
 		Where("parent_group_id != ?", parentGroupID).
 		Where(`
-			(teams_contests.is_active AND NOW() < attempts.allows_submissions_until AND attempts.ended_at IS NULL) OR
+			(team_attempts.is_active AND NOW() < attempts.allows_submissions_until AND attempts.ended_at IS NULL) OR
 			NOT items.allows_multiple_attempts`).
-		WithWriteLock().Pluck("child_group_id", &otherTeamsMembers).Error())
+		WithExclusiveWriteLock().Pluck("child_group_id", &otherTeamsMembers).Error())
 
 	return otherTeamsMembers
 }

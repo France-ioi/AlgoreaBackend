@@ -4,26 +4,26 @@ Feature: List attempts for current user and item_id - robustness
       | login | group_id | first_name | last_name |
       | jdoe  | 11       | John       | Doe       |
       | jane  | 12       | Jane       | Doe       |
-    And the database has the following table 'groups':
+    And the database has the following table "groups":
       | id | type  |
       | 13 | Team  |
       | 14 | Class |
       | 15 | Team  |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 12             |
       | 14              | 12             |
       | 15              | 12             |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | allows_multiple_attempts | default_language_tag |
       | 210 | 1                        | fr                   |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 11       | 210     | content            |
       | 13       | 210     | info               |
       | 15       | 210     | solution           |
-    And the database has the following table 'attempts':
+    And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | ended_at |
       | 0  | 11             | 2018-05-29 05:38:38 | null       | null              | null     |
       | 1  | 13             | 2018-05-29 05:38:38 | null       | null              | null     |
@@ -75,7 +75,7 @@ Feature: List attempts for current user and item_id - robustness
     When I send a GET request to "/items/210/attempts?attempt_id=0&as_team_id=14"
     Then the response code should be 403
     And the response error message should contain "Can't use given as_team_id as a user's team"
-    And the table "attempts" should stay unchanged
+    And the table "attempts" should remain unchanged
 
   Scenario: Wrong attempt_id
     Given I am the user with id "11"

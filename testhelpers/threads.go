@@ -3,14 +3,14 @@
 package testhelpers
 
 // RunConcurrently runs a given function concurrently.
-func RunConcurrently(f func(), threadsNumber int) {
+func RunConcurrently(funcToRun func(), threadsNumber int) {
 	done := make(chan bool, threadsNumber)
 	for i := 0; i < threadsNumber; i++ {
 		go func() {
 			defer func() {
 				done <- true
 			}()
-			f()
+			funcToRun()
 		}()
 	}
 	for i := 0; i < threadsNumber; i++ {

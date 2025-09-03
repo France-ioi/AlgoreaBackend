@@ -5,23 +5,21 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 type listItemStringNotInfo struct {
-	// Nullable; only if `can_view` >= 'content'
+	// Only if `can_view` >= 'content'
 	Subtitle *string `json:"subtitle"`
 }
 
 type listItemString struct {
 	// required: true
 	LanguageTag string `json:"language_tag"`
-	// Nullable
 	// required: true
 	Title *string `json:"title"`
-	// Nullable
 	// required: true
 	ImageURL *string `json:"image_url"`
 
@@ -58,7 +56,7 @@ type visibleChildItemFields struct {
 	// only for visible items
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type"`
-	// Nullable, only for visible items
+	// only for visible items
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	Duration *string `json:"duration"`
@@ -186,6 +184,7 @@ type rawListChildItem struct {
 //			description: "`id` of an attempt for the item."
 //			in: query
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: show_invisible_items
 //			in: query
@@ -196,9 +195,11 @@ type rawListChildItem struct {
 //		- name: as_team_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //	responses:
 //		"200":
 //			description: OK. Success response with item children data
@@ -212,19 +213,18 @@ type rawListChildItem struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, attemptID, participantID, user, watchedGroupID, watchedGroupIDSet, apiError := srv.resolveGetParentsOrChildrenServiceParams(
-		httpReq,
-	)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	params, err := srv.resolveGetParentsOrChildrenServiceParams(httpRequest)
+	service.MustNotBeError(err)
 
 	requiredViewPermissionOnItems := "info"
-	if len(httpReq.URL.Query()["show_invisible_items"]) > 0 {
-		showInvisibleItems, err := service.ResolveURLQueryGetBoolField(httpReq, "show_invisible_items")
+	if len(httpRequest.URL.Query()["show_invisible_items"]) > 0 {
+		var showInvisibleItems bool
+		showInvisibleItems, err = service.ResolveURLQueryGetBoolField(httpRequest, "show_invisible_items")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
@@ -233,30 +233,30 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 		}
 	}
 
-	store := srv.GetStore(httpReq)
+	store := srv.GetStore(httpRequest)
 	found, err := store.Permissions().
-		MatchingGroupAncestors(participantID).
+		MatchingGroupAncestors(params.participantID).
 		WherePermissionIsAtLeast("view", "content").
-		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", participantID).
-		Where("permissions.item_id = ?", itemID).
-		Where("results.attempt_id = ?", attemptID).
+		Joins("JOIN results ON results.participant_id = ? AND results.item_id = permissions.item_id", params.participantID).
+		Where("permissions.item_id = ?", params.itemID).
+		Where("results.attempt_id = ?", params.attemptID).
 		Where("results.started").
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	var rawData []rawListChildItem
 	service.MustNotBeError(
 		constructItemChildrenQuery(
 			store,
-			itemID,
-			participantID,
+			params.itemID,
+			params.participantID,
 			requiredViewPermissionOnItems,
-			attemptID,
-			watchedGroupIDSet,
-			watchedGroupID,
+			params.attemptID,
+			params.watchedGroupIDIsSet,
+			params.watchedGroupID,
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
@@ -272,22 +272,22 @@ func (srv *Service) getItemChildren(rw http.ResponseWriter, httpReq *http.Reques
 					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
 				child_order,
 				EXISTS(SELECT 1 FROM item_dependencies WHERE item_id = items.id AND grant_content_view) AS grants_access_to_items`,
-			[]interface{}{participantID},
+			[]interface{}{params.participantID},
 			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
 			func(db *database.DB) *database.DB {
-				return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", itemID)
+				return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", params.itemID)
 			},
 		).
-			JoinsUserAndDefaultItemStrings(user).
+			JoinsUserAndDefaultItemStrings(params.user).
 			Scan(&rawData).Error())
 
-	response := childItemsFromRawData(rawData, watchedGroupIDSet, store.PermissionsGranted())
+	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
 
-	render.Respond(rw, httpReq, response)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, response)
+	return nil
 }
 
 func constructItemChildrenQuery(
@@ -296,7 +296,7 @@ func constructItemChildrenQuery(
 	groupID int64,
 	requiredViewPermissionOnItems string,
 	attemptID int64,
-	watchedGroupIDSet bool,
+	watchedGroupIDIsSet bool,
 	watchedGroupID int64,
 	columnList string,
 	columnListValues []interface{},
@@ -307,7 +307,7 @@ func constructItemChildrenQuery(
 		dataStore,
 		groupID,
 		requiredViewPermissionOnItems,
-		watchedGroupIDSet,
+		watchedGroupIDIsSet,
 		watchedGroupID,
 		columnList,
 		columnListValues,
@@ -326,7 +326,7 @@ func constructItemChildrenQuery(
 }
 
 func childItemsFromRawData(
-	rawData []rawListChildItem, watchedGroupIDSet bool, permissionGrantedStore *database.PermissionGrantedStore,
+	rawData []rawListChildItem, watchedGroupIDIsSet bool, permissionGrantedStore *database.PermissionGrantedStore,
 ) []childItem {
 	result := make([]childItem, 0, len(rawData))
 	var currentChild *childItem
@@ -369,7 +369,7 @@ func childItemsFromRawData(
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 			}
-			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDSet, permissionGrantedStore)
+			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 			result = append(result, child)
 			currentChild = &result[len(result)-1]
 		}

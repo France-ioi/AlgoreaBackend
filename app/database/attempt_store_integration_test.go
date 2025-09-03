@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type resultType struct {
@@ -31,7 +33,9 @@ type attemptType struct {
 }
 
 func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
-	db := testhelpers.SetupDBWithFixtureString(`
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 10}
 			- {id: 100}
@@ -47,19 +51,19 @@ func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
 			- {attempt_id: 0, participant_id: 20, item_id: 20}`)
 	defer func() { _ = db.Close() }()
 
-	testhelpers.MockDBTime("2019-05-30 11:00:00")
-	defer testhelpers.RestoreDBTime()
+	dbTimePatch := testhelpers.MockDBTime("2019-05-30 11:00:00")
+	defer testhelpers.RestoreDBTime(dbTimePatch)
 
 	var newAttemptID int64
 	var err error
-	assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+	require.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 		newAttemptID, err = store.Attempts().CreateNew(10, 200, 20, 100)
 		return err
 	}))
 	assert.Equal(t, int64(1), newAttemptID)
 	var result resultType
 	expectedTime := database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))
-	assert.NoError(t, database.NewDataStore(db).Results().
+	require.NoError(t, database.NewDataStore(db).Results().
 		Where("attempt_id = ?", newAttemptID).
 		Where("participant_id = ?", 10).
 		Select("participant_id, attempt_id, item_id, started_at, latest_activity_at").Take(&result).Error())
@@ -71,14 +75,14 @@ func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
 		LatestActivityAt: expectedTime,
 	}, result)
 	var attempt attemptType
-	assert.NoError(t, database.NewDataStore(db).Attempts().ByID(newAttemptID).
+	require.NoError(t, database.NewDataStore(db).Attempts().ByID(newAttemptID).
 		Where("participant_id = ?", 10).
 		Select("participant_id, id, creator_id, parent_attempt_id, root_item_id, created_at").Take(&attempt).Error())
 	assert.Equal(t, attemptType{
 		ParticipantID:   10,
 		ID:              1,
-		ParentAttemptID: utils.Ptr(int64(200)),
-		RootItemID:      utils.Ptr(int64(20)),
+		ParentAttemptID: golang.Ptr(int64(200)),
+		RootItemID:      golang.Ptr(int64(20)),
 		CreatorID:       100,
 		CreatedAt:       &expectedTime,
 	}, attempt)

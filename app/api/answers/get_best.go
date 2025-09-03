@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /items/{item_id}/best-answer answers bestAnswerGet
@@ -34,6 +34,7 @@ import (
 //		- name: watched_group_id
 //			in: query
 //			type: integer
+//			format: int64
 //			description: >
 //				A participant (`team_id` or user).
 //				If given, get the best answer of the participant instead of the one of the user.
@@ -48,35 +49,35 @@ import (
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+func (srv *Service) getBestAnswer(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	watchedGroupID, watchedGroupOK, apiError := srv.ResolveWatchedGroupID(httpReq)
-	if apiError != service.NoError {
-		return apiError
-	}
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
+	service.MustNotBeError(err)
 
-	user := srv.GetUser(httpReq)
-	store := srv.GetStore(httpReq)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 	var result []map[string]interface{}
 
 	bestAnswerQuery := store.Answers().
 		WithGradings().
 		DB
 
-	if watchedGroupOK {
+	if watchedGroupIDIsSet {
 		// the following checks were made by ResolveWatchedGroupID:
 		// - watched_group_id must be a participant
 		// - the current user is able to watch the participant
 
 		// check 'can_watch'>='answer' permission on the answers.item_id
 		if !user.CanWatchItemAnswer(store, itemID) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 
 		bestAnswerQuery = bestAnswerQuery.
@@ -84,7 +85,7 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 	} else {
 		// check 'can_view'>='content' permission on the answers.item_id
 		if !user.CanViewItemContent(store, itemID) {
-			return service.InsufficientAccessRightsError
+			return service.ErrAPIInsufficientAccessRights
 		}
 
 		bestAnswerQuery = bestAnswerQuery.
@@ -105,6 +106,6 @@ func (srv *Service) getBestAnswer(rw http.ResponseWriter, httpReq *http.Request)
 	}
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)[0]
 
-	render.Respond(rw, httpReq, convertedResult)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, convertedResult)
+	return nil
 }

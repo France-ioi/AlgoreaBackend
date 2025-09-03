@@ -7,7 +7,7 @@ import (
 	"crypto/rand"
 	"io"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // AES256GCM encrypts the plaintext using AES-256-GCM with the provided key.

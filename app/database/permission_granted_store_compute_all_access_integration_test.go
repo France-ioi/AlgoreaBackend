@@ -3,13 +3,14 @@
 package database_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type groupItemsResultRow struct {
@@ -19,11 +20,13 @@ type groupItemsResultRow struct {
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
-	db := testhelpers.SetupDBWithFixture("permission_granted_store/compute_all_access/_common")
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "permission_granted_store/compute_all_access/_common")
 	defer func() { _ = db.Close() }()
 
 	testhelpers.RunConcurrently(func() {
-		dataStore := database.NewDataStoreWithContext(context.Background(), db)
+		dataStore := database.NewDataStoreWithContext(db.GetContext(), db)
 		assert.NoError(t, dataStore.InTransaction(func(ds *database.DataStore) error {
 			ds.SchedulePermissionsPropagation()
 			return nil
@@ -46,7 +49,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_Concurrency(t *testing.T) {
 		{GroupID: 2, ItemID: 12, PropagateTo: "done"},
 	}
 
-	assert.NoError(t, permissionsGeneratedStore.Joins("LEFT JOIN permissions_propagate USING(group_id, item_id)").
+	require.NoError(t, permissionsGeneratedStore.Joins("LEFT JOIN permissions_propagate USING(group_id, item_id)").
 		Order("group_id, item_id").
 		Select(`
 			group_id,

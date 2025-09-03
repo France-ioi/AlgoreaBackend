@@ -6,9 +6,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDB_getFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -36,6 +40,9 @@ func TestDB_getFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 }
 
 func fakeDBEnums(enumName string, name2index map[string]int, index2name map[int]string) {
+	enumsMutex.Lock()
+	defer enumsMutex.Unlock()
+
 	enumIndex := enumName2Number[enumName]
 	if len(enumValueIndex2Name) <= enumIndex {
 		enumValueIndex2Name = append(enumValueIndex2Name, make([]map[int]string, enumIndex+1-len(enumValueIndex2Name))...)

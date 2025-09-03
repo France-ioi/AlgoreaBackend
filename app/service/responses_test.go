@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	"github.com/go-chi/render"
-	assertlib "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func httpResponseForResponse(renderer render.Renderer) *httptest.ResponseRecorder {
-	var fn AppHandler = func(respW http.ResponseWriter, req *http.Request) APIError {
+	var fn AppHandler = func(respW http.ResponseWriter, req *http.Request) error {
 		_ = render.Render(respW, req, renderer)
-		return NoError
+		return nil
 	}
 	handler := http.HandlerFunc(fn.ServeHTTP)
 
-	req, _ := http.NewRequest("GET", "/dummy", http.NoBody)
+	req, _ := http.NewRequest(http.MethodGet, "/dummy", http.NoBody)
 	recorder := httptest.NewRecorder()
 
 	handler.ServeHTTP(recorder, req)
@@ -24,54 +24,46 @@ func httpResponseForResponse(renderer render.Renderer) *httptest.ResponseRecorde
 }
 
 func TestCreationSuccess(t *testing.T) {
-	assert := assertlib.New(t)
-
 	data := struct {
 		ItemID int64 `json:"id"`
 	}{42}
 
 	recorder := httpResponseForResponse(CreationSuccess(data))
-	assert.Equal(`{"success":true,"message":"created","data":{"id":42}}`+"\n", recorder.Body.String())
-	assert.Equal(http.StatusCreated, recorder.Code)
+	assert.JSONEq(t, `{"success":true,"message":"created","data":{"id":42}}`, recorder.Body.String())
+	assert.Equal(t, http.StatusCreated, recorder.Code)
 }
 
 func TestUpdateSuccess(t *testing.T) {
-	assert := assertlib.New(t)
-
 	data := struct {
 		Info string `json:"info"`
 	}{"some info"}
 
 	recorder := httpResponseForResponse(UpdateSuccess(data))
-	assert.Equal(`{"success":true,"message":"updated","data":{"info":"some info"}}`+"\n", recorder.Body.String())
-	assert.Equal(http.StatusOK, recorder.Code)
+	assert.JSONEq(t, `{"success":true,"message":"updated","data":{"info":"some info"}}`, recorder.Body.String())
+	assert.Equal(t, http.StatusOK, recorder.Code)
 }
 
 func TestDeletionSuccess(t *testing.T) {
-	assert := assertlib.New(t)
-
 	data := struct {
 		Info string `json:"info"`
 	}{"some info"}
 
 	recorder := httpResponseForResponse(DeletionSuccess(data))
-	assert.Equal(`{"success":true,"message":"deleted","data":{"info":"some info"}}`+"\n", recorder.Body.String())
-	assert.Equal(http.StatusOK, recorder.Code)
+	assert.JSONEq(t, `{"success":true,"message":"deleted","data":{"info":"some info"}}`, recorder.Body.String())
+	assert.Equal(t, http.StatusOK, recorder.Code)
 }
 
 func TestUnchangedSuccess(t *testing.T) {
-	assert := assertlib.New(t)
-
 	recorder := httpResponseForResponse(UnchangedSuccess(http.StatusResetContent))
-	assert.Equal(`{"success":true,"message":"unchanged","data":{"changed":false}}`+"\n", recorder.Body.String())
-	assert.Equal(http.StatusResetContent, recorder.Code)
+	assert.JSONEq(t, `{"success":true,"message":"unchanged","data":{"changed":false}}`, recorder.Body.String())
+	assert.Equal(t, http.StatusResetContent, recorder.Code)
 }
 
 func TestResponse_Render(t *testing.T) {
-	response := &Response{HTTPStatusCode: http.StatusOK, Message: "", Success: true}
+	response := &Response[*struct{}]{HTTPStatusCode: http.StatusOK, Message: "", Success: true}
 	recorder := httpResponseForResponse(response)
-	assertlib.Equal(t, `{"success":true,"message":"success"}`+"\n", recorder.Body.String())
-	assertlib.Equal(t, http.StatusOK, recorder.Code)
+	assert.JSONEq(t, `{"success":true,"message":"success"}`, recorder.Body.String())
+	assert.Equal(t, http.StatusOK, recorder.Code)
 }
 
 func TestCheckInt64JsonHasStringTag(t *testing.T) {
@@ -289,9 +281,9 @@ func TestCheckInt64JsonHasStringTag(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.shouldPanic {
-				assertlib.Panics(t, func() { CheckInt64JsonHasStringTag(tt.definitionStructure) })
+				assert.Panics(t, func() { CheckInt64JsonHasStringTag(tt.definitionStructure) })
 			} else {
-				assertlib.NotPanics(t, func() { CheckInt64JsonHasStringTag(tt.definitionStructure) })
+				assert.NotPanics(t, func() { CheckInt64JsonHasStringTag(tt.definitionStructure) })
 			}
 		})
 	}

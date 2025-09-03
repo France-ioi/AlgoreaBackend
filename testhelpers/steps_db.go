@@ -1,16 +1,22 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"regexp"
+	"sort"
+	"strconv"
 	"strings"
+	"time"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
+	messages "github.com/cucumber/messages/go/v21"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type rowTransformation int
@@ -21,118 +27,227 @@ const (
 	deleted
 )
 
-const (
-	UserGroupID = "group_id"
-	UserLogin   = "login"
-)
-
-func (ctx *TestContext) DBHasTable(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
+// DBHasTable inserts the data from the Godog table into the database table.
+func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 	if len(data.Rows) > 1 {
-		referenceColumnIndex := -1
 		head := data.Rows[0].Cells
 		fields := make([]string, 0, len(head))
 		marks := make([]string, 0, len(head))
 
-		for i, cell := range head {
-			if cell.Value == "@reference" {
-				referenceColumnIndex = i
-			}
-
+		for _, cell := range head {
 			fields = append(fields, database.QuoteName(cell.Value))
 			marks = append(marks, "?")
 		}
 
 		marksString := "(" + strings.Join(marks, ", ") + ")"
 		finalMarksString := marksString
-		if len(data.Rows) > 2 {
+		if len(data.Rows) > 2 { //nolint:mnd // finalMarksString = marksString when data is a header plus one row (two rows in total)
+			//nolint:mnd // -2 = minus one row for the table's header, and minus one more row for a set of question marks in '+ finalMarksString'
 			finalMarksString = strings.Repeat(marksString+", ", len(data.Rows)-2) + finalMarksString
 		}
-		query := "INSERT INTO " + database.QuoteName(table) + // nolint: gosec
+		query := "INSERT INTO " + database.QuoteName(tableName) +
 			" (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
 		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
-			for j, cell := range data.Rows[i].Cells {
-				if j != referenceColumnIndex {
-					var err error
-					if cell.Value, err = ctx.preprocessString(cell.Value); err != nil {
-						return err
-					}
-				}
+			for _, cell := range data.Rows[i].Cells {
+				cell.Value = ctx.preprocessString(cell.Value)
 				vals = append(vals, dbDataTableValue(cell.Value))
 			}
 		}
-		if ctx.inScenario {
-			tx, err := ctx.db.Begin()
-			if err != nil {
-				return err
-			}
-			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=0")
-			if err != nil {
-				_ = tx.Rollback()
-				return err
-			}
-			_, err = tx.Exec(query, vals...)
-			if err != nil {
-				_ = tx.Rollback()
-				return err
-			}
-			_, err = tx.Exec("SET FOREIGN_KEY_CHECKS=1")
-			if err != nil {
-				_ = tx.Rollback()
-				return err
-			}
-			err = tx.Commit()
-			if err != nil {
-				return err
-			}
-		} else {
-			ctx.featureQueries = append(ctx.featureQueries, dbquery{query, vals})
+		if err := ctx.executeOrQueueDBDataInsertionQuery(query, vals); err != nil {
+			return err
 		}
 	}
 
-	if ctx.dbTableData[table] == nil {
-		ctx.dbTableData[table] = data
-	} else if len(data.Rows) > 1 {
-		ctx.dbTableData[table] = combinePickleTables(ctx.dbTableData[table], data)
-	}
+	ctx.initializeOrCombineDBTableData(tableName, data)
 
 	return nil
 }
 
-func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable) error { // nolint
-	if len(data.Rows) > 1 {
-		groupsToCreate := &messages.PickleStepArgument_PickleTable{
-			Rows: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow, 1, (len(data.Rows)-1)*2+1),
+func (ctx *TestContext) initializeOrCombineDBTableData(tableName string, data *godog.Table) {
+	if ctx.dbTableData[tableName] == nil {
+		ctx.sortGodogTable(data)
+		ctx.dbTableData[tableName] = data
+	} else if len(data.Rows) > 1 {
+		ctx.dbTableData[tableName] = combineGodogTables(ctx.dbTableData[tableName], data)
+		ctx.sortGodogTable(ctx.dbTableData[tableName])
+	}
+}
+
+func (ctx *TestContext) setDBTableRowColumnValues(tableName string, primaryKey, columnValues map[string]string) {
+	if ctx.dbTableData[tableName] == nil {
+		panic(fmt.Sprintf("cannot set value: table %q is not initialized", tableName))
+	}
+
+	columns := make([]string, 0, len(columnValues))
+	values := make([]string, 0, len(columnValues))
+	for column, value := range columnValues {
+		columns = append(columns, column)
+		values = append(values, value)
+	}
+
+	columnIndexes := getColumnIndexes(ctx.dbTableData[tableName], columns)
+	for columnNumber, columnIndex := range columnIndexes {
+		if columnIndex == -1 {
+			ctx.dbTableData[tableName] = combineGodogTables(
+				ctx.dbTableData[tableName],
+				&godog.Table{Rows: []*messages.PickleTableRow{{Cells: []*messages.PickleTableCell{{Value: columns[columnNumber]}}}}},
+			)
+			columnIndexes[columnNumber] = len(ctx.dbTableData[tableName].Rows[0].Cells) - 1
 		}
-		groupsToCreate.Rows[0] = &messages.PickleStepArgument_PickleTable_PickleTableRow{
-			Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
-				{Value: "id"}, {Value: "name"}, {Value: "description"}, {Value: "type"},
+	}
+
+	rowIndex := ctx.getDBTableRowIndexForPrimaryKey(tableName, primaryKey)
+	if rowIndex == -1 {
+		panic(fmt.Sprintf("no such row in table %q with primary key %v", tableName, primaryKey))
+	}
+
+	row := ctx.dbTableData[tableName].Rows[rowIndex]
+	for i, columnIndex := range columnIndexes {
+		if row.Cells[columnIndex] == nil {
+			row.Cells[columnIndex] = &messages.PickleTableCell{}
+		}
+		row.Cells[columnIndex].Value = values[i]
+	}
+
+	ctx.sortGodogTable(ctx.dbTableData[tableName])
+
+	ctx.executeOrQueueDBDataRowUpdate(tableName, primaryKey, columns, values)
+}
+
+func (ctx *TestContext) executeOrQueueDBDataRowUpdate(tableName string, primaryKey map[string]string, columns, values []string) {
+	queryValues := make([]interface{}, 0, len(values)+len(primaryKey))
+	quotedColumns := make([]string, 0, len(columns))
+	for i, column := range columns {
+		quotedColumns = append(quotedColumns, database.QuoteName(column)+" = ?")
+		queryValues = append(queryValues, dbDataTableValue(values[i]))
+	}
+
+	primaryKeyColumns := make([]string, 0, len(primaryKey))
+	for primaryKeyColumn, primaryKeyValue := range primaryKey {
+		primaryKeyColumns = append(primaryKeyColumns, database.QuoteName(primaryKeyColumn))
+		queryValues = append(queryValues, dbDataTableValue(primaryKeyValue))
+	}
+
+	err := ctx.executeOrQueueDBDataInsertionQuery("UPDATE "+database.QuoteName(tableName)+
+		" SET "+strings.Join(quotedColumns, ", ")+" WHERE "+
+		strings.Join(primaryKeyColumns, " = ? AND ")+" = ?", queryValues)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (ctx *TestContext) setDBTableRowColumnValue(tableName string, primaryKey map[string]string, column, value string) {
+	ctx.setDBTableRowColumnValues(tableName, primaryKey, map[string]string{column: value})
+}
+
+func getDBTableColumnIndex(dbTable *godog.Table, columnName string) int {
+	for i, cell := range dbTable.Rows[0].Cells {
+		if cell.Value == columnName {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func isDBTableColumnSetInRow(dbTable *godog.Table, columnName string, rowIndex int) bool {
+	columnIndex := getDBTableColumnIndex(dbTable, columnName)
+	return columnIndex != -1 && dbTable.Rows[rowIndex].Cells[columnIndex] != nil
+}
+
+func (ctx *TestContext) getDBTableRowIndexForPrimaryKey(tableName string, primaryKey map[string]string) int {
+	if _, ok := ctx.dbTableData[tableName]; !ok {
+		return -1
+	}
+
+	primaryKeyIndexes := make(map[string]int, len(primaryKey))
+	for primaryKeyColumn := range primaryKey {
+		primaryKeyIndexes[primaryKeyColumn] = getDBTableColumnIndex(ctx.dbTableData[tableName], primaryKeyColumn)
+		if primaryKeyIndexes[primaryKeyColumn] == -1 {
+			return -1
+		}
+	}
+
+	for rowIndex := 1; rowIndex < len(ctx.dbTableData[tableName].Rows); rowIndex++ {
+		row := ctx.dbTableData[tableName].Rows[rowIndex]
+		match := true
+		for primaryKeyColumn, primaryKeyIndex := range primaryKeyIndexes {
+			if row.Cells[primaryKeyIndex] == nil || row.Cells[primaryKeyIndex].Value != primaryKey[primaryKeyColumn] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return rowIndex
+		}
+	}
+	return -1
+}
+
+type stringKeyValuePair struct {
+	Key   string
+	Value string
+}
+
+func constructGodogTableFromData(data []stringKeyValuePair) *godog.Table {
+	table := &godog.Table{}
+	table.Rows = make([]*messages.PickleTableRow, 2) //nolint:mnd // one for header, one for data
+	table.Rows[0] = &messages.PickleTableRow{Cells: make([]*messages.PickleTableCell, 0, len(data))}
+	table.Rows[1] = &messages.PickleTableRow{Cells: make([]*messages.PickleTableCell, 0, len(data))}
+
+	for _, keyValuePair := range data {
+		table.Rows[0].Cells = append(table.Rows[0].Cells, &messages.PickleTableCell{Value: keyValuePair.Key})
+		table.Rows[1].Cells = append(table.Rows[1].Cells, &messages.PickleTableCell{Value: keyValuePair.Value})
+	}
+
+	return table
+}
+
+func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
+	return database.NewDataStore(ctx.application.Database).WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
+		return store.Exec(query, vals...).Error()
+	})
+}
+
+func getColumnIndex(table *godog.Table, columnName string) int {
+	for i, cell := range table.Rows[0].Cells {
+		if cell.Value == columnName {
+			return i
+		}
+	}
+	return -1
+}
+
+// DBHasUsers inserts the data from the Godog table into the users and groups tables.
+func (ctx *TestContext) DBHasUsers(data *godog.Table) error {
+	if len(data.Rows) > 1 {
+		groupsToCreate := &godog.Table{
+			Rows: make([]*messages.PickleTableRow, 1, (len(data.Rows)-1)*2+1),
+		}
+		groupsToCreate.Rows[0] = &messages.PickleTableRow{
+			Cells: []*messages.PickleTableCell{
+				{Value: idString}, {Value: "name"}, {Value: "type"},
 			},
 		}
-		head := data.Rows[0].Cells
-		groupIDColumnNumber := -1
-		loginColumnNumber := -1
-		for number, cell := range head {
-			if cell.Value == UserGroupID {
-				groupIDColumnNumber = number
-				continue
-			}
-			if cell.Value == UserLogin {
-				loginColumnNumber = number
-				continue
-			}
-		}
 
-		for i := 1; i < len(data.Rows); i++ {
-			login := tableValueNull
-			if loginColumnNumber != -1 {
-				login = data.Rows[i].Cells[loginColumnNumber].Value
+		groupIDColumnIndex := getColumnIndex(data, "group_id")
+		loginColumnIndex := getColumnIndex(data, "login")
+
+		for rowIndex := 1; rowIndex < len(data.Rows); rowIndex++ {
+			var login string
+			if loginColumnIndex != -1 {
+				login = data.Rows[rowIndex].Cells[loginColumnIndex].Value
 			}
 
-			if groupIDColumnNumber != -1 {
-				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleStepArgument_PickleTable_PickleTableRow{
-					Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
-						{Value: data.Rows[i].Cells[groupIDColumnNumber].Value}, {Value: login}, {Value: login}, {Value: "User"},
+			if groupIDColumnIndex != -1 &&
+				ctx.getDBTableRowIndexForPrimaryKey(
+					"groups",
+					map[string]string{idString: data.Rows[rowIndex].Cells[groupIDColumnIndex].Value},
+				) == -1 {
+				groupsToCreate.Rows = append(groupsToCreate.Rows, &messages.PickleTableRow{
+					Cells: []*messages.PickleTableCell{
+						{Value: data.Rows[rowIndex].Cells[groupIDColumnIndex].Value}, {Value: login}, {Value: "User"},
 					},
 				})
 			}
@@ -146,38 +261,38 @@ func (ctx *TestContext) DBHasUsers(data *messages.PickleStepArgument_PickleTable
 	return ctx.DBHasTable("users", data)
 }
 
-// saveTableFromDatabase saves the content of a table in database for some columns, in order to later check if the table
-// had changed after some manipulations.
-func (ctx *TestContext) saveTableFromDatabase(gormDB *database.DB, table string, columns []string) error {
-	headerCells := make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, len(columns))
-	for i, column := range columns {
-		headerCells[i] = &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
-			Value: column,
+// loadColumnsFromDBTable loads the content of a table from the database for some columns in order to check if the table
+// had changed after some manipulations later.
+func (ctx *TestContext) loadColumnsFromDBTable(dbTableName string, dbColumnNames []string) error {
+	headerCells := make([]*messages.PickleTableCell, len(dbColumnNames))
+	for i, columnName := range dbColumnNames {
+		headerCells[i] = &messages.PickleTableCell{
+			Value: columnName,
 		}
 	}
 
-	ctx.dbTableData[table] = &messages.PickleStepArgument_PickleTable{
-		Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
+	ctx.dbTableData[dbTableName] = &godog.Table{
+		Rows: []*messages.PickleTableRow{
 			{Cells: headerCells},
 		},
 	}
 
 	var rows []map[string]interface{}
-	err := gormDB.Table(table).Select(strings.Join(columns, ",")).
-		Order(strings.Join(columns, ",")).ScanIntoSliceOfMaps(&rows).Error()
+	err := ctx.application.Database.Table(dbTableName).Select(strings.Join(dbColumnNames, ",")).
+		Order(strings.Join(dbColumnNames, ",")).ScanIntoSliceOfMaps(&rows).Error()
 	if err != nil {
 		return err
 	}
 
 	for _, row := range rows {
-		rowCells := make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, len(columns))
-		for j, column := range columns {
-			rowCells[j] = &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{
-				Value: row[column].(string),
+		rowCells := make([]*messages.PickleTableCell, len(dbColumnNames))
+		for j, columnName := range dbColumnNames {
+			rowCells[j] = &messages.PickleTableCell{
+				Value: fmt.Sprintf("%v", row[columnName]),
 			}
 		}
 
-		ctx.dbTableData[table].Rows = append(ctx.dbTableData[table].Rows, &messages.PickleStepArgument_PickleTable_PickleTableRow{
+		ctx.dbTableData[dbTableName].Rows = append(ctx.dbTableData[dbTableName].Rows, &messages.PickleTableRow{
 			Cells: rowCells,
 		})
 	}
@@ -187,21 +302,14 @@ func (ctx *TestContext) saveTableFromDatabase(gormDB *database.DB, table string,
 
 // DBGroupsAncestorsAreComputed computes the groups_ancestors table.
 func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
-	gormDB, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-
-	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-		store.ScheduleGroupsAncestorsPropagation()
-
-		return nil
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.GroupGroups().CreateNewAncestors()
 	})
 	if err != nil {
 		return err
 	}
 
-	err = ctx.saveTableFromDatabase(gormDB, "groups_ancestors", []string{
+	err = ctx.loadColumnsFromDBTable("groups_ancestors", []string{
 		"ancestor_group_id",
 		"child_group_id",
 		"expires_at",
@@ -213,30 +321,16 @@ func (ctx *TestContext) DBGroupsAncestorsAreComputed() error {
 	return nil
 }
 
-// DBItemsAncestorsAndPermissionsAreComputed computes the items_ancestors and permissions_generated tables.
-func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
-	gormDB, err := database.Open(ctx.db)
-	if err != nil {
-		return err
-	}
-
-	err = database.NewDataStore(gormDB).InTransaction(func(store *database.DataStore) error {
-		// We can consider keeping foreign_key_checks,
-		// but it'll break all tests that didn't define items while having permissions.
-		store.Exec("SET FOREIGN_KEY_CHECKS=0")
-		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-
-		store.ScheduleItemsAncestorsPropagation()
-		store.SchedulePermissionsPropagation()
-		store.ScheduleResultsPropagation()
-
-		return nil
+// DBItemsAncestorsAreComputed computes the items_ancestors table.
+func (ctx *TestContext) DBItemsAncestorsAreComputed() error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.ItemItems().CreateNewAncestors()
 	})
 	if err != nil {
 		return err
 	}
 
-	err = ctx.saveTableFromDatabase(gormDB, "items_ancestors", []string{
+	err = ctx.loadColumnsFromDBTable("items_ancestors", []string{
 		"ancestor_item_id",
 		"child_item_id",
 	})
@@ -244,18 +338,22 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 		return err
 	}
 
-	err = ctx.saveTableFromDatabase(gormDB, "permissions_generated", []string{
-		"group_id",
-		"item_id",
-		"can_view_generated",
-		"can_grant_view_generated",
-		"can_watch_generated",
-		"can_edit_generated",
-		"is_owner_generated",
-		"can_view_generated_value",
-		"can_grant_view_generated_value",
-		"can_watch_generated_value",
-		"can_edit_generated_value",
+	return nil
+}
+
+// DBGeneratedPermissionsAreComputed computes the generated permissions.
+func (ctx *TestContext) DBGeneratedPermissionsAreComputed() error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.PermissionsGranted().ComputeAllAccess()
+	})
+	if err != nil {
+		return err
+	}
+
+	err = ctx.loadColumnsFromDBTable("permissions_generated", []string{
+		"group_id", "item_id",
+		"can_view_generated", "can_grant_view_generated", "can_watch_generated", "can_edit_generated", "is_owner_generated",
+		"can_view_generated_value", "can_grant_view_generated_value", "can_watch_generated_value", "can_edit_generated_value",
 	})
 	if err != nil {
 		return err
@@ -264,109 +362,137 @@ func (ctx *TestContext) DBItemsAncestorsAndPermissionsAreComputed() error {
 	return nil
 }
 
-func (ctx *TestContext) TableShouldBeEmpty(table string) error { //nolint
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", table)) //nolint:gosec
+// DBResultsAreComputed computes the results.
+func (ctx *TestContext) DBResultsAreComputed() error {
+	err := database.NewDataStore(ctx.application.Database).InTransaction(func(store *database.DataStore) error {
+		return store.Results().Propagate()
+	})
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = sqlRows.Close()
 
-		if sqlRows.Err() != nil {
-			panic(sqlRows.Err())
-		}
-	}()
-	if sqlRows.Next() {
-		return fmt.Errorf("the table %q should be empty, but it is not", table)
+	err = ctx.loadColumnsFromDBTable("results", []string{
+		"participant_id", "attempt_id", "item_id", "score_computed", "score_edit_rule", "score_edit_value",
+		"score_edit_comment", "submissions", "tasks_tried", "started", "validated", "tasks_with_help",
+		"hints_requested", "hints_cached", "started_at", "validated_at", "latest_activity_at", "score_obtained_at",
+		"latest_submission_at", "latest_hint_at", "help_requested", "recomputing_state",
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(table string, column, valuesStr string) error { //nolint
+// TableShouldBeEmpty verifies that the DB table is empty.
+func (ctx *TestContext) TableShouldBeEmpty(tableName string) error {
+	found, err := ctx.application.Database.Table(tableName).HasRows()
+	if err != nil {
+		return err
+	}
+	if found {
+		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
+	}
+
+	return nil
+}
+
+// TableAtColumnValueShouldBeEmpty verifies that the DB table does not contain rows having the provided values
+// in the specified column.
+func (ctx *TestContext) TableAtColumnValueShouldBeEmpty(tableName, columnName, valuesStr string) error {
 	values := parseMultipleValuesString(valuesStr)
 
-	where, parameters := constructWhereForColumnValues([]string{column}, values, true)
-	sqlRows, err := ctx.db.Query(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", table, where), parameters...) //nolint:gosec
+	where, parameters := constructWhereForColumnValues([]string{columnName}, values, true)
+	var found []int64
+	err := ctx.application.Database.Raw(fmt.Sprintf("SELECT 1 FROM %s %s LIMIT 1", tableName, where), parameters...).Scan(&found).Error()
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = sqlRows.Close()
-
-		if sqlRows.Err() != nil {
-			panic(sqlRows.Err())
-		}
-	}()
-	if sqlRows.Next() {
-		return fmt.Errorf("the table %q should be empty, but it is not", table)
+	if len(found) > 0 {
+		return fmt.Errorf("the table %q should be empty, but it is not", tableName)
 	}
 
 	return nil
 }
 
-func (ctx *TestContext) TableShouldBe(table string, data *messages.PickleStepArgument_PickleTable) error { // nolint
-	return ctx.tableAtColumnValueShouldBe(table, []string{""}, nil, unchanged, data)
+// TableShouldBe verifies that the DB table matches the provided data.
+func (ctx *TestContext) TableShouldBe(tableName string, data *godog.Table) error {
+	return ctx.tableAtColumnValueShouldBe(tableName, []string{""}, nil, unchanged, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchanged(table string) error { //nolint
-	data := ctx.dbTableData[table]
+// TableShouldRemainUnchanged checks that the DB table has not changed.
+func (ctx *TestContext) TableShouldRemainUnchanged(tableName string) error {
+	data := ctx.dbTableData[tableName]
 	if data == nil {
-		data = &messages.PickleStepArgument_PickleTable{
-			Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
-				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: "1"}}},
+		data = &godog.Table{
+			Rows: []*messages.PickleTableRow{
+				{Cells: []*messages.PickleTableCell{{Value: "1"}}},
 			},
 		}
 	}
-	return ctx.tableAtColumnValueShouldBe(table, []string{""}, nil, unchanged, data)
+	return ctx.tableAtColumnValueShouldBe(tableName, []string{""}, nil, unchanged, data)
 }
 
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowWithColumnValue(table, column, values string) error { //nolint
-	data := ctx.dbTableData[table]
+// TableShouldStayUnchangedRegardlessOfTheRowsWithColumnValue checks that the DB table has not changed except for rows
+// with the specified values in the specified column.
+func (ctx *TestContext) TableShouldStayUnchangedRegardlessOfTheRowsWithColumnValue(tableName, columnName, columnValues string) error {
+	data := ctx.dbTableData[tableName]
 	if data == nil {
-		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
+		data = &godog.Table{Rows: []*messages.PickleTableRow{}}
 	}
-	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(values), changed, data)
+	return ctx.tableAtColumnValueShouldBe(tableName, []string{columnName}, parseMultipleValuesString(columnValues), changed, data)
 }
 
-// TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted checks for row deletion.
-func (ctx *TestContext) TableShouldStayUnchangedButTheRowsWithColumnValueShouldBeDeleted(table, columns, values string) error {
-	data := ctx.dbTableData[table]
+// TableShouldRemainUnchangedExceptThatTheRowsWithColumnValueShouldBeDeleted checks for row deletion.
+func (ctx *TestContext) TableShouldRemainUnchangedExceptThatTheRowsWithColumnValueShouldBeDeleted(
+	tableName, columnNames, columnValues string,
+) error {
+	data := ctx.dbTableData[tableName]
 	if data == nil {
-		data = &messages.PickleStepArgument_PickleTable{Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{}}
+		data = &godog.Table{Rows: []*messages.PickleTableRow{}}
 	}
 
-	return ctx.tableAtColumnValueShouldBe(table, parseMultipleValuesString(columns), parseMultipleValuesString(values), deleted, data)
-}
-
-func (ctx *TestContext) TableAtColumnValueShouldBe(table, column, values string, data *messages.PickleStepArgument_PickleTable) error { // nolint
 	return ctx.tableAtColumnValueShouldBe(
-		table,
-		[]string{column},
-		parseMultipleValuesString(ctx.replaceReferencesByIDs(values)),
+		tableName, parseMultipleValuesString(columnNames), parseMultipleValuesString(columnValues), deleted, data)
+}
+
+// TableAtColumnValueShouldBe verifies that the rows of the DB table having the provided values in the specified column
+// match the provided data.
+func (ctx *TestContext) TableAtColumnValueShouldBe(
+	tableName, columnName, columnValues string, data *godog.Table,
+) error {
+	return ctx.tableAtColumnValueShouldBe(
+		tableName,
+		[]string{columnName},
+		parseMultipleValuesString(ctx.replaceReferencesWithIDs(columnValues)),
 		unchanged,
 		data,
 	)
 }
 
-func (ctx *TestContext) TableShouldNotContainColumnValue(table, column, values string) error { //nolint
-	return ctx.tableAtColumnValueShouldBe(table, []string{column}, parseMultipleValuesString(ctx.replaceReferencesByIDs(values)), unchanged,
-		&messages.PickleStepArgument_PickleTable{
-			Rows: []*messages.PickleStepArgument_PickleTable_PickleTableRow{
-				{Cells: []*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{{Value: column}}},
+// TableShouldNotContainColumnValue verifies that the DB table does not contain rows having the provided values
+// in the specified column.
+func (ctx *TestContext) TableShouldNotContainColumnValue(
+	tableName, columnName, columnValues string,
+) error {
+	return ctx.tableAtColumnValueShouldBe(
+		tableName, []string{columnName}, parseMultipleValuesString(ctx.replaceReferencesWithIDs(columnValues)), unchanged,
+		&godog.Table{
+			Rows: []*messages.PickleTableRow{
+				{Cells: []*messages.PickleTableCell{{Value: columnName}}},
 			},
 		})
 }
 
-func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable) *messages.PickleStepArgument_PickleTable {
+func combineGodogTables(table1, table2 *godog.Table) *godog.Table {
 	table1FieldMap := map[string]int{}
 	combinedFieldMap := map[string]bool{}
 	columnNumber := len(table1.Rows[0].Cells)
-	combinedcolumns := make([]string, 0, columnNumber+len(table2.Rows[0].Cells))
+	combinedColumnNames := make([]string, 0, columnNumber+len(table2.Rows[0].Cells))
 	for index, cell := range table1.Rows[0].Cells {
 		table1FieldMap[cell.Value] = index
 		combinedFieldMap[cell.Value] = true
-		combinedcolumns = append(combinedcolumns, cell.Value)
+		combinedColumnNames = append(combinedColumnNames, cell.Value)
 	}
 	table2FieldMap := map[string]int{}
 	for index, cell := range table2.Rows[0].Cells {
@@ -375,36 +501,106 @@ func combinePickleTables(table1, table2 *messages.PickleStepArgument_PickleTable
 		if !combinedFieldMap[cell.Value] {
 			combinedFieldMap[cell.Value] = true
 			columnNumber++
-			combinedcolumns = append(combinedcolumns, cell.Value)
+			combinedColumnNames = append(combinedColumnNames, cell.Value)
 		}
 	}
 
-	combinedTable := &messages.PickleStepArgument_PickleTable{}
-	combinedTable.Rows = make([]*messages.PickleStepArgument_PickleTable_PickleTableRow, 0, len(table1.Rows)+len(table2.Rows)-1)
+	combinedTable := &godog.Table{}
+	combinedTable.Rows = make([]*messages.PickleTableRow, 0, len(table1.Rows)+len(table2.Rows)-1)
 
-	header := &messages.PickleStepArgument_PickleTable_PickleTableRow{
-		Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, columnNumber),
+	header := &messages.PickleTableRow{
+		Cells: make([]*messages.PickleTableCell, 0, columnNumber),
 	}
-	for _, column := range combinedcolumns {
-		header.Cells = append(header.Cells, &messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell{Value: column})
+	for _, columnName := range combinedColumnNames {
+		header.Cells = append(header.Cells, &messages.PickleTableCell{Value: columnName})
 	}
 	combinedTable.Rows = append(combinedTable.Rows, header)
 
-	copyCellsIntoCombinedTable(table1, combinedcolumns, table1FieldMap, combinedTable)
-	copyCellsIntoCombinedTable(table2, combinedcolumns, table2FieldMap, combinedTable)
+	copyCellsIntoCombinedTable(table1, combinedColumnNames, table1FieldMap, combinedTable)
+	copyCellsIntoCombinedTable(table2, combinedColumnNames, table2FieldMap, combinedTable)
 	return combinedTable
 }
 
-func copyCellsIntoCombinedTable(sourceTable *messages.PickleStepArgument_PickleTable, combinedcolumns []string,
-	sourceTableFieldMap map[string]int, combinedTable *messages.PickleStepArgument_PickleTable,
+func (ctx *TestContext) sortGodogTable(table *godog.Table) {
+	columnNumber := len(table.Rows[0].Cells)
+
+	sort.Slice(table.Rows[1:], func(leftRowIndex, rightRowIndex int) bool {
+		for columnIndex := 0; columnIndex < columnNumber; columnIndex++ {
+			var leftCellValue, rightCellValue string
+			if table.Rows[leftRowIndex+1].Cells[columnIndex] != nil {
+				leftCellValue = table.Rows[leftRowIndex+1].Cells[columnIndex].Value
+			}
+			if table.Rows[rightRowIndex+1].Cells[columnIndex] != nil {
+				rightCellValue = table.Rows[rightRowIndex+1].Cells[columnIndex].Value
+			}
+
+			columnName := table.Rows[0].Cells[columnIndex].Value
+			isIntegerColumn := columnName == idString || strings.HasSuffix(columnName, "_id") && columnName != "text_id"
+
+			cmpResult := ctx.compareCellValues(leftCellValue, rightCellValue, isIntegerColumn)
+			if cmpResult == 0 {
+				continue
+			}
+			return cmpResult == -1
+		}
+		return false
+	})
+}
+
+func (ctx *TestContext) compareCellValues(leftCellValue, rightCellValue string, isIntegerColumn bool) int {
+	if !isIntegerColumn {
+		return strings.Compare(leftCellValue, rightCellValue)
+	}
+
+	leftCellValueIsNull := leftCellValue == "" || leftCellValue == tableValueNull
+	rightCellValueIsNull := rightCellValue == "" || rightCellValue == tableValueNull
+	if leftCellValueIsNull && rightCellValueIsNull {
+		return 0
+	}
+	if leftCellValueIsNull {
+		return -1
+	}
+	if rightCellValueIsNull {
+		return 1
+	}
+
+	leftIntValue := ctx.parseIntColumnValue(leftCellValue)
+	rightIntValue := ctx.parseIntColumnValue(rightCellValue)
+	return compareInt64Values(leftIntValue, rightIntValue)
+}
+
+func compareInt64Values(l, r int64) int {
+	switch {
+	case l < r:
+		return -1
+	case l > r:
+		return 1
+	default:
+		return 0
+	}
+}
+
+func (ctx *TestContext) parseIntColumnValue(value string) (intValue int64) {
+	var err error
+	if value[0] == referencePrefix {
+		intValue = ctx.getIDByReference(value)
+	} else {
+		intValue, err = strconv.ParseInt(value, 10, 64)
+		mustNotBeError(err)
+	}
+	return intValue
+}
+
+func copyCellsIntoCombinedTable(sourceTable *godog.Table, combinedColumnNames []string,
+	sourceTableFieldMap map[string]int, combinedTable *godog.Table,
 ) {
 	for rowNum := 1; rowNum < len(sourceTable.Rows); rowNum++ {
-		newRow := &messages.PickleStepArgument_PickleTable_PickleTableRow{
-			Cells: make([]*messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell, 0, len(combinedcolumns)),
+		newRow := &messages.PickleTableRow{
+			Cells: make([]*messages.PickleTableCell, 0, len(combinedColumnNames)),
 		}
-		for _, column := range combinedcolumns {
-			var newCell *messages.PickleStepArgument_PickleTable_PickleTableRow_PickleTableCell
-			if sourceColumnNumber, ok := sourceTableFieldMap[column]; ok {
+		for _, columnName := range combinedColumnNames {
+			var newCell *messages.PickleTableCell
+			if sourceColumnNumber, ok := sourceTableFieldMap[columnName]; ok {
 				newCell = sourceTable.Rows[rowNum].Cells[sourceColumnNumber]
 			}
 			newRow.Cells = append(newRow.Cells, newCell)
@@ -419,16 +615,15 @@ func parseMultipleValuesString(valuesString string) []string {
 
 var columnRegexp = regexp.MustCompile(`^[a-zA-Z]\w*$`)
 
-func (ctx *TestContext) tableAtColumnValueShouldBe(table string, columns, values []string,
-	rowTransformation rowTransformation, data *messages.PickleStepArgument_PickleTable,
-) error { // nolint
+func (ctx *TestContext) tableAtColumnValueShouldBe(tableName string, columnNames, columnValues []string,
+	rowTransformation rowTransformation, data *godog.Table,
+) error {
 	// For that, we build a SQL request with only the attributes we are interested about (those
 	// for the test data table) and we convert them to string (in SQL) to compare to table value.
 	// Expect 'null' string in the table to check for nullness
-	// Expect 'null' string in the table to check for nullness
 
 	if rowTransformation == deleted {
-		nbRows, err := ctx.getNbRowsMatching(table, columns, values)
+		nbRows, err := ctx.getNbRowsMatching(tableName, columnNames, columnValues)
 		if err != nil {
 			return err
 		}
@@ -437,67 +632,99 @@ func (ctx *TestContext) tableAtColumnValueShouldBe(table string, columns, values
 		}
 	}
 
-	tableColumns := getColumnNamesFromData(data)
+	dbColumnNames := getDBColumnNamesFromDataTable(data)
 
 	// request for "unchanged": WHERE IN...
 	// request for "changed" or "deleted": WHERE NOT IN...
 	whereIn := rowTransformation == unchanged
-	sqlRows, closer, err := ctx.getSQLRowsMatching(table, tableColumns, columns, values, whereIn)
+	dbResult, closer, err := ctx.queryDBRowsMatching(tableName, dbColumnNames, columnNames, columnValues, whereIn)
 	if err != nil {
 		return err
 	}
 	defer closer()
 
-	err = ctx.dataTableMatchesSQLRows(data, sqlRows, rowTransformation, tableColumns, columns, values)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return ctx.dataTableShouldMatchDBResult(data, dbResult, rowTransformation, dbColumnNames, columnNames, columnValues)
 }
 
-// dataTableMatchesSQLRows checks whether the provided data table matches the database rows result.
-func (ctx *TestContext) dataTableMatchesSQLRows(data *messages.PickleStepArgument_PickleTable, sqlRows *sql.Rows,
-	rowTransformation rowTransformation, tableColumns, columns, values []string,
+// dataTableShouldMatchDBResult checks whether the provided data table matches the database rows result.
+func (ctx *TestContext) dataTableShouldMatchDBResult(data *godog.Table, dbResult *sql.Rows,
+	rowTransformation rowTransformation, dbColumnNames, columnNames, columnValues []string,
 ) error {
 	iDataRow := 1
-	columnIndexes := getColumnIndexes(data, columns)
-	for sqlRows.Next() {
-		for shouldSkipRow(data, iDataRow, columnIndexes, values, rowTransformation) {
+	columnIndexes := getColumnIndexes(data, columnNames)
+	for dbResult.Next() {
+		for shouldSkipRow(data, iDataRow, columnIndexes, columnValues, rowTransformation) {
 			iDataRow++
 		}
-		if iDataRow >= len(data.Rows) {
-			return fmt.Errorf("there are more rows in the SQL results than expected. expected: %d", len(data.Rows)-1)
-		}
 
-		// We need pointers to differentiate null values
-		sqlRowValues, err := getStringPtrFromSQLRow(sqlRows, len(tableColumns))
+		// We need pointers to differentiate null columnValues
+		dbRow, err := scanDBRow(dbResult, len(dbColumnNames))
 		if err != nil {
 			return err
 		}
 
-		err = ctx.dataRowMatchesSQLRow(data.Rows[iDataRow], sqlRowValues, tableColumns, iDataRow)
+		if iDataRow >= len(data.Rows) {
+			nextRow := ctx.formatDBRowAsTableRow(dbRow)
+			return fmt.Errorf("there are more rows in the SQL results than expected. expected: %d, the next row:\n%s",
+				len(data.Rows)-1, nextRow)
+		}
+
+		err = ctx.dataRowMatchesDBRow(data.Rows[iDataRow], dbRow, dbColumnNames, iDataRow)
 		if err != nil {
 			return err
 		}
 
 		iDataRow++
 	}
-	for shouldSkipRow(data, iDataRow, columnIndexes, values, rowTransformation) {
+	for shouldSkipRow(data, iDataRow, columnIndexes, columnValues, rowTransformation) {
 		iDataRow++
 	}
 
 	// check that there are no rows in the test data table left for checking (this means there are fewer rows in the SQL result)
 	if iDataRow < len(data.Rows) {
-		return fmt.Errorf("there are fewer rows in the SQL result than expected")
+		return errors.New("there are fewer rows in the SQL result than expected")
 	}
 
 	return nil
 }
 
+func (ctx *TestContext) formatDBRowAsTableRow(dbRow []*string) string {
+	dbRowValuesStr := make([]string, len(dbRow))
+	for columnIndex, value := range dbRow {
+		if value == nil {
+			dbRowValuesStr[columnIndex] = "null"
+			continue
+		}
+
+		dbRowValuesStr[columnIndex] = *value
+		dbRowValuesStr[columnIndex] = ctx.readableValue(dbRowValuesStr[columnIndex])
+	}
+
+	return "| " + strings.Join(dbRowValuesStr, " | ") + " |"
+}
+
+func (ctx *TestContext) readableValue(value string) string {
+	if id, err := strconv.ParseInt(value, 10, 64); err == nil {
+		if reference, ok := ctx.idToReferenceMap[id]; ok {
+			return reference
+		}
+		return value
+	}
+
+	if value == time.Now().Format(time.DateTime) {
+		return "{{currentTimeDB()}}"
+	}
+
+	if value == time.Now().Format("2006-01-02 15:04:05.000") {
+		return "{{currentTimeDBMs()}}"
+	}
+
+	return value
+}
+
 // dataRowMatchesSQLRow checks that a data row matches a row from database.
-func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgument_PickleTable_PickleTableRow,
-	values []*string, tableColumns []string, rowIndex int,
+func (ctx *TestContext) dataRowMatchesDBRow(dataRow *messages.PickleTableRow,
+	columnValues []*string, tableColumnNames []string, rowIndex int,
 ) error {
 	// checking that all columns of the test data table match the SQL row
 	for colIndex, dataCell := range dataRow.Cells {
@@ -505,47 +732,44 @@ func (ctx *TestContext) dataRowMatchesSQLRow(dataRow *messages.PickleStepArgumen
 			continue
 		}
 
-		dataValue, err := ctx.preprocessString(dataCell.Value)
-		if err != nil {
-			return err
+		dataValue := ctx.preprocessString(dataCell.Value)
+
+		columnValue := columnValues[colIndex]
+		if columnValue == nil {
+			columnValue = golang.Ptr(tableValueNull)
 		}
 
-		value := values[colIndex]
-		if value == nil {
-			value = pTableValueNull
-		}
-
-		if (dataValue == tableValueTrue && *value == "1") || (dataValue == tableValueFalse && *value == "0") {
+		if (dataValue == tableValueTrue && *columnValue == "1") || (dataValue == tableValueFalse && *columnValue == "0") {
 			continue
 		}
 
-		if dataValue != *value {
+		if dataValue != *columnValue {
 			return fmt.Errorf("not matching expected value at row %d, col %s, expected '%s', got: '%v'",
-				rowIndex, tableColumns[colIndex], dataValue, *value)
+				rowIndex, tableColumnNames[colIndex], dataValue, *columnValue)
 		}
 	}
 
 	return nil
 }
 
-// getColumnNamesFromData gets the column names from the data table.
-func getColumnNamesFromData(data *messages.PickleStepArgument_PickleTable) (columns []string) {
+// getDBColumnNamesFromDataTable gets the column names from the Godog data table.
+func getDBColumnNamesFromDataTable(data *godog.Table) (dbColumnNames []string) {
 	// the first row contains the column names
-	headerColumns := data.Rows[0].Cells
-	for _, cell := range headerColumns {
-		dataTablecolumn := cell.Value
-		if columnRegexp.MatchString(dataTablecolumn) {
-			dataTablecolumn = database.QuoteName(dataTablecolumn)
+	headerCells := data.Rows[0].Cells
+	for _, cell := range headerCells {
+		dbColumnName := cell.Value
+		if columnRegexp.MatchString(dbColumnName) {
+			dbColumnName = database.QuoteName(dbColumnName)
 		}
 
-		columns = append(columns, dataTablecolumn)
+		dbColumnNames = append(dbColumnNames, dbColumnName)
 	}
 
-	return columns
+	return dbColumnNames
 }
 
-// getStringPtrFromSQLRow gets a slice of string pointers from a SQL row.
-func getStringPtrFromSQLRow(sqlRows *sql.Rows, length int) ([]*string, error) {
+// scanDBRow scans a DB row from a DB result (*sql.Rows) into a slice of string pointers.
+func scanDBRow(dbResult *sql.Rows, length int) ([]*string, error) {
 	// Create a slice of values and a second slice with pointers to each item.
 	rowValues := make([]*string, length)
 	rowValPtr := make([]interface{}, length)
@@ -554,23 +778,23 @@ func getStringPtrFromSQLRow(sqlRows *sql.Rows, length int) ([]*string, error) {
 	}
 
 	// Scan the result into the column pointers...
-	err := sqlRows.Scan(rowValPtr...)
+	err := dbResult.Scan(rowValPtr...)
 
 	return rowValues, err
 }
 
-// getColumnIndexes gets the indices of the columns referenced by columns.
-func getColumnIndexes(data *messages.PickleStepArgument_PickleTable, columns []string) []int {
+// getColumnIndexes gets the indices of the columns referenced by the given names.
+func getColumnIndexes(data *godog.Table, columnNames []string) []int {
 	// the first row contains the column names
 	headerColumns := data.Rows[0].Cells
 
-	columnIndexes := make([]int, len(columns))
+	columnIndexes := make([]int, len(columnNames))
 	for i := range columnIndexes {
 		columnIndexes[i] = -1
 	}
 	for headerColumnIndex, headerColumn := range headerColumns {
-		for columnIndex, column := range columns {
-			if headerColumn.Value == column {
+		for columnIndex, columnName := range columnNames {
+			if headerColumn.Value == columnName {
 				columnIndexes[columnIndex] = headerColumnIndex
 				break
 			}
@@ -580,49 +804,53 @@ func getColumnIndexes(data *messages.PickleStepArgument_PickleTable, columns []s
 	return columnIndexes
 }
 
-// getSQLRowsMatching returns the rows that matches (if whereIn) or not (if !whereIn) one of filterColumns at any filterValues.
-func (ctx *TestContext) getSQLRowsMatching(table string, columns, filterColumns, filterValues []string, whereIn bool) (
+// queryDBRowsMatching returns the MySQL result (*sql.Rows) with DB rows that match (if whereIn) or not (if !whereIn)
+// one of filterColumnNames at any filterColumnValues.
+func (ctx *TestContext) queryDBRowsMatching(tableName string, dbColumnNames, filterColumnNames, filterColumnValues []string, whereIn bool) (
 	*sql.Rows, func(), error,
 ) {
-	selectsJoined := strings.Join(columns, ", ")
+	selectsJoined := strings.Join(dbColumnNames, ", ")
 
-	where, parameters := constructWhereForColumnValues(filterColumns, filterValues, whereIn)
+	where, parameters := constructWhereForColumnValues(filterColumnNames, filterColumnValues, whereIn)
 
 	// exec sql
-	query := fmt.Sprintf("SELECT %s FROM `%s` %s ORDER BY %s", selectsJoined, table, where, selectsJoined) //nolint: gosec
-	sqlRows, err := ctx.db.Query(query, parameters...)
+	query := fmt.Sprintf("SELECT %s FROM %s %s ORDER BY %s", selectsJoined, database.QuoteName(tableName), where, selectsJoined)
+	sqlRows, err := ctx.application.Database.GetSQLDB().QueryContext(ctx.application.Database.GetContext(), query, parameters...)
 
 	closer := func() { _ = sqlRows.Close() }
 	return sqlRows, closer, err
 }
 
-// getNbRowsMatching returns how many rows matches one of values at any column.
-func (ctx *TestContext) getNbRowsMatching(table string, columns, values []string) (int, error) {
+// getNbRowsMatching returns how many rows match one of values at any column.
+func (ctx *TestContext) getNbRowsMatching(tableName string, columnNames, columnValues []string) (int, error) {
 	// check that the rows are not present anymore
-	where, parameters := constructWhereForColumnValues(columns, values, true)
+	where, parameters := constructWhereForColumnValues(columnNames, columnValues, true)
 
 	// exec sql
-	var nbRows int
-	selectValuesInQuery := fmt.Sprintf("SELECT COUNT(*) FROM `%s` %s", table, where) //nolint: gosec
-	err := ctx.db.QueryRow(selectValuesInQuery, parameters...).Scan(&nbRows)
+	var nbRows []int
+	selectValuesInQuery := fmt.Sprintf("SELECT COUNT(*) FROM %s %s", database.QuoteName(tableName), where)
+	err := ctx.application.Database.Raw(selectValuesInQuery, parameters...).Scan(&nbRows).Error()
+	if err != nil {
+		return 0, err
+	}
 
-	return nbRows, err
+	return nbRows[0], err
 }
 
-func shouldSkipRow(data *messages.PickleStepArgument_PickleTable, rowIndex int, columnIndexes []int,
-	values []string, rowTransformation rowTransformation,
+func shouldSkipRow(data *godog.Table, rowIndex int, columnIndexes []int,
+	columnValues []string, rowTransformation rowTransformation,
 ) bool {
 	return rowTransformation != unchanged &&
 		rowIndex < len(data.Rows) &&
-		rowMatchesColumnValues(data.Rows[rowIndex], columnIndexes, values)
+		rowMatchesColumnValues(data.Rows[rowIndex], columnIndexes, columnValues)
 }
 
 // rowMatchesColumnValues checks whether a column matches some values at some rows
 // we do an OR operation, thus returning if any column is match one of the values.
-func rowMatchesColumnValues(row *messages.PickleStepArgument_PickleTable_PickleTableRow, columnIndexes []int, values []string) bool {
+func rowMatchesColumnValues(row *messages.PickleTableRow, columnIndexes []int, columnValues []string) bool {
 	// Both loops should contain 1 or 2 elements only
 	for _, columnIndex := range columnIndexes {
-		for _, value := range values {
+		for _, value := range columnValues {
 			if row.Cells[columnIndex].Value == value {
 				return true
 			}
@@ -634,14 +862,14 @@ func rowMatchesColumnValues(row *messages.PickleStepArgument_PickleTable_PickleT
 
 // constructWhereForColumnValues construct the WHERE part of a query matching column with values
 // note: the same values are checked for every column
-func constructWhereForColumnValues(columns, values []string, whereIn bool) (
+func constructWhereForColumnValues(columnNames, columnValues []string, whereIn bool) (
 	where string, parameters []interface{},
 ) {
-	if len(values) > 0 {
-		questionMarks := "?" + strings.Repeat(", ?", len(values)-1)
+	if len(columnValues) > 0 {
+		questionMarks := "?" + strings.Repeat(", ?", len(columnValues)-1)
 
 		isFirstCondition := true
-		for _, column := range columns {
+		for _, columnName := range columnNames {
 			if isFirstCondition {
 				where += " WHERE "
 			} else {
@@ -650,13 +878,13 @@ func constructWhereForColumnValues(columns, values []string, whereIn bool) (
 			isFirstCondition = false
 
 			if whereIn {
-				where += fmt.Sprintf(" %s IN (%s) ", column, questionMarks) // #nosec
+				where += fmt.Sprintf(" %s IN (%s) ", columnName, questionMarks) // #nosec
 			} else {
-				where += fmt.Sprintf(" %s NOT IN (%s) ", column, questionMarks) // #nosec
+				where += fmt.Sprintf(" %s NOT IN (%s) ", columnName, questionMarks) // #nosec
 			}
 
-			for _, value := range values {
-				parameters = append(parameters, value)
+			for _, columnValue := range columnValues {
+				parameters = append(parameters, columnValue)
 			}
 		}
 	}
@@ -664,8 +892,10 @@ func constructWhereForColumnValues(columns, values []string, whereIn bool) (
 	return where, parameters
 }
 
-func (ctx *TestContext) DbTimeNow(timeStrRaw string) error { //nolint
-	MockDBTime(timeStrRaw)
+// DBTimeNow sets the current time in the database to the provided time.
+func (ctx *TestContext) DBTimeNow(timeStrRaw string) error {
+	timeStrRaw = ctx.preprocessString(timeStrRaw)
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(timeStrRaw))
 	return nil
 }
 
@@ -673,11 +903,6 @@ const (
 	tableValueFalse = "false"
 	tableValueTrue  = "true"
 	tableValueNull  = "null"
-)
-
-var (
-	tableValueNullVar = tableValueNull
-	pTableValueNull   = &tableValueNullVar
 )
 
 // dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db

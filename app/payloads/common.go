@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
 
 // Binder is an interface for managing payloads.
@@ -28,46 +28,68 @@ func ParseMap(raw map[string]interface{}, target interface{}) error {
 	return nil
 }
 
+// ConverterIntoMap is an interface implemented by types
+// that can convert themselves into a map.
+// payloads.ConvertIntoMap uses this interface to convert structs into maps.
+type ConverterIntoMap interface {
+	ConvertIntoMap() map[string]interface{}
+}
+
 // ConvertIntoMap converts a struct into a map
 // Fields without a `json` tag or having '-' as a json field name are skipped.
 func ConvertIntoMap(source interface{}) map[string]interface{} {
+	if converter, ok := source.(ConverterIntoMap); ok {
+		return converter.ConvertIntoMap()
+	}
+
 	sourceValue := reflect.ValueOf(source)
 	for sourceValue.Kind() == reflect.Ptr {
 		sourceValue = sourceValue.Elem()
 	}
 
 	sourceType := sourceValue.Type()
-	fieldsNumber := sourceValue.NumField()
-	out := make(map[string]interface{}, fieldsNumber)
-	for i := 0; i < fieldsNumber; i++ {
-		field := sourceType.Field(i)
+	fieldsCount := sourceValue.NumField()
+	out := make(map[string]interface{}, fieldsCount)
+	for fieldNumber := 0; fieldNumber < fieldsCount; fieldNumber++ {
+		field := sourceType.Field(fieldNumber)
 		jsonName, omitEmpty := getJSONFieldNameAndOmitEmpty(&field)
-		if jsonName != "-" {
-			fieldValue := sourceValue.Field(i)
-			if fieldValue.CanInterface() { // skip unexported fields
-				fieldValue = resolvePointer(fieldValue)
-				if !omitEmpty || fieldValue.Type().Kind() != reflect.Ptr || !fieldValue.IsNil() {
-					if shouldConvert(fieldValue) {
-						out[jsonName] = ConvertIntoMap(fieldValue.Addr().Interface())
-					} else {
-						out[jsonName] = fieldValue.Interface()
-					}
-				}
+		if jsonName == "-" {
+			continue
+		}
+		fieldValue := sourceValue.Field(fieldNumber)
+		if !fieldValue.CanInterface() { // skip unexported fields
+			continue
+		}
+		fieldValue = resolvePointer(fieldValue)
+		if !omitEmpty || fieldValue.Type().Kind() != reflect.Ptr || !fieldValue.IsNil() {
+			if shouldConvert(fieldValue) {
+				out[jsonName] = ConvertIntoMap(fieldValue.Addr().Interface())
+			} else {
+				out[jsonName] = fieldValue.Interface()
 			}
 		}
 	}
 	return out
 }
 
+const (
+	anythingTypeName = "Anything"
+	anythingPkgPath  = "github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+)
+
 func shouldConvert(fieldValue reflect.Value) bool {
 	return fieldValue.Kind() == reflect.Struct &&
-		(fieldValue.Type().Name() != "Anything" ||
-			fieldValue.Type().PkgPath() != "github.com/France-ioi/AlgoreaBackend/app/formdata")
+		(fieldValue.Type().Name() != anythingTypeName || fieldValue.Type().PkgPath() != anythingPkgPath)
 }
 
 func resolvePointer(fieldValue reflect.Value) reflect.Value {
 	for fieldValue.IsValid() && fieldValue.Type().Kind() == reflect.Ptr && !fieldValue.IsNil() {
-		fieldValue = fieldValue.Elem()
+		newFieldValue := fieldValue.Elem()
+		if newFieldValue.Kind() == reflect.Struct &&
+			newFieldValue.Type().Name() == anythingTypeName && newFieldValue.Type().PkgPath() == anythingPkgPath {
+			return fieldValue
+		}
+		fieldValue = newFieldValue
 	}
 	return fieldValue
 }

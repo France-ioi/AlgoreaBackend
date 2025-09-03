@@ -9,9 +9,10 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation POST /answers/{answer_id}/generate-task-token answers answerTaskTokenGenerate
@@ -44,6 +45,7 @@ import (
 //		- name: answer_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":
@@ -72,15 +74,17 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) service.APIError {
-	answerID, err := service.ResolveURLQueryPathInt64Field(r, "answer_id")
+func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	answerID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "answer_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
 	var answerInfos struct {
 		AccessSolutions   bool
@@ -97,7 +101,7 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		Validated         bool
 	}
 
-	store := srv.GetStore(r)
+	store := srv.GetStore(httpRequest)
 	usersGroupsQuery := store.ActiveGroupGroups().WhereUserIsMember(user).Select("parent_group_id")
 
 	// a participant should have at least 'content' access to the answers.item_id
@@ -156,12 +160,12 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 			observerItemPerms.SubQuery(), observerParticipantPerms.SubQuery()).
 		Where("answers.id = ?", answerID).
 		Where("items.type = 'Task'").
-		WhereUserHaveStartedResultOnItem(user).
+		WhereItemHasResultStartedByUser(user).
 		Limit(1).
 		Take(&answerInfos).Error()
 
 	if gorm.IsRecordNotFoundError(err) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
@@ -170,14 +174,14 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 
 	accessSolutions := answerInfos.AccessSolutions || answerInfos.Validated
 
-	taskToken := token.Task{
+	taskToken := token.Token[payloads.TaskToken]{Payload: payloads.TaskToken{
 		AccessSolutions:    &accessSolutions,
-		SubmissionPossible: utils.Ptr(false),
-		HintsAllowed:       utils.Ptr(false),
+		SubmissionPossible: golang.Ptr(false),
+		HintsAllowed:       golang.Ptr(false),
 		HintsRequested:     answerInfos.HintsRequested,
-		HintsGivenCount:    utils.Ptr(strconv.Itoa(int(answerInfos.HintsCachedCount))),
-		IsAdmin:            utils.Ptr(false),
-		ReadAnswers:        utils.Ptr(true),
+		HintsGivenCount:    golang.Ptr(strconv.Itoa(int(answerInfos.HintsCachedCount))),
+		IsAdmin:            golang.Ptr(false),
+		ReadAnswers:        golang.Ptr(true),
 		UserID:             strconv.FormatInt(answerInfos.AuthorID, 10),
 		LocalItemID:        strconv.FormatInt(answerInfos.ItemID, 10),
 		ItemID:             answerInfos.TextID,
@@ -187,12 +191,12 @@ func (srv *Service) generateTaskToken(w http.ResponseWriter, r *http.Request) se
 		RandomSeed:         strconv.FormatUint(randomSeed, 10),
 		PlatformName:       srv.TokenConfig.PlatformName,
 		Login:              answerInfos.AuthorLogin,
-	}
+	}}
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	render.Respond(w, r, service.CreationSuccess(map[string]interface{}{
+	render.Respond(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"task_token": signedTaskToken,
 	}))
-	return service.NoError
+	return nil
 }

@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /items/{dependent_item_id}/prerequisites/{prerequisite_item_id} items itemDependencyDelete
@@ -38,41 +38,38 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteDependency(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "dependent_item_id")
+func (srv *Service) deleteDependency(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	dependentItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "dependent_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "prerequisite_item_id")
+	prerequisiteItemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "prerequisite_item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(httpReq)
+	user := srv.GetUser(httpRequest)
 
-	apiError := service.NoError
-	err = srv.GetStore(httpReq).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		found, err = store.Permissions().MatchingUserAncestors(user).
 			WherePermissionIsAtLeast("edit", "all").
-			Where("item_id = ?", dependentItemID).WithWriteLock().HasRows()
+			Where("item_id = ?", dependentItemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 		return store.ItemDependencies().
 			Delete("item_id = ? AND dependent_item_id = ?", prerequisiteItemID, dependentItemID).Error()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
 	// response
-	service.MustNotBeError(render.Render(rw, httpReq, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

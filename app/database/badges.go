@@ -1,29 +1,30 @@
 package database
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 // BadgeGroupPathElement represents an element of a badge's group path.
 type BadgeGroupPathElement struct {
 	Manager bool   `json:"manager" validate:"set"`
-	Name    string `json:"name" validate:"set"`
-	URL     string `json:"url" validate:"min=1"` // length >= 1
+	Name    string `json:"name"    validate:"set"`
+	URL     string `json:"url"     validate:"min=1"` // length >= 1
 }
 
 // BadgeInfo contains a name and group path of a badge.
 type BadgeInfo struct {
-	Name      string                  `json:"name" validate:"set"`
+	Name      string                  `json:"name"       validate:"set"`
 	GroupPath []BadgeGroupPathElement `json:"group_path"`
 }
 
 // Badge represents a badge from the login module.
 type Badge struct {
-	Manager   bool      `json:"manager" validate:"set"`
-	URL       string    `json:"url" validate:"min=1"` // length >= 1
+	Manager   bool      `json:"manager"    validate:"set"`
+	URL       string    `json:"url"        validate:"min=1"` // length >= 1
 	BadgeInfo BadgeInfo `json:"badge_info"`
 }
 
@@ -46,14 +47,8 @@ func (s *GroupStore) StoreBadges(badges []Badge, userID int64, newUser bool) (er
 	knownBadgeGroups := s.loadKnownBadgeGroups(badges)
 
 	managedBadgeGroups := make(map[int64]struct{})
-	var ancestorsCalculationNeeded bool
 	for index := range badges {
-		s.storeBadge(&ancestorsCalculationNeeded, &badges[index], userID, newUser, managedBadgeGroups, knownBadgeGroups)
-	}
-
-	if ancestorsCalculationNeeded {
-		s.ScheduleGroupsAncestorsPropagation()
-		s.ScheduleResultsPropagation()
+		s.storeBadge(&badges[index], userID, newUser, managedBadgeGroups, knownBadgeGroups)
 	}
 
 	if len(managedBadgeGroups) > 0 {
@@ -78,7 +73,7 @@ func (s *GroupStore) loadKnownBadgeGroups(badges []Badge) map[string]int64 {
 		ID     int64
 		TextID string
 	}
-	mustNotBeError(s.Where("text_id IN(?)", badgeURLs).WithWriteLock().Select("id, text_id").Scan(&dbBadgeGroups).Error())
+	mustNotBeError(s.Where("text_id IN(?)", badgeURLs).WithExclusiveWriteLock().Select("id, text_id").Scan(&dbBadgeGroups).Error())
 	knownBadgeGroups := make(map[string]int64, len(badgeURLs))
 	for _, dbBadgeGroup := range dbBadgeGroups {
 		knownBadgeGroups[dbBadgeGroup.TextID] = dbBadgeGroup.ID
@@ -87,10 +82,10 @@ func (s *GroupStore) loadKnownBadgeGroups(badges []Badge) map[string]int64 {
 }
 
 func (s *GroupStore) storeBadge(
-	ancestorsCalculationNeeded *bool, badge *Badge, userID int64, newUser bool,
+	badge *Badge, userID int64, newUser bool,
 	managedBadgeGroups map[int64]struct{}, knownBadgeGroups map[string]int64,
 ) {
-	badgeGroupID, groupCreated := s.findOrCreateBadgeGroup(ancestorsCalculationNeeded, badge.URL, badge.BadgeInfo.Name, knownBadgeGroups)
+	badgeGroupID, groupCreated := s.findOrCreateBadgeGroup(badge.URL, badge.BadgeInfo.Name, knownBadgeGroups)
 
 	if badge.Manager {
 		managedBadgeGroups[badgeGroupID] = struct{}{}
@@ -99,21 +94,23 @@ func (s *GroupStore) storeBadge(
 		if !groupCreated && !newUser {
 			var err error
 			alreadyMember, err = s.ActiveGroupGroups().
-				Where("parent_group_id = ? AND child_group_id = ?", badgeGroupID, userID).HasRows()
+				Where("parent_group_id = ? AND child_group_id = ?", badgeGroupID, userID).
+				WithExclusiveWriteLock().
+				HasRows()
 			mustNotBeError(err)
 		}
 		if !alreadyMember {
-			s.makeUserMemberOfBadgeGroup(ancestorsCalculationNeeded, badgeGroupID, userID, badge.URL)
+			s.makeUserMemberOfBadgeGroup(badgeGroupID, userID, badge.URL)
 		}
 	}
 
 	if groupCreated {
-		s.storeBadgeGroupPath(ancestorsCalculationNeeded, badge, badgeGroupID, managedBadgeGroups, knownBadgeGroups)
+		s.storeBadgeGroupPath(badge, badgeGroupID, managedBadgeGroups, knownBadgeGroups)
 	}
 }
 
 func (s *GroupStore) storeBadgeGroupPath(
-	ancestorsCalculationNeeded *bool, badge *Badge, badgeGroupID int64,
+	badge *Badge, badgeGroupID int64,
 	managedBadgeGroups map[int64]struct{}, knownBadgeGroups map[string]int64,
 ) {
 	createGroupsAndRelations := true
@@ -123,13 +120,13 @@ func (s *GroupStore) storeBadgeGroupPath(
 		var found, groupCreated bool
 		badgeGroupID, found = knownBadgeGroups[ancestorBadge.URL]
 		if !found && createGroupsAndRelations {
-			badgeGroupID = s.createAndCacheBadgeGroup(ancestorsCalculationNeeded, ancestorBadge.URL, ancestorBadge.Name, knownBadgeGroups)
+			badgeGroupID = s.createAndCacheBadgeGroup(ancestorBadge.URL, ancestorBadge.Name, knownBadgeGroups)
 			groupCreated = true
 		}
 		badgeGroupIDValid := found || groupCreated
 		if badgeGroupIDValid {
 			if createGroupsAndRelations {
-				s.createBadgeGroupRelation(ancestorsCalculationNeeded, badgeGroupID, childBadgeGroupID, ancestorBadge.URL)
+				s.createBadgeGroupRelation(badgeGroupID, childBadgeGroupID, ancestorBadge.URL)
 			}
 			if ancestorBadge.Manager {
 				managedBadgeGroups[badgeGroupID] = struct{}{}
@@ -139,17 +136,15 @@ func (s *GroupStore) storeBadgeGroupPath(
 	}
 }
 
-func (s *GroupStore) createBadgeGroupRelation(
-	ancestorsCalculationNeeded *bool, badgeGroupID, childBadgeGroupID int64, badgeURL string,
-) bool {
+func (s *GroupStore) createBadgeGroupRelation(badgeGroupID, childBadgeGroupID int64, badgeURL string) bool {
 	err := s.GroupGroups().CreateRelation(badgeGroupID, childBadgeGroupID)
-	if err == ErrRelationCycle {
-		logging.Warnf("Cannot add badge group %d into badge group %d (%s) because it would create a cycle",
-			childBadgeGroupID, badgeGroupID, badgeURL)
+	if errors.Is(err, ErrRelationCycle) {
+		logging.EntryFromContext(s.ctx()).
+			Warnf("Cannot add badge group %d into badge group %d (%s) because it would create a cycle",
+				childBadgeGroupID, badgeGroupID, badgeURL)
 		return false
 	}
 	mustNotBeError(err)
-	*ancestorsCalculationNeeded = false
 	return true
 }
 
@@ -159,36 +154,35 @@ func (s *GroupStore) makeUserManagerOfBadgeGroups(badgeGroupIDsMap map[int64]str
 		badgeGroupIDs = append(badgeGroupIDs, strconv.FormatInt(badgeGroupID, 10))
 	}
 	badgeGroupIDsList := strings.Join(badgeGroupIDs, ", ")
-	// nolint:gosec
 	mustNotBeError(s.Exec(`
 		INSERT IGNORE INTO group_managers (group_id, manager_id, can_manage, can_grant_group_access, can_watch_members)
 		SELECT badge_groups.group_id, ?, "memberships", 1, 1
 			FROM JSON_TABLE('[`+badgeGroupIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS badge_groups`, userID).Error())
 }
 
-func (s *GroupStore) makeUserMemberOfBadgeGroup(ancestorsCalculationNeeded *bool, badgeGroupID, userID int64, badgeURL string) bool {
+func (s *GroupStore) makeUserMemberOfBadgeGroup(badgeGroupID, userID int64, badgeURL string) bool {
 	// This approach prevents cycles in group relations, logs the membership change, checks approvals, and respects group limits
 	results, _, err := s.GroupGroups().Transition(
 		UserJoinsGroupByBadge, badgeGroupID, []int64{userID}, map[int64]GroupApprovals{}, userID)
 	mustNotBeError(err)
 
 	if results[userID] != Success {
-		logging.Warnf("Cannot add the user %d into a badge group %d (%s), reason: %s",
-			userID, badgeGroupID, badgeURL, results[userID])
-	} else {
-		*ancestorsCalculationNeeded = false
+		logging.EntryFromContext(s.ctx()).
+			Warnf("Cannot add the user %d into a badge group %d (%s), reason: %s",
+				userID, badgeGroupID, badgeURL, results[userID])
 	}
+
 	return results[userID] == Success
 }
 
 func (s *GroupStore) findOrCreateBadgeGroup(
-	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64,
+	badgeURL, badgeName string, knownBadgeGroups map[string]int64,
 ) (int64, bool) {
 	var groupCreated bool
 
 	badgeGroupID, found := knownBadgeGroups[badgeURL]
 	if !found {
-		badgeGroupID = s.createAndCacheBadgeGroup(ancestorsCalculationNeeded, badgeURL, badgeName, knownBadgeGroups)
+		badgeGroupID = s.createAndCacheBadgeGroup(badgeURL, badgeName, knownBadgeGroups)
 		groupCreated = true
 	}
 	return badgeGroupID, groupCreated
@@ -196,7 +190,7 @@ func (s *GroupStore) findOrCreateBadgeGroup(
 
 func (s *GroupStore) createBadgeGroup(badgeURL, badgeName string) int64 {
 	var badgeGroupID int64
-	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError(func(retryIDStore *DataStore) error {
+	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *DataStore) error {
 		badgeGroupID = retryIDStore.NewID()
 		return retryIDStore.Groups().InsertMap(map[string]interface{}{
 			"id":          badgeGroupID,
@@ -212,10 +206,9 @@ func (s *GroupStore) createBadgeGroup(badgeURL, badgeName string) int64 {
 }
 
 func (s *GroupStore) createAndCacheBadgeGroup(
-	ancestorsCalculationNeeded *bool, badgeURL, badgeName string, knownBadgeGroups map[string]int64,
+	badgeURL, badgeName string, knownBadgeGroups map[string]int64,
 ) int64 {
 	badgeGroupID := s.createBadgeGroup(badgeURL, badgeName)
 	knownBadgeGroups[badgeURL] = badgeGroupID
-	*ancestorsCalculationNeeded = true
 	return badgeGroupID
 }

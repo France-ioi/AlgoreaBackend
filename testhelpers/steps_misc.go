@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -9,24 +9,34 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 	"github.com/go-chi/chi"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/api/groups"
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
-	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api/groups"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
-// TimeNow stubs time.Now to the provided time.
+// TimeNow stubs time.Now and mocks the DB function NOW() with the provided time.
 func (ctx *TestContext) TimeNow(timeStr string) error {
+	if err := ctx.ServerTimeNow(timeStr); err != nil {
+		return err
+	}
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(time.Now().UTC().Format(time.DateTime+".999999999")))
+	return nil
+}
+
+// ServerTimeNow stubs time.Now with the provided time.
+func (ctx *TestContext) ServerTimeNow(timeStr string) error {
+	timeStr = ctx.preprocessString(timeStr)
 	testTime, err := time.Parse(time.RFC3339Nano, timeStr)
 	if err == nil {
 		monkey.Patch(time.Now, func() time.Time { return testTime })
@@ -34,8 +44,17 @@ func (ctx *TestContext) TimeNow(timeStr string) error {
 	return err
 }
 
-// TimeIsFrozen stubs time.Now to the current time.
+// TimeIsFrozen stubs time.Now with the current time and mocks the DB function NOW().
 func (ctx *TestContext) TimeIsFrozen() error {
+	if err := ctx.ServerTimeIsFrozen(); err != nil {
+		return err
+	}
+	ctx.dbTimePatches = append(ctx.dbTimePatches, MockDBTime(time.Now().UTC().Format(time.DateTime+".999999999")))
+	return nil
+}
+
+// ServerTimeIsFrozen stubs time.Now with the current time.
+func (ctx *TestContext) ServerTimeIsFrozen() error {
 	currentTime := time.Now()
 	monkey.Patch(time.Now, func() time.Time { return currentTime })
 	return nil
@@ -47,22 +66,23 @@ func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error {
 	return nil
 }
 
-var multipleStringsRegexp = regexp.MustCompile(`^((?:\s*,\s*)?"([^"]*)")`)
-
 // TheGeneratedGroupCodesAre stubs groups.GenerateGroupCode to generate the provided codes instead of random ones.
 // generatedCodes is in the following form:
 // example for three codes: "code1","code2","code3"
 // with an arbitrary number of codes.
 func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error {
-	currentIndex := 0
+	ctx.generatedGroupCodeIndex = -1
+	var parsedGeneratedCode []string
+	if err := json.Unmarshal([]byte(fmt.Sprintf("[%s]", generatedCodes)), &parsedGeneratedCode); err != nil {
+		return err
+	}
 	monkey.Patch(groups.GenerateGroupCode, func() (string, error) {
-		currentIndex++
-		code := multipleStringsRegexp.FindStringSubmatch(generatedCodes)
-		if code == nil {
+		ctx.generatedGroupCodeIndex++
+
+		if ctx.generatedGroupCodeIndex >= len(parsedGeneratedCode) {
 			return "", errors.New("not enough generated codes")
 		}
-		generatedCodes = generatedCodes[len(code[1]):]
-		return code[2], nil
+		return parsedGeneratedCode[ctx.generatedGroupCodeIndex], nil
 	})
 	return nil
 }
@@ -74,13 +94,10 @@ func (ctx *TestContext) TheGeneratedAuthKeyIs(generatedKey string) error {
 }
 
 // LogsShouldContain checks that the logs contain a provided string.
-func (ctx *TestContext) LogsShouldContain(docString *messages.PickleStepArgument_PickleDocString) error {
-	preprocessed, err := ctx.preprocessString(docString.Content)
-	if err != nil {
-		return err
-	}
+func (ctx *TestContext) LogsShouldContain(docString *godog.DocString) error {
+	preprocessed := ctx.preprocessString(docString.Content)
 	stringToSearch := strings.TrimSpace(preprocessed)
-	logs := ctx.logsHook.GetAllLogs()
+	logs := ctx.logsHook.GetAllStructuredLogs()
 	if !strings.Contains(logs, stringToSearch) {
 		return fmt.Errorf("cannot find %q in logs:\n%s", stringToSearch, logs)
 	}
@@ -96,7 +113,7 @@ func (ctx *TestContext) getPrivateKeyOf(signerName string) *rsa.PrivateKey {
 		config, _ := app.TokenConfig(ctx.application.Config)
 		privateKey = config.PrivateKey
 	case "the task platform":
-		privateKey = tokentest.TaskPlatformPrivateKeyParsed
+		privateKey = tokentest.TaskPlatformPrivateKeyParsed()
 	default:
 		panic(fmt.Errorf("unknown signer: %q. Only \"the app\" and \"the task platform\" are supported", signerName))
 	}
@@ -108,14 +125,11 @@ func (ctx *TestContext) getPrivateKeyOf(signerName string) *rsa.PrivateKey {
 // This allows later use inside a request, or a comparison with a response.
 func (ctx *TestContext) SignedTokenIsDistributed(
 	varName, signerName string,
-	jsonPayload *messages.PickleStepArgument_PickleDocString,
+	jsonPayload *godog.DocString,
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
-	data, err := ctx.preprocessString(jsonPayload.Content)
-	if err != nil {
-		return err
-	}
+	data := ctx.preprocessString(jsonPayload.Content)
 
 	var payload map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &payload); err != nil {
@@ -127,16 +141,14 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 	return nil
 }
 
+// FalsifiedSignedTokenIsDistributed generates a falsified token and sets it in a global template variable.
 func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 	varName, signerName string,
-	jsonPayload *messages.PickleStepArgument_PickleDocString,
+	jsonPayload *godog.DocString,
 ) error {
 	privateKey := ctx.getPrivateKeyOf(signerName)
 
-	data, err := ctx.preprocessString(jsonPayload.Content)
-	if err != nil {
-		return err
-	}
+	data := ctx.preprocessString(jsonPayload.Content)
 
 	var payload map[string]interface{}
 	if err := json.Unmarshal([]byte(data), &payload); err != nil {
@@ -157,41 +169,46 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 }
 
 // TheApplicationConfigIs specifies variables of the app configuration given in YAML format.
-func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *messages.PickleStepArgument_PickleDocString) error {
+func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) error {
 	config := viper.New()
 	config.SetConfigType("yaml")
-	preprocessedConfig, err := ctx.preprocessString(ctx.replaceReferencesByIDs(yamlConfig.Content))
-	if err != nil {
-		return err
-	}
-	err = config.MergeConfig(strings.NewReader(preprocessedConfig))
+	preprocessedConfig := ctx.preprocessString(ctx.replaceReferencesWithIDs(yamlConfig.Content))
+	err := config.MergeConfig(strings.NewReader(preprocessedConfig))
 	if err != nil {
 		return err
 	}
 
-	// Only 'domain' and 'auth' changes are currently supported
+	newConfig := viper.New()
+	for key, value := range ctx.application.Config.AllSettings() {
+		newConfig.Set(key, value)
+	}
+
+	// Only 'server', 'domain' and 'auth' changes are currently supported
 	if config.IsSet("auth") {
-		ctx.application.ReplaceAuthConfig(config)
+		newConfig.Set("auth", config.Get("auth"))
 	}
 	if config.IsSet("domains") {
-		ctx.application.ReplaceDomainsConfig(config)
+		newConfig.Set("domains", config.Get("domains"))
 	}
-
-	return nil
+	if config.IsSet("server") {
+		newSettings := config.GetStringMap("server")
+		for settingName, settingValue := range newSettings {
+			newConfig.Set("server."+settingName, settingValue)
+		}
+	}
+	return ctx.application.Reset(newConfig, ctx.logger)
 }
 
 // TheContextVariableIs sets a context variable in the request http.Request as the provided value.
-// Can be retrieved from the request with r.Context().Value("variableName").
+// Can be retrieved from the request with r.Context().Value(service.APIServiceContextVariableName("variableName")).
 func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
-	preprocessed, err := ctx.preprocessString(value)
-	if err != nil {
-		return err
-	}
+	preprocessed := ctx.preprocessString(value)
 
 	oldHTTPHandler := ctx.application.HTTPHandler
-	ctx.application.HTTPHandler = chi.NewRouter().With(func(next http.Handler) http.Handler {
+	ctx.application.HTTPHandler = chi.NewRouter().With(func(_ http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(), variableName, preprocessed)))
+			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(),
+				service.APIServiceContextVariableName(variableName), preprocessed)))
 		})
 	}).(*chi.Mux)
 	ctx.application.HTTPHandler.Mount("/", oldHTTPHandler)

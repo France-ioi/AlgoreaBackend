@@ -6,9 +6,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /groups/{group_id} groups groupDelete
@@ -41,7 +41,7 @@ import (
 //			format: int64
 //			required: true
 //	responses:
-//		"201":
+//		"200":
 //			"$ref": "#/responses/deletedResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
@@ -51,48 +51,43 @@ import (
 //			"$ref": "#/responses/forbiddenResponse"
 //		"404":
 //			"$ref": "#/responses/notFoundResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) deleteGroup(w http.ResponseWriter, r *http.Request) service.APIError {
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+func (srv *Service) deleteGroup(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	user := srv.GetUser(r)
-	apiErr := service.NoError
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
-		found, err = s.Groups().ManagedBy(user).
-			WithWriteLock().
+		found, err = store.Groups().ManagedBy(user).
+			WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).
 			Where("group_managers.can_manage = 'memberships_and_group'").
 			Where("groups.type != 'User'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
-		found, err = s.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithWriteLock().HasRows()
+		found, err = store.ActiveGroupGroups().Where("parent_group_id = ?", groupID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
-			apiErr = service.ErrNotFound(errors.New("the group must be empty"))
-			return apiErr.Error // rollback
+			return service.ErrNotFound(errors.New("the group must be empty")) // rollback
 		}
 
 		// Updates all threads where helper_group_id was the deleted groupID to the AllUsers group.
-		allUsersGroupID := domain.ConfigFromContext(r.Context()).AllUsersGroupID
-		s.Threads().UpdateHelperGroupID(groupID, allUsersGroupID)
+		allUsersGroupID := domain.ConfigFromContext(httpRequest.Context()).AllUsersGroupID
+		store.Threads().UpdateHelperGroupID(groupID, allUsersGroupID)
 
-		return s.Groups().DeleteGroup(groupID)
+		return store.Groups().DeleteGroup(groupID)
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

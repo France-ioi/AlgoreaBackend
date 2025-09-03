@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/structures"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/structures"
 )
 
 // swagger:model groupUserRequestsViewResponseRow
@@ -40,7 +40,6 @@ type groupUserRequestsViewResponseRow struct {
 		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
-		// Nullable
 		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
@@ -71,6 +70,7 @@ type groupUserRequestsViewResponseRow struct {
 //		- name: group_id
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: include_descendant_groups
 //			in: query
 //			type: integer
@@ -96,6 +96,7 @@ type groupUserRequestsViewResponseRow struct {
 //							 (only if `{group_id}` is not given; `{from.user.group_id}` is also required when `{from.group.id}` is given)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: from.user.group_id
 //			description: Start the page from the request next to the request with
 //							 `group_pending_requests.member_id`=`{from.user.group_id}`
@@ -103,6 +104,7 @@ type groupUserRequestsViewResponseRow struct {
 //								either `{group_id}` is not given or descendants are included)
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N requests
 //			in: query
@@ -122,16 +124,16 @@ type groupUserRequestsViewResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) service.APIError {
-	store := srv.GetStore(r)
-	groupID, groupIDSet, includeDescendantGroups, types, apiError := srv.resolveParametersForGetUserRequests(store, r)
-	if apiError != service.NoError {
-		return apiError
-	}
+func (srv *Service) getUserRequests(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	store := srv.GetStore(httpRequest)
+	groupID, groupIDSet, includeDescendantGroups, types, err := srv.resolveParametersForGetUserRequests(store, httpRequest)
+	service.MustNotBeError(err)
 
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 	query := store.GroupPendingRequests().
 		Select(`
 			group_pending_requests.at,
@@ -166,9 +168,9 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 				Select("groups_ancestors_active.child_group_id").SubQuery())
 	}
 
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError = service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"user.login":    {ColumnName: "user.login"},
@@ -180,10 +182,7 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 			DefaultRules: "group.id,-at,user.group_id",
 			TieBreakers:  tieBreakers,
 		})
-
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	query = attachUsersWithApproval(query, user)
 	var result []groupUserRequestsViewResponseRow
@@ -195,45 +194,43 @@ func (srv *Service) getUserRequests(w http.ResponseWriter, r *http.Request) serv
 		}
 	}
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
-func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, r *http.Request) (
-	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, apiError service.APIError,
+func (srv *Service) resolveParametersForGetUserRequests(store *database.DataStore, httpRequest *http.Request) (
+	groupID int64, groupIDSet, includeDescendantGroups bool, types []string, err error,
 ) {
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	var err error
-
-	urlQuery := r.URL.Query()
-	if len(urlQuery["group_id"]) > 0 {
-		groupIDSet = true
-		groupID, err = service.ResolveURLQueryGetInt64Field(r, "group_id")
+	urlQuery := httpRequest.URL.Query()
+	groupIDSet = len(urlQuery["group_id"]) > 0
+	includeDescendantGroupsSet := len(urlQuery["include_descendant_groups"]) > 0
+	if groupIDSet {
+		groupID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "group_id")
 		if err != nil {
 			return 0, false, false, nil, service.ErrInvalidRequest(err)
 		}
 
-		if apiError = checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-			return 0, false, false, nil, apiError
-		}
+		service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
-		if len(urlQuery["include_descendant_groups"]) > 0 {
-			includeDescendantGroups, err = service.ResolveURLQueryGetBoolField(r, "include_descendant_groups")
-			if err != nil {
+		if includeDescendantGroupsSet {
+			if includeDescendantGroups, err = service.ResolveURLQueryGetBoolField(httpRequest, "include_descendant_groups"); err != nil {
 				return 0, false, false, nil, service.ErrInvalidRequest(err)
 			}
 		}
-	} else if len(urlQuery["include_descendant_groups"]) > 0 {
+	}
+
+	if !groupIDSet && includeDescendantGroupsSet {
 		return 0, false, false, nil,
 			service.ErrInvalidRequest(errors.New("'include_descendant_groups' should not be given when 'group_id' is not given"))
 	}
 
-	types, apiError = resolveTypesParameterForGetUserRequests(r)
-	return groupID, groupIDSet, includeDescendantGroups, types, apiError
+	types, err = resolveTypesParameterForGetUserRequests(httpRequest)
+	return groupID, groupIDSet, includeDescendantGroups, types, err
 }
 
-func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, service.APIError) {
+func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, error) {
 	types := []string{"join_request"}
 	urlQuery := r.URL.Query()
 	if len(urlQuery["types"]) > 0 {
@@ -244,5 +241,5 @@ func resolveTypesParameterForGetUserRequests(r *http.Request) ([]string, service
 			}
 		}
 	}
-	return types, service.NoError
+	return types, nil
 }

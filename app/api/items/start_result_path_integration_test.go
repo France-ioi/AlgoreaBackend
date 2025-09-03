@@ -6,13 +6,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/api/items"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/api/items"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func Test_getDataForResultPathStart(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	type args struct {
 		participantID int64
 		ids           []int64
@@ -435,18 +439,18 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			- {participant_id: 100, id: 0}
 			- {participant_id: 101, id: 0}
 	`
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(globalFixture, tt.fixture)
+			testoutput.SuppressIfPasses(t)
+
+			db := testhelpers.SetupDBWithFixtureString(ctx, globalFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 			var got []map[string]interface{}
-			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
-				s.ScheduleGroupsAncestorsPropagation()
-				return nil
-			}))
-			assert.NoError(t, store.InTransaction(func(s *database.DataStore) error {
+			require.NoError(t, store.InTransaction(func(s *database.DataStore) error {
+				require.NoError(t, s.GroupGroups().CreateNewAncestors())
 				got = items.GetDataForResultPathStart(s, tt.args.participantID, tt.args.ids)
 				return nil
 			}))

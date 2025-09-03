@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model userBatch
@@ -16,7 +16,6 @@ type userBatch struct {
 	CustomPrefix string `json:"custom_prefix"`
 	// required: true
 	Size int `json:"size"`
-	// Nullable
 	// required: true
 	CreatorID *int64 `json:"creator_id,string"`
 }
@@ -36,6 +35,7 @@ type userBatch struct {
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: sort
 //			in: query
 //			default: [group_prefix,custom_prefix]
@@ -70,13 +70,15 @@ type userBatch struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getUserBatches(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -92,15 +94,15 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 		Joins("JOIN user_batch_prefixes USING(group_prefix)").
 		Where(`user_batch_prefixes.group_id IN(?)`, managedByUser.QueryExpr()).
 		Where(`user_batch_prefixes.group_id IN(?)`, prefixAncestors.QueryExpr()).
-		Select("user_batches.group_prefix, user_batches.custom_prefix, user_batches.size, user_batches.creator_id")
+		Select("user_batches_v2.group_prefix, user_batches_v2.custom_prefix, user_batches_v2.size, user_batches_v2.creator_id")
 
-	query, apiErr := service.ApplySortingAndPaging(
-		r, query,
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"group_prefix":  {ColumnName: "user_batches.group_prefix"},
-				"custom_prefix": {ColumnName: "user_batches.custom_prefix"},
-				"size":          {ColumnName: "user_batches.size"},
+				"group_prefix":  {ColumnName: "user_batches_v2.group_prefix"},
+				"custom_prefix": {ColumnName: "user_batches_v2.custom_prefix"},
+				"size":          {ColumnName: "user_batches_v2.size"},
 			},
 			DefaultRules: "group_prefix,custom_prefix",
 			TieBreakers: service.SortingAndPagingTieBreakers{
@@ -108,13 +110,11 @@ func (srv *Service) getUserBatches(w http.ResponseWriter, r *http.Request) servi
 				"custom_prefix": service.FieldTypeString,
 			},
 		})
-	if apiErr != service.NoError {
-		return apiErr
-	}
+	service.MustNotBeError(err)
 
 	var result []userBatch
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }

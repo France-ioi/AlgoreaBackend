@@ -7,8 +7,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model groupUserProgressResponseTableCell
@@ -24,7 +24,6 @@ type groupUserProgressResponseTableCell struct {
 	// Whether the user or one of his teams has the item validated
 	// required:true
 	Validated bool `json:"validated"`
-	// Nullable
 	// required:true
 	LatestActivityAt *database.Time `json:"latest_activity_at"`
 	// Number of hints requested for the result with the best score (if multiple, take the first one, chronologically).
@@ -79,6 +78,7 @@ type groupUserProgressResponseTableCell struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: parent_item_ids
 //			required: true
@@ -86,10 +86,12 @@ type groupUserProgressResponseTableCell struct {
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //		- name: from.id
 //			description: Start the page from the user next to the user with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display results for the first N users (sorted by `groups.name`)
 //			in: query
@@ -109,28 +111,29 @@ type groupUserProgressResponseTableCell struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getUserProgress(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	if !user.CanWatchGroupMembers(store, groupID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, apiError := resolveAndCheckParentIDs(store, r, user)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	service.MustNotBeError(err)
+
 	if len(itemParentIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		return nil
 	}
 
 	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
@@ -144,8 +147,8 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		Joins("JOIN `groups` ON groups.id = groups_groups_active.child_group_id AND groups.type = 'User'").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
 		Group("groups.id")
-	userIDQuery, apiError = service.ApplySortingAndPaging(
-		r, userIDQuery,
+	userIDQuery, err = service.ApplySortingAndPaging(
+		httpRequest, userIDQuery,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -154,22 +157,20 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
-	userIDQuery = service.NewQueryLimiter().Apply(r, userIDQuery)
+	service.MustNotBeError(err)
+
+	userIDQuery = service.NewQueryLimiter().Apply(httpRequest, userIDQuery)
 	service.MustNotBeError(userIDQuery.
 		Pluck("groups.id", &userIDs).Error())
 
 	if len(userIDs) == 0 {
-		render.Respond(w, r, []map[string]interface{}{})
-		return service.NoError
+		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		return nil
 	}
 
 	userIDsList := strings.Join(userIDs, ", ")
 	var result []*groupUserProgressResponseTableCell
 	scanAndBuildProgressResults(
-		// nolint:gosec
 		joinUserProgressResults(
 			store.Raw(`
 				SELECT STRAIGHT_JOIN
@@ -184,8 +185,8 @@ func (srv *Service) getUserProgress(w http.ResponseWriter, r *http.Request) serv
 		orderedItemIDListWithDuplicates, len(uniqueItemIDs), &result,
 	)
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }
 
 const userProgressFields = `
@@ -207,10 +208,9 @@ func joinUserProgressResults(db *database.DB, userID interface{}) *database.DB {
 	return db.
 		Joins(`
 			LEFT JOIN LATERAL (
-				SELECT STRAIGHT_JOIN groups.id
+				SELECT STRAIGHT_JOIN groups_groups_active.parent_group_id AS id
 				FROM groups_groups_active
-				JOIN `+"`groups`"+` ON groups.id = groups_groups_active.parent_group_id
-				WHERE groups.type = 'Team' AND groups_groups_active.child_group_id = ?
+				WHERE groups_groups_active.is_team_membership = 1 AND groups_groups_active.child_group_id = ?
 			) teams ON 1`, userID).
 		Joins(`
 			LEFT JOIN LATERAL (

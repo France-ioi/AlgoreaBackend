@@ -30,4 +30,5 @@ domains:
   -
     domains: [default]
     allUsersGroup: ALLUSERS # 1 for dev db, 3 for prod
+    nonTempUsersGroup: NONTMPUSERS
     tempUsersGroup: TMPUSERS # 4 for dev, 2 for prod

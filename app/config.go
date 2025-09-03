@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,9 +11,9 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/domain"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 const (
@@ -62,21 +61,20 @@ func loadConfigFrom(filename, directory string) *viper.Viper {
 	// because it might contain the credentials to a live database, and running the tests will erase the database
 	if !appenv.IsEnvTest() {
 		if err = config.ReadInConfig(); err != nil {
-			log.Print("Cannot read the main config file, ignoring it: ", err)
+			fmt.Fprint(os.Stderr, "Cannot read the main config file, ignoring it: ", err)
 		}
 	}
 
 	environment := appenv.Env()
-	log.Printf("Loading environment: %s\n", environment)
+	fmt.Fprintf(os.Stderr, "Loading environment: %s\n", environment)
 
 	config.SetConfigName(filename + "." + environment)
 	if err = config.MergeInConfig(); err != nil {
 		if appenv.IsEnvTest() {
-			log.Printf("Cannot read the %q config file: %s", environment, err)
+			fmt.Fprintf(os.Stderr, "Cannot read the %q config file: %s", environment, err)
 			panic("Cannot read the test config file")
-		} else {
-			log.Printf("Cannot merge %q config file, ignoring it: %s", environment, err)
 		}
+		fmt.Fprintf(os.Stderr, "Cannot merge %q config file, ignoring it: %s", environment, err)
 	}
 
 	return config
@@ -93,20 +91,6 @@ func configDirectory() string {
 		}
 	}
 	return filepath.Dir(cwd + "/conf/")
-}
-
-// ReplaceAuthConfig replaces the auth part of the config by the given one.
-func (app *Application) ReplaceAuthConfig(newGlobalConfig *viper.Viper) {
-	app.Config.Set(authConfigKey, newGlobalConfig.Get(authConfigKey))
-	_ = app.Reset(app.Config) // cannot return an error in this case
-}
-
-// ReplaceDomainsConfig replaces the domains part of the config by the given one.
-func (app *Application) ReplaceDomainsConfig(newGlobalConfig *viper.Viper) {
-	app.Config.Set(domainsConfigKey, newGlobalConfig.Get(domainsConfigKey))
-	if err := app.Reset(app.Config); err != nil {
-		panic(err)
-	}
 }
 
 //
@@ -151,7 +135,7 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 // TokenConfig returns the token fixed config from the global config.
 func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)
-	return token.Initialize(sub)
+	return token.BuildConfig(sub)
 }
 
 // AuthConfig returns an auth dynamic config from the global config.

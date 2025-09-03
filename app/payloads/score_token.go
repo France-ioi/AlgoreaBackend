@@ -1,7 +1,6 @@
 package payloads
 
 import (
-	"crypto/rsa"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,7 +9,7 @@ import (
 // ScoreToken represents data inside a score token.
 type ScoreToken struct {
 	// Nullable fields are of pointer types
-	Date         string  `json:"date" validate:"dmy-date"` // dd-mm-yyyy
+	Date         string  `json:"date"             validate:"dmy-date"` // dd-mm-yyyy
 	UserID       string  `json:"idUser"`
 	ItemID       *string `json:"idItem,omitempty"`
 	LocalItemID  string  `json:"idItemLocal"`
@@ -20,9 +19,7 @@ type ScoreToken struct {
 	UserAnswerID string  `json:"idUserAnswer"`
 	Answer       *string `json:"sAnswer"`
 
-	Converted  ScoreTokenConverted
-	PublicKey  *rsa.PublicKey
-	PrivateKey *rsa.PrivateKey
+	Converted ScoreTokenConverted
 }
 
 // ScoreTokenConverted contains converted field values of ScoreToken payload.

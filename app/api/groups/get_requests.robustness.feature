@@ -1,19 +1,18 @@
 Feature: Get requests for group_id - robustness
   Background:
     Given the database has the following users:
-      | login | temp_user | group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-      | user  | 0         | 11       | John        | Doe       | 1     |
-      | jane  | 0         | 31       | Jane        | Doe       | 2     |
-    And the database has the following table 'groups':
+      | group_id | login | first_name  | last_name |
+      | 21       | owner | Jean-Michel | Blanquer  |
+      | 11       | user  | John        | Doe       |
+      | 31       | jane  | Jane        | Doe       |
+    And the database has the following table "groups":
       | id |
       | 13 |
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |
       | 13       | 31         | none        |
       | 21       | 31         | memberships |
-    And the groups ancestors are computed
 
   Scenario: User is not a manager of the group
     Given I am the user with id "11"

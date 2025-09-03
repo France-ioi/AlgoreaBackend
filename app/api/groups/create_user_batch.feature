@@ -1,24 +1,24 @@
 Feature: Create a user batch
   Background:
-    Given the database has the following table 'groups':
-      | id | type    | name     | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
-      | 2  | Base    | AllUsers | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
-      | 3  | Club    | Club     | 2017-08-10 12:34:55 | view                                  | 3030-01-01 00:00:00                    | 1                      |
-      | 4  | Friends | Friends  | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
-      | 21 | User    | owner    | 2016-08-10 12:34:55 | none                                  | null                                   | 0                      |
-    And the database has the following table 'users':
-      | login | group_id | first_name  | last_name | default_language |
-      | owner | 21       | Jean-Michel | Blanquer  | en               |
-    And the database has the following table 'group_managers':
+    Given the database has the following table "groups":
+      | id | type    | name         | created_at          | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval |
+      | 2  | Base    | NonTempUsers | 2015-08-10 12:34:55 | none                                  | null                                   | 0                      |
+      | 3  | Club    | Club         | 2017-08-10 12:34:55 | view                                  | 3030-01-01 00:00:00                    | 1                      |
+      | 4  | Friends | Friends      | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
+      | 21 | User    | owner        | 2016-08-10 12:34:55 | none                                  | null                                   | 0                      |
+    And the database has the following user:
+      | group_id | login | first_name  | last_name | default_language |
+      | 21       | owner | Jean-Michel | Blanquer  | en               |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 3        | 21         | memberships           |
       | 4        | 21         | memberships_and_group |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 2               | 21             |
       | 3               | 4              |
     And the groups ancestors are computed
-    And the database has the following table 'user_batch_prefixes':
+    And the database has the following table "user_batch_prefixes":
       | group_prefix | group_id | allow_new | max_users |
       | test         | 3        | 1         | 2         |
     And the application config is:
@@ -30,11 +30,11 @@ Feature: Create a user batch
       domains:
         -
           domains: [127.0.0.1]
-          allUsersGroup: 2
+          nonTempUsersGroup: 2
       """
 
   Scenario: Create a new user batch
-    Given the time now is "2019-07-17T01:02:29+03:00"
+    Given the server time now is "2019-07-17T01:02:29+03:00"
     And the DB time now is "2019-07-16 22:02:28"
     And the login module "create" endpoint with params "amount=2&language=en&login_fixed=1&password_length=6&postfix_length=3&prefix=test_custom_" returns 200 with encoded body:
       """
@@ -90,7 +90,7 @@ Feature: Create a user batch
         ]
       }
       """
-    And the table "user_batches" should be:
+    And the table "user_batches_v2" should be:
       | group_prefix | custom_prefix | size | creator_id | created_at          |
       | test         | custom        | 2    | 21         | 2019-07-16 22:02:28 |
     And the table "users" should be:
@@ -100,7 +100,7 @@ Feature: Create a user batch
       | 8674665223082153551 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000030 | test_custom_ctc | en               | null  | null        | null      |
     And the table "groups" should be:
       | id                  | name            | type    | description     | created_at          | is_open | send_emails |
-      | 2                   | AllUsers        | Base    | null            | 2015-08-10 12:34:55 | false   | false       |
+      | 2                   | NonTempUsers    | Base    | null            | 2015-08-10 12:34:55 | false   | false       |
       | 3                   | Club            | Club    | null            | 2017-08-10 12:34:55 | false   | false       |
       | 4                   | Friends         | Friends | null            | 2018-08-10 12:34:55 | false   | false       |
       | 21                  | owner           | User    | null            | 2016-08-10 12:34:55 | false   | false       |

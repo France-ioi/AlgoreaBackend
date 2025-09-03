@@ -10,16 +10,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/thingful/httpmock"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 )
 
 func TestNewClient(t *testing.T) {
@@ -46,7 +48,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 		_ = func() (err error) {
 			defer recoverPanics(&err)
 			var a []int
-			a[0]++ // nolint:govet // runtime error
+			a[0]++ // runtime error
 			return nil
 		}()
 
@@ -165,24 +167,24 @@ func TestClient_GetUserProfile(t *testing.T) {
 			responseCode: 200,
 			response:     "{",
 			expectedErr:  errors.New("can't parse user's profile"),
-			expectedLog:  `level=warning msg="Can't parse user's profile (response = \"{\", error = \"unexpected EOF\")"`,
+			expectedLog:  `level=warning .* ` + regexp.QuoteMeta(`msg="Can't parse user's profile (response = \"{\", error = \"unexpected EOF\")"`),
 		},
 		{
 			name:         "invalid profile",
 			responseCode: 200,
 			response:     "{}",
 			expectedErr:  errors.New("user's profile is invalid"),
-			expectedLog: `level=warning msg="User's profile is invalid (response = \"{}\", ` +
-				`error = \"no id in user's profile\")"`,
+			expectedLog: `level=warning .* ` + regexp.QuoteMeta(`msg="User's profile is invalid (response = \"{}\", `+
+				`error = \"no id in user's profile\")"`),
 		},
 		{
 			name:         "invalid badges",
 			responseCode: 200,
 			response:     `{"id":100000001,"login":"jane","badges":1234}`,
 			expectedErr:  errors.New("user's profile is invalid"),
-			expectedLog: `level=warning msg="User's profile is invalid ` +
-				`(response = \"{\\\"id\\\":100000001,\\\"login\\\":\\\"jane\\\",\\\"badges\\\":1234}\", ` +
-				`error = \"invalid badges data\")"`,
+			expectedLog: `level=warning .* ` + regexp.QuoteMeta(`msg="User's profile is invalid `+
+				`(response = \"{\\\"id\\\":100000001,\\\"login\\\":\\\"jane\\\",\\\"badges\\\":1234}\", `+
+				`error = \"invalid badges data\")"`),
 		},
 	}
 
@@ -197,16 +199,14 @@ func TestClient_GetUserProfile(t *testing.T) {
 			httpmock.RegisterStubRequests(httpmock.NewStubRequest("GET",
 				moduleURL+"/user_api/account", responder,
 				httpmock.WithHeader(&http.Header{"Authorization": {"Bearer accesstoken"}})))
+			ctx, _, hook := logging.NewContextWithNewMockLogger()
 
-			hook, restoreLogFunc := logging.MockSharedLoggerHook()
-			defer restoreLogFunc()
-
-			gotProfile, err := client.GetUserProfile(context.Background(), "accesstoken")
+			gotProfile, err := client.GetUserProfile(ctx, "accesstoken")
 
 			assert.Equal(t, tt.expectedErr, err)
 			assert.Equal(t, tt.expectedProfile, gotProfile)
 			if tt.expectedLog != "" {
-				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+				assert.Regexp(t, tt.expectedLog, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 			}
 			assert.NoError(t, httpmock.AllStubsCalled())
 		})
@@ -392,30 +392,30 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 		endpoint     string
 		errorMessage string
 		params       string
-		action       func(*Client) (bool, error)
+		action       func(context.Context, *Client) (bool, error)
 	}{
 		{
 			endpoint:     "accounts_manager/unlink_client",
 			errorMessage: "can't unlink the user",
 			params:       "user_id=123456",
-			action: func(client *Client) (bool, error) {
-				return client.UnlinkClient(context.Background(), "clientID", "clientKeyclientKey", 123456)
+			action: func(ctx context.Context, client *Client) (bool, error) {
+				return client.UnlinkClient(ctx, "clientID", "clientKeyclientKey", 123456)
 			},
 		},
 		{
 			endpoint:     "accounts_manager/delete",
 			errorMessage: "can't delete users",
 			params:       "prefix=prefix_subprefix_",
-			action: func(client *Client) (bool, error) {
-				return client.DeleteUsers(context.Background(), "clientID", "clientKeyclientKey", "prefix_subprefix_")
+			action: func(ctx context.Context, client *Client) (bool, error) {
+				return client.DeleteUsers(ctx, "clientID", "clientKeyclientKey", "prefix_subprefix_")
 			},
 		},
 		{
 			endpoint:     "lti_result/send",
 			errorMessage: "can't publish score",
 			params:       "user_id=1234&content_id=5678&score=99.9",
-			action: func(client *Client) (bool, error) {
-				return client.SendLTIResult(context.Background(), "clientID", "clientKeyclientKey", 1234, 5678, 99.9)
+			action: func(ctx context.Context, client *Client) (bool, error) {
+				return client.SendLTIResult(ctx, "clientID", "clientKeyclientKey", 1234, 5678, 99.9)
 			},
 		},
 	} {
@@ -440,33 +440,33 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 					responseCode: 500,
 					response:     "Unexpected error",
 					expectedErr:  fmt.Errorf(testSuite.errorMessage+": %s", "bad response code"),
-					expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/` +
-						testSuite.endpoint + ` (status code = 500, response = \"Unexpected error\")"`,
+					expectedLog: `level=warning .* ` + regexp.QuoteMeta(`msg="Login module returned a bad status code for /platform_api/`+
+						testSuite.endpoint+` (status code = 500, response = \"Unexpected error\")"`),
 				},
 				{
 					name:         "corrupted base64",
 					responseCode: 200,
 					response:     "Some text",
 					expectedErr:  fmt.Errorf(testSuite.errorMessage+": %s", "illegal base64 data at input byte 4"),
-					expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/` +
-						testSuite.endpoint + ` (status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
+					expectedLog: `level=warning .*` + regexp.QuoteMeta(`msg="Can't decode response from the login module for /platform_api/`+
+						testSuite.endpoint+` (status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`),
 				},
 				{
 					name:         "can't unmarshal",
 					responseCode: 200,
 					response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
 					expectedErr:  fmt.Errorf(testSuite.errorMessage+": %s", "invalid character 'Ý' in literal true (expecting 'r')"),
-					expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/` +
-						testSuite.endpoint +
-						` (decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
-						`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
+					expectedLog: `level=warning .*` + regexp.QuoteMeta(`msg="Can't parse response from the login module for /platform_api/`+
+						testSuite.endpoint+
+						` (decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", `+
+						`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`),
 				},
 				{
 					name:         "'success' is false",
 					responseCode: 200,
 					response:     encodeAccountsManagerResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
-					expectedLog: `level=warning msg="The login module returned an error for /platform_api/` +
-						testSuite.endpoint + `: unknown error"`,
+					expectedLog: `level=warning .*` + regexp.QuoteMeta(`msg="The login module returned an error for /platform_api/`+
+						testSuite.endpoint+`: unknown error"`),
 				},
 			}
 			const moduleURL = "http://login.url.com"
@@ -479,28 +479,26 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 					responder := httpmock.NewStringResponder(tt.responseCode, tt.response)
 
 					parsedParams, err := url.ParseQuery(testSuite.params)
-					assert.NoError(t, err)
+					require.NoError(t, err)
 					paramsMap := make(map[string]string, len(parsedParams))
 					for key := range parsedParams {
 						paramsMap[key] = parsedParams.Get(key)
 					}
 					requestBody, err := EncodeBody(paramsMap, "clientID", "clientKeyclientKey")
-					assert.NoError(t, err)
+					require.NoError(t, err)
 
 					httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
 						moduleURL+"/platform_api/"+testSuite.endpoint, responder,
 						httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
 						httpmock.WithBody(bytes.NewReader(requestBody))))
+					ctx, _, hook := logging.NewContextWithNewMockLogger()
 
-					hook, restoreLogFunc := logging.MockSharedLoggerHook()
-					defer restoreLogFunc()
-
-					result, err := testSuite.action(client)
+					result, err := testSuite.action(ctx, client)
 
 					assert.Equal(t, tt.expectedResult, result)
 					assert.Equal(t, tt.expectedErr, err)
 					if tt.expectedLog != "" {
-						assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+						assert.Regexp(t, tt.expectedLog, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 					}
 					assert.NoError(t, httpmock.AllStubsCalled())
 				})
@@ -572,31 +570,35 @@ func TestClient_CreateUsers(t *testing.T) {
 			responseCode: 500,
 			response:     "Unexpected error",
 			expectedErr:  fmt.Errorf("can't create users: %s", "bad response code"),
-			expectedLog: `level=warning msg="Login module returned a bad status code for /platform_api/accounts_manager/create ` +
-				`(status code = 500, response = \"Unexpected error\")"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="Login module returned a bad status code for /platform_api/accounts_manager/create `+
+					`(status code = 500, response = \"Unexpected error\")"`),
 		},
 		{
 			name:         "corrupted base64",
 			responseCode: 200,
 			response:     "Some text",
 			expectedErr:  fmt.Errorf("can't create users: %s", "illegal base64 data at input byte 4"),
-			expectedLog: `level=warning msg="Can't decode response from the login module for /platform_api/accounts_manager/create ` +
-				`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="Can't decode response from the login module for /platform_api/accounts_manager/create `+
+					`(status code = 200, response = \"Some text\"): illegal base64 data at input byte 4"`),
 		},
 		{
 			name:         "can't unmarshal",
 			responseCode: 200,
 			response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
 			expectedErr:  fmt.Errorf("can't create users: %s", "invalid character 'Ý' in literal true (expecting 'r')"),
-			expectedLog: `level=warning msg="Can't parse response from the login module for /platform_api/accounts_manager/create ` +
-				`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", ` +
-				`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="Can't parse response from the login module for /platform_api/accounts_manager/create `+
+					`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", `+
+					`encrypted response = \"K\\f_Bd\\xa5et\\xa5̡\\xfa蠐x\"): invalid character 'Ý' in literal true (expecting 'r')"`),
 		},
 		{
 			name:         "'success' is false",
 			responseCode: 200,
 			response:     encodeAccountsManagerResponse(`{"error":"unknown error"}`, "clientKeyclientKey"),
-			expectedLog:  `level=warning msg="The login module returned an error for /platform_api/accounts_manager/create: unknown error"`,
+			expectedLog: `level=warning .* ` +
+				regexp.QuoteMeta(`msg="The login module returned an error for /platform_api/accounts_manager/create: unknown error"`),
 		},
 	}
 
@@ -613,31 +615,30 @@ func TestClient_CreateUsers(t *testing.T) {
 			}
 
 			parsedParams, err := url.ParseQuery(tt.loginModuleParams)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			paramsMap := make(map[string]string, len(parsedParams))
 			for key := range parsedParams {
 				paramsMap[key] = parsedParams.Get(key)
 			}
 			requestBody, err := EncodeBody(paramsMap, "clientID", "clientKeyclientKey")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",
 				moduleURL+"/platform_api/accounts_manager/create", responder,
 				httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
 				httpmock.WithBody(bytes.NewReader(requestBody))))
 
-			hook, restoreLogFunc := logging.MockSharedLoggerHook()
-			defer restoreLogFunc()
+			ctx, _, hook := logging.NewContextWithNewMockLogger()
 
 			if tt.params == nil {
 				tt.params = &CreateUsersParams{}
 			}
-			result, data, err := client.CreateUsers(context.Background(), "clientID", "clientKeyclientKey", tt.params)
+			result, data, err := client.CreateUsers(ctx, "clientID", "clientKeyclientKey", tt.params)
 			assert.Equal(t, tt.expectedResult, result)
 			assert.Equal(t, tt.expectedErr, err)
 			assert.Equal(t, tt.expectedData, data)
 			if tt.expectedLog != "" {
-				assert.Contains(t, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs(), tt.expectedLog)
+				assert.Regexp(t, tt.expectedLog, (&loggingtest.Hook{Hook: hook}).GetAllStructuredLogs())
 			}
 			assert.NoError(t, httpmock.AllStubsCalled())
 		})
@@ -660,23 +661,23 @@ func TestEncodeBody(t *testing.T) {
 	const clientID = "1234"
 	const clientKey = "abcdefghijklmnop"
 	encoded, err := EncodeBody(params, clientID, clientKey)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	var unmarshaled map[string]string
 	err = json.Unmarshal(encoded, &unmarshaled)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, clientID, unmarshaled["client_id"])
-	assert.Equal(t, 2, len(unmarshaled))
+	assert.Len(t, unmarshaled, 2)
 	assert.Contains(t, unmarshaled, "data")
 	decodedData := make([]byte, base64.StdEncoding.DecodedLen(len(unmarshaled["data"])))
 	n, err := base64.StdEncoding.Decode(decodedData, []byte(unmarshaled["data"]))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	decodedData = decodedData[0:n]
 	decryptedData := decryptAes128Ecb(decodedData, []byte(clientKey)[:16])
 	decoder := json.NewDecoder(bytes.NewReader(decryptedData))
 	decoder.UseNumber()
 	var parsedData map[string]string
 	err = decoder.Decode(&parsedData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, params, parsedData)
 }
 
@@ -705,7 +706,7 @@ func TestEncode(t *testing.T) {
 			assert.Len(t, got, tt.expectedLen)
 			decodedData := make([]byte, base64.StdEncoding.DecodedLen(len(got)))
 			n, err := base64.StdEncoding.Decode(decodedData, []byte(got))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			decodedData = decodedData[0:n]
 			decryptedData := decryptAes128Ecb(decodedData, []byte(clientKey)[:16])
 			assert.Equal(t, tt.data, decryptedData)

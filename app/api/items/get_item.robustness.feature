@@ -1,34 +1,32 @@
 Feature: Get item view information - robustness
 Background:
-  Given the database has the following table 'groups':
-    | id | name    | grade | type  |
-    | 11 | jdoe    | -2    | User  |
-    | 13 | Group B | -2    | Class |
-    | 14 | info    | -2    | Class |
-    | 16 | Group C | -2    | Class |
-    | 17 | Team    | -2    | Team  |
-  And the database has the following table 'users':
-    | login | temp_user | group_id |
-    | jdoe  | 0         | 11       |
-    | info  | 0         | 14       |
-  And the database has the following table 'groups_groups':
+  Given the database has the following table "groups":
+    | id | name    | type  |
+    | 13 | Group B | Class |
+    | 16 | Group C | Class |
+    | 17 | Team    | Team  |
+  And the database has the following users:
+    | group_id | login |
+    | 11       | jdoe  |
+    | 14       | info  |
+  And the database has the following table "groups_groups":
     | parent_group_id | child_group_id |
     | 13              | 11             |
     | 16              | 14             |
     | 17              | 14             |
   And the groups ancestors are computed
-  And the database has the following table 'items':
+  And the database has the following table "items":
     | id  | type    | no_score | default_language_tag |
     | 190 | Chapter | false    | fr                   |
     | 200 | Chapter | false    | fr                   |
-  And the database has the following table 'permissions_generated':
+  And the database has the following table "permissions_generated":
     | group_id | item_id | can_view_generated       |
     | 13       | 190     | none                     |
     | 13       | 200     | content_with_descendants |
     | 16       | 190     | info                     |
     | 16       | 200     | content_with_descendants |
     | 17       | 190     | info                     |
-  And the database has the following table 'items_strings':
+  And the database has the following table "items_strings":
     | item_id | language_tag | title      |
     | 200     | fr           | Category 1 |
 

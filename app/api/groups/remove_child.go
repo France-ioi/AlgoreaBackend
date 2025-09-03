@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation DELETE /groups/{parent_group_id}/relations/{child_group_id} group-memberships groupRemoveChild
@@ -55,7 +55,7 @@ import (
 //			enum: [0,1]
 //			default: 0
 //	responses:
-//		"201":
+//		"200":
 //			"$ref": "#/responses/deletedResponse"
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
@@ -63,54 +63,47 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) removeChild(w http.ResponseWriter, r *http.Request) service.APIError {
-	parentGroupID, err := service.ResolveURLQueryPathInt64Field(r, "parent_group_id")
+func (srv *Service) removeChild(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	parentGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "parent_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	childGroupID, err := service.ResolveURLQueryPathInt64Field(r, "child_group_id")
+	childGroupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "child_group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	shouldDeleteOrphans := false
-	if len(r.URL.Query()["delete_orphans"]) > 0 {
-		shouldDeleteOrphans, err = service.ResolveURLQueryGetBoolField(r, "delete_orphans")
+	if len(httpRequest.URL.Query()["delete_orphans"]) > 0 {
+		shouldDeleteOrphans, err = service.ResolveURLQueryGetBoolField(httpRequest, "delete_orphans")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
 	}
 
-	user := srv.GetUser(r)
-	apiErr := service.NoError
+	user := srv.GetUser(httpRequest)
 
-	err = srv.GetStore(r).InTransaction(func(s *database.DataStore) error {
-		apiErr = checkThatUserHasRightsForDirectRelation(s, user, parentGroupID, childGroupID, deleteRelation)
-		if apiErr != service.NoError {
-			return apiErr.Error // rollback
-		}
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
+		service.MustNotBeError(checkThatUserHasRightsForDirectRelation(store, user, parentGroupID, childGroupID, deleteRelation))
 
 		// Check that the relation exists
 		var result []struct{}
-		service.MustNotBeError(s.ActiveGroupGroups().WithWriteLock().
+		service.MustNotBeError(store.ActiveGroupGroups().WithExclusiveWriteLock().
 			Where("parent_group_id = ?", parentGroupID).
 			Where("child_group_id = ?", childGroupID).
 			Take(&result).Error())
 		if len(result) == 0 {
-			apiErr = service.InsufficientAccessRightsError
-			return apiErr.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		return s.GroupGroups().DeleteRelation(parentGroupID, childGroupID, shouldDeleteOrphans)
+		return store.GroupGroups().DeleteRelation(parentGroupID, childGroupID, shouldDeleteOrphans)
 	})
 
-	if apiErr != service.NoError {
-		return apiErr
-	}
-
 	service.MustNotBeError(err)
-	service.MustNotBeError(render.Render(w, r, service.DeletionSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.DeletionSuccess[*struct{}](nil)))
+	return nil
 }

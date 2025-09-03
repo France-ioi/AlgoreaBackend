@@ -2,26 +2,34 @@ package groups
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
 	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-var (
-	canViewValues      = [...]string{"none", "info", "content", "content_with_descendants", "solution"}
-	canGrantViewValues = [...]string{"none", "enter", "content", "content_with_descendants", "solution", "solution_with_grant"}
-	canWatchValues     = [...]string{"none", "result", "answer", "answer_with_grant"}
-	canEditValues      = [...]string{"none", "children", "all", "all_with_grant"}
-)
+func canViewValues() []string {
+	return []string{"none", "info", "content", "content_with_descendants", "solution"}
+}
+
+func canGrantViewValues() []string {
+	return []string{"none", "enter", "content", "content_with_descendants", "solution", "solution_with_grant"}
+}
+
+func canWatchValues() []string {
+	return []string{"none", "result", "answer", "answer_with_grant"}
+}
+
+func canEditValues() []string {
+	return []string{"none", "children", "all", "all_with_grant"}
+}
 
 func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 	type args struct {
@@ -44,11 +52,11 @@ func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for _, currentCanView := range canViewValues {
+	for _, currentCanView := range canViewValues() {
 		var newValueIsGreater bool
-		for _, newCanViewValue := range canViewValues {
+		for _, newCanViewValue := range canViewValues() {
 			if newValueIsGreater {
-				for _, canGrantViewValue := range canGrantViewValues {
+				for _, canGrantViewValue := range canGrantViewValues() {
 					tests = append(tests, testStruct{
 						name: fmt.Sprintf("requires the manager to have can_grant_view_generated >= new value (%s -> %s, %s)",
 							currentCanView, newCanViewValue, canGrantViewValue),
@@ -89,7 +97,7 @@ func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 }
 
 func Test_checkIfPossibleToModifyCanGrantView_AllowsSettingLowerOrSameValue(t *testing.T) {
-	testCheckerAllowsSettingLowerOrSameValue(t, canGrantViewValues[:],
+	testCheckerAllowsSettingLowerOrSameValue(t, canGrantViewValues(),
 		checkIfPossibleToModifyCanGrantView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string))}
@@ -100,6 +108,8 @@ func testCheckerAllowsSettingLowerOrSameValue(
 	t *testing.T, values []string,
 	funcToCheck interface{}, currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -136,14 +146,14 @@ func Test_checkIfPossibleToModifyCanGrantView_RequiresCanViewBeGreaterOrEqualToC
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for currentCanGrantViewIndex, currentCanGrantView := range canGrantViewValues {
+	for currentCanGrantViewIndex, currentCanGrantView := range canGrantViewValues() {
 		currentCanGrantView := currentCanGrantView
-		for newCanGrantViewIndex := currentCanGrantViewIndex + 1; newCanGrantViewIndex < len(canGrantViewValues); newCanGrantViewIndex++ {
-			newCanGrantViewValue := canGrantViewValues[newCanGrantViewIndex]
+		for newCanGrantViewIndex := currentCanGrantViewIndex + 1; newCanGrantViewIndex < len(canGrantViewValues()); newCanGrantViewIndex++ {
+			newCanGrantViewValue := canGrantViewValues()[newCanGrantViewIndex]
 			if newCanGrantViewValue == solutionWithGrant {
 				break
 			}
-			for _, currentCanViewValue := range canViewValues {
+			for _, currentCanViewValue := range canViewValues() {
 				currentCanViewValue := currentCanViewValue
 				t.Run(fmt.Sprintf("%s -> %s, %s", currentCanGrantView, newCanGrantViewValue, currentCanViewValue),
 					func(t *testing.T) {
@@ -174,7 +184,7 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	assert.Equal(t, true, checkIfPossibleToModifyCanGrantView(
+	assert.True(t, checkIfPossibleToModifyCanGrantView(
 		solutionWithGrant,
 		&userPermissions{
 			CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(solution),
@@ -185,7 +195,7 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 			CanGrantViewGeneratedValue: permissionGrantedStore.GrantViewIndexByName(solutionWithGrant),
 		}, dataStore))
 
-	assert.Equal(t, false, checkIfPossibleToModifyCanGrantView(
+	assert.False(t, checkIfPossibleToModifyCanGrantView(
 		solutionWithGrant,
 		&userPermissions{
 			CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(solution),
@@ -196,7 +206,7 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 			CanGrantViewGeneratedValue: permissionGrantedStore.GrantViewIndexByName(solutionWithGrant),
 		}, dataStore))
 
-	assert.Equal(t, false, checkIfPossibleToModifyCanGrantView(
+	assert.False(t, checkIfPossibleToModifyCanGrantView(
 		solutionWithGrant,
 		&userPermissions{
 			CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(solution),
@@ -207,7 +217,7 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 			CanGrantViewGeneratedValue: permissionGrantedStore.GrantViewIndexByName(solutionWithGrant),
 		}, dataStore))
 
-	for _, canGrantView := range canGrantViewValues {
+	for _, canGrantView := range canGrantViewValues() {
 		canGrantView := canGrantView
 		t.Run(canGrantView, func(t *testing.T) {
 			assert.Equal(t, canGrantView == solutionWithGrant, checkIfPossibleToModifyCanGrantView(
@@ -227,7 +237,7 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 
 func Test_checkIfPossibleToModifyCanGrantView_RequiresManagerToHaveSolutionWithGrantPermission(t *testing.T) {
 	testCheckerRequiresManagerToHaveSpecificPermission(
-		t, canGrantViewValues[:], solutionWithGrant, solution,
+		t, canGrantViewValues(), solutionWithGrant, solution,
 		checkIfPossibleToModifyCanGrantView,
 		func(newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
 			return &managerGeneratedPermissions{
@@ -243,6 +253,8 @@ func testCheckerRequiresManagerToHaveSpecificPermission(
 	managerPermissionsGenerator func(
 		newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -268,7 +280,7 @@ func testCheckerRequiresManagerToHaveSpecificPermission(
 }
 
 func Test_checkIfPossibleToModifyCanWatch_AllowsSettingLowerOrSameValue(t *testing.T) {
-	testCheckerAllowsSettingLowerOrSameValue(t, canWatchValues[:],
+	testCheckerAllowsSettingLowerOrSameValue(t, canWatchValues(),
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string))}
@@ -276,7 +288,7 @@ func Test_checkIfPossibleToModifyCanWatch_AllowsSettingLowerOrSameValue(t *testi
 }
 
 func Test_checkIfPossibleToModifyCanWatch_RequiresCanViewBeGreaterOrEqualToContent(t *testing.T) {
-	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canWatchValues[:], answerWithGrant,
+	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canWatchValues(), answerWithGrant,
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, viewValue string, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{
@@ -298,6 +310,8 @@ func testCheckerRequiresCanViewBeGreaterOrEqualToContent(
 	managerPermissionsGenerator func(
 		permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -313,7 +327,7 @@ func testCheckerRequiresCanViewBeGreaterOrEqualToContent(
 			if newValue == stopValue {
 				break
 			}
-			for _, currentCanViewValue := range canViewValues {
+			for _, currentCanViewValue := range canViewValues() {
 				currentCanViewValue := currentCanViewValue
 				t.Run(fmt.Sprintf("%s -> %s, %s",
 					currentValue, newValue, currentCanViewValue), func(t *testing.T) {
@@ -362,7 +376,7 @@ func Test_checkIfPossibleToModifyCanWatch_AnswerWithGrant(t *testing.T) {
 			})
 	}
 
-	for _, canWatch := range canWatchValues {
+	for _, canWatch := range canWatchValues() {
 		canWatch := canWatch
 		t.Run(canWatch, func(t *testing.T) {
 			assert.Equal(t, canWatch == answerWithGrant, checkIfPossibleToModifyCanWatch(
@@ -379,7 +393,7 @@ func Test_checkIfPossibleToModifyCanWatch_AnswerWithGrant(t *testing.T) {
 
 func Test_checkIfPossibleToModifyCanWatch_RequiresManagerToHaveAnswerWithGrantPermission(t *testing.T) {
 	testCheckerRequiresManagerToHaveSpecificPermission(
-		t, canWatchValues[:], answerWithGrant, content,
+		t, canWatchValues(), answerWithGrant, content,
 		checkIfPossibleToModifyCanWatch,
 		func(newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
 			return &managerGeneratedPermissions{
@@ -390,7 +404,7 @@ func Test_checkIfPossibleToModifyCanWatch_RequiresManagerToHaveAnswerWithGrantPe
 }
 
 func Test_checkIfPossibleToModifyCanEdit_AllowsSettingLowerOrSameValue(t *testing.T) {
-	testCheckerAllowsSettingLowerOrSameValue(t, canEditValues[:],
+	testCheckerAllowsSettingLowerOrSameValue(t, canEditValues(),
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanEditValue: permissionGrantedStore.EditIndexByName(value.(string))}
@@ -398,7 +412,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllowsSettingLowerOrSameValue(t *testin
 }
 
 func Test_checkIfPossibleToModifyCanEdit_RequiresCanViewBeGreaterOrEqualToContent(t *testing.T) {
-	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canEditValues[:], allWithGrant,
+	testCheckerRequiresCanViewBeGreaterOrEqualToContent(t, canEditValues(), allWithGrant,
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, viewValue string, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{
@@ -422,7 +436,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	assert.Equal(t, true, checkIfPossibleToModifyCanEdit(
+	assert.True(t, checkIfPossibleToModifyCanEdit(
 		allWithGrant,
 		&userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(content)},
 		&managerGeneratedPermissions{
@@ -430,7 +444,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 			CanEditGeneratedValue: permissionGrantedStore.EditIndexByName(allWithGrant),
 		}, dataStore))
 
-	assert.Equal(t, false, checkIfPossibleToModifyCanEdit(
+	assert.False(t, checkIfPossibleToModifyCanEdit(
 		allWithGrant,
 		&userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(info)},
 		&managerGeneratedPermissions{
@@ -438,7 +452,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 			CanEditGeneratedValue: permissionGrantedStore.EditIndexByName(allWithGrant),
 		}, dataStore))
 
-	assert.Equal(t, false, checkIfPossibleToModifyCanEdit(
+	assert.False(t, checkIfPossibleToModifyCanEdit(
 		allWithGrant,
 		&userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(content)},
 		&managerGeneratedPermissions{
@@ -446,7 +460,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 			CanEditGeneratedValue: permissionGrantedStore.EditIndexByName(allWithGrant),
 		}, dataStore))
 
-	for _, canEdit := range canEditValues {
+	for _, canEdit := range canEditValues() {
 		canEdit := canEdit
 		t.Run(canEdit, func(t *testing.T) {
 			assert.Equal(t, canEdit == allWithGrant, checkIfPossibleToModifyCanEdit(
@@ -463,7 +477,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 
 func Test_checkIfPossibleToModifyCanEdit_RequiresManagerToHaveAllWithGrantPermission(t *testing.T) {
 	testCheckerRequiresManagerToHaveSpecificPermission(
-		t, canEditValues[:], allWithGrant, content,
+		t, canEditValues(), allWithGrant, content,
 		checkIfPossibleToModifyCanEdit,
 		func(newValue, managerValue string, permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
 			return &managerGeneratedPermissions{
@@ -481,13 +495,13 @@ func Test_checkIfPossibleToModifyCanMakeSessionOfficial_AllowsSettingLowerOrSame
 	defer database.ClearAllDBEnums()
 	dataStore := database.NewDataStore(db)
 
-	assert.Equal(t, true, checkIfPossibleToModifyCanMakeSessionOfficial(
+	assert.True(t, checkIfPossibleToModifyCanMakeSessionOfficial(
 		false, &userPermissions{CanMakeSessionOfficial: false}, &managerGeneratedPermissions{}, dataStore))
-	assert.Equal(t, true, checkIfPossibleToModifyCanMakeSessionOfficial(
+	assert.True(t, checkIfPossibleToModifyCanMakeSessionOfficial(
 		false, &userPermissions{CanMakeSessionOfficial: true}, &managerGeneratedPermissions{}, dataStore))
-	assert.Equal(t, true, checkIfPossibleToModifyCanMakeSessionOfficial(
+	assert.True(t, checkIfPossibleToModifyCanMakeSessionOfficial(
 		true, &userPermissions{CanMakeSessionOfficial: true}, &managerGeneratedPermissions{}, dataStore))
-	assert.Equal(t, false, checkIfPossibleToModifyCanMakeSessionOfficial(
+	assert.False(t, checkIfPossibleToModifyCanMakeSessionOfficial(
 		true, &userPermissions{CanMakeSessionOfficial: false}, &managerGeneratedPermissions{}, dataStore))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -501,7 +515,7 @@ func Test_checkIfPossibleToModifyCanMakeSessionOfficial_RequiresCanViewBeGreater
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for _, currentCanViewValue := range canViewValues {
+	for _, currentCanViewValue := range canViewValues() {
 		currentCanViewValue := currentCanViewValue
 		t.Run(currentCanViewValue, func(t *testing.T) {
 			assert.Equal(t,
@@ -524,11 +538,11 @@ func Test_checkIfPossibleToModifyCanMakeSessionOfficial_RequiresManagerToBeOwner
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	assert.Equal(t, true, checkIfPossibleToModifyCanMakeSessionOfficial(
+	assert.True(t, checkIfPossibleToModifyCanMakeSessionOfficial(
 		true,
 		&userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(info)},
 		&managerGeneratedPermissions{IsOwnerGenerated: true}, dataStore))
-	assert.Equal(t, false, checkIfPossibleToModifyCanMakeSessionOfficial(
+	assert.False(t, checkIfPossibleToModifyCanMakeSessionOfficial(
 		true,
 		&userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(info)},
 		&managerGeneratedPermissions{IsOwnerGenerated: false}, dataStore))
@@ -543,14 +557,14 @@ func Test_checkIfPossibleToModifyCanEnterFrom_AllowsSettingGreaterOrSameValue(t 
 	defer database.ClearAllDBEnums()
 	dataStore := database.NewDataStore(db)
 
-	tm := time.Date(2019, 5, 30, 11, 0, 0, 1, time.UTC)
-	tmPlus := tm.Add(time.Nanosecond)
-	assert.Equal(t, true, checkIfPossibleToModifyCanEnterFrom(
-		tmPlus, &userPermissions{CanEnterFrom: database.Time(tmPlus)}, &managerGeneratedPermissions{}, dataStore))
-	assert.Equal(t, true, checkIfPossibleToModifyCanEnterFrom(
-		tm, &userPermissions{CanEnterFrom: database.Time(tm)}, &managerGeneratedPermissions{}, dataStore))
-	assert.Equal(t, false, checkIfPossibleToModifyCanEnterFrom(
-		tm, &userPermissions{CanEnterFrom: database.Time(tmPlus)}, &managerGeneratedPermissions{}, dataStore))
+	timestamp := time.Date(2019, 5, 30, 11, 0, 0, 1, time.UTC)
+	timestampPlus := timestamp.Add(time.Nanosecond)
+	assert.True(t, checkIfPossibleToModifyCanEnterFrom(
+		timestampPlus, &userPermissions{CanEnterFrom: database.Time(timestampPlus)}, &managerGeneratedPermissions{}, dataStore))
+	assert.True(t, checkIfPossibleToModifyCanEnterFrom(
+		timestamp, &userPermissions{CanEnterFrom: database.Time(timestamp)}, &managerGeneratedPermissions{}, dataStore))
+	assert.False(t, checkIfPossibleToModifyCanEnterFrom(
+		timestamp, &userPermissions{CanEnterFrom: database.Time(timestampPlus)}, &managerGeneratedPermissions{}, dataStore))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -567,6 +581,8 @@ func Test_checkIfPossibleToModifyCanEnterFrom_RequiresManagerToHaveCanGrantViewG
 func testCheckerRequiresManagerToHaveCanGrantViewGreaterOrEqualToEnter(
 	t *testing.T, value, funcToCheck interface{}, currentPermissionsGenerator func() *userPermissions,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	database.ClearAllDBEnums()
@@ -575,7 +591,7 @@ func testCheckerRequiresManagerToHaveCanGrantViewGreaterOrEqualToEnter(
 	dataStore := database.NewDataStore(db)
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
-	for _, canGrantView := range canGrantViewValues {
+	for _, canGrantView := range canGrantViewValues() {
 		canGrantView := canGrantView
 		t.Run(canGrantView, func(t *testing.T) {
 			assert.Equal(t,
@@ -599,15 +615,15 @@ func Test_checkIfPossibleToModifyCanEnterUntil_AllowsSettingSmallerOrSameValue(t
 	defer database.ClearAllDBEnums()
 	dataStore := database.NewDataStore(db)
 
-	assert.Equal(t, true, checkIfPossibleToModifyCanEnterUntil(
+	assert.True(t, checkIfPossibleToModifyCanEnterUntil(
 		time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC),
 		&userPermissions{CanEnterUntil: database.Time(time.Date(2019, 5, 30, 11, 0, 0, 1, time.UTC))},
 		&managerGeneratedPermissions{}, dataStore))
-	assert.Equal(t, true, checkIfPossibleToModifyCanEnterUntil(
+	assert.True(t, checkIfPossibleToModifyCanEnterUntil(
 		time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC),
 		&userPermissions{CanEnterUntil: database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))},
 		&managerGeneratedPermissions{}, dataStore))
-	assert.Equal(t, false, checkIfPossibleToModifyCanEnterUntil(
+	assert.False(t, checkIfPossibleToModifyCanEnterUntil(
 		time.Date(2019, 5, 30, 11, 0, 0, 1, time.UTC),
 		&userPermissions{CanEnterUntil: database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC))},
 		&managerGeneratedPermissions{}, dataStore))
@@ -630,33 +646,33 @@ func Test_IsOwnerValidator_AllowsSettingIsOwnerToFalseOrSameValue(t *testing.T) 
 	dataStore := database.NewDataStore(db)
 
 	currentPermissions := &userPermissions{}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore, &managerGeneratedPermissions{}, currentPermissions,
-		&database.User{}, 0, &http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":false}`))})
-	assert.Equal(t, service.NoError, apiError)
+	dataMap, modified, err := parsePermissionsInputData(dataStore, &managerGeneratedPermissions{}, currentPermissions,
+		&database.User{}, 0, map[string]interface{}{"is_owner": false})
+	require.NoError(t, err)
 	assert.False(t, modified)
 	assert.Equal(t, &userPermissions{}, currentPermissions)
 	assert.Equal(t, map[string]interface{}{"is_owner": false}, dataMap)
 
 	currentPermissions = &userPermissions{IsOwner: true}
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
-		currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":false}`))})
-	assert.Equal(t, service.NoError, apiError)
+	dataMap, modified, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
+		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": false})
+	require.NoError(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": false}, dataMap)
 
 	currentPermissions = &userPermissions{IsOwner: true}
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
-		currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
-	assert.Equal(t, service.NoError, apiError)
+	dataMap, modified, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
+		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
+	require.NoError(t, err)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": true}, dataMap)
 
 	currentPermissions = &userPermissions{}
-	_, _, apiError = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
-		currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
+	_, _, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
+		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
+	require.IsType(t, (*service.APIError)(nil), err)
+	var apiError *service.APIError
+	require.ErrorAs(t, err, &apiError)
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -668,16 +684,19 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 	dataStore := database.NewDataStore(db)
 
 	currentPermissions := &userPermissions{}
-	_, _, apiError := parsePermissionsInputData(dataStore,
+	_, _, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{IsOwnerGenerated: false}, currentPermissions,
-		&database.User{}, 0, &http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
+		&database.User{}, 0, map[string]interface{}{"is_owner": true})
+	require.IsType(t, (*service.APIError)(nil), err)
+	var apiError *service.APIError
+	require.ErrorAs(t, err, &apiError)
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	currentPermissions = &userPermissions{}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{IsOwnerGenerated: true}, currentPermissions,
-		&database.User{}, 0, &http.Request{Body: ioutil.NopCloser(strings.NewReader(`{"is_owner":true}`))})
-	assert.Equal(t, service.NoError, apiError)
+		&database.User{}, 0, map[string]interface{}{"is_owner": true})
+	require.NoError(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{"is_owner": true}, dataMap)
 
@@ -685,7 +704,7 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 }
 
 func Test_CanViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canViewValues[:], "can_view", checkIfPossibleToModifyCanView,
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canViewValues(), "can_view", checkIfPossibleToModifyCanView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(value.(string))}
 		}, true)
@@ -696,6 +715,8 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 	currentPermissionsGenerator func(interface{}, *database.PermissionGrantedStore) *userPermissions,
 	mockEnums bool,
 ) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	if mockEnums {
@@ -719,10 +740,10 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 			newValue := reflValues.Index(newIndex).Interface()
 			t.Run(fmt.Sprintf("%s -> %s", currentValue, newValue), func(t *testing.T) {
 				currentPermissions := currentPermissionsGenerator(currentValue, permissionGrantedStore)
-				dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+				dataMap, modified, err := parsePermissionsInputData(dataStore,
 					&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-					&http.Request{Body: ioutil.NopCloser(strings.NewReader(fmt.Sprintf(`{%q:%#v}`, fieldName, newValue)))})
-				assert.Equal(t, service.NoError, apiError)
+					map[string]interface{}{fieldName: newValue})
+				require.NoError(t, err)
 				assert.Equal(t, newValue != currentValue, modified)
 				assert.Equal(t, map[string]interface{}{fieldName: newValue}, dataMap)
 				assert.Equal(t, currentPermissionsGenerator(newValue, permissionGrantedStore), currentPermissions)
@@ -734,10 +755,12 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 }
 
 func Test_CanViewValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_view":"info"}`, checkIfPossibleToModifyCanView)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_view": "info"}, checkIfPossibleToModifyCanView)
 }
 
-func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, body string, checkFunc interface{}) {
+func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string]interface{}, checkFunc interface{}) {
+	t.Helper()
+
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 	dataStore := database.NewDataStore(db)
@@ -748,16 +771,18 @@ func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, body string, checkFun
 		}).Interface())
 	defer pg.Unpatch()
 
-	_, _, apiError := parsePermissionsInputData(dataStore,
-		&managerGeneratedPermissions{}, &userPermissions{}, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(body))})
+	_, _, err := parsePermissionsInputData(dataStore,
+		&managerGeneratedPermissions{}, &userPermissions{}, &database.User{}, 0, parsedBody)
+	require.IsType(t, (*service.APIError)(nil), err)
+	var apiError *service.APIError
+	require.ErrorAs(t, err, &apiError)
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func Test_CanGrantViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canGrantViewValues[:], "can_grant_view",
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canGrantViewValues(), "can_grant_view",
 		checkIfPossibleToModifyCanGrantView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string))}
@@ -765,11 +790,11 @@ func Test_CanGrantViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *
 }
 
 func Test_CanGrantViewValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_grant_view":"info"}`, checkIfPossibleToModifyCanGrantView)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_grant_view": "info"}, checkIfPossibleToModifyCanGrantView)
 }
 
 func Test_CanWatchValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canWatchValues[:], "can_watch",
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canWatchValues(), "can_watch",
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string))}
@@ -777,11 +802,11 @@ func Test_CanWatchValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *test
 }
 
 func Test_CanWatchValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_watch":"result"}`, checkIfPossibleToModifyCanWatch)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_watch": "result"}, checkIfPossibleToModifyCanWatch)
 }
 
 func Test_CanEditValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
-	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canEditValues[:], "can_edit",
+	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canEditValues(), "can_edit",
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{CanEditValue: permissionGrantedStore.EditIndexByName(value.(string))}
@@ -789,7 +814,7 @@ func Test_CanEditValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testi
 }
 
 func Test_CanEditValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_edit":"all"}`, checkIfPossibleToModifyCanEdit)
+	testValidatorFailsWhenCheckReturnsFalse(t, map[string]interface{}{"can_edit": "all"}, checkIfPossibleToModifyCanEdit)
 }
 
 func Test_CanMakeSessionOfficialValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
@@ -801,7 +826,8 @@ func Test_CanMakeSessionOfficialValidator_SetsModifiedFlagAndUpdatesCurrentPermi
 }
 
 func Test_CanMakeSessionOfficialValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_make_session_official":false}`, checkIfPossibleToModifyCanMakeSessionOfficial)
+	testValidatorFailsWhenCheckReturnsFalse(
+		t, map[string]interface{}{"can_make_session_official": false}, checkIfPossibleToModifyCanMakeSessionOfficial)
 }
 
 func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
@@ -813,30 +839,29 @@ func Test_CanEnterFromValidator_SetsModifiedFlag(t *testing.T) {
 		func(time.Time, *userPermissions, *managerGeneratedPermissions, *database.DataStore) bool { return true })
 	defer pg.Unpatch()
 
-	tm := time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)
-	tmPlus := tm.Add(time.Second)
-	currentPermissions := &userPermissions{CanEnterFrom: database.Time(tmPlus)}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	timestamp := time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)
+	timestampPlus := timestamp.Add(time.Second)
+	currentPermissions := &userPermissions{CanEnterFrom: database.Time(timestampPlus)}
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_from":%q}`, "2019-05-30T11:00:00Z")))})
-	assert.Equal(t, service.NoError, apiError)
+		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:00Z"})
+	require.NoError(t, err)
 	assert.True(t, modified)
-	assert.Equal(t, map[string]interface{}{"can_enter_from": tm}, dataMap)
+	assert.Equal(t, map[string]interface{}{"can_enter_from": timestamp}, dataMap)
 
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
+	dataMap, modified, err = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_from":%q}`, "2019-05-30T11:00:01Z")))})
-	assert.Equal(t, service.NoError, apiError)
+		map[string]interface{}{"can_enter_from": "2019-05-30T11:00:01Z"})
+	require.NoError(t, err)
 	assert.False(t, modified)
-	assert.Equal(t, map[string]interface{}{"can_enter_from": tmPlus}, dataMap)
+	assert.Equal(t, map[string]interface{}{"can_enter_from": timestampPlus}, dataMap)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
 func Test_CanEnterFromValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_enter_from":"2019-05-30T11:00:00Z"}`, checkIfPossibleToModifyCanEnterFrom)
+	testValidatorFailsWhenCheckReturnsFalse(
+		t, map[string]interface{}{"can_enter_from": "2019-05-30T11:00:00Z"}, checkIfPossibleToModifyCanEnterFrom)
 }
 
 func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
@@ -851,21 +876,19 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 	currentPermissions := &userPermissions{
 		CanEnterUntil: database.Time(time.Date(2019, 5, 30, 11, 0, 1, 0, time.UTC)),
 	}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_until":%q}`, "2019-05-30T11:00:00Z")))})
-	assert.Equal(t, service.NoError, apiError)
+		map[string]interface{}{"can_enter_until": "2019-05-30T11:00:00Z"})
+	require.NoError(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, map[string]interface{}{
 		"can_enter_until": time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC),
 	}, dataMap)
 
-	dataMap, modified, apiError = parsePermissionsInputData(dataStore,
+	dataMap, modified, err = parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(
-			fmt.Sprintf(`{"can_enter_until":%q}`, "2019-05-30T11:00:01Z")))})
-	assert.Equal(t, service.NoError, apiError)
+		map[string]interface{}{"can_enter_until": "2019-05-30T11:00:01Z"})
+	require.NoError(t, err)
 	assert.False(t, modified)
 	assert.Equal(t, map[string]interface{}{
 		"can_enter_until": time.Date(2019, 5, 30, 11, 0, 1, 0, time.UTC),
@@ -875,7 +898,8 @@ func Test_CanEnterUntilValidator_SetsModifiedFlag(t *testing.T) {
 }
 
 func Test_CanEnterUntilValidator_FailsWhenCheckReturnsFalse(t *testing.T) {
-	testValidatorFailsWhenCheckReturnsFalse(t, `{"can_enter_until":"2019-05-30T11:00:00Z"}`, checkIfPossibleToModifyCanEnterUntil)
+	testValidatorFailsWhenCheckReturnsFalse(
+		t, map[string]interface{}{"can_enter_until": "2019-05-30T11:00:00Z"}, checkIfPossibleToModifyCanEnterUntil)
 }
 
 func Test_parsePermissionsInputData_ChecksCanViewFirstAndUsesItsNewValue(t *testing.T) {
@@ -888,21 +912,21 @@ func Test_parsePermissionsInputData_ChecksCanViewFirstAndUsesItsNewValue(t *test
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
 	currentPermissions := &userPermissions{}
-	dataMap, modified, apiError := parsePermissionsInputData(dataStore,
+	dataMap, modified, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{
 			IsOwnerGenerated:           true,
 			CanGrantViewGeneratedValue: permissionGrantedStore.GrantViewIndexByName(solutionWithGrant),
 			CanWatchGeneratedValue:     permissionGrantedStore.WatchIndexByName(answerWithGrant),
 			CanEditGeneratedValue:      permissionGrantedStore.EditIndexByName(allWithGrant),
 		}, currentPermissions, &database.User{}, 0,
-		&http.Request{Body: ioutil.NopCloser(strings.NewReader(`{
-			"can_view": "solution",
-			"can_grant_view": "solution_with_grant",
-			"can_watch": "answer_with_grant",
-			"can_edit": "all_with_grant",
-			"can_make_session_official": true
-		}`))})
-	assert.Equal(t, service.NoError, apiError)
+		map[string]interface{}{
+			"can_view":                  "solution",
+			"can_grant_view":            "solution_with_grant",
+			"can_watch":                 "answer_with_grant",
+			"can_edit":                  "all_with_grant",
+			"can_make_session_official": true,
+		})
+	require.NoError(t, err)
 	assert.True(t, modified)
 	assert.Equal(t, &userPermissions{
 		CanViewValue:           permissionGrantedStore.ViewIndexByName(solution),
@@ -1016,15 +1040,15 @@ func Test_correctPermissionsDataMap(t *testing.T) {
 		},
 	}
 
-	for _, ts := range tests {
-		ts := ts
-		t.Run(ts.permission, func(t *testing.T) {
-			for _, tt := range ts.tests {
-				tt := tt
-				t.Run(fmt.Sprintf("%s=%v, can_view=%s", ts.permission, tt.value, tt.canView), func(t *testing.T) {
+	for _, test := range tests {
+		test := test
+		t.Run(test.permission, func(t *testing.T) {
+			for _, testSpec := range test.tests {
+				testSpec := testSpec
+				t.Run(fmt.Sprintf("%s=%v, can_view=%s", test.permission, testSpec.value, testSpec.canView), func(t *testing.T) {
 					dataMap := make(map[string]interface{})
-					correctPermissionsDataMap(dataStore, dataMap, ts.userPermissionsFunc(tt.value, tt.canView))
-					assert.Equal(t, tt.expectedDataMap, dataMap)
+					correctPermissionsDataMap(dataStore, dataMap, test.userPermissionsFunc(testSpec.value, testSpec.canView))
+					assert.Equal(t, testSpec.expectedDataMap, dataMap)
 				})
 			}
 		})

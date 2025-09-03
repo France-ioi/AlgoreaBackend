@@ -1,6 +1,6 @@
 Feature: Update a group (groupEdit)
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name    | grade | description     | created_at          | type    | root_activity_id    | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | is_official_session | require_members_to_join_parent | organizer | address_line1 | address_line2 | address_postcode | address_city | address_country | expected_start      | frozen_membership | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
       | 11 | Group A | -3    | Group A is here | 2019-02-06 09:26:40 | Class   | 1672978871462145361 | null          | true    | true      | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 13 | Group B | -2    | Group B is here | 2019-03-06 09:26:40 | Class   | 1672978871462145461 | null          | true    | true      | ybabbxnlyo | 3600          | 2017-10-14 05:39:48 | true                       | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | edit                                  | 2020-01-01 00:00:00                    | true                   | 5                | true                     |
@@ -15,12 +15,12 @@ Feature: Update a group (groupEdit)
       | 31 | user    | -4    | owner           | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 41 | john    | -4    | john            | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 50 | Admins  | -4    | Admins          | 2019-04-06 09:26:40 | Club    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
-    And the database has the following table 'users':
-      | login | temp_user | group_id | first_name  | last_name | default_language |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | fr               |
-      | other | 0         | 24       | John        | Doe       | en               |
-      | jane  | 0         | 25       | Jane        | Doe       | en               |
-    And the database has the following table 'group_managers':
+    And the database has the following users:
+      | group_id | login | first_name  | last_name | default_language |
+      | 21       | owner | Jean-Michel | Blanquer  | fr               |
+      | 24       | other | John        | Doe       | en               |
+      | 25       | jane  | Jane        | Doe       | en               |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
       | 14       | 21         | none                  |
@@ -29,26 +29,26 @@ Feature: Update a group (groupEdit)
       | 16       | 25         | none                  |
       | 17       | 25         | none                  |
       | 18       | 25         | memberships           |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 41             |
       | 50              | 21             |
     And the groups ancestors are computed
-    And the database has the following table 'group_pending_requests':
+    And the database has the following table "group_pending_requests":
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
       | 13       | 24        | join_request  |
       | 13       | 31        | join_request  |
       | 13       | 41        | leave_request |
       | 14       | 31        | join_request  |
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id   | default_language_tag | type    |
       | 123  | fr                   | Task    |
       | 4567 | fr                   | Skill   |
       | 5678 | fr                   | Chapter |
       | 6789 | fr                   | Task    |
       | 7890 | fr                   | Task    |
-    And the database has the following table 'permissions_generated':
+    And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 21       | 4567    | info               |
       | 21       | 5678    | info               |
@@ -56,7 +56,7 @@ Feature: Update a group (groupEdit)
       | 21       | 7890    | info               |
       | 24       | 123     | info               |
       | 50       | 123     | info               |
-    And the database has the following table 'permissions_granted':
+    And the database has the following table "permissions_granted":
       | group_id | item_id | can_make_session_official | is_owner | source_group_id |
       | 24       | 123     | true                      | false    | 13              |
       | 50       | 123     | false                     | true     | 13              |
@@ -67,9 +67,9 @@ Feature: Update a group (groupEdit)
     """
     {
       "is_public": false,
-      "name": "Team B",
+      "name": "Team B 🐱",
       "grade": 10,
-      "description": "Team B is here",
+      "description": "Team B is here 🐱",
       "is_open": false,
       "code_lifetime": 2147483647,
       "code_expires_at": "2019-12-31T23:59:59Z",
@@ -80,9 +80,9 @@ Feature: Update a group (groupEdit)
       "require_members_to_join_parent": true,
       "frozen_membership": false,
 
-      "organizer": "Association France-ioi",
-      "address_line1": "Chez Jacques-Henri Jourdan,",
-      "address_line2": "42, rue de Cronstadt",
+      "organizer": "Association France-ioi 🐱",
+      "address_line1": "Chez Jacques-Henri Jourdan, 🐱",
+      "address_line2": "42, rue de Cronstadt 🐱",
       "address_postcode": "75015",
       "address_city": "Paris",
       "address_country": "France",
@@ -95,11 +95,11 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "13"
+    And the table "groups" should remain unchanged, regardless of the row with id "13"
     And the table "groups" at id "13" should be:
-      | id | name   | grade | description    | created_at          | type  | root_activity_id   | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_members_to_join_parent | organizer              | address_line1               | address_line2        | address_postcode | address_city | address_country | expected_start      | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
-      | 13 | Team B | 10    | Team B is here | 2019-03-06 09:26:40 | Class | <root_activity_id> | 4567          | false   | false     | ybabbxnlyo | 2147483647    | 2019-12-31 23:59:59 | false                      | true                           | Association France-ioi | Chez Jacques-Henri Jourdan, | 42, rue de Cronstadt | 75015            | Paris        | France          | 2019-05-03 11:00:00 | view                                  | 2018-05-30 11:00:00                    | true                   | 8                | true                     |
-    And the table "groups_groups" should stay unchanged
+      | id | name      | grade | description       | created_at          | type  | root_activity_id   | root_skill_id | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining | require_members_to_join_parent | organizer                 | address_line1                  | address_line2           | address_postcode | address_city | address_country | expected_start      | require_personal_info_access_approval | require_lock_membership_approval_until | require_watch_approval | max_participants | enforce_max_participants |
+      | 13 | Team B 🐱 | 10    | Team B is here 🐱 | 2019-03-06 09:26:40 | Class | <root_activity_id> | 4567          | false   | false     | ybabbxnlyo | 2147483647    | 2019-12-31 23:59:59 | false                      | true                           | Association France-ioi 🐱 | Chez Jacques-Henri Jourdan, 🐱 | 42, rue de Cronstadt 🐱 | 75015            | Paris        | France          | 2019-05-03 11:00:00 | view                                  | 2018-05-30 11:00:00                    | true                   | 8                | true                     |
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be:
       | group_id | member_id | type          |
       | 13       | 21        | invitation    |
@@ -135,7 +135,7 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "13"
+    And the table "groups" should remain unchanged, regardless of the row with id "13"
     And the table "groups" at id "13" should be:
       | id | name   | grade | description | created_at          | type  | root_activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_activity_when_joining | require_lock_membership_approval_until | max_participants |
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null             | false   | false     | ybabbxnlyo | null          | null            | false                      | null                                   | null             |
@@ -157,13 +157,13 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "13"
+    And the table "groups" should remain unchanged, regardless of the row with id "13"
     And the table "groups" at id "13" should be:
       | id | name   | grade | description | created_at          | type  | root_activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_activity_when_joining |
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null             | false   | true      | ybabbxnlyo | null          | null            | false                      |
-    And the table "groups_groups" should stay unchanged
-    And the table "group_pending_requests" should stay unchanged
-    And the table "group_membership_changes" should stay unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged
 
   Scenario: User is a manager of the group, does not update group_pending_requests (is_public is not changed)
     Given I am the user with id "21"
@@ -181,13 +181,13 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "13"
+    And the table "groups" should remain unchanged, regardless of the row with id "13"
     And the table "groups" at id "13" should be:
       | id | name   | grade | description | created_at          | type  | root_activity_id | is_open | is_public | code       | code_lifetime | code_expires_at | open_activity_when_joining |
       | 13 | Club B | 0     | null        | 2019-03-06 09:26:40 | Class | null             | false   | true      | ybabbxnlyo | null          | null            | false                      |
-    And the table "groups_groups" should stay unchanged
-    And the table "group_pending_requests" should stay unchanged
-    And the table "group_membership_changes" should stay unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged
 
   Scenario: User is a manager of the group, does not update group_pending_requests (is_public changes from false to true)
     Given I am the user with id "21"
@@ -198,13 +198,13 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "14"
+    And the table "groups" should remain unchanged, regardless of the row with id "14"
     And the table "groups" at id "14" should be:
       | id | name    | grade | description | created_at          | type | root_activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_activity_when_joining |
       | 14 | Group C | -4    | Group C     | 2019-04-06 09:26:40 | Club | null             | false               | true    | true      | null | null          | null            | false                      |
-    And the table "groups_groups" should stay unchanged
-    And the table "group_pending_requests" should stay unchanged
-    And the table "group_membership_changes" should stay unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged
 
   Scenario: User is a manager of the group, but no fields provided
     Given I am the user with id "21"
@@ -214,8 +214,8 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
+    And the table "groups" should remain unchanged
+    And the table "groups_groups" should remain unchanged
 
   Scenario: User attaches the group to the activity as an official session
     Given I am the user with id "21"
@@ -227,11 +227,11 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "14"
+    And the table "groups" should remain unchanged, regardless of the row with id "14"
     And the table "groups" at id "14" should be:
       | id | name    | grade | description | created_at          | type | root_activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_activity_when_joining |
       | 14 | Group C | -4    | Group C     | 2019-04-06 09:26:40 | Club | 123              | true                | true    | false     | null | null          | null            | false                      |
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
 
   Scenario: User replaces the activity of the official session
     Given I am the user with id "24"
@@ -242,11 +242,11 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "15"
+    And the table "groups" should remain unchanged, regardless of the row with id "15"
     And the table "groups" at id "15" should be:
       | id | name    | grade | description | created_at          | type    | root_activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at | open_activity_when_joining |
       | 15 | Group D | -4    | Group D     | 2019-04-06 09:26:40 | Session | 123              | true                | true    | false     | null | null          | null            | false                      |
-    And the table "groups_groups" should stay unchanged
+    And the table "groups_groups" should remain unchanged
 
   Scenario: Pending requests stay unchanged when 'frozen_membership' is not changed
     Given I am the user with id "21"
@@ -257,10 +257,10 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "14"
-    And the table "groups_groups" should stay unchanged
-    And the table "group_pending_requests" should stay unchanged
-    And the table "group_membership_changes" should stay unchanged
+    And the table "groups" should remain unchanged, regardless of the row with id "14"
+    And the table "groups_groups" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged
 
   Scenario: Removes pending requests and invitations when 'frozen_membership' becomes true
     Given I am the user with id "21"
@@ -271,8 +271,8 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "13"
-    And the table "groups_groups" should stay unchanged
+    And the table "groups" should remain unchanged, regardless of the row with id "13"
+    And the table "groups_groups" should remain unchanged
     And the table "group_pending_requests" should be:
       | group_id | member_id | type          |
       | 14       | 31        | join_request  |
@@ -318,28 +318,27 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-    And the table "group_pending_requests" should stay unchanged
-    And the table "group_membership_changes" should stay unchanged
+    And the table "groups" should remain unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged
 
   Scenario: Should be able to update the description, root_activity_id and root_skill_id from a value to null
     Given I am the user with id "100"
-    And the database has the following table 'users':
-      | login   | group_id |
-      | manager | 100      |
-    And the database has the following table 'group_managers':
+    And the database has the following users:
+      | group_id | login   |
+      | 100      | manager |
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 101      | 100        | memberships_and_group |
-    And the database has the following table 'groups':
+    And the database table "groups" also has the following row:
       | id  | name    | description       | root_activity_id | root_skill_id |
-      | 100 | manager |                   | null             | null          |
       | 101 | Group   | Group description | 200              | 100           |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 101             | 100            |
     And the groups ancestors are computed
-    And the database has the following table 'items':
+    And the database has the following table "items":
       | id  | default_language_tag | type  |
       | 100 | fr                   | Skill |
     When I send a PUT request to "/groups/101" with the following body:
@@ -390,10 +389,10 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged
-    And the table "groups_groups" should stay unchanged
-    And the table "group_pending_requests" should stay unchanged
-    And the table "group_membership_changes" should stay unchanged
+    And the table "groups" should remain unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged
 
   Scenario: User is a manager of the group with can_manage=memberships: allows changing all the membership-related fields
     Given I am the user with id "25"
@@ -408,10 +407,10 @@ Feature: Update a group (groupEdit)
     }
     """
     Then the response should be "updated"
-    And the table "groups" should stay unchanged but the row with id "18"
+    And the table "groups" should remain unchanged, regardless of the row with id "18"
     And the table "groups" at id "18" should be:
       | code_lifetime | code_expires_at     | frozen_membership | max_participants | enforce_max_participants |
       | 3723          | 2030-05-30 11:00:00 | true              | 15               | true                     |
-    And the table "groups_groups" should stay unchanged
-    And the table "group_pending_requests" should stay unchanged
-    And the table "group_membership_changes" should stay unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged

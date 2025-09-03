@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestTaskToken_Bind(t *testing.T) {
@@ -48,10 +49,10 @@ func TestTaskToken_Bind(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := tt.taskToken.Bind()
 			if tt.wantErr == nil {
-				assert.NoError(t, got)
+				require.NoError(t, got)
 				assert.Equal(t, tt.wantConverted, tt.taskToken.Converted)
 			} else {
-				assert.Equal(t, got, tt.wantErr)
+				assert.Equal(t, tt.wantErr, got)
 			}
 		})
 	}
@@ -61,11 +62,11 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 	tt := &TaskToken{
 		UserID:          "10",
 		AttemptID:       "200",
-		AccessSolutions: utils.Ptr(true),
+		AccessSolutions: golang.Ptr(true),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
-	assert.NoError(t, err)
-	assert.Equal(t, []byte(
+	require.NoError(t, err)
+	assert.JSONEq(t,
 		`{"bAccessSolutions":true,"date":"","idAttempt":"200","idItemLocal":"","idUser":"10","itemUrl":"","platformName":"","randomSeed":""}`,
-	), result)
+		string(result))
 }

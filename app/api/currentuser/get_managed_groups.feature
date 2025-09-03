@@ -1,25 +1,26 @@
 Feature: List groups managed by the current user
   Background:
-    Given the database has the following table 'groups':
-      | id | name          | type  | description |
-      | 5  | Group         | Class | null        |
-      | 11 | user          | User  | null        |
-      | 13 | Our Class     | Class | null        |
-      | 14 | Our Friends   | Other | null        |
-      | 15 | Another Group | Other | Super Group |
-      | 21 | owner         | User  | null        |
-    And the database has the following table 'users':
-      | login | group_id |
-      | owner | 21       |
-      | user  | 11       |
-    And the database has the following table 'groups_groups':
+    Given the database has the following table "groups":
+      | id | name          | type    | description |
+      | 1  | Friends       | Friends | null        |
+      | 5  | Group         | Class   | null        |
+      | 6  | Club          | Club    | null        |
+      | 9  | Other         | Other   | null        |
+      | 13 | Our Class     | Class   | null        |
+      | 14 | Our Friends   | Other   | null        |
+      | 15 | Another Group | Other   | Super Group |
+    And the database has the following users:
+      | group_id | login |
+      | 21       | owner |
+      | 11       | user  |
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 5               | 21             |
       | 6               | 21             |
       | 9               | 21             |
       | 1               | 11             |
     And the groups ancestors are computed
-    And the database has the following table 'group_managers':
+    And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            | can_grant_group_access | can_watch_members |
       | 13       | 5          | memberships_and_group | 1                      | 0                 |
       | 13       | 21         | none                  | 0                      | 0                 |

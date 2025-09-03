@@ -8,13 +8,16 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
-	db := testhelpers.SetupDBWithFixtureString(`
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		attempts:
 			- {participant_id: 11, id: 1, root_item_id: 112, allows_submissions_until: 3019-05-30 12:00:00}
 			- {participant_id: 11, id: 2, root_item_id: 112}
@@ -38,7 +41,7 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 		{
 			name: "with info", participantID: 11, attemptID: 2, itemID: 12,
 			wantHintsInfo: &database.HintsInfo{
-				HintsRequested: utils.Ptr(`[0,1,"hint",null]`),
+				HintsRequested: golang.Ptr(`[0,1,"hint",null]`),
 				HintsCached:    4,
 			},
 		},
@@ -50,6 +53,8 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				hintsInfo, err := store.Results().GetHintsInfoForActiveAttempt(test.participantID, test.attemptID, test.itemID)
 				assert.Equal(t, test.wantHintsInfo, hintsInfo)
@@ -61,6 +66,8 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 }
 
 func TestResultStore_Propagate(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name    string
 		wantErr bool
@@ -68,15 +75,16 @@ func TestResultStore_Propagate(t *testing.T) {
 		{name: "basic", wantErr: false},
 	}
 
-	db := testhelpers.SetupDBWithFixture("results_propagation/main")
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/main")
 	defer func() { _ = db.Close() }()
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
 			err := database.NewDataStore(db).InTransaction(func(s *database.DataStore) error {
-				s.ScheduleResultsPropagation()
-				return nil
+				return s.Results().Propagate()
 			})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ResultStore.propagate() error = %v, wantErr %v", err, tt.wantErr)
@@ -88,11 +96,11 @@ func TestResultStore_Propagate(t *testing.T) {
 // Works locally but fails twice for every run on CI, losing 20 minutes each time.
 // Comment for now until the current emergency is over.
 // func TestResultStore_Propagate_Concurrent(t *testing.T) {
-//	db := testhelpers.SetupDBWithFixture("results_propagation/main")
+//	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "results_propagation/main")
 //	defer func() { _ = db.Close() }()
 //
 //	testhelpers.RunConcurrently(func() {
-//		s := database.NewDataStoreWithContext(context.Background(), db)
+//		s := database.NewDataStoreWithContext(db.GetContext(), db)
 //		err := s.InTransaction(func(st *database.DataStore) error {
 //			st.ScheduleResultsPropagation()
 //			return nil

@@ -13,23 +13,24 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
 )
 
 func TestGenerateGroupCode(t *testing.T) {
 	got, err := GenerateGroupCode()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, got, 10)
 	assert.Regexp(t, `^[3-9a-kmnp-y]+$`, got)
 }
 
 func TestGenerateGroupCode_HandlesError(t *testing.T) {
 	expectedError := errors.New("some error")
-	monkey.Patch(rand.Int, func(rand io.Reader, max *big.Int) (n *big.Int, err error) {
+	monkey.Patch(rand.Int, func(_ io.Reader, _ *big.Int) (n *big.Int, err error) {
 		return nil, expectedError
 	})
 	defer monkey.UnpatchAll()
@@ -65,6 +66,8 @@ func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 func assertMockedChangeCodeRequest(t *testing.T,
 	setMockExpectationsFunc func(sqlmock.Sqlmock),
 ) (*http.Response, sqlmock.Sqlmock, string, error) {
+	t.Helper()
+
 	response, mock, logs, err := servicetest.GetResponseForRouteWithMockedDBAndUser(
 		"POST", "/groups/1/code", ``, &database.User{GroupID: 2},
 		setMockExpectationsFunc,

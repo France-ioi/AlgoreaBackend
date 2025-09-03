@@ -3,21 +3,34 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
-	"github.com/France-ioi/AlgoreaBackend/app"
-	"github.com/France-ioi/AlgoreaBackend/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
-// nolint:gosec
-func init() { //nolint:gochecknoinits,gocyclo
+func init() { //nolint:gochecknoinits
+	var delay time.Duration
+
 	deleteTempUsersCmd := &cobra.Command{
 		Use:   "delete-temp-users [environment]",
 		Short: "delete all temporary users with expired sessions",
-		Run: func(cmd *cobra.Command, args []string) {
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if delay < 0 {
+				cmd.Println("delay must be positive or equal to 0")
+				os.Exit(1)
+			}
+
+			if delay > 100*365*24*time.Hour {
+				cmd.Println("delay must be less than 100 years")
+				os.Exit(1)
+			}
+
 			// if arg given, replace the env
 			if len(args) > 0 {
 				appenv.SetEnv(args[0])
@@ -28,21 +41,29 @@ func init() { //nolint:gochecknoinits,gocyclo
 			var application *app.Application
 			var err error
 			application, err = app.New()
+			defer func() {
+				if application != nil && application.Database != nil {
+					_ = application.Database.Close()
+				}
+			}()
 			if err != nil {
-				fmt.Println("Fatal error: ", err)
-				os.Exit(1)
+				return err
 			}
 
-			err = database.NewDataStore(application.Database).Users().DeleteTemporaryWithTraps()
+			err = database.NewDataStore(application.Database).Users().DeleteTemporaryWithTraps(delay)
 			if err != nil {
-				fmt.Println("Fatal error: ", err)
-				os.Exit(1)
+				return fmt.Errorf("cannot delete temporary users: %w", err)
 			}
 
 			// Success
-			fmt.Println("DONE")
+			cmd.Println("DONE")
+
+			return nil
 		},
 	}
+
+	deleteTempUsersCmd.Flags().DurationVar(&delay, "delay", 60*24*time.Hour,
+		"delay between expiration and deletion of temporary users")
 
 	rootCmd.AddCommand(deleteTempUsersCmd)
 }

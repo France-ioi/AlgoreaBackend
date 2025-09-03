@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model groupParentsViewResponseRow
@@ -47,6 +47,7 @@ type groupParentsViewResponseRow struct {
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: sort
 //			in: query
@@ -59,6 +60,7 @@ type groupParentsViewResponseRow struct {
 //			description: Start the page from the parent next to the parent with `groups.id`=`{from.id}`
 //			in: query
 //			type: integer
+//			format: int64
 //		- name: limit
 //			description: Display the first N parents
 //			in: query
@@ -78,13 +80,15 @@ type groupParentsViewResponseRow struct {
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getParents(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
@@ -92,7 +96,7 @@ func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) service.A
 	found, err := store.Groups().PickVisibleGroups(store.Groups().ByID(groupID), user).HasRows()
 	service.MustNotBeError(err)
 	if !found {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
@@ -111,9 +115,9 @@ func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) service.A
 			store.ActiveGroupGroups().
 				Select("parent_group_id").Where("child_group_id = ?", groupID).QueryExpr()).
 		Where("groups.type != 'ContestParticipants'")
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err = service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"name": {ColumnName: "groups.name"},
@@ -122,13 +126,11 @@ func (srv *Service) getParents(w http.ResponseWriter, r *http.Request) service.A
 			DefaultRules: "name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []groupParentsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
 
-	render.Respond(w, r, result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, result)
+	return nil
 }

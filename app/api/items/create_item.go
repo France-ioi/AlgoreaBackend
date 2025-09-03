@@ -11,16 +11,14 @@ import (
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // Item represents input fields that are common to itemCreate & itemUpdate.
 type Item struct {
-	// Nullable
-	URL *string `json:"url"`
-	// Nullable
+	URL     *string `json:"url"`
 	Options *string `json:"options" validate:"null|options"`
 	// default: false
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
@@ -28,14 +26,13 @@ type Item struct {
 	NoScore bool `json:"no_score"`
 	// Identifier to reference the task.
 	// Unique
-	// Nullable
 	TextID                 *string `json:"text_id"`
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
 	ReadOnly               bool    `json:"read_only"`
 	// enum: List,Grid
 	ChildrenLayout string `json:"children_layout"`
 	// enum: forceYes,forceNo,default
-	FullScreen   string `json:"full_screen" validate:"oneof=forceYes forceNo default"`
+	FullScreen   string `json:"full_screen"   validate:"oneof=forceYes forceNo default"`
 	HintsAllowed bool   `json:"hints_allowed"`
 	FixedRanks   bool   `json:"fixed_ranks"`
 
@@ -53,14 +50,12 @@ type Item struct {
 	AllowsMultipleAttempts       bool      `json:"allows_multiple_attempts"`
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type" validate:"oneof=User Team"`
-	// Nullable
-	//
 	// MySQL time (max value is 838:59:59), cannot be set for skills
 	// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 	// example: 838:59:59
 	Duration *string `json:"duration" validate:"omitempty,duration,cannot_be_set_for_skills,duration_requires_explicit_entry"`
 	// should be true when the duration is not null, cannot be set for skill items
-	RequiresExplicitEntry   bool `json:"requires_explicit_entry" validate:"cannot_be_set_for_skills,duration_requires_explicit_entry"`
+	RequiresExplicitEntry   bool `json:"requires_explicit_entry"      validate:"cannot_be_set_for_skills,duration_requires_explicit_entry"`
 	ShowUserInfos           bool `json:"show_user_infos"`
 	UsesAPI                 bool `json:"uses_api"`
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
@@ -68,7 +63,7 @@ type Item struct {
 
 // ItemWithRequiredType represents common item fields plus the required type field.
 type ItemWithRequiredType struct {
-	Item `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	Item `json:"item,squash"`
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
 	// enum: Chapter,Task,Skill
@@ -78,12 +73,9 @@ type ItemWithRequiredType struct {
 // swagger:ignore
 type newItemString struct {
 	// required: true
-	Title string `json:"title" validate:"set"`
-	// Nullable
-	ImageURL *string `json:"image_url"`
-	// Nullable
-	Subtitle *string `json:"subtitle"`
-	// Nullable
+	Title       string  `json:"title"       validate:"set"`
+	ImageURL    *string `json:"image_url"`
+	Subtitle    *string `json:"subtitle"`
 	Description *string `json:"description"`
 }
 
@@ -116,14 +108,13 @@ type itemParent struct {
 type NewItemRequest struct {
 	// `default_language_tag` of the item
 	// required: true
-	LanguageTag   string                 `json:"language_tag" validate:"set,language_tag"`
-	newItemString `json:"string,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	LanguageTag   string `json:"language_tag"  validate:"set,language_tag"`
+	newItemString `json:"string,squash"`
 
 	Parent          itemParent `json:"parent"`
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
-	// Nullable fields are of pointer types
-	ItemWithRequiredType `json:"item,squash"` //nolint:staticcheck SA5008: unknown JSON option "squash"
+	ItemWithRequiredType `json:"item,squash"`
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 }
@@ -140,7 +131,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 		ids[index] = in.Children[index].ItemID
 	}
 	var count int64
-	service.MustNotBeError(store.ItemAncestors().WithWriteLock().
+	service.MustNotBeError(store.ItemAncestors().WithSharedWriteLock().
 		Where("child_item_id = ?", in.Parent.ItemID).
 		Where("ancestor_item_id IN (?)", ids).Count(&count).Error())
 	return count == 0
@@ -153,7 +144,7 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //	description: >
 //
 //		Creates an item with parameters from the input data with `items.default_language_tag` = `language_tag`.
-//		Also it
+//		Also, it
 //
 //			* inserts a row into `items_strings` with given `language_tag`, `title`, `image_url`, `subtitle`, `description`,
 //
@@ -196,32 +187,34 @@ func (in *NewItemRequest) canCreateItemsRelationsWithoutCycles(store *database.D
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createItem(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
+func (srv *Service) createItem(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
 	if user.IsTempUser {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemID, apiError, err := validateAndInsertItem(srv, r)
-	if apiError != service.NoError {
-		return apiError
-	}
+	itemID, err := validateAndInsertItem(srv, httpRequest)
 	service.MustNotBeError(err)
 
 	// response
 	response := struct {
 		ItemID int64 `json:"id,string"`
 	}{ItemID: itemID}
-	service.MustNotBeError(render.Render(w, r, service.CreationSuccess(&response)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(&response)))
+	return nil
 }
 
-func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiError service.APIError, err error) {
+func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, err error) {
 	user := srv.GetUser(r)
 	store := srv.GetStore(r)
-	propagationsToRun := []string{}
+
+	rawRequestData, err := service.ResolveJSONBodyIntoMap(r)
+	service.MustNotBeError(err)
+
 	err = store.InTransaction(func(store *database.DataStore) error {
 		input := NewItemRequest{}
 		formData := formdata.NewFormData(&input)
@@ -230,56 +223,40 @@ func validateAndInsertItem(srv *Service, r *http.Request) (itemID int64, apiErro
 		var childrenInfoMap map[int64]permissionAndType
 		registerAddItemValidators(formData, store, user, &parentInfo, &childrenInfoMap)
 
-		err = formData.ParseJSONRequestData(r)
+		err = formData.ParseMapData(rawRequestData)
 		if err != nil {
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
 		if !formData.IsSet("parent") && !formData.IsSet("as_root_of_group_id") {
 			err = errors.New("at least one of parent and as_root_of_group_id should be given")
-			apiError = service.ErrInvalidRequest(err)
-			return err // rollback
+			return service.ErrInvalidRequest(err) // rollback
 		}
 
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
 			if formData.IsSet("parent") && !input.canCreateItemsRelationsWithoutCycles(lockedStore) {
-				apiError = service.ErrForbidden(errors.New("an item cannot become an ancestor of itself"))
-				return apiError.Error
+				return service.ErrForbidden(errors.New("an item cannot become an ancestor of itself")) // rollback
 			}
 
-			apiError = validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, nil, lockedStore)
-			if apiError != service.NoError {
-				return apiError.Error
-			}
+			service.MustNotBeError(validateChildrenFieldsAndApplyDefaults(childrenInfoMap, input.Children, formData, nil, lockedStore))
 
 			// insertion
-			itemID, apiError = srv.insertItem(lockedStore, user, formData, &input)
-			if apiError != service.NoError {
-				return apiError.Error
-			}
+			itemID, err = srv.insertItem(lockedStore, user, formData, &input)
 
-			return nil
+			return err
 		})
 
-		if apiError != service.NoError {
-			return apiError.Error // rollback
-		}
 		service.MustNotBeError(err)
 
 		setNewItemAsRootActivityOrSkill(store, formData, &input, itemID)
 
-		propagationsToRun = append(propagationsToRun, "items_ancestors")
-
 		return nil
 	})
 	if err == nil {
-		propagationsToRun = append(propagationsToRun, "permissions", "results")
-
-		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)
+		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"permissions", "results"})
 	}
 
-	return itemID, apiError, err
+	return itemID, err
 }
 
 func setNewItemAsRootActivityOrSkill(store *database.DataStore, formData *formdata.FormData, input *NewItemRequest, itemID int64) {
@@ -322,7 +299,7 @@ func constructAsRootOfGroupIDValidator(
 			return true
 		}
 		found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", fl.Field().Interface().(int64)).
-			Where("can_manage = 'memberships_and_group'").WithWriteLock().HasRows()
+			Where("can_manage = 'memberships_and_group'").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
 	}
@@ -330,7 +307,7 @@ func constructAsRootOfGroupIDValidator(
 
 // constructParentItemTypeValidator constructs a validator checking that the parent item is not a Task.
 func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func {
-	return func(fl validator.FieldLevel) bool {
+	return func(_ validator.FieldLevel) bool {
 		return parentInfo.Type != task
 	}
 }
@@ -339,7 +316,7 @@ func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func
 // The validator checks that the language exists.
 func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 	return func(fl validator.FieldLevel) bool {
-		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithWriteLock().HasRows()
+		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
 	}
@@ -383,7 +360,8 @@ func constructItemOptionsValidator() validator.Func {
 // The validator checks that there are no duplicates in the list and
 // all the children items are visible to the user (can_view != 'none').
 func constructChildrenValidator(store *database.DataStore, user *database.User,
-	childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the map is created by the returned validator
+	oldPropagationLevelsMap *map[int64]*itemsRelationData, //nolint:gocritic // and here we need the pointer for the same reason
 	itemID *int64,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
@@ -403,27 +381,27 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 			return false
 		}
 
-		(*childrenInfoMap) = generateChildrenInfoMap(store, user, ids)
+		*childrenInfoMap = generateChildrenInfoMap(store, user, ids)
 
 		if oldPropagationLevelsMap != nil || itemID != nil {
-			(*oldPropagationLevelsMap) = generateOldPropagationLevelsMap(store, itemID)
+			*oldPropagationLevelsMap = generateOldPropagationLevelsMap(store, itemID)
 		}
 
-		for _, id := range ids {
-			if _, ok := (*childrenInfoMap)[id]; !ok {
+		for _, itemID := range ids {
+			if _, ok := (*childrenInfoMap)[itemID]; !ok {
 				// the child item candidate is not visible and there are no existing items_items
 				if oldPropagationLevelsMap == nil {
 					return false
 				}
 				// the child item candidate is not visible and it is not a child item
-				if _, ok = (*oldPropagationLevelsMap)[id]; !ok {
+				if _, ok := (*oldPropagationLevelsMap)[itemID]; !ok {
 					return false
 				}
 				// the child item candidate is not visible, but it is a child item already:
 				// stub the permissions with nones
-				(*childrenInfoMap)[id] = permissionAndType{
+				(*childrenInfoMap)[itemID] = permissionAndType{
 					Permission: &Permission{
-						ItemID:                     id,
+						ItemID:                     itemID,
 						CanViewGeneratedValue:      1,
 						CanGrantViewGeneratedValue: 1,
 						CanWatchGeneratedValue:     1,
@@ -438,7 +416,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 
 func generateOldPropagationLevelsMap(store *database.DataStore, itemID *int64) map[int64]*itemsRelationData {
 	var oldRelations []itemsRelationData
-	service.MustNotBeError(store.ItemItems().ChildrenOf(*itemID).WithWriteLock().
+	service.MustNotBeError(store.ItemItems().ChildrenOf(*itemID).WithSharedWriteLock().
 		Select(`child_item_id AS item_id, category, score_weight,
 				        content_view_propagation_value, upper_view_levels_propagation_value,
 						    grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation`).
@@ -455,7 +433,7 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 	service.MustNotBeError(store.Items().
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "info").
 		Where("items.id IN (?)", ids).
-		WithWriteLock().
+		WithSharedWriteLock().
 		Select("permissions.*, items.type").
 		Scan(&childrenInfo).Error())
 
@@ -468,8 +446,9 @@ func generateChildrenInfoMap(store *database.DataStore, user *database.User, ids
 
 // constructChildrenAllowedValidator constructs a validator checking that the new item can have children (is not a Task).
 func constructChildrenAllowedValidator(
-	defaultItemType string, childrenInfoMap *map[int64]permissionAndType,
-) validator.Func { // nolint:gocritic
+	defaultItemType string,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		if len(*childrenInfoMap) == 0 {
 			return true
@@ -487,7 +466,9 @@ func constructChildrenAllowedValidator(
 
 // constructChildTypeNonSkillValidator constructs a validator for the Children field that check
 // if a child's type is not 'Skill' when the item's type is not 'Skill'.
-func constructChildTypeNonSkillValidator(childrenInfoMap *map[int64]permissionAndType) validator.Func { // nolint:gocritic
+func constructChildTypeNonSkillValidator(
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
+) validator.Func {
 	return func(fl validator.FieldLevel) bool {
 		child := fl.Field().Interface().(itemChild)
 
@@ -504,8 +485,9 @@ type parentItemInfo struct {
 }
 
 func registerAddItemValidators(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	parentInfo *parentItemInfo, childrenInfoMap *map[int64]permissionAndType,
-) { // nolint:gocritic
+	parentInfo *parentItemInfo,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the map is created later, during validation
+) {
 	formData.RegisterValidation("parent_item_id",
 		formData.ValidatorSkippingUnsetFields(constructParentItemIDValidator(store, user, parentInfo)))
 	formData.RegisterTranslation("parent_item_id",
@@ -536,7 +518,9 @@ func registerLanguageTagValidator(formData *formdata.FormData, store *database.D
 }
 
 func registerChildrenValidator(formData *formdata.FormData, store *database.DataStore, user *database.User,
-	itemType string, childrenInfoMap *map[int64]permissionAndType, oldPropagationLevelsMap *map[int64]*itemsRelationData, // nolint:gocritic
+	itemType string,
+	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the map has not been created yet
+	oldPropagationLevelsMap *map[int64]*itemsRelationData, //nolint:gocritic // and here we need the pointer for the same reason
 	itemID *int64,
 ) {
 	formData.RegisterValidation("children", constructChildrenValidator(store, user, childrenInfoMap, oldPropagationLevelsMap, itemID))
@@ -549,32 +533,28 @@ func registerChildrenValidator(formData *formdata.FormData, store *database.Data
 
 func (srv *Service) insertItem(store *database.DataStore, user *database.User, formData *formdata.FormData,
 	newItemRequest *NewItemRequest,
-) (itemID int64, apiError service.APIError) {
+) (itemID int64, err error) {
 	itemMap := formData.ConstructPartialMapForDB("ItemWithRequiredType")
 	stringMap := formData.ConstructPartialMapForDB("newItemString")
 
-	err := store.WithForeignKeyChecksDisabled(func(fkStore *database.DataStore) error {
-		return fkStore.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
-			itemID = s.NewID()
+	itemMap["default_language_tag"] = newItemRequest.LanguageTag
 
-			itemMap["id"] = itemID
-			itemMap["default_language_tag"] = newItemRequest.LanguageTag
-			return s.Items().InsertMap(itemMap)
-		})
-	})
+	itemID, err = insertItemRow(store, itemMap)
 	if err != nil && database.IsDuplicateEntryError(err) {
-		return 0, service.ErrForbidden(formdata.FieldErrors{"text_id": []string{
+		return 0, service.ErrForbidden(formdata.FieldErrorsError{"text_id": []string{
 			"text_id must be unique",
 		}})
 	}
 	service.MustNotBeError(err)
 
 	if itemMap["requires_explicit_entry"] == true {
-		participantsGroupID := createContestParticipantsGroup(store, itemID)
+		participantsGroupID := createParticipantsGroupForItemRequiringExplicitEntry(store, itemID)
 		service.MustNotBeError(store.Items().ByID(itemID).
 			UpdateColumn("participants_group_id", participantsGroupID).Error())
 	}
 
+	service.MustNotBeError(store.SetPropagationsModeToSync())
+	// We are going to propagate this permission synchronously
 	service.MustNotBeError(store.PermissionsGranted().InsertMap(
 		map[string]interface{}{
 			"item_id":         itemID,
@@ -598,7 +578,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 		parentChildSpec := make([]*insertItemItemsSpec, 0, parentChildSpecLength)
 		if formData.IsSet("parent.item_id") {
 			var order int32
-			service.MustNotBeError(store.ItemItems().WithWriteLock().
+			service.MustNotBeError(store.ItemItems().WithExclusiveWriteLock().
 				Where("parent_item_id = ?", newItemRequest.Parent.ItemID).
 				PluckFirst("IFNULL(MAX(`child_order`), 0)+1", &order).Error())
 
@@ -620,13 +600,45 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 					RequestHelpPropagation: valueOrDefault(
 						formData, "parent.request_help_propagation", newItemRequest.Parent.RequestHelpPropagation, true).(bool),
 				})
+
+			// Mark results of the current user linked to the parent item (if any) to be recomputed synchronously
+			service.MustNotBeError(store.Exec(`
+				INSERT INTO results_propagate_sync
+				SELECT CONNECTION_ID(), participant_id, attempt_id, item_id, 'to_be_recomputed' AS state
+				FROM results
+				WHERE item_id = ? AND participant_id = ?
+				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`,
+				newItemRequest.Parent.ItemID, user.GroupID).Error())
 		}
 		parentChildSpec = append(parentChildSpec,
 			constructItemsItemsForChildren(newItemRequest.Children, itemID)...)
 		insertItemItems(store, parentChildSpec)
+
+		service.MustNotBeError(store.ItemItems().CreateNewAncestors())
 	}
 
-	return itemID, service.NoError
+	// Implicitly marks results linked to descendants of the created item (excluding the created item) and the current user
+	// to be propagated synchronously. For this reason, we do not need to mark results of the current user linked to
+	// child items to be propagated synchronously explicitly in the code.
+	service.MustNotBeError(store.PermissionsGranted().ComputeAllAccess())
+	if parentChildSpecLength > 0 {
+		service.MustNotBeError(store.Results().Propagate())
+	}
+
+	return itemID, nil
+}
+
+func insertItemRow(store *database.DataStore, itemMap map[string]interface{}) (int64, error) {
+	var itemID int64
+	err := store.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
+		return store.RetryOnDuplicatePrimaryKeyError("items", func(store *database.DataStore) error {
+			itemID = store.NewID()
+
+			itemMap["id"] = itemID
+			return store.Items().InsertMap(itemMap)
+		})
+	})
+	return itemID, err
 }
 
 // setItemRequestDefaults sets the default values of a newItemRequest which are not set.

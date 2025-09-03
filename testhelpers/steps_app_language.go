@@ -1,4 +1,4 @@
-//go:build !prod
+//go:build !prod && !unit
 
 package testhelpers
 
@@ -8,27 +8,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cucumber/messages-go/v10"
+	"github.com/cucumber/godog"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
 const (
-	ReferencePrefix = '@'
-	strTrue         = "true"
-)
-
-var (
-	itemPermissionKeys  = []string{"can_view", "can_grant_view", "can_watch", "can_edit", "is_owner", "can_request_help_to"}
-	itemPropagationKeys = []string{"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation"}
+	referencePrefix = '@'
+	idString        = "id"
 )
 
 // ctx.getParameterMap parses parameters in format key1=val1,key2=val2,... into a map.
 func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
+	preprocessed := ctx.preprocessString(parameters)
+
 	parameterMap := make(map[string]string)
-	arrayParameters := strings.Split(parameters, ",")
+	arrayParameters := strings.Split(preprocessed, ",")
 	for _, paramKeyValue := range arrayParameters {
 		keyVal := strings.Split(paramKeyValue, "=")
 
@@ -56,7 +51,7 @@ func referenceToName(reference string) string {
 	if reference == "" {
 		return ""
 	}
-	if reference[0] == ReferencePrefix {
+	if reference[0] == referencePrefix {
 		return reference[1:]
 	}
 
@@ -64,18 +59,18 @@ func referenceToName(reference string) string {
 }
 
 // getRowMap convert a PickleTable's row into a map where the keys are the column headers.
-func (ctx *TestContext) getRowMap(rowIndex int, table *messages.PickleStepArgument_PickleTable) map[string]string {
+func (ctx *TestContext) getRowMap(rowIndex int, table *godog.Table) map[string]string {
 	rowHeader := table.Rows[0]
 	sourceRow := table.Rows[rowIndex]
 
-	rowMap := map[string]string{}
-	for i := 0; i < len(rowHeader.Cells); i++ {
-		value := sourceRow.Cells[i].Value
+	rowMap := make(map[string]string, len(rowHeader.Cells))
+	for cellIndex := 0; cellIndex < len(rowHeader.Cells); cellIndex++ {
+		value := sourceRow.Cells[cellIndex].Value
 		if value == "" {
 			continue
 		}
 
-		rowMap[rowHeader.Cells[i].Value] = value
+		rowMap[rowHeader.Cells[cellIndex].Value] = value
 	}
 
 	return rowMap
@@ -92,143 +87,118 @@ func (ctx *TestContext) populateDatabase() error {
 		return nil
 	}
 
-	db, err := database.Open(ctx.db)
+	err := ctx.DBItemsAncestorsAreComputed()
 	if err != nil {
 		return err
 	}
 
-	// add all the defined table rows in the database.
-	err = database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-		store.Exec("SET FOREIGN_KEY_CHECKS=0")
-		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
-
-		err = ctx.addUsersIntoAllUsersGroup()
-		if err != nil {
-			return err
-		}
-
-		for tableName, tableRows := range ctx.dbTables {
-			for _, tableRow := range tableRows {
-				err = database.NewDataStoreWithTable(store.DB, tableName).InsertOrUpdateMap(tableRow, nil)
-				if err != nil {
-					return fmt.Errorf("populateDatabase %s %+v: %v", tableName, tableRow, err)
-				}
-			}
-		}
-
-		return nil
-	})
+	err = ctx.DBGroupsAncestorsAreComputed()
 	if err != nil {
 		return err
 	}
 
-	err = ctx.DBItemsAncestorsAndPermissionsAreComputed()
+	err = ctx.DBGeneratedPermissionsAreComputed()
 	if err != nil {
 		return err
 	}
 
-	return ctx.DBGroupsAncestorsAreComputed()
+	return ctx.DBResultsAreComputed()
 }
 
-func (ctx *TestContext) isInDatabase(tableName, key string) bool {
-	if ctx.dbTables[tableName] == nil {
-		return false
-	}
-
-	_, ok := ctx.dbTables[tableName][key]
-	return ok
-}
-
-func mergeFields(oldValues, newValues map[string]interface{}) map[string]interface{} {
-	merged := oldValues
-	for key, newValue := range newValues {
-		merged[key] = newValue
-	}
-
-	return merged
-}
-
-func (ctx *TestContext) addInDatabase(tableName, key string, row map[string]interface{}) {
-	ctx.needPopulateDatabase = true
-
-	if ctx.dbTables[tableName] == nil {
-		ctx.dbTables[tableName] = make(map[string]map[string]interface{})
-	}
-
-	ctx.dbTables[tableName][key] = row
+func (ctx *TestContext) isInDatabase(tableName string, primaryKey map[string]string) bool {
+	return ctx.getDBTableRowIndexForPrimaryKey(tableName, primaryKey) != -1
 }
 
 // addPersonalInfoViewApprovedFor adds a permission generated in the database.
 func (ctx *TestContext) addPersonalInfoViewApprovedFor(childGroup, parentGroup string) {
-	parentGroupID := ctx.getReference(parentGroup)
-	childGroupID := ctx.getReference(childGroup)
+	parentGroupID := ctx.getIDOrIDByReference(parentGroup)
+	childGroupID := ctx.getIDOrIDByReference(childGroup)
 
-	groupGroupTable := "groups_groups"
+	const groupGroupTable = "groups_groups"
 	key := ctx.getGroupGroupKey(parentGroupID, childGroupID)
 	if !ctx.isInDatabase(groupGroupTable, key) {
 		ctx.addGroupGroup(parentGroup, childGroup)
 	}
 
-	ctx.dbTables[groupGroupTable][key]["personal_info_view_approved_at"] = time.Now()
+	ctx.setDBTableRowColumnValue(groupGroupTable, key, "personal_info_view_approved_at", time.Now().UTC().Format(time.DateTime))
 }
 
-// getGroupGroupKey gets a group group unique key for the groupgroup's map.
-func (ctx *TestContext) getGroupGroupKey(parentGroupID, childGroupID int64) string {
-	return strconv.FormatInt(parentGroupID, 10) + "," + strconv.FormatInt(childGroupID, 10)
+// getGroupGroupKey constructs a key for a searching a group-group pair in the groups_groups table.
+func (ctx *TestContext) getGroupGroupKey(parentGroupID, childGroupID int64) map[string]string {
+	return map[string]string{
+		"parent_group_id": strconv.FormatInt(parentGroupID, 10),
+		"child_group_id":  strconv.FormatInt(childGroupID, 10),
+	}
 }
 
 // addGroupGroup adds a group-group in the database.
 func (ctx *TestContext) addGroupGroup(parentGroup, childGroup string) {
-	parentGroupID := ctx.getReference(parentGroup)
-	childGroupID := ctx.getReference(childGroup)
+	parentGroupID := ctx.getIDOrIDByReference(parentGroup)
+	childGroupID := ctx.getIDOrIDByReference(childGroup)
 
-	ctx.addInDatabase("groups_groups", ctx.getGroupGroupKey(parentGroupID, childGroupID), map[string]interface{}{
-		"parent_group_id": parentGroupID,
-		"child_group_id":  childGroupID,
-	})
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("groups_groups",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"parent_group_id", strconv.FormatInt(parentGroupID, 10)},
+			{"child_group_id", strconv.FormatInt(childGroupID, 10)},
+		}))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // addGroupManager adds a group manager in the database.
-func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess, canManage string) {
-	managerID := ctx.getReference(manager)
-	groupID := ctx.getReference(group)
+func (ctx *TestContext) addGroupManager(manager, group, canWatchMembers, canGrantGroupAccess, canManage string) error {
+	err := ctx.ThereIsAGroup(group)
+	if err != nil {
+		return err
+	}
 
-	ctx.addInDatabase(
-		"group_managers",
-		strconv.FormatInt(managerID, 10)+","+strconv.FormatInt(groupID, 10),
-		map[string]interface{}{
-			"manager_id":             managerID,
-			"group_id":               groupID,
-			"can_watch_members":      canWatchMembers,
-			"can_grant_group_access": canGrantGroupAccess,
-			"can_manage":             canManage,
-		},
-	)
+	managerID := ctx.getIDOrIDByReference(manager)
+	groupID := ctx.getIDOrIDByReference(group)
+
+	ctx.needPopulateDatabase = true
+	err = ctx.DBHasTable("group_managers",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"manager_id", strconv.FormatInt(managerID, 10)},
+			{"group_id", strconv.FormatInt(groupID, 10)},
+			{"can_watch_members", canWatchMembers},
+			{"can_grant_group_access", canGrantGroupAccess},
+			{"can_manage", canManage},
+		}))
+	if err != nil {
+		panic(err)
+	}
+	return nil
 }
 
-// addPermissionsGranted adds a permission granted in the database.
-func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, permission, permissionValue string) {
-	groupID := ctx.getReference(group)
-	sourceGroupID := ctx.getReference(sourceGroup)
-	itemID := ctx.getReference(item)
+// setGrantedPermission sets a granted permission in the database.
+func (ctx *TestContext) setGrantedPermission(group, item, sourceGroup, origin, permission, permissionValue string) {
+	groupIDString := strconv.FormatInt(ctx.getIDOrIDByReference(group), 10)
+	sourceGroupIDString := strconv.FormatInt(ctx.getIDOrIDByReference(sourceGroup), 10)
+	itemIDString := strconv.FormatInt(ctx.getIDOrIDByReference(item), 10)
 
-	permissionsGrantedTable := "permissions_granted"
-	key := strconv.FormatInt(groupID, 10) + "," +
-		strconv.FormatInt(itemID, 10) + "," +
-		strconv.FormatInt(sourceGroupID, 10) + "," +
-		origin
+	const permissionsGrantedTable = "permissions_granted"
+	primaryKey := map[string]string{
+		"group_id": groupIDString, "item_id": itemIDString, "source_group_id": sourceGroupIDString, "origin": origin,
+	}
 
-	if !ctx.isInDatabase(permissionsGrantedTable, key) {
-		ctx.addInDatabase(permissionsGrantedTable, key, map[string]interface{}{
-			"group_id":        groupID,
-			"source_group_id": sourceGroupID,
-			"item_id":         itemID,
-			"origin":          origin,
-		})
+	if !ctx.isInDatabase(permissionsGrantedTable, primaryKey) {
+		ctx.needPopulateDatabase = true
+		err := ctx.DBHasTable(permissionsGrantedTable,
+			constructGodogTableFromData([]stringKeyValuePair{
+				{"group_id", groupIDString},
+				{"source_group_id", sourceGroupIDString},
+				{"item_id", itemIDString},
+				{"origin", origin},
+			}))
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	if permission == "can_request_help_to" {
-		canRequestHelpToGroupID := ctx.getReference(permissionValue)
+		canRequestHelpToGroupID := ctx.getIDOrIDByReference(permissionValue)
 
 		err := ctx.ThereIsAGroup(permissionValue)
 		if err != nil {
@@ -238,249 +208,208 @@ func (ctx *TestContext) addPermissionGranted(group, item, sourceGroup, origin, p
 		permissionValue = strconv.FormatInt(canRequestHelpToGroupID, 10)
 	}
 
-	if permission == "is_owner" {
-		boolValue, err := strconv.ParseBool(permissionValue)
-		if err != nil {
-			panic(fmt.Sprintf("%v cannot be parsed as a boolean", boolValue))
-		}
+	ctx.setDBTableRowColumnValue(permissionsGrantedTable, primaryKey, permission, permissionValue)
+}
 
-		ctx.dbTables[permissionsGrantedTable][key][permission] = boolValue
-	} else {
-		ctx.dbTables[permissionsGrantedTable][key][permission] = permissionValue
+// addAttempt adds an attempt to the database.
+func (ctx *TestContext) addAttempt(item, participant string) {
+	itemID := ctx.getIDOrIDByReference(item)
+	participantID := ctx.getIDOrIDByReference(participant)
+
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("attempts",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{idString, strconv.FormatInt(itemID, 10)},
+			{"participant_id", strconv.FormatInt(participantID, 10)},
+		}))
+	if err != nil {
+		panic(err)
 	}
 }
 
-// addAttempt adds an attempt in database.
-func (ctx *TestContext) addAttempt(item, participant string) {
-	itemID := ctx.getReference(item)
-	participantID := ctx.getReference(participant)
+// addValidatedResult adds a validated result to the database.
+func (ctx *TestContext) addValidatedResult(attemptID, participant, item string, validatedAt time.Time) {
+	participantID := ctx.getIDOrIDByReference(participant)
+	itemID := ctx.getIDOrIDByReference(item)
 
-	ctx.addInDatabase(
-		`attempts`,
-		strconv.FormatInt(itemID, 10)+","+strconv.FormatInt(participantID, 10),
-		map[string]interface{}{
-			"id":             itemID,
-			"participant_id": participantID,
-		},
-	)
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("results",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"attempt_id", attemptID},
+			{"participant_id", strconv.FormatInt(participantID, 10)},
+			{"item_id", strconv.FormatInt(itemID, 10)},
+			{"validated_at", validatedAt.UTC().Format(time.DateTime)},
+		}))
+	if err != nil {
+		panic(err)
+	}
 }
 
-// addResult adds a result in database.
-func (ctx *TestContext) addResult(attemptID, participant, item string, validatedAt time.Time) {
-	participantID := ctx.getReference(participant)
-	itemID := ctx.getReference(item)
-
-	ctx.addInDatabase(
-		"results",
-		attemptID+","+strconv.FormatInt(participantID, 10)+","+strconv.FormatInt(itemID, 10),
-		map[string]interface{}{
-			"attempt_id":     attemptID,
-			"participant_id": participantID,
-			"item_id":        itemID,
-			"validated_at":   validatedAt,
-		},
-	)
-}
-
-func (ctx *TestContext) getItemItemKey(parentItemID, childItemID int64) string {
-	return strconv.FormatInt(parentItemID, 10) + "," + strconv.FormatInt(childItemID, 10)
+func (ctx *TestContext) getItemItemPrimaryKey(parentItemID, childItemID int64) map[string]string {
+	return map[string]string{
+		"parent_item_id": strconv.FormatInt(parentItemID, 10),
+		"child_item_id":  strconv.FormatInt(childItemID, 10),
+	}
 }
 
 // addItemItem adds an item-item in the database.
 func (ctx *TestContext) addItemItem(parentItem, childItem string) {
-	parentItemID := ctx.getReference(parentItem)
-	childItemID := ctx.getReference(childItem)
+	parentItemID := ctx.getIDOrIDByReference(parentItem)
+	childItemID := ctx.getIDOrIDByReference(childItem)
 
-	ctx.addInDatabase(
-		"items_items",
-		ctx.getItemItemKey(parentItemID, childItemID),
-		map[string]interface{}{
-			"parent_item_id": parentItemID,
-			"child_item_id":  childItemID,
-			"child_order":    rand.Int31n(1000),
-		},
-	)
+	ctx.needPopulateDatabase = true
+	err := ctx.DBHasTable("items_items",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"parent_item_id", strconv.FormatInt(parentItemID, 10)},
+			{"child_item_id", strconv.FormatInt(childItemID, 10)},
+			{"child_order", strconv.FormatInt((parentItemID+childItemID)%1000, 10)},
+		}))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (ctx *TestContext) addItemItemPropagation(parent, child, propagation, propagationValue string) {
-	key := ctx.getItemItemKey(ctx.getReference(parent), ctx.getReference(child))
-
-	ctx.dbTables["items_items"][key][propagation] = propagationValue
+	primaryKey := ctx.getItemItemPrimaryKey(ctx.getIDOrIDByReference(parent), ctx.getIDOrIDByReference(child))
+	ctx.setDBTableRowColumnValue("items_items", primaryKey, propagation, propagationValue)
 }
 
-// addItem adds an item in the database.
+// addItem adds an item to the database.
 func (ctx *TestContext) addItem(fields map[string]string) {
-	dbFields := make(map[string]interface{})
+	dbFields, primaryKey, oldRowIndex := ctx.constructDBFieldsForAddItem(fields)
+
+	ctx.needPopulateDatabase = true
+
+	if oldRowIndex != -1 {
+		ctx.setDBTableRowColumnValues("items", primaryKey, dbFields)
+		return
+	}
+
+	keyValuePairs := make([]stringKeyValuePair, 0, len(dbFields))
+	for name, value := range dbFields {
+		keyValuePairs = append(keyValuePairs, stringKeyValuePair{name, value})
+	}
+	err := ctx.DBHasTable("items", constructGodogTableFromData(keyValuePairs))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (ctx *TestContext) constructDBFieldsForAddItem(fields map[string]string) (
+	dbFields, primaryKey map[string]string, oldRowIndex int,
+) {
+	dbFields = make(map[string]string, len(fields))
 	for key, value := range fields {
 		if key == "item" {
-			key = "id"
+			key = idString
 		}
 
 		switch {
-		case strings.HasSuffix(key, "id"):
-			dbFields[key] = ctx.getReference(value)
-		case value[0] == ReferencePrefix:
+		case strings.HasSuffix(key, idString):
+			dbFields[key] = strconv.FormatInt(ctx.getIDOrIDByReference(value), 10)
+		case value[0] == referencePrefix:
 			dbFields[key] = value[1:]
 		default:
 			dbFields[key] = value
 		}
 	}
 
-	itemKey := strconv.FormatInt(dbFields["id"].(int64), 10)
+	primaryKey = map[string]string{idString: dbFields[idString]}
+	oldRowIndex = ctx.getDBTableRowIndexForPrimaryKey("items", primaryKey)
+	ctx.setDefaultValuesInDBFieldsForAddItem(dbFields, fields, oldRowIndex)
 
-	if oldFields, ok := ctx.dbTables["items"][itemKey]; ok {
-		dbFields = mergeFields(oldFields, dbFields)
+	return dbFields, primaryKey, oldRowIndex
+}
+
+func (ctx *TestContext) setDefaultValuesInDBFieldsForAddItem(dbFields, fields map[string]string, oldRowIndex int) {
+	_, typeIsSet := dbFields["type"]
+	_, defaultLanguageTagIsSet := dbFields["default_language_tag"]
+	_, textIDIsSet := dbFields["text_id"]
+
+	if oldRowIndex != -1 {
+		dbTable := ctx.dbTableData["items"]
+		typeIsSet = typeIsSet || isDBTableColumnSetInRow(dbTable, "type", oldRowIndex)
+		defaultLanguageTagIsSet = defaultLanguageTagIsSet || isDBTableColumnSetInRow(dbTable, "default_language_tag", oldRowIndex)
+		textIDIsSet = typeIsSet || isDBTableColumnSetInRow(dbTable, "text_id", oldRowIndex)
 	}
 
-	if _, ok := dbFields["type"]; !ok {
+	if !typeIsSet {
 		dbFields["type"] = "Task"
 	}
-	if _, ok := dbFields["default_language_tag"]; !ok {
+	if !defaultLanguageTagIsSet {
 		dbFields["default_language_tag"] = "en"
 	}
-	if _, ok := dbFields["text_id"]; !ok && fields["item"][0] == ReferencePrefix {
+	if !textIDIsSet && fields["item"][0] == referencePrefix {
 		dbFields["text_id"] = fields["item"][1:]
 	}
-
-	ctx.addInDatabase("items", itemKey, dbFields)
 }
 
-// getThreadKey gets a thread unique key for the thread's map.
-func (ctx *TestContext) getThreadKey(itemID, participantID int64) string {
-	return strconv.FormatInt(itemID, 10) + "," + strconv.FormatInt(participantID, 10)
+// getThreadKey gets a thread unique key for the thread's DB table.
+func (ctx *TestContext) getThreadKey(itemID, participantID int64) map[string]string {
+	return map[string]string{
+		"participant_id": strconv.FormatInt(participantID, 10),
+		"item_id":        strconv.FormatInt(itemID, 10),
+	}
 }
 
-// addThread adds a thread in database.
+// addThread adds a thread to the database.
 func (ctx *TestContext) addThread(item, participant, helperGroup, status, messageCount, latestUpdateAt string) {
-	itemID := ctx.getReference(item)
-	participantID := ctx.getReference(participant)
-	helperGroupID := ctx.getReference(helperGroup)
+	itemID := ctx.getIDOrIDByReference(item)
+	participantID := ctx.getIDOrIDByReference(participant)
+	helperGroupID := ctx.getIDOrIDByReference(helperGroup)
 
-	latestUpdateAtDate, err := time.Parse(utils.DateTimeFormat, latestUpdateAt)
+	_, err := time.Parse(time.DateTime, latestUpdateAt)
 	if err != nil {
 		panic(err)
 	}
 
-	ctx.addInDatabase("threads", ctx.getThreadKey(itemID, participantID), map[string]interface{}{
-		"item_id":          itemID,
-		"participant_id":   participantID,
-		"helper_group_id":  helperGroupID,
-		"status":           status,
-		"message_count":    messageCount,
-		"latest_update_at": latestUpdateAtDate,
-	})
+	err = ctx.DBHasTable("threads",
+		constructGodogTableFromData([]stringKeyValuePair{
+			{"item_id", strconv.FormatInt(itemID, 10)},
+			{"participant_id", strconv.FormatInt(participantID, 10)},
+			{"helper_group_id", strconv.FormatInt(helperGroupID, 10)},
+			{"status", status},
+			{"message_count", messageCount},
+			{"latest_update_at", latestUpdateAt},
+		}))
+	if err != nil {
+		panic(err)
+	}
 }
 
-// UserIsAManagerOfTheGroupWith sets the current user as the manager of a group.
-func (ctx *TestContext) UserIsAManagerOfTheGroupWith(parameters string) error {
-	group := ctx.getParameterMap(parameters)
-
-	err := ctx.ThereIsAGroup(group["id"])
-	if err != nil {
-		return err
-	}
-
-	canWatchMembers := "0"
-	canGrantGroupAccess := "0"
-	canManage := "none"
-	watchedGroupName := group["user_id"] + " manages " + referenceToName(group["name"])
-
-	if group["can_watch_members"] == strTrue {
-		canWatchMembers = "1"
-		watchedGroupName += " with can_watch_members"
-	}
-	if group["can_grant_group_access"] == strTrue {
-		canGrantGroupAccess = "1"
-		watchedGroupName += " with can_grant_group_access"
-	}
-	if _, ok := group["can_manage"]; ok {
-		canManage = group["can_manage"]
-		watchedGroupName += " with can_manage_memberships_and_groups"
-	}
-
-	// We create a parent group of which the user is the manager.
-	err = ctx.ThereIsAGroup(watchedGroupName)
-	if err != nil {
-		return err
-	}
-
-	ctx.IsAMemberOfTheGroup(group["id"], watchedGroupName)
-
-	ctx.addGroupManager(group["user_id"], watchedGroupName, canWatchMembers, canGrantGroupAccess, canManage)
-
-	return nil
-}
-
-// IAmAManagerOfTheGroupWithID sets the user as a manager of a group with an id.
+// IAmAManagerOfTheGroupWithID sets the current user as a manager of a group with an id.
 func (ctx *TestContext) IAmAManagerOfTheGroupWithID(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"can_watch_members": "false",
-	}))
+	return ctx.addGroupManager(ctx.user, group, "0", "0", "none")
 }
 
-// IAmAManagerOfTheGroup sets the user as a manager of a group with an id.
+// IAmAManagerOfTheGroup sets the current user as a manager of the given group with can_watch_members=false.
 func (ctx *TestContext) IAmAManagerOfTheGroup(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"name":              group,
-		"can_watch_members": "false",
-	}))
+	return ctx.addGroupManager(ctx.user, group, "0", "0", "none")
 }
 
-// IAmAManagerOfTheGroupAndCanWatchItsMembers sets the user as a manager of a group with can_watch permission.
-func (ctx *TestContext) IAmAManagerOfTheGroupAndCanWatchItsMembers(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"name":              group,
-		"can_watch_members": strTrue,
-	}))
+// GroupIsAManagerOfTheGroupAndCanWatchItsMembers sets the user as a manager of the group with can_watch_members permission.
+func (ctx *TestContext) GroupIsAManagerOfTheGroupAndCanWatchItsMembers(managerGroup, group string) error {
+	return ctx.addGroupManager(managerGroup, group, "1", "0", "none")
 }
 
-// UserIsAManagerOfTheGroupAndCanWatchItsMembers sets the user as a manager of a group with can_watch permission.
-func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanWatchItsMembers(user, group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           user,
-		"name":              group,
-		"can_watch_members": strTrue,
-	}))
+// GroupIsAManagerOfTheGroupAndCanGrantGroupAccess sets the group as a manager of the given group with can_grant_group_access permission.
+func (ctx *TestContext) GroupIsAManagerOfTheGroupAndCanGrantGroupAccess(managerGroup, group string) error {
+	return ctx.addGroupManager(managerGroup, group, "0", "1", "none")
 }
 
-func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanGrantGroupAccess(user, group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                     group,
-		"user_id":                user,
-		"name":                   group,
-		"can_grant_group_access": strTrue,
-	}))
-}
-
-// UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup adds a user as a manager of a group
+// GroupIsAManagerOfTheGroupAndCanManageMembershipsAndGroup sets the group as a manager of the group
 // with the can_manage=memberships_and_groups permission.
-func (ctx *TestContext) UserIsAManagerOfTheGroupAndCanManageMembershipsAndGroup(user, group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":         group,
-		"user_id":    user,
-		"name":       group,
-		"can_manage": "memberships_and_group",
-	}))
+func (ctx *TestContext) GroupIsAManagerOfTheGroupAndCanManageMembershipsAndGroup(managerGroup, group string) error {
+	return ctx.addGroupManager(managerGroup, group, "0", "0", "memberships_and_group")
 }
 
-// ICanWatchGroupWithID adds the permission for the user to watch a group.
-func (ctx *TestContext) ICanWatchGroupWithID(group string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                group,
-		"user_id":           ctx.user,
-		"can_watch_members": strTrue,
-	}))
+// IAmAManagerOfTheGroupAndCanWatchItsMembers adds the permission for the current user to watch a group.
+func (ctx *TestContext) IAmAManagerOfTheGroupAndCanWatchItsMembers(group string) error {
+	return ctx.addGroupManager(ctx.user, group, "1", "0", "none")
 }
 
 // ThereAreTheFollowingItems defines items.
-func (ctx *TestContext) ThereAreTheFollowingItems(items *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingItems(items *godog.Table) error {
 	for i := 1; i < len(items.Rows); i++ {
 		item := ctx.getRowMap(i, items)
 
@@ -502,7 +431,7 @@ func (ctx *TestContext) ThereAreTheFollowingItems(items *messages.PickleStepArgu
 }
 
 // ThereAreTheFollowingTasks defines item tasks.
-func (ctx *TestContext) ThereAreTheFollowingTasks(tasks *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingTasks(tasks *godog.Table) error {
 	for i := 1; i < len(tasks.Rows); i++ {
 		task := ctx.getRowMap(i, tasks)
 
@@ -516,7 +445,7 @@ func (ctx *TestContext) ThereAreTheFollowingTasks(tasks *messages.PickleStepArgu
 }
 
 // ThereAreTheFollowingItemPermissions defines item permissions.
-func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingItemPermissions(itemPermissions *godog.Table) error {
 	for i := 1; i < len(itemPermissions.Rows); i++ {
 		itemPermission := ctx.getRowMap(i, itemPermissions)
 
@@ -540,9 +469,11 @@ func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]str
 		origin = definedOrigin
 	}
 
-	for _, permissionKey := range itemPermissionKeys {
+	for _, permissionKey := range []string{
+		"can_view", "can_grant_view", "can_watch", "can_edit", "is_owner", "can_request_help_to",
+	} {
 		if permissionValue, ok := itemPermission[permissionKey]; ok {
-			err := ctx.UserSetPermissionExtendedOnItemWithID(
+			err := ctx.SetGroupPermissionWithSourceGroupAndOriginOnItem(
 				permissionKey,
 				permissionValue,
 				itemPermission["group"],
@@ -560,7 +491,7 @@ func (ctx *TestContext) applyUserPermissionsOnItem(itemPermission map[string]str
 }
 
 // ThereAreTheFollowingItemRelations defines item relations, in items_items table.
-func (ctx *TestContext) ThereAreTheFollowingItemRelations(itemPermissions *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingItemRelations(itemPermissions *godog.Table) error {
 	for i := 1; i < len(itemPermissions.Rows); i++ {
 		itemRelation := ctx.getRowMap(i, itemPermissions)
 
@@ -576,7 +507,9 @@ func (ctx *TestContext) ThereAreTheFollowingItemRelations(itemPermissions *messa
 func (ctx *TestContext) applyItemRelation(itemRelation map[string]string) error {
 	ctx.addItemItem(itemRelation["parent"], itemRelation["item"])
 
-	for _, propagationKey := range itemPropagationKeys {
+	for _, propagationKey := range []string{
+		"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation",
+	} {
 		if propagationValue, ok := itemRelation[propagationKey]; ok {
 			boolValue, err := strconv.ParseBool(propagationValue)
 			if err != nil {
@@ -601,89 +534,75 @@ func (ctx *TestContext) applyItemRelation(itemRelation map[string]string) error 
 	return nil
 }
 
-// ICanWatchGroup adds the permission for the user to watch a group.
-func (ctx *TestContext) ICanWatchGroup(groupName string) error {
-	return ctx.UserIsAManagerOfTheGroupWith(getParameterString(map[string]string{
-		"id":                groupName,
-		"user_id":           ctx.user,
-		"name":              groupName,
-		"can_watch_members": strTrue,
-	}))
-}
-
-// IsAMemberOfTheGroup Puts a group in a group.
-func (ctx *TestContext) IsAMemberOfTheGroup(childGroupName, parentGroupName string) {
+// GroupIsAMemberOfTheGroup Puts a group into a group.
+func (ctx *TestContext) GroupIsAMemberOfTheGroup(childGroupName, parentGroupName string) {
 	ctx.addGroupGroup(parentGroupName, childGroupName)
 }
 
-// ItemRelationSetPropagation adds a propagation on an item relation.
-func (ctx *TestContext) ItemRelationSetPropagation(propagation, value, parent, item string) error {
-	ctx.addItemItemPropagation(parent, item, propagation, value)
+// SetGroupPermissionWithSourceGroupAndOriginOnItem gives a group a permission on an item with a specific source_group and origin.
+func (ctx *TestContext) SetGroupPermissionWithSourceGroupAndOriginOnItem(permission, value, group, item, sourceGroup, origin string) error {
+	ctx.setGrantedPermission(group, item, sourceGroup, origin, permission, value)
 
 	return nil
 }
 
-// UserSetPermissionExtendedOnItemWithID gives a user a permission on an item with a specific source_group and origin.
-func (ctx *TestContext) UserSetPermissionExtendedOnItemWithID(permission, value, user, item, sourceGroup, origin string) error {
-	ctx.addPermissionGranted(user, item, sourceGroup, origin, permission, value)
+// SetGroupPermissionOnItem grants a group a permission on an item with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) SetGroupPermissionOnItem(permission, value, group, item string) error {
+	ctx.setGrantedPermission(group, item, group, "group_membership", permission, value)
 
 	return nil
 }
 
-// UserSetPermissionOnItemWithID gives a user a permission on an item.
-func (ctx *TestContext) UserSetPermissionOnItemWithID(permission, value, user, item string) error {
-	ctx.addPermissionGranted(user, item, user, "group_membership", permission, value)
-
-	return nil
+// IHavePermissionOnItem gives the current user a permission on an item with source_group_id=user and origin="group_membership".
+func (ctx *TestContext) IHavePermissionOnItem(permType, permValue, item string) error {
+	return ctx.SetGroupPermissionOnItem(permType, permValue, ctx.user, item)
 }
 
-// ICanOnItemWithID gives the user a permission on an item.
-func (ctx *TestContext) ICanOnItemWithID(watchType, watchValue, item string) error {
-	return ctx.UserSetPermissionOnItemWithID(watchType, watchValue, ctx.user, item)
+// GroupHasViewPermissionOnItem gives a group a "view" permission on an item with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) GroupHasViewPermissionOnItem(group, viewPermissionValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_view", viewPermissionValue, group, item)
 }
 
-// UserCanViewOnItemWithID gives a user a can_view permission on an item.
-func (ctx *TestContext) UserCanViewOnItemWithID(viewValue, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, user, item)
+// IHaveViewPermissionOnItem gives the current user a "view" permission on an item with source_group_id=user and origin="group_membership".
+func (ctx *TestContext) IHaveViewPermissionOnItem(viewValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_view", viewValue, ctx.user, item)
 }
 
-// ICanViewOnItemWithID gives the user a "view" permission on an item.
-func (ctx *TestContext) ICanViewOnItemWithID(viewValue, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_view", viewValue, ctx.user, item)
+// GroupHasGrantViewPermissionOnItem gives a group a "grant_view" permission on an item
+// with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) GroupHasGrantViewPermissionOnItem(viewValue, group, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_grant_view", viewValue, group, item)
 }
 
-// UserCanGrantViewOnItemWithID gives a user a can_grant_view permission on an item.
-func (ctx *TestContext) UserCanGrantViewOnItemWithID(viewValue, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_grant_view", viewValue, user, item)
+// GroupHasWatchPermissionOnItem gives a group a "watch" permission on an item with source_group_id=group and origin="group_membership".
+func (ctx *TestContext) GroupHasWatchPermissionOnItem(group, watchValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_watch", watchValue, group, item)
 }
 
-// UserCanWatchOnItemWithID gives a user a "watch" permission on an item.
-func (ctx *TestContext) UserCanWatchOnItemWithID(watchValue, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, user, item)
+// IHaveWatchPermissionOnItem gives the current user a "watch" permission on an item
+// with source_group_id=user and origin="group_membership".
+func (ctx *TestContext) IHaveWatchPermissionOnItem(watchValue, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_watch", watchValue, ctx.user, item)
 }
 
-// ICanWatchOnItemWithID gives the user a "watch" permission on an item.
-func (ctx *TestContext) ICanWatchOnItemWithID(watchValue, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_watch", watchValue, ctx.user, item)
+// UserIsOwnerOfItem sets the is_owner permission.
+func (ctx *TestContext) UserIsOwnerOfItem(isOwner, user, item string) error {
+	return ctx.SetGroupPermissionOnItem("is_owner", isOwner, user, item)
 }
 
-// UserIsOwnerOfItemWithID sets the is_owner permission.
-func (ctx *TestContext) UserIsOwnerOfItemWithID(isOwner, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("is_owner", isOwner, user, item)
+// UserCanRequestHelpToOnItem sets the can_request_help_to permission.
+func (ctx *TestContext) UserCanRequestHelpToOnItem(helperGroup, user, item string) error {
+	return ctx.SetGroupPermissionOnItem("can_request_help_to", helperGroup, user, item)
 }
 
-// UserCanRequestHelpToOnItemWithID sets the can_request_help_to permission.
-func (ctx *TestContext) UserCanRequestHelpToOnItemWithID(canRequestHelpTo, user, item string) error {
-	return ctx.UserSetPermissionOnItemWithID("can_request_help_to", canRequestHelpTo, user, item)
-}
-
-func (ctx *TestContext) UserHaveValidatedItemWithID(user, item string) error {
+// GroupHasValidatedResultOnItem adds a validated result of the group on the item to the database.
+func (ctx *TestContext) GroupHasValidatedResultOnItem(group, item string) error {
 	attemptID := rand.Int63()
 
-	ctx.addAttempt(item, user)
-	ctx.addResult(
+	ctx.addAttempt(item, group)
+	ctx.addValidatedResult(
 		strconv.FormatInt(attemptID, 10),
-		user,
+		group,
 		item,
 		time.Now(),
 	)
@@ -691,7 +610,8 @@ func (ctx *TestContext) UserHaveValidatedItemWithID(user, item string) error {
 	return nil
 }
 
-func (ctx *TestContext) ThereAreTheFollowingResults(results *messages.PickleStepArgument_PickleTable) error {
+// ThereAreTheFollowingValidatedResults creates validated results described in the given Godog table.
+func (ctx *TestContext) ThereAreTheFollowingValidatedResults(results *godog.Table) error {
 	for i := 1; i < len(results.Rows); i++ {
 		result := ctx.getRowMap(i, results)
 
@@ -699,7 +619,7 @@ func (ctx *TestContext) ThereAreTheFollowingResults(results *messages.PickleStep
 			"item": result["item"],
 		})
 
-		err := ctx.UserHaveValidatedItemWithID(result["participant"], result["item"])
+		err := ctx.GroupHasValidatedResultOnItem(result["participant"], result["item"])
 		if err != nil {
 			return err
 		}
@@ -708,13 +628,13 @@ func (ctx *TestContext) ThereAreTheFollowingResults(results *messages.PickleStep
 	return nil
 }
 
-// IHaveValidatedItemWithID states that user has validated an item.
-func (ctx *TestContext) IHaveValidatedItemWithID(item string) error {
-	return ctx.UserHaveValidatedItemWithID(ctx.user, item)
+// IHaveValidatedResultOnItem states that the current user has a validated result on the item.
+func (ctx *TestContext) IHaveValidatedResultOnItem(item string) error {
+	return ctx.GroupHasValidatedResultOnItem(ctx.user, item)
 }
 
 // ThereAreTheFollowingThreads create threads.
-func (ctx *TestContext) ThereAreTheFollowingThreads(threads *messages.PickleStepArgument_PickleTable) error {
+func (ctx *TestContext) ThereAreTheFollowingThreads(threads *godog.Table) error {
 	for i := 1; i < len(threads.Rows); i++ {
 		thread := ctx.getRowMap(i, threads)
 		threadParameters := make(map[string]string)
@@ -742,7 +662,7 @@ func (ctx *TestContext) ThereAreTheFollowingThreads(threads *messages.PickleStep
 		}
 
 		if thread["visible_by_participant"] == "1" {
-			err := ctx.UserCanViewOnItemWithID("content", thread["participant"], thread["item"])
+			err := ctx.GroupHasViewPermissionOnItem(thread["participant"], "content", thread["item"])
 			if err != nil {
 				return err
 			}
@@ -773,8 +693,9 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 	// add helper_group_id
 	if _, ok := thread["helper_group_id"]; !ok {
 		helperGroupID := rand.Int63()
+		helperGroupIDString := strconv.FormatInt(helperGroupID, 10)
 
-		err := ctx.ThereIsAGroup(strconv.FormatInt(helperGroupID, 10))
+		err := ctx.ThereIsAGroup(helperGroupIDString)
 		if err != nil {
 			return err
 		}
@@ -799,12 +720,12 @@ func (ctx *TestContext) ThereIsAThreadWith(parameters string) error {
 
 	// add latest update at
 	if _, ok := thread["latest_update_at"]; !ok {
-		thread["latest_update_at"] = time.Now().Format(utils.DateTimeFormat)
+		thread["latest_update_at"] = time.Now().Format(time.DateTime)
 	}
 
 	ctx.currentThreadKey = ctx.getThreadKey(
-		ctx.getReference(thread["item_id"]),
-		ctx.getReference(thread["participant_id"]),
+		ctx.getIDOrIDByReference(thread["item_id"]),
+		ctx.getIDOrIDByReference(thread["participant_id"]),
 	)
 
 	ctx.addThread(
@@ -832,12 +753,17 @@ func (ctx *TestContext) ThereIsNoThreadWith(parameters string) error {
 
 // IAmPartOfTheHelperGroupOfTheThread states that user is a member of the helper group, of a given thread.
 func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
-	threadHelperGroupID := ctx.dbTables["threads"][ctx.currentThreadKey]["helper_group_id"].(int64)
+	rowIndex := ctx.getDBTableRowIndexForPrimaryKey("threads", ctx.currentThreadKey)
+	if rowIndex == -1 {
+		panic(fmt.Sprintf("IAmPartOfTheHelperGroupOfTheThread: thread %v not found", ctx.currentThreadKey))
+	}
+	columnIndex := getDBTableColumnIndex(ctx.dbTableData["threads"], "helper_group_id")
+	if columnIndex == -1 {
+		panic("IAmPartOfTheHelperGroupOfTheThread: helper_group_id column not found")
+	}
+	threadHelperGroupIDString := ctx.dbTableData["threads"].Rows[rowIndex].Cells[columnIndex].Value
 
-	ctx.IsAMemberOfTheGroup(
-		ctx.user,
-		strconv.FormatInt(threadHelperGroupID, 10),
-	)
+	ctx.GroupIsAMemberOfTheGroup(ctx.user, threadHelperGroupIDString)
 
 	return nil
 }
@@ -845,5 +771,5 @@ func (ctx *TestContext) IAmPartOfTheHelperGroupOfTheThread() error {
 // ICanRequestHelpToTheGroupWithIDOnTheItemWithID gives the user the permission to request help from a given group
 // to a given item.
 func (ctx *TestContext) ICanRequestHelpToTheGroupWithIDOnTheItemWithID(group, item string) error {
-	return ctx.UserCanRequestHelpToOnItemWithID(group, ctx.user, item)
+	return ctx.UserCanRequestHelpToOnItem(group, ctx.user, item)
 }

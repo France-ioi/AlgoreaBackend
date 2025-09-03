@@ -8,11 +8,11 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/auth"
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // Service is the mount point for services related to `items`.
@@ -64,6 +64,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuthAndParticipant.Get("/items/log", service.AppHandler(srv.getActivityLogForAllItems).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/official-sessions", service.AppHandler(srv.listOfficialSessions).ServeHTTP)
 	routerWithAuth.Put("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.updateItemString).ServeHTTP)
+	routerWithAuth.Delete("/items/{item_id}/strings/{language_tag}", service.AppHandler(srv.deleteItemString).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/entry-state",
 		service.AppHandler(srv.getEntryState).ServeHTTP)
 	routerWithAuthAndParticipant.Post("/items/{ids:(\\d+/)+}enter", service.AppHandler(srv.enter).ServeHTTP)
@@ -73,12 +74,18 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	routerWithAuthAndParticipant.Get("/items/{item_id}/path-from-root", service.AppHandler(srv.getPathFromRoot).ServeHTTP)
 	routerWithAuth.Get("/items/{item_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByItemID).ServeHTTP)
 	routerWithAuth.Get("/items/by-text-id/{text_id}/breadcrumbs-from-roots", service.AppHandler(srv.getBreadcrumbsFromRootsByTextID).ServeHTTP)
+
+	routerWithAuth.Put("/items/{item_id}/groups/{group_id}/additional-times", service.AppHandler(srv.setAdditionalTime).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/groups/{group_id}/additional-times", service.AppHandler(srv.getGroupAdditionalTimes).ServeHTTP)
+	routerWithAuth.Get("/items/{item_id}/groups/{group_id}/members/additional-times",
+		service.AppHandler(srv.getMembersAdditionalTimes).ServeHTTP)
+	routerWithAuth.Get("/items/time-limited/administered", service.AppHandler(srv.getAdministeredList).ServeHTTP)
 }
 
-func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldName string,
+func checkHintOrScoreTokenRequiredFields(taskToken *payloads.TaskToken, otherTokenFieldName string,
 	otherTokenConvertedUserID int64,
 	otherTokenLocalItemID, otherTokenItemURL, otherTokenAttemptID string,
-) service.APIError {
+) error {
 	if taskToken.Converted.UserID != otherTokenConvertedUserID {
 		return service.ErrInvalidRequest(fmt.Errorf(
 			"token in %s doesn't correspond to user session: got idUser=%d, expected %d",
@@ -93,7 +100,7 @@ func checkHintOrScoreTokenRequiredFields(taskToken *token.Task, otherTokenFieldN
 	if taskToken.AttemptID != otherTokenAttemptID {
 		return service.ErrInvalidRequest(fmt.Errorf("wrong idAttempt in %s token", otherTokenFieldName))
 	}
-	return service.NoError
+	return nil
 }
 
 // Permission represents item permissions + ItemID.
@@ -226,7 +233,7 @@ type itemsRelationData struct {
 
 func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permissionAndType, children []itemChild,
 	formData *formdata.FormData, oldRelationsMap map[int64]*itemsRelationData, store *database.DataStore,
-) service.APIError {
+) error {
 	for index := range children {
 		childRelation := childrenInfoMap[children[index].ItemID]
 		oldChildRelation := oldRelationsMap[children[index].ItemID]
@@ -235,43 +242,43 @@ func validateChildrenFieldsAndApplyDefaults(childrenInfoMap map[int64]permission
 		applyCategoryDefaultValue(formData, prefix, &children[index], oldChildRelation)
 		applyScoreWeightDefaultValue(formData, prefix, &children[index], oldChildRelation)
 
-		apiError := validateChildContentViewPropagationAndApplyDefaultValue(
+		err := validateChildContentViewPropagationAndApplyDefaultValue(
 			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
-		if apiError != service.NoError {
-			return apiError
+		if err != nil {
+			return err
 		}
 
-		apiError = validateChildUpperViewLevelsPropagationAndApplyDefaultValue(
+		err = validateChildUpperViewLevelsPropagationAndApplyDefaultValue(
 			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
-		if apiError != service.NoError {
-			return apiError
+		if err != nil {
+			return err
 		}
 
-		apiError = validateChildGrantViewPropagationAndApplyDefaultValue(
+		err = validateChildGrantViewPropagationAndApplyDefaultValue(
 			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
-		if apiError != service.NoError {
-			return apiError
+		if err != nil {
+			return err
 		}
 
-		apiError = validateChildWatchPropagationAndApplyDefaultValue(
+		err = validateChildWatchPropagationAndApplyDefaultValue(
 			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
-		if apiError != service.NoError {
-			return apiError
+		if err != nil {
+			return err
 		}
 
-		apiError = validateChildEditPropagationAndApplyDefaultValue(
+		err = validateChildEditPropagationAndApplyDefaultValue(
 			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
-		if apiError != service.NoError {
-			return apiError
+		if err != nil {
+			return err
 		}
 
-		apiError = validateChildRequestHelpPropagationAndApplyDefaultValue(
+		err = validateChildRequestHelpPropagationAndApplyDefaultValue(
 			formData, prefix, &children[index], childRelation.Permission, oldChildRelation, store)
-		if apiError != service.NoError {
-			return apiError
+		if err != nil {
+			return err
 		}
 	}
-	return service.NoError
+	return nil
 }
 
 func applyCategoryDefaultValue(formData *formdata.FormData, prefix string, child *itemChild, oldRelationData *itemsRelationData) {
@@ -296,12 +303,12 @@ func applyScoreWeightDefaultValue(formData *formdata.FormData, prefix string, ch
 
 func validateChildBooleanPropagationAndApplyDefaultValue(formData *formdata.FormData, fieldName, prefix string,
 	propagationValue, oldPropagationValue *bool, permissionValue, requiredPermissionValue int,
-) service.APIError {
+) error {
 	switch {
 	case formData.IsSet(prefix + fieldName):
 		// allow setting the propagation to the same or a lower value
 		if oldPropagationValue != nil && (!*propagationValue || *oldPropagationValue) {
-			return service.NoError
+			return nil
 		}
 		if *propagationValue && permissionValue < requiredPermissionValue {
 			return service.ErrForbidden(fmt.Errorf("not enough permissions for setting %s", fieldName))
@@ -311,12 +318,12 @@ func validateChildBooleanPropagationAndApplyDefaultValue(formData *formdata.Form
 	default:
 		*propagationValue = permissionValue >= requiredPermissionValue
 	}
-	return service.NoError
+	return nil
 }
 
 func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) error {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.EditPropagation
@@ -328,7 +335,7 @@ func validateChildEditPropagationAndApplyDefaultValue(formData *formdata.FormDat
 
 func validateChildRequestHelpPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) error {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.RequestHelpPropagation
@@ -341,7 +348,7 @@ func validateChildRequestHelpPropagationAndApplyDefaultValue(formData *formdata.
 
 func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) error {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.WatchPropagation
@@ -353,7 +360,7 @@ func validateChildWatchPropagationAndApplyDefaultValue(formData *formdata.FormDa
 
 func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string, child *itemChild,
 	childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) error {
 	var oldPropagationValue *bool
 	if oldRelationData != nil {
 		oldPropagationValue = &oldRelationData.GrantViewPropagation
@@ -363,16 +370,16 @@ func validateChildGrantViewPropagationAndApplyDefaultValue(formData *formdata.Fo
 		childPermissions.CanGrantViewGeneratedValue, store.PermissionsGranted().PermissionIndexByKindAndName("grant_view", "solution_with_grant"))
 }
 
-//nolint:dupl
+//nolint:dupl // It looks like a duplicate of validateChildContentViewPropagationAndApplyDefaultValue, but it is not.
 func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) error {
 	switch {
 	case formData.IsSet(prefix + "upper_view_levels_propagation"):
 		if oldRelationData != nil &&
 			store.ItemItems().UpperViewLevelsPropagationIndexByName(child.UpperViewLevelsPropagation) <=
 				oldRelationData.UpperViewLevelsPropagationValue {
-			return service.NoError
+			return nil
 		}
 		var failed bool
 		switch child.UpperViewLevelsPropagation {
@@ -393,18 +400,18 @@ func validateChildUpperViewLevelsPropagationAndApplyDefaultValue(formData *formd
 	default:
 		child.UpperViewLevelsPropagation = defaultUpperViewLevelsPropagationForNewItemItems(childPermissions.CanGrantViewGeneratedValue, store)
 	}
-	return service.NoError
+	return nil
 }
 
-//nolint:dupl
+//nolint:dupl // It looks like a duplicate of validateChildUpperViewLevelsPropagationAndApplyDefaultValue, but it is not.
 func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.FormData, prefix string,
 	child *itemChild, childPermissions *Permission, oldRelationData *itemsRelationData, store *database.DataStore,
-) service.APIError {
+) error {
 	switch {
 	case formData.IsSet(prefix + "content_view_propagation"):
 		if oldRelationData != nil &&
 			store.ItemItems().ContentViewPropagationIndexByName(child.ContentViewPropagation) <= oldRelationData.ContentViewPropagationValue {
-			return service.NoError
+			return nil
 		}
 		var failed bool
 		switch child.ContentViewPropagation {
@@ -421,7 +428,7 @@ func validateChildContentViewPropagationAndApplyDefaultValue(formData *formdata.
 	default:
 		child.ContentViewPropagation = defaultContentViewPropagationForNewItemItems(childPermissions.CanGrantViewGeneratedValue, store)
 	}
-	return service.NoError
+	return nil
 }
 
 // insertItemsItems is used by itemCreate/itemEdit services to insert data constructed by
@@ -452,18 +459,18 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 		[]string{
 			"child_order", "category", "score_weight", "content_view_propagation", "upper_view_levels_propagation",
 			"grant_view_propagation", "watch_propagation", "edit_propagation", "request_help_propagation",
-		}))
+		}, nil))
 }
 
-// createContestParticipantsGroup creates a new contest participants group for the given item and
+// createParticipantsGroupForItemRequiringExplicitEntry creates a new contest participants group for the given item and
 // gives "can_manage:content" permission on the item to this new group.
-// The method doesn't update `items.participants_group_id` or run ItemItemStore.After()
+// The method doesn't update `items.participants_group_id` or run items ancestors recalculation
 // (a caller should do both on their own).
-func createContestParticipantsGroup(store *database.DataStore, itemID int64) int64 {
+func createParticipantsGroupForItemRequiringExplicitEntry(store *database.DataStore, itemID int64) int64 {
 	var participantsGroupID int64
-	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError(func(s *database.DataStore) error {
-		participantsGroupID = s.NewID()
-		return s.Groups().InsertMap(map[string]interface{}{
+	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(store *database.DataStore) error {
+		participantsGroupID = store.NewID()
+		return store.Groups().InsertMap(map[string]interface{}{
 			"id": participantsGroupID, "type": "ContestParticipants",
 			"name": fmt.Sprintf("%d-participants", itemID),
 		})

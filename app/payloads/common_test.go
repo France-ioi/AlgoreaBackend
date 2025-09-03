@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
-	"github.com/France-ioi/AlgoreaBackend/app/utils"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestPayloads_ParseMap(t *testing.T) {
@@ -21,7 +21,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 	}{
 		{
 			name: "task token",
-			raw:  payloadstest.TaskPayloadFromAlgoreaPlatform,
+			raw:  payloadstest.TaskPayloadFromAlgoreaPlatform(),
 			want: &TaskToken{
 				Date:               "02-05-2019",
 				UserID:             "556371821693219925",
@@ -30,15 +30,15 @@ func TestPayloads_ParseMap(t *testing.T) {
 				LocalItemID:        "901756573345831409",
 				PlatformName:       "test_dmitry",
 				RandomSeed:         "556371821693219925",
-				HintsGivenCount:    utils.Ptr("0"),
-				HintsAllowed:       utils.Ptr(false),
-				HintPossible:       utils.Ptr(true),
-				AccessSolutions:    utils.Ptr(true),
-				ReadAnswers:        utils.Ptr(true),
-				Login:              utils.Ptr("test"),
-				SubmissionPossible: utils.Ptr(true),
-				SupportedLangProg:  utils.Ptr("*"),
-				IsAdmin:            utils.Ptr(false),
+				HintsGivenCount:    golang.Ptr("0"),
+				HintsAllowed:       golang.Ptr(false),
+				HintPossible:       golang.Ptr(true),
+				AccessSolutions:    golang.Ptr(true),
+				ReadAnswers:        golang.Ptr(true),
+				Login:              golang.Ptr("test"),
+				SubmissionPossible: golang.Ptr(true),
+				SupportedLangProg:  golang.Ptr("*"),
+				IsAdmin:            golang.Ptr(false),
 				Converted: TaskTokenConverted{
 					UserID:        556371821693219925,
 					LocalItemID:   901756573345831409,
@@ -49,7 +49,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 		},
 		{
 			name: "answer token",
-			raw:  payloadstest.AnswerPayloadFromAlgoreaPlatform,
+			raw:  payloadstest.AnswerPayloadFromAlgoreaPlatform(),
 			want: &AnswerToken{
 				Date:            "02-05-2019",
 				UserID:          "556371821693219925",
@@ -73,12 +73,12 @@ func TestPayloads_ParseMap(t *testing.T) {
 		},
 		{
 			name: "hint token",
-			raw:  payloadstest.HintPayloadFromTaskPlatform,
+			raw:  payloadstest.HintPayloadFromTaskPlatform(),
 			want: &HintToken{
 				Date:      "02-05-2019",
 				UserID:    "556371821693219925",
 				ItemURL:   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
-				AskedHint: *formdata.AnythingFromString("1"),
+				AskedHint: formdata.AnythingFromString("1"),
 				Converted: HintTokenConverted{
 					UserID: 556371821693219925,
 				},
@@ -89,14 +89,14 @@ func TestPayloads_ParseMap(t *testing.T) {
 			raw: map[string]interface{}{
 				"itemUrl":   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
 				"idUser":    "556371821693219925",
-				"askedHint": *formdata.AnythingFromString(`{"rotorIndex":0,"cellRank":1}`),
+				"askedHint": formdata.AnythingFromString(`{"rotorIndex":0,"cellRank":1}`),
 				"date":      "02-05-2019",
 			},
 			want: &HintToken{
 				Date:      "02-05-2019",
 				UserID:    "556371821693219925",
 				ItemURL:   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
-				AskedHint: *formdata.AnythingFromString(`{"rotorIndex":0,"cellRank":1}`),
+				AskedHint: formdata.AnythingFromString(`{"rotorIndex":0,"cellRank":1}`),
 				Converted: HintTokenConverted{
 					UserID: 556371821693219925,
 				},

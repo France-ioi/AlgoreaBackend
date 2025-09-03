@@ -1,6 +1,6 @@
 Feature: Find a group path
   Background:
-    Given the database has the following table 'groups':
+    Given the database has the following table "groups":
       | id | name                                     | type    | is_public |
       | 1  | Joined Base                              | Base    | false     |
       | 2  | Managed Base                             | Base    | false     |
@@ -39,17 +39,13 @@ Feature: Find a group path
       | 35 | U3                                       | User    | false     |
       | 36 | U3                                       | User    | false     |
       | 38 | Public                                   | Friends | true      |
-      | 41 | owner                                    | User    | false     |
-      | 49 | jack                                     | User    | false     |
-      | 50 | jane                                     | User    | false     |
-      | 51 | john                                     | User    | false     |
-    And the database has the following table 'users':
-      | login | group_id | first_name  | last_name |
-      | owner | 41       | Jean-Michel | Blanquer  |
-      | jack  | 49       | Jack        | Smith     |
-      | jane  | 50       | Jane        | Doe       |
-      | john  | 51       | John        | Doe       |
-    And the database has the following table 'group_managers':
+    And the database has the following users:
+      | group_id | login | first_name  | last_name |
+      | 41       | owner | Jean-Michel | Blanquer  |
+      | 49       | jack  | Jack        | Smith     |
+      | 50       | jane  | Jane        | Doe       |
+      | 51       | john  | John        | Doe       |
+    And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 41         |
       | 4        | 41         |
@@ -61,7 +57,7 @@ Feature: Find a group path
       | 23       | 25         |
       | 28       | 50         |
       | 30       | 51         |
-    And the database has the following table 'groups_groups':
+    And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 1               | 41             | 9999-12-31 23:59:59 |
       | 3               | 4              | 9999-12-31 23:59:59 |
@@ -121,7 +117,7 @@ Feature: Find a group path
       | 23              | 41             | 2010-01-01 00:00:00 |
       | 25              | 41             | 2010-01-01 00:00:00 |
     And the groups ancestors are computed
-    And the database has the following table 'groups_ancestors':
+    And the database has the following table "groups_ancestors":
       | ancestor_group_id | child_group_id | expires_at          |
       | 5                 | 41             | 2010-01-01 00:00:00 |
       | 7                 | 41             | 2010-01-01 00:00:00 |

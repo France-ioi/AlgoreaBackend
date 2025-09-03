@@ -5,9 +5,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDB_WithPersonalInfoViewApprovals(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
@@ -30,7 +35,7 @@ func TestDB_WithPersonalInfoViewApprovals(t *testing.T) {
 		Approved bool
 	}
 	var result []resultType
-	assert.NoError(t,
+	require.NoError(t,
 		NewDataStore(db).Users().WithPersonalInfoViewApprovals(&User{GroupID: 23}).
 			Select("*").Scan(&result).Error())
 	assert.Equal(t, []resultType{{ID: 123, Approved: true}}, result)

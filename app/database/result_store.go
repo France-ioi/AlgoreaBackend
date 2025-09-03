@@ -1,5 +1,7 @@
 package database
 
+import "github.com/France-ioi/AlgoreaBackend/v2/golang"
+
 // ResultStore implements database operations on `results`.
 type ResultStore struct {
 	*DataStore
@@ -26,7 +28,8 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 	var hintsInfo HintsInfo
 	mustNotBeError(s.Results().
 		ByID(participantID, attemptID, itemID).
-		WithWriteLock().Select("hints_requested, hints_cached").
+		WithCustomWriteLocks(golang.NewSet("attempts"), golang.NewSet("results")).
+		Select("hints_requested, hints_cached").
 		Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 		Where("NOW() < attempts.allows_submissions_until").
 		Scan(&hintsInfo).Error())
@@ -36,10 +39,16 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 // MarkAsToBePropagated marks a given result as 'to_be_propagated'.
 func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int64, propagateNow bool) error {
 	err := s.Exec(`
-		INSERT IGNORE INTO results_propagate (participant_id, attempt_id, item_id, state)
-		VALUES(?, ?, ?, 'to_be_propagated')`, participantID, attemptID, itemID).Error()
+		INSERT INTO `+s.resultsPropagateTableName()+
+		` (`+golang.If(s.arePropagationsSync(), "connection_id, ")+`participant_id, attempt_id, item_id, state)
+		VALUES(`+golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ")+`?, ?, ?, 'to_be_propagated')
+		ON DUPLICATE KEY UPDATE state = IF(state='propagating', 'to_be_propagated', state)`, participantID, attemptID, itemID).Error()
 	if err == nil && propagateNow {
 		s.ScheduleResultsPropagation()
 	}
 	return err
+}
+
+func (s *ResultStore) resultsPropagateTableName() string {
+	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync_conn", "results_propagate")
 }

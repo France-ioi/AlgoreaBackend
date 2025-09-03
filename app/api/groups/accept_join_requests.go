@@ -2,8 +2,6 @@ package groups
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // swagger:operation POST /groups/{parent_group_id}/join-requests/accept group-memberships groupJoinRequestsAccept
@@ -31,8 +29,8 @@ import (
 //
 //
 //		If the `{parent_group_id}` corresponds to a team, the service skips a user
-//		being a member of another team having attempts for the same contest as `{parent_group_id}`
-//		(expired attempts are ignored for contests allowing multiple attempts, result = "in_another_team").
+//		being a member of another team having attempts for the same item requiring explicit entry as `{parent_group_id}`
+//		(expired attempts are ignored for items allowing multiple attempts, result = "in_another_team").
 //
 //
 //		If the `{parent_group_id}` corresponds to a team, the service skips a user with result = "in_another_team"
@@ -65,12 +63,14 @@ import (
 //		- name: parent_group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //		- name: group_ids
 //			in: query
 //			type: array
 //			items:
 //				type: integer
+//				format: int64
 //			required: true
 //	responses:
 //		"200":
@@ -81,8 +81,10 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) acceptJoinRequests(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) acceptJoinRequests(w http.ResponseWriter, r *http.Request) error {
 	return srv.performBulkMembershipAction(w, r, acceptJoinRequestsAction)
 }

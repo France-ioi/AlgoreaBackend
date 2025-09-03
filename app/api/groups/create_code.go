@@ -9,10 +9,12 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
+
+const maxNumberOfRetriesForCodeGenerator = 3
 
 // swagger:operation POST /groups/{group_id}/code groups groupCodeCreate
 //
@@ -30,6 +32,7 @@ import (
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":
@@ -47,35 +50,35 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) createCode(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	if apiError := checkThatUserCanManageTheGroupMemberships(store, user, groupID); apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 	var newCode string
 	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
 		for retryCount := 1; ; retryCount++ {
-			if retryCount > 3 {
+			if retryCount > maxNumberOfRetriesForCodeGenerator {
 				generatorErr := errors.New("the code generator is broken")
-				logging.GetLogEntry(r).Error(generatorErr)
+				logging.GetLogEntry(httpRequest).Error(generatorErr)
 				return generatorErr
 			}
 
 			newCode, err = GenerateGroupCode()
 			service.MustNotBeError(err)
 
-			err = store.Groups().Where("id = ?", groupID).Updates(map[string]interface{}{"code": newCode}).Error()
+			err = store.Groups().Where("id = ?", groupID).UpdateColumn(map[string]interface{}{"code": newCode}).Error()
 			if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
 				continue
 			}
@@ -86,11 +89,11 @@ func (srv *Service) createCode(w http.ResponseWriter, r *http.Request) service.A
 		return nil
 	}))
 
-	render.Respond(w, r, struct {
+	render.Respond(responseWriter, httpRequest, struct {
 		Code string `json:"code"`
 	}{newCode})
 
-	return service.NoError
+	return nil
 }
 
 // GenerateGroupCode generate a random code for a group.

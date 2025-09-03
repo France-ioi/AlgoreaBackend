@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:model managedGroupsGetResponseRow
@@ -15,7 +15,6 @@ type managedGroupsGetResponseRow struct {
 	ID int64 `json:"id,string"`
 	// required:true
 	Name string `json:"name"`
-	// Nullable
 	// required:true
 	Description *string `json:"description"`
 	// required:true
@@ -68,11 +67,13 @@ type managedGroupsGetResponseRow struct {
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) service.APIError {
-	user := srv.GetUser(r)
-	store := srv.GetStore(r)
+func (srv *Service) getManagedGroups(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	user := srv.GetUser(httpRequest)
+	store := srv.GetStore(httpRequest)
 
 	query := store.Groups().
 		Joins("JOIN group_managers ON group_managers.group_id = groups.id").
@@ -87,9 +88,9 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 			MAX(can_watch_members) AS can_watch_members`).
 		Group("groups.id")
 
-	query = service.NewQueryLimiter().Apply(r, query)
-	query, apiError := service.ApplySortingAndPaging(
-		r, query,
+	query = service.NewQueryLimiter().Apply(httpRequest, query)
+	query, err := service.ApplySortingAndPaging(
+		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
 				"type": {ColumnName: "groups.type"},
@@ -99,9 +100,7 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 			DefaultRules: "type,name,id",
 			TieBreakers:  service.SortingAndPagingTieBreakers{"id": service.FieldTypeInt64},
 		})
-	if apiError != service.NoError {
-		return apiError
-	}
+	service.MustNotBeError(err)
 
 	var result []managedGroupsGetResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -111,6 +110,6 @@ func (srv *Service) getManagedGroups(w http.ResponseWriter, r *http.Request) ser
 		result[index].CanManage = groupManagerStore.CanManageNameByIndex(result[index].CanManageValue)
 	}
 
-	render.Respond(w, r, &result)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, &result)
+	return nil
 }

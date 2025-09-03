@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/formdata"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation PUT /groups/{group_id}/managers/{manager_id} groups groupManagerEdit
@@ -27,10 +27,12 @@ import (
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- name: manager_id
 //			in: path
 //			required: true
 //			type: integer
+//			format: int64
 //		- in: body
 //			name: data
 //			required: true
@@ -46,34 +48,35 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) updateGroupManager(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	var err error
-	user := srv.GetUser(r)
+	user := srv.GetUser(httpRequest)
 
-	groupID, err := service.ResolveURLQueryPathInt64Field(r, "group_id")
+	groupID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "group_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	managerID, err := service.ResolveURLQueryPathInt64Field(r, "manager_id")
+	managerID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "manager_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
 	input := createGroupManagerRequest{}
 	formData := formdata.NewFormData(&input)
-	err = formData.ParseJSONRequestData(r)
+	err = formData.ParseJSONRequestData(httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	apiError := service.NoError
-	err = srv.GetStore(r).InTransaction(func(store *database.DataStore) error {
+	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
 		// 1) the authenticated user should have can_manage:memberships_and_group permission on the groupID
 		// 2) there should be a row in group_managers for the given groupID-managerID pair
-		found, err = store.Groups().ManagedBy(user).WithWriteLock().
+		found, err = store.Groups().ManagedBy(user).WithExclusiveWriteLock().
 			Where("groups.id = ?", groupID).
 			Joins(`
 				JOIN group_managers AS this_manager
@@ -81,8 +84,7 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) s
 			Where("group_managers.can_manage = 'memberships_and_group'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
-			apiError = service.InsufficientAccessRightsError
-			return apiError.Error // rollback
+			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
 		values := formData.ConstructMapForDB()
@@ -92,11 +94,8 @@ func (srv *Service) updateGroupManager(w http.ResponseWriter, r *http.Request) s
 			UpdateColumn(values).Error()
 	})
 
-	if apiError != service.NoError {
-		return apiError
-	}
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(w, r, service.UpdateSuccess(nil)))
-	return service.NoError
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
+	return nil
 }

@@ -2,8 +2,6 @@ package currentuser
 
 import (
 	"net/http"
-
-	"github.com/France-ioi/AlgoreaBackend/app/service"
 )
 
 // swagger:operation POST /current-user/group-invitations/{group_id}/reject group-memberships groupInvitationReject
@@ -19,12 +17,13 @@ import (
 //
 //		* There should be a row in `group_pending_requests` with the `{group_id}` as `group_id`
 //		and the authenticated user’s `group_id` as `member_id` with `type`=`invitation_created`.
-//		Otherwise the unprocessable entity error is returned.
+//		Otherwise, the unprocessable entity error is returned.
 //
 //	parameters:
 //		- name: group_id
 //			in: path
 //			type: integer
+//			format: int64
 //			required: true
 //	responses:
 //		"200":
@@ -35,10 +34,12 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"422":
 //			"$ref": "#/responses/unprocessableEntityResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) rejectGroupInvitation(w http.ResponseWriter, r *http.Request) service.APIError {
+func (srv *Service) rejectGroupInvitation(w http.ResponseWriter, r *http.Request) error {
 	return srv.performGroupRelationAction(w, r, rejectInvitationAction)
 }

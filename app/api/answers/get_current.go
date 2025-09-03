@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
 // swagger:operation GET /items/{item_id}/current-answer answers currentAnswerGet
@@ -50,24 +50,26 @@ import (
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"403":
 //			"$ref": "#/responses/forbiddenResponse"
+//		"408":
+//			"$ref": "#/responses/requestTimeoutResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Request) service.APIError {
-	itemID, err := service.ResolveURLQueryPathInt64Field(httpReq, "item_id")
+func (srv *Service) getCurrentAnswer(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+	itemID, err := service.ResolveURLQueryPathInt64Field(httpRequest, "item_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	attemptID, err := service.ResolveURLQueryGetInt64Field(httpReq, "attempt_id")
+	attemptID, err := service.ResolveURLQueryGetInt64Field(httpRequest, "attempt_id")
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	participantID := service.ParticipantIDFromContext(httpReq.Context())
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
-	store := srv.GetStore(httpReq)
-	user := srv.GetUser(httpReq)
+	store := srv.GetStore(httpRequest)
+	user := srv.GetUser(httpRequest)
 
 	if !user.CanSeeAnswer(store, participantID, itemID) {
-		return service.InsufficientAccessRightsError
+		return service.ErrAPIInsufficientAccessRights
 	}
 
 	answer, hasAnswer := store.Answers().GetCurrentAnswer(participantID, itemID, attemptID)
@@ -78,6 +80,6 @@ func (srv *Service) getCurrentAnswer(rw http.ResponseWriter, httpReq *http.Reque
 	}
 	convertedResult := service.ConvertMapFromDBToJSON(answer)
 
-	render.Respond(rw, httpReq, convertedResult)
-	return service.NoError
+	render.Respond(responseWriter, httpRequest, convertedResult)
+	return nil
 }

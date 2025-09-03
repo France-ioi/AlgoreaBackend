@@ -7,12 +7,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	tests := []struct {
 		name   string
 		teamID int64
@@ -44,7 +48,7 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 			want:   true,
 		},
 	}
-	db := testhelpers.SetupDBWithFixtureString(`
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
 		groups:
 			- {id: 1, type: Class}
 			- {id: 2, type: Team}
@@ -92,18 +96,20 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 		for _, withLock := range []bool{true, false} {
 			withLock := withLock
 			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
+				testoutput.SuppressIfPasses(t)
+
 				store := database.NewDataStore(db)
 				var got bool
 				var err error
 				if withLock {
-					assert.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
+					require.NoError(t, store.InTransaction(func(trStore *database.DataStore) error {
 						got, err = trStore.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, tt.userID, true)
 						return err
 					}))
 				} else {
 					got, err = store.CheckIfTeamParticipationsConflictWithExistingUserMemberships(tt.teamID, tt.userID, false)
 				}
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.want, got)
 			})
 		}

@@ -1,21 +1,29 @@
+//go:build !unit
+
 package service_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/thingful/httpmock"
 
-	"github.com/France-ioi/AlgoreaBackend/app/database"
-	"github.com/France-ioi/AlgoreaBackend/app/logging"
-	"github.com/France-ioi/AlgoreaBackend/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/app/service"
-	"github.com/France-ioi/AlgoreaBackend/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 func TestSchedulePropagation(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
 	type args struct {
 		endpoint string
 	}
@@ -28,23 +36,14 @@ func TestSchedulePropagation(t *testing.T) {
 		propagated           bool
 	}{
 		{
-			name: "should propagate sync when endpoint is defined",
+			name: "should propagate sync when endpoint is undefined",
 			args: args{
 				endpoint: "",
 			},
 			propagated: true,
 		},
 		{
-			name: "should propagate sync when the endpoint call returns an error",
-			args: args{
-				endpoint: "https://example.com",
-			},
-			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
-			endpointCallErr: fmt.Errorf("error"),
-			propagated:      true,
-		},
-		{
-			name: "should not propagate now (async) when endpoint is defined, and endpoint must be called",
+			name: "should not propagate sync when the endpoint is defined",
 			args: args{
 				endpoint: "https://example.com",
 			},
@@ -52,19 +51,34 @@ func TestSchedulePropagation(t *testing.T) {
 			propagated:           false,
 		},
 		{
-			name: "should do propagation when the endpoint is defined but the call fails",
+			name: "should not propagate sync when the endpoint is defined, but returns an error",
+			args: args{
+				endpoint: "https://example.com",
+			},
+			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
+			endpointCallErr: errors.New("error"),
+			propagated:      false,
+		},
+		{
+			name: "should not propagate sync when the endpoint is defined, but the response code is not 200",
 			args: args{
 				endpoint: "https://example.com",
 			},
 			loggedError:          "Propagation endpoint error: status=500",
 			endpointResponseCode: http.StatusInternalServerError,
-			propagated:           true,
+			propagated:           false,
 		},
 	}
 
+	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			db := testhelpers.SetupDBWithFixtureString(`
+			testoutput.SuppressIfPasses(t)
+
+			logger, logHook := logging.NewMockLogger()
+			ctx := logging.ContextWithLogger(ctx, logger)
+
+			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				groups:
 					- {id: 1, type: Class}
 				items:
@@ -78,12 +92,9 @@ func TestSchedulePropagation(t *testing.T) {
 			httpmock.Activate()
 			defer httpmock.DeactivateAndReset()
 
-			logHook, restoreFunc := logging.MockSharedLoggerHook()
-			defer restoreFunc()
-
 			if tt.args.endpoint != "" {
 				if tt.endpointCallErr == nil {
-					httpmock.RegisterStubRequest(
+					httpmock.RegisterStubRequests(
 						httpmock.NewStubRequest(
 							"GET",
 							tt.args.endpoint+"?types=permissions",
@@ -91,7 +102,7 @@ func TestSchedulePropagation(t *testing.T) {
 						),
 					)
 				} else {
-					httpmock.RegisterStubRequest(
+					httpmock.RegisterStubRequests(
 						httpmock.NewStubRequest(
 							"GET",
 							tt.args.endpoint+"?types=permissions",
@@ -106,7 +117,7 @@ func TestSchedulePropagation(t *testing.T) {
 			service.SchedulePropagation(store, tt.args.endpoint, []string{"permissions"})
 
 			exists, err := store.Permissions().Where("item_id = 1").HasRows()
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.propagated, exists)
 
 			// Verify that all stubs were called.
@@ -117,7 +128,7 @@ func TestSchedulePropagation(t *testing.T) {
 			// Verify logs.
 			if tt.loggedError != "" {
 				logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-				assert.Contains(t, logs, fmt.Sprintf("level=error msg=%q", tt.loggedError))
+				assert.Regexp(t, "level=error .* "+regexp.QuoteMeta(fmt.Sprintf("msg=%q", tt.loggedError)), logs)
 			}
 		})
 	}

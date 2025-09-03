@@ -7,34 +7,35 @@ import (
 
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/France-ioi/AlgoreaBackend/app/payloads"
-	"github.com/France-ioi/AlgoreaBackend/app/payloadstest"
-	"github.com/France-ioi/AlgoreaBackend/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
 )
 
-func TestHint_UnmarshalString(t *testing.T) {
-	hint := Hint{}
-	err := payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform, &hint)
-	assert.NoError(t, err)
+func TestToken_HintToken_UnmarshalString(t *testing.T) {
+	hint := Token[payloads.HintToken]{}
+	err := payloads.ParseMap(payloadstest.HintPayloadFromTaskPlatform(), &hint.Payload)
+	require.NoError(t, err)
 
-	hint.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(tokentest.TaskPlatformPrivateKey)
-	assert.NoError(t, err)
+	hint.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM([]byte(tokentest.TaskPlatformPrivateKey))
+	require.NoError(t, err)
 
-	hint.PublicKey, err = crypto.ParseRSAPublicKeyFromPEM(tokentest.TaskPlatformPublicKey)
-	assert.NoError(t, err)
+	hint.PublicKey, err = crypto.ParseRSAPublicKeyFromPEM([]byte(tokentest.TaskPlatformPublicKey))
+	require.NoError(t, err)
 
 	marshaled, err := hint.MarshalJSON()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var marshaledString string
-	assert.NoError(t, json.Unmarshal(marshaled, &marshaledString))
+	require.NoError(t, json.Unmarshal(marshaled, &marshaledString))
 
-	result := Hint{PublicKey: hint.PublicKey, PrivateKey: hint.PrivateKey}
+	result := Token[payloads.HintToken]{PublicKey: hint.PublicKey, PrivateKey: hint.PrivateKey}
 	err = result.UnmarshalString(marshaledString)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	hint.Date = result.Date
-	hint.Converted.UserID, _ = strconv.ParseInt(hint.UserID, 10, 64)
+	hint.Payload.Date = result.Payload.Date
+	hint.Payload.Converted.UserID, _ = strconv.ParseInt(hint.Payload.UserID, 10, 64)
 	assert.Equal(t, hint, result)
 }
