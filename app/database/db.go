@@ -80,6 +80,7 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 
 	var rawConnection gorm.SQLCommon
 	var ownSQLDBConnection bool
+	doPing := true
 	switch src := source.(type) {
 	case string:
 		var sqlDB *sql.DB
@@ -93,15 +94,18 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 		rawConnection = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &logConfig}
 	case *sql.Tx:
 		rawConnection = &sqlTxWrapper{sqlTx: src, ctx: ctx, logConfig: &logConfig}
+		doPing = false
 	default:
 		return nil, fmt.Errorf("unknown database source type: %T (%v)", src, src)
 	}
 	dbConn, _ = gorm.Open(driverName, rawConnection)
 
-	if ownSQLDBConnection {
+	if doPing {
 		// gorm.Open only pings the connection when it's sql.DB. So we need to ping it ourselves.
 		if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.PingContext(ctx); err != nil {
-			_ = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Close()
+			if ownSQLDBConnection {
+				_ = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Close()
+			}
 			return nil, err
 		}
 	}
