@@ -2102,6 +2102,19 @@ UNLOCK TABLES;
 /*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
+--
+-- Recreate FULLTEXT indexes with empty stopwords list
+--
+SET @old_stopword_table := @@innodb_ft_user_stopword_table;
+SET SESSION innodb_ft_user_stopword_table = CONCAT(DATABASE(), '/stopwords');
+
+ALTER TABLE `items_strings` DROP INDEX `fullTextTitle`;
+CREATE FULLTEXT INDEX `fullTextTitle` ON `items_strings`(`title`);
+ALTER TABLE `groups` DROP INDEX `fullTextName`;
+CREATE FULLTEXT INDEX `fullTextName` ON `groups`(`name`);
+
+SET SESSION innodb_ft_user_stopword_table = @old_stopword_table;
+
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
