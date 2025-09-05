@@ -55,9 +55,8 @@ func init() { //nolint:gochecknoinits
 			// migrate
 			err = goose.DownContext(ctx, db, "db/migrations")
 			switch {
-			case errors.Is(err, goose.ErrNoMigrationFiles):
-				fallthrough
-			case err != nil && err.Error() == "migration 0: no current version found":
+			case errors.Is(err, goose.ErrNoMigrationFiles),
+				err != nil && err.Error() == "migration 0: no current version found":
 				cmd.Println("No migration to undo!")
 			case err != nil:
 				return fmt.Errorf("unable to undo a migration: %w", err)
