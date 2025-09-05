@@ -103,7 +103,7 @@ jobs:
           command: |
             EARLIEST_CHANGED_MIGRATION=$( \
               git diff --name-only `if [ "<<pipeline.git.branch>>" = "master" ]; then echo "<<pipeline.git.base_revision>>"; else echo "origin/master"; fi`..<<pipeline.git.revision>> | \
-                (grep "db/migrations/" || true) | sort | head -n 1 | sed "s/db\/migrations\///" \
+                (grep "db/migrations/" || true) | sort | head -n 1 | sed "s/db\/migrations\///" || true \
             )
             [ -z "$EARLIEST_CHANGED_MIGRATION" ] && circleci-agent step halt && exit 0
             MIGRATIONS_TO_UNDO=$( \
