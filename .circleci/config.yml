@@ -107,7 +107,7 @@ jobs:
             )
             [ -z "$EARLIEST_CHANGED_MIGRATION" ] && circleci-agent step halt && exit 0
             MIGRATIONS_TO_UNDO=$( \
-              ls -Ar db/migrations/*.sql | sed "s/db\/migrations\///" | \
+              ls -Ar db/migrations/* | sed "s/db\/migrations\///" | \
                 awk "{cnt+=1} \$0==\"$EARLIEST_CHANGED_MIGRATION\" {print cnt; exit} \$0<\"$EARLIEST_CHANGED_MIGRATION\"{print cnt-1; exit}" \
             )
             [ -z "$MIGRATIONS_TO_UNDO" ] && MIGRATIONS_TO_UNDO=0

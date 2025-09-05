@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
-	migrate "github.com/rubenv/sql-migrate"
+	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	_ "github.com/France-ioi/AlgoreaBackend/v2/db/migrations" // register migrations
 )
 
 func init() { //nolint:gochecknoinits
@@ -29,9 +29,9 @@ func init() { //nolint:gochecknoinits
 			appenv.SetDefaultEnvToTest()
 
 			// open DB
-			migrations := &migrate.FileMigrationSource{Dir: "db/migrations"}
 			var db *sql.DB
-			databaseConfig, err := app.DBConfig(app.LoadConfig())
+			config := app.LoadConfig()
+			databaseConfig, err := app.DBConfig(config)
 			if err != nil {
 				cmd.Println("Unable to load the database config: ", err)
 				os.Exit(1)
@@ -45,14 +45,17 @@ func init() { //nolint:gochecknoinits
 
 			defer func() { _ = db.Close() }()
 
+			ctx := createContextWithLogger(config)
+			err = goose.SetDialect("mysql")
+			if err != nil {
+				panic(err)
+			}
+
 			// migrate
-			var n int
-			n, err = migrate.ExecMax(db, "mysql", migrations, migrate.Down, 1)
+			err = goose.DownContext(ctx, db, "db/migrations")
 			switch {
 			case err != nil:
 				return fmt.Errorf("unable to undo a migration: %w", err)
-			case n == 0:
-				cmd.Println("No migrations to undo!")
 			default:
 				cmd.Println("1 migration undone successfully!")
 			}
