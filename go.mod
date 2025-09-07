@@ -1,6 +1,6 @@
 module github.com/France-ioi/AlgoreaBackend/v2
 
-go 1.20
+go 1.23.0
 
 exclude github.com/SermoDigital/jose v0.9.1
 
@@ -38,7 +38,7 @@ require (
 	github.com/stretchr/testify v1.8.2
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
 	github.com/zenovich/flowmingo v1.0.4
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/oauth2 v0.27.0
 	gopkg.in/yaml.v2 v2.2.8
 )
 
@@ -54,7 +54,6 @@ require (
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/gobuffalo/packr v1.21.0 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
-	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/goware/urlx v0.2.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-memdb v1.3.4 // indirect
@@ -73,10 +72,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
