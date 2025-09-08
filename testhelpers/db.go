@@ -235,6 +235,7 @@ func emptyDB(ctx context.Context, db *sql.DB, dbName string) error {
                          WHERE  table_type   = 'BASE TABLE'
                            AND  table_schema = '`+dbName+`'
                            AND  table_name  != 'gorp_migrations'
+                           AND  table_name  != 'goose_db_version'
                            AND  table_name  != 'user_batches'
                          ORDER BY table_name`)
 	if err != nil {
