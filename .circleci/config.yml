@@ -103,11 +103,11 @@ jobs:
           command: |
             EARLIEST_CHANGED_MIGRATION=$( \
               git diff --name-only `if [ "<<pipeline.git.branch>>" = "master" ]; then echo "<<pipeline.git.base_revision>>"; else echo "origin/master"; fi`..<<pipeline.git.revision>> | \
-                (grep "db/migrations/" || true) | sort | head -n 1 | sed "s/db\/migrations\///" \
+                (grep "db/migrations/" || true) | sort | head -n 1 | sed "s/db\/migrations\///" || true \
             )
             [ -z "$EARLIEST_CHANGED_MIGRATION" ] && circleci-agent step halt && exit 0
             MIGRATIONS_TO_UNDO=$( \
-              ls -Ar db/migrations/*.sql | sed "s/db\/migrations\///" | \
+              ls -Ar db/migrations/* | sed "s/db\/migrations\///" | grep -v ^package.go\$ | \
                 awk "{cnt+=1} \$0==\"$EARLIEST_CHANGED_MIGRATION\" {print cnt; exit} \$0<\"$EARLIEST_CHANGED_MIGRATION\"{print cnt-1; exit}" \
             )
             [ -z "$MIGRATIONS_TO_UNDO" ] && MIGRATIONS_TO_UNDO=0
@@ -122,9 +122,6 @@ jobs:
       - run:
           name: Download a large dump of data
           command: curl -o - $LARGE_DUMP_URL | gunzip > dump.sql
-      - run:
-          name: Patch the dump data
-          command: sed -i "s/\`custom_prefix\` varchar(14) NOT NULL COMMENT \'Second part of the full login prefix, given by the user that created the batch\',/\`custom_prefix\` VARCHAR(14) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT \'Second part of the full login prefix, given by the user that created the batch\',/g; s/CONSTRAINT \`ck_user_batches_custom_prefix\` CHECK (regexp_like(cast(\`custom_prefix\` as char charset binary),_utf8mb4'\\^\\[a-z0-9-\\]+\\$'))/CONSTRAINT \`ck_user_batches_custom_prefix\` CHECK (REGEXP_LIKE(\`custom_prefix\`, '^[a-z0-9-]+$'))/g" dump.sql
       - run:
           name: Seed database
           command: mysql -h 127.0.0.1 -u root -proot --protocol=TCP algorea_example < dump.sql

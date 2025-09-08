@@ -1,7 +1,0 @@
--- +migrate Up
-ALTER TABLE `group_pending_requests`
-  MODIFY COLUMN `at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);
-
--- +migrate Down
-ALTER TABLE `group_pending_requests`
-  MODIFY COLUMN `at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;

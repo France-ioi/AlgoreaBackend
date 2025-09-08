@@ -1,15 +1,17 @@
 package cmd
 
 import (
+	"context"
 	"os"
 
 	"github.com/akrylysov/algnhsa"
 	_ "github.com/aws/aws-lambda-go/events" // force algnhsa dependency
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
-	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 //nolint:gochecknoglobals // spf13/cobra's style is to use a global variable the root command
@@ -30,9 +32,9 @@ var rootCmd = &cobra.Command{
 		lambdaHandler := algnhsa.New(application.HTTPHandler, nil)
 		lambda.StartWithOptions(lambdaHandler, lambda.WithEnableSIGTERM(func() {
 			ctx := application.Database.GetContext()
-			log.EntryFromContext(ctx).Info("Got SIGTERM, closing the DB connection")
+			logging.EntryFromContext(ctx).Info("Got SIGTERM, closing the DB connection")
 			closeDB()
-			log.EntryFromContext(ctx).Info("Closed the DB connection after receiving SIGTERM")
+			logging.EntryFromContext(ctx).Info("Closed the DB connection after receiving SIGTERM")
 		}))
 
 		return nil
@@ -46,6 +48,11 @@ func Execute() {
 		rootCmd.Println(err)
 		os.Exit(1)
 	}
+}
+
+func createContextWithLogger(config *viper.Viper) context.Context {
+	logger := logging.NewLoggerFromConfig(app.LoggingConfig(config))
+	return logging.ContextWithLogger(context.Background(), logger)
 }
 
 /*

@@ -31,11 +31,11 @@ require (
 	github.com/lithammer/dedent v1.1.0
 	github.com/luna-duclos/instrumentedsql v1.1.3
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/rubenv/sql-migrate v0.0.0-20181213081019-5a8808c14925
+	github.com/pressly/goose/v3 v3.21.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.3.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.9.0
 	github.com/thingful/httpmock v0.0.0-20171102191412-cfb4c64b7d81
 	github.com/zenovich/flowmingo v1.0.4
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
@@ -52,9 +52,8 @@ require (
 	github.com/cucumber/gherkin/go/v26 v26.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	github.com/gobuffalo/packr v1.21.0 // indirect
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
-	github.com/golang/protobuf v1.2.0 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/goware/urlx v0.2.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-memdb v1.3.4 // indirect
@@ -65,19 +64,21 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/magiconair/properties v1.8.0 // indirect
+	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/pelletier/go-toml v1.2.0 // indirect
+	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/spf13/afero v1.1.2 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/ziutek/mymysql v1.5.4 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9 // indirect
+	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

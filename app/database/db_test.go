@@ -1596,6 +1596,22 @@ func TestOpen_OpenRawDBConnectionError(t *testing.T) {
 	assert.Nil(t, db)
 }
 
+func TestOpen_SqlTxAsSource(t *testing.T) {
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	sqlDB, mock, err := sqlmock.New()
+	require.NoError(t, err)
+	defer func() { _ = sqlDB.Close() }()
+	mock.ExpectBegin()
+
+	tx, err := sqlDB.Begin()
+	require.NoError(t, err)
+
+	db, err := Open(ctx, tx)
+	require.NoError(t, err)
+	assert.NotNil(t, db)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func assertRawDBIsOK(t *testing.T, rawDB *sql.DB) {
 	t.Helper()
 
