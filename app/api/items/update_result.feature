@@ -10,6 +10,7 @@ Feature: Update an attempt result
       | 11       | jdoe  | John       | Doe       |
       | 21       | other | George     | Bush      |
       | 24       | jane  | Jane       | Joe       |
+      | 31       | jack  | Jack       | Black     |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 13              | 11             | null                           |
