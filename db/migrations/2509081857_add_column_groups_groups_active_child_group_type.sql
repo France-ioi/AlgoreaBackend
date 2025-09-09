@@ -1,10 +1,8 @@
 -- +goose Up
-DROP VIEW groups_groups_active;
-CREATE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
+CREATE OR REPLACE VIEW groups_groups_active AS SELECT * FROM groups_groups WHERE NOW() < expires_at;
 
 -- +goose Down
-DROP VIEW groups_groups_active;
-CREATE VIEW `groups_groups_active` AS
+CREATE OR REPLACE VIEW `groups_groups_active` AS
   SELECT `groups_groups`.`parent_group_id` AS `parent_group_id`,
          `groups_groups`.`child_group_id` AS `child_group_id`,
          `groups_groups`.`expires_at` AS `expires_at`,
