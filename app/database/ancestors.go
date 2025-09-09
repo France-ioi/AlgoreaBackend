@@ -80,13 +80,15 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	mustNotBeError(err)
 	defer func() { mustNotBeError(markAsProcessing.Close()) }()
 
-	expiresAtColumn := ""
-	expiresAtValueJoin := ""
+	groupRelatedColumns := ""
+	groupRelatedColumnValues := ""
 	ignore := "IGNORE"
 
 	if objectName == groups {
-		expiresAtColumn = ", expires_at"
-		expiresAtValueJoin = ", MAX(LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at)) AS max_expires_at"
+		groupRelatedColumns = ", expires_at, child_group_type"
+		groupRelatedColumnValues = `,
+			MAX(LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at)) AS max_expires_at,
+			MIN(groups_groups.child_group_type) AS child_group_type`
 		ignore = ""
 	}
 
@@ -101,12 +103,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
-			`+expiresAtColumn+`
+			`+groupRelatedColumns+`
 		)
 		SELECT
 			`+objectName+`_ancestors_join.ancestor_`+singleObjectName+`_id,
 			`+relationsTable+`.child_`+singleObjectName+`_id
-			`+expiresAtValueJoin+`
+			`+groupRelatedColumnValues+`
 		FROM `+relationsTable+` AS `+relationsTable+`
 		JOIN `+objectName+`_ancestors AS `+objectName+`_ancestors_join ON (
 			`+objectName+`_ancestors_join.child_`+singleObjectName+`_id = `+relationsTable+`.parent_`+singleObjectName+`_id

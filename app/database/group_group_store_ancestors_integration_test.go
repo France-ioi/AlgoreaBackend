@@ -269,3 +269,20 @@ func TestGroupGroupStore_CreateNewAncestors_IgnoresExpiredRelations(t *testing.T
 		{ID: 4, AncestorsComputationState: "done"},
 	}, propagateResult)
 }
+
+func TestGroupGroupStore_CreateNewAncestors_SetsChildGroupType(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixture(testhelpers.CreateTestContext(), "group_group_store/ancestors/_common")
+	defer func() { _ = db.Close() }()
+
+	dataStore := database.NewDataStore(db)
+	require.NoError(t, dataStore.InTransaction(func(dataStore *database.DataStore) error {
+		return dataStore.GroupGroups().CreateNewAncestors()
+	}))
+
+	var cnt int
+	require.NoError(t, dataStore.GroupAncestors().Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id").
+		Where("NOT groups.type <=> groups_ancestors.child_group_type").Count(&cnt).Error())
+	assert.Zero(t, cnt)
+}
