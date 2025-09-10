@@ -177,11 +177,10 @@ func (s *GroupStore) AncestorsOfJoinedGroups(store *DataStore, user *User) *DB {
 // and all users who are descendants from managed groups, for a group.
 func (s *GroupStore) ManagedUsersAndAncestorsOfManagedGroupsForGroup(store *DataStore, groupID int64) *DB {
 	return store.ActiveGroupAncestors().ManagedByGroup(groupID).
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Joins(`
 			JOIN groups_ancestors_active AS ancestors_of_managed
 				ON ancestors_of_managed.child_group_id = groups_ancestors_active.child_group_id AND
-				   (groups.type != 'User' OR ancestors_of_managed.is_self)`).
+				   (groups_ancestors_active.child_group_type != 'User' OR ancestors_of_managed.is_self)`).
 		Joins("JOIN `groups` AS ancestor_group ON ancestor_group.id = ancestors_of_managed.ancestor_group_id").
 		Where("ancestor_group.type != 'ContestParticipants'").
 		Select("ancestors_of_managed.ancestor_group_id")
@@ -221,33 +220,6 @@ func (s *GroupStore) IsVisibleForGroup(groupID, visibleForGroupID int64) bool {
 // IsVisibleFor checks whether a group is visible to a user.
 func (s *GroupStore) IsVisibleFor(groupID int64, user *User) bool {
 	return s.IsVisibleForGroup(groupID, user.GroupID)
-}
-
-// GetDirectParticipantIDsOf returns the participant IDs of the direct participants of a group.
-func (s *GroupStore) GetDirectParticipantIDsOf(groupID int64) (participantIDs []int64) {
-	err := s.
-		Joins("JOIN groups_groups ON groups_groups.child_group_id = groups.id").
-		Where("groups_groups.parent_group_id = ?", groupID).
-		Where("groups.type = 'User' OR groups.type = 'Team'").
-		Pluck("groups.id", &participantIDs).
-		Error()
-	mustNotBeError(err)
-
-	return participantIDs
-}
-
-// HasParticipants checks whether a group has participants.
-// Must be called inside a transaction.
-func (s *GroupStore) HasParticipants(groupID int64) (hasParticipants bool, err error) {
-	return s.
-		Joins("JOIN groups_groups ON groups_groups.parent_group_id = groups.id").
-		Joins("JOIN `groups` AS participants ON participants.id = groups_groups.child_group_id").
-		Where("groups.id = ?", groupID).
-		Where("participants.type = 'User' OR participants.type = 'Team'").
-		WithSharedWriteLock().
-		Select("1").
-		Limit(1).
-		HasRows()
 }
 
 // PossibleSubgroupsBySearchString returns a query for searching for possible subgroups of a user.

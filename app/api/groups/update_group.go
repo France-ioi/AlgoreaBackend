@@ -186,12 +186,15 @@ func (srv *Service) updateGroup(responseWriter http.ResponseWriter, httpRequest 
 		}
 		service.MustNotBeError(err)
 
-		var groupHasParticipants bool
-		groupHasParticipants, err = groupStore.HasParticipants(groupID)
-		service.MustNotBeError(err)
+		var participantIDs []int64
+		service.MustNotBeError(store.ActiveGroupGroups().
+			Where("parent_group_id = ?", groupID).
+			Where("child_group_type = 'User' OR child_group_type = 'Team'").
+			WithExclusiveWriteLock().
+			Pluck("child_group_id", &participantIDs).Error())
 
 		var formData *formdata.FormData
-		formData, err = validateUpdateGroupInput(rawRequestData, groupHasParticipants, &currentGroupData, store)
+		formData, err = validateUpdateGroupInput(rawRequestData, len(participantIDs) > 0, &currentGroupData, store)
 		if err != nil {
 			return service.ErrInvalidRequest(err) // rollback
 		}
@@ -211,8 +214,6 @@ func (srv *Service) updateGroup(responseWriter http.ResponseWriter, httpRequest 
 		service.MustNotBeError(err)
 
 		if approvalChangeAction != "" {
-			participantIDs := store.Groups().GetDirectParticipantIDsOf(groupID)
-
 			// If the approval_change_action is 'reinvite', we need to reinvite the participants.
 			if approvalChangeAction == "reinvite" {
 				_, _, err = store.GroupGroups().Transition(database.AdminStrengthensApprovalWithReinvite, groupID, participantIDs, nil, user.GroupID)

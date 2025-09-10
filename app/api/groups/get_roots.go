@@ -131,14 +131,10 @@ func ancestorsOfJoinedGroupsQuery(store *database.DataStore, user *database.User
 // ancestorsOfManagedGroupsQuery returns a query to get the ancestors (excluding ContestParticipants)
 // of the groups (excluding users) managed by the given user (as ancestor_group.*).
 func ancestorsOfManagedGroupsQuery(store *database.DataStore, user *database.User) *database.DB {
-	distinctGroupsManagedByUserQuery := store.ActiveGroupAncestors().ManagedByUser(user).
+	distinctManagedNonUserGroupsQuery := store.ActiveGroupAncestors().ManagedByUser(user).
 		Select("groups_ancestors_active.child_group_id AS id, MAX(groups_ancestors_active.is_self) AS is_managed_directly").
+		Where("groups_ancestors_active.child_group_type != 'User'").
 		Group("groups_ancestors_active.child_group_id")
-
-	distinctManagedNonUserGroupsQuery := store.Groups().
-		Joins("JOIN ? AS distinct_managed ON distinct_managed.id = groups.id", distinctGroupsManagedByUserQuery.SubQuery()).
-		Where("groups.type != 'User'").
-		Select("groups.id, is_managed_directly")
 
 	distinctAncestorsOfManagedNonUserGroupsQuery := store.ActiveGroupAncestors().
 		Joins("JOIN ? AS distinct_managed_non_user_groups ON distinct_managed_non_user_groups.id = child_group_id",

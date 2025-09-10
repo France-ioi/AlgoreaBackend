@@ -64,7 +64,7 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Insert(t *testing.
 		mock.ExpectQuery("SELECT .* FOR UPDATE").
 			WithArgs(2, 1).
 			WillReturnRows(sqlmock.NewRows([]string{"is_public", "can_manage_value"}).AddRow(true, int64(3)))
-		mock.ExpectQuery("SELECT 1 FROM .*").
+		mock.ExpectQuery("SELECT child_group_id .* FOR UPDATE").
 			WillReturnRows(sqlmock.NewRows([]string{"1"}))
 		database.ClearAllDBEnums()
 		database.MockDBEnumQueries(mock)
@@ -81,7 +81,7 @@ func TestService_updateGroup_ErrorOnRefusingSentGroupRequests_Delete(t *testing.
 		mock.ExpectQuery("SELECT .* FOR UPDATE").
 			WithArgs(2, 1).
 			WillReturnRows(sqlmock.NewRows([]string{"is_public", "can_manage_value"}).AddRow(true, int64(3)))
-		mock.ExpectQuery("SELECT 1 FROM .*").
+		mock.ExpectQuery("SELECT child_group_id .* FOR UPDATE").
 			WillReturnRows(sqlmock.NewRows([]string{"1"}))
 		database.ClearAllDBEnums()
 		database.MockDBEnumQueries(mock)
@@ -100,7 +100,7 @@ func TestService_updateGroup_ErrorOnUpdatingGroup(t *testing.T) {
 		mock.ExpectQuery("SELECT .* FOR UPDATE").
 			WithArgs(2, 1).
 			WillReturnRows(sqlmock.NewRows([]string{"is_public", "can_manage_value"}).AddRow(false, int64(3)))
-		mock.ExpectQuery("SELECT 1 FROM .*").
+		mock.ExpectQuery("SELECT child_group_id .* FOR UPDATE").
 			WillReturnRows(sqlmock.NewRows([]string{"1"}))
 		mock.ExpectExec("UPDATE `groups` .+").
 			WillReturnError(errors.New("some error"))

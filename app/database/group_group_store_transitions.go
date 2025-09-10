@@ -530,8 +530,7 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 	}
 	var activeRelationsCount int
 	mustNotBeError(dataStore.ActiveGroupGroups().Where("parent_group_id = ?", parentGroupID).
-		Joins("JOIN `groups` ON groups.id = child_group_id").
-		Where("groups.type IN ('User', 'Team')").
+		Where("child_group_type IN ('User', 'Team')").
 		Where("child_group_id NOT IN(?)", changedIDsList).WithSharedWriteLock().Count(&activeRelationsCount).Error())
 	var invitationsCount int
 	mustNotBeError(dataStore.GroupPendingRequests().

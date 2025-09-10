@@ -178,9 +178,11 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			db := testhelpers.SetupDBWithFixture(ctx, "group_group_store/delete_relation/"+tt.fixture)
 			defer func() { _ = db.Close() }()
 			dataStore := database.NewDataStore(db)
-			assert.NoError(t, dataStore.Table("groups_propagate").UpdateColumn("ancestors_computation_state", "done").Error())
+			require.NoError(t, dataStore.InTransaction(func(dataStore *database.DataStore) error {
+				return dataStore.GroupGroups().CreateNewAncestors()
+			}))
 
-			assert.NoError(t, dataStore.InTransaction(func(s *database.DataStore) error {
+			require.NoError(t, dataStore.InTransaction(func(s *database.DataStore) error {
 				return s.PermissionsGranted().ComputeAllAccess()
 			}))
 			err := dataStore.InTransaction(func(s *database.DataStore) error {

@@ -137,8 +137,9 @@ func (srv *Service) getTeamProgress(responseWriter http.ResponseWriter, httpRequ
 	// There should not be too many of end members on one page.
 	var teamIDs []interface{}
 	teamIDQuery := store.ActiveGroupAncestors().
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
+		Where("groups_ancestors_active.child_group_type = 'Team'").
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id")
 	teamIDQuery, err = service.ApplySortingAndPaging(
 		httpRequest, teamIDQuery,

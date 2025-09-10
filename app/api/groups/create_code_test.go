@@ -46,9 +46,8 @@ func TestService_changeCode_RetriesOnDuplicateEntryError(t *testing.T) {
 			"JOIN groups_ancestors_active AS group_ancestors "+
 			"ON group_ancestors.ancestor_group_id = group_managers.manager_id AND "+
 			"group_ancestors.child_group_id = ? "+
-			"JOIN `groups` ON groups.id = groups_ancestors.child_group_id "+
 			"WHERE (NOW() < `groups_ancestors`.expires_at) AND (groups_ancestors.child_group_id = ?) AND "+
-			"(group_managers.can_manage != 'none') AND (groups.type != 'User') "+
+			"(group_managers.can_manage != 'none') AND (groups_ancestors.child_group_type != 'User') "+
 			"LIMIT 1")).
 			WithArgs(2, 1).WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(int64(1)))
 		mock.ExpectBegin()

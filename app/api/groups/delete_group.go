@@ -9,6 +9,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation DELETE /groups/{group_id} groups groupDelete
@@ -65,11 +66,11 @@ func (srv *Service) deleteGroup(responseWriter http.ResponseWriter, httpRequest 
 
 	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var found bool
-		found, err = store.Groups().ManagedBy(user).
-			WithExclusiveWriteLock().
-			Where("groups.id = ?", groupID).
+		found, err = store.ActiveGroupAncestors().ManagedByUser(user).
+			WithCustomWriteLocks(golang.NewSet[string](), golang.NewSet("groups_ancestors_active")).
+			Where("groups_ancestors_active.child_group_id = ?", groupID).
 			Where("group_managers.can_manage = 'memberships_and_group'").
-			Where("groups.type != 'User'").HasRows()
+			Where("groups_ancestors_active.child_group_type != 'User'").HasRows()
 		service.MustNotBeError(err)
 		if !found {
 			return service.ErrAPIInsufficientAccessRights // rollback

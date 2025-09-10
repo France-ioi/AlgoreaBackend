@@ -114,8 +114,9 @@ func (srv *Service) getTeamProgressCSV(responseWriter http.ResponseWriter, httpR
 		Name string
 	}
 	service.MustNotBeError(store.ActiveGroupAncestors().
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id AND groups.type = 'Team'").
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
+		Where("groups_ancestors_active.child_group_type = 'Team'").
 		Where("groups_ancestors_active.child_group_id != groups_ancestors_active.ancestor_group_id").
 		Order("groups.name, groups.id").
 		Select("groups.id, groups.name").

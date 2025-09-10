@@ -12,6 +12,10 @@ Feature:
       | @School   |              | @Teacher            |                                             |                                              |                              |
       | @Class    | @ClassParent | @Student1,@Student2 | <old_require_personal_info_access_approval> | <old_require_lock_membership_approval_until> | <old_require_watch_approval> |
       | @SubGroup | @Class       | @Student3,@Student4 |                                             |                                              |                              |
+    And there is a user @Student6
+    And the database table "groups_groups" also has the following row:
+      | parent_group_id | child_group_id | expires_at          |
+      | @Class          | @Student6      | 2020-01-01 00:00:00 |
     And the group @Teacher is a manager of the group @ClassParent and can manage memberships and the group
     And the time now is "2020-01-01T01:00:00.001Z"
     When I send a PUT request to "/groups/@Class" with the following body:
@@ -29,6 +33,9 @@ Feature:
     And @SubGroup should be a member of the group @Class
     And @Student3 should be a member of the group @SubGroup
     And @Student4 should be a member of the group @SubGroup
+    And the table "groups_groups" at child_group_id "@Student6" should be:
+      | parent_group_id | expires_at          |
+      | @Class          | 2020-01-01 00:00:00 |
     And the table "group_membership_changes" should be:
       | group_id | member_id | action                         | at                    | initiator_id |
       | @Class   | @Student1 | removed_due_to_approval_change | {{currentTimeDBMs()}} | @Teacher     |
@@ -150,6 +157,10 @@ Feature:
       | @Class   | @Student4 | join_request  | 2020-01-01 00:00:04.000 |
       | @Class   | @Student5 | invitation    | 2020-01-01 00:00:05.000 |
       | @Other   | @Student5 | join_request  | 2020-01-01 00:00:15.000 |
+    And there is a user @Student6
+    And the database table "groups_groups" also has the following row:
+      | parent_group_id | child_group_id | expires_at          |
+      | @Class          | @Student6      | 2020-01-01 00:00:00 |
     And the group @Teacher is a manager of the group @ClassParent and can manage memberships and the group
     And the time now is "2020-01-01T01:00:00.001Z"
     When I send a PUT request to "/groups/@Class" with the following body:
@@ -171,6 +182,9 @@ Feature:
       | @Class   | @Student2 | invitation_created             | {{currentTimeDB()}} | @Teacher     |
       | @Class   | @Student3 | join_request_refused           | {{currentTimeDB()}} | @Teacher     |
       | @Class   | @Student4 | join_request_refused           | {{currentTimeDB()}} | @Teacher     |
+    And the table "groups_groups" at child_group_id "@Student6" should be:
+      | parent_group_id | expires_at          |
+      | @Class          | 2020-01-01 00:00:00 |
 
   Scenario: Should empty the group when approval_change_action = "reinvite"
     Given I am @Teacher
@@ -235,3 +249,42 @@ Feature:
       | @Class   | @Student3 | {{currentTimeDBMs()}} | removed_due_to_approval_change | @Teacher     |
       | @Class   | @Student4 | {{currentTimeDBMs()}} | join_request_refused           | @Teacher     |
       | @Class   | @Student5 | {{currentTimeDBMs()}} | join_request_refused           | @Teacher     |
+
+  Scenario Outline: Should allow strengthening of require_* fields when all participants of the group have been exired, and approval_change_action is not given
+    Given I am @Teacher
+    And the server time now is "2020-01-01T01:00:00Z"
+    And the database table "groups" also has the following rows:
+      | id  | name  | grade | description | created_at          | type  | root_activity_id | is_official_session | is_open | is_public | code | code_lifetime | code_expires_at     | open_activity_when_joining | frozen_membership | require_personal_info_access_approval       | require_lock_membership_approval_until       | require_watch_approval       | max_participants | enforce_max_participants |
+      | 101 | Group | 1     | Group       | 2020-01-01 00:00:00 | Class | null             | true                | true    | true      | null | null          | 2020-01-01 00:00:00 | true                       | 0                 | <require_personal_info_access_approval_old> | <require_lock_membership_approval_until_old> | <require_watch_approval_old> | 1                | false                    |
+      | 110 | Team  | 1     | Team        | 2020-01-01 00:00:00 | Team  | null             | true                | true    | true      | null | null          | 2020-01-01 00:00:00 | true                       | 0                 | <require_personal_info_access_approval_old> | <require_lock_membership_approval_until_old> | <require_watch_approval_old> | 1                | false                    |
+    And the database table "group_managers" also has the following rows:
+      | group_id | manager_id | can_manage            |
+      | 101      | @Teacher   | memberships_and_group |
+    And the database table "groups_groups" also has the following row:
+      | parent_group_id | child_group_id | expires_at          |
+      | 101             | 110            | 2020-01-01 01:00:00 |
+    And the groups ancestors are computed
+    # There is at least one user in the group
+    And the database table "groups_ancestors" also has the following rows:
+      | ancestor_group_id | child_group_id | expires_at          |
+      | 101               | 110            | 2021-01-01 00:00:00 |
+    When I send a PUT request to "/groups/101" with the following body:
+      """
+      {
+        "require_watch_approval": <require_watch_approval_new>,
+        "require_personal_info_access_approval": "<require_personal_info_access_approval_new>",
+        "require_lock_membership_approval_until": <require_lock_membership_approval_until_new>
+      }
+      """
+    Then the response should be "updated"
+    And the table "groups_groups" should remain unchanged
+    And the table "group_membership_changes" should remain unchanged
+    And the table "group_pending_requests" should remain unchanged
+    Examples:
+      | require_watch_approval_old | require_watch_approval_new | require_personal_info_access_approval_old | require_personal_info_access_approval_new | require_lock_membership_approval_until_old | require_lock_membership_approval_until_new |
+      | false                      | true                       | none                                      | none                                      | null                                       | null                                       |
+      | false                      | false                      | none                                      | view                                      | null                                       | null                                       |
+      | false                      | false                      | none                                      | edit                                      | null                                       | null                                       |
+      | false                      | false                      | view                                      | edit                                      | null                                       | null                                       |
+      | false                      | false                      | none                                      | none                                      | null                                       | "2020-01-01T01:00:01Z"                     |
+      | false                      | false                      | none                                      | none                                      | 2020-01-01 12:00:00                        | "2020-01-01T12:00:01Z"                     |
