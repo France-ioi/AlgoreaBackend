@@ -494,3 +494,58 @@ func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
 		})
 	}
 }
+
+func TestGroupStore_TriggerAfterUpdate_UpdatesChildGroupTypeForRelations(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.SetupDBWithFixtureString(ctx, `
+		groups: [
+			{id: 1, type: Club},
+			{id: 2, type: Class},
+			{id: 3, type: Team},
+			{id: 4, type: User}
+		]
+		groups_groups: [
+			{parent_group_id: 1, child_group_id: 2},
+			{parent_group_id: 1, child_group_id: 3},
+			{parent_group_id: 1, child_group_id: 4},
+			{parent_group_id: 2, child_group_id: 3},
+			{parent_group_id: 2, child_group_id: 4},
+			{parent_group_id: 3, child_group_id: 4}
+		]`)
+	defer func() { _ = db.Close() }()
+
+	dataStore := database.NewDataStore(db)
+	require.NoError(t, dataStore.InTransaction(func(dataStore *database.DataStore) error {
+		return dataStore.GroupGroups().CreateNewAncestors()
+	}))
+
+	groupStore := database.NewDataStore(db).Groups()
+	const expectedType = "Friends"
+	require.NoError(t, groupStore.ByID(2).UpdateColumn("type", expectedType).Error())
+
+	var count int
+
+	groupGroupStore := dataStore.GroupGroups()
+	require.NoError(t, groupGroupStore.Where("child_group_id = 2").Where("child_group_type != ?", expectedType).
+		Count(&count).Error())
+	assert.Zero(t, count)
+	require.NoError(t, groupGroupStore.Where("child_group_id = 2").Where("child_group_type = ?", expectedType).
+		Count(&count).Error())
+	assert.Equal(t, 1, count)
+	require.NoError(t, groupGroupStore.Where("child_group_id != 2").Where("child_group_type = ?", expectedType).
+		Count(&count).Error())
+	assert.Zero(t, count)
+
+	groupAncestorStore := dataStore.GroupAncestors()
+	require.NoError(t, groupAncestorStore.Where("child_group_id = 2").Where("child_group_type != ?", expectedType).
+		Count(&count).Error())
+	assert.Zero(t, count)
+	require.NoError(t, groupAncestorStore.Where("child_group_id = 2").Where("child_group_type = ?", expectedType).
+		Count(&count).Error())
+	assert.Equal(t, 2, count) // 1->2, 2->2
+	require.NoError(t, groupAncestorStore.Where("child_group_id != 2").Where("child_group_type = ?", expectedType).
+		Count(&count).Error())
+	assert.Zero(t, count)
+}

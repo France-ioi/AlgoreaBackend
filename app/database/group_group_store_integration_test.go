@@ -335,6 +335,81 @@ const (
 		- {attempt_id: 1, participant_id: 109, item_id: 3}`
 )
 
+func TestGroupGroupStore_TriggerBeforeInsert_SetsIsTeamMembership(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.SetupDBWithFixtureString(ctx, `
+		groups: [{id: 1, type: Club}, {id: 2, type: Class}, {id: 3, type: Team}, {id: 4, type: User}]`)
+	defer func() { _ = db.Close() }()
+	dataStore := database.NewDataStore(db)
+	for _, test := range []struct {
+		parentGroupID            int64
+		childGroupID             int64
+		expectedIsTeamMembership bool
+	}{
+		{parentGroupID: 1, childGroupID: 3, expectedIsTeamMembership: false},
+		{parentGroupID: 2, childGroupID: 3, expectedIsTeamMembership: false},
+		{parentGroupID: 2, childGroupID: 4, expectedIsTeamMembership: false},
+		{parentGroupID: 3, childGroupID: 4, expectedIsTeamMembership: true},
+	} {
+		test := test
+		t.Run(fmt.Sprintf("parent %d child %d", test.parentGroupID, test.childGroupID), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			groupGroupStore := dataStore.GroupGroups()
+			require.NoError(t, groupGroupStore.InsertMap(map[string]interface{}{
+				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID,
+			}))
+			assertGroupRelationColumn(t, groupGroupStore, test.parentGroupID, test.childGroupID,
+				"is_team_membership", test.expectedIsTeamMembership)
+		})
+	}
+}
+
+func assertGroupRelationColumn[T any](t *testing.T, groupGroupStore *database.GroupGroupStore,
+	parentGroupID, childGroupID int64, column string, expectedValue T,
+) {
+	t.Helper()
+
+	var actualValue T
+	require.NoError(t, groupGroupStore.Where("parent_group_id = ?", parentGroupID).
+		Where("child_group_id = ?", childGroupID).
+		PluckFirst(column, &actualValue).Error())
+	assert.Equal(t, expectedValue, actualValue)
+}
+
+func TestGroupGroupStore_TriggerBeforeInsert_SetsChildGroupType(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.SetupDBWithFixtureString(ctx, `
+		groups: [{id: 1, type: Club}, {id: 3, type: Team}, {id: 4, type: User}]`)
+	defer func() { _ = db.Close() }()
+	dataStore := database.NewDataStore(db)
+	for _, test := range []struct {
+		parentGroupID          int64
+		childGroupID           int64
+		expectedChildGroupType string
+	}{
+		{parentGroupID: 1, childGroupID: 3, expectedChildGroupType: "Team"},
+		{parentGroupID: 1, childGroupID: 4, expectedChildGroupType: "User"},
+		{parentGroupID: 3, childGroupID: 4, expectedChildGroupType: "User"},
+	} {
+		test := test
+		t.Run(fmt.Sprintf("parent %d child %d", test.parentGroupID, test.childGroupID), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			groupGroupStore := dataStore.GroupGroups()
+			require.NoError(t, groupGroupStore.InsertMap(map[string]interface{}{
+				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID,
+			}))
+			assertGroupRelationColumn(t, groupGroupStore, test.parentGroupID, test.childGroupID,
+				"child_group_type", test.expectedChildGroupType)
+		})
+	}
+}
+
 func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 

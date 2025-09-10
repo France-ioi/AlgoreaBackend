@@ -132,7 +132,7 @@ Feature: Export the current user's data
       ],
       "groups_groups": [
         {
-          "child_group_id": "11", "parent_group_id": "2",
+          "child_group_id": "11", "parent_group_id": "2", "child_group_type": "User",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
@@ -140,7 +140,7 @@ Feature: Export the current user's data
           "is_team_membership": 1
         },
         {
-          "child_group_id": "11", "parent_group_id": "5",
+          "child_group_id": "11", "parent_group_id": "5", "child_group_type": "User",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
@@ -148,7 +148,7 @@ Feature: Export the current user's data
           "is_team_membership": 0
         },
         {
-          "child_group_id": "11", "parent_group_id": "6",
+          "child_group_id": "11", "parent_group_id": "6", "child_group_type": "User",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
@@ -156,7 +156,7 @@ Feature: Export the current user's data
           "is_team_membership": 0
         },
         {
-          "child_group_id": "11", "parent_group_id": "9",
+          "child_group_id": "11", "parent_group_id": "9", "child_group_type": "User",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
@@ -164,7 +164,7 @@ Feature: Export the current user's data
           "is_team_membership": 0
         },
         {
-          "child_group_id": "11", "parent_group_id": "10",
+          "child_group_id": "11", "parent_group_id": "10", "child_group_type": "User",
           "lock_membership_approved_at": null, "lock_membership_approved": 0,
           "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
           "watch_approved_at": null, "watch_approved": 0,
