@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.30.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.0...v2.30.1) - 2025-09-10
+- `refreshToken`: put the lock before the most recent token is retrieved
+- migrate the db migration system to `Goose`
+
 ## [v2.30.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.29.1...v2.30.0) - 2025-09-03
 - add flags related to pending requests/invitations of the current user in `groupGet`
 - rework locking in `refreshAccessToken`
