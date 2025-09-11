@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.30.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.2...v2.30.3) - 2025-09-11
+- set groups_groups.child_group_type
+
 ## [v2.30.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.1...v2.30.2) - 2025-09-11
 - introduce `groups_groups.child_group_type` & `groups_ancestors.child_group_type`
 - do not wipe out the list of applied migrations during test runs
