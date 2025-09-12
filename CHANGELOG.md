@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.30.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.4...v2.30.5) - 2025-09-12
+- set groups `ancestors.child_group_type`
+
 ## [v2.30.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.3...v2.30.4) - 2025-09-12
 - set `groups_ancestors.child_group_type` for new `groups_ancestors` rows
 
