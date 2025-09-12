@@ -456,6 +456,24 @@ func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
 	}
 }
 
+func TestGroupStore_TriggetAfterInsert_CreatesGroupAncestor(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx := testhelpers.CreateTestContext()
+	db := testhelpers.SetupDBWithFixtureString(ctx, `groups: [{id: 1, type: Other}]`)
+	defer func() { _ = db.Close() }()
+
+	groupAncestorStore := database.NewDataStore(db).GroupAncestors()
+	var result []map[string]interface{}
+	require.NoError(t, groupAncestorStore.Select("ancestor_group_id, child_group_id, child_group_type").
+		ScanIntoSliceOfMaps(&result).Error())
+	assert.Equal(t, map[string]interface{}{
+		"ancestor_group_id": int64(1),
+		"child_group_id":    int64(1),
+		"child_group_type":  "Other",
+	}, result[0])
+}
+
 func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 

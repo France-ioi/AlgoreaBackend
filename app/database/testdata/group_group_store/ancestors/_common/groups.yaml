@@ -1,4 +1,4 @@
-- {id: 1}
-- {id: 2}
-- {id: 3}
-- {id: 4}
+- {id: 1, type: Club}
+- {id: 2, type: Class}
+- {id: 3, type: Friends}
+- {id: 4, type: Other}
