@@ -159,9 +159,8 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 	var ancestorGroupIDs []interface{}
 	ancestorGroupIDQuery := store.ActiveGroupGroups().
 		Where("groups_groups_active.parent_group_id = ?", groupID).
-		Joins(`
-			JOIN ` + "`groups`" + ` AS group_child
-			ON group_child.id = groups_groups_active.child_group_id AND group_child.type NOT IN('Team', 'User')`)
+		Where("groups_groups_active.child_group_type NOT IN('Team', 'User')").
+		Joins("JOIN `groups` AS group_child ON group_child.id = groups_groups_active.child_group_id")
 	ancestorGroupIDQuery, err = service.ApplySortingAndPaging(
 		httpRequest, ancestorGroupIDQuery,
 		&service.SortingAndPagingParameters{
@@ -184,14 +183,11 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 		return nil
 	}
 
-	endMembers := store.Groups().
-		Select("groups.id").
-		Joins(`
-			JOIN groups_ancestors_active
-			ON groups_ancestors_active.ancestor_group_id IN (?) AND
-				groups_ancestors_active.child_group_id = groups.id`, ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
-		Where("groups.type = 'Team' OR groups.type = 'User'").
-		Group("groups.id")
+	endMembers := store.ActiveGroupAncestors().
+		Select("child_group_id AS id").
+		Where("ancestor_group_id IN(?)", ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
+		Where("child_group_type = 'Team' OR child_group_type = 'User'").
+		Group("child_group_id")
 
 	endMembersStats := store.Raw(`
 		SELECT

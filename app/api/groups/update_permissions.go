@@ -529,11 +529,12 @@ func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
 ) error {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
 	// the 'sourceGroupID' should be an ancestor of 'groupID'
-	found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", sourceGroupID).
-		Where("groups.type != 'User'").
+	found, err := store.ActiveGroupAncestors().ManagedByUser(user).
+		Where("groups_ancestors_active.child_group_id = ?", sourceGroupID).
+		Where("groups_ancestors_active.child_group_type != 'User'").
 		Joins(`
 				JOIN groups_ancestors_active AS descendants
-					ON descendants.ancestor_group_id = groups.id AND descendants.child_group_id = ?`, groupID).
+					ON descendants.ancestor_group_id = groups_ancestors_active.child_group_id AND descendants.child_group_id = ?`, groupID).
 		Where("group_managers.can_grant_group_access").
 		HasRows()
 	service.MustNotBeError(err)

@@ -124,14 +124,11 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	// Candidates for deletion are all groups that are descendants of groupID filtered by type
 	var candidatesForDeletion []int64
-	mustNotBeError(s.Groups().WithExclusiveWriteLock().
-		Joins(`
-			JOIN groups_ancestors_active AS ancestors ON
-				ancestors.child_group_id = groups.id AND
-				ancestors.is_self = 0 AND
-				ancestors.ancestor_group_id = ?`, groupID).
-		Where("groups.type NOT IN('Base', 'User')").
-		Pluck("groups.id", &candidatesForDeletion).Error())
+	mustNotBeError(s.ActiveGroupAncestors().WithExclusiveWriteLock().
+		Where("is_self = 0").
+		Where("ancestor_group_id = ?", groupID).
+		Where("child_group_type NOT IN('Base', 'User')").
+		Pluck("child_group_id", &candidatesForDeletion).Error())
 
 	// we delete groups_groups linked to groupID here in order to recalculate new ancestors correctly
 	groupRelationsDeleted, permissionsDeleted := s.deleteObjectsLinkedToGroups([]int64{groupID})

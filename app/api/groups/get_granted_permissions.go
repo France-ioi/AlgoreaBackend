@@ -149,8 +149,10 @@ func (srv *Service) getGrantedPermissions(responseWriter http.ResponseWriter, ht
 	user := srv.GetUser(httpRequest)
 	store := srv.GetStore(httpRequest)
 
-	found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", groupID).
-		Where("groups.type != 'User'").Where("can_grant_group_access").HasRows()
+	found, err := store.ActiveGroupAncestors().ManagedByUser(user).
+		Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Where("groups_ancestors_active.child_group_type != 'User'").
+		Where("can_grant_group_access").HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.ErrAPIInsufficientAccessRights

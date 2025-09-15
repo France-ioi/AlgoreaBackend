@@ -18,6 +18,7 @@ Feature: List official sessions for item_id
       | group_id | login | first_name | last_name |
       | 11       | jdoe  | John       | Doe       |
       | 21       | other | George     | Bush      |
+      | 31       | jack  | Jack       | Black     |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |

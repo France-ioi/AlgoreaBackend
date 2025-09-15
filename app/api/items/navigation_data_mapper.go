@@ -147,14 +147,12 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 		watchedGroupAvgScoreQuery = dataStore.Raw(
 			"SELECT IFNULL(AVG(score), 0) AS avg_score, COUNT(*) > 0 AND COUNT(*) = SUM(validated) AS all_validated FROM ? AS stats",
 			dataStore.Table("groups_ancestors_active").
-				Joins(`INNER JOIN `+"`groups`"+` AS participant
-                      ON participant.id = groups_ancestors_active.child_group_id AND
-												 participant.type IN ('User', 'Team')`).
+				Where("groups_ancestors_active.child_group_type IN ('User', 'Team')").
 				Joins(`LEFT JOIN results
-											ON results.participant_id = participant.id AND
+											ON results.participant_id = groups_ancestors_active.child_group_id AND
 												 results.item_id = items.id`).
 				Select("MAX(IFNULL(results.score_computed, 0)) AS score, MAX(IFNULL(results.validated, 0)) AS validated").
-				Group("participant.id").
+				Group("groups_ancestors_active.child_group_id").
 				Where("groups_ancestors_active.ancestor_group_id = ?", watchedGroupID).SubQuery()).SubQuery()
 	}
 

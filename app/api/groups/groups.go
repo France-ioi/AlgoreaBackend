@@ -96,10 +96,9 @@ func checkThatUserCanManageTheGroup(store *database.DataStore, user *database.Us
 
 func checkThatUserCanManageTheGroupMemberships(store *database.DataStore, user *database.User, groupID int64) error {
 	found, err := store.GroupAncestors().ManagedByUser(user).
-		Joins("JOIN `groups` ON groups.id = groups_ancestors.child_group_id").
 		Where("groups_ancestors.child_group_id = ?", groupID).
 		Where("group_managers.can_manage != 'none'").
-		Where("groups.type != 'User'").HasRows()
+		Where("groups_ancestors.child_group_type != 'User'").HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.ErrAPIInsufficientAccessRights
@@ -123,25 +122,24 @@ func checkThatUserHasRightsForDirectRelation(
 	store *database.DataStore, user *database.User,
 	parentGroupID, childGroupID int64, createOrDelete createOrDeleteRelation,
 ) error {
-	groupStore := store.Groups()
-
 	var groupData []struct {
 		ID   int64
 		Type string
 	}
 
-	query := groupStore.ManagedBy(user).
-		WithCustomWriteLocks(golang.NewSet("groups"), golang.NewSet[string]()).
-		Select("groups.id, type").
-		Where("groups.id IN(?, ?)", parentGroupID, childGroupID).
-		Where("IF(groups.id = ?, group_managers.can_manage != 'none', 1)", parentGroupID)
+	query := store.ActiveGroupAncestors().ManagedByUser(user).
+		WithCustomWriteLocks(golang.NewSet("groups_ancestors_active"), golang.NewSet[string]()).
+		Select("groups_ancestors_active.child_group_id AS id, MIN(groups_ancestors_active.child_group_type) AS type").
+		Where("groups_ancestors_active.child_group_id IN(?, ?)", parentGroupID, childGroupID).
+		Where("IF(groups_ancestors_active.child_group_id = ?, group_managers.can_manage != 'none', 1)", parentGroupID)
 
 	if createOrDelete == createRelation {
-		query = query.Where("IF(groups.id = ?, group_managers.can_manage = 'memberships_and_group', 1)", childGroupID)
+		query = query.Where(
+			"IF(groups_ancestors_active.child_group_id = ?, group_managers.can_manage = 'memberships_and_group', 1)", childGroupID)
 	}
 
 	err := query.
-		Group("groups.id").
+		Group("groups_ancestors_active.child_group_id").
 		Scan(&groupData).Error()
 	service.MustNotBeError(err)
 

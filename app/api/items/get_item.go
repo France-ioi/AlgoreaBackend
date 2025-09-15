@@ -431,18 +431,16 @@ func getRawItemData(store *database.ItemStore, rootID, groupID int64, languageTa
 		service.MustNotBeError(err)
 		columnValues = append(columnValues,
 			store.ActiveGroupAncestors().
-				Select("participant.id").
-				Joins(`
-					JOIN `+"`groups`"+` AS participant
-						ON participant.id = groups_ancestors_active.child_group_id AND participant.type IN ('User', 'Team')`).
+				Select("groups_ancestors_active.child_group_id AS id").
+				Where("groups_ancestors_active.child_group_type IN ('User', 'Team')").
 				Where("groups_ancestors_active.ancestor_group_id = ?", watchedGroupID).
 				Joins(`
 					LEFT JOIN (
 						SELECT participant_id, score_computed FROM results
 						WHERE results.item_id = items.id
-					) AS results ON results.participant_id = participant.id`).
+					) AS results ON results.participant_id = groups_ancestors_active.child_group_id`).
 				Select("MAX(IFNULL(results.score_computed, 0)) AS score").
-				Group("participant.id").SubQuery())
+				Group("groups_ancestors_active.child_group_id").SubQuery())
 	}
 
 	if languageTagSet {
