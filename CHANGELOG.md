@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.30.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.5...v2.30.6) - 2025-09-15
+- make `*.child_group_type` NOT NULL, remove unnecessary JOINs of groups, ignore expired participants in `groupUpdate`
+
 ## [v2.30.5](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.4...v2.30.5) - 2025-09-12
 - set groups `ancestors.child_group_type`
 
