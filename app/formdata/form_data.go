@@ -497,6 +497,9 @@ func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc 
 			return data, nil
 		}
 		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, from, reflect.TypeOf((*time.Time)(nil)).Elem(), data)
+		if err != nil {
+			return nil, err
+		}
 		return database.Time(converted.(time.Time).UTC()), err
 	}
 }
