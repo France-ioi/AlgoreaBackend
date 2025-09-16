@@ -49,7 +49,7 @@ func (conn *DB) loadDBEnum(fullColumnName string) {
 	enumValueIndex2Name[enumNumber] = indexesMap
 }
 
-func (conn *DB) getFromEnumUnderLock(getterFunc func() interface{}) interface{} {
+func getFromEnumUnderLock[T any](conn *DB, getterFunc func() T) T {
 	// Lock for reading to check if the enums have been already loaded
 	enumsMutex.RLock()
 	if len(enumValueName2Index) != 0 { // the enums have been loaded, so return the value

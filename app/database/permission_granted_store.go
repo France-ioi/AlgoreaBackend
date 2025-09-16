@@ -13,8 +13,8 @@ type PermissionGrantedStore struct {
 
 // PermissionIndexByKindAndName returns the index of the given permission in the enum.
 func (s *PermissionGrantedStore) PermissionIndexByKindAndName(kind, name string) int {
-	getterFunc := func() interface{} { return requireDBEnumIndexByName("permissions_granted.can_"+kind, name) }
-	return s.DB.getFromEnumUnderLock(getterFunc).(int)
+	getterFunc := func() int { return requireDBEnumIndexByName("permissions_granted.can_"+kind, name) }
+	return getFromEnumUnderLock(s.DB, getterFunc)
 }
 
 // PermissionIsAtLeastSQLExpr returns a gorm.SqlExpr for filtering by `can_*_generated_value` >= indexOf(`permissionName`)
@@ -31,8 +31,8 @@ func (s *PermissionGrantedStore) ViewIndexByName(name string) int {
 
 // PermissionNameByKindAndIndex returns the permission name of the given kind with the given index from the enum.
 func (s *PermissionGrantedStore) PermissionNameByKindAndIndex(kind string, index int) string {
-	getterFunc := func() interface{} { return requireDBEnumNameByIndex("permissions_granted.can_"+kind, index) }
-	return s.DB.getFromEnumUnderLock(getterFunc).(string)
+	getterFunc := func() string { return requireDBEnumNameByIndex("permissions_granted.can_"+kind, index) }
+	return getFromEnumUnderLock(s.DB, getterFunc)
 }
 
 // ViewNameByIndex returns the view permission name with the given index from the 'can_view' enum.
