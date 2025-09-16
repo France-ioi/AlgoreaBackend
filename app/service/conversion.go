@@ -43,8 +43,9 @@ func ConvertMapFromDBToJSON(dbMap map[string]interface{}) map[string]interface{}
 				}
 			}
 			if shouldCreateSubMap {
-				currentMap[subKey] = map[string]interface{}{}
-				currentMap = currentMap[subKey].(map[string]interface{})
+				newMap := map[string]interface{}{}
+				currentMap[subKey] = newMap
+				currentMap = newMap
 			}
 		}
 	}
