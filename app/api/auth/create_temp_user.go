@@ -71,11 +71,12 @@ func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpReque
 
 	defaultLanguage := database.Default()
 	if len(httpRequest.URL.Query()["default_language"]) != 0 {
-		defaultLanguage = httpRequest.URL.Query().Get("default_language")
+		defaultLanguageString := httpRequest.URL.Query().Get("default_language")
 		const maxLanguageLength = 3
-		if utf8.RuneCountInString(defaultLanguage.(string)) > maxLanguageLength {
+		if utf8.RuneCountInString(defaultLanguageString) > maxLanguageLength {
 			return service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
 		}
+		defaultLanguage = defaultLanguageString
 	}
 
 	var token string
