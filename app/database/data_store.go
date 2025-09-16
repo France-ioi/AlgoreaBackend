@@ -225,13 +225,13 @@ const (
 
 //nolint:gochecknoglobals // for testing purposes only
 var (
-	onStartOfTransactionToBeRetriedForcefullyHook atomic.Value
-	onForcefulRetryOfTransactionHook              atomic.Value
+	onStartOfTransactionToBeRetriedForcefullyHook atomic.Pointer[func()]
+	onForcefulRetryOfTransactionHook              atomic.Pointer[func()]
 )
 
 func init() { //nolint:gochecknoinits // this is an initialization function to store the default hooks
-	onStartOfTransactionToBeRetriedForcefullyHook.Store(func() {})
-	onForcefulRetryOfTransactionHook.Store(func() {})
+	onStartOfTransactionToBeRetriedForcefullyHook.Store(golang.Ptr(func() {}))
+	onForcefulRetryOfTransactionHook.Store(golang.Ptr(func() {}))
 }
 
 // InTransaction executes the given function in a transaction and commits.
@@ -249,14 +249,14 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 
 		dataStore := NewDataStoreWithTable(db, s.tableName)
 		if shouldForceTransactionRetry {
-			onStartOfTransactionToBeRetriedForcefullyHook.Load().(func())()
+			(*onStartOfTransactionToBeRetriedForcefullyHook.Load())()
 		}
 
 		err := txFunc(dataStore)
 
 		if err == nil && shouldForceTransactionRetry {
 			retried = true
-			onForcefulRetryOfTransactionHook.Load().(func())()
+			(*onForcefulRetryOfTransactionHook.Load())()
 			return &mysql.MySQLError{
 				Number: uint16(mysqldb.DeadlockError),
 			}
@@ -296,14 +296,14 @@ func (s *DataStore) EnsureTransaction(txFunc func(*DataStore) error, txOptions .
 // of a transaction that will be forcefully retried.
 // For testing purposes only.
 func SetOnStartOfTransactionToBeRetriedForcefullyHook(hook func()) {
-	onStartOfTransactionToBeRetriedForcefullyHook.Store(hook)
+	onStartOfTransactionToBeRetriedForcefullyHook.Store(&hook)
 }
 
 // SetOnForcefulRetryOfTransactionHook sets a hook to be called on the retry
 // of a forcefully retried transaction.
 // For testing purposes only.
 func SetOnForcefulRetryOfTransactionHook(hook func()) {
-	onForcefulRetryOfTransactionHook.Store(hook)
+	onForcefulRetryOfTransactionHook.Store(&hook)
 }
 
 // SetPropagationsModeToSync sets the mode of propagations to synchronous.
