@@ -16,8 +16,10 @@ import (
 )
 
 func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
-	requestData := httpRequest.Context().Value(parsedRequestData).(map[string]interface{})
-	cookieAttributes, _ := srv.resolveCookieAttributes(httpRequest, requestData) // the error has been checked in createAccessToken()
+	//nolint:forcetypeassert // panic if the type is wrong
+	cookieParameters := httpRequest.Context().Value(ctxKeyParsedCookieParameters).(*CookieParameters)
+	// the error has been checked in createAccessToken()
+	cookieAttributes, _ := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, cookieParameters)
 
 	user := srv.GetUser(httpRequest)
 	store := srv.GetStore(httpRequest)

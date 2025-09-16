@@ -169,7 +169,7 @@ func callRefreshAccessTokenServiceWithLoginModuleStub(
 	routerForAddingHandlers.
 		With(func(next http.Handler) http.Handler {
 			fn := func(w http.ResponseWriter, r *http.Request) {
-				r = r.WithContext(contextWithParsedRequestData(r.Context(), map[string]interface{}{}))
+				r = r.WithContext(contextWithParsedCookieParameters(r.Context(), &apiAuth.CookieParameters{}))
 				next.ServeHTTP(w, r)
 			}
 			return http.HandlerFunc(fn)
@@ -353,5 +353,5 @@ func (srv *Service) refreshAccessToken(w http.ResponseWriter, r *http.Request) e
 //go:linkname srvRefreshAccessToken github.com/France-ioi/AlgoreaBackend/v2/app/api/auth.(*Service).refreshAccessToken
 func srvRefreshAccessToken(srv *apiAuth.Service, w http.ResponseWriter, r *http.Request) error
 
-//go:linkname contextWithParsedRequestData github.com/France-ioi/AlgoreaBackend/v2/app/api/auth.contextWithParsedRequestData
-func contextWithParsedRequestData(ctx context.Context, requestData map[string]interface{}) context.Context
+//go:linkname contextWithParsedCookieParameters github.com/France-ioi/AlgoreaBackend/v2/app/api/auth.contextWithParsedCookieParameters
+func contextWithParsedCookieParameters(ctx context.Context, cookieParameters *apiAuth.CookieParameters) context.Context

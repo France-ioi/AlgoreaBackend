@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 
 	"github.com/go-chi/render"
@@ -26,7 +27,7 @@ import (
 type ctxKey int
 
 const (
-	parsedRequestData             ctxKey = iota
+	ctxKeyParsedCookieParameters  ctxKey = iota
 	maxNumberOfUserSessionsToKeep        = 10
 )
 
@@ -202,19 +203,18 @@ const (
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
-	requestData, err := parseRequestParametersForCreateAccessToken(httpRequest)
+	requestParameters, err := parseRequestParametersForCreateAccessToken(httpRequest)
 	service.MustNotBeError(err)
 
-	cookieAttributes, err := srv.resolveCookieAttributes(httpRequest, requestData)
+	cookieAttributes, err := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters.CookieParameters)
 	service.MustNotBeError(err)
 
-	code, codeGiven := requestData["code"]
-	if codeGiven && len(httpRequest.Header["Authorization"]) != 0 {
+	if requestParameters.Code != nil && len(httpRequest.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(
 			errors.New("only one of the 'code' parameter and the 'Authorization' header can be given"))
 	}
 
-	if !codeGiven {
+	if requestParameters.Code == nil {
 		var (
 			requestContext context.Context
 			authorized     bool
@@ -226,7 +226,8 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 
 		if authorized {
 			service.AppHandler(srv.refreshAccessToken).
-				ServeHTTP(responseWriter, httpRequest.WithContext(contextWithParsedRequestData(requestContext, requestData)))
+				ServeHTTP(responseWriter, httpRequest.WithContext(
+					contextWithParsedCookieParameters(requestContext, requestParameters.CookieParameters)))
 			return nil
 		}
 
@@ -256,14 +257,14 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
-	if codeVerifier, ok := requestData["code_verifier"]; ok {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", codeVerifier.(string)))
+	if requestParameters.CodeVerifier != nil {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", *requestParameters.CodeVerifier))
 	}
-	if redirectURI, ok := requestData["redirect_uri"]; ok {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", redirectURI.(string)))
+	if requestParameters.RedirectURI != nil {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", *requestParameters.RedirectURI))
 	}
 
-	token, err := oauthConfig.Exchange(httpRequest.Context(), code.(string), oauthOptions...)
+	token, err := oauthConfig.Exchange(httpRequest.Context(), *requestParameters.Code, oauthOptions...)
 	service.MustNotBeError(err)
 
 	expiresIn, err := validateAndGetExpiresInFromOAuth2Token(token)
@@ -310,7 +311,7 @@ func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter
 		oldCookieAttributes = &auth.SessionCookieAttributes{}
 		_, *oldCookieAttributes = auth.ParseSessionCookie(httpRequest)
 	}
-	if oldCookieAttributes != nil && oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
+	if oldCookieAttributes.UseCookie && *oldCookieAttributes != *cookieAttributes {
 		http.SetCookie(responseWriter, oldCookieAttributes.SessionCookie("", -1000))
 	}
 	if cookieAttributes.UseCookie {
@@ -321,18 +322,18 @@ func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, rendererGenerator(response)))
 }
 
-func (srv *Service) resolveCookieAttributes(httpRequest *http.Request, requestData map[string]interface{}) (
+func (srv *Service) resolveSessionCookieAttributesFromCookieParameters(httpRequest *http.Request, cookieParameters *CookieParameters) (
 	cookieAttributes *auth.SessionCookieAttributes, err error,
 ) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
-	if value, ok := requestData["use_cookie"]; ok && value.(bool) {
+	if cookieParameters.UseCookie != nil && *cookieParameters.UseCookie {
 		cookieAttributes.UseCookie = true
 		cookieAttributes.Domain = domain.CurrentDomainFromContext(httpRequest.Context())
 		cookieAttributes.Path = srv.ServerConfig.GetString("rootPath")
-		if value, ok := requestData["cookie_secure"]; ok && value.(bool) {
+		if cookieParameters.CookieSecure != nil && *cookieParameters.CookieSecure {
 			cookieAttributes.Secure = true
 		}
-		if value, ok := requestData["cookie_same_site"]; ok && value.(bool) {
+		if cookieParameters.CookieSameSite != nil && *cookieParameters.CookieSameSite {
 			cookieAttributes.SameSite = true
 		}
 		if !cookieAttributes.Secure && !cookieAttributes.SameSite {
@@ -342,22 +343,61 @@ func (srv *Service) resolveCookieAttributes(httpRequest *http.Request, requestDa
 	return cookieAttributes, nil
 }
 
-func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (map[string]interface{}, error) {
+func setParametersFromMap(requestParameters interface{}, requestData map[string]string) error {
+	reflRequestParameters := reflect.ValueOf(requestParameters).Elem()
+	reflRequestParametersType := reflRequestParameters.Type()
+	for i := 0; i < reflRequestParameters.NumField(); i++ {
+		field := reflRequestParameters.Field(i)
+		fieldType := reflRequestParametersType.Field(i)
+		if fieldType.Type.Elem().Kind() == reflect.Struct {
+			field.Set(reflect.New(fieldType.Type.Elem()))
+			if err := setParametersFromMap(field.Interface(), requestData); err != nil {
+				return err
+			}
+			continue
+		}
+
+		jsonTagParts := strings.Split(fieldType.Tag.Get("json"), ",")
+		fieldName := jsonTagParts[0]
+		value, ok := requestData[fieldName]
+		if !ok {
+			continue
+		}
+
+		if fieldType.Type.Elem().Kind() == reflect.Bool {
+			boolValue, ok := map[string]bool{"0": false, "1": true}[value]
+			if !ok {
+				return fmt.Errorf("wrong value for %s (should have a boolean value (0 or 1))", fieldName)
+			}
+			field.Set(reflect.ValueOf(&boolValue))
+		} else {
+			field.Set(reflect.ValueOf(&value))
+		}
+	}
+	return nil
+}
+
+func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (*createAccessTokenRequestParameters, error) {
 	allowedParameters := []string{
 		"code", "code_verifier", "redirect_uri",
 		"use_cookie", "cookie_secure", "cookie_same_site",
 	}
-	requestData := make(map[string]interface{}, len(allowedParameters))
+	var requestParameters createAccessTokenRequestParameters
+	requestData := make(map[string]string, len(allowedParameters))
 	query := httpRequest.URL.Query()
 	for _, parameterName := range allowedParameters {
 		extractOptionalParameter(query, parameterName, requestData)
+	}
+	err := setParametersFromMap(&requestParameters, requestData)
+	if err != nil {
+		return nil, service.ErrInvalidRequest(err)
 	}
 
 	contentType := strings.ToLower(strings.TrimSpace(
 		strings.SplitN(httpRequest.Header.Get("Content-Type"), ";", 2)[0])) //nolint:mnd // cut off the parameters, keep only the media type
 	switch contentType {
 	case "application/json":
-		if err := parseJSONParams(httpRequest, requestData); err != nil {
+		if err := parseJSONParams(httpRequest, &requestParameters); err != nil {
 			return nil, err
 		}
 	case "application/x-www-form-urlencoded":
@@ -365,65 +405,41 @@ func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (map[
 		if err != nil {
 			return nil, service.ErrInvalidRequest(err)
 		}
+		requestData := make(map[string]string, len(allowedParameters))
 		for _, parameterName := range allowedParameters {
 			extractOptionalParameter(httpRequest.PostForm, parameterName, requestData)
 		}
+		if err = setParametersFromMap(&requestParameters, requestData); err != nil {
+			return nil, service.ErrInvalidRequest(err)
+		}
 	}
-	return preprocessBooleanCookieAttributes(requestData)
+	return &requestParameters, nil
 }
 
-func parseJSONParams(httpRequest *http.Request, requestData map[string]interface{}) error {
-	var jsonPayload struct {
-		Code           *string `json:"code"`
-		CodeVerifier   *string `json:"code_verifier"`
-		RedirectURI    *string `json:"redirect_uri"`
-		UseCookie      *bool   `json:"use_cookie"`
-		CookieSecure   *bool   `json:"cookie_secure"`
-		CookieSameSite *bool   `json:"cookie_same_site"`
-	}
+// CookieParameters holds optional boolean parameters related to cookies.
+type CookieParameters struct {
+	UseCookie      *bool `json:"use_cookie"`
+	CookieSecure   *bool `json:"cookie_secure"`
+	CookieSameSite *bool `json:"cookie_same_site"`
+}
+
+type createAccessTokenRequestParameters struct {
+	Code         *string `json:"code"`
+	CodeVerifier *string `json:"code_verifier"`
+	RedirectURI  *string `json:"redirect_uri"`
+	*CookieParameters
+}
+
+func parseJSONParams(httpRequest *http.Request, requestParameters *createAccessTokenRequestParameters) error {
 	defer func() { _, _ = io.Copy(io.Discard, httpRequest.Body) }()
-	err := json.NewDecoder(httpRequest.Body).Decode(&jsonPayload)
+	err := json.NewDecoder(httpRequest.Body).Decode(requestParameters)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
-	}
-	if jsonPayload.Code != nil {
-		requestData["code"] = *jsonPayload.Code
-	}
-	if jsonPayload.CodeVerifier != nil {
-		requestData["code_verifier"] = *jsonPayload.CodeVerifier
-	}
-	if jsonPayload.RedirectURI != nil {
-		requestData["redirect_uri"] = *jsonPayload.RedirectURI
-	}
-	bool2String := map[bool]string{false: "0", true: "1"}
-	if jsonPayload.UseCookie != nil {
-		requestData["use_cookie"] = bool2String[*jsonPayload.UseCookie]
-	}
-	if jsonPayload.CookieSecure != nil {
-		requestData["cookie_secure"] = bool2String[*jsonPayload.CookieSecure]
-	}
-	if jsonPayload.CookieSameSite != nil {
-		requestData["cookie_same_site"] = bool2String[*jsonPayload.CookieSameSite]
 	}
 	return nil
 }
 
-func preprocessBooleanCookieAttributes(requestData map[string]interface{}) (map[string]interface{}, error) {
-	for _, flagName := range []string{"use_cookie", "cookie_secure", "cookie_same_site"} {
-		if stringValue, ok := requestData[flagName]; ok {
-			if _, ok = map[string]bool{"0": false, "1": true}[stringValue.(string)]; !ok {
-				return nil, service.ErrInvalidRequest(fmt.Errorf("wrong value for %s (should have a boolean value (0 or 1))", flagName))
-			}
-			delete(requestData, flagName)
-			if stringValue == "1" {
-				requestData[flagName] = true
-			}
-		}
-	}
-	return requestData, nil
-}
-
-func extractOptionalParameter(query url.Values, paramName string, requestData map[string]interface{}) {
+func extractOptionalParameter(query url.Values, paramName string, requestData map[string]string) {
 	if len(query[paramName]) != 0 {
 		requestData[paramName] = query.Get(paramName)
 	}
@@ -500,6 +516,6 @@ func createGroupFromLogin(store *database.GroupStore, login string, domainConfig
 	return selfGroupID
 }
 
-func contextWithParsedRequestData(ctx context.Context, requestData map[string]interface{}) context.Context {
-	return context.WithValue(ctx, parsedRequestData, requestData)
+func contextWithParsedCookieParameters(ctx context.Context, cookieParameters *CookieParameters) context.Context {
+	return context.WithValue(ctx, ctxKeyParsedCookieParameters, cookieParameters)
 }
