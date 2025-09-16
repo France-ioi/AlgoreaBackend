@@ -69,6 +69,21 @@ Feature: Login callback - robustness
     And the table "sessions" should remain unchanged
     And the table "access_tokens" should remain unchanged
 
+  Scenario: Wrong value in form data
+    Given the "Content-Type" request header is "application/x-www-form-urlencoded"
+    When I send a POST request to "/auth/token" with the following body:
+    """
+    cookie_secure=abc
+    """
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for cookie_secure (should have a boolean value (0 or 1))"
+    And the table "users" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "groups_ancestors" should remain unchanged
+    And the table "sessions" should remain unchanged
+    And the table "access_tokens" should remain unchanged
+
   Scenario: Invalid request content type
     Given the "Content-Type" request header is "application/xml"
     When I send a POST request to "/auth/token" with the following body:
