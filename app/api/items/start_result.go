@@ -105,7 +105,7 @@ func (srv *Service) startResult(responseWriter http.ResponseWriter, httpRequest 
 			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		onBeforeInsertingResultInResultStartHook.Load().(func())()
+		(*onBeforeInsertingResultInResultStartHook.Load())()
 
 		itemID := ids[len(ids)-1]
 		var found bool
@@ -153,8 +153,8 @@ func (srv *Service) startResult(responseWriter http.ResponseWriter, httpRequest 
 }
 
 //nolint:gochecknoglobals // this is a global variable to store the default hook, used for testing purposes only
-var onBeforeInsertingResultInResultStartHook atomic.Value
+var onBeforeInsertingResultInResultStartHook atomic.Pointer[func()]
 
 func init() { //nolint:gochecknoinits // this is an initialization function to store the default hook
-	onBeforeInsertingResultInResultStartHook.Store(func() {})
+	onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {}))
 }

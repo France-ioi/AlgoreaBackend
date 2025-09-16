@@ -13,6 +13,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -42,12 +43,12 @@ func TestService_startResult_concurrency(t *testing.T) {
 	monkey.Patch(service.SchedulePropagation, func(*database.DataStore, string, []string) {})
 	defer monkey.UnpatchAll()
 
-	onBeforeInsertingResultInResultStartHook.Store(func() {
-		onBeforeInsertingResultInResultStartHook.Store(func() {})
+	onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {
+		onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {}))
 		testhelpers.VerifyTestHTTPRequestWithToken(t, appServer, "token_john", 200,
 			"POST", "/items/1/start-result?attempt_id=0", nil, nil)
-	})
-	defer onBeforeInsertingResultInResultStartHook.Store(func() {})
+	}))
+	defer onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {}))
 
 	testhelpers.VerifyTestHTTPRequestWithToken(t, appServer, "token_john", 200,
 		"POST", "/items/1/start-result?attempt_id=0", nil, nil)
@@ -55,4 +56,4 @@ func TestService_startResult_concurrency(t *testing.T) {
 
 //nolint:gochecknoglobals // this is a link to a global variable to store the default hook, used for testing purposes only
 //go:linkname onBeforeInsertingResultInResultStartHook github.com/France-ioi/AlgoreaBackend/v2/app/api/items.onBeforeInsertingResultInResultStartHook
-var onBeforeInsertingResultInResultStartHook atomic.Value
+var onBeforeInsertingResultInResultStartHook atomic.Pointer[func()]
