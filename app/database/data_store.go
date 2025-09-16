@@ -51,7 +51,7 @@ func getProhibitedPropagationsFromContext(ctx context.Context) propagationsBitFi
 	if prohibitedPropagations == nil {
 		return propagationsBitField{}
 	}
-	return prohibitedPropagations.(propagationsBitField)
+	return prohibitedPropagations.(propagationsBitField) //nolint:forcetypeassert // panic if it is not propagationsBitField
 }
 
 // MergeContext returns a new context based on the given one, with DB-related values copied
@@ -268,6 +268,7 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 		return err
 	}
 
+	//nolint:forcetypeassert // panic if it is not *propagationsBitField
 	propagationsToRun := s.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx())
 
@@ -324,6 +325,7 @@ func (s *DataStore) SetPropagationsModeToSync() (err error) {
 func (s *DataStore) ScheduleResultsPropagation() {
 	s.mustBeInTransaction()
 
+	//nolint:forcetypeassert // panic if it is not *propagationsBitField
 	propagationsToRun := s.DB.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	propagationsToRun.Results = true
 }
@@ -332,6 +334,7 @@ func (s *DataStore) ScheduleResultsPropagation() {
 func (s *DataStore) SchedulePermissionsPropagation() {
 	s.mustBeInTransaction()
 
+	//nolint:forcetypeassert // panic if it is not *propagationsBitField
 	propagationsToRun := s.DB.ctx().Value(awaitingPropagationsContextKey).(*propagationsBitField)
 	propagationsToRun.Permissions = true
 }

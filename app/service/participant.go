@@ -52,7 +52,7 @@ func ParticipantMiddleware(srv GetStorer) func(next http.Handler) http.Handler {
 
 // ParticipantIDFromContext retrieves a participant id  set by the middleware from a context.
 func ParticipantIDFromContext(ctx context.Context) int64 {
-	return ctx.Value(ctxParticipant).(int64)
+	return ctx.Value(ctxParticipant).(int64) //nolint:forcetypeassert // panic if the value is of wrong type
 }
 
 // GetParticipantIDFromRequest returns `as_team_id` parameter value if it is given or the user's `group_id` otherwise.

@@ -91,6 +91,7 @@ func convertTimeToRFC3339IfTime(value interface{}, snakeCaseName string) interfa
 
 // ConvertDBTimeToJSONTime converts the DB datetime representation to RFC3339.
 func ConvertDBTimeToJSONTime(data interface{}) string {
+	//nolint:forcetypeassert // panic if the data is not a string
 	parsedTime, err := time.Parse("2006-01-02 15:04:05.999", data.(string))
 	if err != nil {
 		panic(err)

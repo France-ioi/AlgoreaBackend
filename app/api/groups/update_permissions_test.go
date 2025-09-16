@@ -100,6 +100,7 @@ func Test_checkIfPossibleToModifyCanGrantView_AllowsSettingLowerOrSameValue(t *t
 	testCheckerAllowsSettingLowerOrSameValue(t, canGrantViewValues(),
 		checkIfPossibleToModifyCanGrantView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
+			//nolint:forcetypeassert // value is always a string
 			return &userPermissions{CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string))}
 		})
 }
@@ -283,6 +284,7 @@ func Test_checkIfPossibleToModifyCanWatch_AllowsSettingLowerOrSameValue(t *testi
 	testCheckerAllowsSettingLowerOrSameValue(t, canWatchValues(),
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
+			//nolint:forcetypeassert // value is always a string
 			return &userPermissions{CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string))}
 		})
 }
@@ -293,7 +295,7 @@ func Test_checkIfPossibleToModifyCanWatch_RequiresCanViewBeGreaterOrEqualToConte
 		func(value interface{}, viewValue string, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{
 				CanViewValue:  permissionGrantedStore.ViewIndexByName(viewValue),
-				CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string)),
+				CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string)), //nolint:forcetypeassert // value is always a string
 			}
 		},
 		func(permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
@@ -407,6 +409,7 @@ func Test_checkIfPossibleToModifyCanEdit_AllowsSettingLowerOrSameValue(t *testin
 	testCheckerAllowsSettingLowerOrSameValue(t, canEditValues(),
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
+			//nolint:forcetypeassert // value is always a string
 			return &userPermissions{CanEditValue: permissionGrantedStore.EditIndexByName(value.(string))}
 		})
 }
@@ -417,7 +420,7 @@ func Test_checkIfPossibleToModifyCanEdit_RequiresCanViewBeGreaterOrEqualToConten
 		func(value interface{}, viewValue string, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
 			return &userPermissions{
 				CanViewValue: permissionGrantedStore.ViewIndexByName(viewValue),
-				CanEditValue: permissionGrantedStore.EditIndexByName(value.(string)),
+				CanEditValue: permissionGrantedStore.EditIndexByName(value.(string)), //nolint:forcetypeassert // value is always a string
 			}
 		},
 		func(permissionGrantedStore *database.PermissionGrantedStore) *managerGeneratedPermissions {
@@ -706,6 +709,7 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 func Test_CanViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testing.T) {
 	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canViewValues(), "can_view", checkIfPossibleToModifyCanView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
+			//nolint:forcetypeassert // value is always a string
 			return &userPermissions{CanViewValue: permissionGrantedStore.ViewIndexByName(value.(string))}
 		}, true)
 }
@@ -785,6 +789,7 @@ func Test_CanGrantViewValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *
 	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canGrantViewValues(), "can_grant_view",
 		checkIfPossibleToModifyCanGrantView,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
+			//nolint:forcetypeassert // value is always a string
 			return &userPermissions{CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string))}
 		}, true)
 }
@@ -797,6 +802,7 @@ func Test_CanWatchValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *test
 	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canWatchValues(), "can_watch",
 		checkIfPossibleToModifyCanWatch,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
+			//nolint:forcetypeassert // value is always a string
 			return &userPermissions{CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string))}
 		}, true)
 }
@@ -809,6 +815,7 @@ func Test_CanEditValidator_SetsModifiedFlagAndUpdatesCurrentPermissions(t *testi
 	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, canEditValues(), "can_edit",
 		checkIfPossibleToModifyCanEdit,
 		func(value interface{}, permissionGrantedStore *database.PermissionGrantedStore) *userPermissions {
+			//nolint:forcetypeassert // value is always a string
 			return &userPermissions{CanEditValue: permissionGrantedStore.EditIndexByName(value.(string))}
 		}, true)
 }
@@ -821,7 +828,7 @@ func Test_CanMakeSessionOfficialValidator_SetsModifiedFlagAndUpdatesCurrentPermi
 	testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(t, []bool{false, true}, "can_make_session_official",
 		checkIfPossibleToModifyCanMakeSessionOfficial,
 		func(value interface{}, _ *database.PermissionGrantedStore) *userPermissions {
-			return &userPermissions{CanMakeSessionOfficial: value.(bool)}
+			return &userPermissions{CanMakeSessionOfficial: value.(bool)} //nolint:forcetypeassert // value is always bool
 		}, false)
 }
 
@@ -970,7 +977,7 @@ func Test_correctPermissionsDataMap(t *testing.T) {
 			"can_grant_view", func(value interface{}, canView string) *userPermissions {
 				return &userPermissions{
 					CanViewValue:      permissionGrantedStore.ViewIndexByName(canView),
-					CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string)),
+					CanGrantViewValue: permissionGrantedStore.GrantViewIndexByName(value.(string)), //nolint:forcetypeassert // value is always a string
 				}
 			},
 			[]correctPermissionsDataMapTest{
@@ -1009,20 +1016,20 @@ func Test_correctPermissionsDataMap(t *testing.T) {
 		{"can_watch", func(value interface{}, canView string) *userPermissions {
 			return &userPermissions{
 				CanViewValue:  permissionGrantedStore.ViewIndexByName(canView),
-				CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string)),
+				CanWatchValue: permissionGrantedStore.WatchIndexByName(value.(string)), //nolint:forcetypeassert // value is always a string
 			}
 		}, generateCorrectPermissionsDataMapTestsForWatchOrEdit("can_watch")},
 		{"can_edit", func(value interface{}, canView string) *userPermissions {
 			return &userPermissions{
 				CanViewValue: permissionGrantedStore.ViewIndexByName(canView),
-				CanEditValue: permissionGrantedStore.EditIndexByName(value.(string)),
+				CanEditValue: permissionGrantedStore.EditIndexByName(value.(string)), //nolint:forcetypeassert // value is always a string
 			}
 		}, generateCorrectPermissionsDataMapTestsForWatchOrEdit("can_edit")},
 		{
 			"can_make_session_official", func(value interface{}, canView string) *userPermissions {
 				return &userPermissions{
 					CanViewValue:           permissionGrantedStore.ViewIndexByName(canView),
-					CanMakeSessionOfficial: value.(bool),
+					CanMakeSessionOfficial: value.(bool), //nolint:forcetypeassert // value is always bool
 				}
 			},
 			[]correctPermissionsDataMapTest{

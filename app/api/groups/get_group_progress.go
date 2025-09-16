@@ -345,7 +345,7 @@ func scanAndBuildProgressResults(
 
 				// Convert it by parsing
 				result := &database.Time{}
-				err := result.ScanString(data.(string))
+				err := result.ScanString(data.(string)) //nolint:forcetypeassert // we've verified that f.Kind() == reflect.String
 				service.MustNotBeError(err)
 				return *result, nil
 			},
@@ -365,6 +365,7 @@ func scanAndBuildProgressResults(
 		// convert map[string]interface{} into tableCellType and store the result in reflDecodedTableCell
 		service.MustNotBeError(decoder.Decode(cell))
 
+		//nolint:forcetypeassert // we know that GroupID is int64
 		groupID := reflDecodedTableCell.FieldByName("GroupID").Interface().(int64)
 		if groupID != previousGroupID {
 			if previousGroupID != -1 {

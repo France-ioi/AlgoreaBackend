@@ -286,6 +286,7 @@ func constructUpdateItemChildTypeNonSkillValidator(
 	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for elements of Children slice of type itemChild
 		child := fl.Field().Interface().(itemChild)
 		if itemType == skill {
 			return true
@@ -308,6 +309,7 @@ func constructUpdateItemDurationRequiresExplicitEntryValidator(
 	formData *formdata.FormData, duration *string, requiresExplicitEntry bool,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for fields inside Item
 		data := fl.Parent().Addr().Interface().(*Item)
 		var changed bool
 		if formData.IsSet("duration") {

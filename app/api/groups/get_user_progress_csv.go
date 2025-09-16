@@ -223,8 +223,8 @@ func processCSVResultRow(
 			score = fmt.Sprintf("%v", rowMap["score"])
 		}
 
-		itemID := rowMap["item_id"].(int64)
-		groupID := rowMap["group_id"].(int64)
+		itemID := rowMap["item_id"].(int64)   //nolint:forcetypeassert // we know that it is int64
+		groupID := rowMap["group_id"].(int64) //nolint:forcetypeassert // we know that it is int64
 
 		if currentRowNumber%uniqueItemsCount == 0 {
 			groupNames := generateGroupNamesFunc(groupID)

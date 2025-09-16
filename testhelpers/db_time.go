@@ -182,6 +182,7 @@ func patchDatabaseDBMethodsWithStringQuery(nowReplacer func(string) string, patc
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
 				reflArgs := []reflect.Value{reflect.ValueOf(query)}
 
+				//nolint:forcetypeassert // both methods always return *database.DB
 				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
 			})
 		patch.patchedMethods = append(patch.patchedMethods, stringDBGuards[methodName])
@@ -204,6 +205,7 @@ func patchDatabaseDBMethodsWithStringQueryAndArgs(nowReplacer func(string) strin
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
 				reflArgs := constructReflArgsForQueryAndArgs(query, args)
 
+				//nolint:forcetypeassert // all the methods always return *database.DB
 				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
 			})
 		patch.patchedMethods = append(patch.patchedMethods, stringAndArgsDBGuards[methodName])
@@ -245,6 +247,7 @@ func patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer func(string) string, 
 				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
 				reflArgs := constructReflArgsForQueryAndArgs(query, args)
 
+				//nolint:forcetypeassert // all the methods always return *database.DB
 				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
 			})
 		patch.patchedMethods = append(patch.patchedMethods, standardDBGuards[methodName])

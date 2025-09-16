@@ -276,6 +276,7 @@ func constructParentItemIDValidator(
 	store *database.DataStore, user *database.User, parentInfo *parentItemInfo,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for `item_id` field of itemParent which is of type int64
 		err := store.Items().
 			JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
 			WherePermissionIsAtLeast("edit", "children").
@@ -298,6 +299,7 @@ func constructAsRootOfGroupIDValidator(
 		if !formData.IsSet("as_root_of_group_id") {
 			return true
 		}
+		//nolint:forcetypeassert // the validator is registered only for `as_root_of_group_id` field which is of type int64
 		found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", fl.Field().Interface().(int64)).
 			Where("can_manage = 'memberships_and_group'").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
@@ -316,6 +318,7 @@ func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func
 // The validator checks that the language exists.
 func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for `language_tag` field which is of type string
 		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
@@ -337,6 +340,7 @@ func constructTypeSkillValidator(parentInfo *parentItemInfo) validator.Func {
 // The validator checks that when the duration is given and is not null, the field is true.
 func constructDurationRequiresExplicitEntryValidator() validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for fields inside Item
 		data := fl.Parent().Addr().Interface().(*Item)
 		return data.RequiresExplicitEntry || !fl.Field().IsValid()
 	}
@@ -365,6 +369,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 	itemID *int64,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for Children slice of type []itemChild
 		children := fl.Field().Interface().([]itemChild)
 
 		if len(children) == 0 {
@@ -470,6 +475,7 @@ func constructChildTypeNonSkillValidator(
 	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for elements of Children slice of type itemChild
 		child := fl.Field().Interface().(itemChild)
 
 		itemType := fl.Top().Elem().FieldByName("Type").String()

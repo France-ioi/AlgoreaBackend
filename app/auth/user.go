@@ -9,18 +9,18 @@ import (
 
 // UserFromContext retrieves a user from a context set by the middleware.
 func UserFromContext(ctx context.Context) *database.User {
-	userFromContext := ctx.Value(ctxUser).(*database.User)
+	userFromContext := ctx.Value(ctxUser).(*database.User) //nolint:forcetypeassert // panic if it is not *database.User
 	return userFromContext.Clone()
 }
 
 // SessionIDFromContext retrieves the session id from a context set by the middleware.
 func SessionIDFromContext(ctx context.Context) int64 {
-	return ctx.Value(ctxSessionID).(int64)
+	return ctx.Value(ctxSessionID).(int64) //nolint:forcetypeassert // panic if it is not int64
 }
 
 // BearerTokenFromContext retrieves a bearer token from a context set by the middleware.
 func BearerTokenFromContext(ctx context.Context) string {
-	return ctx.Value(ctxBearer).(string)
+	return ctx.Value(ctxBearer).(string) //nolint:forcetypeassert // panic if it is not a string
 }
 
 // SessionCookieAttributesFromContext retrieves session cookie attributes from a context set by the middleware.
@@ -30,6 +30,7 @@ func SessionCookieAttributesFromContext(ctx context.Context) *SessionCookieAttri
 	if cookieAttributesFromContext == nil {
 		return nil
 	}
+	//nolint:forcetypeassert // panic if it is not *SessionCookieAttributes
 	attributesCopy := *(cookieAttributesFromContext.(*SessionCookieAttributes))
 	return &attributesCopy
 }

@@ -372,6 +372,7 @@ func registerCanEnterFromValidator(data *formdata.FormData, managerPermissions *
 	currentPermissions *userPermissions, modified *bool, s *database.DataStore,
 ) {
 	registerOptionalValidator(data, "can_enter_from", "the value is not permitted", func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered for `can_enter_from` only which is of type time.Time
 		newValue := fl.Field().Interface().(time.Time)
 		if !checkIfPossibleToModifyCanEnterFrom(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -388,6 +389,7 @@ func registerCanEnterUntilValidator(
 	modified *bool, s *database.DataStore,
 ) {
 	registerOptionalValidator(data, "can_enter_until", "the value is not permitted", func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered for `can_enter_until` only which is of type time.Time
 		newValue := fl.Field().Interface().(time.Time)
 		if !checkIfPossibleToModifyCanEnterUntil(newValue, currentPermissions, managerPermissions, s) {
 			return false
@@ -405,6 +407,7 @@ func registerCanRequestHelpToSetValidator(data *formdata.FormData, currentPermis
 		"can_request_help_to_set",
 		"can_request_help_to_set",
 		func(fl validator.FieldLevel) bool {
+			//nolint:forcetypeassert // the validator is registered for `can_request_help_to` only which is of type setCanRequestHelpTo
 			value := fl.Field().Interface().(setCanRequestHelpTo)
 
 			if value.IsAllUsersGroup || canRequestHelpToIsModified(value.ID, currentPermissions.CanRequestHelpTo) {
@@ -421,6 +424,7 @@ func registerCanRequestHelpToConsistentValidator(data *formdata.FormData) {
 		"can_request_help_to_consistent",
 		"cannot set can_request_help_to id and is_all_users_group at the same time",
 		func(fl validator.FieldLevel) bool {
+			//nolint:forcetypeassert // the validator is registered for `can_request_help_to` only which is of type setCanRequestHelpTo
 			value := fl.Field().Interface().(setCanRequestHelpTo)
 
 			// Cannot set can_request_help_to and can_request_help_to_all_users at the same time.
@@ -444,6 +448,7 @@ func registerCanRequestHelpToVisibleValidator(
 		"can_request_help_to_visible",
 		"can_request_help_to is not visible either by the current-user or the groupID",
 		func(fl validator.FieldLevel) bool {
+			//nolint:forcetypeassert // the validator is registered for `can_request_help_to` only which is of type setCanRequestHelpTo
 			value := fl.Field().Interface().(setCanRequestHelpTo)
 
 			if value.ID != nil {
@@ -728,6 +733,7 @@ func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[strin
 	permissionGrantedStore := store.PermissionsGranted()
 	service.MustNotBeError(permissionGrantedStore.InsertOrUpdateMap(dbMap, columnsToUpdate, nil))
 	store.SchedulePermissionsPropagation()
+	//nolint:forcetypeassert // panic if dbMap["is_owner"] is not boolean
 	if dbMap["can_view"] != nil && dbMap["can_view"] != none || dbMap["is_owner"] != nil && dbMap["is_owner"].(bool) {
 		// the permissions propagation implicitly (via triggers) marks some results as to_be_propagated
 		// when an item becomes visible, so we should propagate results here

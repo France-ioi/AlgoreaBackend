@@ -29,6 +29,7 @@ type ConfigItem struct {
 
 // ConfigFromContext retrieves the current domain configuration from a context set by the middleware.
 func ConfigFromContext(ctx context.Context) *CtxConfig {
+	//nolint:forcetypeassert // panic if the context does not have a domain config or it is of a wrong type
 	conf := ctx.Value(ctxKeyDomainConfig).(*CtxConfig)
 	confCopy := *conf
 	return &confCopy
@@ -36,5 +37,6 @@ func ConfigFromContext(ctx context.Context) *CtxConfig {
 
 // CurrentDomainFromContext retrieves the current domain from a context set by the middleware.
 func CurrentDomainFromContext(ctx context.Context) string {
+	//nolint:forcetypeassert // panic if the context does not have a domain or it is not a string
 	return ctx.Value(ctxKeyDomain).(string)
 }

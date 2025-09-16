@@ -46,5 +46,6 @@ func CreateTestContextWithLogger(logger *logging.Logger) context.Context {
 // GetConfigFromContext returns the configuration from the given context
 // initialized by CreateTestContext or CreateTestContextWithLogger.
 func GetConfigFromContext(ctx context.Context) *viper.Viper {
+	//nolint:forcetypeassert // panic if the context does not have a config or it is of a wrong type
 	return ctx.Value(testContextConfigKey).(*viper.Viper)
 }

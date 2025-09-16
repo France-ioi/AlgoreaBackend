@@ -21,6 +21,7 @@ func (d *mysqlDriverWrapper) Open(name string) (driver.Conn, error) {
 var _ driver.Driver = &mysqlDriverWrapper{}
 
 func (d *mysqlDriverWrapper) OpenConnector(name string) (driver.Connector, error) {
+	//nolint:forcetypeassert // panic if d.driver does not implement driver.DriverContext
 	connector, err := d.driver.(driver.DriverContext).OpenConnector(name)
 	if err != nil {
 		return nil, err

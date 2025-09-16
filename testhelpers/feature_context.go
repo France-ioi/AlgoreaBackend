@@ -157,6 +157,7 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 			restoreFunc(err != nil) // Pass through the output if the test failed
 		}
 		if err != nil { // If the test failed, restore the output of the parent test (if it is captured)
+			//nolint:forcetypeassert // outputRestorerFuncKey is always associated with *flowmingo.RestoreFunc
 			if parentOutputRestorerFunc := contextCtx.Value(outputRestorerFuncKey).(*flowmingo.RestoreFunc); *parentOutputRestorerFunc != nil {
 				(*parentOutputRestorerFunc)(true)
 				*parentOutputRestorerFunc = nil

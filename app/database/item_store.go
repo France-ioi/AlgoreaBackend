@@ -242,9 +242,11 @@ func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
 	attemptIDMap = make(map[int64]int64, len(ids))
 	attemptNumberMap = make(map[int64]int, len(ids))
 	for idIndex := 0; idIndex < len(ids); idIndex++ {
+		//nolint:forcetypeassert // panic if the type of data["attempt%d"] is not int64
 		attemptIDMap[ids[idIndex]] = data[fmt.Sprintf("attempt%d", idIndex)].(int64)
 		numberKey := fmt.Sprintf("number%d", idIndex)
 		if data[numberKey] != nil {
+			//nolint:forcetypeassert // panic if the type of data["number%d"] is not int64
 			attemptNumberMap[ids[idIndex]] = int(data[numberKey].(int64))
 		}
 	}

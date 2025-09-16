@@ -24,6 +24,7 @@ func NewRawDBLogger() instrumentedsql.Logger {
 		}
 
 		if valuesMap["duration"] != nil {
+			//nolint:forcetypeassert // panic if valuesMap["duration"] is not time.Duration (instrumentedsql guarantees that)
 			valuesMap["duration"] = valuesMap["duration"].(time.Duration).String()
 		}
 
@@ -36,9 +37,11 @@ func NewRawDBLogger() instrumentedsql.Logger {
 func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 	valuesMap := make(map[string]interface{}, len(keyvals)/2) //nolint:mnd // keyvals are key-value pairs
 	for index := 0; index < len(keyvals); index += 2 {
+		//nolint:forcetypeassert // panic if keyvals[index] is not a string (instrumentedsql guarantees that)
 		valuesMap[keyvals[index].(string)] = keyvals[index+1]
 	}
 	if valuesMap["query"] != nil && valuesMap["args"] != nil {
+		//nolint:forcetypeassert // panic if valuesMap["args"] is not a string (instrumentedsql guarantees that)
 		argsString := valuesMap["args"].(string)
 		argsString = argsString[1 : len(argsString)-1]
 		var argsValues []interface{}
@@ -55,6 +58,7 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 			}
 			argsString = argsString[indices[5]+3:]
 		}
+		//nolint:forcetypeassert // panic if valuesMap["query"] is not a string (instrumentedsql guarantees that)
 		valuesMap["query"] = fillSQLPlaceholders(valuesMap["query"].(string), argsValues)
 		delete(valuesMap, "args")
 	}
