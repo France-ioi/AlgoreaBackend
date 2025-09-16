@@ -178,7 +178,7 @@ func (srv *Service) getUserProgressCSV(responseWriter http.ResponseWriter, httpR
 }
 
 func printTableHeader(
-	store *database.DataStore, user *database.User, uniqueItemIDs []string, orderedItemIDListWithDuplicates []interface{},
+	store *database.DataStore, user *database.User, uniqueItemIDs []string, orderedItemIDListWithDuplicates []int64,
 	itemOrder []int, csvWriter *csv.Writer, firstColumns []string,
 ) {
 	var items []struct {
@@ -198,7 +198,7 @@ func printTableHeader(
 	itemTitles := make([]string, 0, len(firstColumns)+len(orderedItemIDListWithDuplicates))
 	itemTitles = append(itemTitles, firstColumns...)
 	for i, itemID := range orderedItemIDListWithDuplicates {
-		title := itemTitlesMap[itemID.(int64)]
+		title := itemTitlesMap[itemID]
 		if itemOrder[i] != 0 {
 			title = fmt.Sprintf("%d. %s", itemOrder[i], title)
 		}
@@ -208,7 +208,7 @@ func printTableHeader(
 }
 
 func processCSVResultRow(
-	orderedItemIDListWithDuplicates []interface{},
+	orderedItemIDListWithDuplicates []int64,
 	uniqueItemsCount int,
 	groupNumber *int,
 	generateGroupNamesFunc func(groupID int64) []string,
@@ -238,7 +238,7 @@ func processCSVResultRow(
 
 		if currentRowNumber%uniqueItemsCount == uniqueItemsCount-1 {
 			for _, id := range orderedItemIDListWithDuplicates {
-				rowArray = append(rowArray, cellsMap[id.(int64)])
+				rowArray = append(rowArray, cellsMap[id])
 			}
 			service.MustNotBeError(csvWriter.Write(rowArray))
 		}
