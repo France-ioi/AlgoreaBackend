@@ -273,14 +273,14 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
 		GetUserProfile(httpRequest.Context(), token.AccessToken)
 	service.MustNotBeError(err)
-	userProfile["last_ip"] = strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
 
 	domainConfig := domain.ConfigFromContext(httpRequest.Context())
+	userIP := strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
 
 	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
-		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig)
+		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig, userIP)
 		logging.LogEntrySetField(httpRequest, "user_id", userID)
-		service.MustNotBeError(store.Groups().StoreBadges(userProfile["badges"].([]database.Badge), userID, true))
+		service.MustNotBeError(store.Groups().StoreBadges(userProfile.Badges, userID, true))
 
 		sessionID := rand.Int63()
 		service.MustNotBeError(store.Exec(
@@ -445,14 +445,19 @@ func extractOptionalParameter(query url.Values, paramName string, requestData ma
 	}
 }
 
-func createOrUpdateUser(userStore *database.UserStore, userData map[string]interface{}, domainConfig *domain.CtxConfig) int64 {
+func createOrUpdateUser(
+	userStore *database.UserStore, userProfile *loginmodule.UserProfile, domainConfig *domain.CtxConfig, userIP string,
+) int64 {
 	var groupID int64
 	err := userStore.WithExclusiveWriteLock().
-		Where("login_id = ?", userData["login_id"]).PluckFirst("group_id", &groupID).Error()
+		Where("login_id = ?", userProfile.LoginID).PluckFirst("group_id", &groupID).Error()
+
+	userData := userProfile.ToMap()
 
 	userData["latest_login_at"] = database.Now()
 	userData["latest_activity_at"] = database.Now()
 	userData["latest_profile_sync_at"] = database.Now()
+	userData["last_ip"] = userIP
 
 	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
 		userData["default_language"] = database.Default()
@@ -463,7 +468,7 @@ func createOrUpdateUser(userStore *database.UserStore, userData map[string]inter
 	defer func() { userData["badges"] = badges }()
 
 	if gorm.IsRecordNotFoundError(err) {
-		selfGroupID := createGroupFromLogin(userStore.Groups(), userData["login"].(string), domainConfig)
+		selfGroupID := createGroupFromLogin(userStore.Groups(), userProfile.Login, domainConfig)
 		userData["temp_user"] = 0
 		userData["registered_at"] = database.Now()
 		userData["group_id"] = selfGroupID
