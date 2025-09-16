@@ -729,10 +729,13 @@ func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
 	assert.Equal(t, db.logConfig(), dataStore.logConfig())
 	assert.Equal(t, ctx, dataStore.ctx())
 
-	dbWrapper := dataStore.DB.db.CommonDB().(*sqlDBWrapper)
+	dbWrapper, ok := dataStore.DB.db.CommonDB().(*sqlDBWrapper)
+	require.True(t, ok)
 	assert.Equal(t, ctx, dbWrapper.ctx)
 	assert.Equal(t, db.logConfig(), dbWrapper.logConfig)
-	assert.Equal(t, db.db.CommonDB().(*sqlDBWrapper).sqlDB, dbWrapper.sqlDB)
+	dbDBWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+	require.True(t, ok)
+	assert.Equal(t, dbDBWrapper.sqlDB, dbWrapper.sqlDB)
 	dialect := dataStore.DB.db.Dialect()
 	//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
 	assert.Equal(t, dbWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
@@ -757,10 +760,13 @@ func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
 		assert.Equal(t, db.logConfig(), dataStore.logConfig())
 		assert.Equal(t, ctx, dataStore.ctx())
 
-		txWrapper := dataStore.DB.db.CommonDB().(*sqlTxWrapper)
+		txWrapper, ok := dataStore.DB.db.CommonDB().(*sqlTxWrapper)
+		require.True(t, ok)
 		assert.Equal(t, db.logConfig(), txWrapper.logConfig)
 		assert.Equal(t, ctx, txWrapper.ctx)
-		assert.Equal(t, db.db.CommonDB().(*sqlTxWrapper).sqlTx, txWrapper.sqlTx)
+		dbTxWrapper, ok := db.db.CommonDB().(*sqlTxWrapper)
+		require.True(t, ok)
+		assert.Equal(t, dbTxWrapper.sqlTx, txWrapper.sqlTx)
 		dialect := dataStore.DB.db.Dialect()
 		//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
 		assert.Equal(t, txWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
@@ -822,7 +828,9 @@ func TestDataStore_SetPropagationsModeToSync(t *testing.T) {
 	require.NoError(t, NewDataStore(db).InTransaction(func(store *DataStore) error {
 		require.NoError(t, store.SetPropagationsModeToSync())
 		assert.Equal(t, true, store.DB.ctx().Value(propagationsAreSyncContextKey))
-		assert.Equal(t, true, store.DB.db.CommonDB().(*sqlTxWrapper).ctx.Value(propagationsAreSyncContextKey))
+		txWrapper, ok := store.DB.db.CommonDB().(*sqlTxWrapper)
+		require.True(t, ok)
+		assert.Equal(t, true, txWrapper.ctx.Value(propagationsAreSyncContextKey))
 		return nil
 	}))
 	assert.NoError(t, mock.ExpectationsWereMet())

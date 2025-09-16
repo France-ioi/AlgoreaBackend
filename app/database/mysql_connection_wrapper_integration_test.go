@@ -36,7 +36,9 @@ func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
 	require.Equal(t, int64(1), *result)
 
 	err = conn.Raw(func(driverConn any) error {
-		return driverConn.(driver.SessionResetter).ResetSession(ctx)
+		sessionResetter, ok := driverConn.(driver.SessionResetter)
+		require.True(t, ok)
+		return sessionResetter.ResetSession(ctx)
 	})
 	require.NoError(t, err)
 
@@ -63,7 +65,9 @@ func TestMysqlConnectionWrapper_ResetSession_ResetsForeignKeyChecks(t *testing.T
 	require.Equal(t, int64(0), *result)
 
 	err = conn.Raw(func(driverConn any) error {
-		return driverConn.(driver.SessionResetter).ResetSession(ctx)
+		sessionResetter, ok := driverConn.(driver.SessionResetter)
+		require.True(t, ok)
+		return sessionResetter.ResetSession(ctx)
 	})
 	require.NoError(t, err)
 
@@ -83,8 +87,12 @@ func TestMysqlConnectionWrapper_ResetSession_FailsOnClosedConnection(t *testing.
 	defer func() { _ = conn.Close() }()
 
 	err = conn.Raw(func(driverConn any) error {
-		require.NoError(t, driverConn.(driver.Conn).Close())
-		return driverConn.(driver.SessionResetter).ResetSession(ctx)
+		driverConnObject, ok := driverConn.(driver.Conn)
+		require.True(t, ok)
+		require.NoError(t, driverConnObject.Close())
+		sessionResetter, ok := driverConn.(driver.SessionResetter)
+		require.True(t, ok)
+		return sessionResetter.ResetSession(ctx)
 	})
 	require.Equal(t, driver.ErrBadConn, err)
 }
@@ -107,8 +115,12 @@ func TestMysqlConnectionWrapper_Reset_FailsOnClosedConnection(t *testing.T) {
 	defer func() { _ = conn.Close() }()
 
 	err = conn.Raw(func(driverConn any) error {
-		require.NoError(t, driverConn.(driver.Conn).Close())
-		return driverConn.(resetter).Reset(ctx)
+		driverConnObject, ok := driverConn.(driver.Conn)
+		require.True(t, ok)
+		require.NoError(t, driverConnObject.Close())
+		resetterObject, ok := driverConn.(resetter)
+		require.True(t, ok)
+		return resetterObject.Reset(ctx)
 	})
 	require.Equal(t, driver.ErrBadConn, err)
 }
@@ -130,7 +142,9 @@ func TestMysqlConnectionWrapper_Reset_FailsWhenContextIsCancelled(t *testing.T) 
 
 	err = conn.Raw(func(driverConn any) error {
 		cancelFunc()
-		return driverConn.(resetter).Reset(ctx)
+		resetterObject, ok := driverConn.(resetter)
+		require.True(t, ok)
+		return resetterObject.Reset(ctx)
 	})
 	require.Equal(t, context.Canceled, err)
 }
@@ -154,7 +168,9 @@ func TestMysqlConnectionWrapper_Reset_FailsWhenWriteCommandPacketFails(t *testin
 			return expectedError
 		})
 		defer monkey.UnpatchAll()
-		return driverConn.(resetter).Reset(ctx)
+		resetterObject, ok := driverConn.(resetter)
+		require.True(t, ok)
+		return resetterObject.Reset(ctx)
 	})
 	require.Equal(t, expectedError, err)
 }

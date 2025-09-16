@@ -47,8 +47,11 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 			for _, arg := range testCase.args {
 				parameters = append(parameters, reflect.ValueOf(arg))
 			}
-			db = reflect.ValueOf(itemStore).MethodByName(testCase.methodToCall).
-				Call(parameters)[0].Interface().(*database.DB).Pluck(testCase.column, &result)
+			var ok bool
+			db, ok = reflect.ValueOf(itemStore).MethodByName(testCase.methodToCall).
+				Call(parameters)[0].Interface().(*database.DB)
+			require.True(t, ok)
+			db = db.Pluck(testCase.column, &result)
 			require.NoError(t, db.Error())
 
 			assert.Equal(t, testCase.expected, result)
