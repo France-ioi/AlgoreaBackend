@@ -109,9 +109,9 @@ func assertMiddleware(t *testing.T, domains []ConfigItem, domainOverride string,
 	enteredService := false // used to log if the service has been reached
 	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 		enteredService = true // has passed into the service
-		configuration := httpRequest.Context().Value(ctxDomainConfig).(*CtxConfig)
+		configuration := httpRequest.Context().Value(ctxKeyDomainConfig).(*CtxConfig)
 		assert.Equal(t, expectedConfig, configuration)
-		domain := httpRequest.Context().Value(ctxDomain).(string)
+		domain := httpRequest.Context().Value(ctxKeyDomain).(string)
 		assert.Equal(t, expectedDomain, domain)
 		responseWriter.WriteHeader(http.StatusOK)
 	})

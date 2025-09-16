@@ -9,7 +9,7 @@ import (
 
 func TestConfigFromContext(t *testing.T) {
 	expectedConfig := &CtxConfig{AllUsersGroupID: 101, NonTempUsersGroupID: 102, TempUsersGroupID: 103}
-	ctx := context.WithValue(context.Background(), ctxDomainConfig, expectedConfig)
+	ctx := context.WithValue(context.Background(), ctxKeyDomainConfig, expectedConfig)
 	conf := ConfigFromContext(ctx)
 
 	assert.NotSame(t, expectedConfig, conf)
@@ -18,7 +18,7 @@ func TestConfigFromContext(t *testing.T) {
 
 func TestDomainFromContext(t *testing.T) {
 	expectedDomain := "somedomain.com"
-	ctx := context.WithValue(context.Background(), ctxDomain, expectedDomain)
+	ctx := context.WithValue(context.Background(), ctxKeyDomain, expectedDomain)
 	domain := CurrentDomainFromContext(ctx)
 	assert.Equal(t, expectedDomain, domain)
 }

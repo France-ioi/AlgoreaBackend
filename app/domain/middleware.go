@@ -47,7 +47,7 @@ func Middleware(domains []ConfigItem, domainOverride string) func(next http.Hand
 				return
 			}
 			ctx := context.WithValue(
-				context.WithValue(httpRequest.Context(), ctxDomainConfig, configuration), ctxDomain, domain)
+				context.WithValue(httpRequest.Context(), ctxKeyDomainConfig, configuration), ctxKeyDomain, domain)
 			next.ServeHTTP(responseWriter, httpRequest.WithContext(ctx))
 		})
 	}
