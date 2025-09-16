@@ -59,7 +59,8 @@ func Float64() float64 {
 
 const rngLen = 607
 
-type rngSource struct {
+// RngSource is the state of a math/rand.Rand source.
+type RngSource struct {
 	_ int           // index into vec
 	_ int           // index into vec
 	_ [rngLen]int64 // current feedback register
@@ -67,7 +68,7 @@ type rngSource struct {
 
 type sourceInterface struct {
 	typ unsafe.Pointer
-	val *rngSource
+	val *RngSource
 }
 
 type rnd struct {
@@ -76,22 +77,22 @@ type rnd struct {
 }
 
 // GetSource returns a copy of the current source of the random number generator.
-func GetSource() interface{} {
+func GetSource() *RngSource {
 	globalLock.Lock()
 	defer globalLock.Unlock()
 
 	source := ((*rnd)(unsafe.Pointer(globalRand))).src64.val //nolint:gosec // G103: Valid use of unsafe call
 
-	sourceCopy := &rngSource{}
+	sourceCopy := &RngSource{}
 	*sourceCopy = *source
 	return sourceCopy
 }
 
 // SetSource sets the source of the random number generator to a copy of the given source.
-func SetSource(newSource interface{}) {
+func SetSource(newSource *RngSource) {
 	globalLock.Lock()
 	defer globalLock.Unlock()
 
 	source := ((*rnd)(unsafe.Pointer(globalRand))).src64.val //nolint:gosec // G103: Valid use of unsafe call
-	*source = *newSource.(*rngSource)
+	*source = *newSource
 }
