@@ -588,17 +588,17 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 					Order:    order,
 					Category: newItemRequest.Parent.Category, ScoreWeight: newItemRequest.Parent.ScoreWeight,
 					ContentViewPropagation: valueOrDefault(
-						formData, "parent.content_view_propagation", newItemRequest.Parent.ContentViewPropagation, asInfo).(string),
+						formData, "parent.content_view_propagation", newItemRequest.Parent.ContentViewPropagation, asInfo),
 					UpperViewLevelsPropagation: valueOrDefault(
-						formData, "parent.upper_view_levels_propagation", newItemRequest.Parent.UpperViewLevelsPropagation, asIs).(string),
+						formData, "parent.upper_view_levels_propagation", newItemRequest.Parent.UpperViewLevelsPropagation, asIs),
 					GrantViewPropagation: valueOrDefault(
-						formData, "parent.grant_view_propagation", newItemRequest.Parent.GrantViewPropagation, true).(bool),
+						formData, "parent.grant_view_propagation", newItemRequest.Parent.GrantViewPropagation, true),
 					WatchPropagation: valueOrDefault(
-						formData, "parent.watch_propagation", newItemRequest.Parent.WatchPropagation, true).(bool),
+						formData, "parent.watch_propagation", newItemRequest.Parent.WatchPropagation, true),
 					EditPropagation: valueOrDefault(
-						formData, "parent.edit_propagation", newItemRequest.Parent.EditPropagation, true).(bool),
+						formData, "parent.edit_propagation", newItemRequest.Parent.EditPropagation, true),
 					RequestHelpPropagation: valueOrDefault(
-						formData, "parent.request_help_propagation", newItemRequest.Parent.RequestHelpPropagation, true).(bool),
+						formData, "parent.request_help_propagation", newItemRequest.Parent.RequestHelpPropagation, true),
 				})
 
 			// Mark results of the current user linked to the parent item (if any) to be recomputed synchronously
@@ -660,7 +660,7 @@ func setItemRequestDefaults(newItemRequest *NewItemRequest, formData *formdata.F
 	}
 }
 
-func valueOrDefault(formData *formdata.FormData, fieldName string, value, defaultValue interface{}) interface{} {
+func valueOrDefault[T any](formData *formdata.FormData, fieldName string, value, defaultValue T) T {
 	if formData.IsSet(fieldName) {
 		return value
 	}
