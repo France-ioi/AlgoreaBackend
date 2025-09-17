@@ -77,7 +77,7 @@ func (srv *Service) deleteItemString(responseWriter http.ResponseWriter, httpReq
 		}
 
 		result := store.ItemStrings().Delete("item_id = ? AND language_tag = ?", itemID, languageTag)
-		if database.IsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError(result.Error()) {
+		if database.IsRowIsReferenced2Error(result.Error()) {
 			return service.ErrUnprocessableEntity(
 				errors.New("the item string cannot be deleted because its language is the default language of the item"))
 		}

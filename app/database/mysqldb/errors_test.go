@@ -24,8 +24,8 @@ func TestIsMysqlError_shouldNotMatchDifferentMysqlError(t *testing.T) {
 		Message: "Duplicate Error",
 	}
 
-	if IsMysqlError(error(&duplicateEntryError), ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError) {
-		t.Error("DuplicateEntryError should not match a ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError")
+	if IsMysqlError(error(&duplicateEntryError), NoReferencedRow2) {
+		t.Error("DuplicateEntryError should not match a NoReferencedRow2")
 	}
 }
 
