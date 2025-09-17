@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func TestDB_getFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
+func TestGetFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, mock := NewDBMock()
@@ -33,7 +33,7 @@ func TestDB_getFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 		WillReturnError(expectedError)
 
 	assert.PanicsWithValue(t, expectedError, func() {
-		db.getFromEnumUnderLock(func() interface{} { return nil })
+		getFromEnumUnderLock(db, func() interface{} { return nil })
 	})
 	assert.Nil(t, enumValueIndex2Name)
 	assert.Nil(t, enumValueName2Index)

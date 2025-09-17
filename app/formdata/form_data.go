@@ -462,6 +462,7 @@ func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 		}
 
 		if from.Kind() == reflect.Slice && from.Elem().Kind() == reflect.Uint8 {
+			//nolint:forcetypeassert // we know that data is []byte because from.Kind() == reflect.Slice and from.Elem().Kind() == reflect.Uint8
 			return *AnythingFromBytes(data.([]byte)), nil
 		}
 		bytes, _ := json.Marshal(data)
@@ -480,6 +481,7 @@ func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 		if t.Kind() != reflect.Int64 || f.Kind() != reflect.String {
 			return data, nil
 		}
+		//nolint:forcetypeassert // we know that data is string because f.Kind() == reflect.String
 		return strconv.ParseInt(data.(string), 10, 64)
 	}
 }
@@ -497,6 +499,10 @@ func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc 
 			return data, nil
 		}
 		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, from, reflect.TypeOf((*time.Time)(nil)).Elem(), data)
+		if err != nil {
+			return nil, err
+		}
+		//nolint:forcetypeassert // we know that converted is time.Time because timeDecodeFunc returns time.Time on success
 		return database.Time(converted.(time.Time).UTC()), err
 	}
 }

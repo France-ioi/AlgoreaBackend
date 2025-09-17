@@ -77,6 +77,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 
 	set.AddGlobalFunc("currentTimeInFormat", func(a jet.Arguments) reflect.Value {
 		a.RequireNumOfArguments("currentTimeInFormat", 1, 1)
+		//nolint:forcetypeassert // panic if the argument is not a string
 		return reflect.ValueOf(time.Now().UTC().Format(a.Get(0).Interface().(string)))
 	})
 
@@ -94,13 +95,16 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		var privateKey *rsa.PrivateKey
 		privateKeyRefl := arguments.Get(1)
 		if privateKeyRefl.CanAddr() {
+			//nolint:forcetypeassert // panic if privateKeyRefl is addressable but not *rsa.PrivateKey
 			privateKey = privateKeyRefl.Addr().Interface().(*rsa.PrivateKey)
 		} else {
 			var err error
 			var privateKeyBytes []byte
 			if privateKeyRefl.Kind() == reflect.String {
+				//nolint:forcetypeassert // privateKeyRefl is a string
 				privateKeyBytes = []byte(privateKeyRefl.Interface().(string))
 			} else {
+				//nolint:forcetypeassert // panic if privateKeyRefl is not addressable, but neither string nor []byte
 				privateKeyBytes = privateKeyRefl.Interface().([]byte)
 			}
 			privateKey, err = crypto.ParseRSAPrivateKeyFromPEM(privateKeyBytes)
@@ -109,6 +113,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 			}
 		}
 		return reflect.ValueOf(
+			//nolint:forcetypeassert // panic if the first argument is not map[string]interface{}
 			fmt.Sprintf("%q", token.Generate(arguments.Get(0).Interface().(map[string]interface{}),
 				privateKey)))
 	})
@@ -119,6 +124,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 
 	set.AddGlobalFunc("db", func(arguments jet.Arguments) reflect.Value {
 		arguments.RequireNumOfArguments("db", 1, 1)
+		//nolint:forcetypeassert // panic if the argument is not a string
 		path := arguments.Get(0).Interface().(string)
 		if match := dbPathRegexp.FindStringSubmatch(path); match != nil {
 			gherkinTable := ctx.dbTableData[match[1]]
@@ -142,12 +148,13 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		return reflect.Value{}
 	})
 
-	set.AddGlobalFunc("relativeTimeDB", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("relativeTimeDB", 1, 1)
-		durationString := a.Get(0).Interface().(string)
+	set.AddGlobalFunc("relativeTimeDB", func(arguments jet.Arguments) reflect.Value {
+		arguments.RequireNumOfArguments("relativeTimeDB", 1, 1)
+		//nolint:forcetypeassert // panic if the argument is not a string
+		durationString := arguments.Get(0).Interface().(string)
 		duration, err := time.ParseDuration(durationString)
 		if err != nil {
-			a.Panicf("can't parse duration: %s", err.Error())
+			arguments.Panicf("can't parse duration: %s", err.Error())
 		}
 		return reflect.ValueOf(time.Now().UTC().Add(duration).Truncate(time.Second).Format(time.DateTime))
 	})
@@ -168,24 +175,26 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 }
 
 func addRelativeTimeDBMsFunction(set *jet.Set) *jet.Set {
-	return set.AddGlobalFunc("relativeTimeDBMs", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("relativeTimeDBMs", 1, 1)
-		durationString := a.Get(0).Interface().(string)
+	return set.AddGlobalFunc("relativeTimeDBMs", func(arguments jet.Arguments) reflect.Value {
+		arguments.RequireNumOfArguments("relativeTimeDBMs", 1, 1)
+		//nolint:forcetypeassert // panic if the argument is not a string
+		durationString := arguments.Get(0).Interface().(string)
 		duration, err := time.ParseDuration(durationString)
 		if err != nil {
-			a.Panicf("can't parse duration: %s", err.Error())
+			arguments.Panicf("can't parse duration: %s", err.Error())
 		}
 		return reflect.ValueOf(time.Now().UTC().Add(duration).Truncate(time.Millisecond).Format("2006-01-02 15:04:05.000"))
 	})
 }
 
 func addtimeDBToRFC3339Function(set *jet.Set) {
-	set.AddGlobalFunc("timeDBToRFC3339", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("timeDBToRFC3339", 1, 1)
-		dbTime := a.Get(0).Interface().(string)
+	set.AddGlobalFunc("timeDBToRFC3339", func(arguments jet.Arguments) reflect.Value {
+		arguments.RequireNumOfArguments("timeDBToRFC3339", 1, 1)
+		//nolint:forcetypeassert // panic if the argument is not a string
+		dbTime := arguments.Get(0).Interface().(string)
 		parsedTime, err := time.Parse("2006-01-02 15:04:05.999999999", dbTime)
 		if err != nil {
-			a.Panicf("can't parse mysql datetime: %s", err.Error())
+			arguments.Panicf("can't parse mysql datetime: %s", err.Error())
 		}
 		parsedTime = parsedTime.Truncate(time.Second)
 		return reflect.ValueOf(parsedTime.Format(time.RFC3339))
@@ -193,12 +202,13 @@ func addtimeDBToRFC3339Function(set *jet.Set) {
 }
 
 func addTimeDBMsToRFC3339Function(set *jet.Set) {
-	set.AddGlobalFunc("timeDBMsToRFC3339", func(a jet.Arguments) reflect.Value {
-		a.RequireNumOfArguments("timeDBMsToRFC3339", 1, 1)
-		dbTime := a.Get(0).Interface().(string)
+	set.AddGlobalFunc("timeDBMsToRFC3339", func(arguments jet.Arguments) reflect.Value {
+		arguments.RequireNumOfArguments("timeDBMsToRFC3339", 1, 1)
+		//nolint:forcetypeassert // panic if the argument is not a string
+		dbTime := arguments.Get(0).Interface().(string)
 		parsedTime, err := time.Parse("2006-01-02 15:04:05.999", dbTime)
 		if err != nil {
-			a.Panicf("can't parse mysql datetime: %s", err.Error())
+			arguments.Panicf("can't parse mysql datetime: %s", err.Error())
 		}
 		return reflect.ValueOf(parsedTime.Format(time.RFC3339Nano))
 	})

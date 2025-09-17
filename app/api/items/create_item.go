@@ -276,6 +276,7 @@ func constructParentItemIDValidator(
 	store *database.DataStore, user *database.User, parentInfo *parentItemInfo,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for `item_id` field of itemParent which is of type int64
 		err := store.Items().
 			JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
 			WherePermissionIsAtLeast("edit", "children").
@@ -298,6 +299,7 @@ func constructAsRootOfGroupIDValidator(
 		if !formData.IsSet("as_root_of_group_id") {
 			return true
 		}
+		//nolint:forcetypeassert // the validator is registered only for `as_root_of_group_id` field which is of type int64
 		found, err := store.Groups().ManagedBy(user).Where("groups.id = ?", fl.Field().Interface().(int64)).
 			Where("can_manage = 'memberships_and_group'").WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
@@ -316,6 +318,7 @@ func constructParentItemTypeValidator(parentInfo *parentItemInfo) validator.Func
 // The validator checks that the language exists.
 func constructLanguageTagValidator(store *database.DataStore) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for `language_tag` field which is of type string
 		found, err := store.Languages().ByTag(fl.Field().Interface().(string)).WithSharedWriteLock().HasRows()
 		service.MustNotBeError(err)
 		return found
@@ -337,6 +340,7 @@ func constructTypeSkillValidator(parentInfo *parentItemInfo) validator.Func {
 // The validator checks that when the duration is given and is not null, the field is true.
 func constructDurationRequiresExplicitEntryValidator() validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for fields inside Item
 		data := fl.Parent().Addr().Interface().(*Item)
 		return data.RequiresExplicitEntry || !fl.Field().IsValid()
 	}
@@ -365,6 +369,7 @@ func constructChildrenValidator(store *database.DataStore, user *database.User,
 	itemID *int64,
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for Children slice of type []itemChild
 		children := fl.Field().Interface().([]itemChild)
 
 		if len(children) == 0 {
@@ -470,6 +475,7 @@ func constructChildTypeNonSkillValidator(
 	childrenInfoMap *map[int64]permissionAndType, //nolint:gocritic // we need the pointer as the constructor is called before the map is set
 ) validator.Func {
 	return func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered only for elements of Children slice of type itemChild
 		child := fl.Field().Interface().(itemChild)
 
 		itemType := fl.Top().Elem().FieldByName("Type").String()
@@ -588,17 +594,17 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 					Order:    order,
 					Category: newItemRequest.Parent.Category, ScoreWeight: newItemRequest.Parent.ScoreWeight,
 					ContentViewPropagation: valueOrDefault(
-						formData, "parent.content_view_propagation", newItemRequest.Parent.ContentViewPropagation, asInfo).(string),
+						formData, "parent.content_view_propagation", newItemRequest.Parent.ContentViewPropagation, asInfo),
 					UpperViewLevelsPropagation: valueOrDefault(
-						formData, "parent.upper_view_levels_propagation", newItemRequest.Parent.UpperViewLevelsPropagation, asIs).(string),
+						formData, "parent.upper_view_levels_propagation", newItemRequest.Parent.UpperViewLevelsPropagation, asIs),
 					GrantViewPropagation: valueOrDefault(
-						formData, "parent.grant_view_propagation", newItemRequest.Parent.GrantViewPropagation, true).(bool),
+						formData, "parent.grant_view_propagation", newItemRequest.Parent.GrantViewPropagation, true),
 					WatchPropagation: valueOrDefault(
-						formData, "parent.watch_propagation", newItemRequest.Parent.WatchPropagation, true).(bool),
+						formData, "parent.watch_propagation", newItemRequest.Parent.WatchPropagation, true),
 					EditPropagation: valueOrDefault(
-						formData, "parent.edit_propagation", newItemRequest.Parent.EditPropagation, true).(bool),
+						formData, "parent.edit_propagation", newItemRequest.Parent.EditPropagation, true),
 					RequestHelpPropagation: valueOrDefault(
-						formData, "parent.request_help_propagation", newItemRequest.Parent.RequestHelpPropagation, true).(bool),
+						formData, "parent.request_help_propagation", newItemRequest.Parent.RequestHelpPropagation, true),
 				})
 
 			// Mark results of the current user linked to the parent item (if any) to be recomputed synchronously
@@ -660,7 +666,7 @@ func setItemRequestDefaults(newItemRequest *NewItemRequest, formData *formdata.F
 	}
 }
 
-func valueOrDefault(formData *formdata.FormData, fieldName string, value, defaultValue interface{}) interface{} {
+func valueOrDefault[T any](formData *formdata.FormData, fieldName string, value, defaultValue T) T {
 	if formData.IsSet(fieldName) {
 		return value
 	}

@@ -45,6 +45,7 @@ func EntryFromContext(ctx context.Context) *logrus.Entry {
 // LoggerFromContext returns the logger from the given context.
 // The context must have been created with ContextWithLogger, otherwise LoggerFromContext will panic.
 func LoggerFromContext(ctx context.Context) *Logger {
+	//nolint:forcetypeassert // panic if the context does not have a logger or it is of a wrong type
 	return ctx.Value(loggerContextKey).(*Logger)
 }
 

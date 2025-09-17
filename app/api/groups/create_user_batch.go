@@ -130,6 +130,7 @@ func (srv *Service) createUserBatch(responseWriter http.ResponseWriter, httpRequ
 	input := createUserBatchRequest{}
 	formData := formdata.NewFormData(&input)
 	formData.RegisterValidation("custom_prefix", func(fl validator.FieldLevel) bool {
+		//nolint:forcetypeassert // the validator is registered for the `custom_prefix` field only which is of type string
 		return customPrefixRegexp.MatchString(fl.Field().Interface().(string))
 	})
 	formData.RegisterTranslation("custom_prefix",

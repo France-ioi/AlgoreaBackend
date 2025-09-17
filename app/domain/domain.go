@@ -8,8 +8,8 @@ import (
 type ctxKey int
 
 const (
-	ctxDomainConfig ctxKey = iota
-	ctxDomain
+	ctxKeyDomainConfig ctxKey = iota
+	ctxKeyDomain
 )
 
 // CtxConfig contains domain-specific settings related to a request context.
@@ -29,12 +29,14 @@ type ConfigItem struct {
 
 // ConfigFromContext retrieves the current domain configuration from a context set by the middleware.
 func ConfigFromContext(ctx context.Context) *CtxConfig {
-	conf := ctx.Value(ctxDomainConfig).(*CtxConfig)
+	//nolint:forcetypeassert // panic if the context does not have a domain config or it is of a wrong type
+	conf := ctx.Value(ctxKeyDomainConfig).(*CtxConfig)
 	confCopy := *conf
 	return &confCopy
 }
 
 // CurrentDomainFromContext retrieves the current domain from a context set by the middleware.
 func CurrentDomainFromContext(ctx context.Context) string {
-	return ctx.Value(ctxDomain).(string)
+	//nolint:forcetypeassert // panic if the context does not have a domain or it is not a string
+	return ctx.Value(ctxKeyDomain).(string)
 }

@@ -103,8 +103,8 @@ func (srv *Service) startResultPath(responseWriter http.ResponseWriter, httpRequ
 		rowsToInsert := make([]map[string]interface{}, 0, len(data))
 		rowsToInsertPropagate := make([]map[string]interface{}, 0, len(data))
 		for index, itemID := range ids {
-			attemptID = data[fmt.Sprintf("attempt_id%d", index)].(int64)
-			if data[fmt.Sprintf("has_started_result%d", index)].(int64) == 1 {
+			attemptID = data[fmt.Sprintf("attempt_id%d", index)].(int64)       //nolint:forcetypeassert // we know it is int64
+			if data[fmt.Sprintf("has_started_result%d", index)].(int64) == 1 { //nolint:forcetypeassert // we know it is int64
 				continue
 			}
 			rowsToInsert = append(rowsToInsert, map[string]interface{}{

@@ -205,6 +205,7 @@ func (ctx *TestContext) TheContextVariableIs(variableName, value string) error {
 	preprocessed := ctx.preprocessString(value)
 
 	oldHTTPHandler := ctx.application.HTTPHandler
+	//nolint:forcetypeassert // panic if the HTTPHandler is not *chi.Mux
 	ctx.application.HTTPHandler = chi.NewRouter().With(func(_ http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			oldHTTPHandler.ServeHTTP(writer, request.WithContext(context.WithValue(request.Context(),

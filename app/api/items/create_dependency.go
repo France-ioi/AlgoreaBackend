@@ -113,7 +113,7 @@ func (srv *Service) createDependency(responseWriter http.ResponseWriter, httpReq
 		err = store.ItemDependencies().InsertMap(map[string]interface{}{
 			"item_id":            prerequisiteItemID,
 			"dependent_item_id":  dependentItemID,
-			"score":              valueOrDefault(formData, "score", input.Score, database.Default()),
+			"score":              valueOrDefault[interface{}](formData, "score", input.Score, database.Default()),
 			"grant_content_view": input.GrantContentView,
 		})
 		if err != nil && database.IsDuplicateEntryError(err) {

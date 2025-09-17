@@ -170,15 +170,20 @@ func loadFixtureChainFromString(ctx context.Context, db *sql.DB, fixture string)
 		panic(err)
 	}
 	for _, item := range content {
-		data := make([]map[string]interface{}, 0, len(item.Value.([]interface{})))
-		for _, row := range item.Value.([]interface{}) {
+		//nolint:forcetypeassert // panic if item.Value is not []interface{}
+		rows := item.Value.([]interface{})
+		data := make([]map[string]interface{}, 0, len(rows))
+		for _, row := range rows {
+			//nolint:forcetypeassert // panic if the row is not yaml.MapSlice
 			rowSlice := row.(yaml.MapSlice)
 			rowData := make(map[string]interface{}, len(rowSlice))
 			for _, column := range rowSlice {
+				//nolint:forcetypeassert // panic if column.Key is not a string
 				rowData[column.Key.(string)] = column.Value
 			}
 			data = append(data, rowData)
 		}
+		//nolint:forcetypeassert // panic if item.Key is not a string
 		InsertBatch(ctx, db, item.Key.(string), data)
 	}
 }

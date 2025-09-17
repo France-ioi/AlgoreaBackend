@@ -276,12 +276,13 @@ func callAuthThroughMiddleware(
 	middleware := UserMiddleware(&storeProvider{database.NewDataStore(dbmock)})
 	enteredService := false // used to log if the service has been reached
 	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
-		enteredService = true // has passed into the service
-		user := httpRequest.Context().Value(ctxUser).(*database.User)
+		enteredService = true                                         // has passed into the service
+		user := httpRequest.Context().Value(ctxUser).(*database.User) //nolint:forcetypeassert // panic if it is not *database.User
 		//nolint:errchkjson // the test data is always valid
 		cookieAttributes, _ := json.Marshal(httpRequest.Context().Value(ctxSessionCookieAttributes))
 		//nolint:errchkjson // the test data is always valid
 		userAttributes, _ := json.Marshal(httpRequest.Context().Value(ctxUser))
+		//nolint:forcetypeassert // panic if the value of ctxBearer is not a string
 		body := "user_id:" + strconv.FormatInt(user.GroupID, 10) + "\nBearer:" + httpRequest.Context().Value(ctxBearer).(string) +
 			"\nCookieAttributes:" + string(cookieAttributes) + "\nUser:" + string(userAttributes)
 		responseWriter.Header().Set("Content-Type", "application/json; charset=utf-8")

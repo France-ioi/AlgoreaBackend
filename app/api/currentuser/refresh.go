@@ -32,15 +32,17 @@ func (srv *Service) refresh(responseWriter http.ResponseWriter, httpRequest *htt
 
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(httpRequest.Context(), accessToken)
 	service.MustNotBeError(err)
-	badges := userProfile["badges"].([]database.Badge)
+
+	badges := userProfile.Badges
+	userData := userProfile.ToMap()
+	userData["latest_activity_at"] = database.Now()
+	userData["latest_profile_sync_at"] = database.Now()
+	delete(userData, "default_language")
+	delete(userData, "badges")
 
 	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.Groups().StoreBadges(badges, user.GroupID, false))
-		userProfile["latest_activity_at"] = database.Now()
-		userProfile["latest_profile_sync_at"] = database.Now()
-		delete(userProfile, "default_language")
-		delete(userProfile, "badges")
-		service.MustNotBeError(store.Users().ByID(user.GroupID).UpdateColumn(userProfile).Error())
+		service.MustNotBeError(store.Users().ByID(user.GroupID).UpdateColumn(userData).Error())
 		return nil
 	}))
 

@@ -37,7 +37,7 @@ type TestContext struct {
 	idToReferenceMap                map[int64]string
 	currentThreadKey                map[string]string
 	needPopulateDatabase            bool
-	previousRandSource              interface{}
+	previousRandSource              *rand.RngSource
 	previousGeneratedGroupCodeIndex int
 	generatedGroupCodeIndex         int
 }

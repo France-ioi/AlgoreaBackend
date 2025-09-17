@@ -7,52 +7,53 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/sirupsen/logrus" //nolint:depguard
-	assertlib "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMiddleware_Success(t *testing.T) {
-	assert := assertlib.New(t)
 	logger, hook := NewMockLogger()
 
 	doRequest(logger, false)
 
-	assert.Len(hook.AllEntries(), 3)
+	assert.Len(t, hook.AllEntries(), 3)
 
 	// First entry: request started
 	entryData := hook.AllEntries()[0].Data
-	checkCommon(assert, entryData)
-	assert.Equal("request started", hook.AllEntries()[0].Message)
+	checkCommon(t, entryData)
+	assert.Equal(t, "request started", hook.AllEntries()[0].Message)
 
 	// Second entry: in-service message
 	entryData = hook.AllEntries()[1].Data
-	checkCommon(assert, entryData)
-	assert.Equal("in service log", hook.AllEntries()[1].Message)
-	assert.Equal(42, entryData["my_key"])
-	assert.Equal(1, entryData["opt_one"])
-	assert.Equal("bar", entryData["foo"])
+	checkCommon(t, entryData)
+	assert.Equal(t, "in service log", hook.AllEntries()[1].Message)
+	assert.Equal(t, 42, entryData["my_key"])
+	assert.Equal(t, 1, entryData["opt_one"])
+	assert.Equal(t, "bar", entryData["foo"])
 
 	// Third entry: request complete
 	entryData = hook.AllEntries()[2].Data
-	checkCommon(assert, entryData)
-	assert.Equal("request complete", hook.AllEntries()[2].Message)
-	assert.Equal(10, entryData["resp_bytes_length"])
-	assert.Less(entryData["resp_elapsed_ms"].(float64), 3000.0, "Expected <3.0s, got: %f", entryData["resp_elapsed_ms"].(float64))
-	assert.Equal(200, entryData["resp_status"])
+	checkCommon(t, entryData)
+	assert.Equal(t, "request complete", hook.AllEntries()[2].Message)
+	assert.Equal(t, 10, entryData["resp_bytes_length"])
+	respElapsedMs, ok := entryData["resp_elapsed_ms"].(float64)
+	require.True(t, ok)
+	assert.Less(t, respElapsedMs, 3000.0, "Expected <3.0s, got: %f", respElapsedMs)
+	assert.Equal(t, 200, entryData["resp_status"])
 }
 
 func TestMiddleware_Panic(t *testing.T) {
-	assert := assertlib.New(t)
 	logger, hook := NewMockLogger()
 
 	doRequest(logger, true)
 
-	assert.Len(hook.AllEntries(), 3)
+	assert.Len(t, hook.AllEntries(), 3)
 
 	// Third entry: panic
 	entryData := hook.LastEntry().Data
-	checkCommon(assert, entryData)
-	assert.NotNil(entryData["stack"])
-	assert.Equal("my panic msg", entryData["panic"])
+	checkCommon(t, entryData)
+	assert.NotNil(t, entryData["stack"])
+	assert.Equal(t, "my panic msg", entryData["panic"])
 }
 
 func doRequest(logger *Logger, forcePanic bool) {
@@ -84,13 +85,19 @@ func doRequest(logger *Logger, forcePanic bool) {
 	}
 }
 
-func checkCommon(assert *assertlib.Assertions, entryData logrus.Fields) {
-	assert.Equal("web", entryData["type"])
-	assert.Equal("https", entryData["http_scheme"])
-	assert.Equal("HTTP/1.1", entryData["http_proto"])
-	assert.Equal("GET", entryData["http_method"])
-	assert.Regexp("^127.0.0.1:", entryData["remote_addr"].(string))
-	assert.Equal("Go-http-client/1.1", entryData["user_agent"])
-	assert.Regexp("^https://127.0.0.1:\\d*/a_path$", entryData["uri"].(string))
-	assert.NotNil(entryData["req_id"])
+func checkCommon(t *testing.T, entryData logrus.Fields) {
+	t.Helper()
+
+	assert.Equal(t, "web", entryData["type"])
+	assert.Equal(t, "https", entryData["http_scheme"])
+	assert.Equal(t, "HTTP/1.1", entryData["http_proto"])
+	assert.Equal(t, "GET", entryData["http_method"])
+	remoteAddr, remoteAddrOK := entryData["remote_addr"].(string)
+	require.True(t, remoteAddrOK)
+	assert.Regexp(t, "^127.0.0.1:", remoteAddr)
+	assert.Equal(t, "Go-http-client/1.1", entryData["user_agent"])
+	uri, uriOK := entryData["uri"].(string)
+	require.True(t, uriOK)
+	assert.Regexp(t, "^https://127.0.0.1:\\d*/a_path$", uri)
+	assert.NotNil(t, entryData["req_id"])
 }

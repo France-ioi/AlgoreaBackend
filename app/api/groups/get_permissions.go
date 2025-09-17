@@ -432,6 +432,7 @@ func permissionsStructForPrefix(
 	pgStore *database.PermissionGrantedStore,
 	permissionsRow map[string]interface{}, prefix string,
 ) permissionsStruct {
+	//nolint:forcetypeassert // we know all the columns are int64 (we want to panic if they are not)
 	return permissionsStruct{
 		ItemPermissions: structures.ItemPermissions{
 			CanView:      pgStore.ViewNameByIndex(int(permissionsRow[prefix+"_can_view_value"].(int64))),

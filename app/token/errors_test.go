@@ -18,6 +18,17 @@ func Test_recoverPanics_and_mustNotBeError(t *testing.T) {
 	assert.Equal(t, expectedError.Error(), err.Error())
 }
 
+func Test_recoverPanics_PanicsOnGettingNonErrorPanics(t *testing.T) {
+	expectedValue := "some string"
+	assert.PanicsWithValue(t, expectedValue, func() {
+		err := func() (err error) {
+			defer recoverPanics(&err)
+			panic(expectedValue)
+		}
+		_ = err()
+	})
+}
+
 func Test_UnexpectedError(t *testing.T) {
 	assert.True(t, IsUnexpectedError(&UnexpectedError{err: errors.New("some error")}))
 	assert.False(t, IsUnexpectedError(errors.New("some error")))

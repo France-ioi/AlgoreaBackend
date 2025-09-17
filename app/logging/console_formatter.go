@@ -21,16 +21,16 @@ func newConsoleFormatter() *consoleFormatter {
 func (f *consoleFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	buffer := &bytes.Buffer{}
 
-	if fileLine, ok := entry.Data["fileline"]; ok {
+	if fileLine, ok := entry.Data["fileline"].(string); ok {
 		buffer.WriteString("\033[35m(")
-		buffer.WriteString(fileLine.(string))
+		buffer.WriteString(fileLine)
 		buffer.WriteString(")\033[0m")
 		delete(entry.Data, "fileline")
 	}
 
-	if duration, ok := entry.Data["duration"]; ok {
+	if duration, ok := entry.Data["duration"].(string); ok {
 		buffer.WriteString(" \033[36;1m[")
-		buffer.WriteString(duration.(string))
+		buffer.WriteString(duration)
 		buffer.WriteString("]\033[0m ")
 		delete(entry.Data, "duration")
 	}

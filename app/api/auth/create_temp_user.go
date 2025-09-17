@@ -62,7 +62,7 @@ import (
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
-	cookieAttributes, err := srv.resolveCookieAttributesFromRequest(httpRequest)
+	cookieAttributes, err := srv.resolveSessionCookieAttributesFromRequest(httpRequest)
 	service.MustNotBeError(err)
 
 	if len(httpRequest.Header["Authorization"]) != 0 {
@@ -71,11 +71,12 @@ func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpReque
 
 	defaultLanguage := database.Default()
 	if len(httpRequest.URL.Query()["default_language"]) != 0 {
-		defaultLanguage = httpRequest.URL.Query().Get("default_language")
+		defaultLanguageString := httpRequest.URL.Query().Get("default_language")
 		const maxLanguageLength = 3
-		if utf8.RuneCountInString(defaultLanguage.(string)) > maxLanguageLength {
+		if utf8.RuneCountInString(defaultLanguageString) > maxLanguageLength {
 			return service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
 		}
+		defaultLanguage = defaultLanguageString
 	}
 
 	var token string
@@ -146,13 +147,13 @@ func createTempUserGroup(store *database.DataStore) int64 {
 	return userID
 }
 
-func (srv *Service) resolveCookieAttributesFromRequest(httpRequest *http.Request) (*auth.SessionCookieAttributes, error) {
-	requestData, err := parseCookieAttributesForCreateTempUser(httpRequest)
+func (srv *Service) resolveSessionCookieAttributesFromRequest(httpRequest *http.Request) (*auth.SessionCookieAttributes, error) {
+	requestParameters, err := parseCookieParametersForCreateTempUser(httpRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	cookieAttributes, err := srv.resolveCookieAttributes(httpRequest, requestData)
+	cookieAttributes, err := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters)
 	if err != nil {
 		return nil, err
 	}
@@ -160,13 +161,17 @@ func (srv *Service) resolveCookieAttributesFromRequest(httpRequest *http.Request
 	return cookieAttributes, nil
 }
 
-func parseCookieAttributesForCreateTempUser(r *http.Request) (map[string]interface{}, error) {
+func parseCookieParametersForCreateTempUser(r *http.Request) (*CookieParameters, error) {
+	var requestParameters CookieParameters
 	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
-	requestData := make(map[string]interface{}, len(allowedParameters))
+	requestData := make(map[string]string, len(allowedParameters))
 	query := r.URL.Query()
 	for _, parameterName := range allowedParameters {
 		extractOptionalParameter(query, parameterName, requestData)
 	}
-
-	return preprocessBooleanCookieAttributes(requestData)
+	err := setParametersFromMap(&requestParameters, requestData)
+	if err != nil {
+		return nil, service.ErrInvalidRequest(err)
+	}
+	return &requestParameters, nil
 }

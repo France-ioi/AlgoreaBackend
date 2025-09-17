@@ -28,6 +28,11 @@ func recoverPanics(
 	err *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
 ) {
 	if r := recover(); r != nil {
-		*err = &UnexpectedError{err: r.(error)}
+		switch r := r.(type) {
+		case error:
+			*err = &UnexpectedError{err: r}
+		default:
+			panic(r)
+		}
 	}
 }

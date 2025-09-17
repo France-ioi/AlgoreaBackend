@@ -52,6 +52,7 @@ func newDB(db *gorm.DB, ctes []cte) *DB {
 
 // cloneDBWithNewContext clones the current db connection replacing the context with the given one.
 func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
+	//nolint:forcetypeassert // panic if conn.db doesn't implement withContexter: both sqlDBWrapper and sqlTxWrapper implement withContexter
 	newSQLDB := conn.db.CommonDB().(withContexter).withContext(ctx)
 	newGormDB := cloneGormDB(conn.db)
 	replaceDBInGormDB(newGormDB, newSQLDB)
@@ -80,7 +81,7 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 
 	var rawConnection gorm.SQLCommon
 	var ownSQLDBConnection bool
-	doPing := true
+	var dbWrapper *sqlDBWrapper
 	switch src := source.(type) {
 	case string:
 		var sqlDB *sql.DB
@@ -88,23 +89,24 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 		if err != nil {
 			return nil, err
 		}
-		rawConnection = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &logConfig}
+		dbWrapper = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &logConfig}
+		rawConnection = dbWrapper
 		ownSQLDBConnection = true
 	case *sql.DB:
-		rawConnection = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &logConfig}
+		dbWrapper = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &logConfig}
+		rawConnection = dbWrapper
 	case *sql.Tx:
 		rawConnection = &sqlTxWrapper{sqlTx: src, ctx: ctx, logConfig: &logConfig}
-		doPing = false
 	default:
 		return nil, fmt.Errorf("unknown database source type: %T (%v)", src, src)
 	}
 	dbConn, _ = gorm.Open(driverName, rawConnection)
 
-	if doPing {
+	if dbWrapper != nil {
 		// gorm.Open only pings the connection when it's sql.DB. So we need to ping it ourselves.
-		if err = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.PingContext(ctx); err != nil {
+		if err = dbWrapper.sqlDB.PingContext(ctx); err != nil {
 			if ownSQLDBConnection {
-				_ = dbConn.CommonDB().(*sqlDBWrapper).sqlDB.Close()
+				_ = dbWrapper.sqlDB.Close()
 			}
 			return nil, err
 		}
@@ -148,10 +150,12 @@ func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB,
 }
 
 func (conn *DB) ctx() context.Context {
+	//nolint:forcetypeassert // panic if conn.db doesn't implement contextGetter: both sqlDBWrapper and sqlTxWrapper do
 	return conn.db.CommonDB().(contextGetter).getContext()
 }
 
 func (conn *DB) logConfig() *LogConfig {
+	//nolint:forcetypeassert // panic if conn.db doesn't implement logConfigGetter: both sqlDBWrapper and sqlTxWrapper do
 	return conn.db.CommonDB().(logConfigGetter).getLogConfig()
 }
 
@@ -207,6 +211,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
+	//nolint:forcetypeassert // panic if txDB.CommonDB() is not *sqlTxWrapper
 	txLogConfig := txDB.CommonDB().(*sqlTxWrapper).logConfig
 	txLogConfig.LogRetryableErrorsAsInfo = true
 	err = txFunc(newDB(txDB, nil))
@@ -348,8 +353,10 @@ func (conn *DB) GetSQLDB() *sql.DB {
 		type sqlTxDBAccessor struct {
 			db *sql.DB
 		}
+		//nolint:forcetypeassert // panic if conn.db.CommonDB() is not *sqlTxWrapper in transaction
 		sqlDB = (*sqlTxDBAccessor)((unsafe.Pointer)(conn.db.CommonDB().(*sqlTxWrapper).sqlTx)).db
 	} else {
+		//nolint:forcetypeassert // panic if conn.db.CommonDB() is not *sqlDBWrapper outside transaction
 		sqlDB = conn.db.CommonDB().(*sqlDBWrapper).sqlDB
 	}
 	return sqlDB
@@ -864,6 +871,7 @@ func (conn *DB) WithCustomWriteLocks(shared, exclusive *golang.Set[string]) *DB 
 func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
 	conn.mustBeInTransaction()
 
+	//nolint:forcetypeassert // panic if conn.db.CommonDB() is not *sqlTxWrapper in transaction
 	tx := conn.db.CommonDB().(*sqlTxWrapper)
 	return tx.prepare(query)
 }

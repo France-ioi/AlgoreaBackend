@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -13,7 +14,8 @@ func TestSQLDBWrapper_Prepare_Panics(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	sqlDBWrapper := db.db.CommonDB().(*sqlDBWrapper)
+	sqlDBWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+	require.True(t, ok)
 	assert.Panics(t, func() {
 		_, _ = sqlDBWrapper.Prepare("SELECT 1") //nolint:sqlclosecheck // there is no statement to close as the Prepare should panic
 	})

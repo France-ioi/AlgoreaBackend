@@ -203,6 +203,7 @@ func (srv *Service) updateGroup(responseWriter http.ResponseWriter, httpRequest 
 
 		var approvalChangeAction string
 		if _, ok := dbMap["approval_change_action"]; ok {
+			//nolint:forcetypeassert // panic if dbMap["approval_change_action"] is set but not to a string
 			approvalChangeAction = dbMap["approval_change_action"].(string)
 			delete(dbMap, "approval_change_action")
 		}
@@ -247,8 +248,10 @@ func validateRootActivityIDAndIsOfficial(
 ) error {
 	rootActivityIDToCheck := oldRootActivityID
 	rootActivityID, rootActivityIDSet := dbMap["root_activity_id"]
+	//nolint:forcetypeassert // we know that dbMap["root_activity_id"] is *int64 if it is set
 	rootActivityIDChanged := rootActivityIDSet && !int64PtrEqualValues(oldRootActivityID, rootActivityID.(*int64))
 	if rootActivityIDChanged {
+		//nolint:forcetypeassert // we know that dbMap["root_activity_id"] is *int64 if it is set
 		rootActivityIDToCheck = rootActivityID.(*int64)
 		if rootActivityIDToCheck != nil {
 			err := validateRootActivityID(store, user, rootActivityIDToCheck)
@@ -294,6 +297,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 ) error {
 	newRootSkillIDInterface, newRootSkillIDSet := dbMap["root_skill_id"]
 	if newRootSkillIDSet && newRootSkillIDInterface != nil {
+		//nolint:forcetypeassert // we know that dbMap["root_skill_id"] is *int64 if it is set and not nil
 		newRootSkillID := newRootSkillIDInterface.(*int64)
 
 		rootSkillIDChanged := !int64PtrEqualValues(oldRootSkillID, newRootSkillID)
@@ -353,6 +357,7 @@ func getGroupPendingRequestTypesToRefuse(
 ) []string {
 	pendingTypesToHandle := []string{"join_request"}
 
+	//nolint:forcetypeassert // panic if dbMap["frozen_membership"] is set but not bool
 	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
 		pendingTypesToHandle = append(pendingTypesToHandle, "leave_request", "invitation")
 	}
@@ -360,6 +365,7 @@ func getGroupPendingRequestTypesToRefuse(
 	// If a require_* fields is strengthened, we want to refuse all pending join requests.
 	if approvalChangeAction != "" {
 		if _, ok := dbMap["require_lock_membership_approval_until"]; ok {
+			//nolint:forcetypeassert // panic if dbMap["require_lock_membership_approval_until"] is set but not *database.Time
 			newRequireLockMembershipApprovalUntil := dbMap["require_lock_membership_approval_until"].(*database.Time)
 
 			// We can pass "true" for "groupHasParticipants" because we know there are participants, since approvalChangeAction is not nil.
@@ -381,9 +387,11 @@ func shouldRefuseGroupPendingRequests(
 	approvalChangeAction string,
 ) bool {
 	// If is_public is going to be changed from true to false
+	//nolint:forcetypeassert // panic if dbMap["is_public"] is set but not bool
 	if newIsPublic, ok := dbMap["is_public"]; ok && !newIsPublic.(bool) && currentGroupData.IsPublic {
 		return true
 	}
+	//nolint:forcetypeassert // panic if dbMap["frozen_membership"] is set but not bool
 	if newFrozenMembership, ok := dbMap["frozen_membership"]; ok && newFrozenMembership.(bool) && !currentGroupData.FrozenMembership {
 		return true
 	}
@@ -441,7 +449,9 @@ func int64PtrEqualValues(a, b *int64) bool {
 
 func isTryingToChangeOfficialSessionActivity(dbMap map[string]interface{}, oldIsOfficialSession, rootActivityIDChanged bool) bool {
 	isOfficialSession, isOfficialSessionSet := dbMap["is_official_session"]
+	//nolint:forcetypeassert // we know that isOfficialSession is bool if it is set
 	isOfficialSessionChanged := isOfficialSessionSet && oldIsOfficialSession != isOfficialSession.(bool)
+	//nolint:forcetypeassert // we know that isOfficialSession is bool if it is set
 	return isOfficialSessionChanged && isOfficialSession.(bool) ||
 		!isOfficialSessionChanged && oldIsOfficialSession && rootActivityIDChanged
 }
@@ -466,6 +476,7 @@ func constructMaxParticipantsValidator(formData *formdata.FormData, currentGroup
 		if fl.Field().Kind() == reflect.Ptr {
 			enforceMaxParticipants := currentGroupData.EnforceMaxParticipants
 			if formData.IsSet("enforce_max_participants") {
+				//nolint:forcetypeassert // we know that EnforceMaxParticipants is bool
 				enforceMaxParticipants = fl.Top().Elem().FieldByName("EnforceMaxParticipants").Interface().(bool)
 			}
 			if enforceMaxParticipants {
@@ -478,9 +489,10 @@ func constructMaxParticipantsValidator(formData *formdata.FormData, currentGroup
 
 func constructEnforceMaxParticipantsValidator(formData *formdata.FormData, currentGroupData *groupUpdateInput) validator.Func {
 	return formData.ValidatorSkippingUnchangedFields(func(fl validator.FieldLevel) bool {
-		if fl.Field().Interface().(bool) {
+		if fl.Field().Interface().(bool) { //nolint:forcetypeassert // the validator is only for 'enforce_max_participants' which is bool
 			maxParticipants := currentGroupData.MaxParticipants
 			if formData.IsSet("max_participants") {
+				//nolint:forcetypeassert // we know that MaxParticipants is *int
 				maxParticipants = fl.Top().Elem().FieldByName("MaxParticipants").Interface().(*int)
 			}
 			if maxParticipants == nil {
@@ -563,6 +575,7 @@ func fieldIsStrengthened(fieldInfo validator.FieldLevel, groupHasParticipants bo
 			newValue,
 		)
 	case "require_lock_membership_approval_until":
+		//nolint:forcetypeassert // we know that RequireLockMembershipApprovalUntil is *database.Time
 		newValue := fieldInfo.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
 
 		return requireLockMembershipApprovalUntilIsStrengthened(
@@ -599,10 +612,14 @@ func constructStrengtheningRequiresFieldValidator(
 }
 
 func constructNotSetWhenNoFieldStrengthenedValidator(groupHasParticipants bool, currentGroupData *groupUpdateInput) validator.Func {
-	return func(fl validator.FieldLevel) bool {
-		newRequirePersonalInfoAccessApproval := fl.Top().Elem().FieldByName("RequirePersonalInfoAccessApproval").Interface().(string)
-		newRequireLockMembershipApprovalUntil := fl.Top().Elem().FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
-		newRequireWatchApproval := fl.Top().Elem().FieldByName("RequireWatchApproval").Interface().(bool)
+	return func(fieldInfo validator.FieldLevel) bool {
+		//nolint:forcetypeassert // we know that RequirePersonalInfoAccessApproval is a string
+		newRequirePersonalInfoAccessApproval := fieldInfo.Top().Elem().FieldByName("RequirePersonalInfoAccessApproval").Interface().(string)
+		//nolint:forcetypeassert // we know that RequireLockMembershipApprovalUntil is *database.Time
+		newRequireLockMembershipApprovalUntil := fieldInfo.Top().Elem().
+			FieldByName("RequireLockMembershipApprovalUntil").Interface().(*database.Time)
+		//nolint:forcetypeassert // we know that RequireWatchApproval is bool
+		newRequireWatchApproval := fieldInfo.Top().Elem().FieldByName("RequireWatchApproval").Interface().(bool)
 
 		// We don't need to check that approval_change_action is set,
 		// because this validator is called only if it is (it has omitempty).

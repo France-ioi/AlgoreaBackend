@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -35,7 +36,7 @@ func NewClient(loginModuleURL string) *Client {
 // GetUserProfile returns a user profile for given access token.
 // Note that the context must have a logger (set by logging.ContextWithLogger),
 // otherwise GetUserProfile will panic on logging.
-func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile map[string]interface{}, err error) {
+func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile *UserProfile, err error) {
 	defer recoverPanics(&err)
 
 	request, err := http.NewRequest(http.MethodGet, client.url+"/user_api/account", http.NoBody)
@@ -245,9 +246,59 @@ func Encode(data []byte, clientKey string) string {
 	return base64.StdEncoding.EncodeToString(encrypted)
 }
 
-func convertUserProfile(source map[string]interface{}) (map[string]interface{}, error) {
-	//nolint:mnd // we are going to add two fields: public_first_name and public_last_name
-	dest := make(map[string]interface{}, len(source)+2)
+// UserProfile represents normalized user profile data returned by the login module.
+type UserProfile struct {
+	LoginID         int64            `json:"login_id"`
+	Login           string           `json:"login"`
+	Email           *string          `json:"email"`
+	FirstName       *string          `json:"first_name"`
+	LastName        *string          `json:"last_name"`
+	Sex             *string          `json:"sex"`
+	StudentID       *string          `json:"student_id"`
+	CountryCode     string           `json:"country_code"`
+	BirthDate       *string          `json:"birth_date"`
+	GraduationYear  int64            `json:"graduation_year"`
+	Grade           *int64           `json:"grade"`
+	Address         *string          `json:"address"`
+	Zipcode         *string          `json:"zipcode"`
+	City            *string          `json:"city"`
+	LandLineNumber  *string          `json:"land_line_number"`
+	CellPhoneNumber *string          `json:"cell_phone_number"`
+	DefaultLanguage *string          `json:"default_language"`
+	FreeText        *string          `json:"free_text"`
+	WebSite         *string          `json:"web_site"`
+	TimeZone        *string          `json:"time_zone"`
+	EmailVerified   bool             `json:"email_verified"`
+	PhotoUpload     bool             `json:"photo_autoload"`
+	NotifyNews      bool             `json:"notify_news"`
+	PublicFirstName bool             `json:"public_first_name"`
+	PublicLastName  bool             `json:"public_last_name"`
+	Badges          []database.Badge `json:"badges"`
+}
+
+// ToMap converts UserProfile to a map[string]interface{}.
+func (up *UserProfile) ToMap() map[string]interface{} {
+	reflStruct := reflect.ValueOf(up).Elem()
+	userData := make(map[string]interface{}, reflStruct.NumField())
+	for i := 0; i < reflStruct.NumField(); i++ {
+		fieldType := reflStruct.Type().Field(i)
+		fieldName := fieldType.Tag.Get("json")
+		fieldValue := reflStruct.Field(i)
+		if fieldType.Type.Kind() == reflect.Ptr { // nullable field
+			if fieldValue.IsNil() { // nil value
+				userData[fieldName] = nil
+				continue
+			}
+			fieldValue = fieldValue.Elem()
+		}
+		userData[fieldName] = fieldValue.Interface()
+	}
+	return userData
+}
+
+func convertUserProfile(source map[string]interface{}) (*UserProfile, error) {
+	//nolint:mnd // we are going to add two fields: sex, public_first_name, public_last_name, and badges
+	dest := make(map[string]interface{}, len(source)+4)
 	/*
 	 We ignore fields: birthday_year, client_id, created_at, creator_client_id,
 	 school_grade, graduation_grade_expire_at, ip, last_password_recovery_at, last_login,
@@ -323,7 +374,29 @@ func convertUserProfile(source map[string]interface{}) (map[string]interface{}, 
 		return nil, errors.New("invalid badges data")
 	}
 
-	return dest, nil
+	userProfile := createUserProfileFromNormalizedMap(dest)
+	return userProfile, nil
+}
+
+func createUserProfileFromNormalizedMap(data map[string]interface{}) *UserProfile {
+	userProfile := &UserProfile{}
+	reflStruct := reflect.ValueOf(userProfile).Elem()
+	for i := 0; i < reflStruct.NumField(); i++ {
+		fieldType := reflStruct.Type().Field(i)
+		fieldName := fieldType.Tag.Get("json")
+		value := data[fieldName]
+		targetValue := reflStruct.Field(i)
+		reflectValue := reflect.ValueOf(value)
+		if fieldType.Type.Kind() == reflect.Ptr { // nullable field
+			if !reflectValue.IsValid() { // nil value
+				continue
+			}
+			targetValue.Set(reflect.New(targetValue.Type().Elem()))
+			targetValue = targetValue.Elem()
+		}
+		targetValue.Set(reflect.ValueOf(value))
+	}
+	return userProfile
 }
 
 func normalizeUserProfileBooleanFields(dest map[string]interface{}) {
@@ -369,11 +442,13 @@ func recoverPanics(
 	returnErr *error, //nolint:gocritic // we need the pointer as we replace the error with a panic
 ) {
 	if p := recover(); p != nil {
-		switch e := p.(type) {
+		switch typedP := p.(type) {
 		case runtime.Error:
-			panic(e)
+			panic(typedP)
+		case error:
+			*returnErr = typedP
 		default:
-			*returnErr = p.(error)
+			panic(typedP)
 		}
 	}
 }

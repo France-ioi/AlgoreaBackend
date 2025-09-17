@@ -1673,7 +1673,9 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 
 	assert.True(t, didPanic)
 	assert.Implements(t, (*runtime.Error)(nil), panicValue)
-	assert.Equal(t, "runtime error: index out of range [0] with length 0", panicValue.(error).Error())
+	err, ok := panicValue.(error)
+	require.True(t, ok)
+	assert.Equal(t, "runtime error: index out of range [0] with length 0", err.Error())
 }
 
 func Test_recoverPanics_PanicsOnRecoveringValueOfNonErrorType(t *testing.T) {
@@ -2090,7 +2092,9 @@ func Test_gormDBBeginTxReplacement_ErrsWhenDBIsNotSQLDBWrapper(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	sqlDB := db.db.CommonDB().(*sqlDBWrapper).sqlDB
+	dbWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+	require.True(t, ok)
+	sqlDB := dbWrapper.sqlDB
 	gormDB, err := gorm.Open("", sqlDB)
 	require.NoError(t, err)
 	gormDB.LogMode(false)

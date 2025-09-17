@@ -100,6 +100,7 @@ func (l *StructuredLoggerEntry) Panic(v interface{}, stack []byte) {
 // GetLogEntry return the request scoped logrus.FieldLogger.
 // noinspection GoUnusedExportedFunction.
 func GetLogEntry(r *http.Request) logrus.FieldLogger {
+	//nolint:forcetypeassert // panic if the context does not have a log entry or it is of a wrong type
 	entry := middleware.GetLogEntry(r).(*StructuredLoggerEntry)
 	return entry.Logger
 }

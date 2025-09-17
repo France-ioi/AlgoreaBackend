@@ -249,12 +249,13 @@ func newMessageCountWithIncrement(oldMessageCount, increment int) int {
 func constructValidateCanRequestHelpToWhenOwnThread(user *database.User, store *database.DataStore,
 	participantID, itemID int64,
 ) validator.Func {
-	return func(fl validator.FieldLevel) bool {
+	return func(fieldInfo validator.FieldLevel) bool {
 		if user.GroupID != participantID {
 			return true
 		}
 
-		helperGroupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
+		//nolint:forcetypeassert // we know HelperGroupID is *int64
+		helperGroupIDPtr := fieldInfo.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
 		return user.CanRequestHelpTo(store, itemID, *helperGroupIDPtr)
 	}
 }
@@ -262,6 +263,7 @@ func constructValidateCanRequestHelpToWhenOwnThread(user *database.User, store *
 func constructValidateGroupVisibleBy(srv *Service, httpRequest *http.Request) validator.Func {
 	return func(fieldInfo validator.FieldLevel) bool {
 		store := srv.GetStore(httpRequest)
+		//nolint:forcetypeassert // we know HelperGroupID is *int64
 		groupIDPtr := fieldInfo.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
 		if groupIDPtr == nil {
 			return false
@@ -290,6 +292,7 @@ func constructHelperGroupIDNotSetWhenSetOrKeepClosed(oldStatus string) validator
 		newStatus := fl.Top().Elem().FieldByName("Status").String()
 		willBeOpen := database.IsThreadOpenStatus(newStatus)
 
+		//nolint:forcetypeassert // we know HelperGroupID is *int64
 		helperGroupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
 		if helperGroupIDPtr != nil {
 			if (!wasOpen && newStatus == "") || (!willBeOpen && newStatus != "") {
@@ -309,6 +312,7 @@ func constructHelperGroupIDSetIfNonOpenToOpenStatus(oldStatus string) validator.
 		newStatus := fl.Field().String()
 		willBeOpen := database.IsThreadOpenStatus(newStatus)
 
+		//nolint:forcetypeassert // we know HelperGroupID is *int64
 		helperGroupIDPtr := fl.Top().Elem().FieldByName("HelperGroupID").Interface().(*int64)
 		if !wasOpen && willBeOpen && helperGroupIDPtr == nil {
 			return false
@@ -320,7 +324,9 @@ func constructHelperGroupIDSetIfNonOpenToOpenStatus(oldStatus string) validator.
 
 // excludeIncrementIfMessageCountSetValidator validates that message_count and message_count_increment are not both set.
 func excludeIncrementIfMessageCountSetValidator(messageCountField validator.FieldLevel) bool {
+	//nolint:forcetypeassert // we know MessageCount is *int
 	messageCountPtr := messageCountField.Top().Elem().FieldByName("MessageCount").Interface().(*int)
+	//nolint:forcetypeassert // we know MessageCountIncrement is *int
 	messageCountIncrementPtr := messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Interface().(*int)
 
 	return !(messageCountPtr != nil && messageCountIncrementPtr != nil)

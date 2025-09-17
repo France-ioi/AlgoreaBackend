@@ -245,7 +245,7 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 }
 
 func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64, user *database.User) (
-	orderedItemIDListWithDuplicates []interface{}, uniqueItemIDs []string, itemOrder []int, itemsSubQuery interface{},
+	orderedItemIDListWithDuplicates []int64, uniqueItemIDs []string, itemOrder []int, itemsSubQuery interface{},
 ) {
 	itemParentIDsAsIntSlice := make([]interface{}, len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
@@ -272,7 +272,7 @@ func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64
 		Scan(&parentChildPairs).Error())
 
 	// parent1_id, child1_1_id, ..., parent2_id, child2_1_id, ...
-	orderedItemIDListWithDuplicates = make([]interface{}, 0, len(itemParentIDs)+len(parentChildPairs))
+	orderedItemIDListWithDuplicates = make([]int64, 0, len(itemParentIDs)+len(parentChildPairs))
 	itemOrder = make([]int, 0, len(itemParentIDs)+len(parentChildPairs))
 	currentParentIDIndex := 0
 
@@ -309,7 +309,7 @@ func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64
 	return orderedItemIDListWithDuplicates, itemIDs, itemOrder, itemsSubQuery
 }
 
-func appendTableRowToResult(orderedItemIDListWithDuplicates []interface{}, reflResultRowMap reflect.Value, resultPtr interface{}) {
+func appendTableRowToResult(orderedItemIDListWithDuplicates []int64, reflResultRowMap reflect.Value, resultPtr interface{}) {
 	// resultPtr is *[]*tableCellType
 	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
 	// []*tableCellType
@@ -327,7 +327,7 @@ func appendTableRowToResult(orderedItemIDListWithDuplicates []interface{}, reflR
 
 // resultPtr should be a pointer to a slice of pointers to table cells.
 func scanAndBuildProgressResults(
-	query *database.DB, orderedItemIDListWithDuplicates []interface{}, uniqueItemsCount int, resultPtr interface{},
+	query *database.DB, orderedItemIDListWithDuplicates []int64, uniqueItemsCount int, resultPtr interface{},
 ) {
 	// resultPtr is *[]*tableCellType
 	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
@@ -345,7 +345,7 @@ func scanAndBuildProgressResults(
 
 				// Convert it by parsing
 				result := &database.Time{}
-				err := result.ScanString(data.(string))
+				err := result.ScanString(data.(string)) //nolint:forcetypeassert // we've verified that f.Kind() == reflect.String
 				service.MustNotBeError(err)
 				return *result, nil
 			},
@@ -365,6 +365,7 @@ func scanAndBuildProgressResults(
 		// convert map[string]interface{} into tableCellType and store the result in reflDecodedTableCell
 		service.MustNotBeError(decoder.Decode(cell))
 
+		//nolint:forcetypeassert // we know that GroupID is int64
 		groupID := reflDecodedTableCell.FieldByName("GroupID").Interface().(int64)
 		if groupID != previousGroupID {
 			if previousGroupID != -1 {

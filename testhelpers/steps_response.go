@@ -184,6 +184,7 @@ func (ctx *TestContext) TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSON
 		return err
 	}
 
+	//nolint:forcetypeassert // panic if hexCipher is not a string
 	cipherText, err := hex.DecodeString(hexCipher.(string))
 	if err != nil {
 		return err
@@ -320,6 +321,7 @@ func stringifyJSONPathResultValue(value interface{}) string {
 			return undefinedValue
 		}
 
+		//nolint:forcetypeassert // panic if the value is neither string nor bool
 		return typedValue.(string)
 	}
 }

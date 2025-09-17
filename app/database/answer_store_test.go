@@ -43,6 +43,7 @@ func TestAnswerStore_WithMethods(t *testing.T) {
 
 			store := NewDataStore(db).Answers()
 			resultValue := reflect.ValueOf(store).MethodByName(testCase.name).Call([]reflect.Value{})[0]
+			//nolint:forcetypeassert // we know that resultValue is *AnswerStore
 			newStore := resultValue.Interface().(*AnswerStore)
 
 			assert.NotEqual(t, store, newStore)
