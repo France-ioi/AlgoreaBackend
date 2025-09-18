@@ -126,7 +126,7 @@ func TestConvertIntoMap(t *testing.T) {
 		Field string `json:"field"`
 	}
 	type testStruct struct {
-		notExported   string `json:"not_exported"` //nolint:govet
+		notExported   string `json:"not_exported"` //nolint:govet // to test that unexported fields are ignored even if they have a tag
 		Normal        string `json:"normal"`
 		WithoutTag    string
 		Skipped       string        `json:"-"`

@@ -10,7 +10,7 @@ import (
 	"runtime"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/sirupsen/logrus" //nolint:depguard
+	"github.com/sirupsen/logrus" //nolint:depguard // using logrus in logging package is allowed in app/logging
 	"github.com/spf13/viper"
 )
 

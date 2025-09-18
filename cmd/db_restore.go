@@ -14,8 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 )
 
-//nolint:gosec
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	restoreCmd := &cobra.Command{
 		Use:   "db-restore [environment]",
 		Short: "load the last db schema",
@@ -53,6 +52,8 @@ func init() { //nolint:gochecknoinits
 				host = dbConf.Addr
 				port = "3306"
 			}
+
+			//nolint:gosec // we trust the config as it is filled by the user having access to the command line
 			command := exec.Command(
 				"mysql",
 				"-h"+host,

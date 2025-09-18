@@ -24,7 +24,7 @@ const (
 	utf8mb4    = "utf8mb4"
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // we need to force test env for integration/cucumber tests
 	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
 		appenv.ForceTestEnv()
 	}

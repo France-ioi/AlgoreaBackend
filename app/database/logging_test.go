@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/sirupsen/logrus" //nolint:depguard
+	"github.com/sirupsen/logrus" //nolint:depguard // allow to use logrus here as an exception to reference logrus.Entry
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -14,7 +14,7 @@ import (
 	_ "github.com/France-ioi/AlgoreaBackend/v2/db/migrations" // register migrations
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	migrateCmd := &cobra.Command{
 		Use:   "db-migrate [environment]",
 		Short: "apply schema-change migrations to the database",

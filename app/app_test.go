@@ -12,7 +12,7 @@ import (
 
 	"bou.ke/monkey"
 	"github.com/go-sql-driver/mysql"
-	"github.com/sirupsen/logrus" //nolint:depguard
+	"github.com/sirupsen/logrus" //nolint:depguard // allow to use logrus here as an exception to reference logrus.ErrorLevel in tests
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

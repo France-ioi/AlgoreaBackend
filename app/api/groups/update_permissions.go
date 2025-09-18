@@ -26,7 +26,7 @@ type updatePermissionsInput struct {
 	// (or 'info' if the new value is 'enter', or 'solution' if the new value is 'solution_with_grant') and
 	// the current user should have `permissions_generated.can_grant_view_generated` = 'solution_with_grant'
 	// in order to increase level of this permission. Only owners can increase it to 'solution_with_grant'.
-	CanGrantView string `json:"can_grant_view" validate:"oneof=none enter content content_with_descendants solution solution_with_grant,can_grant_view"` //nolint:lll
+	CanGrantView string `json:"can_grant_view" validate:"oneof=none enter content content_with_descendants solution solution_with_grant,can_grant_view"` //nolint:lll // there's no way to make this line shorter
 	// The granted `can_view` should be >= 'content' and
 	// the current user should have `permissions_generated.can_watch_generated` = 'answer_with_grant'
 	// in order to increase level of this permission. Only owners can increase it to 'answer_with_grant'.
@@ -47,7 +47,7 @@ type updatePermissionsInput struct {
 	// Optional
 	// The current user should have `permissions_generated.can_grant_view` >= 'content',
 	// in order to set this field's value.
-	CanRequestHelpTo setCanRequestHelpTo `json:"can_request_help_to" validate:"can_request_help_to_set,can_request_help_to_consistent,can_request_help_to_can_grant_view_content,can_request_help_to_visible"` //nolint:lll
+	CanRequestHelpTo setCanRequestHelpTo `json:"can_request_help_to" validate:"can_request_help_to_set,can_request_help_to_consistent,can_request_help_to_can_grant_view_content,can_request_help_to_visible"` //nolint:lll // there's no way to make this line shorter
 }
 
 // Cannot set `id` and `is_all_users_group` at the same time,
