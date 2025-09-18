@@ -15,7 +15,7 @@ const (
 	DuplicateEntryErrorKey   = "key"
 )
 
-func TestIsDuplicateEntryError_matchError(t *testing.T) {
+func TestIsDuplicateEntryError_MatchingError(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
@@ -26,7 +26,7 @@ func TestIsDuplicateEntryError_matchError(t *testing.T) {
 	}
 }
 
-func TestIsDuplicateEntryError_otherErrors(t *testing.T) {
+func TestIsDuplicateEntryError_OtherErrors(t *testing.T) {
 	lockDeadlockError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DeadlockError),
 		Message: "Lock Deadlock Error",
@@ -42,7 +42,7 @@ func TestIsDuplicateEntryError_otherErrors(t *testing.T) {
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_matchError(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_MatchingError(t *testing.T) {
 	table := DuplicateEntryErrorTable
 	key := DuplicateEntryErrorKey
 	duplicateEntryError := mysql.MySQLError{
@@ -55,7 +55,7 @@ func TestIsDuplicateEntryErrorForKey_matchError(t *testing.T) {
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherKey(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_ShouldNotMatchDuplicateWithAnotherKey(t *testing.T) {
 	table := DuplicateEntryErrorTable
 	otherKey := "otherkey"
 	duplicateEntryError := mysql.MySQLError{
@@ -68,7 +68,7 @@ func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherKey(t *testing.T)
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherTable(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_ShouldNotMatchDuplicateWithAnotherTable(t *testing.T) {
 	otherTable := "othertable"
 	key := DuplicateEntryErrorKey
 	duplicateEntryError := mysql.MySQLError{
@@ -81,7 +81,7 @@ func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherTable(t *testing.
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_OtherErrors(t *testing.T) {
 	table := DuplicateEntryErrorTable
 	key := DuplicateEntryErrorKey
 
@@ -100,7 +100,7 @@ func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
 	}
 }
 
-func TestIsRowIsReferenced2Error_matchError(t *testing.T) {
+func TestIsRowIsReferenced2Error_MatchingError(t *testing.T) {
 	foreignKeyConstraintFailedError := mysql.MySQLError{
 		Number:  uint16(mysqldb.RowIsReferenced2),
 		Message: "Some message",
@@ -111,7 +111,7 @@ func TestIsRowIsReferenced2Error_matchError(t *testing.T) {
 	}
 }
 
-func TestIsRowIsReferenced2Error_otherError(t *testing.T) {
+func TestIsRowIsReferenced2Error_OtherErrors(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
@@ -127,7 +127,7 @@ func TestIsRowIsReferenced2Error_otherError(t *testing.T) {
 	}
 }
 
-func TestIsNoReferencedRow2Error_matchError(t *testing.T) {
+func TestIsNoReferencedRow2Error_MatchingError(t *testing.T) {
 	foreignKeyConstraintError := mysql.MySQLError{
 		Number:  uint16(mysqldb.NoReferencedRow2),
 		Message: "Some message",
@@ -138,7 +138,7 @@ func TestIsNoReferencedRow2Error_matchError(t *testing.T) {
 	}
 }
 
-func TestIsNoReferencedRow2Error_otherError(t *testing.T) {
+func TestIsNoReferencedRow2Error_OtherErrors(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
@@ -154,7 +154,7 @@ func TestIsNoReferencedRow2Error_otherError(t *testing.T) {
 	}
 }
 
-func TestIsLockDeadlockError_matchError(t *testing.T) {
+func TestIsLockDeadlockError_MatchingError(t *testing.T) {
 	lockDeadlockError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DeadlockError),
 		Message: "Lock Deadlock Error",
@@ -165,7 +165,7 @@ func TestIsLockDeadlockError_matchError(t *testing.T) {
 	}
 }
 
-func TestIsLockDeadlockError_otherError(t *testing.T) {
+func TestIsLockDeadlockError_OtherErrors(t *testing.T) {
 	foreignKeyConstraintError := mysql.MySQLError{
 		Number:  uint16(mysqldb.NoReferencedRow2),
 		Message: "Some message",
