@@ -26,8 +26,8 @@ linters-settings:
       main:
         list-mode: original
         deny:
-          # logging is allowed only by logutils.Log, logrus
-          # is allowed to be used only in logutils package
+          # logging is allowed only by app/logging, logrus
+          # is allowed to be used only in app/logging package
           - pkg: "github.com/sirupsen/logrus"
             desc: not allowed
               - github.com/sirupsen/logrus
