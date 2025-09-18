@@ -16,16 +16,18 @@ func IsDuplicateEntryErrorForKey(err error, table, key string) bool {
 	return IsDuplicateEntryError(err) && mysqldb.ErrorContains(err, fmt.Sprintf("for key '%s.%s'", table, key))
 }
 
-// IsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError checks whether an error corresponds to a foreign key constraint failure
-// on deleting/updating a parent row.
-func IsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError(err error) bool {
-	return mysqldb.IsMysqlError(err, mysqldb.ForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError)
+// IsKindOfRowIsReferencedError checks whether an error corresponds to a foreign key constraint failure
+// on deleting/updating a parent row no matter if the current DB user has table-level privileges for all parent tables
+// or not.
+func IsKindOfRowIsReferencedError(err error) bool {
+	return mysqldb.IsMysqlError(err, mysqldb.RowIsReferenced) || mysqldb.IsMysqlError(err, mysqldb.RowIsReferenced2)
 }
 
-// IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError checks whether an error corresponds to a foreign key constraint failure
-// on inserting/updating a child row.
-func IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(err error) bool {
-	return mysqldb.IsMysqlError(err, mysqldb.ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError)
+// IsKindOfNoReferencedRowError checks whether an error corresponds to a foreign key constraint failure
+// on inserting/updating a child row no matter if the current DB user has table-level privileges for all parent tables
+// or not.
+func IsKindOfNoReferencedRowError(err error) bool {
+	return mysqldb.IsMysqlError(err, mysqldb.NoReferencedRow) || mysqldb.IsMysqlError(err, mysqldb.NoReferencedRow2)
 }
 
 // IsDeadlockError checks whether an error corresponds to a deadlock when trying to get a lock.

@@ -15,7 +15,7 @@ const (
 	DuplicateEntryErrorKey   = "key"
 )
 
-func TestIsDuplicateEntryError_matchError(t *testing.T) {
+func TestIsDuplicateEntryError_MatchingError(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
@@ -26,7 +26,7 @@ func TestIsDuplicateEntryError_matchError(t *testing.T) {
 	}
 }
 
-func TestIsDuplicateEntryError_otherErrors(t *testing.T) {
+func TestIsDuplicateEntryError_OtherErrors(t *testing.T) {
 	lockDeadlockError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DeadlockError),
 		Message: "Lock Deadlock Error",
@@ -42,7 +42,7 @@ func TestIsDuplicateEntryError_otherErrors(t *testing.T) {
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_matchError(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_MatchingError(t *testing.T) {
 	table := DuplicateEntryErrorTable
 	key := DuplicateEntryErrorKey
 	duplicateEntryError := mysql.MySQLError{
@@ -55,7 +55,7 @@ func TestIsDuplicateEntryErrorForKey_matchError(t *testing.T) {
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherKey(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_ShouldNotMatchDuplicateWithAnotherKey(t *testing.T) {
 	table := DuplicateEntryErrorTable
 	otherKey := "otherkey"
 	duplicateEntryError := mysql.MySQLError{
@@ -68,7 +68,7 @@ func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherKey(t *testing.T)
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherTable(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_ShouldNotMatchDuplicateWithAnotherTable(t *testing.T) {
 	otherTable := "othertable"
 	key := DuplicateEntryErrorKey
 	duplicateEntryError := mysql.MySQLError{
@@ -81,7 +81,7 @@ func TestIsDuplicateEntryErrorForKey_matchDuplicateButWithOtherTable(t *testing.
 	}
 }
 
-func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
+func TestIsDuplicateEntryErrorForKey_OtherErrors(t *testing.T) {
 	table := DuplicateEntryErrorTable
 	key := DuplicateEntryErrorKey
 
@@ -100,61 +100,65 @@ func TestIsDuplicateEntryErrorForKey_otherErrors(t *testing.T) {
 	}
 }
 
-func TestIsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError_matchError(t *testing.T) {
-	foreignKeyConstraintFailedError := mysql.MySQLError{
-		Number:  uint16(mysqldb.ForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError),
-		Message: "Some message",
-	}
+func TestIsKindOfRowIsReferencedError_MatchingErrors(t *testing.T) {
+	for _, errorNumber := range []mysqldb.MysqlErrorNumber{mysqldb.RowIsReferenced, mysqldb.RowIsReferenced2} {
+		foreignKeyConstraintError := mysql.MySQLError{
+			Number:  uint16(errorNumber),
+			Message: "Some message",
+		}
 
-	if !IsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError(error(&foreignKeyConstraintFailedError)) {
-		t.Error("should be a ForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError")
+		if !IsKindOfRowIsReferencedError(error(&foreignKeyConstraintError)) {
+			t.Errorf("%d should be kind of RowIsReferenced error", foreignKeyConstraintError.Number)
+		}
 	}
 }
 
-func TestIsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError_otherError(t *testing.T) {
+func TestIsKindOfRowIsReferencedError_OtherErrors(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
 	}
 
-	if IsForeignKeyConstraintFailedOnDeletingOrUpdatingParentRowError(error(&duplicateEntryError)) {
+	if IsKindOfRowIsReferencedError(error(&duplicateEntryError)) {
 		t.Error("should not match a Duplicate Entry Error")
 	}
 
 	nonMysqlError := errors.New("other error")
-	if IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(nonMysqlError) {
+	if IsKindOfRowIsReferencedError(nonMysqlError) {
 		t.Error("should not match a non-mysql error")
 	}
 }
 
-func TestIsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError_matchError(t *testing.T) {
-	foreignKeyConstraintError := mysql.MySQLError{
-		Number:  uint16(mysqldb.ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError),
-		Message: "Some message",
-	}
+func TestIsKindOfNoReferencedRowError_MatchingErrors(t *testing.T) {
+	for _, errorNumber := range []mysqldb.MysqlErrorNumber{mysqldb.NoReferencedRow, mysqldb.NoReferencedRow2} {
+		foreignKeyConstraintError := mysql.MySQLError{
+			Number:  uint16(errorNumber),
+			Message: "Some message",
+		}
 
-	if !IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(error(&foreignKeyConstraintError)) {
-		t.Error("should be a ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError")
+		if !IsKindOfNoReferencedRowError(error(&foreignKeyConstraintError)) {
+			t.Errorf("%d should be a NoReferencedRow error", foreignKeyConstraintError.Number)
+		}
 	}
 }
 
-func TestIsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError_otherError(t *testing.T) {
+func TestIsKindOfNoReferencedRowError_OtherErrors(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
 	}
 
-	if IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(error(&duplicateEntryError)) {
+	if IsKindOfNoReferencedRowError(error(&duplicateEntryError)) {
 		t.Error("should not match a Duplicate Entry Error")
 	}
 
 	nonMysqlError := errors.New("other error")
-	if IsForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError(nonMysqlError) {
+	if IsKindOfNoReferencedRowError(nonMysqlError) {
 		t.Error("should not match a non-mysql error")
 	}
 }
 
-func TestIsLockDeadlockError_matchError(t *testing.T) {
+func TestIsLockDeadlockError_MatchingError(t *testing.T) {
 	lockDeadlockError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DeadlockError),
 		Message: "Lock Deadlock Error",
@@ -165,9 +169,9 @@ func TestIsLockDeadlockError_matchError(t *testing.T) {
 	}
 }
 
-func TestIsLockDeadlockError_otherError(t *testing.T) {
+func TestIsLockDeadlockError_OtherErrors(t *testing.T) {
 	foreignKeyConstraintError := mysql.MySQLError{
-		Number:  uint16(mysqldb.ForeignKeyConstraintFailedOnAddingOrUpdatingChildRowError),
+		Number:  uint16(mysqldb.NoReferencedRow2),
 		Message: "Some message",
 	}
 
