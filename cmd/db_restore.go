@@ -12,6 +12,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
 func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
@@ -116,11 +117,11 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 	// remove all tables from DB
 	var rows *sql.Rows
 	var err error
-	//nolint:gosec
-	rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+	rows, err = db.Query(`SELECT table_name
 	                      FROM   information_schema.tables
 	                      WHERE  table_type   = 'BASE TABLE'
-	                      AND  table_schema = '` + dbConf.DBName + "'")
+	                      AND  table_schema = ?
+	                      ORDER BY table_name`, dbConf.DBName)
 	if err != nil {
 		return fmt.Errorf("unable to query the database: %w", err)
 	}
@@ -139,7 +140,7 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 		if err != nil {
 			return fmt.Errorf("unable to parse the database result: %w", err)
 		}
-		_, err = tx.Exec("DROP TABLE " + tableName)
+		_, err = tx.Exec("DROP TABLE " + database.QuoteName(tableName))
 		if err != nil {
 			return fmt.Errorf("unable to drop table: %w", err)
 		}
