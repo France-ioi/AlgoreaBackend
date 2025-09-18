@@ -33,8 +33,8 @@ jobs:
     environment:
       ALGOREA_ENV: test
       ALGOREA_DATABASE__ADDR: 127.0.0.1
-      ALGOREA_DATABASE__USER: algorea
-      ALGOREA_DATABASE__PASSWD: dummy_password
+      ALGOREA_DATABASE__USER: root
+      ALGOREA_DATABASE__PASSWD: root
       ALGOREA_DATABASE__DBNAME: ci_db
       ALGOREA_LOGGING__FORMAT: json
       ALGOREA_LOGGING__OUTPUT: file
@@ -54,9 +54,6 @@ jobs:
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 30s
       - run:
           name: Seed database
-          environment:
-            ALGOREA_DATABASE__USER: root
-            ALGOREA_DATABASE__PASSWD: root
           command: |
             make db-restore
             make db-migrate
