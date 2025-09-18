@@ -19,6 +19,12 @@ const (
 	// DeadlockError represents the mysql error "Deadlock found when trying to get lock; try restarting transaction".
 	DeadlockError MysqlErrorNumber = 1213
 
+	// NoReferencedRow represents a mysql foreign constraint error
+	// of adding or updating a child row when the current DB user doesn't have table-level privileges for all parent tables.
+	NoReferencedRow MysqlErrorNumber = 1216
+	// RowIsReferenced represents a mysql foreign constraint error
+	// of deleting or updating a parent row when the current DB user doesn't have table-level privileges for all parent tables.
+	RowIsReferenced MysqlErrorNumber = 1217
 	// RowIsReferenced2 represents a mysql foreign constraint error
 	// of deleting or updating a parent row when the current DB user has table-level privileges for all parent tables.
 	RowIsReferenced2 MysqlErrorNumber = 1451
