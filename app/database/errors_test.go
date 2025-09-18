@@ -100,56 +100,60 @@ func TestIsDuplicateEntryErrorForKey_OtherErrors(t *testing.T) {
 	}
 }
 
-func TestIsRowIsReferenced2Error_MatchingError(t *testing.T) {
-	foreignKeyConstraintFailedError := mysql.MySQLError{
-		Number:  uint16(mysqldb.RowIsReferenced2),
-		Message: "Some message",
-	}
+func TestIsKindOfRowIsReferencedError_MatchingErrors(t *testing.T) {
+	for _, errorNumber := range []mysqldb.MysqlErrorNumber{mysqldb.RowIsReferenced, mysqldb.RowIsReferenced2} {
+		foreignKeyConstraintError := mysql.MySQLError{
+			Number:  uint16(errorNumber),
+			Message: "Some message",
+		}
 
-	if !IsRowIsReferenced2Error(error(&foreignKeyConstraintFailedError)) {
-		t.Error("should be a RowIsReferenced2")
+		if !IsKindOfRowIsReferencedError(error(&foreignKeyConstraintError)) {
+			t.Errorf("%d should be kind of RowIsReferenced error", foreignKeyConstraintError.Number)
+		}
 	}
 }
 
-func TestIsRowIsReferenced2Error_OtherErrors(t *testing.T) {
+func TestIsKindOfRowIsReferencedError_OtherErrors(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
 	}
 
-	if IsRowIsReferenced2Error(error(&duplicateEntryError)) {
+	if IsKindOfRowIsReferencedError(error(&duplicateEntryError)) {
 		t.Error("should not match a Duplicate Entry Error")
 	}
 
 	nonMysqlError := errors.New("other error")
-	if IsRowIsReferenced2Error(nonMysqlError) {
+	if IsKindOfRowIsReferencedError(nonMysqlError) {
 		t.Error("should not match a non-mysql error")
 	}
 }
 
-func TestIsNoReferencedRow2Error_MatchingError(t *testing.T) {
-	foreignKeyConstraintError := mysql.MySQLError{
-		Number:  uint16(mysqldb.NoReferencedRow2),
-		Message: "Some message",
-	}
+func TestIsKindOfNoReferencedRowError_MatchingErrors(t *testing.T) {
+	for _, errorNumber := range []mysqldb.MysqlErrorNumber{mysqldb.NoReferencedRow, mysqldb.NoReferencedRow2} {
+		foreignKeyConstraintError := mysql.MySQLError{
+			Number:  uint16(errorNumber),
+			Message: "Some message",
+		}
 
-	if !IsNoReferencedRow2Error(error(&foreignKeyConstraintError)) {
-		t.Error("should be a NoReferencedRow2")
+		if !IsKindOfNoReferencedRowError(error(&foreignKeyConstraintError)) {
+			t.Errorf("%d should be a NoReferencedRow error", foreignKeyConstraintError.Number)
+		}
 	}
 }
 
-func TestIsNoReferencedRow2Error_OtherErrors(t *testing.T) {
+func TestIsKindOfNoReferencedRowError_OtherErrors(t *testing.T) {
 	duplicateEntryError := mysql.MySQLError{
 		Number:  uint16(mysqldb.DuplicateEntryError),
 		Message: "Duplicate Error",
 	}
 
-	if IsNoReferencedRow2Error(error(&duplicateEntryError)) {
+	if IsKindOfNoReferencedRowError(error(&duplicateEntryError)) {
 		t.Error("should not match a Duplicate Entry Error")
 	}
 
 	nonMysqlError := errors.New("other error")
-	if IsNoReferencedRow2Error(nonMysqlError) {
+	if IsKindOfNoReferencedRowError(nonMysqlError) {
 		t.Error("should not match a non-mysql error")
 	}
 }
