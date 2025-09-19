@@ -57,13 +57,13 @@ func init() { //nolint:gochecknoinits // cobra suggests using init functions to 
 			//nolint:gosec // we trust the config as it is filled by the user having access to the command line
 			command := exec.Command(
 				"mysql",
-				"-h"+host,
-				"-P"+port,
-				"-D"+dbConf.DBName,
-				"-u"+dbConf.User,
-				"-p"+dbConf.Passwd,
+				"--host="+host,
+				"--port="+port,
+				"--database="+dbConf.DBName,
+				"--user="+dbConf.User,
+				"--password="+dbConf.Passwd,
 				"--protocol=TCP",
-				"-e"+"source db/schema/schema.sql",
+				"-e", "source db/schema/schema.sql",
 			)
 			cmd.Println("mysql importing dump...")
 			var output []byte
