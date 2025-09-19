@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.30.7](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.6...v2.30.7) - 2025-09-19
+- handle foreign key constraint failures even if the current DB user doesn't have table-level privileges for parent tables
+- enable the `forcetypeassert` linter, fix/comment issues it found
+
 ## [v2.30.6](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.5...v2.30.6) - 2025-09-15
 - make `*.child_group_type` NOT NULL, remove unnecessary JOINs of groups, ignore expired participants in `groupUpdate`
 
