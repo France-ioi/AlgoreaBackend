@@ -41,9 +41,11 @@ linters-settings:
     local-prefixes: github.com/France-ioi/AlgoreaBackend/v2
   gocritic:
     enabled-tags:
-      - performance
+      - diagnostic
       - style
+      - performance
       - experimental
+      - opinionated
   gci:
     sections:
       - standard # Standard section: captures all standard packages.
