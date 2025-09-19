@@ -46,7 +46,6 @@ linters-settings:
       - experimental
     disabled-checks:
       - wrapperFunc
-      - whyNoLint # Requires an explanation for each nolint. requires many changes
   gci:
     sections:
       - standard # Standard section: captures all standard packages.
