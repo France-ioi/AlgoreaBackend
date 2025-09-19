@@ -17,7 +17,7 @@ const (
 	propagationCommandLockTimeout = 600 * time.Second
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	propagationCmd := &cobra.Command{
 		Use:   "propagation [environment]",
 		Short: "apply propagation to the database",

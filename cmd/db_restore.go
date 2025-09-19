@@ -12,10 +12,10 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
-//nolint:gosec
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	restoreCmd := &cobra.Command{
 		Use:   "db-restore [environment]",
 		Short: "load the last db schema",
@@ -53,15 +53,17 @@ func init() { //nolint:gochecknoinits
 				host = dbConf.Addr
 				port = "3306"
 			}
+
+			//nolint:gosec // we trust the config as it is filled by the user having access to the command line
 			command := exec.Command(
 				"mysql",
-				"-h"+host,
-				"-P"+port,
-				"-D"+dbConf.DBName,
-				"-u"+dbConf.User,
-				"-p"+dbConf.Passwd,
+				"--host="+host,
+				"--port="+port,
+				"--database="+dbConf.DBName,
+				"--user="+dbConf.User,
+				"--password="+dbConf.Passwd,
 				"--protocol=TCP",
-				"-e"+"source db/schema/schema.sql",
+				"-e", "source db/schema/schema.sql",
 			)
 			cmd.Println("mysql importing dump...")
 			var output []byte
@@ -115,11 +117,11 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 	// remove all tables from DB
 	var rows *sql.Rows
 	var err error
-	//nolint:gosec
-	rows, err = db.Query(`SELECT CONCAT(table_schema, '.', table_name)
+	rows, err = db.Query(`SELECT table_name
 	                      FROM   information_schema.tables
 	                      WHERE  table_type   = 'BASE TABLE'
-	                      AND  table_schema = '` + dbConf.DBName + "'")
+	                      AND  table_schema = ?
+	                      ORDER BY table_name`, dbConf.DBName)
 	if err != nil {
 		return fmt.Errorf("unable to query the database: %w", err)
 	}
@@ -138,7 +140,7 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 		if err != nil {
 			return fmt.Errorf("unable to parse the database result: %w", err)
 		}
-		_, err = tx.Exec("DROP TABLE " + tableName)
+		_, err = tx.Exec("DROP TABLE " + database.QuoteName(tableName))
 		if err != nil {
 			return fmt.Errorf("unable to drop table: %w", err)
 		}

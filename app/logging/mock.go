@@ -3,7 +3,7 @@ package logging
 import (
 	"context"
 
-	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard
+	"github.com/sirupsen/logrus/hooks/test" //nolint:depguard // using logrus in logging package is allowed in app/logging
 )
 
 // NewMockLogger creates a null/mock logger and return the logger and the hook.

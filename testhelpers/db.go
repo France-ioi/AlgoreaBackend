@@ -24,7 +24,7 @@ const (
 	utf8mb4    = "utf8mb4"
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // we need to force test env for integration/cucumber tests
 	if strings.HasSuffix(os.Args[0], ".test") || strings.HasSuffix(os.Args[0], ".test.exe") {
 		appenv.ForceTestEnv()
 	}
@@ -136,7 +136,7 @@ func LoadFixture(ctx context.Context, db *sql.DB, fileName string) {
 	for _, filename := range filenames {
 		var err error
 		var data []byte
-		data, err = os.ReadFile(filepath.Join(filePath, filename)) //nolint: gosec
+		data, err = os.ReadFile(filepath.Clean(filepath.Join(filePath, filename)))
 		if err != nil {
 			panic(err)
 		}
@@ -162,7 +162,7 @@ func loadFixtureChainFromString(ctx context.Context, db *sql.DB, fixture string)
 
 	var content yaml.MapSlice
 	fixture = dedent.Dedent(fixture)
-	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
+	fixture = strings.TrimSpace(strings.ReplaceAll(fixture, "\t", "  "))
 	bytesFixture := []byte(fixture)
 	logging.EntryFromContext(ctx).Infof("Loading data chain:\n%s", bytesFixture)
 	err := yaml.Unmarshal(bytesFixture, &content)
@@ -212,9 +212,9 @@ func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[s
 			valueMarks = append(valueMarks, "?")
 			values = append(values, v)
 		}
-		//nolint:gosec
-		query := fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)",
-			tableName, strings.Join(attributes, ", "), strings.Join(valueMarks, ", "))
+		//nolint:gosec // tableName & column names have been quoted, values are passed as args
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+			database.QuoteName(tableName), strings.Join(attributes, ", "), strings.Join(valueMarks, ", "))
 		_, err = tx.ExecContext(ctx, query, values...)
 		if err != nil {
 			panic(err)
@@ -231,18 +231,17 @@ func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[s
 	}
 }
 
-//nolint:gosec
 func emptyDB(ctx context.Context, db *sql.DB, dbName string) error {
 	appenv.ForceTestEnv()
 
-	rows, err := db.QueryContext(ctx, `SELECT CONCAT(table_schema, '.', table_name)
+	rows, err := db.QueryContext(ctx, `SELECT table_name
                          FROM   information_schema.tables
                          WHERE  table_type   = 'BASE TABLE'
-                           AND  table_schema = '`+dbName+`'
+                           AND  table_schema = ?
                            AND  table_name  != 'gorp_migrations'
                            AND  table_name  != 'goose_db_version'
                            AND  table_name  != 'user_batches'
-                         ORDER BY table_name`)
+                         ORDER BY table_name`, dbName)
 	if err != nil {
 		return err
 	}
@@ -273,7 +272,7 @@ func emptyDB(ctx context.Context, db *sql.DB, dbName string) error {
 			return scanErr
 		}
 		// DELETE is MUCH faster than TRUNCATE on empty tables
-		_, err = tx.ExecContext(ctx, "DELETE FROM "+tableName)
+		_, err = tx.ExecContext(ctx, "DELETE FROM "+database.QuoteName(tableName)) //nolint:gosec // tableName has been quoted
 		if err != nil {
 			_, _ = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS=1")
 			_ = tx.Rollback()

@@ -138,7 +138,7 @@ type itemChild struct {
 	// (if `can_grant_view` >= 'content_with_descendants') or 'use_content_view_propagation' (otherwise).
 	// It is always possible to set this field to the same or a lower value, `can_grant_view` doesn't matter in this case.
 	// enum: use_content_view_propagation,as_content_with_descendants,as_is
-	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` //nolint:lll
+	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` //nolint:lll // there's no way to make this line shorter
 	// Can be set to true if `can_grant_view` >= 'solution_with_grant'.
 	// Defaults to true  if `can_grant_view` >= 'solution_with_grant', false otherwise.
 	// It is always possible to set this field to the same or a lower value, `can_grant_view` doesn't matter in this case.

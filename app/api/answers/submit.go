@@ -38,7 +38,7 @@ type submitRequestWrapper struct {
 
 // Created. Success response with answer_token
 // swagger:model answerSubmitResponse
-type answerSubmitResponse struct { //nolint:unused
+type answerSubmitResponse struct { //nolint:unused // used in swagger documentation
 	// description
 	// swagger:allOf
 	doc.CreatedResponse

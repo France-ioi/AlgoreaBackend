@@ -92,7 +92,7 @@ type itemParent struct {
 	ContentViewPropagation string `json:"content_view_propagation" validate:"oneof=none as_info as_content"`
 	// default: as_is
 	// enum: use_content_view_propagation,as_content_with_descendants,as_is
-	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` //nolint:lll
+	UpperViewLevelsPropagation string `json:"upper_view_levels_propagation" validate:"oneof=use_content_view_propagation as_content_with_descendants as_is"` //nolint:lll // there's no way to make this line shorter
 	// default: true
 	GrantViewPropagation bool `json:"grant_view_propagation"`
 	// default: true

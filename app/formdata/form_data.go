@@ -311,9 +311,9 @@ func (f *FormData) getUsedKeysPathFromValidatorPath(path string) string {
 	}
 
 	path = strings.TrimPrefix(path, prefix)
-	path = strings.Replace(path, ".<squash>", "", -1)
-	path = strings.Replace(path, "<squash>.", "", -1)
-	path = strings.Replace(path, "<squash>", "", -1)
+	path = strings.ReplaceAll(path, ".<squash>", "")
+	path = strings.ReplaceAll(path, "<squash>.", "")
+	path = strings.ReplaceAll(path, "<squash>", "")
 
 	return path
 }

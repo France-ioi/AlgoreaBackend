@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sirupsen/logrus" //nolint:depguard
+	"github.com/sirupsen/logrus" //nolint:depguard // using logrus in logging package is allowed in app/logging
 )
 
 type consoleFormatter struct {

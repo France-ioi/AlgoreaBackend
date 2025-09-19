@@ -601,7 +601,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interfa
 	rowMap := make(map[string]interface{})
 	for i, columnName := range cols {
 		if value, ok := columns[i].([]byte); ok {
-			columns[i] = *(*string)(unsafe.Pointer(&value)) //nolint:gosec
+			columns[i] = *(*string)(unsafe.Pointer(&value)) //nolint:gosec // convert []byte to string without copying
 		}
 		rowMap[columnName] = columns[i]
 	}
@@ -964,7 +964,7 @@ func recoverPanics(
 
 // QuoteName surrounds a given table/column name in backtick quotes and escapes the content.
 func QuoteName(name string) string {
-	return "`" + strings.Replace(name, "`", "``", -1) + "`"
+	return "`" + strings.ReplaceAll(name, "`", "``") + "`"
 }
 
 // Default returns gorm.Expr("DEFAULT").
@@ -993,5 +993,5 @@ func EscapeLikeString(v string, escapeCharacter byte) string {
 	}
 
 	result := buf[:pos]
-	return *(*string)(unsafe.Pointer(&result)) //nolint:gosec
+	return *(*string)(unsafe.Pointer(&result)) //nolint:gosec // convert []byte to string without copying
 }

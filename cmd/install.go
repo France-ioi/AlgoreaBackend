@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database/configdb"
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	installCmd := &cobra.Command{
 		Use:   "install [environment]",
 		Short: "fill the database with required data",

@@ -125,7 +125,7 @@ func (mc *mysqlConn) Reset(ctx context.Context) (err error) {
 func mysqlConnLog(*mysqlConn, ...any)
 
 //go:linkname mysqlConnWatchCancel github.com/go-sql-driver/mysql.(*mysqlConn).watchCancel
-func mysqlConnWatchCancel(*mysqlConn, context.Context) error //nolint: revive
+func mysqlConnWatchCancel(*mysqlConn, context.Context) error //nolint:revive // it's not our function, we cannot change its signature
 
 //go:linkname mysqlConnFinish github.com/go-sql-driver/mysql.(*mysqlConn).finish
 func mysqlConnFinish(*mysqlConn)

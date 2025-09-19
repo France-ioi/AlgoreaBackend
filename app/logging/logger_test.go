@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"bou.ke/monkey"
-	"github.com/sirupsen/logrus" //nolint:depguard
+	"github.com/sirupsen/logrus" //nolint:depguard // using logrus in logging package is allowed in app/logging
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -21,10 +21,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-func init() { //nolint:gochecknoinits
-	appenv.SetDefaultEnvToTest()
-}
-
 const devEnv = "dev"
 
 func TestLoadConfigFrom(t *testing.T) {

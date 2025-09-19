@@ -573,7 +573,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		{
 			"skips unexported attributes",
 			&struct {
-				name string `gorm:"column:name" json:"name"` //nolint:govet
+				name string `gorm:"column:name" json:"name"` //nolint:govet // to test that unexported fields are ignored even if they have a tag
 			}{},
 			`{"name":"Test"}`,
 			map[string]interface{}{},

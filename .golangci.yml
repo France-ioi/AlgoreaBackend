@@ -26,8 +26,8 @@ linters-settings:
       main:
         list-mode: original
         deny:
-          # logging is allowed only by logutils.Log, logrus
-          # is allowed to be used only in logutils package
+          # logging is allowed only by app/logging, logrus
+          # is allowed to be used only in app/logging package
           - pkg: "github.com/sirupsen/logrus"
             desc: not allowed
               - github.com/sirupsen/logrus
@@ -41,12 +41,11 @@ linters-settings:
     local-prefixes: github.com/France-ioi/AlgoreaBackend/v2
   gocritic:
     enabled-tags:
-      - performance
+      - diagnostic
       - style
+      - performance
       - experimental
-    disabled-checks:
-      - wrapperFunc
-      - whyNoLint # Requires an explanation for each nolint. requires many changes
+      - opinionated
   gci:
     sections:
       - standard # Standard section: captures all standard packages.

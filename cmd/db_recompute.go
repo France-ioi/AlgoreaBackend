@@ -11,7 +11,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	recomputeCmd := &cobra.Command{
 		Use:   "db-recompute [environment]",
 		Short: "recompute db caches",

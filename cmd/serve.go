@@ -14,7 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	var skipChecks bool
 
 	serveCmd := &cobra.Command{

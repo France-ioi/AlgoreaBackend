@@ -72,7 +72,7 @@ func (ctx *TestContext) preprocessString(str string) string {
 
 func (ctx *TestContext) constructTemplateSet() *jet.Set {
 	set := jet.NewSet(jet.SafeWriter(func(w io.Writer, b []byte) {
-		w.Write(b) //nolint:gosec,errcheck
+		_, _ = w.Write(b)
 	}))
 
 	set.AddGlobalFunc("currentTimeInFormat", func(a jet.Arguments) reflect.Value {

@@ -14,7 +14,7 @@ import (
 	_ "github.com/France-ioi/AlgoreaBackend/v2/db/migrations" // register migrations
 )
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:gochecknoinits // cobra suggests using init functions to add commands
 	migrateUndoCmd := &cobra.Command{
 		Use:   "db-migrate-undo [environment]",
 		Short: "undo the last schema-change migration applied to the database",

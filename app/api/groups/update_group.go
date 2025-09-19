@@ -46,7 +46,7 @@ type groupUpdateInput struct {
 	// Cannot be set to null when enforce_max_participant is true
 	MaxParticipants *int `json:"max_participants" validate:"changing_requires_can_manage_at_least=memberships,max_participants"`
 	// Cannot be set to true when max_participants is null
-	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll
+	EnforceMaxParticipants bool `json:"enforce_max_participants" validate:"changing_requires_can_manage_at_least=memberships,enforce_max_participants"` //nolint:lll // there's no way to make this line shorter
 
 	// Strengthened if the new value is `view` and the old value is `none`, or if the new value is `edit` and
 	// the old value is either `view` or `none`.
@@ -56,20 +56,20 @@ type groupUpdateInput struct {
 	// If it is strengthened, `approval_change_action` should be set.
 	//
 	// enum: none,view,edit
-	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit,strengthening_requires_approval_change_action"` //nolint:lll
+	RequirePersonalInfoAccessApproval string `json:"require_personal_info_access_approval" validate:"changing_requires_can_manage_at_least=memberships_and_group,oneof=none view edit,strengthening_requires_approval_change_action"` //nolint:lll // there's no way to make this line shorter
 	// Strengthened if the new value is > `NOW()` and > the old value, or if the new value is > `NOW()` and the old value is `null`.
 	//
 	// Not considered strengthened if the group doesn't have any participants.
 	//
 	// If it is strengthened, `approval_change_action` must be set.
-	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
+	RequireLockMembershipApprovalUntil *database.Time `json:"require_lock_membership_approval_until" validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll // there's no way to make this line shorter
 	// Strengthened if the new value is `true` and the old value is `false`.
 	//
 	// Not considered strengthened if the group doesn't have any participants.
 	//
 	// If it is strengthened, `approval_change_action` must be set.
-	RequireWatchApproval       bool `json:"require_watch_approval"         validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll
-	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                               //nolint:lll
+	RequireWatchApproval       bool `json:"require_watch_approval"         validate:"changing_requires_can_manage_at_least=memberships_and_group,strengthening_requires_approval_change_action"` //nolint:lll  // there's no way to make this line shorter
+	RequireMembersToJoinParent bool `json:"require_members_to_join_parent" validate:"changing_requires_can_manage_at_least=memberships_and_group"`                                               //nolint:lll  // there's no way to make this line shorter
 
 	// Must be present only if a `require_*` field is strengthened.
 	//
