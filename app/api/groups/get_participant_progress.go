@@ -74,12 +74,12 @@ type groupParticipantProgressResponse struct {
 }
 
 type rawParticipantProgressRaw struct {
+	*database.RawGeneratedPermissionFields
+
 	// items
 	ItemID  int64 `gorm:"column:id"`
 	Type    string
 	NoScore bool
-
-	*database.RawGeneratedPermissionFields
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `gorm:"column:language_tag"`

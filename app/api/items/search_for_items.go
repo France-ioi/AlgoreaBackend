@@ -34,11 +34,11 @@ type itemSearchResponseRow struct {
 }
 
 type itemSearchResponseRowRaw struct {
+	*database.RawGeneratedPermissionFields
+
 	ID    int64
 	Title *string
 	Type  string
-
-	*database.RawGeneratedPermissionFields
 }
 
 // swagger:operation GET /items/search items itemSearch

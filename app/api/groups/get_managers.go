@@ -33,17 +33,17 @@ type GroupManagersViewResponseRowThroughAncestorGroups struct {
 
 // swagger:model groupManagersViewResponseRow
 type groupManagersViewResponseRow struct {
+	// only for users
+	*GroupManagersViewResponseRowUser
+	// only when include_managers_of_ancestor_groups=1
+	*GroupManagersViewResponseRowThroughAncestorGroups
+
 	// `groups.id`
 	// required: true
 	ID int64 `json:"id,string"`
 	// `groups.name`
 	// required: true
 	Name string `json:"name"`
-
-	// only for users
-	*GroupManagersViewResponseRowUser
-	// only when include_managers_of_ancestor_groups=1
-	*GroupManagersViewResponseRowThroughAncestorGroups
 
 	// null when a manager is not a direct manager of the group
 	// enum: none,memberships,memberships_and_group

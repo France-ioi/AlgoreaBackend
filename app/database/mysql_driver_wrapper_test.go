@@ -11,6 +11,7 @@ import (
 
 type connMockWithName struct {
 	*connMock
+
 	name string
 }
 

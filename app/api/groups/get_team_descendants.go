@@ -152,10 +152,11 @@ func (srv *Service) getTeamDescendants(responseWriter http.ResponseWriter, httpR
 }
 
 type teamDescendantMember struct {
+	*structures.UserPersonalInfo
+
 	// required:true
 	GroupID int64 `json:"group_id,string"`
 
-	*structures.UserPersonalInfo
 	ShowPersonalInfo bool `json:"-"`
 
 	// required:true

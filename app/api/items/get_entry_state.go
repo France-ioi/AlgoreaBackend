@@ -13,6 +13,7 @@ import (
 
 type itemGetEntryStateOtherMember struct {
 	*structures.UserPersonalInfo
+
 	ShowPersonalInfo bool `json:"-"` // required: true
 
 	Login string `json:"login"`

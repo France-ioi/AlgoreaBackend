@@ -42,12 +42,13 @@ type itemActivityLogResponseRow struct {
 		Type string `json:"type"`
 	} `json:"participant" gorm:"embedded;embedded_prefix:participant__"`
 	User *struct {
+		*structures.UserPersonalInfo
+
 		// required: true
 		ID *int64 `json:"id,string"`
 		// required: true
 		Login string `json:"login"`
 
-		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 	} `gorm:"embedded;embedded_prefix:user__" json:"user,omitempty"`
 	// required: true

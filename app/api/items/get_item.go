@@ -111,6 +111,7 @@ type itemResponseWatchedGroupItemInfo struct {
 // swagger:model itemResponse
 type itemResponse struct {
 	commonItemFields
+	*itemRootNodeNotChapterFields
 
 	// required: true
 	Permissions getItemItemPermissions `json:"permissions"`
@@ -152,8 +153,6 @@ type itemResponse struct {
 
 	// required: true
 	String itemStringRoot `json:"string"`
-
-	*itemRootNodeNotChapterFields
 
 	WatchedGroup *itemResponseWatchedGroupItemInfo `json:"watched_group,omitempty"`
 }

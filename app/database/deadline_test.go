@@ -20,11 +20,12 @@ import (
 
 type cancelCtx struct {
 	context.Context //nolint:containedctx // it is not us who store the context in the structure
-	_               sync.Mutex
-	_               atomic.Value
-	_               map[interface{}]struct{}
-	err             error
-	cause           error
+
+	_     sync.Mutex
+	_     atomic.Value
+	_     map[interface{}]struct{}
+	err   error
+	cause error
 }
 
 type timerCtx struct {

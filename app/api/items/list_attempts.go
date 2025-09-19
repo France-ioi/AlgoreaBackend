@@ -33,10 +33,11 @@ type attemptsListResponseRow struct {
 	HelpRequested bool `json:"help_requested"`
 	// required: true
 	UserCreator *struct {
+		*structures.UserPersonalInfo
+
 		// required: true
 		Login string `json:"login"`
 
-		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
 		// required: true

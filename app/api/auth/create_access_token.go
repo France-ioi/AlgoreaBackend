@@ -424,10 +424,11 @@ type CookieParameters struct {
 }
 
 type createAccessTokenRequestParameters struct {
+	*CookieParameters
+
 	Code         *string `json:"code"`
 	CodeVerifier *string `json:"code_verifier"`
 	RedirectURI  *string `json:"redirect_uri"`
-	*CookieParameters
 }
 
 func parseJSONParams(httpRequest *http.Request, requestParameters *createAccessTokenRequestParameters) error {

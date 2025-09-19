@@ -18,6 +18,9 @@ type UserCountPart struct {
 
 // swagger:model groupChildrenViewResponseRow
 type groupChildrenViewResponseRow struct {
+	*ManagerPermissionsPart
+	*UserCountPart
+
 	// The sub-group's `groups.id`
 	// required:true
 	ID int64 `json:"id,string"`
@@ -37,8 +40,6 @@ type groupChildrenViewResponseRow struct {
 	IsEmpty *bool `json:"is_empty,omitempty"`
 	// required:true
 	CurrentUserIsManager bool `json:"current_user_is_manager"`
-	*ManagerPermissionsPart
-	*UserCountPart
 }
 
 // swagger:operation GET /groups/{group_id}/children group-memberships groupChildrenView

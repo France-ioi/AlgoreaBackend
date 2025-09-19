@@ -42,6 +42,7 @@ type answerSubmitResponse struct { //nolint:unused // used in swagger documentat
 	// description
 	// swagger:allOf
 	doc.CreatedResponse
+
 	// required:true
 	Data struct {
 		AnswerToken string `json:"answer_token"`
