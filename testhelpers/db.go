@@ -162,7 +162,7 @@ func loadFixtureChainFromString(ctx context.Context, db *sql.DB, fixture string)
 
 	var content yaml.MapSlice
 	fixture = dedent.Dedent(fixture)
-	fixture = strings.TrimSpace(strings.Replace(fixture, "\t", "  ", -1))
+	fixture = strings.TrimSpace(strings.ReplaceAll(fixture, "\t", "  "))
 	bytesFixture := []byte(fixture)
 	logging.EntryFromContext(ctx).Infof("Loading data chain:\n%s", bytesFixture)
 	err := yaml.Unmarshal(bytesFixture, &content)

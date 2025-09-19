@@ -964,7 +964,7 @@ func recoverPanics(
 
 // QuoteName surrounds a given table/column name in backtick quotes and escapes the content.
 func QuoteName(name string) string {
-	return "`" + strings.Replace(name, "`", "``", -1) + "`"
+	return "`" + strings.ReplaceAll(name, "`", "``") + "`"
 }
 
 // Default returns gorm.Expr("DEFAULT").

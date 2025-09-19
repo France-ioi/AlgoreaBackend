@@ -44,8 +44,6 @@ linters-settings:
       - performance
       - style
       - experimental
-    disabled-checks:
-      - wrapperFunc
   gci:
     sections:
       - standard # Standard section: captures all standard packages.
