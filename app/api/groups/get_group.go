@@ -41,6 +41,10 @@ type ManagerPermissionsPart struct {
 
 // swagger:model groupGetResponse
 type groupGetResponse struct {
+	*structures.GroupShortInfo
+	*GroupGetResponseCodePart
+	*ManagerPermissionsPart
+
 	// required:true
 	Grade int32 `json:"grade"`
 	// required:true
@@ -79,10 +83,6 @@ type groupGetResponse struct {
 	// list of descendant (excluding the group itself) non-user groups that the current user (or his ancestor groups) is manager of
 	// required:true
 	DescendantsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"descendants_current_user_is_manager_of"`
-
-	*structures.GroupShortInfo
-	*GroupGetResponseCodePart
-	*ManagerPermissionsPart
 
 	// required: true
 	IsMembershipLocked bool `json:"is_membership_locked"`

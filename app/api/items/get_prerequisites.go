@@ -32,6 +32,7 @@ type prerequisiteOrDependencyItem struct {
 
 type rawPrerequisiteOrDependencyItem struct {
 	*RawCommonItemFields
+	*RawWatchedGroupStatFields
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `sql:"column:language_tag"`
@@ -45,8 +46,6 @@ type rawPrerequisiteOrDependencyItem struct {
 	// from item_dependencies
 	DependencyRequiredScore    int
 	DependencyGrantContentView bool
-
-	*RawWatchedGroupStatFields
 }
 
 // swagger:operation GET /items/{item_id}/prerequisites items itemPrerequisitesView

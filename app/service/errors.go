@@ -13,6 +13,7 @@ import (
 // ErrorResponse is an extension of the response for returning errors.
 type ErrorResponse[T any] struct {
 	Response[T]
+
 	ErrorText string      `json:"error_text,omitempty"` // application-level error message, for debugging
 	Errors    interface{} `json:"errors,omitempty"`     // form errors
 }

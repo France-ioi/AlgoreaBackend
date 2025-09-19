@@ -629,6 +629,7 @@ type ResultPrimaryKey struct {
 
 type resultPrimaryKeyAndState struct {
 	ResultPrimaryKey
+
 	State string
 }
 

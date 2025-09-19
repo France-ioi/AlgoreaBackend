@@ -35,6 +35,9 @@ type ManagerPermissionsPart struct {
 
 // swagger:model
 type userViewResponse struct {
+	*structures.UserPersonalInfo
+	*ManagerPermissionsPart
+
 	// required: true
 	GroupID int64 `json:"group_id,string"`
 	// required: true
@@ -46,14 +49,11 @@ type userViewResponse struct {
 	// required: true
 	WebSite *string `json:"web_site"`
 
-	*structures.UserPersonalInfo
 	ShowPersonalInfo bool `json:"-"`
 
 	// list of ancestor (excluding the user himself) groups that the current user (or his ancestor groups) is manager of
 	// required:true
 	AncestorsCurrentUserIsManagerOf []structures.GroupShortInfo `json:"ancestors_current_user_is_manager_of"`
-
-	*ManagerPermissionsPart
 
 	// required: true
 	IsCurrentUser bool `json:"is_current_user"`

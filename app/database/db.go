@@ -234,6 +234,7 @@ func cloneGormDB(db *gorm.DB) *gorm.DB {
 
 type gormDBAccessor struct {
 	sync.RWMutex
+
 	Value        interface{}
 	Error        error
 	RowsAffected int64

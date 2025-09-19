@@ -19,6 +19,7 @@ type grantedPermissionsViewResultRowGroup struct {
 
 type grantedPermissionsViewResultPermissions struct {
 	structures.ItemPermissions
+
 	// required: true
 	CanMakeSessionOfficial bool `json:"can_make_session_official"`
 	// required: true

@@ -16,6 +16,7 @@ import (
 // DataStore gather all stores for database operations on business data.
 type DataStore struct {
 	*DB
+
 	tableName string
 }
 

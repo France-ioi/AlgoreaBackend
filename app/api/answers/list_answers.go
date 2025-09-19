@@ -173,9 +173,10 @@ type rawAnswersData struct {
 }
 
 type answersResponseAnswerUser struct {
+	*structures.UserPersonalInfo
+
 	// required: true
 	Login string `json:"login"`
-	*structures.UserPersonalInfo
 }
 
 // swagger:model

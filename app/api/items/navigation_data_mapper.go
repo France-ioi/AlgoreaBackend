@@ -9,6 +9,10 @@ import (
 
 // rawNavigationItem represents one row of a navigation subtree returned from the DB.
 type rawNavigationItem struct {
+	*RawItemResultFields
+	*database.RawGeneratedPermissionFields
+	*RawWatchedGroupStatFields
+
 	// items
 	ID                    int64
 	Type                  string
@@ -20,17 +24,12 @@ type rawNavigationItem struct {
 	Title       *string
 	LanguageTag string
 
-	*RawItemResultFields
-
 	// max from results of the current participant.
 	BestScore float32
 
 	// items_items.
 	ParentItemID       int64
 	HasVisibleChildren bool
-
-	*database.RawGeneratedPermissionFields
-	*RawWatchedGroupStatFields
 }
 
 // getRawNavigationData reads a navigation subtree from the DB and returns an array of rawNavigationItem's.

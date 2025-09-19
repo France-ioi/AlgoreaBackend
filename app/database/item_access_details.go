@@ -13,8 +13,9 @@ type ItemAccessDetails struct {
 
 // ItemAccessDetailsWithID represents access rights for an item + ItemID.
 type ItemAccessDetailsWithID struct {
-	ItemID int64
 	ItemAccessDetails
+
+	ItemID int64
 }
 
 // IsInfo returns true when can_view_generated = 'info'.
