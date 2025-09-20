@@ -20,7 +20,7 @@ func (s *ItemItemStore) ChildrenOf(parentID int64) *ItemItemStore {
 func (s *ItemItemStore) CreateNewAncestors() (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
-	s.DataStore.createNewAncestors("items", "item")
+	s.createNewAncestors("items", "item")
 	return nil
 }
 

@@ -220,7 +220,7 @@ func generateRootItemInfoFromRawData(store *database.DataStore, rawData *rawRoot
 			ID:          rawData.ItemID,
 			Type:        rawData.ItemType,
 			String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-			Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(store.PermissionsGranted()),
+			Permissions: *rawData.AsItemPermissions(store.PermissionsGranted()),
 		},
 		RequiresExplicitEntry: rawData.RequiresExplicitEntry,
 		EntryParticipantType:  rawData.EntryParticipantType,

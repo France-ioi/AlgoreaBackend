@@ -214,7 +214,7 @@ func (srv *Service) getGroup(responseWriter http.ResponseWriter, httpRequest *ht
 		result.GroupGetResponseCodePart = nil
 		result.ManagerPermissionsPart = nil
 	} else {
-		result.ManagerPermissionsPart.CurrentUserCanManage = store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
+		result.CurrentUserCanManage = store.GroupManagers().CanManageNameByIndex(result.CurrentUserCanManageValue)
 	}
 
 	if result.CurrentUserMembership != "none" {

@@ -192,7 +192,7 @@ func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDIsSet bool,
 	result := make([]parentItem, 0, len(rawData))
 	for index := range rawData {
 		item := parentItem{
-			commonItemFields: rawData[index].RawCommonItemFields.asItemCommonFields(permissionGrantedStore),
+			commonItemFields: rawData[index].asItemCommonFields(permissionGrantedStore),
 			BestScore:        rawData[index].BestScore,
 			Result:           rawData[index].asItemResult(),
 			String: listItemString{
@@ -206,7 +206,7 @@ func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDIsSet bool,
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
+		item.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 		result = append(result, item)
 	}
 	return result

@@ -10,12 +10,12 @@ func (ctx *TestContext) databaseCountRows(table string, datamap map[string]strin
 	query := ctx.application.Database.Table(table)
 	for key, value := range datamap {
 		columnName := database.QuoteName(key)
-		switch {
-		case value == nullValue:
+		switch value {
+		case nullValue:
 			query = query.Where(columnName + " IS NULL")
-		case value == tableValueFalse:
+		case tableValueFalse:
 			query = query.Where(columnName + " = 0")
-		case value == tableValueTrue:
+		case tableValueTrue:
 			query = query.Where(columnName + " = 1")
 		default:
 			var processedValue interface{} = value

@@ -244,8 +244,7 @@ func updateChildrenAndRunListeners(
 ) (propagationsToRun []string, err error) {
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
-			deleteStatement := lockedStore.ItemItems().DB.
-				Where("parent_item_id = ?", itemID)
+			deleteStatement := lockedStore.ItemItems().Where("parent_item_id = ?", itemID)
 			newChildrenIDs := input.childrenIDs()
 			if len(newChildrenIDs) > 0 {
 				deleteStatement = deleteStatement.Where("child_item_id NOT IN(?)", newChildrenIDs)

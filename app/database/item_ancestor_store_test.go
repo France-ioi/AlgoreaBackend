@@ -25,7 +25,7 @@ func TestItemAncestorStore_DescendantsOf(t *testing.T) {
 	newStore := store.DescendantsOf(ancestorItemID)
 
 	assert.NotEqual(t, newStore, store)
-	assert.Equal(t, "items_ancestors", newStore.DataStore.tableName)
+	assert.Equal(t, "items_ancestors", newStore.tableName)
 
 	err := newStore.Scan(&result).Error()
 	assert.NoError(t, err)

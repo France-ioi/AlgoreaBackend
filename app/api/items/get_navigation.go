@@ -253,7 +253,7 @@ func fillItemCommonFieldsWithDBData(store *database.DataStore, rawData *rawNavig
 		ID:          rawData.ID,
 		Type:        rawData.Type,
 		String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-		Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(store.PermissionsGranted()),
+		Permissions: *rawData.AsItemPermissions(store.PermissionsGranted()),
 	}
 	return result
 }

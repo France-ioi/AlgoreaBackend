@@ -58,7 +58,7 @@ func getProhibitedPropagationsFromContext(ctx context.Context) propagationsBitFi
 // MergeContext returns a new context based on the given one, with DB-related values copied
 // from the context of the current DB connection.
 func (s *DataStore) MergeContext(ctx context.Context) context.Context {
-	prohibitedPropagations := getProhibitedPropagationsFromContext(s.DB.ctx())
+	prohibitedPropagations := getProhibitedPropagationsFromContext(s.ctx())
 	return context.WithValue(ctx, prohibitedPropagationsContextKey, prohibitedPropagations)
 }
 
@@ -242,7 +242,7 @@ func init() { //nolint:gochecknoinits // this is an initialization function to s
 // For testing purposes, it is possible to force this method to retry the transaction once
 // by providing a context created with ContextWithTransactionRetrying.
 func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*sql.TxOptions) error {
-	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx(), awaitingPropagationsContextKey, &propagationsBitField{}), s.DB)
+	s.DB = cloneDBWithNewContext(context.WithValue(s.ctx(), awaitingPropagationsContextKey, &propagationsBitField{}), s.DB)
 	var retried bool
 
 	err := s.inTransaction(func(db *DB) error {
@@ -318,7 +318,7 @@ func (s *DataStore) SetPropagationsModeToSync() (err error) {
 
 	mustNotBeError(s.Exec("SET @synchronous_propagations_connection_id = CONNECTION_ID()").Error())
 
-	s.DB = cloneDBWithNewContext(context.WithValue(s.DB.ctx(), propagationsAreSyncContextKey, true), s.DB)
+	s.DB = cloneDBWithNewContext(context.WithValue(s.ctx(), propagationsAreSyncContextKey, true), s.DB)
 	return nil
 }
 
@@ -350,7 +350,7 @@ func (s *DataStore) WithForeignKeyChecksDisabled(blockFunc func(*DataStore) erro
 
 // IsInTransaction returns true if the store operates in a DB transaction at the moment.
 func (s *DataStore) IsInTransaction() bool {
-	return s.DB.isInTransaction()
+	return s.isInTransaction()
 }
 
 // WithNamedLock wraps the given function in GET_LOCK/RELEASE_LOCK.
@@ -394,7 +394,7 @@ func (s *DataStore) ByID(id int64) *DB {
 // RetryOnDuplicatePrimaryKeyError will retry the given function on getting duplicate entry errors
 // for primary keys.
 func (s *DataStore) RetryOnDuplicatePrimaryKeyError(tableName string, f func(store *DataStore) error) error {
-	return s.DB.retryOnDuplicatePrimaryKeyError(tableName, func(db *DB) error {
+	return s.retryOnDuplicatePrimaryKeyError(tableName, func(db *DB) error {
 		return f(NewDataStore(db))
 	})
 }
@@ -402,7 +402,7 @@ func (s *DataStore) RetryOnDuplicatePrimaryKeyError(tableName string, f func(sto
 // RetryOnDuplicateKeyError will retry the given function on getting duplicate entry errors
 // for the given key.
 func (s *DataStore) RetryOnDuplicateKeyError(tableName, keyName, nameInError string, f func(store *DataStore) error) error {
-	return s.DB.retryOnDuplicateKeyError(tableName, keyName, nameInError, func(db *DB) error {
+	return s.retryOnDuplicateKeyError(tableName, keyName, nameInError, func(db *DB) error {
 		return f(NewDataStore(db))
 	})
 }
@@ -410,13 +410,13 @@ func (s *DataStore) RetryOnDuplicateKeyError(tableName, keyName, nameInError str
 // InsertMap reads fields from the given map and inserts the values which have been set
 // into the store's table.
 func (s *DataStore) InsertMap(dataMap map[string]interface{}) error {
-	return s.DB.insertMaps(s.tableName, []map[string]interface{}{dataMap})
+	return s.insertMaps(s.tableName, []map[string]interface{}{dataMap})
 }
 
 // InsertMaps reads fields from the given map and inserts the values set in the first row (so all the rows should have the same keys)
 // into the store's table.
 func (s *DataStore) InsertMaps(dataMaps []map[string]interface{}) error {
-	return s.DB.insertMaps(s.tableName, dataMaps)
+	return s.insertMaps(s.tableName, dataMaps)
 }
 
 // InsertOrUpdateMap reads fields from the given map and inserts the values which have been set
