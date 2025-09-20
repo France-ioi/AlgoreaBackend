@@ -149,83 +149,9 @@ func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB,
 	return sql.Open(golang.IfElse(enableRawLevelLogging, "instrumented-mysql", "wrapped-mysql"), sourceDSN)
 }
 
-func (conn *DB) ctx() context.Context {
-	//nolint:forcetypeassert // panic if conn.db doesn't implement contextGetter: both sqlDBWrapper and sqlTxWrapper do
-	return conn.db.CommonDB().(contextGetter).getContext()
-}
-
-func (conn *DB) logConfig() *LogConfig {
-	//nolint:forcetypeassert // panic if conn.db doesn't implement logConfigGetter: both sqlDBWrapper and sqlTxWrapper do
-	return conn.db.CommonDB().(logConfigGetter).getLogConfig()
-}
-
 // New clones a new db connection without search conditions.
 func (conn *DB) New() *DB {
 	return newDB(conn.db.New(), nil)
-}
-
-func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
-	return conn.inTransactionWithCount(txFunc, 0, txOptions...)
-}
-
-const (
-	transactionRetriesLimit        = 30
-	transactionDelayBetweenRetries = 50 * time.Millisecond
-)
-
-func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
-	conn.sleepBeforeStartingTransactionIfNeeded(count)
-
-	txOpts := &sql.TxOptions{}
-	if len(txOptions) > 0 {
-		txOpts = txOptions[0]
-	}
-
-	txDB := gormDBBeginTxReplacement(conn.ctx(), conn.db, txOpts)
-	if txDB.Error != nil {
-		return txDB.Error
-	}
-	defer func() {
-		recoveredPanic := recover()
-		switch {
-		case recoveredPanic != nil:
-			// ensure rollback is executed even in case of panic
-			rollbackErr := txDB.Rollback().Error
-			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
-			// In all cases, the DB library closes the connection on rollback failure and logs the error.
-			// But still, in both cases, we should not retry the transaction.
-			// If the panic was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
-			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, recoveredPanic, rollbackErr, &err, txOptions...) {
-				return
-			}
-			panic(recoveredPanic) // re-throw panic after rollback if it was not a deadlock/timeout error
-		case err != nil:
-			// ensure the rollback is executed, do not change the err
-			rollbackErr := txDB.Rollback().Error
-			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
-			// In all cases, the DB library closes the connection on rollback failure and logs the error.
-			// But still, in both cases, we should not retry the transaction.
-			// If the error was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
-			conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...)
-		default:
-			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
-		}
-	}()
-	//nolint:forcetypeassert // panic if txDB.CommonDB() is not *sqlTxWrapper
-	txLogConfig := txDB.CommonDB().(*sqlTxWrapper).logConfig
-	txLogConfig.LogRetryableErrorsAsInfo = true
-	err = txFunc(newDB(txDB, nil))
-	return err
-}
-
-func isRetryableError(err error) bool {
-	return IsDeadlockError(err) || IsLockWaitTimeoutExceededError(err)
-}
-
-func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
-	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
-		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:mnd // ±5%
-	}
 }
 
 func cloneGormDB(db *gorm.DB) *gorm.DB {
@@ -262,88 +188,6 @@ func gormDBBeginTxReplacement(ctx context.Context, db *gorm.DB, txOpts *sql.TxOp
 		_ = clonedDB.AddError(gorm.ErrCantStartTransaction)
 	}
 	return clonedDB
-}
-
-func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
-	returnErr *error, //nolint:gocritic // we need the pointer as we replace the value of returnErr in some cases
-	txOptions ...*sql.TxOptions,
-) (shouldIgnoreInitialError bool) {
-	errToHandleError, _ := errToHandle.(error)
-
-	// Deadlock found / lock wait timeout exceeded
-	if errToHandle != nil && isRetryableError(errToHandleError) {
-		if rollbackErr != nil { // do not retry if rollback failed
-			// as the previous error was a retryable error, we should return the rollback error, as it is more important
-			*returnErr = rollbackErr
-			return true
-		}
-		// retry
-		if count == transactionRetriesLimit {
-			logDBError(conn.ctx(), conn.logConfig(),
-				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %w", errToHandleError))
-			*returnErr = errors.New("transaction retries limit exceeded")
-			return true
-		}
-		log.EntryFromContext(conn.ctx()).WithField("type", "db").
-			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
-		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
-		return true
-	}
-	return false
-}
-
-func (conn *DB) isInTransaction() bool {
-	if _, ok := interface{}(conn.db.CommonDB()).(driver.Tx); ok {
-		return true
-	}
-	return false
-}
-
-func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall func(*DB) error) (err error) {
-	initGetLockTime := time.Now()
-
-	sqlDB := conn.GetSQLDB()
-	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig()}
-
-	var shouldDiscardNamedLockDBConnection bool
-	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx())
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = namedLockDBConnection.close(
-			// return driver.ErrBadConn on RELEASE_LOCK() error to discard the connection releasing the lock
-			golang.IfElse(shouldDiscardNamedLockDBConnection, driver.ErrBadConn, nil))
-	}()
-
-	var getLockResult *int64
-	err = namedLockDBConnection.QueryRowContext(conn.ctx(), "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
-	if err != nil {
-		return err
-	}
-	if getLockResult == nil || *getLockResult != 1 {
-		return ErrNamedLockWaitTimeoutExceeded
-	}
-
-	defer func() {
-		var releaseLockResult *int64
-		// call RELEASE_LOCK() even if the context is canceled or timed out
-		releaseErr := namedLockDBConnection.QueryRowContext(
-			log.ContextWithLogger(context.Background(), log.LoggerFromContext(conn.ctx())),
-			"SELECT RELEASE_LOCK(?)", lockName).Scan(&releaseLockResult)
-		if releaseErr != nil || releaseLockResult == nil || *releaseLockResult != 1 {
-			// on error we just close the connection to release the lock
-			shouldDiscardNamedLockDBConnection = true
-			// do not return an error, it should not affect the result
-			logDBError(conn.ctx(), conn.logConfig(),
-				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
-		}
-	}()
-
-	log.EntryFromContext(conn.ctx()).WithField("type", "db").
-		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
-
-	return funcToCall(conn)
 }
 
 // GetSQLDB returns the underlying *sql.DB connection.
@@ -479,28 +323,6 @@ func (conn *DB) QueryExpr() interface{} {
 	return conn.toQuery().QueryExpr()
 }
 
-func (conn *DB) toQuery() *gorm.DB {
-	if len(conn.ctes) == 0 {
-		return conn.db
-	}
-	strBuilder := new(strings.Builder)
-	strBuilder.WriteString("WITH ")
-	cteSubQueries := make([]interface{}, 0, len(conn.ctes)+1)
-	isFirstCTE := true
-	for _, cte := range conn.ctes {
-		if !isFirstCTE {
-			strBuilder.WriteString(", ")
-		}
-		isFirstCTE = false
-		strBuilder.WriteString(QuoteName(cte.name))
-		strBuilder.WriteString(" AS ?")
-		cteSubQueries = append(cteSubQueries, cte.subQuery)
-	}
-	strBuilder.WriteString(" ?")
-	cteSubQueries = append(cteSubQueries, conn.db.QueryExpr())
-	return conn.Raw(strBuilder.String(), cteSubQueries...).db
-}
-
 // Scan scans value to a struct.
 func (conn *DB) Scan(dest interface{}) *DB {
 	return newDB(conn.toQuery().Scan(dest), nil)
@@ -586,27 +408,6 @@ func (conn *DB) ScanAndHandleMaps(handler func(map[string]interface{}) error) *D
 	}
 	_ = conn.db.AddError(rows.Err())
 	return conn
-}
-
-func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interface{} {
-	columns := make([]interface{}, len(cols))
-	columnPointers := make([]interface{}, len(cols))
-	for i := range columns {
-		columnPointers[i] = &columns[i]
-	}
-
-	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil { //nolint:gocritic // conn.db.AddError(err) returns err
-		return nil
-	}
-
-	rowMap := make(map[string]interface{})
-	for i, columnName := range cols {
-		if value, ok := columns[i].([]byte); ok {
-			columns[i] = *(*string)(unsafe.Pointer(&value)) //nolint:gosec // convert []byte to string without copying
-		}
-		rowMap[columnName] = columns[i]
-	}
-	return rowMap
 }
 
 // Count gets how many records for a model.
@@ -699,16 +500,6 @@ func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...), nil)
 }
 
-// insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
-// into the given table.
-func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) error {
-	if len(dataMaps) == 0 {
-		return nil
-	}
-	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, false)
-	return conn.db.Exec(query, values...).Error
-}
-
 // InsertIgnoreMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
 // into the given table ignoring errors (such as duplicates).
 func (conn *DB) InsertIgnoreMaps(tableName string, dataMaps []map[string]interface{}) error {
@@ -717,45 +508,6 @@ func (conn *DB) InsertIgnoreMaps(tableName string, dataMaps []map[string]interfa
 	}
 	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, true)
 	return conn.db.Exec(query, values...).Error
-}
-
-func (conn *DB) constructInsertMapsStatement(
-	dataMaps []map[string]interface{}, tableName string, ignore bool,
-) (query string, values []interface{}) {
-	// data for the building the SQL request
-	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...), ...", values...
-	values = make([]interface{}, 0, len(dataMaps)*len(dataMaps[0]))
-	keys := make([]string, 0, len(dataMaps[0]))
-	for key := range dataMaps[0] {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	escapedKeys := make([]string, 0, len(keys))
-	for _, key := range keys {
-		escapedKeys = append(escapedKeys, QuoteName(key))
-	}
-	var builder strings.Builder
-	var ignoreString string
-	if ignore {
-		ignoreString = "IGNORE "
-	}
-	_, _ = builder.WriteString(fmt.Sprintf("INSERT %sINTO `%s` (%s) VALUES ", ignoreString, tableName, strings.Join(escapedKeys, ", ")))
-	for index, dataMap := range dataMaps {
-		_, _ = builder.WriteRune('(')
-		for keyIndex, key := range keys {
-			_, _ = builder.WriteRune('?')
-			values = append(values, dataMap[key])
-			if keyIndex != len(keys)-1 {
-				_, _ = builder.WriteString(", ")
-			}
-		}
-		_, _ = builder.WriteRune(')')
-		if index != len(dataMaps)-1 {
-			_, _ = builder.WriteString(", ")
-		}
-	}
-	query = builder.String()
-	return query, values
 }
 
 // InsertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
@@ -806,12 +558,6 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 
 // ErrNoTransaction means that a called method/function cannot work outside of a transaction.
 var ErrNoTransaction = errors.New("should be executed in a transaction")
-
-func (conn *DB) mustBeInTransaction() {
-	if !conn.isInTransaction() {
-		panic(ErrNoTransaction)
-	}
-}
 
 // WithExclusiveWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
 // For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
@@ -880,6 +626,260 @@ func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
 // GetContext returns the context of the DB connection.
 func (conn *DB) GetContext() context.Context {
 	return conn.ctx()
+}
+
+func (conn *DB) ctx() context.Context {
+	//nolint:forcetypeassert // panic if conn.db doesn't implement contextGetter: both sqlDBWrapper and sqlTxWrapper do
+	return conn.db.CommonDB().(contextGetter).getContext()
+}
+
+func (conn *DB) logConfig() *LogConfig {
+	//nolint:forcetypeassert // panic if conn.db doesn't implement logConfigGetter: both sqlDBWrapper and sqlTxWrapper do
+	return conn.db.CommonDB().(logConfigGetter).getLogConfig()
+}
+
+func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
+	return conn.inTransactionWithCount(txFunc, 0, txOptions...)
+}
+
+const (
+	transactionRetriesLimit        = 30
+	transactionDelayBetweenRetries = 50 * time.Millisecond
+)
+
+func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
+	conn.sleepBeforeStartingTransactionIfNeeded(count)
+
+	txOpts := &sql.TxOptions{}
+	if len(txOptions) > 0 {
+		txOpts = txOptions[0]
+	}
+
+	txDB := gormDBBeginTxReplacement(conn.ctx(), conn.db, txOpts)
+	if txDB.Error != nil {
+		return txDB.Error
+	}
+	defer func() {
+		recoveredPanic := recover()
+		switch {
+		case recoveredPanic != nil:
+			// ensure rollback is executed even in case of panic
+			rollbackErr := txDB.Rollback().Error
+			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
+			// In all cases, the DB library closes the connection on rollback failure and logs the error.
+			// But still, in both cases, we should not retry the transaction.
+			// If the panic was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
+			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, recoveredPanic, rollbackErr, &err, txOptions...) {
+				return
+			}
+			panic(recoveredPanic) // re-throw panic after rollback if it was not a deadlock/timeout error
+		case err != nil:
+			// ensure the rollback is executed, do not change the err
+			rollbackErr := txDB.Rollback().Error
+			// There are two possible causes of the rollback error: 1) the connection is broken, 2) the context is canceled.
+			// In all cases, the DB library closes the connection on rollback failure and logs the error.
+			// But still, in both cases, we should not retry the transaction.
+			// If the error was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
+			conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...)
+		default:
+			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
+		}
+	}()
+	//nolint:forcetypeassert // panic if txDB.CommonDB() is not *sqlTxWrapper
+	txLogConfig := txDB.CommonDB().(*sqlTxWrapper).logConfig
+	txLogConfig.LogRetryableErrorsAsInfo = true
+	err = txFunc(newDB(txDB, nil))
+	return err
+}
+
+func isRetryableError(err error) bool {
+	return IsDeadlockError(err) || IsLockWaitTimeoutExceededError(err)
+}
+
+func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
+	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
+		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:mnd // ±5%
+	}
+}
+
+func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
+	returnErr *error, //nolint:gocritic // we need the pointer as we replace the value of returnErr in some cases
+	txOptions ...*sql.TxOptions,
+) (shouldIgnoreInitialError bool) {
+	errToHandleError, _ := errToHandle.(error)
+
+	// Deadlock found / lock wait timeout exceeded
+	if errToHandle != nil && isRetryableError(errToHandleError) {
+		if rollbackErr != nil { // do not retry if rollback failed
+			// as the previous error was a retryable error, we should return the rollback error, as it is more important
+			*returnErr = rollbackErr
+			return true
+		}
+		// retry
+		if count == transactionRetriesLimit {
+			logDBError(conn.ctx(), conn.logConfig(),
+				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %w", errToHandleError))
+			*returnErr = errors.New("transaction retries limit exceeded")
+			return true
+		}
+		log.EntryFromContext(conn.ctx()).WithField("type", "db").
+			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
+		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
+		return true
+	}
+	return false
+}
+
+func (conn *DB) isInTransaction() bool {
+	if _, ok := interface{}(conn.db.CommonDB()).(driver.Tx); ok {
+		return true
+	}
+	return false
+}
+
+func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall func(*DB) error) (err error) {
+	initGetLockTime := time.Now()
+
+	sqlDB := conn.GetSQLDB()
+	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig()}
+
+	var shouldDiscardNamedLockDBConnection bool
+	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = namedLockDBConnection.close(
+			// return driver.ErrBadConn on RELEASE_LOCK() error to discard the connection releasing the lock
+			golang.IfElse(shouldDiscardNamedLockDBConnection, driver.ErrBadConn, nil))
+	}()
+
+	var getLockResult *int64
+	err = namedLockDBConnection.QueryRowContext(conn.ctx(), "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
+	if err != nil {
+		return err
+	}
+	if getLockResult == nil || *getLockResult != 1 {
+		return ErrNamedLockWaitTimeoutExceeded
+	}
+
+	defer func() {
+		var releaseLockResult *int64
+		// call RELEASE_LOCK() even if the context is canceled or timed out
+		releaseErr := namedLockDBConnection.QueryRowContext(
+			log.ContextWithLogger(context.Background(), log.LoggerFromContext(conn.ctx())),
+			"SELECT RELEASE_LOCK(?)", lockName).Scan(&releaseLockResult)
+		if releaseErr != nil || releaseLockResult == nil || *releaseLockResult != 1 {
+			// on error we just close the connection to release the lock
+			shouldDiscardNamedLockDBConnection = true
+			// do not return an error, it should not affect the result
+			logDBError(conn.ctx(), conn.logConfig(),
+				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
+		}
+	}()
+
+	log.EntryFromContext(conn.ctx()).WithField("type", "db").
+		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
+
+	return funcToCall(conn)
+}
+
+func (conn *DB) toQuery() *gorm.DB {
+	if len(conn.ctes) == 0 {
+		return conn.db
+	}
+	strBuilder := new(strings.Builder)
+	strBuilder.WriteString("WITH ")
+	cteSubQueries := make([]interface{}, 0, len(conn.ctes)+1)
+	isFirstCTE := true
+	for _, cte := range conn.ctes {
+		if !isFirstCTE {
+			strBuilder.WriteString(", ")
+		}
+		isFirstCTE = false
+		strBuilder.WriteString(QuoteName(cte.name))
+		strBuilder.WriteString(" AS ?")
+		cteSubQueries = append(cteSubQueries, cte.subQuery)
+	}
+	strBuilder.WriteString(" ?")
+	cteSubQueries = append(cteSubQueries, conn.db.QueryExpr())
+	return conn.Raw(strBuilder.String(), cteSubQueries...).db
+}
+
+func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interface{} {
+	columns := make([]interface{}, len(cols))
+	columnPointers := make([]interface{}, len(cols))
+	for i := range columns {
+		columnPointers[i] = &columns[i]
+	}
+
+	if err := rows.Scan(columnPointers...); conn.db.AddError(err) != nil { //nolint:gocritic // conn.db.AddError(err) returns err
+		return nil
+	}
+
+	rowMap := make(map[string]interface{})
+	for i, columnName := range cols {
+		if value, ok := columns[i].([]byte); ok {
+			columns[i] = *(*string)(unsafe.Pointer(&value)) //nolint:gosec // convert []byte to string without copying
+		}
+		rowMap[columnName] = columns[i]
+	}
+	return rowMap
+}
+
+// insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
+// into the given table.
+func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) error {
+	if len(dataMaps) == 0 {
+		return nil
+	}
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, false)
+	return conn.db.Exec(query, values...).Error
+}
+
+func (conn *DB) constructInsertMapsStatement(
+	dataMaps []map[string]interface{}, tableName string, ignore bool,
+) (query string, values []interface{}) {
+	// data for the building the SQL request
+	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...), ...", values...
+	values = make([]interface{}, 0, len(dataMaps)*len(dataMaps[0]))
+	keys := make([]string, 0, len(dataMaps[0]))
+	for key := range dataMaps[0] {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	escapedKeys := make([]string, 0, len(keys))
+	for _, key := range keys {
+		escapedKeys = append(escapedKeys, QuoteName(key))
+	}
+	var builder strings.Builder
+	var ignoreString string
+	if ignore {
+		ignoreString = "IGNORE "
+	}
+	_, _ = builder.WriteString(fmt.Sprintf("INSERT %sINTO `%s` (%s) VALUES ", ignoreString, tableName, strings.Join(escapedKeys, ", ")))
+	for index, dataMap := range dataMaps {
+		_, _ = builder.WriteRune('(')
+		for keyIndex, key := range keys {
+			_, _ = builder.WriteRune('?')
+			values = append(values, dataMap[key])
+			if keyIndex != len(keys)-1 {
+				_, _ = builder.WriteString(", ")
+			}
+		}
+		_, _ = builder.WriteRune(')')
+		if index != len(dataMaps)-1 {
+			_, _ = builder.WriteString(", ")
+		}
+	}
+	query = builder.String()
+	return query, values
+}
+
+func (conn *DB) mustBeInTransaction() {
+	if !conn.isInTransaction() {
+		panic(ErrNoTransaction)
+	}
 }
 
 const keyTriesCount = 10

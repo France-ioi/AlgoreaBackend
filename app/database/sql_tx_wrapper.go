@@ -64,24 +64,6 @@ func (sqlTX *sqlTxWrapper) Prepare(_ string) (*sql.Stmt, error) {
 	panic("sqlTxWrapper.Prepare is not implemented, should not be called")
 }
 
-// prepare creates a prepared statement for use within a transaction.
-//
-// The returned statement operates within the transaction and will be closed
-// when the transaction has been committed or rolled back.
-//
-// To use an existing prepared statement on this transaction, see [sql.Tx.Stmt].
-//
-// prepare uses the context of [sqlTxWrapper] internally.
-func (sqlTX *sqlTxWrapper) prepare(query string) (*SQLStmtWrapper, error) {
-	stmt, err := sqlTX.sqlTx.PrepareContext(sqlTX.ctx, query)
-	err = sqlTX.handleError(err)
-	if err != nil {
-		logDBError(sqlTX.ctx, sqlTX.logConfig, err)
-		return nil, err
-	}
-	return &SQLStmtWrapper{db: sqlTX, sql: query, stmt: stmt, logConfig: sqlTX.logConfig}, nil
-}
-
 // Query executes a query that returns rows, typically a SELECT.
 //
 // Query uses the context of [sqlTxWrapper] internally.
@@ -145,6 +127,24 @@ func (sqlTX *sqlTxWrapper) Rollback() (err error) {
 		logSQLQuery(sqlTX.ctx, gorm.NowFunc().Sub(startTime), rollbackTransactionLogMessage, nil, nil)
 	}
 	return sqlTX.handleCommitOrRollbackError(err)
+}
+
+// prepare creates a prepared statement for use within a transaction.
+//
+// The returned statement operates within the transaction and will be closed
+// when the transaction has been committed or rolled back.
+//
+// To use an existing prepared statement on this transaction, see [sql.Tx.Stmt].
+//
+// prepare uses the context of [sqlTxWrapper] internally.
+func (sqlTX *sqlTxWrapper) prepare(query string) (*SQLStmtWrapper, error) {
+	stmt, err := sqlTX.sqlTx.PrepareContext(sqlTX.ctx, query)
+	err = sqlTX.handleError(err)
+	if err != nil {
+		logDBError(sqlTX.ctx, sqlTX.logConfig, err)
+		return nil, err
+	}
+	return &SQLStmtWrapper{db: sqlTX, sql: query, stmt: stmt, logConfig: sqlTX.logConfig}, nil
 }
 
 func (sqlTX *sqlTxWrapper) handleError(err error) error {

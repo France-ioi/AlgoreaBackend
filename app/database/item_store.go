@@ -58,93 +58,6 @@ func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
 		ids, groupID, parentAttemptID, true, requireContentAccessToTheFinalItem, "1", withWriteLock).HasRows()
 }
 
-// visibleItemsFromListForGroupQuery returns a query for selecting visible items from a list of item ids for a group.
-// The item is considered visible if the group has at least 'info' view access on it.
-// For each item, the query selects the id, allows_multiple_attempts, and can_view_generated_value.
-func (s *ItemStore) visibleItemsFromListForGroupQuery(itemIDs []int64, groupID int64) *DB {
-	return s.Permissions().MatchingGroupAncestors(groupID).
-		WherePermissionIsAtLeast("view", "info").
-		Where("item_id IN (?)", itemIDs).
-		Joins("JOIN items ON items.id = permissions.item_id").
-		Select(`
-			items.id, items.allows_multiple_attempts,
-			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
-		Group("items.id")
-}
-
-func (s *ItemStore) participationHierarchyForParentAttempt(
-	ids []int64, groupID, parentAttemptID int64, requireAttemptsToBeActive, requireContentAccessToTheFinalItem bool,
-	columnsList string, withWriteLock bool,
-) *DB {
-	subQuery := s.itemAttemptChainWithoutAttemptForTail(
-		ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheFinalItem, withWriteLock)
-
-	if len(ids) > 1 {
-		subQuery = subQuery.
-			Where(fmt.Sprintf("attempts%d.id = ?", len(ids)-2), parentAttemptID) //nolint:mnd // the second last item is the parent of the last one
-	}
-
-	return subQuery.Select(columnsList).
-		With("visible_items", s.visibleItemsFromListForGroupQuery(ids, groupID))
-}
-
-func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID int64,
-	requireAttemptsToBeActive, requireContentAccessToTheFinalItem, withWriteLock bool,
-) *DB {
-	participantAncestors := s.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
-		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
-	groupsManagedByParticipant := s.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
-		Joins("JOIN group_managers ON group_managers.manager_id = groups_ancestors_active.ancestor_group_id").
-		Joins("JOIN groups_ancestors_active AS managed_descendants ON managed_descendants.ancestor_group_id = group_managers.group_id").
-		Joins("JOIN `groups` ON groups.id = managed_descendants.child_group_id")
-	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
-		groupsManagedByParticipant.Select("groups.root_activity_id"))
-	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
-		groupsManagedByParticipant.Select("groups.root_skill_id"))
-
-	if withWriteLock {
-		rootActivities = rootActivities.WithExclusiveWriteLock()
-		rootSkills = rootSkills.WithExclusiveWriteLock()
-	}
-
-	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).
-		Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
-
-	for idIndex := 1; idIndex < len(ids); idIndex++ {
-		subQuery = subQuery.Joins(fmt.Sprintf(`
-				JOIN results AS results%d ON results%d.participant_id = ? AND
-					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1), groupID).
-			Joins(fmt.Sprintf(`
-				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
-					attempts%d.id = results%d.attempt_id`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1)).
-			Joins(
-				fmt.Sprintf(
-					"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
-					idIndex, idIndex, idIndex-1, idIndex), ids[idIndex]).
-			Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex, idIndex, idIndex)).
-			Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", idIndex-1),
-				s.PermissionsGranted().ViewIndexByName("content"))
-
-		if idIndex != len(ids)-1 {
-			subQuery = subQuery.Where(fmt.Sprintf(
-				"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
-				idIndex, idIndex, idIndex, idIndex, idIndex-1))
-		}
-
-		if requireAttemptsToBeActive {
-			subQuery = subQuery.Where(
-				fmt.Sprintf("attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until", idIndex-1, idIndex-1))
-		}
-	}
-
-	if requireContentAccessToTheFinalItem {
-		subQuery = subQuery.Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", len(ids)-1),
-			s.PermissionsGranted().ViewIndexByName("content"))
-	}
-
-	return subQuery
-}
-
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids (but the final item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
@@ -253,38 +166,6 @@ func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
 	return attemptIDMap, attemptNumberMap
 }
 
-func (s *ItemStore) breadcrumbsHierarchyForAttempt(
-	ids []int64, groupID, attemptID int64, requireContentAccessToTheFinalItem bool,
-	columnsList string, withWriteLock bool,
-) *DB {
-	finalItemIndex := len(ids) - 1
-	subQuery := s.
-		itemAttemptChainWithoutAttemptForTail(ids, groupID, false, requireContentAccessToTheFinalItem, withWriteLock).
-		Where(fmt.Sprintf("attempts%d.id = ?", finalItemIndex), attemptID)
-	subQuery = subQuery.
-		Joins(fmt.Sprintf(`
-				JOIN results AS results%d ON results%d.participant_id = ? AND
-					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`,
-			finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex), groupID).
-		Joins(fmt.Sprintf(`
-				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
-					attempts%d.id = results%d.attempt_id`, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex))
-	if len(ids) > 1 {
-		subQuery = subQuery.Where(fmt.Sprintf(
-			"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
-			finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex-1))
-	}
-
-	subQuery = subQuery.Select(columnsList)
-	visibleItems := s.visibleItemsFromListForGroupQuery(ids, groupID)
-
-	if withWriteLock {
-		subQuery = subQuery.WithExclusiveWriteLock()
-		visibleItems = visibleItems.WithExclusiveWriteLock()
-	}
-	return subQuery.With("visible_items", visibleItems)
-}
-
 // CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),
 // i.e. the item (task) exists and is not read-only and the participant has at least content:view permission on the item.
 func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAccess bool, reason, err error) {
@@ -357,4 +238,123 @@ func (s *ItemStore) GetItemIDFromTextID(textID string) (itemID int64, err error)
 		PluckFirst("id", &itemID).Error()
 
 	return itemID, err
+}
+
+// visibleItemsFromListForGroupQuery returns a query for selecting visible items from a list of item ids for a group.
+// The item is considered visible if the group has at least 'info' view access on it.
+// For each item, the query selects the id, allows_multiple_attempts, and can_view_generated_value.
+func (s *ItemStore) visibleItemsFromListForGroupQuery(itemIDs []int64, groupID int64) *DB {
+	return s.Permissions().MatchingGroupAncestors(groupID).
+		WherePermissionIsAtLeast("view", "info").
+		Where("item_id IN (?)", itemIDs).
+		Joins("JOIN items ON items.id = permissions.item_id").
+		Select(`
+			items.id, items.allows_multiple_attempts,
+			MAX(permissions.can_view_generated_value) AS can_view_generated_value`).
+		Group("items.id")
+}
+
+func (s *ItemStore) participationHierarchyForParentAttempt(
+	ids []int64, groupID, parentAttemptID int64, requireAttemptsToBeActive, requireContentAccessToTheFinalItem bool,
+	columnsList string, withWriteLock bool,
+) *DB {
+	subQuery := s.itemAttemptChainWithoutAttemptForTail(
+		ids, groupID, requireAttemptsToBeActive, requireContentAccessToTheFinalItem, withWriteLock)
+
+	if len(ids) > 1 {
+		subQuery = subQuery.
+			Where(fmt.Sprintf("attempts%d.id = ?", len(ids)-2), parentAttemptID) //nolint:mnd // the second last item is the parent of the last one
+	}
+
+	return subQuery.Select(columnsList).
+		With("visible_items", s.visibleItemsFromListForGroupQuery(ids, groupID))
+}
+
+func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID int64,
+	requireAttemptsToBeActive, requireContentAccessToTheFinalItem, withWriteLock bool,
+) *DB {
+	participantAncestors := s.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
+		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.ancestor_group_id")
+	groupsManagedByParticipant := s.ActiveGroupAncestors().Where("groups_ancestors_active.child_group_id = ?", groupID).
+		Joins("JOIN group_managers ON group_managers.manager_id = groups_ancestors_active.ancestor_group_id").
+		Joins("JOIN groups_ancestors_active AS managed_descendants ON managed_descendants.ancestor_group_id = group_managers.group_id").
+		Joins("JOIN `groups` ON groups.id = managed_descendants.child_group_id")
+	rootActivities := participantAncestors.Select("groups.root_activity_id").Union(
+		groupsManagedByParticipant.Select("groups.root_activity_id"))
+	rootSkills := participantAncestors.Select("groups.root_skill_id").Union(
+		groupsManagedByParticipant.Select("groups.root_skill_id"))
+
+	if withWriteLock {
+		rootActivities = rootActivities.WithExclusiveWriteLock()
+		rootSkills = rootSkills.WithExclusiveWriteLock()
+	}
+
+	subQuery := s.Table("visible_items as items0").Where("items0.id = ?", ids[0]).
+		Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
+
+	for idIndex := 1; idIndex < len(ids); idIndex++ {
+		subQuery = subQuery.Joins(fmt.Sprintf(`
+				JOIN results AS results%d ON results%d.participant_id = ? AND
+					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1), groupID).
+			Joins(fmt.Sprintf(`
+				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
+					attempts%d.id = results%d.attempt_id`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1)).
+			Joins(
+				fmt.Sprintf(
+					"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
+					idIndex, idIndex, idIndex-1, idIndex), ids[idIndex]).
+			Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex, idIndex, idIndex)).
+			Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", idIndex-1),
+				s.PermissionsGranted().ViewIndexByName("content"))
+
+		if idIndex != len(ids)-1 {
+			subQuery = subQuery.Where(fmt.Sprintf(
+				"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
+				idIndex, idIndex, idIndex, idIndex, idIndex-1))
+		}
+
+		if requireAttemptsToBeActive {
+			subQuery = subQuery.Where(
+				fmt.Sprintf("attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until", idIndex-1, idIndex-1))
+		}
+	}
+
+	if requireContentAccessToTheFinalItem {
+		subQuery = subQuery.Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", len(ids)-1),
+			s.PermissionsGranted().ViewIndexByName("content"))
+	}
+
+	return subQuery
+}
+
+func (s *ItemStore) breadcrumbsHierarchyForAttempt(
+	ids []int64, groupID, attemptID int64, requireContentAccessToTheFinalItem bool,
+	columnsList string, withWriteLock bool,
+) *DB {
+	finalItemIndex := len(ids) - 1
+	subQuery := s.
+		itemAttemptChainWithoutAttemptForTail(ids, groupID, false, requireContentAccessToTheFinalItem, withWriteLock).
+		Where(fmt.Sprintf("attempts%d.id = ?", finalItemIndex), attemptID)
+	subQuery = subQuery.
+		Joins(fmt.Sprintf(`
+				JOIN results AS results%d ON results%d.participant_id = ? AND
+					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`,
+			finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex), groupID).
+		Joins(fmt.Sprintf(`
+				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
+					attempts%d.id = results%d.attempt_id`, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex))
+	if len(ids) > 1 {
+		subQuery = subQuery.Where(fmt.Sprintf(
+			"IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id",
+			finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex-1))
+	}
+
+	subQuery = subQuery.Select(columnsList)
+	visibleItems := s.visibleItemsFromListForGroupQuery(ids, groupID)
+
+	if withWriteLock {
+		subQuery = subQuery.WithExclusiveWriteLock()
+		visibleItems = visibleItems.WithExclusiveWriteLock()
+	}
+	return subQuery.With("visible_items", visibleItems)
 }

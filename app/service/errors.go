@@ -30,6 +30,10 @@ var _ error = &APIError{}
 // ErrAPIInsufficientAccessRights is an APIError to be returned when the has no access rights to perform an action.
 var ErrAPIInsufficientAccessRights = ErrForbidden(errors.New("insufficient access rights"))
 
+func (e *APIError) Error() string {
+	return e.EmbeddedError.Error()
+}
+
 func (e *APIError) httpResponse() render.Renderer {
 	response := Response[*struct{}]{
 		HTTPStatusCode: e.HTTPStatusCode,
@@ -52,10 +56,6 @@ func (e *APIError) httpResponse() render.Renderer {
 	}
 
 	return &result
-}
-
-func (e *APIError) Error() string {
-	return e.EmbeddedError.Error()
 }
 
 // ErrInvalidRequest is for errors caused by invalid request input
