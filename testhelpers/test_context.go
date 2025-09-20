@@ -65,21 +65,6 @@ func (ctx *TestContext) SetupTestContext(scenario *godog.Scenario) {
 	}
 }
 
-// initReferences initializes the referenceToIDMap and idToReferenceMap
-// generating unique IDs for references. The generated IDs have the same
-// sorting order as the references.
-func (ctx *TestContext) initReferences(sc *godog.Scenario) {
-	collectedReferences := collectReferences(sc)
-	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
-	ctx.idToReferenceMap = make(map[int64]string, len(collectedReferences))
-	for index, reference := range collectedReferences {
-		const minReferenceID = int64(1000000000000000000) // a large number to avoid conflicts with other IDs in tests
-		id := minReferenceID + int64(index)
-		ctx.referenceToIDMap[reference] = id
-		ctx.idToReferenceMap[id] = reference
-	}
-}
-
 func collectReferencesInText(text string, referencesMap map[string]struct{}) {
 	for _, match := range referenceRegexp.FindAllString(text, -1) {
 		if match[0] != referencePrefix {
@@ -122,6 +107,38 @@ func collectReferences(sc *godog.Scenario) []string {
 	return references
 }
 
+// ScenarioTeardown is called after each scenario to remove stubs.
+func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) (err error) {
+	for i := len(ctx.dbTimePatches) - 1; i >= 0; i-- {
+		RestoreDBTime(ctx.dbTimePatches[i])
+	}
+	ctx.dbTimePatches = make([]*DBTimePatch, 0)
+	monkey.UnpatchAll()
+
+	defer func() {
+		err = httpmock.AllStubsCalled()
+		httpmock.DeactivateAndReset()
+	}()
+
+	ctx.tearDownApp()
+	return nil
+}
+
+// initReferences initializes the referenceToIDMap and idToReferenceMap
+// generating unique IDs for references. The generated IDs have the same
+// sorting order as the references.
+func (ctx *TestContext) initReferences(sc *godog.Scenario) {
+	collectedReferences := collectReferences(sc)
+	ctx.referenceToIDMap = make(map[string]int64, len(collectedReferences))
+	ctx.idToReferenceMap = make(map[int64]string, len(collectedReferences))
+	for index, reference := range collectedReferences {
+		const minReferenceID = int64(1000000000000000000) // a large number to avoid conflicts with other IDs in tests
+		id := minReferenceID + int64(index)
+		ctx.referenceToIDMap[reference] = id
+		ctx.idToReferenceMap[id] = reference
+	}
+}
+
 func (ctx *TestContext) setupApp() {
 	var err error
 	logger, logsHook := logging.NewMockLogger()
@@ -138,23 +155,6 @@ func (ctx *TestContext) tearDownApp() {
 		_ = ctx.application.Database.Close()
 	}
 	ctx.application = nil
-}
-
-// ScenarioTeardown is called after each scenario to remove stubs.
-func (ctx *TestContext) ScenarioTeardown(*godog.Scenario, error) (err error) {
-	for i := len(ctx.dbTimePatches) - 1; i >= 0; i-- {
-		RestoreDBTime(ctx.dbTimePatches[i])
-	}
-	ctx.dbTimePatches = make([]*DBTimePatch, 0)
-	monkey.UnpatchAll()
-
-	defer func() {
-		err = httpmock.AllStubsCalled()
-		httpmock.DeactivateAndReset()
-	}()
-
-	ctx.tearDownApp()
-	return nil
 }
 
 func (ctx *TestContext) emptyDB() error {

@@ -20,10 +20,6 @@ func (s *GroupGroupStore) WhereUserIsMember(user *User) *DB {
 	return result
 }
 
-func (s *GroupGroupStore) createNewAncestors() {
-	s.DataStore.createNewAncestors("groups", "group")
-}
-
 // ErrRelationCycle is returned by CreateRelation() if the relation is impossible because it would
 // create a cycle in the groups_groups graph.
 var ErrRelationCycle = errors.New("a group cannot become an ancestor of itself")
@@ -61,14 +57,6 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 	s.ScheduleResultsPropagation()
 
 	return err
-}
-
-func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
-	relationMap := map[string]interface{}{
-		"parent_group_id": parentGroupID,
-		"child_group_id":  childGroupID,
-	}
-	mustNotBeError(s.GroupGroups().InsertMap(relationMap))
 }
 
 // CreateRelationsWithoutChecking creates multiple direct relations at once
@@ -119,6 +107,33 @@ func (s *GroupGroupStore) DeleteRelation(parentGroupID, childGroupID int64, shou
 	}
 
 	return nil
+}
+
+// CreateNewAncestors creates ancestors for groups marked as 'todo' in `groups_propagate`.
+func (s *GroupGroupStore) CreateNewAncestors() (err error) {
+	s.mustBeInTransaction()
+	defer recoverPanics(&err)
+
+	s.createNewAncestors()
+	return nil
+}
+
+// TeamGroupForTeamItemAndUser returns a composable query for getting a team
+//
+//	(as groups_groups_active.parent_group_id) that
+//	1. the given user is a member of
+//	2. has an unexpired attempt with root_item_id = `itemID`.
+//
+// If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
+func (s *GroupGroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
+	return s.
+		Where("groups_groups_active.is_team_membership = 1").
+		Where("groups_groups_active.child_group_id = ?", user.GroupID).
+		Joins(`
+			JOIN attempts ON attempts.participant_id = groups_groups_active.parent_group_id AND
+				attempts.root_item_id = ? AND NOW() < attempts.allows_submissions_until`, itemID).
+		Order("groups_groups_active.parent_group_id").
+		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }
 
 func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
@@ -178,6 +193,18 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 	}
 }
 
+func (s *GroupGroupStore) createNewAncestors() {
+	s.DataStore.createNewAncestors("groups", "group")
+}
+
+func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
+	relationMap := map[string]interface{}{
+		"parent_group_id": parentGroupID,
+		"child_group_id":  childGroupID,
+	}
+	mustNotBeError(s.GroupGroups().InsertMap(relationMap))
+}
+
 func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) (groupRelationsDeleted, permissionsDeleted int64) {
 	result := s.GroupGroups().Delete("parent_group_id IN(?)", groupIDs)
 	mustNotBeError(result.Error())
@@ -190,31 +217,4 @@ func (s *GroupGroupStore) deleteObjectsLinkedToGroups(groupIDs []int64) (groupRe
 	mustNotBeError(result.Error())
 	permissionsDeleted = result.RowsAffected()
 	return groupRelationsDeleted, permissionsDeleted
-}
-
-// CreateNewAncestors creates ancestors for groups marked as 'todo' in `groups_propagate`.
-func (s *GroupGroupStore) CreateNewAncestors() (err error) {
-	s.mustBeInTransaction()
-	defer recoverPanics(&err)
-
-	s.createNewAncestors()
-	return nil
-}
-
-// TeamGroupForTeamItemAndUser returns a composable query for getting a team
-//
-//	(as groups_groups_active.parent_group_id) that
-//	1. the given user is a member of
-//	2. has an unexpired attempt with root_item_id = `itemID`.
-//
-// If more than one team is found (which should be impossible), the one with the smallest `groups.id` is returned.
-func (s *GroupGroupStore) TeamGroupForTeamItemAndUser(itemID int64, user *User) *DB {
-	return s.
-		Where("groups_groups_active.is_team_membership = 1").
-		Where("groups_groups_active.child_group_id = ?", user.GroupID).
-		Joins(`
-			JOIN attempts ON attempts.participant_id = groups_groups_active.parent_group_id AND
-				attempts.root_item_id = ? AND NOW() < attempts.allows_submissions_until`, itemID).
-		Order("groups_groups_active.parent_group_id").
-		Limit(1) // The current API doesn't allow users to join multiple teams working on the same item
 }

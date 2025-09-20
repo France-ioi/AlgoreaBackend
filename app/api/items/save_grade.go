@@ -289,6 +289,11 @@ func (requestData *saveGradeRequestParsed) UnmarshalJSON(raw []byte) error {
 	return requestData.unmarshalScoreToken(&wrapper)
 }
 
+// Bind of saveGradeRequestParsed does nothing.
+func (requestData *saveGradeRequestParsed) Bind(*http.Request) error {
+	return nil
+}
+
 func (requestData *saveGradeRequestParsed) unmarshalScoreToken(wrapper *saveGradeRequest) error {
 	if wrapper.ScoreToken == nil {
 		return requestData.reconstructScoreTokenData(wrapper)
@@ -374,10 +379,5 @@ func (requestData *saveGradeRequestParsed) reconstructScoreTokenData(wrapper *sa
 		AttemptID:   requestData.AnswerToken.Payload.AttemptID,
 		LocalItemID: requestData.AnswerToken.Payload.LocalItemID,
 	}}
-	return nil
-}
-
-// Bind of saveGradeRequestParsed does nothing.
-func (requestData *saveGradeRequestParsed) Bind(*http.Request) error {
 	return nil
 }
