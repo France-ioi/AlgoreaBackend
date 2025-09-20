@@ -47,7 +47,7 @@ func TestAnswerStore_WithMethods(t *testing.T) {
 			newStore := resultValue.Interface().(*AnswerStore)
 
 			assert.NotEqual(t, store, newStore)
-			assert.Equal(t, "answers", newStore.DataStore.tableName)
+			assert.Equal(t, "answers", newStore.tableName)
 
 			var result []interface{}
 			err := newStore.Scan(&result).Error()

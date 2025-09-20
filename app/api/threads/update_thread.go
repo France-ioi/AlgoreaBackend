@@ -329,7 +329,7 @@ func excludeIncrementIfMessageCountSetValidator(messageCountField validator.Fiel
 	//nolint:forcetypeassert // we know MessageCountIncrement is *int
 	messageCountIncrementPtr := messageCountField.Top().Elem().FieldByName("MessageCountIncrement").Interface().(*int)
 
-	return !(messageCountPtr != nil && messageCountIncrementPtr != nil)
+	return messageCountPtr == nil || messageCountIncrementPtr == nil
 }
 
 // userCanChangeThreadStatus checks whether a user can change the status of a thread

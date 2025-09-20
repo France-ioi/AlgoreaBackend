@@ -368,7 +368,7 @@ func childItemsFromRawData(
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 			}
-			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
+			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 			result = append(result, child)
 			currentChild = &result[len(result)-1]
 		}

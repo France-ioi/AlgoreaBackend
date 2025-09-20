@@ -365,9 +365,10 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 		columnName := configuredFields[fieldName].ColumnName
 		if subQueryNeeded {
 			condition := fmt.Sprintf("%s %s from_page.%s", columnName, fieldsSortingTypes[fieldName].conditionSign(), safeColumnName)
-			if fieldsSortingTypes[fieldName].nullPlacement == first {
+			switch fieldsSortingTypes[fieldName].nullPlacement {
+			case first:
 				condition = fmt.Sprintf("IF(from_page.%s IS NULL, %s IS NOT NULL, %s)", safeColumnName, columnName, condition)
-			} else if fieldsSortingTypes[fieldName].nullPlacement == last {
+			case last:
 				condition = fmt.Sprintf("IF(from_page.%s IS NULL, FALSE, %s IS NULL OR %s)", safeColumnName, columnName, condition)
 			}
 			conditions = append(conditions, fmt.Sprintf("(%s%s)", conditionPrefix, condition))

@@ -67,8 +67,8 @@ func init() { //nolint:gochecknoinits // cobra suggests using init functions to 
 				cmd.Print(".")
 			}
 			cmd.Print("\n")
-			switch {
-			case applied == 0:
+			switch applied {
+			case 0:
 				cmd.Println("No migrations to apply!")
 			default:
 				cmd.Printf("%d migration(s) applied successfully!\n", applied)

@@ -170,7 +170,7 @@ func prerequisiteOrDependencyItemsFromRawData(
 	result := make([]prerequisiteOrDependencyItem, 0, len(rawData))
 	for index := range rawData {
 		item := prerequisiteOrDependencyItem{
-			commonItemFields: rawData[index].RawCommonItemFields.asItemCommonFields(permissionGrantedStore),
+			commonItemFields: rawData[index].asItemCommonFields(permissionGrantedStore),
 			BestScore:        rawData[index].BestScore,
 			String: listItemString{
 				LanguageTag: rawData[index].StringLanguageTag,
@@ -183,7 +183,7 @@ func prerequisiteOrDependencyItemsFromRawData(
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
+		item.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 		result = append(result, item)
 	}
 	return result

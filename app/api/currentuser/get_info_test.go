@@ -18,7 +18,7 @@ func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
 	mock.ExpectQuery("^SELECT").WillReturnRows(mock.NewRows([]string{"id"})) // no rows
 
 	srv := &Service{Base: &service.Base{}}
-	srv.Base.SetGlobalStore(database.NewDataStore(db))
+	srv.SetGlobalStore(database.NewDataStore(db))
 	patch := monkey.PatchInstanceMethod(reflect.TypeOf(srv.Base), "GetUser", func(*service.Base, *http.Request) *database.User {
 		return &database.User{GroupID: 123}
 	})
