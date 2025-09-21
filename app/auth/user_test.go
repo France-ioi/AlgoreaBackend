@@ -17,7 +17,7 @@ func TestUserFromContext(t *testing.T) {
 	user := UserFromContext(ctx)
 
 	assert.NotSame(myUser, user)
-	assert.EqualValues(myUser, user)
+	assert.Equal(myUser, user)
 }
 
 func TestBearerTokenFromContext(t *testing.T) {
@@ -44,7 +44,7 @@ func TestSessionCookieAttributesFromContext(t *testing.T) {
 	cookieAttributes := SessionCookieAttributesFromContext(ctx)
 
 	assert.NotSame(expectedCookieAttributes, cookieAttributes)
-	assert.EqualValues(expectedCookieAttributes, cookieAttributes)
+	assert.Equal(expectedCookieAttributes, cookieAttributes)
 
 	ctx = context.WithValue(context.Background(), ctxSessionCookieAttributes, nil)
 	assert.Nil(SessionCookieAttributesFromContext(ctx))

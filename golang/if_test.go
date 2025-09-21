@@ -67,7 +67,7 @@ func TestLazyIf_TrueValueFuncIsCalled(t *testing.T) {
 
 func TestLazyIf_TrueValueFuncIsNotCalled(t *testing.T) {
 	var trueValueFuncCalled bool
-	assert.Equal(t, "",
+	assert.Empty(t,
 		LazyIf(false, func() string {
 			trueValueFuncCalled = true
 			return "a"
