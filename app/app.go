@@ -126,6 +126,7 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 func resolveOrCreateLogger(loggingConfig *viper.Viper, loggerOptional []*logging.Logger) (logger *logging.Logger) {
 	if len(loggerOptional) > 0 && loggerOptional[0] != nil {
 		logger = loggerOptional[0]
+		logger.Configure(loggingConfig)
 	} else {
 		logger = logging.NewLoggerFromConfig(loggingConfig)
 	}
