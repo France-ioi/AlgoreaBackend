@@ -45,12 +45,17 @@ func GetResponseForRouteWithMockedDBAndUser(
 	defer ts.Close()
 
 	request, err := http.NewRequest(method, ts.URL+path, strings.NewReader(requestBody))
-	var response *http.Response
-	if err == nil {
-		response, err = http.DefaultClient.Do(request)
+	if err != nil {
+		return nil, nil, "", err
 	}
 
-	return response, mock, (&loggingtest.Hook{Hook: logHook}).GetAllLogs(), err
+	var response *http.Response
+	response, err = http.DefaultClient.Do(request)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	return response, mock, (&loggingtest.Hook{Hook: logHook}).GetAllLogs(), nil
 }
 
 // WithLoggingMiddleware wraps the given handler in NullLogger with hook.

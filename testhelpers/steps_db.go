@@ -816,9 +816,12 @@ func (ctx *TestContext) queryDBRowsMatching(tableName string, dbColumnNames, fil
 	// exec sql
 	query := fmt.Sprintf("SELECT %s FROM %s %s ORDER BY %s", selectsJoined, database.QuoteName(tableName), where, selectsJoined)
 	sqlRows, err := ctx.application.Database.GetSQLDB().QueryContext(ctx.application.Database.GetContext(), query, parameters...)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	closer := func() { _ = sqlRows.Close() }
-	return sqlRows, closer, err
+	return sqlRows, closer, nil
 }
 
 // getNbRowsMatching returns how many rows match one of values at any column.

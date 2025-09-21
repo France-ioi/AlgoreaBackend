@@ -168,7 +168,7 @@ func parseSortingRules(sortingRules string, configuredFields map[string]*FieldSo
 	}
 	sort.Strings(tieBreakerFieldsToAdd)
 	usedFields = append(usedFields, tieBreakerFieldsToAdd...)
-	return usedFields, fieldsSortingTypes, err
+	return usedFields, fieldsSortingTypes, nil
 }
 
 func mustHaveValidTieBreakerFieldsList(configuredFields map[string]*FieldSortingParams, tieBreakerFields map[string]FieldType) {

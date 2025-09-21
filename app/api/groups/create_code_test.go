@@ -76,5 +76,9 @@ func assertMockedChangeCodeRequest(t *testing.T,
 		})
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
-	return response, mock, logs, err
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	return response, mock, logs, nil
 }

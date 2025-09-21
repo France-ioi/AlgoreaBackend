@@ -85,7 +85,7 @@ func ValidatesUserAuthentication(service GetStorer, responseWriter http.Response
 		if err != nil && !gorm.IsRecordNotFoundError(err) {
 			logging.EntryFromContext(httpRequest.Context()).Errorf("Can't validate an access token: %s", err)
 
-			return httpRequest.Context(), false, "", err
+			return nil, false, "", err
 		}
 	}
 

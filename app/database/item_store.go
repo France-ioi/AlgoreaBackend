@@ -58,6 +58,9 @@ func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
 		ids, groupID, parentAttemptID, true, requireContentAccessToTheFinalItem, "1", withWriteLock).HasRows()
 }
 
+// ErrHierarchyNotFound is returned by BreadcrumbsHierarchyForParentAttempt/BreadcrumbsHierarchyForAttempt when no valid hierarchy is found.
+var ErrHierarchyNotFound = errors.New("no valid hierarchy found")
+
 // BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
 // for the given list of item ids (but the final item) if it is a valid participation hierarchy
 // for the given `parentAttemptID` which means all the following statements are true:
@@ -69,11 +72,13 @@ func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
 //   - the `groupID` group has a started result for each item but the last,
 //     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //   - if `ids` consists of only one item, the `parentAttemptID` is zero.
+//
+// When no valid hierarchy is found, it returns ErrHierarchyNotFound.
 func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, parentAttemptID int64, withWriteLock bool) (
 	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
 ) {
 	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
-		return nil, nil, nil
+		return nil, nil, ErrHierarchyNotFound
 	}
 
 	defer recoverPanics(&err)
@@ -84,7 +89,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 	var data []map[string]interface{}
 	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
 	if len(data) == 0 {
-		return nil, nil, nil
+		return nil, nil, ErrHierarchyNotFound
 	}
 
 	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids[:len(ids)-1], data[0])
@@ -101,11 +106,13 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 //     at least 'info' access on the final one,
 //   - the `groupID` group has a started result for each item,
 //     with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
+//
+// When no valid hierarchy is found, it returns ErrHierarchyNotFound.
 func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (
 	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
 ) {
 	if len(ids) == 0 {
-		return nil, nil, nil
+		return nil, nil, ErrHierarchyNotFound
 	}
 
 	defer recoverPanics(&err)
@@ -116,7 +123,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attempt
 	var data []map[string]interface{}
 	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
 	if len(data) == 0 {
-		return nil, nil, nil
+		return nil, nil, ErrHierarchyNotFound
 	}
 
 	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids, data[0])
