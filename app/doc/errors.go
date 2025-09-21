@@ -25,6 +25,7 @@ type genericError struct {
 
 type badRequest struct {
 	genericError
+
 	// required: true
 	// enum: Bad Request
 	Message string `json:"message"`
@@ -35,6 +36,7 @@ type badRequest struct {
 
 type unauthorized struct {
 	genericError
+
 	// required: true
 	// enum: Unauthorized
 	Message string `json:"message"`
@@ -42,6 +44,7 @@ type unauthorized struct {
 
 type forbidden struct {
 	genericError
+
 	// required: true
 	// enum: Forbidden
 	Message string `json:"message"`
@@ -49,6 +52,7 @@ type forbidden struct {
 
 type conflict struct {
 	genericError
+
 	// required: true
 	// enum: Conflict
 	Message string `json:"message"`
@@ -56,6 +60,7 @@ type conflict struct {
 
 type notFound struct {
 	genericError
+
 	// required: true
 	// enum: Not Found
 	Message string `json:"message"`
@@ -63,6 +68,7 @@ type notFound struct {
 
 type requestTimeout struct {
 	genericError
+
 	// required: true
 	// enum: Request Timeout
 	Message string `json:"message"`
@@ -70,6 +76,7 @@ type requestTimeout struct {
 
 type unprocessableEntity struct {
 	genericError
+
 	// required: true
 	// enum: Unprocessable Entity
 	Message string `json:"message"`
@@ -77,6 +84,7 @@ type unprocessableEntity struct {
 
 type unprocessableEntityWithMissingApprovals struct {
 	genericError
+
 	// required: true
 	// enum: Unprocessable Entity
 	Message string                                      `json:"message"`
@@ -91,6 +99,7 @@ type unprocessableEntityWithMissingApprovalsData struct {
 
 type internalError struct {
 	genericError
+
 	// required: true
 	// enum: Internal Server Error
 	Message string `json:"message"`

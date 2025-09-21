@@ -18,6 +18,7 @@ type userCreateTmpResponse struct {
 	// description
 	// swagger:allOf
 	CreatedResponse
+
 	// required:true
 	Data struct {
 		// Only if the cookie is not enabled
