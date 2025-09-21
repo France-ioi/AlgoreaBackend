@@ -711,8 +711,8 @@ func TestDataStore_IsInTransaction_ReturnsFalse(t *testing.T) {
 type gormDialectDBAccessor struct {
 	_ unsafe.Pointer
 	v *struct {
-		db gorm.SQLCommon
-		gorm.DefaultForeignKeyNamer
+		db                          gorm.SQLCommon
+		gorm.DefaultForeignKeyNamer //nolint:embeddedstructfieldcheck // we should use the same order of fields as in gorm.commonDialect
 	}
 }
 

@@ -539,6 +539,7 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 					responseCode: 200,
 					response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
 					expectedErr:  fmt.Errorf(testSuite.errorMessage+": %s", "invalid character 'Ý' in literal true (expecting 'r')"),
+					//nolint:gosmopolitan // yes, the log message does contain a rune in Han script
 					expectedLog: `level=warning .*` + regexp.QuoteMeta(`msg="Can't parse response from the login module for /platform_api/`+
 						testSuite.endpoint+
 						` (decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", `+
@@ -671,6 +672,7 @@ func TestClient_CreateUsers(t *testing.T) {
 			responseCode: 200,
 			response:     encodeAccountsManagerResponse(`{"success":true}`, "anotherClientKey"),
 			expectedErr:  fmt.Errorf("can't create users: %s", "invalid character 'Ý' in literal true (expecting 'r')"),
+			//nolint:gosmopolitan // yes, the log message does contain a rune in Han script
 			expectedLog: `level=warning .* ` +
 				regexp.QuoteMeta(`msg="Can't parse response from the login module for /platform_api/accounts_manager/create `+
 					`(decrypted response = \"t\\xdd\\t\\xc0\\x02\\xe9M.{0\\xa5\\xba\\xff\\xcb@|\", `+

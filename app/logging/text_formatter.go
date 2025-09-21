@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sirupsen/logrus" //nolint:depguard // using logrus in logging package is allowed in app/logging
+	"github.com/sirupsen/logrus"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )

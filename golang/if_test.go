@@ -21,7 +21,7 @@ func TestIf(t *testing.T) {
 	assert.Equal(t, 1, If(true, 1))
 	assert.Equal(t, 0, If(false, 1))
 	assert.Equal(t, "a", If(true, "a"))
-	assert.Equal(t, "", If(false, "a"))
+	assert.Equal(t, "", If(false, "a")) //nolint:testifylint // we want to compare with an empty string, not any empty value
 	assert.True(t, If(true, true))
 	assert.False(t, If(false, true))
 	assert.Equal(t, (*string)(nil), If(false, strPtr))

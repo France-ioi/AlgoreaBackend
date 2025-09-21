@@ -1,145 +1,148 @@
-linters-settings:
-  govet:
-    shadow: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/github.com/sirupsen/logrus.Entry).Debugf
-          - (github.com/github.com/sirupsen/logrus.Entry).Infof
-          - (github.com/github.com/sirupsen/logrus.Entry).Warnf
-          - (github.com/github.com/sirupsen/logrus.Entry).Errorf
-          - (github.com/github.com/sirupsen/logrus.Entry).Panicf
-          - (github.com/github.com/sirupsen/logrus.Entry).Fatalf
-  golint:
-    min-confidence: 0
-  gocyclo:
-    min-complexity: 10
-  maligned:
-    suggest-new: true
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 2
-    min-occurrences: 2
-  depguard:
-    rules:
-      main:
-        list-mode: original
-        deny:
-          # logging is allowed only by app/logging, logrus
-          # is allowed to be used only in app/logging package
-          - pkg: "github.com/sirupsen/logrus"
-            desc: not allowed
-              - github.com/sirupsen/logrus
-          - pkg: "github.com/pkg/errors"
-            desc: Should be replaced by standard lib errors package
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
-  goimports:
-    local-prefixes: github.com/France-ioi/AlgoreaBackend/v2
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-      - experimental
-      - opinionated
-  gci:
-    sections:
-      - standard # Standard section: captures all standard packages.
-      - default # Default section: contains all imports that could not be matched to another section type.
-      - prefix(github.com/France-ioi/AlgoreaBackend/v2/) # Custom section: groups all imports with the specified Prefix.
-    no-inline-comments: true
-    no-prefix-comments: true
-    custom-order: true
-    # Drops lexical ordering for custom sections.
-    # Default: false
-    no-lex-order: false
-  errchkjson:
-    check-error-free-encoding: true
-    report-no-exported: true
-  exhaustive:
-    default-signifies-exhaustive: true
-    package-scope-only: false
-  nilnil:
-    only-two: false
-    detect-opposite: true
-  paralleltest:
-    ignore-missing: true
-  tagliatelle:
-    case:
-      rules:
-        json: snake
-        yaml: camel
-        xml: camel
-        toml: camel
-        bson: camel
-        avro: snake
-        mapstructure: kebab
-        env: upperSnake
-        envconfig: upperSnake
-        whatever: snake
-      overrides:
-        - pkg: app/payloads
-          ignore: true
-  varnamelen:
-    ignore-names:
-      - db
-      - tx
-
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    - testpackage      # Requires that go tests files are in a different package, but current tests are on private functions
-    - wsl              # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
-    - err113           # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
-    - contextcheck     # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
-    - ireturn          # Forces functions to accept Interfaces and return concrete types. (Very subjective, complains about many implementations of interfaces from third-party libraries, the benefit is questionable. Disabled by default in golangci-lint)
-    - maintidx         # Measures the maintainability index of each function. (It only complains about some out test functions, but it is not very useful. Disabled by default in golangci-lint)
-    - nlreturn         # Checks for a new line before return and branch statements. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
-    - nonamedreturns   # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
-    - tenv             # Deprecated in golangci-lint v1.64.0, replaced by `usetesting`
-    - wrapcheck        # Requires all errors from external packages are wrapped during return. (It requires many changes without any real benefit for now. Disabled by default in golangci-lint.)
-    - exhaustruct      # Requires all structure fields to be initialized. (Requires many changes without any real benefit. Disabled by default in golangci-lint.)
-
+    - contextcheck   # Checks whether a function uses a non-inherited context. (Many false positives. Disabled by default in golangci-lint)
+    - err113         # Doesn't allow dynamic errors, requires wrapped static errors. (Disabled by default in golangci-lint)
+    - exhaustruct    # Requires all structure fields to be initialized. (Requires many changes without any real benefit. Disabled by default in golangci-lint.)
+    - ireturn        # Forces functions to accept Interfaces and return concrete types. (Very subjective, complains about many implementations of interfaces from third-party libraries, the benefit is questionable. Disabled by default in golangci-lint)
+    - maintidx       # Measures the maintainability index of each function. (It only complains about some out test functions, but it is not very useful. Disabled by default in golangci-lint)
+    - nlreturn       # Checks for a new line before return and branch statements. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+    - noinlineerr    # Disallows inline error handling (if err := ...; err != nil {). (Very subjective, no real benefit. Disabled by default in golangci-lint)
+    - nonamedreturns # Doesn't allow named returns in functions. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+    - testpackage    # Requires that go tests files are in a different package, but current tests are on private functions
+    - wrapcheck      # Requires all errors from external packages are wrapped during return. (It requires many changes without any real benefit for now. Disabled by default in golangci-lint.)
+    - wsl            # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+    - wsl_v5         # Requires white lines between blocks. (Very subjective, requires many changes without any real benefit. Disabled by default in golangci-lint)
+  settings:
+    depguard:
+      rules:
+        main:
+          list-mode: original
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: Should be replaced by standard lib errors package
+        # logrus is allowed to be used only in app/logging & loggingtest packages
+        logrus:
+          list-mode: original
+          files:
+            - "!${config-path}/app/logging*/**"
+          deny:
+            - pkg: github.com/sirupsen/logrus
+              desc: only app/logging and app/loggingtest are allowed to use logrus directly, use logging package instead
+    dupl:
+      threshold: 100
+    errchkjson:
+      check-error-free-encoding: true
+      report-no-exported: true
+    exhaustive:
+      default-signifies-exhaustive: true
+      package-scope-only: false
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+        - experimental
+        - opinionated
+    gocyclo:
+      min-complexity: 10
+    govet:
+      enable:
+        - printf
+      settings:
+        printf:
+          funcs:
+            - (github.com/github.com/sirupsen/logrus.Entry).Debugf
+            - (github.com/github.com/sirupsen/logrus.Entry).Infof
+            - (github.com/github.com/sirupsen/logrus.Entry).Warnf
+            - (github.com/github.com/sirupsen/logrus.Entry).Errorf
+            - (github.com/github.com/sirupsen/logrus.Entry).Panicf
+            - (github.com/github.com/sirupsen/logrus.Entry).Fatalf
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+    nilnil:
+      only-two: false
+      detect-opposite: true
+    paralleltest:
+      ignore-missing: true
+    tagliatelle:
+      case:
+        rules:
+          avro: snake
+          bson: camel
+          env: upperSnake
+          envconfig: upperSnake
+          json: snake
+          mapstructure: kebab
+          toml: camel
+          whatever: snake
+          xml: camel
+          yaml: camel
+        overrides:
+          - pkg: app/payloads
+            ignore: true
+    varnamelen:
+      ignore-names:
+        - db
+        - tx
+  exclusions:
+    generated: strict
+    warn-unused: true
+    rules:
+      - linters:
+          - noctx
+        path: _test\.go$
+      - linters:
+          - lll
+          - revive
+          - unused
+        path: ^app/doc/
+      - linters:
+          - varnamelen
+        path: _test\.go$
+        text: name 'tt' is too short for the scope of its usage
+      - linters:
+          - noctx
+        path: ^app/servicetest/
+      - linters:
+          - funlen
+        text: is too long
+      - linters:
+          - funlen
+        text: has too many statements
+      - linters:
+          - staticcheck
+        text: unknown JSON option "squash" # an option provided by the mapstructure library and the formdata package
+      - linters:
+          - dupword
+        text: Duplicate words \(.*[:,].*\) found
 issues:
-  exclude-use-default: false
-  exclude-dirs:
-    - ^db$
-    - ^app/database/testdata$
-    - ^test-results$
-    - ^pkg/golinters/goanalysis/(checker|passes)$
-    - ^app/doc$
-  exclude-rules:
-    - path: _test\.go$
-      linters:
-        - noctx
-    - path: _test\.go$
-      text: "name 'tt' is too short for the scope of its usage"
-      linters:
-        - varnamelen
-    - path: ^app/servicetest/
-      linters:
-        - noctx
-    - text: "is too long"
-      linters:
-        - funlen
-    - text: "has too many statements"
-      linters:
-        - funlen
-    - text: unknown JSON option "squash" # an option provided by the mapstructure library and the formdata package
-      linters:
-        - staticcheck
-    - text: "Duplicate words \\(.*[:,].*\\) found"
-      linters:
-        - dupword
   max-issues-per-linter: 0
   max-same-issues: 0
-  #fix: true # Enable to try auto fix.
-
-# golangci.com configuration
-# https://github.com/golangci/golangci/wiki/Configuration
-service:
-  golangci-lint-version: 1.64.7 # use the fixed version to not introduce new linters unexpectedly
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard # Standard section: captures all standard packages.
+        - default # Default section: contains all imports that could not be matched to another section type.
+        - prefix(github.com/France-ioi/AlgoreaBackend/v2/) # Custom section: groups all imports with the specified Prefix.
+      no-inline-comments: true
+      no-prefix-comments: true
+      custom-order: true
+      # Drops lexical ordering for custom sections.
+      # Default: false
+      no-lex-order: false
+    goimports:
+      local-prefixes:
+        - github.com/France-ioi/AlgoreaBackend/v2

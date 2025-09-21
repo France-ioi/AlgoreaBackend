@@ -116,6 +116,7 @@ type NewItemRequest struct {
 	Parent          itemParent `json:"parent"`
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
+	//nolint:embeddedstructfieldcheck // it's important that this embedded field goes after Parent otherwise validation won't work correctly
 	ItemWithRequiredType `json:"item,squash"`
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`

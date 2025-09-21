@@ -12,7 +12,7 @@ LOCAL_BIN_DIR=./bin
 
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
-GOLANGCILINT_VERSION=1.64.7
+GOLANGCILINT_VERSION=2.4.0
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
 PWD=$(shell pwd)
@@ -137,7 +137,7 @@ version:
 $(TEST_REPORT_DIR):
 	mkdir -p $(TEST_REPORT_DIR)
 $(GOLANGCILINT):
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v$(GOLANGCILINT_VERSION)
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(LOCAL_BIN_DIR) v$(GOLANGCILINT_VERSION)
 $(MYSQL_CONNECTOR_JAVA):
 	curl -sfL https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.16.tar.gz | tar -xzf - mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)

@@ -6,7 +6,7 @@ package loggingtest
 import (
 	"strings"
 
-	"github.com/sirupsen/logrus/hooks/test" //nolint
+	"github.com/sirupsen/logrus/hooks/test"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
