@@ -21,13 +21,14 @@ type groupsMembersViewResponseRow struct {
 	Action *string `json:"action,omitempty"`
 	// required: true
 	User struct {
+		*structures.UserPersonalInfo
+
 		// `users.group_id`
 		// required: true
 		GroupID int64 `json:"group_id,string"`
 		// required: true
 		Login string `json:"login"`
 
-		*structures.UserPersonalInfo
 		ShowPersonalInfo bool `json:"-"`
 
 		// required: true

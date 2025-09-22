@@ -6,6 +6,8 @@ import (
 
 // RawCommonItemFields represents DB data fields that are common for itemView & itemChildrenView.
 type RawCommonItemFields struct {
+	*database.RawGeneratedPermissionFields
+
 	// items
 	ID                     int64
 	Type                   string
@@ -19,8 +21,6 @@ type RawCommonItemFields struct {
 	NoScore                bool
 	DefaultLanguageTag     string
 	RequiresExplicitEntry  bool
-
-	*database.RawGeneratedPermissionFields
 }
 
 func (raw *RawCommonItemFields) asItemCommonFields(permissionGrantedStore *database.PermissionGrantedStore) *commonItemFields {

@@ -197,7 +197,7 @@ func assertTableColumn(t *testing.T, db *database.DB, table, column string, expe
 
 	reflValues := reflect.New(reflect.TypeOf(expectedValues))
 	require.NoError(t, db.Table(table).Order(column).Pluck("DISTINCT "+column, reflValues.Interface()).Error())
-	assert.EqualValues(t, expectedValues, reflValues.Elem().Interface(), "wrong %s in %s", column, table)
+	assert.Equal(t, expectedValues, reflValues.Elem().Interface(), "wrong %s in %s", column, table)
 }
 
 func assertUserRelatedTablesAfterDeletingWithTraps(

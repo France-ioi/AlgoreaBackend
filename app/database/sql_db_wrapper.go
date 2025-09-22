@@ -127,6 +127,12 @@ func (sqlDB *sqlDBWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*s
 // We intentionally do not implement the 'sqlDb' interface to avoid Gorm from calling 'Begin' method.
 // var _ sqlDb = &sqlDBWrapper{}
 
+func (sqlDB *sqlDBWrapper) Close() error {
+	return sqlDB.sqlDB.Close()
+}
+
+var _ interface{ Close() error } = &sqlDBWrapper{}
+
 type queryRowWithoutLogging interface {
 	queryRowWithoutLogging(query string, args ...interface{}) *sql.Row
 }
@@ -166,12 +172,6 @@ func (sqlDB *sqlDBWrapper) getLogConfig() *LogConfig {
 }
 
 var _ logConfigGetter = &sqlDBWrapper{}
-
-func (sqlDB *sqlDBWrapper) Close() error {
-	return sqlDB.sqlDB.Close()
-}
-
-var _ interface{ Close() error } = &sqlDBWrapper{}
 
 func (sqlDB *sqlDBWrapper) conn(ctx context.Context) (*sqlConnWrapper, error) {
 	conn, err := sqlDB.sqlDB.Conn(ctx)

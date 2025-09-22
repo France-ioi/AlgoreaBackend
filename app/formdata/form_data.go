@@ -142,17 +142,6 @@ func (f *FormData) ParseMapData(m map[string]interface{}) error {
 	return f.checkAndValidate()
 }
 
-func (f *FormData) checkAndValidate() error {
-	f.checkProvidedFields()
-	f.validateFieldValues()
-
-	if len(f.fieldErrors) > 0 {
-		return f.fieldErrors
-	}
-
-	return nil
-}
-
 // ConstructMapForDB constructs a map for updating DB. It uses both the definition and the JSON input.
 func (f *FormData) ConstructMapForDB() map[string]interface{} {
 	result := map[string]interface{}{}
@@ -210,6 +199,17 @@ func (f *FormData) ValidatorSkippingUnchangedFields(nestedValidator validator.Fu
 		}
 		return nestedValidator(fieldInfo)
 	})
+}
+
+func (f *FormData) checkAndValidate() error {
+	f.checkProvidedFields()
+	f.validateFieldValues()
+
+	if len(f.fieldErrors) > 0 {
+		return f.fieldErrors
+	}
+
+	return nil
 }
 
 var (

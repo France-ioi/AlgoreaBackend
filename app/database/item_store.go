@@ -58,6 +58,195 @@ func (s *ItemStore) IsValidParticipationHierarchyForParentAttempt(
 		ids, groupID, parentAttemptID, true, requireContentAccessToTheFinalItem, "1", withWriteLock).HasRows()
 }
 
+// ErrHierarchyNotFound is returned by BreadcrumbsHierarchyForParentAttempt/BreadcrumbsHierarchyForAttempt when no valid hierarchy is found.
+var ErrHierarchyNotFound = errors.New("no valid hierarchy found")
+
+// BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
+// for the given list of item ids (but the final item) if it is a valid participation hierarchy
+// for the given `parentAttemptID` which means all the following statements are true:
+//   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
+//     of a group the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
+//     at least 'info' access on the final one,
+//   - the `groupID` group has a started result for each item but the last,
+//     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
+//   - if `ids` consists of only one item, the `parentAttemptID` is zero.
+//
+// When no valid hierarchy is found, it returns ErrHierarchyNotFound.
+func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, parentAttemptID int64, withWriteLock bool) (
+	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
+) {
+	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
+		return nil, nil, ErrHierarchyNotFound
+	}
+
+	defer recoverPanics(&err)
+
+	columnsList := columnsListForBreadcrumbsHierarchy(ids[:len(ids)-1])
+	query := s.participationHierarchyForParentAttempt(
+		ids, groupID, parentAttemptID, false, false, columnsList, withWriteLock)
+	var data []map[string]interface{}
+	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
+	if len(data) == 0 {
+		return nil, nil, ErrHierarchyNotFound
+	}
+
+	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids[:len(ids)-1], data[0])
+	return
+}
+
+// BreadcrumbsHierarchyForAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
+// for the given list of item ids if it is a valid participation hierarchy
+// for the given `attemptID` which means all the following statements are true:
+//   - the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
+//     the `groupID` is a descendant of or manages,
+//   - `ids` is an ordered list of parent-child items,
+//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
+//     at least 'info' access on the final one,
+//   - the `groupID` group has a started result for each item,
+//     with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
+//
+// When no valid hierarchy is found, it returns ErrHierarchyNotFound.
+func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (
+	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
+) {
+	if len(ids) == 0 {
+		return nil, nil, ErrHierarchyNotFound
+	}
+
+	defer recoverPanics(&err)
+
+	columnsList := columnsListForBreadcrumbsHierarchy(ids)
+	query := s.breadcrumbsHierarchyForAttempt(
+		ids, groupID, attemptID, false, columnsList, withWriteLock)
+	var data []map[string]interface{}
+	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
+	if len(data) == 0 {
+		return nil, nil, ErrHierarchyNotFound
+	}
+
+	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids, data[0])
+	return
+}
+
+func columnsListForBreadcrumbsHierarchy(ids []int64) string {
+	columnsList := "1"
+	if len(ids) > 0 {
+		var columnsBuilder strings.Builder
+		for idIndex := 0; idIndex < len(ids); idIndex++ {
+			if idIndex != 0 {
+				_, _ = columnsBuilder.WriteString(", ")
+			}
+			_, _ = columnsBuilder.WriteString(fmt.Sprintf(`
+				IF(items%d.allows_multiple_attempts, (
+					SELECT number FROM (
+						SELECT results.attempt_id, ROW_NUMBER() OVER (ORDER BY started_at) AS number
+						FROM results
+						JOIN attempts ON attempts.participant_id = results.participant_id and attempts.id = results.attempt_id
+						WHERE results.participant_id = attempts%d.participant_id AND
+							results.item_id = items%d.id AND
+							attempts.parent_attempt_id <=> attempts%d.parent_attempt_id
+					) AS numbers WHERE numbers.attempt_id = attempts%d.id
+				), NULL) AS number%d,
+				attempts%d.id AS attempt%d`, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex))
+		}
+		columnsList = columnsBuilder.String()
+	}
+	return columnsList
+}
+
+func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
+	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int,
+) {
+	attemptIDMap = make(map[int64]int64, len(ids))
+	attemptNumberMap = make(map[int64]int, len(ids))
+	for idIndex := 0; idIndex < len(ids); idIndex++ {
+		//nolint:forcetypeassert // panic if the type of data["attempt%d"] is not int64
+		attemptIDMap[ids[idIndex]] = data[fmt.Sprintf("attempt%d", idIndex)].(int64)
+		numberKey := fmt.Sprintf("number%d", idIndex)
+		if data[numberKey] != nil {
+			//nolint:forcetypeassert // panic if the type of data["number%d"] is not int64
+			attemptNumberMap[ids[idIndex]] = int(data[numberKey].(int64))
+		}
+	}
+	return attemptIDMap, attemptNumberMap
+}
+
+// CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),
+// i.e. the item (task) exists and is not read-only and the participant has at least content:view permission on the item.
+func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAccess bool, reason, err error) {
+	s.mustBeInTransaction()
+	recoverPanics(&err)
+
+	var readOnly bool
+	err = s.WhereGroupHasPermissionOnItems(participantID, "view", "content").
+		Where("id = ?", itemID).
+		WithSharedWriteLock().
+		PluckFirst("read_only", &readOnly).Error()
+	if gorm.IsRecordNotFoundError(err) {
+		return false, errors.New("no access to the task item"), nil
+	}
+	mustNotBeError(err)
+
+	if readOnly {
+		return false, errors.New("item is read-only"), nil
+	}
+
+	return true, nil, nil
+}
+
+// TimeLimitedByIDManagedByUser returns a composable query
+// for getting a time-limited item with the given item id managed by the given user.
+func (s *ItemStore) TimeLimitedByIDManagedByUser(timeLimitedItemID int64, user *User) *DB {
+	return s.ByID(timeLimitedItemID).Where("items.duration IS NOT NULL").
+		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
+		WherePermissionIsAtLeast("grant_view", "enter").
+		WherePermissionIsAtLeast("watch", "result")
+}
+
+// DeleteItem deletes an item. Note the method fails if the item has children.
+func (s *ItemStore) DeleteItem(itemID int64) (err error) {
+	s.mustBeInTransaction()
+
+	return s.ItemItems().WithItemsRelationsLock(func(store *DataStore) error {
+		mustNotBeError(store.WithForeignKeyChecksDisabled(func(store *DataStore) error {
+			return store.ItemStrings().Where("item_id = ?", itemID).Delete().Error()
+		}))
+		mustNotBeError(store.Items().ByID(itemID).Delete().Error())
+
+		mustNotBeError(store.ItemItems().CreateNewAncestors())
+		store.SchedulePermissionsPropagation()
+		store.ScheduleResultsPropagation()
+
+		return nil
+	})
+}
+
+// GetAncestorsRequestHelpPropagationQuery gets all ancestors of an itemID while request_help_propagation = 1.
+func (s *ItemStore) GetAncestorsRequestHelpPropagationQuery(itemID int64) *DB {
+	return s.Raw(`
+		WITH RECURSIVE items_ancestors_request_help_propagation(id) AS
+		(
+			SELECT ?
+			UNION
+			SELECT items_items.parent_item_id FROM items_items
+			JOIN items_ancestors_request_help_propagation ON items_ancestors_request_help_propagation.id = items_items.child_item_id
+			WHERE items_items.request_help_propagation = 1
+		)
+		SELECT id FROM items_ancestors_request_help_propagation
+	`, itemID)
+}
+
+// GetItemIDFromTextID gets the item_id from the text_id of an item.
+func (s *ItemStore) GetItemIDFromTextID(textID string) (itemID int64, err error) {
+	err = s.Select("items.id AS id").
+		Where("text_id = ?", textID).
+		PluckFirst("id", &itemID).Error()
+
+	return itemID, err
+}
+
 // visibleItemsFromListForGroupQuery returns a query for selecting visible items from a list of item ids for a group.
 // The item is considered visible if the group has at least 'info' view access on it.
 // For each item, the query selects the id, allows_multiple_attempts, and can_view_generated_value.
@@ -145,114 +334,6 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 	return subQuery
 }
 
-// BreadcrumbsHierarchyForParentAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
-// for the given list of item ids (but the final item) if it is a valid participation hierarchy
-// for the given `parentAttemptID` which means all the following statements are true:
-//   - the first item in `ids` is a root activity/skill (groups.root_activity_id/root_skill_id)
-//     of a group the `groupID` is a descendant of or manages,
-//   - `ids` is an ordered list of parent-child items,
-//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
-//     at least 'info' access on the final one,
-//   - the `groupID` group has a started result for each item but the last,
-//     with `parentAttemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt,
-//   - if `ids` consists of only one item, the `parentAttemptID` is zero.
-func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, parentAttemptID int64, withWriteLock bool) (
-	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
-) {
-	if len(ids) == 0 || len(ids) == 1 && parentAttemptID != 0 {
-		return nil, nil, nil
-	}
-
-	defer recoverPanics(&err)
-
-	columnsList := columnsListForBreadcrumbsHierarchy(ids[:len(ids)-1])
-	query := s.participationHierarchyForParentAttempt(
-		ids, groupID, parentAttemptID, false, false, columnsList, withWriteLock)
-	var data []map[string]interface{}
-	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
-	if len(data) == 0 {
-		return nil, nil, nil
-	}
-
-	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids[:len(ids)-1], data[0])
-	return
-}
-
-// BreadcrumbsHierarchyForAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
-// for the given list of item ids if it is a valid participation hierarchy
-// for the given `attemptID` which means all the following statements are true:
-//   - the first item in `ids` is an activity/skill item (groups.root_activity_id/root_skill_id) of a group
-//     the `groupID` is a descendant of or manages,
-//   - `ids` is an ordered list of parent-child items,
-//   - the `groupID` group has at least 'content' access on each of the items in `ids` except for the final one and
-//     at least 'info' access on the final one,
-//   - the `groupID` group has a started result for each item,
-//     with `attemptID` (or its parent attempt each time we reach a root of an attempt) as the attempt.
-func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attemptID int64, withWriteLock bool) (
-	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int, err error,
-) {
-	if len(ids) == 0 {
-		return nil, nil, nil
-	}
-
-	defer recoverPanics(&err)
-
-	columnsList := columnsListForBreadcrumbsHierarchy(ids)
-	query := s.breadcrumbsHierarchyForAttempt(
-		ids, groupID, attemptID, false, columnsList, withWriteLock)
-	var data []map[string]interface{}
-	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
-	if len(data) == 0 {
-		return nil, nil, nil
-	}
-
-	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids, data[0])
-	return
-}
-
-func columnsListForBreadcrumbsHierarchy(ids []int64) string {
-	columnsList := "1"
-	if len(ids) > 0 {
-		var columnsBuilder strings.Builder
-		for idIndex := 0; idIndex < len(ids); idIndex++ {
-			if idIndex != 0 {
-				_, _ = columnsBuilder.WriteString(", ")
-			}
-			_, _ = columnsBuilder.WriteString(fmt.Sprintf(`
-				IF(items%d.allows_multiple_attempts, (
-					SELECT number FROM (
-						SELECT results.attempt_id, ROW_NUMBER() OVER (ORDER BY started_at) AS number
-						FROM results
-						JOIN attempts ON attempts.participant_id = results.participant_id and attempts.id = results.attempt_id
-						WHERE results.participant_id = attempts%d.participant_id AND
-							results.item_id = items%d.id AND
-							attempts.parent_attempt_id <=> attempts%d.parent_attempt_id
-					) AS numbers WHERE numbers.attempt_id = attempts%d.id
-				), NULL) AS number%d,
-				attempts%d.id AS attempt%d`, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex))
-		}
-		columnsList = columnsBuilder.String()
-	}
-	return columnsList
-}
-
-func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
-	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int,
-) {
-	attemptIDMap = make(map[int64]int64, len(ids))
-	attemptNumberMap = make(map[int64]int, len(ids))
-	for idIndex := 0; idIndex < len(ids); idIndex++ {
-		//nolint:forcetypeassert // panic if the type of data["attempt%d"] is not int64
-		attemptIDMap[ids[idIndex]] = data[fmt.Sprintf("attempt%d", idIndex)].(int64)
-		numberKey := fmt.Sprintf("number%d", idIndex)
-		if data[numberKey] != nil {
-			//nolint:forcetypeassert // panic if the type of data["number%d"] is not int64
-			attemptNumberMap[ids[idIndex]] = int(data[numberKey].(int64))
-		}
-	}
-	return attemptIDMap, attemptNumberMap
-}
-
 func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 	ids []int64, groupID, attemptID int64, requireContentAccessToTheFinalItem bool,
 	columnsList string, withWriteLock bool,
@@ -283,78 +364,4 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 		visibleItems = visibleItems.WithExclusiveWriteLock()
 	}
 	return subQuery.With("visible_items", visibleItems)
-}
-
-// CheckSubmissionRights checks if the participant group can submit an answer for the given item (task),
-// i.e. the item (task) exists and is not read-only and the participant has at least content:view permission on the item.
-func (s *ItemStore) CheckSubmissionRights(participantID, itemID int64) (hasAccess bool, reason, err error) {
-	s.mustBeInTransaction()
-	recoverPanics(&err)
-
-	var readOnly bool
-	err = s.WhereGroupHasPermissionOnItems(participantID, "view", "content").
-		Where("id = ?", itemID).
-		WithSharedWriteLock().
-		PluckFirst("read_only", &readOnly).Error()
-	if gorm.IsRecordNotFoundError(err) {
-		return false, errors.New("no access to the task item"), nil
-	}
-	mustNotBeError(err)
-
-	if readOnly {
-		return false, errors.New("item is read-only"), nil
-	}
-
-	return true, nil, nil
-}
-
-// TimeLimitedByIDManagedByUser returns a composable query
-// for getting a time-limited item with the given item id managed by the given user.
-func (s *ItemStore) TimeLimitedByIDManagedByUser(timeLimitedItemID int64, user *User) *DB {
-	return s.ByID(timeLimitedItemID).Where("items.duration IS NOT NULL").
-		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(user.GroupID, "view", "content").
-		WherePermissionIsAtLeast("grant_view", "enter").
-		WherePermissionIsAtLeast("watch", "result")
-}
-
-// DeleteItem deletes an item. Note the method fails if the item has children.
-func (s *ItemStore) DeleteItem(itemID int64) (err error) {
-	s.mustBeInTransaction()
-
-	return s.ItemItems().WithItemsRelationsLock(func(store *DataStore) error {
-		mustNotBeError(store.WithForeignKeyChecksDisabled(func(store *DataStore) error {
-			return store.ItemStrings().Where("item_id = ?", itemID).Delete().Error()
-		}))
-		mustNotBeError(store.Items().ByID(itemID).Delete().Error())
-
-		mustNotBeError(store.ItemItems().CreateNewAncestors())
-		store.SchedulePermissionsPropagation()
-		store.ScheduleResultsPropagation()
-
-		return nil
-	})
-}
-
-// GetAncestorsRequestHelpPropagationQuery gets all ancestors of an itemID while request_help_propagation = 1.
-func (s *ItemStore) GetAncestorsRequestHelpPropagationQuery(itemID int64) *DB {
-	return s.Raw(`
-		WITH RECURSIVE items_ancestors_request_help_propagation(id) AS
-		(
-			SELECT ?
-			UNION
-			SELECT items_items.parent_item_id FROM items_items
-			JOIN items_ancestors_request_help_propagation ON items_ancestors_request_help_propagation.id = items_items.child_item_id
-			WHERE items_items.request_help_propagation = 1
-		)
-		SELECT id FROM items_ancestors_request_help_propagation
-	`, itemID)
-}
-
-// GetItemIDFromTextID gets the item_id from the text_id of an item.
-func (s *ItemStore) GetItemIDFromTextID(textID string) (itemID int64, err error) {
-	err = s.Select("items.id AS id").
-		Where("text_id = ?", textID).
-		PluckFirst("id", &itemID).Error()
-
-	return itemID, err
 }

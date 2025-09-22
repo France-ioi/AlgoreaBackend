@@ -111,10 +111,10 @@ func (srv *Service) getBreadcrumbs(responseWriter http.ResponseWriter, httpReque
 		attemptIDMap, attemptNumberMap, err = store.Items().BreadcrumbsHierarchyForParentAttempt(
 			params.ids, params.participantID, params.parentAttemptID, false)
 	}
-	service.MustNotBeError(err)
-	if attemptIDMap == nil {
+	if errors.Is(err, database.ErrHierarchyNotFound) {
 		return service.ErrForbidden(errors.New("item ids hierarchy is invalid or insufficient access rights"))
 	}
+	service.MustNotBeError(err)
 
 	idsInterface := make([]interface{}, 0, len(params.ids))
 	for _, id := range params.ids {

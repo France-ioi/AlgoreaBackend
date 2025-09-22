@@ -28,6 +28,7 @@ const (
 
 type permissionsStruct struct {
 	structures.ItemPermissions
+
 	// required: true
 	CanMakeSessionOfficial bool `json:"can_make_session_official"`
 }
@@ -47,6 +48,7 @@ type canRequestHelpTo struct {
 // Permissions granted directly to the group via `origin` = 'group_membership' and `source_group_id` = `{source_group_id}`.
 type grantedPermissionsStruct struct {
 	permissionsStruct
+
 	// required: true
 	CanEnterFrom string `json:"can_enter_from"`
 	// required: true
@@ -57,6 +59,7 @@ type grantedPermissionsStruct struct {
 
 type aggregatedPermissionsWithCanEnterFromStruct struct {
 	permissionsStruct
+
 	// The next time the group can enter the item (>= NOW())
 	// required: true
 	CanEnterFrom string `json:"can_enter_from"`

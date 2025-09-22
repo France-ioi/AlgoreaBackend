@@ -49,17 +49,17 @@ func TestLoadConfigFrom(t *testing.T) {
 	require.NotNil(t, conf)
 
 	// test config override
-	assert.EqualValues(t, 1234, conf.Sub(serverConfigKey).GetInt("port"))
+	assert.Equal(t, 1234, conf.Sub(serverConfigKey).GetInt("port"))
 
 	// test env variables
-	assert.EqualValues(t, 999, conf.GetInt("server.WriteTimeout")) // does not work with Sub!
+	assert.Equal(t, 999, conf.GetInt("server.WriteTimeout")) // does not work with Sub!
 
 	// test 'test' section
-	assert.EqualValues(t, "/test/", conf.Sub(serverConfigKey).GetString("rootPath"))
+	assert.Equal(t, "/test/", conf.Sub(serverConfigKey).GetString("rootPath"))
 
 	// test live env changes
 	t.Setenv("ALGOREA_SERVER__WRITETIMEOUT", "777")
-	assert.EqualValues(t, 777, conf.GetInt("server.WriteTimeout"))
+	assert.Equal(t, 777, conf.GetInt("server.WriteTimeout"))
 }
 
 func TestLoadConfigFrom_ShouldLogWarningWhenNonTestEnvAndNoMainConfigFile(t *testing.T) {
@@ -131,7 +131,7 @@ func TestLoadConfigFrom_MustNotUseMainConfigFileInTestEnv(t *testing.T) {
 	require.NotNil(t, conf)
 
 	// the config of the test file should be used, and the one in the main file should not be used at all
-	assert.EqualValues(t, 3, conf.GetInt("param1"))
+	assert.Equal(t, 3, conf.GetInt("param1"))
 	assert.False(t, conf.IsSet("param2"))
 }
 

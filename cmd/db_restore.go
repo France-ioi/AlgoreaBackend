@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net"
@@ -41,7 +42,7 @@ func init() { //nolint:gochecknoinits // cobra suggests using init functions to 
 				os.Exit(1)
 			}
 
-			err = dropAllDBTablesWithForeignKeysChecksDisabled(dbConf)
+			err = dropAllDBTablesWithForeignKeysChecksDisabled(cmd.Context(), dbConf)
 			if err != nil {
 				return err
 			}
@@ -55,7 +56,8 @@ func init() { //nolint:gochecknoinits // cobra suggests using init functions to 
 			}
 
 			//nolint:gosec // we trust the config as it is filled by the user having access to the command line
-			command := exec.Command(
+			command := exec.CommandContext(
+				cmd.Context(),
 				"mysql",
 				"--host="+host,
 				"--port="+port,
@@ -82,7 +84,7 @@ func init() { //nolint:gochecknoinits // cobra suggests using init functions to 
 	rootCmd.AddCommand(restoreCmd)
 }
 
-func dropAllDBTablesWithForeignKeysChecksDisabled(dbConf *mysql.Config) error {
+func dropAllDBTablesWithForeignKeysChecksDisabled(ctx context.Context, dbConf *mysql.Config) error {
 	// open DB
 	var db *sql.DB
 	var err error
@@ -92,17 +94,17 @@ func dropAllDBTablesWithForeignKeysChecksDisabled(dbConf *mysql.Config) error {
 	}
 	defer func() { _ = db.Close() }()
 
-	tx, err := db.Begin()
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("unable to start a transaction: %w", err)
 	}
 
-	_, err = tx.Exec("SET FOREIGN_KEY_CHECKS = 0")
+	_, err = tx.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 0")
 	if err != nil {
 		return fmt.Errorf("unable to query the database: %w", err)
 	}
 
-	err = dropAllDBTables(dbConf, db, tx)
+	err = dropAllDBTables(ctx, dbConf, db, tx)
 	if err != nil {
 		return err
 	}
@@ -113,11 +115,11 @@ func dropAllDBTablesWithForeignKeysChecksDisabled(dbConf *mysql.Config) error {
 	return nil
 }
 
-func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
+func dropAllDBTables(ctx context.Context, dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 	// remove all tables from DB
 	var rows *sql.Rows
 	var err error
-	rows, err = db.Query(`SELECT table_name
+	rows, err = db.QueryContext(ctx, `SELECT table_name
 	                      FROM   information_schema.tables
 	                      WHERE  table_type   = 'BASE TABLE'
 	                      AND  table_schema = ?
@@ -140,7 +142,7 @@ func dropAllDBTables(dbConf *mysql.Config, db *sql.DB, tx *sql.Tx) error {
 		if err != nil {
 			return fmt.Errorf("unable to parse the database result: %w", err)
 		}
-		_, err = tx.Exec("DROP TABLE " + database.QuoteName(tableName))
+		_, err = tx.ExecContext(ctx, "DROP TABLE "+database.QuoteName(tableName))
 		if err != nil {
 			return fmt.Errorf("unable to drop table: %w", err)
 		}

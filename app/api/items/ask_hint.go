@@ -231,6 +231,15 @@ func (requestData *AskHintRequest) UnmarshalJSON(raw []byte) error {
 	return requestData.unmarshalHintToken(&wrapper)
 }
 
+// Bind of AskHintRequest checks that the asked hint is present.
+func (requestData *AskHintRequest) Bind(_ *http.Request) error {
+	if len(requestData.HintToken.Payload.AskedHint.Bytes()) == 0 ||
+		bytes.Equal([]byte("null"), requestData.HintToken.Payload.AskedHint.Bytes()) {
+		return errors.New("asked hint should not be empty")
+	}
+	return nil
+}
+
 func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWrapper) error {
 	if wrapper.HintRequestedToken == nil {
 		return errors.New("missing hint_requested")
@@ -253,14 +262,5 @@ func (requestData *AskHintRequest) unmarshalHintToken(wrapper *askHintRequestWra
 		return fmt.Errorf("no public key available for the platform linked to item %d", itemID)
 	}
 
-	return nil
-}
-
-// Bind of AskHintRequest checks that the asked hint is present.
-func (requestData *AskHintRequest) Bind(_ *http.Request) error {
-	if len(requestData.HintToken.Payload.AskedHint.Bytes()) == 0 ||
-		bytes.Equal([]byte("null"), requestData.HintToken.Payload.AskedHint.Bytes()) {
-		return errors.New("asked hint should not be empty")
-	}
 	return nil
 }

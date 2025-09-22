@@ -1476,7 +1476,7 @@ func assertGeneratedPermissionsEqual(
 	var generatedPermissions []permissionsGeneratedResultRow
 	require.NoError(t, permissionGeneratedStore.Select("group_id, item_id, can_view_generated").
 		Order("group_id, item_id").Scan(&generatedPermissions).Error())
-	assert.EqualValues(t, expected, generatedPermissions)
+	assert.Equal(t, expected, generatedPermissions)
 }
 
 func Test_insertGroupMembershipChanges_Duplicate(t *testing.T) {

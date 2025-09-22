@@ -135,6 +135,7 @@ func (srv *Service) getUserDescendants(responseWriter http.ResponseWriter, httpR
 
 type userDescendantUser struct {
 	*structures.UserPersonalInfo
+
 	ShowPersonalInfo bool `json:"-"`
 
 	// required:true

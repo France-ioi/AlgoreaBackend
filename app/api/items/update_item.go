@@ -16,6 +16,7 @@ import (
 // ItemWithDefaultLanguageTag represents common item fields plus 'default_language_tag'.
 type ItemWithDefaultLanguageTag struct {
 	Item `json:"item,squash"`
+
 	// new `default_language_tag` of the item can only be set to a language
 	// for that an `items_strings` row exists
 	// minLength: 1
@@ -27,7 +28,8 @@ type ItemWithDefaultLanguageTag struct {
 // swagger:model itemEditRequest
 type updateItemRequest struct {
 	ItemWithDefaultLanguageTag `json:"item,squash"`
-	Children                   []itemChild `json:"children"    validate:"children,children_allowed,dive,child_type_non_skill"`
+
+	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`
 
 	childrenIDsCache []int64
 }
@@ -242,8 +244,7 @@ func updateChildrenAndRunListeners(
 ) (propagationsToRun []string, err error) {
 	if formData.IsSet("children") {
 		err = store.ItemItems().WithItemsRelationsLock(func(lockedStore *database.DataStore) error {
-			deleteStatement := lockedStore.ItemItems().DB.
-				Where("parent_item_id = ?", itemID)
+			deleteStatement := lockedStore.ItemItems().Where("parent_item_id = ?", itemID)
 			newChildrenIDs := input.childrenIDs()
 			if len(newChildrenIDs) > 0 {
 				deleteStatement = deleteStatement.Where("child_item_id NOT IN(?)", newChildrenIDs)

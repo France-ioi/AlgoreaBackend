@@ -31,7 +31,7 @@ func Test_fileWithLineNum(t *testing.T) {
 }
 
 func Test_fileWithLineNum_ReturnsEmptyStringWhenNoSuitableCallerFound(t *testing.T) {
-	assert.Equal(t, "", fileWithLineNum())
+	assert.Empty(t, fileWithLineNum())
 }
 
 func Test_getSQLExecutionPlanLoggingFunc_DoesNothingDependingOnParameters(t *testing.T) {

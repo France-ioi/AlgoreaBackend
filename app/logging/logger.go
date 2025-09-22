@@ -10,7 +10,7 @@ import (
 	"runtime"
 
 	"github.com/go-chi/chi/middleware"
-	"github.com/sirupsen/logrus" //nolint:depguard // using logrus in logging package is allowed in app/logging
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -107,6 +107,18 @@ func (l *Logger) Configure(config *viper.Viper) {
 	log.SetOutput(l.logrusLogger.Writer())
 }
 
+// WithContext returns a new entry with the given context.
+func (l *Logger) WithContext(ctx context.Context) *logrus.Entry {
+	entry := l.logrusLogger.WithContext(ctx)
+
+	requestID := middleware.GetReqID(ctx)
+	if requestID != "" {
+		entry = entry.WithField("req_id", requestID)
+	}
+
+	return entry
+}
+
 func (l *Logger) setOutput(config *viper.Viper) {
 	switch config.GetString("output") {
 	case outputStdout:
@@ -131,18 +143,6 @@ func (l *Logger) setOutput(config *viper.Viper) {
 	default:
 		panic("Logging output must be either 'stdout', 'stderr' or 'file'. Got: " + config.GetString("output"))
 	}
-}
-
-// WithContext returns a new entry with the given context.
-func (l *Logger) WithContext(ctx context.Context) *logrus.Entry {
-	entry := l.logrusLogger.WithContext(ctx)
-
-	requestID := middleware.GetReqID(ctx)
-	if requestID != "" {
-		entry = entry.WithField("req_id", requestID)
-	}
-
-	return entry
 }
 
 func createLogger() *Logger {

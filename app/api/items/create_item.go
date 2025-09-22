@@ -64,6 +64,7 @@ type Item struct {
 // ItemWithRequiredType represents common item fields plus the required type field.
 type ItemWithRequiredType struct {
 	Item `json:"item,squash"`
+
 	// Can be equal to 'Skill' only if the parent's type is 'Skill'
 	// required: true
 	// enum: Chapter,Task,Skill
@@ -106,14 +107,16 @@ type itemParent struct {
 // NewItemRequest is the expected input for new created item
 // swagger:model itemCreateRequest
 type NewItemRequest struct {
+	newItemString `json:"string,squash"`
+
 	// `default_language_tag` of the item
 	// required: true
-	LanguageTag   string `json:"language_tag"  validate:"set,language_tag"`
-	newItemString `json:"string,squash"`
+	LanguageTag string `json:"language_tag" validate:"set,language_tag"`
 
 	Parent          itemParent `json:"parent"`
 	AsRootOfGroupID int64      `json:"as_root_of_group_id,string" validate:"as_root_of_group_id"`
 
+	//nolint:embeddedstructfieldcheck // it's important that this embedded field goes after Parent otherwise validation won't work correctly
 	ItemWithRequiredType `json:"item,squash"`
 
 	Children []itemChild `json:"children" validate:"children,children_allowed,dive,child_type_non_skill"`

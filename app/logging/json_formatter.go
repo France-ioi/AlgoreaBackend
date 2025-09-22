@@ -1,6 +1,6 @@
 package logging
 
-import "github.com/sirupsen/logrus" //nolint:depguard // using logrus in logging package is allowed in app/logging
+import "github.com/sirupsen/logrus"
 
 type jsonFormatter struct {
 	logrusJSONFormatter *logrus.JSONFormatter

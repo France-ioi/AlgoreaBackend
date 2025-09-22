@@ -13,7 +13,7 @@ func TestConfigFromContext(t *testing.T) {
 	conf := ConfigFromContext(ctx)
 
 	assert.NotSame(t, expectedConfig, conf)
-	assert.EqualValues(t, expectedConfig, conf)
+	assert.Equal(t, expectedConfig, conf)
 }
 
 func TestDomainFromContext(t *testing.T) {

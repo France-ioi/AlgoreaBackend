@@ -32,6 +32,7 @@ type prerequisiteOrDependencyItem struct {
 
 type rawPrerequisiteOrDependencyItem struct {
 	*RawCommonItemFields
+	*RawWatchedGroupStatFields
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `sql:"column:language_tag"`
@@ -45,8 +46,6 @@ type rawPrerequisiteOrDependencyItem struct {
 	// from item_dependencies
 	DependencyRequiredScore    int
 	DependencyGrantContentView bool
-
-	*RawWatchedGroupStatFields
 }
 
 // swagger:operation GET /items/{item_id}/prerequisites items itemPrerequisitesView
@@ -171,7 +170,7 @@ func prerequisiteOrDependencyItemsFromRawData(
 	result := make([]prerequisiteOrDependencyItem, 0, len(rawData))
 	for index := range rawData {
 		item := prerequisiteOrDependencyItem{
-			commonItemFields: rawData[index].RawCommonItemFields.asItemCommonFields(permissionGrantedStore),
+			commonItemFields: rawData[index].asItemCommonFields(permissionGrantedStore),
 			BestScore:        rawData[index].BestScore,
 			String: listItemString{
 				LanguageTag: rawData[index].StringLanguageTag,
@@ -184,7 +183,7 @@ func prerequisiteOrDependencyItemsFromRawData(
 		if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 			item.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 		}
-		item.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
+		item.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 		result = append(result, item)
 	}
 	return result

@@ -462,7 +462,7 @@ func TestApplySorting(t *testing.T) {
 			defer func() {
 				if p := recover(); p != nil {
 					if tt.shouldPanic == nil {
-						assert.Fail(t, "unexpected panic() was called with value %+v", p)
+						assert.Failf(t, "unexpected panic()", "value: %+v", p)
 					} else {
 						assert.Equal(t, tt.shouldPanic, p, "panic() value mismatched")
 					}

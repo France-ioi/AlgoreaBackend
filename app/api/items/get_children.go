@@ -16,14 +16,14 @@ type listItemStringNotInfo struct {
 }
 
 type listItemString struct {
+	*listItemStringNotInfo
+
 	// required: true
 	LanguageTag string `json:"language_tag"`
 	// required: true
 	Title *string `json:"title"`
 	// required: true
 	ImageURL *string `json:"image_url"`
-
-	*listItemStringNotInfo
 }
 
 // only for visible items.
@@ -70,6 +70,8 @@ type visibleChildItemFields struct {
 
 // swagger:model childItem
 type childItem struct {
+	*visibleChildItemFields
+
 	// required: true
 	ID int64 `json:"id,string"`
 	// required: true
@@ -111,13 +113,13 @@ type childItem struct {
 	Permissions structures.ItemPermissions `json:"permissions"`
 
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
-
-	*visibleChildItemFields
 }
 
 // RawListItem contains raw fields common for itemChildrenView & itemParentsView.
 type RawListItem struct {
 	*RawCommonItemFields
+	*RawItemResultFields
+	*RawWatchedGroupStatFields
 
 	// from items_strings: in the user’s default language or (if not available) default language of the item
 	StringLanguageTag string  `sql:"column:language_tag"`
@@ -131,9 +133,6 @@ type RawListItem struct {
 
 	// max from results of the current participant
 	BestScore float32
-
-	*RawItemResultFields
-	*RawWatchedGroupStatFields
 }
 
 type rawListChildItem struct {
@@ -369,7 +368,7 @@ func childItemsFromRawData(
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
 			}
-			child.WatchedGroup = rawData[index].RawWatchedGroupStatFields.asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
+			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 			result = append(result, child)
 			currentChild = &result[len(result)-1]
 		}

@@ -39,10 +39,9 @@ func NewClient(loginModuleURL string) *Client {
 func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile *UserProfile, err error) {
 	defer recoverPanics(&err)
 
-	request, err := http.NewRequest(http.MethodGet, client.url+"/user_api/account", http.NoBody)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, client.url+"/user_api/account", http.NoBody)
 	mustNotBeError(err)
 	request.Header.Set("Authorization", "Bearer "+accessToken)
-	request = request.WithContext(ctx)
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)
 	body, err := io.ReadAll(io.LimitReader(response.Body, oneMegabyte))
@@ -189,9 +188,8 @@ func (client *Client) requestAccountsManagerAndDecode(ctx context.Context, urlPa
 
 	params, err := EncodeBody(requestParams, clientID, clientKey)
 
-	request, err := http.NewRequest(http.MethodPost, apiURL.String(), bytes.NewBuffer(params))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL.String(), bytes.NewBuffer(params))
 	mustNotBeError(err)
-	request = request.WithContext(ctx)
 	request.Header.Add("Content-Type", "application/json")
 	response, err := http.DefaultClient.Do(request)
 	mustNotBeError(err)

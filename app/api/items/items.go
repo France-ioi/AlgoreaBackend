@@ -114,6 +114,7 @@ type Permission struct {
 
 type permissionAndType struct {
 	*Permission
+
 	Type string
 }
 

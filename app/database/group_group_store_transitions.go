@@ -54,6 +54,20 @@ const (
 	NoRelation GroupMembershipAction = ""
 )
 
+// PendingType converts the GroupMembershipAction into `group_pending_requests.type`.
+func (groupMembershipAction GroupMembershipAction) PendingType() string {
+	switch groupMembershipAction {
+	case InvitationCreated:
+		return "invitation"
+	case JoinRequestCreated:
+		return "join_request"
+	case LeaveRequestCreated:
+		return "leave_request"
+	default:
+		panic("groupMembershipAction should be of pending kind in PendingType()")
+	}
+}
+
 func (groupMembershipAction GroupMembershipAction) isActive() bool {
 	switch groupMembershipAction {
 	case JoinedByBadge, InvitationAccepted, JoinRequestAccepted, JoinedByCode, IsMember,
@@ -75,20 +89,6 @@ func (groupMembershipAction GroupMembershipAction) isPending() bool {
 
 func (groupMembershipAction GroupMembershipAction) hasApprovals() bool {
 	return groupMembershipAction == JoinRequestCreated
-}
-
-// PendingType converts the GroupMembershipAction into `group_pending_requests.type`.
-func (groupMembershipAction GroupMembershipAction) PendingType() string {
-	switch groupMembershipAction {
-	case InvitationCreated:
-		return "invitation"
-	case JoinRequestCreated:
-		return "join_request"
-	case LeaveRequestCreated:
-		return "leave_request"
-	default:
-		panic("groupMembershipAction should be of pending kind in PendingType()")
-	}
 }
 
 // GroupGroupTransitionAction represents a groups_groups relation transition action.

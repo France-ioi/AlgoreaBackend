@@ -606,9 +606,13 @@ func assertBreadcrumbsHierarchy(t *testing.T,
 ) {
 	t.Helper()
 
+	if wantAttemptIDMap != nil {
+		require.NoError(t, err)
+	} else {
+		require.Equal(t, err, database.ErrHierarchyNotFound)
+	}
 	assert.Equal(t, wantAttemptIDMap, gotIDs)
 	assert.Equal(t, wantAttemptNumberMap, gotNumbers)
-	assert.NoError(t, err)
 }
 
 func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {

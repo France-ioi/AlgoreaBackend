@@ -14,6 +14,8 @@ import (
 
 // rawRootItem represents one row with a root activity/skill returned from the DB.
 type rawRootItem struct {
+	*database.RawGeneratedPermissionFields
+
 	// groups
 	GroupID   int64
 	GroupName string
@@ -45,8 +47,6 @@ type rawRootItem struct {
 	BestScore float32
 
 	HasVisibleChildren bool
-
-	*database.RawGeneratedPermissionFields
 }
 
 type groupInfoForRootItem struct {
@@ -220,7 +220,7 @@ func generateRootItemInfoFromRawData(store *database.DataStore, rawData *rawRoot
 			ID:          rawData.ItemID,
 			Type:        rawData.ItemType,
 			String:      structures.ItemString{Title: rawData.Title, LanguageTag: rawData.LanguageTag},
-			Permissions: *rawData.RawGeneratedPermissionFields.AsItemPermissions(store.PermissionsGranted()),
+			Permissions: *rawData.AsItemPermissions(store.PermissionsGranted()),
 		},
 		RequiresExplicitEntry: rawData.RequiresExplicitEntry,
 		EntryParticipantType:  rawData.EntryParticipantType,
