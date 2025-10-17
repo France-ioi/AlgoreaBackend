@@ -36,11 +36,12 @@ func (t *Time) ScanString(str string) (err error) {
 		parsedTime, err = time.Parse(timeFormat[:len(str)], str)
 		if err == nil {
 			*t = Time(parsedTime)
+			return nil
 		}
-		return
+		return err
 	default:
 		err = fmt.Errorf("invalid time string: %s", str)
-		return
+		return err
 	}
 }
 

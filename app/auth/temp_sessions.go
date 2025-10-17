@@ -40,9 +40,10 @@ func CreateNewTempSession(store *database.DataStore, userID int64) (
 		logging.EntryFromContext(store.GetContext()).
 			Infof("Generated a session token expiring in %d seconds for a temporary user with group_id = %d",
 				expiresIn, userID)
+		return accessToken, expiresIn, nil
 	}
 
-	return accessToken, expiresIn, err
+	return "", 0, err
 }
 
 // RefreshTempUserSession refreshes the session of a temporary user.
@@ -59,11 +60,12 @@ func RefreshTempUserSession(store *database.DataStore, userID, sessionID int64) 
 
 	if err == nil {
 		logging.EntryFromContext(store.GetContext()).
-			Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
+			Infof("Refreshed a session with a token expiring in %d seconds for a temporary user with group_id = %d",
 				expiresIn, userID)
+		return accessToken, expiresIn, nil
 	}
 
-	return
+	return "", 0, err
 }
 
 // mustNotBeError panics if the error is not nil.

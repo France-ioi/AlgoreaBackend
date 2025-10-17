@@ -494,6 +494,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			StartFromRowSubQuery: startFromRowSubQuery,
 		})
 
+	//nolint:unqueryvet // we select all columns from subqueries having explicitly listed columns
 	unionCTEQuery := store.Raw("SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un",
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery := store.Table("un")

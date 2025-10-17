@@ -14,7 +14,7 @@ func Now() *gorm.SqlExpr {
 func MockNow(timestamp string) (oldNow *gorm.SqlExpr) {
 	oldNow = nowExpr
 	nowExpr = gorm.Expr("?", timestamp)
-	return
+	return oldNow
 }
 
 // RestoreNow sets the DB expression for getting current DB time to its default value (gorm.Expr("NOW()")).

@@ -43,7 +43,7 @@ Feature: Create a new access token
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And logs should contain:
       """
-      Refreshed a session token expiring in 7200 seconds for a temporary user with group_id = 12
+      Refreshed a session with a token expiring in 7200 seconds for a temporary user with group_id = 12
       """
     And the table "sessions" should be:
       | session_id | user_id | refresh_token             |
@@ -187,7 +187,7 @@ Feature: Create a new access token
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And logs should contain:
       """
-      Refreshed a session token expiring in 7200 seconds for a temporary user with group_id = 12
+      Refreshed a session with a token expiring in 7200 seconds for a temporary user with group_id = 12
       """
     And the table "sessions" should be:
       | session_id | user_id | refresh_token             |

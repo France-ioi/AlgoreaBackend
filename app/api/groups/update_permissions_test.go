@@ -673,7 +673,6 @@ func Test_IsOwnerValidator_AllowsSettingIsOwnerToFalseOrSameValue(t *testing.T) 
 	currentPermissions = &userPermissions{}
 	_, _, err = parsePermissionsInputData(dataStore, &managerGeneratedPermissions{},
 		currentPermissions, &database.User{}, 0, map[string]interface{}{"is_owner": true})
-	require.IsType(t, (*service.APIError)(nil), err)
 	var apiError *service.APIError
 	require.ErrorAs(t, err, &apiError)
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
@@ -690,7 +689,6 @@ func Test_IsOwnerValidator_RequiresManagerToBeOwnerToMakeSomebodyAnOwner(t *test
 	_, _, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{IsOwnerGenerated: false}, currentPermissions,
 		&database.User{}, 0, map[string]interface{}{"is_owner": true})
-	require.IsType(t, (*service.APIError)(nil), err)
 	var apiError *service.APIError
 	require.ErrorAs(t, err, &apiError)
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)
@@ -777,7 +775,6 @@ func testValidatorFailsWhenCheckReturnsFalse(t *testing.T, parsedBody map[string
 
 	_, _, err := parsePermissionsInputData(dataStore,
 		&managerGeneratedPermissions{}, &userPermissions{}, &database.User{}, 0, parsedBody)
-	require.IsType(t, (*service.APIError)(nil), err)
 	var apiError *service.APIError
 	require.ErrorAs(t, err, &apiError)
 	assert.Equal(t, http.StatusBadRequest, apiError.HTTPStatusCode)

@@ -36,9 +36,10 @@ func TestLoggerFromContext(t *testing.T) {
 type testContextKeyType int
 
 const (
-	testContextKey   testContextKeyType = iota
-	testContextValue                    = "test"
+	testContextKey testContextKeyType = iota
 )
+
+const testContextValue = "test"
 
 func TestContextWithLogger(t *testing.T) {
 	logger := createLogger()

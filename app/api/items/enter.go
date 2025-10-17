@@ -114,7 +114,7 @@ func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.
 
 		user := srv.GetUser(httpRequest)
 		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
-			"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0)").
+			"id": gorm.Expr("(SELECT next_id FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0) AS next_id").
 				Where("participant_id = ?", entryState.groupID).WithExclusiveWriteLock().SubQuery()),
 			"participant_id": entryState.groupID, "created_at": itemInfo.Now,
 			"creator_id": user.GroupID, "parent_attempt_id": parentAttemptID, "root_item_id": entryState.itemID,

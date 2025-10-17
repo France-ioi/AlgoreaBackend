@@ -16,7 +16,7 @@ func (s *AttemptStore) CreateNew(participantID, parentAttemptID, itemID, creator
 	recoverPanics(&err)
 
 	mustNotBeError(s.InsertMap(map[string]interface{}{
-		"id": gorm.Expr("(SELECT * FROM ? AS max_attempt)", s.Attempts().Select("IFNULL(MAX(id)+1, 0)").
+		"id": gorm.Expr("(SELECT next_id FROM ? AS max_attempt)", s.Attempts().Select("IFNULL(MAX(id)+1, 0) AS next_id").
 			Where("participant_id = ?", participantID).WithExclusiveWriteLock().SubQuery()),
 		"participant_id": participantID, "creator_id": creatorID,
 		"parent_attempt_id": parentAttemptID, "root_item_id": itemID, "created_at": Now(),

@@ -56,6 +56,7 @@ func TestTime_ScanString(t *testing.T) {
 		},
 		{name: "zero datetime with ms  (6 digits)", str: "0000-00-00 00:00:00.000000", wantTime: time.Time{}},
 		{name: "wrong datetime", str: "12345-67-89 25:60:70", wantErr: true, wantTime: time.Time{}},
+		{name: "wrong datetime with a correct number of digits", str: "2345-67-89 25:60:70", wantErr: true, wantTime: time.Time{}},
 	}
 	for _, tt := range tests {
 		tt := tt

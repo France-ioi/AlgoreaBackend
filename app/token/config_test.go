@@ -76,7 +76,9 @@ func TestBuildConfig_CannotLoadPublicKey(t *testing.T) {
 	config.Set("PublicKeyFile", "nosuchfile.pem")
 	config.Set("PlatformName", "my platform")
 	_, err = BuildConfig(config)
-	assert.IsType(t, &os.PathError{}, err)
+
+	var pathError *os.PathError
+	assert.ErrorAs(t, err, &pathError)
 }
 
 func TestBuildConfig_CannotLoadPrivateKey(t *testing.T) {
@@ -92,7 +94,8 @@ func TestBuildConfig_CannotLoadPrivateKey(t *testing.T) {
 	config.Set("PlatformName", "my platform")
 	_, err = BuildConfig(config)
 
-	assert.IsType(t, &os.PathError{}, err)
+	var pathError *os.PathError
+	assert.ErrorAs(t, err, &pathError)
 }
 
 func TestBuildConfig_CannotParsePublicKey(t *testing.T) {
