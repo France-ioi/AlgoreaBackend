@@ -60,7 +60,7 @@ func RefreshTempUserSession(store *database.DataStore, userID, sessionID int64) 
 
 	if err == nil {
 		logging.EntryFromContext(store.GetContext()).
-			Infof("Refreshed a session token expiring in %d seconds for a temporary user with group_id = %d",
+			Infof("Refreshed a session with a token expiring in %d seconds for a temporary user with group_id = %d",
 				expiresIn, userID)
 		return accessToken, expiresIn, nil
 	}
