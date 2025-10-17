@@ -97,11 +97,13 @@ linters:
     rules:
       - linters:
           - noctx
+          - unqueryvet
         path: _test\.go$
       - linters:
           - lll
           - revive
           - unused
+          - godoclint
         path: ^app/doc/
       - linters:
           - varnamelen

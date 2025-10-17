@@ -24,21 +24,21 @@ func BuildConfig(config *viper.Viper) (tokenConfig *Config, err error) {
 
 	bytes, err := getKey(config, "Public")
 	if err != nil {
-		return
+		return nil, err
 	}
 	tokenConfig.PublicKey, err = crypto.ParseRSAPublicKeyFromPEM(bytes)
 	if err != nil {
-		return
+		return nil, err
 	}
 	bytes, err = getKey(config, "Private")
 	if err != nil {
-		return
+		return nil, err
 	}
 	tokenConfig.PrivateKey, err = crypto.ParseRSAPrivateKeyFromPEM(bytes)
 	if err != nil {
-		return
+		return nil, err
 	}
-	return
+	return tokenConfig, nil
 }
 
 // getKey returns either "<keyType>Key" if not empty or the content of "<keyType>KeyFile" otherwise

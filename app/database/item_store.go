@@ -93,7 +93,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 	}
 
 	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids[:len(ids)-1], data[0])
-	return
+	return attemptIDMap, attemptNumberMap, nil
 }
 
 // BreadcrumbsHierarchyForAttempt returns attempts ids and 'order' (for items allowing multiple attempts)
@@ -127,7 +127,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attempt
 	}
 
 	attemptIDMap, attemptNumberMap = resultsForBreadcrumbsHierarchy(ids, data[0])
-	return
+	return attemptIDMap, attemptNumberMap, nil
 }
 
 func columnsListForBreadcrumbsHierarchy(ids []int64) string {

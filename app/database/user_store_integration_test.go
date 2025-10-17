@@ -251,5 +251,5 @@ func filterIDs(ids []int64, idsToExclude *golang.Set[int64]) (filtered []int64) 
 			filtered = append(filtered, id)
 		}
 	}
-	return
+	return filtered
 }

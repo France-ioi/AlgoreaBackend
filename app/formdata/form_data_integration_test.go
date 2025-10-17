@@ -332,7 +332,6 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 				require.NoError(t, err)
 			}
 			if tt.wantFieldErrors != nil {
-				assert.IsType(t, formdata.FieldErrorsError{}, err)
 				assert.Equal(t, tt.wantFieldErrors, err)
 			}
 		})
@@ -516,7 +515,6 @@ func TestFormData_ParseMapData(t *testing.T) {
 				require.NoError(t, err)
 			}
 			if tt.wantFieldErrors != nil {
-				assert.IsType(t, formdata.FieldErrorsError{}, err)
 				assert.Equal(t, tt.wantFieldErrors, err)
 			}
 		})
