@@ -27,9 +27,10 @@ import (
 type ctxKey int
 
 const (
-	ctxKeyParsedCookieParameters  ctxKey = iota
-	maxNumberOfUserSessionsToKeep        = 10
+	ctxKeyParsedCookieParameters ctxKey = iota
 )
+
+const maxNumberOfUserSessionsToKeep = 10
 
 // swagger:operation POST /auth/token auth accessTokenCreate
 //

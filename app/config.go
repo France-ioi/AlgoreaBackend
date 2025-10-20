@@ -118,8 +118,8 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 	// we load all possible keys (with their default value), override with config files,
 	// and then environmenent variables.
 	emptyConfig := &map[string]interface{}{}
-	if err = mapstructure.Decode(mysql.NewConfig(), &emptyConfig); err != nil {
-		return // unexpected
+	if err := mapstructure.Decode(mysql.NewConfig(), &emptyConfig); err != nil {
+		return nil, err // unexpected
 	}
 	vConfig := viper.New()
 	_ = vConfig.MergeConfigMap(*emptyConfig) // the function always return nil
@@ -128,8 +128,10 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 	}
 	vConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, databaseConfigKey))
 	vConfig.AutomaticEnv()
-	err = vConfig.Unmarshal(&config)
-	return
+	if err := vConfig.Unmarshal(&config); err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // TokenConfig returns the token fixed config from the global config.
@@ -161,6 +163,8 @@ func ServerConfig(globalConfig *viper.Viper) *viper.Viper {
 func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem, err error) {
 	globalConfig.SetDefault(domainsConfigKey, []interface{}{})
 	// note that `.Sub` cannot be used to get a slice
-	err = globalConfig.UnmarshalKey(domainsConfigKey, &config)
-	return
+	if err := globalConfig.UnmarshalKey(domainsConfigKey, &config); err != nil {
+		return nil, err
+	}
+	return config, nil
 }

@@ -58,7 +58,7 @@ func unmarshalSessionCookieValue(cookieValue string) (token string, attributes S
 	parts := strings.Split(cookieValue, "!")
 	// should be "kind!value!domain!path"
 	if len(parts) != 4 || len(parts[0]) != 1 {
-		return
+		return "", SessionCookieAttributes{}
 	}
 	r, _ := utf8.DecodeRuneInString(parts[0])
 	kind := r - '0'

@@ -107,8 +107,8 @@ func (mc *mysqlConn) Reset(ctx context.Context) (err error) {
 		return driver.ErrBadConn
 	}
 
-	if err = mysqlConnWatchCancel(mc, ctx); err != nil {
-		return
+	if err := mysqlConnWatchCancel(mc, ctx); err != nil {
+		return err
 	}
 	defer mysqlConnFinish(mc)
 
