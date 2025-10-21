@@ -142,7 +142,7 @@ func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRe
 			Where("results.item_id = ?", itemID)
 
 		// load the result data
-		err = resultScope.WithExclusiveWriteLock().
+		err = resultScope.WithCustomWriteLocks(golang.NewSet("attempts"), golang.NewSet("results")).
 			Select("hints_requested, hints_cached, validated").
 			Joins("JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id").
 			Where("NOW() < attempts.allows_submissions_until").
