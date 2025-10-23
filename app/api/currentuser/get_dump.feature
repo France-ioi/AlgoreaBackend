@@ -15,9 +15,9 @@ Feature: Export the short version of the current user's data
       | 11 | User    | user self          |                        |
       | 31 | User    | jane               |                        |
     And the database has the following users:
-      | group_id | login | first_name | last_name | grade |
-      | 11       | user  | John       | Doe       | 1     |
-      | 31       | jane  | Jane       | Doe       | 2     |
+      | group_id | login | first_name | last_name | grade | profile                |
+      | 11       | user  | John       | Doe       | 1     | {"first_name": "John"} |
+      | 31       | jane  | Jane       | Doe       | 2     | null                   |
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token    |
       | 1          | 11      | refreshTokenFor1 |
@@ -87,7 +87,7 @@ Feature: Export the short version of the current user's data
         "latest_activity_at": null, "last_ip": null, "latest_login_at": null, "last_name": "Doe", "login": "user",
         "notifications_read_at": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
         "recover": null, "registered_at": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
-        "web_site": null, "zipcode": null, "temp_user": 0
+        "web_site": null, "zipcode": null, "temp_user": 0, "profile": "{\"first_name\": \"John\"}"
       },
       "groups_groups": [
         {
@@ -179,7 +179,7 @@ Feature: Export the short version of the current user's data
         "latest_login_at": null, "last_name": "Doe", "login": "jane", "notifications_read_at": null, "notify": "Answers",
         "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
         "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0,
-        "latest_profile_sync_at": null
+        "latest_profile_sync_at": null, "profile": null
       },
       "groups_groups": [],
       "group_managers": [],

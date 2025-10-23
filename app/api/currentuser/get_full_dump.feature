@@ -17,10 +17,10 @@ Feature: Export the current user's data
       | 21 | User    | jack               |                        |
       | 31 | User    | jane               |                        |
     And the database has the following users:
-      | login | group_id | first_name | last_name | grade |
-      | user  | 11       | John       | Doe       | 1     |
-      | jack  | 21       | Jack       | Smith     | 2     |
-      | jane  | 31       | Jane       | Doe       | 2     |
+      | login | group_id | first_name | last_name | grade | profile                |
+      | user  | 11       | John       | Doe       | 1     | {"first_name": "John"} |
+      | jack  | 21       | Jack       | Smith     | 2     | null                   |
+      | jane  | 31       | Jane       | Doe       | 2     | null                   |
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token    |
       | 1          | 21      | refreshTokenFor1 |
@@ -92,7 +92,7 @@ Feature: Export the current user's data
         "latest_activity_at": null, "last_ip": null, "latest_login_at": null, "last_name": "Doe", "login": "user",
         "notifications_read_at": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
         "recover": null, "registered_at": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
-        "web_site": null, "zipcode": null, "temp_user": 0
+        "web_site": null, "zipcode": null, "temp_user": 0, "profile": "{\"first_name\": \"John\"}"
       },
       "attempts": [
         {
@@ -269,7 +269,7 @@ Feature: Export the current user's data
         "latest_login_at": null, "last_name": "Doe", "login": "jane", "notifications_read_at": null, "notify": "Answers",
         "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
         "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0,
-        "latest_profile_sync_at": null
+        "latest_profile_sync_at": null, "profile": null
       },
       "attempts": [],
       "results": [],
