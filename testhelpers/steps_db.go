@@ -470,6 +470,64 @@ func (ctx *TestContext) TableAtColumnValueShouldBe(
 	)
 }
 
+// TableColumnAtColumnValueShouldBeInJSON verifies that the column of the row of the DB table
+// having the provided value in the specified column matches the provided JSON data.
+func (ctx *TestContext) TableColumnAtColumnValueShouldBeInJSON(
+	tableName, columnName, filterColumnName, filterColumnValue string, data *godog.DocString,
+) error {
+	//nolint:sqlclosecheck // closer is deferred
+	dbResult, closer, err := ctx.queryDBRowsMatching(tableName, []string{columnName}, []string{filterColumnName},
+		[]string{filterColumnValue}, true)
+	if err != nil {
+		return err
+	}
+	defer closer()
+
+	if !dbResult.Next() {
+		return errors.New("there are no rows in the SQL result")
+	}
+
+	// We need pointers to differentiate null columnValues
+	dbRow, err := scanDBRow(dbResult, 1)
+	if err != nil {
+		return err
+	}
+
+	expectedJSONString := ctx.preprocessString(data.Content)
+
+	dbJSONValue := dbRow[0]
+	if dbJSONValue == nil && expectedJSONString == tableValueNull {
+		return nil
+	}
+
+	if dbJSONValue == nil {
+		return fmt.Errorf("expected JSON value: %q, got NULL", expectedJSONString)
+	}
+
+	err = compareJSONs(expectedJSONString, *dbJSONValue)
+	if err != nil {
+		return err
+	}
+
+	if dbResult.Next() {
+		return errors.New("more than one row in the SQL result")
+	}
+
+	return nil
+}
+
+func compareJSONs(expected, actual string) error {
+	expectedIndented, err := indentJSON(expected)
+	if err != nil {
+		return fmt.Errorf("invalid expected JSON value: %w", err)
+	}
+	actualIndented, err := indentJSON(actual)
+	if err != nil {
+		return fmt.Errorf("invalid actual JSON value: %w", err)
+	}
+	return compareStrings(string(expectedIndented), string(actualIndented))
+}
+
 // TableShouldNotContainColumnValue verifies that the DB table does not contain rows having the provided values
 // in the specified column.
 func (ctx *TestContext) TableShouldNotContainColumnValue(
