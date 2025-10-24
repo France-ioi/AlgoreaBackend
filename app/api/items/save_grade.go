@@ -207,10 +207,13 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 		requestData.ScoreToken.Payload.Converted.AttemptID,
 		requestData.ScoreToken.Payload.Converted.LocalItemID,
 	)
-	service.MustNotBeError(
-		store.DB.Exec("UPDATE results JOIN answers ON answers.id = ? "+
-			updateExpr+" WHERE results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", values...).
-			Error())
+	updateResult := store.Exec("UPDATE results JOIN answers ON answers.id = ? "+
+		updateExpr+" WHERE results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", values...)
+	service.MustNotBeError(updateResult.Error())
+	if updateResult.RowsAffected() == 0 { // nothing to propagate
+		return validated, true, golang.NewSet[int64]()
+	}
+
 	resultStore := store.Results()
 	service.MustNotBeError(resultStore.MarkAsToBePropagated(
 		requestData.ScoreToken.Payload.Converted.ParticipantID, requestData.ScoreToken.Payload.Converted.AttemptID,

@@ -578,3 +578,55 @@ Feature: Save grading result
       | 101            | 1          | 90      | 20             | 0           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+
+  Scenario: Skips the results propagation when the result has not been changed
+    Given the database has the following table "attempts":
+      | id | participant_id |
+      | 0  | 101            |
+      | 1  | 101            |
+    And the database has the following table "results":
+      | attempt_id | participant_id | item_id | latest_activity_at  | hints_requested        | score_computed | tasks_tried | score_obtained_at   | validated_at        |
+      | 0          | 101            | 10      | 2019-05-30 11:00:00 | null                   | 0              | 0           | null                | null                |
+      | 0          | 101            | 50      | 2019-05-30 11:00:00 | [0,  1, "hint" , null] | 100            | 1           | 2017-05-29 06:38:38 | 2017-05-29 06:38:38 |
+      | 1          | 101            | 60      | 2019-05-29 11:00:00 | [0,  1, "hint" , null] | 0              | 0           | null                | null                |
+    And the database has the following table "answers":
+      | id  | author_id | participant_id | attempt_id | item_id | created_at          |
+      | 123 | 101       | 101            | 0          | 50      | 2017-05-29 06:38:38 |
+      | 124 | 101       | 101            | 0          | 60      | 2017-05-29 06:38:38 |
+    And "scoreToken" is a token signed by the task platform with the following payload:
+      """
+      {
+        "idUser": "101",
+        "idItemLocal": "50",
+        "idAttempt": "101/0",
+        "itemUrl": "http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936",
+        "score": "100",
+        "idUserAnswer": "123"
+      }
+      """
+    When I send a POST request to "/items/save-grade" with the following body:
+      """
+      {
+        "score_token": "{{scoreToken}}"
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "data": {
+          "validated": true,
+          "unlocked_items": []
+        },
+        "message": "created",
+        "success": true
+      }
+      """
+    And the table "answers" should remain unchanged
+    And the table "gradings" should be:
+      | answer_id | score | ABS(TIMESTAMPDIFF(SECOND, graded_at, NOW())) < 3 |
+      | 123       | 100   | 1                                                |
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_sync" should be empty
