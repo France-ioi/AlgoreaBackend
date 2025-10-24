@@ -26,18 +26,18 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 67 | User    | janed          | -2    |
       | 69 | User    | janee          | -2    |
     And the database has the following users:
-      | group_id | login | first_name  | last_name | grade |
-      | 21       | owner | Jean-Michel | Blanquer  | 10    |
-      | 51       | johna | John        | Adams     | 1     |
-      | 53       | johnb | John        | Baker     | 2     |
-      | 55       | johnc | John        | null      | 3     |
-      | 57       | johnd | null        | Davis     | -1    |
-      | 59       | johne | John        | Edwards   | null  |
-      | 61       | janea | Jane        | Adams     | 3     |
-      | 63       | janeb | Jane        | Baker     | null  |
-      | 65       | janec | Jane        | null      | 4     |
-      | 67       | janed | Jane        | Doe       | -2    |
-      | 69       | janee | Jane        | Edwards   | null  |
+      | group_id | login | grade | profile                                                |
+      | 21       | owner | 10    | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | 51       | johna | 1     | {"first_name": "John", "last_name": "Adams"}           |
+      | 53       | johnb | 2     | {"first_name": "John", "last_name": "Baker"}           |
+      | 55       | johnc | 3     | {"first_name": "John"}                                 |
+      | 57       | johnd | -1    | {"last_name": "Davis"}                                 |
+      | 59       | johne | null  | {"first_name": "John", "last_name": "Edwards"}         |
+      | 61       | janea | 3     | {"first_name": "Jane", "last_name": "Adams"}           |
+      | 63       | janeb | null  | {"first_name": "Jane", "last_name": "Baker"}           |
+      | 65       | janec | 4     | {"first_name": "Jane"}                                 |
+      | 67       | janed | -2    | {"first_name": "Jane", "last_name": "Doe"}             |
+      | 69       | janee | null  | {"first_name": "Jane", "last_name": "Edwards"}         |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 1        | 21         |

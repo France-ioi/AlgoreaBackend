@@ -113,7 +113,8 @@ func (srv *Service) getInfo(responseWriter http.ResponseWriter, httpRequest *htt
 
 	var userInfo getInfoData
 	err := srv.GetStore(httpRequest).Users().ByID(user.GroupID).
-		Select(`group_id, temp_user, login, registered_at, email, email_verified, first_name, last_name,
+		Select(`group_id, temp_user, login, registered_at, email, email_verified,
+			users.profile->>'$.first_name' AS first_name, users.profile->>'$.last_name' AS last_name,
 			student_id, country_code, time_zone, latest_profile_sync_at,
 			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,
 			city, land_line_number, cell_phone_number, default_language, public_first_name, public_last_name,

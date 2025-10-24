@@ -72,7 +72,7 @@ type groupRequestsViewResponseRow struct {
 //		Otherwise, all rejected invitations/requests are shown.
 //
 //
-//		`first_name` and `last_name` are only shown for joining users whose personal info is visible to the current user.
+//		`first_name` and `last_name` (from `profile`) are only shown for joining users whose personal info is visible to the current user.
 //		A user can see personal info of his own and of those members/candidates of his managed groups
 //		who have provided view access to their personal data.
 //
@@ -153,13 +153,13 @@ func (srv *Service) getRequests(responseWriter http.ResponseWriter, httpRequest 
 			joining_user.group_id AS joining_user__group_id,
 			joining_user.login AS joining_user__login,
 			joining_user_with_approval.group_id IS NOT NULL AS joining_user__show_personal_info,
-			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.first_name) AS joining_user__first_name,
-			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.last_name) AS joining_user__last_name,
+			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.profile->>'$.first_name') AS joining_user__first_name,
+			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.profile->>'$.last_name') AS joining_user__last_name,
 			joining_user.grade AS joining_user__grade,
 			inviting_user.group_id AS inviting_user__group_id,
 			inviting_user.login AS inviting_user__login,
-			inviting_user.first_name AS inviting_user__first_name,
-			inviting_user.last_name AS inviting_user__last_name`).
+			inviting_user.profile->>'$.first_name' AS inviting_user__first_name,
+			inviting_user.profile->>'$.last_name' AS inviting_user__last_name`).
 		Joins(`
 			LEFT JOIN users AS inviting_user
 				ON inviting_user.group_id = initiator_id AND group_membership_changes.action = 'invitation_created'`).

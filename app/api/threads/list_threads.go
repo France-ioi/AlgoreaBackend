@@ -74,8 +74,8 @@ type listThreadParameters struct {
 //				* If `watched_group_id` is given, only threads in which the participant is descendant (including self)
 //				of the `watched_group_id` are returned.
 //				* If `item_id` is given, only threads for which the `item_id` is or is descendant of the given `item_id` are returned.
-//				* `first_name` and `last_name` are only returned for the current user, or if the user approved access to their personal
-//				info for some group managed by the current user.
+//				* `first_name` and `last_name` (from `profile`) are only returned for the current user,
+//				or if the user approved access to their personal info for some group managed by the current user.
 //
 //
 //			The returned threads are those for which the current user has `can_view`>=content permission on item_id and
@@ -278,8 +278,8 @@ func (srv *Service) constructListThreadsQuery(httpRequest *http.Request, params 
 			COALESCE(user_strings.title, default_strings.title) AS item__title,
 			threads.participant_id AS participant__id,
 			threads.participant_id = ? OR personal_info_view_approvals.approved AS participant__show_personal_info,
-			IF(threads.participant_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS participant__first_name,
-			IF(threads.participant_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS participant__last_name,
+			IF(threads.participant_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS participant__first_name,
+			IF(threads.participant_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS participant__last_name,
 			users.login AS participant__login,
 			threads.status AS status,
 			threads.message_count AS message_count,

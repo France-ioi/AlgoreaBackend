@@ -77,7 +77,7 @@ type GroupShortInfo struct {
 	Name string `json:"name"`
 }
 
-// UserPersonalInfo contains first_name and last_name.
+// UserPersonalInfo contains `first_name` and `last_name` from `profile`.
 type UserPersonalInfo struct {
 	FirstName *string `json:"first_name"`
 	LastName  *string `json:"last_name"`

@@ -5,9 +5,9 @@ Background:
     | 13 | Group B | Class |
     | 41 | Group C | Class |
   And the database has the following users:
-    | group_id | login | first_name  | last_name |
-    | 11       | jdoe  | John        | Doe       |
-    | 21       | owner | Jean-Michel | Blanquer  |
+    | group_id | login | profile                                                |
+    | 11       | jdoe  | {"first_name": "John", "last_name": "Doe"}             |
+    | 21       | owner | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
   And the database has the following table "group_managers":
     | group_id | manager_id |
     | 13       | 21         |

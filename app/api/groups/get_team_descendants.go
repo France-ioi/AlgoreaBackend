@@ -16,7 +16,7 @@ import (
 //	description: Returns all teams (`type` = "Team") among the descendants of the given group
 //
 //
-//		`first_name` and `last_name` of descendant team members are only visible to the members themselves and
+//		`first_name` and `last_name` (from `profile`) of descendant team members are only visible to the members themselves and
 //		to managers of those groups to which those members provided view access to personal data.
 //
 //
@@ -128,8 +128,8 @@ func (srv *Service) getTeamDescendants(responseWriter http.ResponseWriter, httpR
 			member_links.parent_group_id AS linked_group_id,
 			users.group_id,
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS last_name,
 			users.login, users.grade`,
 			user.GroupID, user.GroupID, user.GroupID).
 		Joins(`

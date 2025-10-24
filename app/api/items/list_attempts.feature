@@ -6,11 +6,11 @@ Feature: List attempts for current user and item_id
       | 23 | Group C | Team  |
       | 25 | Group D | Club  |
     And the database has the following users:
-      | group_id | login | first_name | last_name |
-      | 11       | jdoe  | John       | Doe       |
-      | 21       | other | George     | Bush      |
-      | 24       | jane  | Jane       | Joe       |
-      | 31       | jack  | Jack       | Black     |
+      | group_id | login | profile                                       |
+      | 11       | jdoe  | {"first_name": "John", "last_name": "Doe"}    |
+      | 21       | other | {"first_name": "George", "last_name": "Bush"} |
+      | 24       | jane  | {"first_name": "Jane", "last_name": "Joe"}    |
+      | 31       | jack  | {"first_name": "Jack", "last_name": "Black"}  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 13              | 11             | null                           |
