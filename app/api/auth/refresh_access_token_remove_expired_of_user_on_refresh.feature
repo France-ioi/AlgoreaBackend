@@ -2,7 +2,6 @@ Feature: Support for parallel sessions
   Background:
     Given there are the following groups:
       | group         | parent    | members                                        |
-      | @TempUsers    | @AllUsers |                                                |
       | @NonTempUsers | @AllUsers | @User1,@UserUntouched,@UserWithoutExpiredToken |
     And the time now is "2020-01-01T01:00:00Z"
     And there are the following sessions:
@@ -54,10 +53,10 @@ Feature: Support for parallel sessions
 
   Scenario: Should remove the expired access tokens of the user when refreshing a token, when the user is a temp user
     Given there are the following users:
-      | user                     | groups     | temp_user |
-      | @User1                   | @TempUsers | true      |
-      | @UserUntouched           | @TempUsers | true      |
-      | @UserWithoutExpiredToken | @TempUsers | true      |
+      | user                     | temp_user |
+      | @User1                   | true      |
+      | @UserUntouched           | true      |
+      | @UserWithoutExpiredToken | true      |
     And the "Authorization" request header is "Bearer t_user_1_session_1_most_recent"
     When I send a POST request to "/auth/token"
     Then the response code should be 201
@@ -84,10 +83,10 @@ Feature: Support for parallel sessions
 
   Scenario: Should not remove any access token if there's no expired one for the user, when the user is a temp user
     Given there are the following users:
-      | user                     | groups     | temp_user |
-      | @User1                   | @TempUsers | true      |
-      | @UserUntouched           | @TempUsers | true      |
-      | @UserWithoutExpiredToken | @TempUsers | true      |
+      | user                     | temp_user |
+      | @User1                   | true      |
+      | @UserUntouched           | true      |
+      | @UserWithoutExpiredToken | true      |
     And the "Authorization" request header is "Bearer t_user_without_expired_token"
     When I send a POST request to "/auth/token"
     Then the response code should be 201
