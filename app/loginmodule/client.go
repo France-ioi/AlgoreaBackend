@@ -246,6 +246,8 @@ func Encode(data []byte, clientKey string) string {
 
 // UserProfile represents normalized user profile data returned by the login module.
 type UserProfile struct {
+	Profile *map[string]interface{} `json:"profile"`
+
 	LoginID         int64            `json:"login_id"`
 	Login           string           `json:"login"`
 	Email           *string          `json:"email"`
@@ -278,10 +280,20 @@ type UserProfile struct {
 func (up *UserProfile) ToMap() map[string]interface{} {
 	reflStruct := reflect.ValueOf(up).Elem()
 	userData := make(map[string]interface{}, reflStruct.NumField())
-	for i := 0; i < reflStruct.NumField(); i++ {
-		fieldType := reflStruct.Type().Field(i)
+	for fieldIndex := 0; fieldIndex < reflStruct.NumField(); fieldIndex++ {
+		fieldType := reflStruct.Type().Field(fieldIndex)
 		fieldName := fieldType.Tag.Get("json")
-		fieldValue := reflStruct.Field(i)
+
+		if fieldName == "profile" {
+			if up.Profile == nil {
+				continue
+			}
+			jsonBytes, _ := json.Marshal(up.Profile) //nolint:errchkjson // we marshal the result of unmarshalling here
+			userData[fieldName] = string(jsonBytes)
+			continue
+		}
+
+		fieldValue := reflStruct.Field(fieldIndex)
 		if fieldType.Type.Kind() == reflect.Ptr { // nullable field
 			if fieldValue.IsNil() { // nil value
 				userData[fieldName] = nil
@@ -309,6 +321,8 @@ func convertUserProfile(source map[string]interface{}) (*UserProfile, error) {
 	*/
 
 	mapping := map[string]string{
+		"profile": "profile",
+
 		"login_id":          "id", // unsigned int
 		"login":             "login",
 		"email":             "primary_email",

@@ -129,9 +129,18 @@ func TestClient_GetUserProfile(t *testing.T) {
 							},
 							"last_update": "2022-07-18T16:07:12+0000"
 						}
-        ],"client_id":1,"verification":[],"subscription_news":true
+					],
+					"profile": {
+						"first_name": "Jane",
+						"last_name": "Doe"
+					},
+					"client_id":1, "verification":[], "subscription_news":true
 				}`,
 			expectedProfile: &UserProfile{
+				Profile: golang.Ptr(map[string]interface{}{
+					"first_name": "Jane",
+					"last_name":  "Doe",
+				}),
 				LoginID: 100000001, Sex: golang.Ptr("Female"), DefaultLanguage: golang.Ptr("en"),
 				FreeText: golang.Ptr("I'm Jane Doe"), GraduationYear: 2021, CountryCode: "gb",
 				Email: golang.Ptr("janedoe@gmail.com"), StudentID: golang.Ptr("456789012"),
@@ -154,6 +163,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 				},
 			},
 			expectedProfileMap: map[string]interface{}{
+				"profile":  `{"first_name":"Jane","last_name":"Doe"}`,
 				"login_id": int64(100000001), "sex": "Female", "land_line_number": nil, "city": nil, "default_language": "en",
 				"free_text": "I'm Jane Doe", "graduation_year": int64(2021), "country_code": "gb", "email": "janedoe@gmail.com",
 				"student_id": "456789012", "cell_phone_number": nil, "web_site": "http://jane.freepages.com", "grade": int64(0),
@@ -180,6 +190,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 			responseCode: 200,
 			response: `
 				{
+					"profile": null,
 					"id":100000001, "login":"jane","login_updated_at":null,"login_fixed":0,
 					"login_revalidate_required":0,"login_change_required":0,"language":null,"first_name":null,
 					"last_name":null,"real_name_visible":false,"timezone":null,"country_code":null,
@@ -252,7 +263,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 
 			gotProfile, err := client.GetUserProfile(ctx, "accesstoken")
 
-			assert.Equal(t, tt.expectedErr, err)
+			require.Equal(t, tt.expectedErr, err)
 			assert.Equal(t, tt.expectedProfile, gotProfile)
 			if gotProfile != nil {
 				profileMap := gotProfile.ToMap()
@@ -277,6 +288,10 @@ func Test_convertUserProfile(t *testing.T) {
 		{
 			name: "all fields are set",
 			source: map[string]interface{}{
+				"profile": map[string]interface{}{
+					"first_name": "Jane",
+					"last_name":  "Doe",
+				},
 				"id": int64(100000001), "login": "jane", "login_updated_at": "2019-07-16 01:56:25", "login_fixed": int64(0),
 				"login_revalidate_required": int64(0), "login_change_required": int64(0), "language": "en", "first_name": "Jane",
 				"last_name": "Doe", "real_name_visible": true, "timezone": "Europe/London", "country_code": "GB",
@@ -310,6 +325,10 @@ func Test_convertUserProfile(t *testing.T) {
 				"client_id": int64(1), "verification": []interface{}(nil),
 			},
 			expected: &UserProfile{
+				Profile: golang.Ptr(map[string]interface{}{
+					"first_name": "Jane",
+					"last_name":  "Doe",
+				}),
 				FreeText: golang.Ptr("I'm Jane Doe"), Email: golang.Ptr("janedoe@gmail.com"),
 				Grade: golang.Ptr(int64(-1)), WebSite: golang.Ptr("http://jane.freepages.com"),
 				EmailVerified: true, LastName: golang.Ptr("Doe"), Sex: golang.Ptr("Female"),
@@ -331,6 +350,7 @@ func Test_convertUserProfile(t *testing.T) {
 				},
 			},
 			expectedMap: map[string]interface{}{
+				"profile":   `{"first_name":"Jane","last_name":"Doe"}`,
 				"free_text": "I'm Jane Doe", "email": "janedoe@gmail.com", "grade": int64(-1),
 				"badges": []database.Badge{
 					{
@@ -354,7 +374,8 @@ func Test_convertUserProfile(t *testing.T) {
 		{
 			name: "null fields",
 			source: map[string]interface{}{
-				"id": int64(100000001), "login": "jane", "login_updated_at": nil, "login_fixed": int64(0),
+				"profile": nil,
+				"id":      int64(100000001), "login": "jane", "login_updated_at": nil, "login_fixed": int64(0),
 				"badges":                    []interface{}(nil),
 				"login_revalidate_required": int64(0), "login_change_required": int64(0), "language": nil, "first_name": nil,
 				"last_name": nil, "real_name_visible": false, "timezone": nil, "country_code": nil,

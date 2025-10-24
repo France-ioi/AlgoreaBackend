@@ -113,6 +113,8 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 	scenarioContext.Step(`^the table "([^"]*)" should be empty$`, ctx.TableShouldBeEmpty)
 	scenarioContext.Step(`^the table "([^"]*)" at (\w+?)s? "([^"]*)" should be:$`, ctx.TableAtColumnValueShouldBe)
 	scenarioContext.Step(`^the table "([^"]*)" at (\w+?)s? "([^"]*)" should be empty$`, ctx.TableAtColumnValueShouldBeEmpty)
+	scenarioContext.Step(`^the column "([^."]+)\.([^"]+)" at (\w+?) "([^"]*)" should be, in JSON:$`,
+		ctx.TableColumnAtColumnValueShouldBeInJSON)
 	scenarioContext.Step(`^the table "([^"]*)" should not contain (\w+?)s? "([^"]*)"$`, ctx.TableShouldNotContainColumnValue)
 	scenarioContext.Step(`^the table "([^"]*)" should remain unchanged$`, ctx.TableShouldRemainUnchanged)
 	scenarioContext.Step(`^the table "([^"]*)" should remain unchanged, regardless of the rows? with (\w+?)s? "([^"]*)"$`,
