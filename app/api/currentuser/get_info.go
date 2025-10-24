@@ -24,6 +24,8 @@ type getInfoData struct {
 	// required: true
 	LatestProfileSyncAt *database.Time `json:"latest_profile_sync_at"`
 	// required: true
+	Profile *database.JSON `json:"profile"`
+	// required: true
 	Email *string `json:"email"`
 	// required: true
 	EmailVerified bool `json:"email_verified"`
@@ -116,7 +118,7 @@ func (srv *Service) getInfo(responseWriter http.ResponseWriter, httpRequest *htt
 			CONVERT(birth_date, char) AS birth_date, graduation_year, grade, sex, address, zipcode,
 			city, land_line_number, cell_phone_number, default_language, public_first_name, public_last_name,
 			notify_news, notify, free_text, web_site, photo_autoload, lang_prog, basic_editor_mode, spaces_for_tab,
-			step_level_in_site, is_admin, no_ranking`).
+			step_level_in_site, is_admin, no_ranking, profile`).
 		Scan(&userInfo).Error()
 
 	// This is very unlikely since the user middleware has already checked that the user exists
