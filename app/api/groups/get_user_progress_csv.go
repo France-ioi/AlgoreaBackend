@@ -133,8 +133,8 @@ func (srv *Service) getUserProgressCSV(responseWriter http.ResponseWriter, httpR
 		Select(`
 			users.group_id AS id,
 			users.login,
-			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.first_name, NULL) AS first_name,
-			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name`,
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile->>'$.first_name', NULL) AS first_name,
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile->>'$.last_name', NULL) AS last_name`,
 			user.GroupID, user.GroupID).
 		WithPersonalInfoViewApprovals(user).
 		Scan(&users).Error())

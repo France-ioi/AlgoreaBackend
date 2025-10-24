@@ -1,13 +1,13 @@
 Feature: Get requests for group_id
   Background:
     Given the database has the following users:
-      | login   | temp_user | group_id | first_name  | last_name | grade |
-      | owner   | 0         | 21       | Jean-Michel | Blanquer  | 3     |
-      | user    | 0         | 11       | John        | Doe       | 1     |
-      | richard | 0         | 22       | Richard     | Roe       | 1     |
-      | jane    | 0         | 31       | Jane        | Doe       | 2     |
-      | mark    | 0         | 41       | Mark        | Moe       | 2     |
-      | larry   | 0         | 51       | Larry       | Loe       | 2     |
+      | login   | temp_user | group_id | grade | profile                                                |
+      | owner   | 0         | 21       | 3     | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | user    | 0         | 11       | 1     | {"first_name": "John", "last_name": "Doe"}             |
+      | richard | 0         | 22       | 1     | {"first_name": "Richard", "last_name": "Roe"}          |
+      | jane    | 0         | 31       | 2     | {"first_name": "Jane", "last_name": "Doe"}             |
+      | mark    | 0         | 41       | 2     | {"first_name": "Mark", "last_name": "Moe"}             |
+      | larry   | 0         | 51       | 2     | {"first_name": "Larry", "last_name": "Loe"}            |
     And the database has the following table "groups":
       | id  |
       | 13  |

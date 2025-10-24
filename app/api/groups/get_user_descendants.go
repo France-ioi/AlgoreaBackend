@@ -16,7 +16,7 @@ import (
 //	description: Return all users (`type` = "User") among the descendants of the given group
 //
 //
-//		`first_name` and `last_name` of descendant users are only visible to the users themselves and
+//		`first_name` and `last_name` (from `profile`) of descendant users are only visible to the users themselves and
 //		to managers of those groups to which those users provided view access to personal data.
 //
 //
@@ -77,8 +77,8 @@ func (srv *Service) getUserDescendants(responseWriter http.ResponseWriter, httpR
 		Select(`
 			groups.id, groups.name,
 			users.group_id = ? OR MAX(personal_info_view_approvals.approved) AS show_personal_info,
-			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.first_name, NULL) AS first_name,
-			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.last_name, NULL) AS last_name,
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile->>'$.first_name', NULL) AS first_name,
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile->>'$.last_name', NULL) AS last_name,
 			users.login, users.grade`, user.GroupID, user.GroupID, user.GroupID).
 		Joins("JOIN groups_groups_active ON groups_groups_active.child_group_id = groups.id").
 		Joins(`

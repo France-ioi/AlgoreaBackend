@@ -13,10 +13,10 @@ Feature: Check if the group code is valid
       | 18 | Team  | 5987654abc | null                | null          | false             | One More Team  | null                                   | none                                  | false                  | null             | null          |
       | 19 | Team  | 87654abcde | null                | null          | true              | Somewhat Team  | null                                   | none                                  | false                  | null             | null          |
     And the database has the following users:
-      | group_id | login | temp_user | first_name | last_name |
-      | 21       | john  | false     | null       | null      |
-      | 22       | tmp   | true      | null       | null      |
-      | 23       | jane  | false     | Jane       | Doe       |
+      | group_id | login | temp_user | profile                                    |
+      | 21       | john  | false     | {}                                         |
+      | 22       | tmp   | true      | null                                       |
+      | 23       | jane  | false     | {"first_name": "Jane", "last_name": "Doe"} |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 14              | 21             |

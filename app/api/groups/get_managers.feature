@@ -1,16 +1,16 @@
 Feature: Get managers of group_id
   Background:
     Given the database has the following users:
-      | login | group_id | first_name  | last_name  |
-      | user  | 11       | null        | null       |
-      | owner | 21       | Jean-Michel | Blanquer   |
-      | jane  | 31       | null        | null       |
-      | john  | 41       | null        | null       |
-      | billg | 51       | null        | null       |
-      | zuck  | 61       | null        | null       |
-      | jeff  | 71       | Jeff        | Joe        |
-      | larry | 81       | null        | null       |
-      | lp    | 91       | null        | null       |
+      | login | group_id | profile                                                |
+      | user  | 11       | {}                                                     |
+      | owner | 21       | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | jane  | 31       | {}                                                     |
+      | john  | 41       | {}                                                     |
+      | billg | 51       | {}                                                     |
+      | zuck  | 61       | {}                                                     |
+      | jeff  | 71       | {"first_name": "Jeff", "last_name": "Joe"}             |
+      | larry | 81       | {}                                                     |
+      | lp    | 91       | {}                                                     |
     And the database has the following table "groups":
       | id | name        | type    |
       | 12 | Our Club    | Club    |

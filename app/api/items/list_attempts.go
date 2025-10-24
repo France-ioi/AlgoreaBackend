@@ -54,7 +54,7 @@ type attemptsListResponseRow struct {
 //	 for the given item within the parent attempt.
 //
 //
-//	 `first_name` and `last_name` of attempt creators are only visible to attempt creators themselves and
+//	 `first_name` and `last_name` (from `profile`) of attempt creators are only visible to attempt creators themselves and
 //	 to managers of those attempt creators' groups to which they provided view access to personal data.
 //
 //
@@ -169,8 +169,8 @@ func constructQueryForGettingAttemptsList(store *database.DataStore, participant
 			results.started_at, results.latest_activity_at, results.help_requested,
 			users.login AS user_creator__login,
 			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user_creator__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user_creator__last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS user_creator__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS user_creator__last_name,
 			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
 }
 

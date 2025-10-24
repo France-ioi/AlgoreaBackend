@@ -118,7 +118,10 @@ func (srv *Service) checkCode(responseWriter http.ResponseWriter, httpRequest *h
 			require_watch_approval, root_activity_id, root_skill_id`).Take(&groupInfo).Error())
 		response.Group = &groupInfo
 		service.MustNotBeError(store.GroupManagers().
-			Select("users.group_id AS id, login, first_name, last_name").
+			Select(`
+				users.group_id AS id, login,
+				users.profile->>'$.first_name' AS first_name,
+				users.profile->>'$.last_name' AS last_name`).
 			Where("group_managers.group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = group_managers.manager_id").
 			Order("users.login, users.group_id").Scan(&response.Group.Managers).Error())

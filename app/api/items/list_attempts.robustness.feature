@@ -1,9 +1,9 @@
 Feature: List attempts for current user and item_id - robustness
   Background:
     Given the database has the following users:
-      | login | group_id | first_name | last_name |
-      | jdoe  | 11       | John       | Doe       |
-      | jane  | 12       | Jane       | Doe       |
+      | login | group_id |
+      | jdoe  | 11       |
+      | jane  | 12       |
     And the database has the following table "groups":
       | id | type  |
       | 13 | Team  |

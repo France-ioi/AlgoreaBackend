@@ -152,7 +152,9 @@ func (srv *Service) getManagers(responseWriter http.ResponseWriter, httpRequest 
 		query = query.
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = group_managers.group_id").
 			Where("groups_ancestors_active.child_group_id = ?", groupID).
-			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name, users.login,
+			Select(`groups.id, groups.name, groups.type, users.login,
+			        users.profile->>'$.first_name' AS first_name,
+			        users.profile->>'$.last_name' AS last_name,
 			        MAX(IF(groups_ancestors_active.is_self, can_manage_value, NULL)) AS can_manage_value,
 			        MAX(IF(groups_ancestors_active.is_self, can_grant_group_access, 0)) AS can_grant_group_access,
 			        MAX(IF(groups_ancestors_active.is_self, can_watch_members, 0)) AS can_watch_members,
@@ -162,8 +164,10 @@ func (srv *Service) getManagers(responseWriter http.ResponseWriter, httpRequest 
 			Group("groups.id")
 	} else {
 		query = query.Where("group_managers.group_id = ?", groupID).
-			Select(`groups.id, groups.name, groups.type, users.first_name, users.last_name, users.login,
-              can_manage_value, can_grant_group_access, can_watch_members`)
+			Select(`groups.id, groups.name, groups.type,
+			        users.profile->>'$.first_name' AS first_name,
+			        users.profile->>'$.last_name' AS last_name,
+			        users.login, can_manage_value, can_grant_group_access, can_watch_members`)
 	}
 
 	query = service.NewQueryLimiter().Apply(httpRequest, query)

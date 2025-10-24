@@ -16,18 +16,18 @@ Feature: Export the current progress of users on a subset of items as CSV (group
       | 19 | Club    | Another Club   |
       | 20 | Friends | My Friends     |
     And the database has the following users:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | en               |
-      | 51       | johna | John        | Adams     | fr               |
-      | 53       | johnb | John        | Black     | fr               |
-      | 55       | johnc | John        | Cook      | fr               |
-      | 57       | johnd | John        | null      | fr               |
-      | 59       | johne | null        | Eliot     | fr               |
-      | 61       | janea | null        | null      | fr               |
-      | 63       | janeb | null        | null      | fr               |
-      | 65       | janec | null        | null      | fr               |
-      | 67       | janed | null        | null      | fr               |
-      | 69       | janee | Jane        | Ebbot     | fr               |
+      | group_id | login | default_language | profile                                                |
+      | 21       | owner | en               | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | 51       | johna | fr               | {"first_name": "John", "last_name": "Adams"}           |
+      | 53       | johnb | fr               | {"first_name": "John", "last_name": "Black"}           |
+      | 55       | johnc | fr               | {"first_name": "John", "last_name": "Cook"}            |
+      | 57       | johnd | fr               | {"first_name": "John"}                                 |
+      | 59       | johne | fr               | {"last_name": "Eliot"}                                 |
+      | 61       | janea | fr               | {}                                                     |
+      | 63       | janeb | fr               | {}                                                     |
+      | 65       | janec | fr               | {}                                                     |
+      | 67       | janed | fr               | {}                                                     |
+      | 69       | janee | fr               | {"first_name": "Jane", "last_name": "Ebbot"}           |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_watch_members |
       | 1        | 21         | true              |

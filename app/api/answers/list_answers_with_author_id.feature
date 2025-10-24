@@ -1,10 +1,10 @@
 Feature: List answers by (item_id, author_id) pair
 Background:
   Given the database has the following users:
-    | group_id | login | first_name | last_name |
-    | 11       | jdoe  | John       | Doe       |
-    | 21       | other | George     | Bush      |
-    | 25       | jane  | Jane       | Doe       |
+    | group_id | login | profile                                       |
+    | 11       | jdoe  | {"first_name": "John", "last_name": "Doe"}    |
+    | 21       | other | {"first_name": "George", "last_name": "Bush"} |
+    | 25       | jane  | {"first_name": "Jane", "last_name": "Doe"}    |
   And the database has the following table "groups":
     | id | name    | type  |
     | 13 | Group B | Class |

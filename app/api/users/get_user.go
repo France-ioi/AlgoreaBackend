@@ -33,9 +33,15 @@ type ManagerPermissionsPart struct {
 	PersonalInfoAccessApprovalToCurrentUser string `json:"personal_info_access_approval_to_current_user"`
 }
 
+// UserViewResponseProfile represents the optional `profile` field in the user view response.
+type UserViewResponseProfile struct {
+	Profile *database.JSON `json:"profile"`
+}
+
 // swagger:model
 type userViewResponse struct {
 	*structures.UserPersonalInfo
+	*UserViewResponseProfile
 	*ManagerPermissionsPart
 
 	// required: true
@@ -64,7 +70,8 @@ type userViewResponse struct {
 //	---
 //	summary: Get profile info for a user by ID
 //	description: Returns data from the `users` table for the given `{user_id}`
-//              (`first_name` and `last_name` are only shown for the authenticated user or
+//              (`first_name` and `last_name` from `profile`, and the `profile` itself
+//               are only shown for the authenticated user or
 //               if the user approved access to their personal info for some group
 //               managed by the authenticated user) along with some permissions if the current user is a manager.
 //	parameters:
@@ -95,7 +102,8 @@ type userViewResponse struct {
 //	summary: Get profile info for a user by login
 //	description: >
 //		Returns data from the `users` table for the given `{login}`
-//		(`first_name` and `last_name` are only shown for the authenticated user or
+//		(`first_name` and `last_name` from `profile` and the `profile` itself
+//	  are only shown for the authenticated user or
 //		if the user approved access to their personal info for some group
 //		managed by the authenticated user) along with some permissions if the current user is a manager.
 //	parameters:
@@ -134,10 +142,10 @@ func (srv *Service) getUser(responseWriter http.ResponseWriter, httpRequest *htt
 	var userInfo userViewResponse
 	err := scope.
 		Select(`
-			group_id, temp_user, login, free_text, web_site,
+			group_id, temp_user, login, free_text, web_site, profile,
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS last_name,
 			manager_access.found AS current_user_is_manager,
 			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_user_access,
 			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_user`,
@@ -163,6 +171,7 @@ func (srv *Service) getUser(responseWriter http.ResponseWriter, httpRequest *htt
 
 	if !userInfo.ShowPersonalInfo {
 		userInfo.UserPersonalInfo = nil
+		userInfo.UserViewResponseProfile = nil
 	}
 
 	if userInfo.CurrentUserIsManager {

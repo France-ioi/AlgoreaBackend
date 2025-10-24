@@ -65,33 +65,13 @@ func (ctx *TestContext) ThereAreTheFollowingUsers(users *godog.Table) error {
 		err := ctx.ThereIsAUser(user["user"])
 		mustNotBeError(err)
 
-		if _, ok := user["first_name"]; ok {
-			ctx.setUserFieldInDatabase(
-				ctx.getUserPrimaryKey(groupID),
-				"first_name",
-				user["first_name"],
-			)
-		}
-		if _, ok := user["last_name"]; ok {
-			ctx.setUserFieldInDatabase(
-				ctx.getUserPrimaryKey(groupID),
-				"last_name",
-				user["last_name"],
-			)
-		}
-		if _, ok := user["temp_user"]; ok {
-			ctx.setUserFieldInDatabase(
-				ctx.getUserPrimaryKey(groupID),
-				"temp_user",
-				user["temp_user"],
-			)
-		}
-		if _, ok := user["login_id"]; ok {
-			ctx.setUserFieldInDatabase(
-				ctx.getUserPrimaryKey(groupID),
-				"login_id",
-				user["login_id"],
-			)
+		primaryKey := ctx.getUserPrimaryKey(groupID)
+
+		for key, value := range user {
+			if key == "user" {
+				continue
+			}
+			ctx.setUserFieldInDatabase(primaryKey, key, value)
 		}
 	}
 
