@@ -75,6 +75,7 @@ Feature: Create item
     And the table "permissions_propagate_sync" should be empty
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (not a skill)
     Given I am the user with id "11"
@@ -128,6 +129,7 @@ Feature: Create item
     And the table "permissions_propagate_sync" should be empty
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (skill with children)
     Given I am the user with id "11"
@@ -199,6 +201,7 @@ Feature: Create item
     And the table "permissions_propagate_sync" should be empty
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Set can_request_help for children
     Given I am the user with id "11"
@@ -386,6 +389,7 @@ Feature: Create item
     And the table "permissions_propagate_sync" should be empty
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
   Examples:
     | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
     | true                   | false             | true             | true                     |
@@ -473,6 +477,7 @@ Feature: Create item
     And the table "permissions_propagate_sync" should be empty
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Recomputes the score of a parent item
     Given the database table "items" also has the following rows:

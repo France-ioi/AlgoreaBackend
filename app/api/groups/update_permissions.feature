@@ -86,6 +86,7 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
   Examples:
     | json                                                 | can_view | can_grant_view | can_watch | can_edit | is_owner | can_make_session_official | can_view_generated | can_grant_view_generated | can_watch_generated | can_edit_generated | can_view_propagated | can_grant_view_propagated | can_watch_propagated | can_edit_propagated |
     | {"can_view":"solution"}                              | solution | none           | none      | none     | false    | false                     | solution           | none                     | none                | none               | content             | none                      | none                 | none                |
@@ -129,6 +130,7 @@ Feature: Change item access rights for a group
     And the table "results_propagate" should be:
       | attempt_id | participant_id | item_id | state            |
       | 0          | 21             | 103     | to_be_propagated |
+    And the table "results_propagate_internal" should be empty
   Examples:
     | json                                       | can_enter_from      | can_enter_until     |
     | {"can_enter_from":"2019-05-30T11:00:00Z"}  | 2019-05-30 11:00:00 | 9999-12-31 23:59:59 |
@@ -170,6 +172,7 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
   Examples:
     | json                                                           | can_view                 | can_grant_view      | can_watch | can_edit       | is_owner | can_make_session_official | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | can_view_propagated | can_grant_view_propagated | can_watch_propagated | can_edit_propagated |
     | {"can_view":"content_with_descendants"}                        | content_with_descendants | none                | none      | none           | false    | false                     | content_with_descendants | none                     | none                | none               | content             | none                      | none                 | none                |
@@ -222,6 +225,7 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has full access to the item itself)
     Given I am the user with id "21"
@@ -274,6 +278,7 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has 'content' access to the item itself)
     Given I am the user with id "21"
@@ -326,6 +331,7 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Create a new permissions_granted row (the group has no access to the item's parents, but has info access to the item itself)
     Given I am the user with id "21"
@@ -378,6 +384,7 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Drops invalid permissions from an existing permissions_granted row
     Given I am the user with id "21"
@@ -415,6 +422,7 @@ Feature: Change item access rights for a group
       | 0          | 21             | 102     |
       | 0          | 21             | 103     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario Outline: There are no item's parents visible to the group, but the item is a root activity of one of the group's ancestors
     Given I am the user with id "21"

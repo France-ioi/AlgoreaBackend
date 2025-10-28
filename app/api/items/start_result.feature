@@ -83,6 +83,7 @@ Feature: Start a result for an item
       | 0          | 111            | <item_id> | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
       | 1          | 102            | 10        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
   Examples:
     | item_id |
     | 50      |
@@ -119,6 +120,7 @@ Feature: Start a result for an item
       | 0          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
       | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     When I send a POST request to "/items/60/70/start-result?as_team_id=102&attempt_id=0"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -148,6 +150,7 @@ Feature: Start a result for an item
       | 0          | 102            | 70      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
       | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Keeps the previous started_at value
     Given I am the user with id "101"
@@ -181,6 +184,7 @@ Feature: Start a result for an item
       | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
       | 1          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Sets started_at of an existing result
     Given I am the user with id "101"
@@ -214,3 +218,4 @@ Feature: Start a result for an item
       | 1          | 102            | 10      | 0              | 0           | 1                                                         | null                 | null              | null         | 0                                                 |
       | 1          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty

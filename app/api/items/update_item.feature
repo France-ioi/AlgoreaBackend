@@ -198,6 +198,7 @@ Background:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 50      | 56.666668      |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Valid (with skill items)
     Given I am the user with id "11"
@@ -270,6 +271,7 @@ Background:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 70      | 56.666668      |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Should set content_view_propagation to 'none' by default if can_grant_view = 'none' for the parent item
     Given I am the user with id "11"
@@ -324,6 +326,7 @@ Background:
       | 0          | 11             | 21      | 0              |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Valid without any fields
     Given I am the user with id "11"
@@ -366,6 +369,7 @@ Background:
       | 0          | 11             | 21      | 0              |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Keep existing contest participants group
     Given I am the user with id "11"
@@ -423,6 +427,7 @@ Background:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Recomputes results if validation_type is given
     Given I am the user with id "11"
@@ -448,6 +453,7 @@ Background:
       | attempt_id | participant_id | item_id | score_computed |
       | 0          | 11             | 50      | 0              |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario Outline: Sets default values of items_items.content_view_propagation/upper_view_levels_propagation/grant_view_propagation correctly for each can_grant_view
     Given I am the user with id "11"

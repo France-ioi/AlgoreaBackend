@@ -171,6 +171,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       | 0          | 31             | 30      | null                |
       | 1          | 11             | 60      | 3019-10-10 10:10:10 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 31             | 9999-12-31 23:59:59 |
@@ -243,6 +244,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       | 1          | 11             | 60      | 2019-05-29 11:00:00 |
       | 2          | 11             | 60      | 3019-10-10 10:10:10 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     And the table "groups_groups" should be:
       | parent_group_id | child_group_id | expires_at          |
       | 10              | 31             | 9999-12-31 23:59:59 |
@@ -304,6 +306,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       | 0          | 31             | 30      | null                |
       | 1          | 31             | 50      | 3019-10-10 10:10:10 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     And the table "groups_groups" should remain unchanged
     And the table "groups_ancestors" should remain unchanged
     And logs should contain:

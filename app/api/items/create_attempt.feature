@@ -66,6 +66,7 @@ Feature: Create an attempt for an item
       | attempt_id | participant_id | item_id   | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 1          | 111            | <item_id> | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
   Examples:
     | item_id |
     | 50      |
@@ -94,6 +95,7 @@ Feature: Create an attempt for an item
       | 0          | 102            | 10      | 0              | 0           | 1                                                         | null                 | null              | null         | null                                              |
       | 1          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     When I send a POST request to "/items/60/attempts?as_team_id=102&parent_attempt_id=0"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -117,6 +119,7 @@ Feature: Create an attempt for an item
       | 1          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
       | 2          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     When I send a POST request to "/items/60/70/attempts?as_team_id=102&parent_attempt_id=2"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -142,3 +145,4 @@ Feature: Create an attempt for an item
       | 2          | 102            | 60      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
       | 3          | 102            | 70      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty

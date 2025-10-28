@@ -75,6 +75,7 @@ Feature: Generate a task token with a refreshed attempt for an item
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 1          | 101            | 50      | 0              | 0           | 1                                                         | null                                                        | null                                                     | null                                                | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: User is able to fetch a task token as a team
     Given I am the user with id "101"
@@ -124,6 +125,7 @@ Feature: Generate a task token with a refreshed attempt for an item
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, validated_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 1          | 102            | 60      | 0              | 0           | 1                                                         | null                                                        | null                                                     | null                                                | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: bAccessSolutions is true when the item is validated
     Given I am the user with id "101"
@@ -173,3 +175,4 @@ Feature: Generate a task token with a refreshed attempt for an item
       | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, latest_submission_at, NOW())) < 3 | ABS(TIMESTAMPDIFF(SECOND, score_obtained_at, NOW())) < 3 | validated_at        | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
       | 1          | 101            | 50      | 0              | 0           | 1                                                         | null                                                        | null                                                     | 2019-05-30 11:00:00 | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty

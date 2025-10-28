@@ -203,3 +203,4 @@ Feature: Invite users
       | 0          | 101            | 20      |
       | 0          | 101            | 30      |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
