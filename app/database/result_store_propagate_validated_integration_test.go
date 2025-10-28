@@ -49,14 +49,13 @@ func testResultStorePropagateValidated(ctx context.Context, t *testing.T, fixtur
 		prepareFunc(t, resultStore)
 	}
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	var result []validatedResultRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "validated")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result, "validated")
 	assert.Equal(t, expectedResults, result)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
@@ -312,4 +311,21 @@ func markResultAsValidated(t *testing.T, resultStore *database.ResultStore, cond
 	t.Helper()
 
 	assert.NoError(t, resultStore.Where(condition).UpdateColumn("validated_at", "2019-05-30 11:00:00").Error())
+}
+
+func runResultsPropagation(store *database.DataStore) (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			switch e := p.(type) {
+			case error:
+				err = e
+			default:
+				panic(p)
+			}
+		}
+	}()
+	moveFromResultsPropagateToResultsPropagateInternal(store)
+	return store.InTransaction(func(s *database.DataStore) error {
+		return s.Results().Propagate()
+	})
 }

@@ -73,9 +73,10 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 				"latest_activity_at": oldDate,
 			}).Error())
 
+			moveFromResultsPropagateToResultsPropagateInternal(resultStore.DataStore)
 			err := resultStore.InTransaction(func(store *database.DataStore) error {
 				require.NoError(t, resultStore.Exec(`
-					INSERT INTO results_propagate
+					INSERT INTO results_propagate_internal
 					SELECT participant_id, attempt_id, item_id, 'to_be_propagated' AS state
 					FROM results
 					ON DUPLICATE KEY UPDATE state = IF(state='propagating', 'to_be_propagated', state)`).Error())
@@ -115,6 +116,7 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 			}
 
 			assertAggregatesEqual(t, resultStore, expected)
+			assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 		})
 	}
 }
@@ -126,9 +128,7 @@ func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	resultStore := database.NewDataStore(db).Results()
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	expectedLatestActivityAt1 := database.Time(time.Date(2019, 5, 29, 11, 0, 0, 0, time.UTC))
@@ -140,6 +140,7 @@ func TestResultStore_Propagate_Aggregates_OnCommonData(t *testing.T) {
 		{ParticipantID: 102, AttemptID: 1, ItemID: 2, State: "done", LatestActivityAt: expectedLatestActivityAt2},
 	}
 	assertAggregatesEqual(t, resultStore, expected)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *testing.T) {
@@ -156,9 +157,7 @@ func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *te
 		"latest_activity_at": time.Time(expectedLatestActivityAt2),
 	}).Error())
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	expected := []aggregatesResultRow{
@@ -167,6 +166,7 @@ func TestResultStore_Propagate_Aggregates_KeepsLastActivityAtIfItIsGreater(t *te
 		{ParticipantID: 102, AttemptID: 1, ItemID: 2, State: "done", LatestActivityAt: expectedLatestActivityAt2},
 	}
 	assertAggregatesEqual(t, resultStore, expected)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
@@ -204,9 +204,7 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 					"score_edit_value": test.editValue,
 				}).Error())
 
-			err := resultStore.InTransaction(func(s *database.DataStore) error {
-				return s.Results().Propagate()
-			})
+			err := runResultsPropagation(resultStore.DataStore)
 			require.NoError(t, err)
 
 			expectedLatestActivityAt1 := database.Time(time.Date(2019, 5, 29, 11, 0, 0, 0, time.UTC))
@@ -227,6 +225,7 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 				},
 			}
 			assertAggregatesEqual(t, resultStore, expected)
+			assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 		})
 	}
 }
@@ -235,6 +234,7 @@ func assertAggregatesEqual(t *testing.T, resultStore *database.ResultStore, expe
 	t.Helper()
 
 	var result []aggregatesResultRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "latest_activity_at, tasks_tried, tasks_with_help, score_computed")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result,
+		"latest_activity_at, tasks_tried, tasks_with_help, score_computed")
 	assert.Equal(t, expected, result)
 }

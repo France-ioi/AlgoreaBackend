@@ -63,16 +63,15 @@ func TestResultStore_Propagate_NonCategories_SetsValidatedAtToMaxOfChildrenValid
 	assert.NoError(t, resultStore.Where("attempt_id = 1 AND item_id = 1 AND participant_id = 101").
 		UpdateColumn("validated_at", skippedDate).Error())
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	var result []validationDateResultRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&skippedDate, &oldestForItem4AndWinner, &oldestForItem3,
 			&oldestForItem4AndWinner, &skippedInItem3, &skippedInItem4), result)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_NoSuitableChildren(
@@ -96,15 +95,14 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 		t, database.NewDataStore(db).Items().Where("id=2").UpdateColumn("validation_type", "Categories").
 			Error())
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	var result []validationDateResultRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&expectedDate, nil, &oldDate, nil, nil, nil), result)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategoriesAreNotValidated(
@@ -130,15 +128,14 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToNull_IfSomeCategories
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
 		UpdateColumn("category", "Validation").Error())
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	var result []validationDateResultRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&expectedDate, nil, &oldDate, nil, nil, nil), result)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithCategoryValidation_IfAllAreValidated(
@@ -169,15 +166,14 @@ func TestResultStore_Propagate_Categories_ValidatedAtShouldBeMaxOfChildrensWithC
 	assert.NoError(t, database.NewDataStore(db).ItemItems().Where("parent_item_id = 2 AND child_item_id IN (3, 4)").
 		UpdateColumn("category", "Validation").Error())
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	var result []validationDateResultRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&oldDate, &expectedDate, &oldDate, nil, nil, &expectedDate), result)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfChildrenWithCategoryValidation_IgnoresNoScoreItems(
@@ -214,13 +210,12 @@ func TestResultStore_Propagate_Categories_SetsValidatedAtToMaxOfValidatedAtsOfCh
 		"no_score": true,
 	}).Error())
 
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	var result []validationDateResultRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "validated_at")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result, "validated_at")
 	assert.Equal(t,
 		constructExpectedResultsForValidatedAtTests(&expectedDate, &expectedDate, &oldDate, &oldDate, &oldDatePlusOneDay, nil), result)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }

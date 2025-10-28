@@ -50,5 +50,5 @@ func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int6
 }
 
 func (s *ResultStore) resultsPropagateTableName() string {
-	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync_conn", "results_propagate")
+	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync_conn", "results_propagate_internal")
 }

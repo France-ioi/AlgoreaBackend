@@ -116,7 +116,7 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 				"group_id": test.groupID, "item_id": test.itemID, "can_view_generated": test.canView,
 			}))
 
-			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, "results_propagate", test.expectedChanged)
 		})
 	}
 }
@@ -229,7 +229,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 			} else {
 				assert.Equal(t, int64(1), result.RowsAffected())
 			}
-			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, "results_propagate", test.expectedChanged)
 		})
 	}
 }

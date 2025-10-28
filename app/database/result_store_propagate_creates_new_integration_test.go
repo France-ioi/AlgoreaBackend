@@ -75,9 +75,7 @@ func testResultStorePropagateCreatesNew(ctx context.Context, t *testing.T, testC
 			UpdateColumn("root_item_id", testCase.rootItemID).Error())
 	}
 	resultStore := database.NewDataStore(db).Results()
-	err := resultStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(resultStore.DataStore)
 	require.NoError(t, err)
 
 	const expectedDate = "2019-05-30 11:00:00"
@@ -88,8 +86,9 @@ func testResultStorePropagateCreatesNew(ctx context.Context, t *testing.T, testC
 	testCase.expectedNewResults = append(testCase.expectedNewResults,
 		existingResultsRow{ParticipantID: 3, AttemptID: 1, ItemID: 333, LatestActivityAt: expectedDate, State: "done"})
 	var result []existingResultsRow
-	queryResultsAndStatesForTests(t, resultStore, &result, "latest_activity_at")
+	queryResultsAndStatesForTests(t, resultStore, "results_propagate_internal", &result, "latest_activity_at")
 	assert.Equal(t, testCase.expectedNewResults, result)
+	assertResultsMarkedAsChanged(t, resultStore.DataStore, "results_propagate", nil)
 }
 
 func TestResultStore_Propagate_CreatesNew(t *testing.T) {

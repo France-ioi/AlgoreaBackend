@@ -486,7 +486,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID, "expires_at": test.expiresAt,
 			}))
 
-			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, "results_propagate", test.expectedChanged)
 		})
 	}
 }
@@ -592,7 +592,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			} else {
 				assert.Equal(t, int64(1), result.RowsAffected())
 			}
-			assertResultsMarkedAsChanged(t, dataStore, test.expectedChanged)
+			assertResultsMarkedAsChanged(t, dataStore, "results_propagate", test.expectedChanged)
 		})
 	}
 }
@@ -633,11 +633,13 @@ type resultPrimaryKeyAndState struct {
 	State string
 }
 
-func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, expectedChanged []resultPrimaryKeyAndState) {
+func assertResultsMarkedAsChanged(
+	t *testing.T, dataStore *database.DataStore, resultsPropagateTableName string, expectedChanged []resultPrimaryKeyAndState,
+) {
 	t.Helper()
 
 	var results []resultPrimaryKeyAndState
-	queryResultsAndStatesForTests(t, dataStore.Results(), &results, "")
+	queryResultsAndStatesForTests(t, dataStore.Results(), resultsPropagateTableName, &results, "")
 
 	expectedChangedResultsMap := make(map[ResultPrimaryKey]string, len(expectedChanged))
 	for _, result := range expectedChanged {
@@ -657,18 +659,21 @@ func assertResultsMarkedAsChanged(t *testing.T, dataStore *database.DataStore, e
 		"Cannot find results that should be marked as 'to_be_propagated': %#v", expectedChangedResultsMap)
 }
 
-func queryResultsAndStatesForTests(t *testing.T, resultStore *database.ResultStore, result interface{}, customColumns string) {
+func queryResultsAndStatesForTests(
+	t *testing.T, resultStore *database.ResultStore, resultsPropagateTableName string, result interface{}, customColumns string,
+) {
 	t.Helper()
 
 	columns := "participant_id, attempt_id, item_id, IFNULL(state, 'done') AS state"
 	if customColumns != "" {
 		columns += "," + customColumns
 	}
+	quotedResultsPropagateTableName := database.QuoteName(resultsPropagateTableName)
 	assert.NoError(t,
 		resultStore.Select(columns).
-			Joins("LEFT JOIN results_propagate USING(participant_id, attempt_id, item_id)").
+			Joins(fmt.Sprintf("LEFT JOIN %s USING(participant_id, attempt_id, item_id)", quotedResultsPropagateTableName)).
 			Union(resultStore.Select(columns).
-				Joins("RIGHT JOIN results_propagate USING(participant_id, attempt_id, item_id)")).
+				Joins(fmt.Sprintf("RIGHT JOIN %s USING(participant_id, attempt_id, item_id)", quotedResultsPropagateTableName))).
 			Order("participant_id, attempt_id, item_id").Scan(result).Error())
 }
 

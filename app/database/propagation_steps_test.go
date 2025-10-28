@@ -24,7 +24,8 @@ func TestPropagationStepSets(t *testing.T) {
 			set:  PropagationStepSetResults(),
 			expectedContent: []PropagationStep{
 				PropagationStepResultsNamedLockAcquire,
-				PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate,
+				PropagationStepResultsInsideNamedLockMoveFromResultsPropagateToResultsPropagateInternal,
+				PropagationStepResultsInsideNamedLockInsertIntoResultsPropagateInternal,
 				PropagationStepResultsInsideNamedLockMarkAndInsertResults,
 				PropagationStepResultsInsideNamedLockMain,
 				PropagationStepResultsInsideNamedLockItemUnlocking,

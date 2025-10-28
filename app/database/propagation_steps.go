@@ -15,9 +15,14 @@ const (
 
 	// PropagationStepResultsNamedLockAcquire is the step of acquiring the named lock for results propagation.
 	PropagationStepResultsNamedLockAcquire PropagationStep = "results: acquire named lock"
-	// PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate is the step of inserting into results_propagate inside the named lock.
-	PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate PropagationStep = "results: inside named lock: " +
-		"insert into results_propagate"
+	// PropagationStepResultsInsideNamedLockMoveFromResultsPropagateToResultsPropagateInternal is the step of moving
+	// from results_propagate into results_propagate_internal inside the named lock.
+	PropagationStepResultsInsideNamedLockMoveFromResultsPropagateToResultsPropagateInternal PropagationStep = "results: inside named lock: " +
+		"move from results_propagate"
+	// PropagationStepResultsInsideNamedLockInsertIntoResultsPropagateInternal is the step of inserting into
+	// results_propagate_internal inside the named lock.
+	PropagationStepResultsInsideNamedLockInsertIntoResultsPropagateInternal PropagationStep = "results: inside named lock: " +
+		"insert into results_propagate_internal"
 	// PropagationStepResultsInsideNamedLockMarkAndInsertResults is the step of marking and inserting results inside the named lock.
 	PropagationStepResultsInsideNamedLockMarkAndInsertResults PropagationStep = "results: inside named lock: mark and insert results"
 	// PropagationStepResultsInsideNamedLockMain is the main step of the results propagation inside the named lock.
@@ -37,7 +42,8 @@ func PropagationStepSetAccess() *golang.Set[PropagationStep] {
 func PropagationStepSetResults() *golang.Set[PropagationStep] {
 	return golang.NewSet(
 		PropagationStepResultsNamedLockAcquire,
-		PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate,
+		PropagationStepResultsInsideNamedLockMoveFromResultsPropagateToResultsPropagateInternal,
+		PropagationStepResultsInsideNamedLockInsertIntoResultsPropagateInternal,
 		PropagationStepResultsInsideNamedLockMarkAndInsertResults,
 		PropagationStepResultsInsideNamedLockMain,
 		PropagationStepResultsInsideNamedLockItemUnlocking,

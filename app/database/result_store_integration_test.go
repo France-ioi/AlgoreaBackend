@@ -4,6 +4,7 @@ package database_test
 
 import (
 	"testing"
+	_ "unsafe"
 
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
@@ -65,6 +66,88 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 	}
 }
 
+func Test_moveFromResultsPropagateToResultsPropagateInternal(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
+		groups: [{id: 101}, {id: 102}]
+		attempts: [{participant_id: 11, id: 1}, {participant_id: 12, id: 2}]
+		items:
+			- {id: 12, default_language_tag: fr}
+			- {id: 13, default_language_tag: fr}
+			- {id: 14, default_language_tag: fr}
+			- {id: 15, default_language_tag: fr}
+			- {id: 404, default_language_tag: fr}
+		results:
+			- {participant_id: 101, attempt_id: 1, item_id: 12}
+			- {participant_id: 102, attempt_id: 2, item_id: 12}
+			- {participant_id: 101, attempt_id: 1, item_id: 13}
+			- {participant_id: 102, attempt_id: 2, item_id: 13}
+			- {participant_id: 101, attempt_id: 1, item_id: 14}
+			- {participant_id: 102, attempt_id: 2, item_id: 14}
+			- {participant_id: 101, attempt_id: 1, item_id: 15}
+			- {participant_id: 102, attempt_id: 2, item_id: 15}
+			- {participant_id: 102, attempt_id: 2, item_id: 16}
+		results_propagate:
+			- {participant_id: 101, attempt_id: 1, item_id: 12, state: 'to_be_propagated'}
+			- {participant_id: 102, attempt_id: 2, item_id: 12, state: 'to_be_recomputed'}
+			- {participant_id: 101, attempt_id: 1, item_id: 13, state: 'to_be_propagated'}
+			- {participant_id: 102, attempt_id: 2, item_id: 13, state: 'to_be_recomputed'}
+			- {participant_id: 101, attempt_id: 1, item_id: 14, state: 'to_be_propagated'}
+			- {participant_id: 102, attempt_id: 2, item_id: 14, state: 'to_be_recomputed'}
+			- {participant_id: 101, attempt_id: 1, item_id: 15, state: 'to_be_propagated'}
+			- {participant_id: 102, attempt_id: 2, item_id: 15, state: 'to_be_recomputed'}
+			- {participant_id: 101, attempt_id: 1, item_id: 404, state: 'to_be_propagated'}
+			- {participant_id: 101, attempt_id: 404, item_id: 12, state: 'to_be_recomputed'}
+			- {participant_id: 404, attempt_id: 1, item_id: 12, state: 'to_be_recomputed'}
+		results_propagate_internal:
+			- {participant_id: 101, attempt_id: 1, item_id: 13, state: 'to_be_propagated'}
+			- {participant_id: 102, attempt_id: 2, item_id: 13, state: 'to_be_propagated'}
+			- {participant_id: 101, attempt_id: 1, item_id: 14, state: 'to_be_recomputed'}
+			- {participant_id: 102, attempt_id: 2, item_id: 14, state: 'to_be_recomputed'}
+			- {participant_id: 101, attempt_id: 1, item_id: 15, state: 'propagating'}
+			- {participant_id: 102, attempt_id: 2, item_id: 15, state: 'propagating'}
+			- {participant_id: 102, attempt_id: 2, item_id: 16, state: 'to_be_propagated'}
+	`)
+	defer func() { _ = db.Close() }()
+
+	store := database.NewDataStore(db)
+	result := moveFromResultsPropagateToResultsPropagateInternal(store)
+	assert.True(t, result)
+
+	assertResultsMarkedAsChanged(t, store, "results_propagate", nil)
+	assertResultsMarkedAsChanged(t, store, "results_propagate_internal", []resultPrimaryKeyAndState{
+		{ResultPrimaryKey: ResultPrimaryKey{101, 1, 12}, State: "to_be_propagated"},
+		{ResultPrimaryKey: ResultPrimaryKey{102, 2, 12}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{101, 1, 13}, State: "to_be_propagated"},
+		{ResultPrimaryKey: ResultPrimaryKey{102, 2, 13}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{101, 1, 14}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{102, 2, 14}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{101, 1, 15}, State: "to_be_propagated"},
+		{ResultPrimaryKey: ResultPrimaryKey{102, 2, 15}, State: "to_be_recomputed"},
+		{ResultPrimaryKey: ResultPrimaryKey{102, 2, 16}, State: "to_be_propagated"},
+	})
+}
+
+func Test_moveFromResultsPropagateToResultsPropagateInternal_NothingMoved(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
+		results_propagate:
+			- {participant_id: 101, attempt_id: 1, item_id: 404, state: 'to_be_propagated'}
+			- {participant_id: 101, attempt_id: 404, item_id: 12, state: 'to_be_recomputed'}
+			- {participant_id: 404, attempt_id: 1, item_id: 12, state: 'to_be_recomputed'}
+	`)
+	defer func() { _ = db.Close() }()
+
+	store := database.NewDataStore(db)
+	result := moveFromResultsPropagateToResultsPropagateInternal(store)
+	assert.False(t, result)
+
+	assertResultsMarkedAsChanged(t, store, "results_propagate", nil)
+	assertResultsMarkedAsChanged(t, store, "results_propagate_internal", nil)
+}
+
 func TestResultStore_Propagate(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
@@ -108,3 +191,6 @@ func TestResultStore_Propagate(t *testing.T) {
 //		assert.NoError(t, err)
 //	}, 30)
 // }
+
+//go:linkname moveFromResultsPropagateToResultsPropagateInternal github.com/France-ioi/AlgoreaBackend/v2/app/database.moveFromResultsPropagateToResultsPropagateInternal
+func moveFromResultsPropagateToResultsPropagateInternal(store *database.DataStore) bool
