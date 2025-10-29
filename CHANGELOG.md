@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.30.9](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.8...v2.30.9) - 2025-10-29
+- create a new db column `users.profile` and update it everywhere we get user profiles from the login module
+- set `users.profile` of non-temp users by chunks
+- do not propagate unmodified results in `saveGrade`
+
 ## [v2.30.8](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.7...v2.30.8) - 2025-10-24
 - do not acquire exclusive lock for attempts in itemTaskTokenGenerate
 - restore old behaviour of app actions logging in Cucumber tests
