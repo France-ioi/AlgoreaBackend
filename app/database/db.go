@@ -500,13 +500,13 @@ func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...), nil)
 }
 
-// InsertIgnoreMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
-// into the given table ignoring errors (such as duplicates).
-func (conn *DB) InsertIgnoreMaps(tableName string, dataMaps []map[string]interface{}) error {
+// InsertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
+// into the given table.
+func (conn *DB) InsertMaps(tableName string, dataMaps []map[string]interface{}) error {
 	if len(dataMaps) == 0 {
 		return nil
 	}
-	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, true)
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
 	return conn.db.Exec(query, values...).Error
 }
 
@@ -520,7 +520,7 @@ func (conn *DB) InsertOrUpdateMaps(
 	if len(dataMaps) == 0 {
 		return nil
 	}
-	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, false)
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
 
 	if updateColumns == nil {
 		updateColumns = make([]string, 0, len(dataMaps))
@@ -833,12 +833,12 @@ func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) 
 	if len(dataMaps) == 0 {
 		return nil
 	}
-	query, values := conn.constructInsertMapsStatement(dataMaps, tableName, false)
+	query, values := conn.constructInsertMapsStatement(dataMaps, tableName)
 	return conn.db.Exec(query, values...).Error
 }
 
 func (conn *DB) constructInsertMapsStatement(
-	dataMaps []map[string]interface{}, tableName string, ignore bool,
+	dataMaps []map[string]interface{}, tableName string,
 ) (query string, values []interface{}) {
 	// data for the building the SQL request
 	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...), ...", values...
@@ -853,11 +853,7 @@ func (conn *DB) constructInsertMapsStatement(
 		escapedKeys = append(escapedKeys, QuoteName(key))
 	}
 	var builder strings.Builder
-	var ignoreString string
-	if ignore {
-		ignoreString = "IGNORE "
-	}
-	_, _ = builder.WriteString(fmt.Sprintf("INSERT %sINTO `%s` (%s) VALUES ", ignoreString, tableName, strings.Join(escapedKeys, ", ")))
+	_, _ = builder.WriteString(fmt.Sprintf("INSERT INTO %s (%s) VALUES ", QuoteName(tableName), strings.Join(escapedKeys, ", ")))
 	for index, dataMap := range dataMaps {
 		_, _ = builder.WriteRune('(')
 		for keyIndex, key := range keys {

@@ -2058,15 +2058,15 @@ func Test_EscapeLikeString(t *testing.T) {
 	}
 }
 
-func TestDB_InsertIgnoreMaps_WithEmptyArray(t *testing.T) {
+func TestDB_InsertMaps_WithEmptyArray(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 	var dataRows []map[string]interface{}
-	assert.NoError(t, db.InsertIgnoreMaps("myTable", dataRows))
+	assert.NoError(t, db.InsertMaps("myTable", dataRows))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDB_InsertIgnoreMaps(t *testing.T) {
+func TestDB_InsertMaps(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, mock := NewDBMock()
@@ -2078,11 +2078,11 @@ func TestDB_InsertIgnoreMaps(t *testing.T) {
 	}
 
 	expectedError := errors.New("some error")
-	mock.ExpectExec(regexp.QuoteMeta("INSERT IGNORE INTO `myTable` (`a`, `b`) VALUES (?, ?), (?, ?)")).
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`a`, `b`) VALUES (?, ?), (?, ?)")).
 		WithArgs(int64(1), "value", nil, nil).
 		WillReturnError(expectedError)
 
-	assert.Equal(t, expectedError, db.InsertIgnoreMaps("myTable", dataRows))
+	assert.Equal(t, expectedError, db.InsertMaps("myTable", dataRows))
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
