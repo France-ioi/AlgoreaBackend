@@ -281,6 +281,7 @@ func (ctx *TestContext) addItem(fields map[string]string) {
 	ctx.needPopulateDatabase = true
 
 	if oldRowIndex != -1 {
+		delete(dbFields, idString)
 		ctx.setDBTableRowColumnValues("items", primaryKey, dbFields)
 		return
 	}
