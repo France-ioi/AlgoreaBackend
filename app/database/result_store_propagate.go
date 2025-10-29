@@ -233,11 +233,12 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 
 		if result.RowsAffected > 0 {
 			mustNotBeError(store.Exec(`
-				INSERT IGNORE INTO results (participant_id, attempt_id, item_id, latest_activity_at)
+				INSERT INTO results (participant_id, attempt_id, item_id, latest_activity_at)
 				SELECT
 					results_to_mark.participant_id, results_to_mark.attempt_id, results_to_mark.item_id, '1000-01-01 00:00:00'
 				FROM results_to_mark
-				WHERE NOT result_exists`).Error())
+				WHERE NOT result_exists
+				ON DUPLICATE KEY UPDATE participant_id = results.participant_id`).Error())
 
 			mustNotBeError(store.Exec(`
 				INSERT INTO ` + resultsPropagateTableName +

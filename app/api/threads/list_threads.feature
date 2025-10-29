@@ -239,7 +239,7 @@ Feature: List threads
       | @Chapter1_Task    | @Chapter1                       | Task    |
       | @ChapterRoot_2A   |                                 | Chapter |
       | @ChapterRoot_2B   |                                 | Chapter |
-      | @Chapter2         | @Chapter_Root_2,@ChapterRoot_2B | Chapter |
+      | @Chapter2         | @ChapterRoot_2A,@ChapterRoot_2B | Chapter |
       | @Chapter2_Task    | @Chapter2                       | Task    |
       | @Chapter2_1       | @Chapter2                       | Chapter |
       | @Chapter2_1_Task1 | @Chapter2_1                     | Task    |

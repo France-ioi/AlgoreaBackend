@@ -155,9 +155,10 @@ func (s *GroupStore) makeUserManagerOfBadgeGroups(badgeGroupIDsMap map[int64]str
 	}
 	badgeGroupIDsList := strings.Join(badgeGroupIDs, ", ")
 	mustNotBeError(s.Exec(`
-		INSERT IGNORE INTO group_managers (group_id, manager_id, can_manage, can_grant_group_access, can_watch_members)
+		INSERT INTO group_managers (group_id, manager_id, can_manage, can_grant_group_access, can_watch_members)
 		SELECT badge_groups.group_id, ?, "memberships", 1, 1
-			FROM JSON_TABLE('[`+badgeGroupIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS badge_groups`, userID).Error())
+			FROM JSON_TABLE('[`+badgeGroupIDsList+`]', "$[*]" COLUMNS(group_id BIGINT PATH "$")) AS badge_groups
+		ON DUPLICATE KEY UPDATE group_id = group_managers.group_id`, userID).Error())
 }
 
 func (s *GroupStore) makeUserMemberOfBadgeGroup(badgeGroupID, userID int64, badgeURL string) bool {
