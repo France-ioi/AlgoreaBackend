@@ -79,6 +79,10 @@ func (ctx *TestContext) setDBTableRowColumnValues(tableName string, primaryKey, 
 		panic(fmt.Sprintf("cannot set value: table %q is not initialized", tableName))
 	}
 
+	if len(columnValues) == 0 {
+		return
+	}
+
 	columns := make([]string, 0, len(columnValues))
 	values := make([]string, 0, len(columnValues))
 	for column, value := range columnValues {

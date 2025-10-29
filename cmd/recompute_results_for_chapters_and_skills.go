@@ -44,7 +44,9 @@ func init() { //nolint:gochecknoinits // cobra suggests using init functions to 
 					itemNumber++
 					return store.InTransaction(func(store *database.DataStore) error {
 						log.Printf("Recomputing results for item %s (#%d)\n", item["id"], itemNumber)
-						err = store.Exec("INSERT IGNORE INTO results_recompute_for_items (item_id) values (?)", item["id"]).Error()
+						err = store.Exec(
+							"INSERT INTO results_recompute_for_items (item_id) values (?) ON DUPLICATE KEY UPDATE item_id = item_id",
+							item["id"]).Error()
 						if err != nil {
 							return err
 						}

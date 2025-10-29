@@ -82,14 +82,12 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 
 	groupRelatedColumns := ""
 	groupRelatedColumnValues := ""
-	ignore := "IGNORE"
 
 	if objectName == groups {
 		groupRelatedColumns = ", expires_at, child_group_type"
 		groupRelatedColumnValues = `,
 			MAX(LEAST(groups_ancestors_join.expires_at, groups_groups.expires_at)) AS max_expires_at,
 			MIN(groups_groups.child_group_type) AS child_group_type`
-		ignore = ""
 	}
 
 	// For every object marked as processing, we compute all its ancestors
@@ -99,7 +97,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		FROM `+objectName+`_ancestors
 			JOIN `+objectName+`_propagate_processing
 				ON `+objectName+`_propagate_processing.id = `+objectName+`_ancestors.child_`+singleObjectName+`_id`, `
-		INSERT `+ignore+` INTO `+objectName+`_ancestors
+		INSERT INTO `+objectName+`_ancestors
 		(
 			ancestor_`+singleObjectName+`_id,
 			child_`+singleObjectName+`_id`+`
@@ -132,14 +130,16 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 		recomputeQueries[1] += `
 			FOR UPDATE OF ` + objectName + `_propagate_processing
 			FOR SHARE OF ` + objectName + `_ancestors_join
-			FOR SHARE OF ` + relationsTable
+			FOR SHARE OF ` + relationsTable + `
+			ON DUPLICATE KEY UPDATE ancestor_item_id = items_ancestors.ancestor_item_id`
 		recomputeQueries = append(recomputeQueries, `
-			INSERT IGNORE INTO items_ancestors (ancestor_item_id, child_item_id)
+			INSERT INTO items_ancestors (ancestor_item_id, child_item_id)
 			SELECT items_items.parent_item_id, items_items.child_item_id
 			FROM items_items
 			JOIN items_propagate_processing ON items_items.child_item_id = items_propagate_processing.id
 			FOR UPDATE OF items_propagate_processing
-			FOR SHARE OF items_items`) // #nosec
+			FOR SHARE OF items_items
+			ON DUPLICATE KEY UPDATE ancestor_item_id = ancestor_item_id`) // #nosec
 	}
 
 	recomputeAncestors := make([]*SQLStmtWrapper, len(recomputeQueries))
