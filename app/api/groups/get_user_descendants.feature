@@ -16,8 +16,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 22 | Club    | Club           | -2    |
       | 23 | Club    | School         | -2    |
     And the database has the following user:
-      | group_id | login | first_name  | last_name | grade |
-      | 21       | owner | Jean-Michel | Blanquer  | 10    |
+      | group_id | login | grade | profile                                                |
+      | 21       | owner | 10    | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 1        | 21         |
@@ -44,11 +44,11 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | 55 | User | johnc | -2    |
       | 57 | User | jackd | -2    |
     And the database table "users" also has the following rows:
-      | group_id | login | first_name | last_name | grade |
-      | 51       | johna | null       | Adams     | 1     |
-      | 53       | johnb | John       | Baker     | null  |
-      | 55       | johnc | John       | null      | 3     |
-      | 57       | jackd | Jack       | Doe       | 3     |
+      | group_id | login | grade | profile                                      |
+      | 51       | johna | 1     | {"last_name": "Adams"}                       |
+      | 53       | johnb | null  | {"first_name": "John", "last_name": "Baker"} |
+      | 55       | johnc | 3     | {"first_name": "John", "last_name": null}    |
+      | 57       | jackd | 3     | {"first_name": "Jack", "last_name": "Doe"}   |
     And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 11              | 51             | null                           |
@@ -137,8 +137,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
 
   Scenario: Non-descendant parents should not appear (one group with 1 grand child, having also a parent which is not descendant)
     Given the database also has the following users:
-      | group_id | login | first_name | last_name | grade |
-      | 51       | johna | null       | Adams     | 1     |
+      | group_id | login | grade | profile                |
+      | 51       | johna | 1     | {"last_name": "Adams"} |
     And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 11              | 51             | 2019-05-30 11:00:00            |
@@ -164,8 +164,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | id | type | name  | grade |
       | 51 | User | johna | -2    |
     And the database table "users" also has the following rows:
-      | group_id | login | first_name | last_name | grade |
-      | 51       | johna | John       | Adams     | 1     |
+      | group_id | login | grade | profile                                      |
+      | 51       | johna | 1     | {"first_name": "John", "last_name": "Adams"} |
     And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id | expires_at          |
       | 11              | 51             | 2019-05-30 11:00:00 |
@@ -184,8 +184,8 @@ Feature: List user descendants of the group (groupUserDescendantView)
       | id | type | name  | grade |
       | 51 | User | johna | -2    |
     And the database table "users" also has the following rows:
-      | group_id | login | first_name | last_name | grade |
-      | 51       | johna | null       | Adams     | 1     |
+      | group_id | login | grade | profile                |
+      | 51       | johna | 1     | {"last_name": "Adams"} |
     And the database table "groups_groups" also has the following rows:
       | parent_group_id | child_group_id |
       | 11              | 51             |

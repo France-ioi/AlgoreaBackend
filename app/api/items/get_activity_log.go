@@ -82,7 +82,7 @@ type itemActivityLogResponseRow struct {
 //		Otherwise, the item's default language is used.
 //
 //
-//		`first_name` and `last_name` of users are only visible to the users themselves and
+//		`first_name` and `last_name` (from `profile`) of users are only visible to the users themselves and
 //		to managers of those users' groups to which they provided view access to personal data.
 //
 //
@@ -186,7 +186,7 @@ func (srv *Service) getActivityLogForItem(responseWriter http.ResponseWriter, ht
 //		Otherwise, the item's default language is used.
 //
 //
-//		`first_name` and `last_name` of users are only visible to the users themselves and
+//		`first_name` and `last_name` (from `profile`) of users are only visible to the users themselves and
 //		to managers of those users' groups to which they provided view access to personal data.
 //
 //
@@ -539,8 +539,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			users.login AS user__login,
 			users.group_id AS user__id,
 			users.group_id = ? OR personal_info_view_approvals.approved AS user__show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.first_name, NULL) AS user__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.last_name, NULL) AS user__last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS user__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS user__last_name,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
 		FROM ? AS activities`, visibleItemDescendantsSubQuery, participantsQuerySubQuery,
 		startFromRowCTESubQuery, unionCTEQuery.SubQuery(),

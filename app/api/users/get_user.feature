@@ -1,11 +1,11 @@
 Feature: Get user info
   Background:
     Given the database has the following users:
-      | group_id | temp_user | login | first_name | last_name | default_language | free_text | web_site   |
-      | 2        | 0         | user  | John       | Doe       | en               | Some text | mysite.com |
-      | 3        | 1         | jane  | null       | null      | fr               | null      | null       |
-      | 4        | 0         | john  | null       | null      | fr               | null      | null       |
-      | 5        | 0         | paul  | null       | null      | fr               | null      | null       |
+      | group_id | temp_user | login | first_name | last_name | default_language | free_text | web_site   | profile                                    |
+      | 2        | 0         | user  | John       | Doe       | en               | Some text | mysite.com | {"first_name": "John", "last_name": "Doe"} |
+      | 3        | 1         | jane  | null       | null      | fr               | null      | null       | null                                       |
+      | 4        | 0         | john  | null       | null      | fr               | null      | null       | null                                       |
+      | 5        | 0         | paul  | null       | null      | fr               | null      | null       | null                                       |
     And the database has the following table "groups":
       | id | name          |
       | 10 | Some group    |
@@ -33,6 +33,10 @@ Feature: Get user info
       "group_id": "2",
       "temp_user": false,
       "login": "user",
+      "profile": {
+        "first_name": "John",
+        "last_name": "Doe"
+      },
       "first_name": "John",
       "last_name": "Doe",
       "free_text": "Some text",
@@ -52,6 +56,7 @@ Feature: Get user info
       "first_name": null,
       "free_text": null,
       "group_id": "3",
+      "profile": null,
       "last_name": null,
       "temp_user": true,
       "web_site": null,
@@ -88,6 +93,10 @@ Feature: Get user info
       "group_id": "2",
       "temp_user": false,
       "login": "user",
+      "profile": {
+        "first_name": "John",
+        "last_name": "Doe"
+      },
       "free_text": "Some text",
       "web_site": "mysite.com",
       "first_name": "John",

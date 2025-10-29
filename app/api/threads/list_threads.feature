@@ -99,10 +99,10 @@ Feature: List threads
     And I am a manager of the group @LaboratoryParent and can watch for submissions from the group and its descendants
     And the group @Laboratory is a child of the group @LaboratoryParent
     And there are the following users:
-      | user                                                 | first_name            | last_name            |
-      | @LaboratoryMember_WithApprovedAccessPersonalInfo     | FirstName_Approved    | LastName_Approved    |
-      | @LaboratoryMember_WithApprovedAccessPersonalInfoNull | null                  | null                 |
-      | @LaboratoryMember_WithoutApprovedAccessPersonalInfo  | FirstName_NotApproved | LastName_NotApproved |
+      | user                                                 | profile                                                                      |
+      | @LaboratoryMember_WithApprovedAccessPersonalInfo     | {"first_name": "FirstName_Approved", "last_name": "LastName_Approved"}       |
+      | @LaboratoryMember_WithApprovedAccessPersonalInfoNull | {}                                                                           |
+      | @LaboratoryMember_WithoutApprovedAccessPersonalInfo  | {"first_name": "FirstName_NotApproved", "last_name": "LastName_NotApproved"} |
     And @LaboratoryMember_WithApprovedAccessPersonalInfo is a member of the group @Laboratory who has approved access to his personal info
     And @LaboratoryMember_WithoutApprovedAccessPersonalInfo is a member of the group @Laboratory
     And @LaboratoryMember_WithApprovedAccessPersonalInfoNull is a member of the group @Laboratory who has approved access to his personal info

@@ -1,16 +1,16 @@
 Feature: Get members of group_id
   Background:
     Given the database has the following users:
-      | login | group_id | first_name  | last_name  | grade |
-      | owner | 21       | Jean-Michel | Blanquer   | 3     |
-      | user  | 11       | John        | Doe        | 1     |
-      | jane  | 31       | Jane        | Doe        | 2     |
-      | john  | 41       | John        | Connor     | -1    |
-      | billg | 51       | Bill        | Gates      | 5     |
-      | zuck  | 61       | Mark        | Zuckerberg | 9     |
-      | jeff  | 71       | Jeff        | Bezos      | 7     |
-      | larry | 81       | Larry       | Ellison    | 8     |
-      | lp    | 91       | Larry       | Page       | 6     |
+      | login | group_id | grade | profile                                                |
+      | owner | 21       | 3     | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | user  | 11       | 1     | {"first_name": "John", "last_name": "Doe"}             |
+      | jane  | 31       | 2     | {"first_name": "Jane", "last_name": "Doe"}             |
+      | john  | 41       | -1    | {"first_name": "John", "last_name": "Connor"}          |
+      | billg | 51       | 5     | {"first_name": "Bill", "last_name": "Gates"}           |
+      | zuck  | 61       | 9     | {"first_name": "Mark", "last_name": "Zuckerberg"}      |
+      | jeff  | 71       | 7     | {"first_name": "Jeff", "last_name": "Bezos"}           |
+      | larry | 81       | 8     | {"first_name": "Larry", "last_name": "Ellison"}        |
+      | lp    | 91       | 6     | {"first_name": "Larry", "last_name": "Page"}           |
     And the database has the following table "groups":
       | id |
       | 13 |

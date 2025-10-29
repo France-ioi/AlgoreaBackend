@@ -8,12 +8,12 @@ Feature: Get entry state (itemGetEntryState)
       | 13 | Club   | Club  | 0                 |
       | 14 | School | Other | 0                 |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
-      | 31       | john  | John        | Doe       |
-      | 41       | jane  | Jane        | null      |
-      | 51       | jack  | Jack        | Daniel    |
-      | 61       | mark  | Mark        | Moe       |
+      | group_id | login | profile                                                |
+      | 21       | owner | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | 31       | john  | {"first_name": "John", "last_name": "Doe"}             |
+      | 41       | jane  | {"first_name": "Jane"}                                 |
+      | 51       | jack  | {"first_name": "Jack", "last_name": "Daniel"}          |
+      | 61       | mark  | {"first_name": "Mark", "last_name": "Moe"}             |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | personal_info_view_approved_at |
       | 10              | 31             | null                           |
