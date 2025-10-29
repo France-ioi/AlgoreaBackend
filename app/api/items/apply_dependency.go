@@ -114,8 +114,8 @@ func (srv *Service) applyDependency(responseWriter http.ResponseWriter, httpRequ
 		if groupsUnlocked > 0 {
 			// generate permissions_generated from permissions_granted
 			store.SchedulePermissionsPropagation()
-			// we should compute attempts again as new permissions were set and
-			// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
+			// we should compute results again as new permissions were set and
+			// triggers on permissions_generated likely marked some results as 'to_be_propagated'
 			store.ScheduleResultsPropagation()
 		}
 		return err

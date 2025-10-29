@@ -21,13 +21,13 @@ func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	dataStore := database.NewDataStore(db)
-	assertResultsMarkedAsChanged(t, dataStore, []resultPrimaryKeyAndState{})
+	assertResultsMarkedAsChanged(t, dataStore, "results_propagate", []resultPrimaryKeyAndState{})
 
 	require.NoError(t, dataStore.ItemItems().InsertMap(map[string]interface{}{
 		"parent_item_id": 1, "child_item_id": 2, "child_order": 1,
 	}))
 
-	assertResultsMarkedAsChanged(t, dataStore, []resultPrimaryKeyAndState{
+	assertResultsMarkedAsChanged(t, dataStore, "results_propagate", []resultPrimaryKeyAndState{
 		{ResultPrimaryKey: ResultPrimaryKey{101, 1, 1}, State: "to_be_recomputed"},
 		{ResultPrimaryKey: ResultPrimaryKey{102, 1, 1}, State: "to_be_recomputed"},
 		{ResultPrimaryKey: ResultPrimaryKey{103, 1, 1}, State: "to_be_recomputed"},

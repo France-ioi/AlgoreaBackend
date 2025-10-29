@@ -110,5 +110,6 @@ Feature: Delete an item
       | 1  | 10             | null         |
     And the table "results" should remain unchanged, except that the rows with item_id "22" should be deleted
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     And the table "answers" should remain unchanged, except that the rows with item_id "22" should be deleted
     And the table "filters" should remain unchanged

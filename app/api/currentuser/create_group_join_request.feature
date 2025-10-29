@@ -108,3 +108,4 @@ Feature: User sends a request to join a group
       | 0          | 21             | 20      |
       | 0          | 21             | 30      |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty

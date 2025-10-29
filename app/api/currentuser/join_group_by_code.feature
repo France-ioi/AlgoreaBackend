@@ -116,6 +116,7 @@ Feature: Join a group using a code (groupsJoinByCode)
       | 0          | 21             | 30      | 2019-05-30 11:00:00 |
       | 1          | 16             | 30      | 2019-05-30 11:00:00 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Updates the code_expires_at
     Given I am the user with id "21"

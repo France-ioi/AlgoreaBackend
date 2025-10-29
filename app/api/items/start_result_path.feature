@@ -79,6 +79,7 @@ Feature: Start results for an item path
       | 3          | 102            | 10        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
       | 3          | 102            | 60        | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
   Examples:
     | item_id |
     | 50      |
@@ -110,6 +111,7 @@ Feature: Start results for an item path
       | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
       | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     When I send a POST request to "/items/60/70/start-result-path?as_team_id=102"
     Then the response code should be 200
     And the response body should be, in JSON:
@@ -134,6 +136,7 @@ Feature: Start results for an item path
       | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
       | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Keeps the previous started_at value
     Given I am the user with id "101"
@@ -162,6 +165,7 @@ Feature: Start results for an item path
       | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
       | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Can create new results for all the path
     Given I am the user with id "101"
@@ -189,3 +193,4 @@ Feature: Start results for an item path
       | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
       | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty

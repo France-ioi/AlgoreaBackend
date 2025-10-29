@@ -67,7 +67,7 @@ func TestResultStore_ScheduledResultsPropagationRecomputesResultsForItemsFromTab
 	expectedTime, _ := time.Parse(time.DateTime, "2019-05-30 11:00:00")
 	expectedDBTime := database.Time(expectedTime)
 	var result []validationDateResultRow
-	queryResultsAndStatesForTests(t, dataStore.Results(), &result, "validated_at")
+	queryResultsAndStatesForTests(t, dataStore.Results(), "results_propagate_internal", &result, "validated_at")
 	assert.Equal(t, []validationDateResultRow{
 		{ParticipantID: 1, AttemptID: 1, ItemID: 111, State: "done", ValidatedAt: nil},
 		{ParticipantID: 1, AttemptID: 1, ItemID: 444, State: "done", ValidatedAt: &expectedDBTime},
@@ -76,4 +76,5 @@ func TestResultStore_ScheduledResultsPropagationRecomputesResultsForItemsFromTab
 		{ParticipantID: 3, AttemptID: 2, ItemID: 111, State: "done", ValidatedAt: nil},
 		{ParticipantID: 3, AttemptID: 2, ItemID: 333, State: "done", ValidatedAt: &expectedDBTime},
 	}, result)
+	assertResultsMarkedAsChanged(t, dataStore, "results_propagate", nil)
 }

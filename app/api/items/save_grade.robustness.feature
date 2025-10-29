@@ -46,6 +46,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Invalid score_token
     Given I send a POST request to "/items/save-grade" with the following body:
@@ -60,6 +61,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Invalid scoreToken: idItemLocal is missing
     Given "scoreToken" is a token signed by the task platform with the following payload:
@@ -84,6 +86,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Invalid scoreToken: idItemLocal is not a number
     Given "scoreToken" is a token signed by the task platform with the following payload:
@@ -109,6 +112,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Fails with an informative message when both score_token and answer_token are missing
     When I send a POST request to "/items/save-grade" with the following body:
@@ -123,6 +127,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Platform doesn't use tokens and answer_token is invalid
     When I send a POST request to "/items/save-grade" with the following body:
@@ -138,6 +143,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (should not be null)
     Given "answerToken" is a token signed by the app with the following payload:
@@ -163,6 +169,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Platform doesn't use tokens and idAttempt in answer_token is wrong (format should be number/number)
     Given "answerToken" is a token signed by the app with the following payload:
@@ -189,6 +196,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Platform doesn't use tokens and score is missing
     Given "answerToken" is a token signed by the app with the following payload:
@@ -214,6 +222,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Platform doesn't use tokens and idUserAnswer in answer_token is invalid
     Given "answerToken" is a token signed by the app with the following payload:
@@ -240,6 +249,7 @@ Feature: Save grading result - robustness
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: The platform does not exist when the answer_token is given and the score_token is not given
     Given the database table "attempts" also has the following row:
@@ -272,6 +282,7 @@ Feature: Save grading result - robustness
     And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: The answer has been already graded
     Given the database table "attempts" also has the following row:
@@ -313,6 +324,7 @@ Feature: Save grading result - robustness
     And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: The answer is not found
     Given "scoreToken" is a token signed by the task platform with the following payload:
@@ -338,3 +350,4 @@ Feature: Save grading result - robustness
     And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty

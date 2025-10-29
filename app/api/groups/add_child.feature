@@ -62,6 +62,7 @@ Feature: Add a parent-child relation between two groups
       | 0          | 11             | 20      |
       | 0          | 11             | 30      |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     When I send a POST request to "/groups/13/relations/14"
     Then the response code should be 201
     And the response body should be, in JSON:

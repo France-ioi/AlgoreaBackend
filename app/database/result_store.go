@@ -38,11 +38,14 @@ func (s *ResultStore) GetHintsInfoForActiveAttempt(participantID, attemptID, ite
 
 // MarkAsToBePropagated marks a given result as 'to_be_propagated'.
 func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int64, propagateNow bool) error {
+	propagationsAreSync := s.arePropagationsSync()
+	resultsPropagateTableName := golang.IfElse(propagationsAreSync, "results_propagate_sync_conn", "results_propagate")
 	err := s.Exec(`
-		INSERT INTO `+s.resultsPropagateTableName()+
-		` (`+golang.If(s.arePropagationsSync(), "connection_id, ")+`participant_id, attempt_id, item_id, state)
-		VALUES(`+golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ")+`?, ?, ?, 'to_be_propagated')
-		ON DUPLICATE KEY UPDATE state = IF(state='propagating', 'to_be_propagated', state)`, participantID, attemptID, itemID).Error()
+		INSERT INTO `+resultsPropagateTableName+
+		` (`+golang.If(propagationsAreSync, "connection_id, ")+`participant_id, attempt_id, item_id, state)
+		VALUES(`+golang.If(propagationsAreSync, "CONNECTION_ID(), ")+`?, ?, ?, 'to_be_propagated')
+		`+golang.If(propagationsAreSync, "ON DUPLICATE KEY UPDATE state = IF(state='propagating', 'to_be_propagated', state)"),
+		participantID, attemptID, itemID).Error()
 	if err == nil && propagateNow {
 		s.ScheduleResultsPropagation()
 	}
@@ -50,5 +53,5 @@ func (s *ResultStore) MarkAsToBePropagated(participantID, attemptID, itemID int6
 }
 
 func (s *ResultStore) resultsPropagateTableName() string {
-	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync_conn", "results_propagate")
+	return golang.IfElse(s.arePropagationsSync(), "results_propagate_sync_conn", "results_propagate_internal")
 }

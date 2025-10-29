@@ -91,6 +91,7 @@ Feature: Ask for a hint
       | 0          | 101            | 10      | 1               | 0            | null                               | 1                                                         | null                                                  |
       | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | 1                                                         | 1                                                     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: User is able to ask for a hint for a team (participant_id is the first integer in idAttempt in the task token)
     Given the database has the following table "attempts":
@@ -154,6 +155,7 @@ Feature: Ask for a hint
       | 0          | 201            | 10      | 1               | 0            | null                               | 1                                                         | null                                                  |
       | 0          | 201            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | 1                                                         | 1                                                     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: User is able to ask for a hint with a minimal hint token
     Given the database has the following table "attempts":
@@ -217,6 +219,7 @@ Feature: Ask for a hint
       | 0          | 101            | 10      | 1               | 0            | null                               | 1                                                         | null                                                  |
       | 0          | 101            | 50      | 1               | 5            | [0,1,"hint",null,{"rotorIndex":1}] | 1                                                         | 1                                                     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: User is able to ask for an already given hint
     Given the database has the following table "attempts":
@@ -280,6 +283,7 @@ Feature: Ask for a hint
       | 0          | 101            | 10      | 1               | 0            | null              | 1                                                         | null                                                  |
       | 0          | 101            | 50      | 1               | 4            | [0,1,"hint",null] | 1                                                         | 1                                                     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Can't parse hints_requested
     Given the database has the following table "attempts":
@@ -343,6 +347,7 @@ Feature: Ask for a hint
       | 0          | 101            | 10      | 1               | 0            | null               | 1                                                         | null                                                  |
       | 0          | 101            | 50      | 1               | 1            | [{"rotorIndex":1}] | 1                                                         | 1                                                     |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
     And logs should contain:
       """
       {{ quote(`Unable to parse hints_requested ({"idAttempt":"101/0","idItemLocal":"50","idUser":"101"}) having value "not an array": invalid character 'o' in literal null (expecting 'u')`) }}

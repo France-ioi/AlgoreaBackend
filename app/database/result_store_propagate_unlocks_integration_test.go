@@ -68,9 +68,7 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 
 	prepareDependencies(t, db)
 	dataStore := database.NewDataStore(db)
-	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(dataStore)
 	require.NoError(t, err)
 
 	for i := range grantedPermissions {
@@ -129,9 +127,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 
 	prepareDependencies(t, db)
 	dataStore := database.NewDataStore(db)
-	err := dataStore.InTransaction(func(s *database.DataStore) error {
-		return s.Results().Propagate()
-	})
+	err := runResultsPropagation(dataStore)
 	assert.NoError(t, err)
 	var result []map[string]interface{}
 	assert.NoError(t, dataStore.PermissionsGranted().
@@ -192,6 +188,7 @@ func testRegularUnlocks(t *testing.T, db *database.DB) {
 
 	var unlockedItems *golang.Set[int64]
 	dataStore := database.NewDataStore(db)
+	moveFromResultsPropagateToResultsPropagateInternal(dataStore)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
 		var err error
 		unlockedItems, err = s.Results().PropagateAndCollectUnlockedItemsForParticipant(101)
@@ -256,6 +253,7 @@ func testExplicitEntryUnlocks(t *testing.T, db *database.DB) {
 	var unlockedItems *golang.Set[int64]
 
 	dataStore := database.NewDataStore(db)
+	moveFromResultsPropagateToResultsPropagateInternal(dataStore)
 	err := dataStore.InTransaction(func(s *database.DataStore) error {
 		var err error
 		unlockedItems, err = s.Results().PropagateAndCollectUnlockedItemsForParticipant(101)

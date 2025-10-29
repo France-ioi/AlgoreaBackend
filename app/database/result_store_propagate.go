@@ -14,17 +14,19 @@ const (
 	resultsPropagationRecomputationChunkSize = 1000
 )
 
-func (s *ResultStore) processResultsRecomputeForItemsAndPropagate() (err error) {
+func (s *ResultStore) movePropagationMarksThenProcessResultsRecomputeForItemsAndPropagate() (err error) {
 	defer recoverPanics(&err)
 
 	CallBeforePropagationStepHook(PropagationStepResultsNamedLockAcquire)
 
 	// Use a lock so that we don't execute the listener multiple times in parallel
-	mustNotBeError(s.WithNamedLock(resultsPropagationLockName, resultsPropagationLockWaitTimeout, func(s *DataStore) error {
-		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagate)
-		setResultsPropagationFromTableResultsRecomputeForItems(s)
+	mustNotBeError(s.WithNamedLock(resultsPropagationLockName, resultsPropagationLockWaitTimeout, func(store *DataStore) error {
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMoveFromResultsPropagateToResultsPropagateInternal)
+		moveFromResultsPropagateToResultsPropagateInternal(store)
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagateInternal)
+		setResultsPropagationFromTableResultsRecomputeForItems(store)
 
-		_, err = s.Results().propagate(nil)
+		_, err = store.Results().propagate(nil)
 		return err
 	}))
 
@@ -52,6 +54,8 @@ func (s *ResultStore) PropagateAndCollectUnlockedItemsForParticipant(participant
 // to ensure it will not process results and permissions that are marked for propagation by other transactions.
 //
 // Note 2: The method does not process the results_recompute_for_items table.
+//
+// Note 3: The method does not move rows from results_propagate to results_propagate_internal.
 func (s *ResultStore) Propagate() error {
 	_, err := s.Results().propagate(nil)
 	return err
@@ -130,12 +134,13 @@ func (s *ResultStore) propagate(collectUnlockedItemsForParticipant *int64) (
 
 		// generate permissions_generated from permissions_granted
 		s.PermissionsGranted().computeAllAccess()
-		// we should compute attempts again as new permissions were set and
-		// triggers on permissions_generated likely marked some attempts as 'to_be_propagated'
-		participantItemsUnlocked2, err := s.Results().propagate(collectUnlockedItemsForParticipant)
-		mustNotBeError(err)
-
-		participantItemsUnlocked.Add(participantItemsUnlocked2.Values()...)
+		// we should compute results again as new permissions were set and
+		// triggers on permissions_generated likely marked some results as 'to_be_propagated'
+		if s.arePropagationsSync() || moveFromResultsPropagateToResultsPropagateInternal(s.DataStore) {
+			participantItemsUnlocked2, err := s.Results().propagate(collectUnlockedItemsForParticipant)
+			mustNotBeError(err)
+			participantItemsUnlocked.Add(participantItemsUnlocked2.Values()...)
+		}
 	}
 
 	return participantItemsUnlocked, nil
@@ -517,7 +522,7 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(store *DataSt
 	return unlockedItemsCount, participantItemsUnlocked
 }
 
-// setResultsPropagationFromTableResultsRecomputeForItems inserts results_propagate rows from results_recompute_for_items.
+// setResultsPropagationFromTableResultsRecomputeForItems inserts results_propagate_internal rows from results_recompute_for_items.
 func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 	const chunkSize = 20000
 
@@ -530,20 +535,20 @@ func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 		mustNotBeError(store.InTransaction(func(store *DataStore) error {
 			// Insert a chunk of results for items marked as processing in results_recompute_for_items into results_propagate.
 			result := store.Exec(`
-				INSERT INTO results_propagate
+				INSERT INTO results_propagate_internal
 					(
 						SELECT results.participant_id, results.attempt_id, results.item_id, 'to_be_recomputed' AS state
 						FROM results
-						LEFT JOIN results_propagate
-							ON results_propagate.participant_id = results.participant_id AND
-								results_propagate.attempt_id = results.attempt_id AND
-								results_propagate.item_id = results.item_id AND
-								results_propagate.state = 'to_be_recomputed'
+						LEFT JOIN results_propagate_internal
+							ON results_propagate_internal.participant_id = results.participant_id AND
+								results_propagate_internal.attempt_id = results.attempt_id AND
+								results_propagate_internal.item_id = results.item_id AND
+								results_propagate_internal.state = 'to_be_recomputed'
 						WHERE
 							results.item_id IN (
 								SELECT item_id FROM results_recompute_for_items WHERE is_being_processed
 							) AND
-							results_propagate.participant_id IS NULL
+							results_propagate_internal.participant_id IS NULL
 						LIMIT ?
 					)
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'
@@ -565,4 +570,35 @@ func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 			break
 		}
 	}
+}
+
+func moveFromResultsPropagateToResultsPropagateInternal(store *DataStore) bool {
+	insertResult := store.Exec(`
+		INSERT INTO results_propagate_internal (participant_id, attempt_id, item_id, state)
+		SELECT participant_id, attempt_id, item_id, state
+		FROM results_propagate
+		JOIN results USING(participant_id, attempt_id, item_id)
+		ON DUPLICATE KEY UPDATE state = IF(
+			VALUES(state)='to_be_recomputed',
+			'to_be_recomputed',
+			IF(results_propagate_internal.state='propagating', 'to_be_propagated', results_propagate_internal.state)
+		)`)
+	mustNotBeError(insertResult.Error())
+
+	movedRows := insertResult.RowsAffected() > 0
+
+	mustNotBeError(store.Exec(`
+		DELETE results_propagate
+		FROM results_propagate
+		JOIN results_propagate_internal USING(participant_id, attempt_id, item_id)
+		WHERE (results_propagate.state='to_be_recomputed') <= (results_propagate_internal.state='to_be_recomputed')`).Error())
+
+	// Delete rows pointing to non-existing results.
+	mustNotBeError(store.Exec(`
+		DELETE results_propagate
+		FROM results_propagate
+		LEFT JOIN results USING(participant_id, attempt_id, item_id)
+		WHERE results.participant_id IS NULL`).Error())
+
+	return movedRows
 }

@@ -77,6 +77,7 @@ Feature: Create item
       | participant_id | attempt_id | item_id | state            |
       | 10             | 0          | 21      | to_be_recomputed |
       | 11             | 1          | 21      | to_be_recomputed |
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Synchronously propagates newly created permissions for the current user on the new item (no parent, no children)
     Given I am the user with id "11"
@@ -163,3 +164,4 @@ Feature: Create item
       | 10             | 0          | 12      | to_be_propagated |
       | 11             | 1          | 12      | to_be_propagated |
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty

@@ -73,6 +73,7 @@ Feature: User accepts an invitation to join a group
       | 0          | 21             | 20      |
       | 0          | 21             | 30      |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Successfully accept an invitation into a group that requires approvals
     Given I am the user with id "21"
@@ -112,3 +113,4 @@ Feature: User accepts an invitation to join a group
       | 0          | 21             | 20      |
       | 0          | 21             | 30      |
     And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty

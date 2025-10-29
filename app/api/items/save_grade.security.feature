@@ -105,6 +105,7 @@ Feature: Save grading result - security
       | 1          | 101            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: score should be ignored if the score_token is present and the platform has a public key
     Given the database has the following table "attempts":
@@ -162,6 +163,7 @@ Feature: Save grading result - security
       | 1          | 101            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Should fail when score_token is expired
     Given the server time now is "2020-01-01T00:00:00Z"
@@ -189,6 +191,7 @@ Feature: Save grading result - security
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Should fail on getting a falsified score_token
     Given "scoreToken" is a falsified token signed by the task platform with the following payload:
@@ -214,6 +217,7 @@ Feature: Save grading result - security
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Should fail when the platform doesn't use tokens and answer_token is expired
     Given the server time now is "2020-01-01T00:00:00Z"
@@ -242,6 +246,7 @@ Feature: Save grading result - security
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Should fail when the platform doesn't use tokens and answer_token is falsified
     Given "answerToken" is a falsified token signed by the app with the following payload:
@@ -267,6 +272,7 @@ Feature: Save grading result - security
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Should fail when the platform uses tokens, but the score_token is not given
     Given the database table "attempts" also has the following row:
@@ -299,6 +305,7 @@ Feature: Save grading result - security
     And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Should fail when the platform doesn't use tokens, but the score_token is given
     Given the database has the following table "attempts":
@@ -346,3 +353,4 @@ Feature: Save grading result - security
     And the table "gradings" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty

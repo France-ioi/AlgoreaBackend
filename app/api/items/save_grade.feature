@@ -100,6 +100,7 @@ Feature: Save grading result
       | 1          | 101            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: User is able to save the grading result for a team (participant_id is the first integer in idAttempt in the score token)
     Given the database has the following table "attempts":
@@ -154,6 +155,7 @@ Feature: Save grading result
       | 1          | 201            | 60      | 0              | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null                |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario Outline: User is able to save the grading result with a low score and idAttempt
     Given the database has the following table "attempts":
@@ -208,6 +210,7 @@ Feature: Save grading result
       | 1          | 101            | 60      | 0                | 0           | 0         | 2019-05-29 11:00:00 | null                 | null                | null         |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
   Examples:
     | score | score_edit_rule | score_edit_value | score_computed | parent_score |
     | 99    | null            | null             | 99             | 49.5         |
@@ -275,6 +278,7 @@ Feature: Save grading result
       | 101            | 1          | 60      | 99             | 1           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario Outline: Should keep previous score if it is greater
     Given the database has the following table "answers":
@@ -578,6 +582,7 @@ Feature: Save grading result
       | 101            | 1          | 90      | 20             | 0           | 0         | 2019-05-29 11:00:00 | null                 | 2017-05-29 06:38:38 | null         |
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty
 
   Scenario: Skips the results propagation when the result has not been changed
     Given the database has the following table "attempts":
@@ -630,3 +635,4 @@ Feature: Save grading result
     And the table "results" should remain unchanged
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
+    And the table "results_propagate_internal" should be empty

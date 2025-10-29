@@ -124,8 +124,7 @@ func (srv *Service) startResultPath(responseWriter http.ResponseWriter, httpRequ
 		if len(rowsToInsert) > 0 {
 			resultStore := store.Results()
 			service.MustNotBeError(resultStore.InsertOrUpdateMaps(rowsToInsert, []string{"started_at", "latest_activity_at"}, nil))
-			service.MustNotBeError(resultStore.DB.InsertOrUpdateMaps("results_propagate", rowsToInsertPropagate,
-				[]string{"state"}, map[string]string{"state": "IF(state='propagating', 'to_be_propagated', state)"}))
+			service.MustNotBeError(resultStore.DB.InsertMaps("results_propagate", rowsToInsertPropagate))
 			shouldSchedulePropagation = true
 		}
 
