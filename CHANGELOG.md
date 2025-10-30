@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.31.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.9...v2.31.0) - 2025-10-30
+- use names from `users.profile` everywhere + return profile in `userData`, `userViewByID`, and `userViewByLogin`
+- use internal table `results_propagate_internal` instead of `results_propagate` in async results propagation
+- remove `INSERT IGNORE` statements from the code
+- fix the DB migration 2510231857
+
 ## [v2.30.9](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.8...v2.30.9) - 2025-10-29
 - create a new db column `users.profile` and update it everywhere we get user profiles from the login module
 - set `users.profile` of non-temp users by chunks
