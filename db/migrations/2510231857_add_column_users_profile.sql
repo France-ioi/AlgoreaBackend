@@ -16,4 +16,16 @@ PREPARE stmt FROM @query;
 EXECUTE stmt;
 
 -- +goose Down
-ALTER TABLE `users` DROP COLUMN `profile`;
+SET @query = IF(
+  EXISTS(
+    SELECT *
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE table_name = 'users'
+      AND table_schema = DATABASE()
+      AND column_name = 'profile'
+  ),
+  "ALTER TABLE `users` DROP COLUMN `profile`",
+  'DO TRUE'
+);
+PREPARE stmt FROM @query;
+EXECUTE stmt;

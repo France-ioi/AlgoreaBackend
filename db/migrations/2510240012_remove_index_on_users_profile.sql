@@ -1,5 +1,27 @@
 -- +goose Up
-ALTER TABLE `users` DROP INDEX `profile_is_null`;
+SET @query = IF(
+  EXISTS(
+    SELECT * FROM INFORMATION_SCHEMA.INNODB_INDEXES
+    JOIN INFORMATION_SCHEMA.INNODB_TABLES USING(TABLE_ID)
+    WHERE INFORMATION_SCHEMA.INNODB_TABLES.NAME = CONCAT(DATABASE(), '/users') AND
+      INFORMATION_SCHEMA.INNODB_INDEXES.NAME = 'profile_is_null'
+  ),
+  "ALTER TABLE `users` DROP INDEX `profile_is_null`",
+  'DO TRUE'
+);
+PREPARE stmt FROM @query;
+EXECUTE stmt;
 
 -- +goose Down
-ALTER TABLE `users` ADD INDEX `profile_is_null` ((NOT temp_user AND `profile` IS NULL));
+SET @query = IF(
+  NOT EXISTS(
+    SELECT * FROM INFORMATION_SCHEMA.INNODB_INDEXES
+    JOIN INFORMATION_SCHEMA.INNODB_TABLES USING(TABLE_ID)
+    WHERE INFORMATION_SCHEMA.INNODB_TABLES.NAME = CONCAT(DATABASE(), '/users') AND
+      INFORMATION_SCHEMA.INNODB_INDEXES.NAME = 'profile_is_null'
+  ),
+  "ALTER TABLE `users` ADD INDEX `profile_is_null` ((NOT temp_user AND `profile` IS NULL))",
+  'DO TRUE'
+);
+PREPARE stmt FROM @query;
+EXECUTE stmt;
