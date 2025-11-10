@@ -71,9 +71,14 @@ func (t sortingType) conditionSign() string {
 	return "<"
 }
 
-// FromFirstRow is a special value of SortingAndPagingParameters.StartFromRowSubQuery
+//nolint:gochecknoglobals // fromFirstRow is a special constant value, we do not allow modifying it from outside.
+var fromFirstRow = &database.DB{}
+
+// FromFirstRow returns a special value of SortingAndPagingParameters.StartFromRowQuery
 // needed to bypass pagination completely and ignore 'from.*' parameters of the HTTP request.
-const FromFirstRow = iota
+func FromFirstRow() *database.DB {
+	return fromFirstRow
+}
 
 // SortingAndPagingFields is a type of SortingAndPagingParameters.Fields (field_name -> params).
 type SortingAndPagingFields map[string]*FieldSortingParams
@@ -90,11 +95,11 @@ type SortingAndPagingParameters struct {
 	// If IgnoreSortParameter is true, the 'sort' parameter of the HTTP request is ignored
 	IgnoreSortParameter bool
 
-	// If StartFromRowSubQuery is not nil, 'from.*' parameters of the HTTP request are not analyzed,
+	// If StartFromRowQuery is not nil, 'from.*' parameters of the HTTP request are not analyzed,
 	// the sub-query should provide tie-breaker fields instead.
 	//
-	// If StartFromRowSubQuery is FromFirstRow, pagination gets skipped.
-	StartFromRowSubQuery interface{}
+	// If StartFromRowQuery is a value returned by FromFirstRow, pagination gets skipped.
+	StartFromRowQuery *database.DB
 }
 
 // ApplySortingAndPaging applies ordering and paging according to the given parameters
@@ -102,7 +107,7 @@ type SortingAndPagingParameters struct {
 //
 // When `parameters.IgnoreSortParameter` is true, the 'sort' request parameter is ignored.
 //
-// When `parameters.StartFromRowSubQuery` is set, the 'from.*' request parameters are ignored.
+// When `parameters.StartFromRowQuery` is set, the 'from.*' request parameters are ignored.
 func ApplySortingAndPaging(httpRequest *http.Request, query *database.DB, parameters *SortingAndPagingParameters) (*database.DB, error) {
 	mustHaveValidTieBreakerFieldsList(parameters.Fields, parameters.TieBreakers)
 	sortingRules := chooseSortingRules(httpRequest, parameters.DefaultRules, parameters.IgnoreSortParameter)
@@ -115,14 +120,14 @@ func ApplySortingAndPaging(httpRequest *http.Request, query *database.DB, parame
 	query = applyOrder(query, usedFields, parameters.Fields, fieldsSortingTypes)
 
 	var fromValues map[string]interface{}
-	if parameters.StartFromRowSubQuery == nil {
+	if parameters.StartFromRowQuery == nil {
 		fromValues, err = ParsePagingParameters(httpRequest, parameters.TieBreakers)
 		if err != nil {
 			return nil, ErrInvalidRequest(err)
 		}
 	}
 
-	query = applyPagingConditions(query, usedFields, fieldsSortingTypes, parameters.Fields, fromValues, parameters.StartFromRowSubQuery)
+	query = applyPagingConditions(query, usedFields, fieldsSortingTypes, parameters.Fields, fromValues, parameters.StartFromRowQuery)
 	return query, nil
 }
 
@@ -317,23 +322,23 @@ var safeColumnNameRegexp = regexp.MustCompile("[^a-zA-Z_0-9]")
 
 // applyPagingConditions adds filtering on paging values into the query.
 func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortingTypes map[string]sortingType,
-	configuredFields map[string]*FieldSortingParams, fromValues map[string]interface{}, startFromRowSubQuery interface{},
+	configuredFields map[string]*FieldSortingParams, fromValues map[string]interface{}, startFromRowQuery *database.DB,
 ) *database.DB {
-	if startFromRowSubQuery == nil && len(fromValues) == 0 || startFromRowSubQuery == FromFirstRow {
+	if startFromRowQuery == nil && len(fromValues) == 0 || startFromRowQuery == fromFirstRow {
 		return query
 	}
 
 	// Note: Since all the tie-breaker columns are always used and usedFields cannot contain duplicates,
 	// having the same number of elements in usedFields and fromValues mean we have all the needed data
-	// for paging. At the same time, fromValues are empty (unknown) when startFromRowSubQuery is given,
+	// for paging. At the same time, fromValues are empty (unknown) when startFromRowQuery is given,
 	// meaning the sub-query is needed in this case.
-	subQueryNeeded := len(usedFields) != len(fromValues) || startFromRowSubQuery != nil
+	subQueryNeeded := len(usedFields) != len(fromValues) || startFromRowQuery != nil
 
 	conditions, queryValues, safeColumnNames := constructPagingConditions(
 		usedFields, configuredFields, subQueryNeeded, fieldsSortingTypes, fromValues)
 	if len(conditions) > 0 {
 		if subQueryNeeded {
-			query = joinSubQueryForPaging(query, usedFields, configuredFields, startFromRowSubQuery, safeColumnNames, fromValues, conditions)
+			query = joinQueryForPaging(query, usedFields, configuredFields, startFromRowQuery, safeColumnNames, fromValues, conditions)
 		} else {
 			query = query.Where(strings.Join(conditions, " OR "), queryValues...)
 		}
@@ -388,11 +393,11 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 	return conditions, queryValues, safeColumnNames
 }
 
-func joinSubQueryForPaging(query *database.DB, usedFields []string, configuredFields map[string]*FieldSortingParams,
-	startFromRowSubQuery interface{}, safeColumnNames []string, fromValues map[string]interface{}, conditions []string,
+func joinQueryForPaging(query *database.DB, usedFields []string, configuredFields map[string]*FieldSortingParams,
+	startFromRowQuery *database.DB, safeColumnNames []string, fromValues map[string]interface{}, conditions []string,
 ) *database.DB {
-	if startFromRowSubQuery == nil {
-		startFromRowQuery := query
+	if startFromRowQuery == nil {
+		startFromRowQuery = query
 		fieldsToSelect := make([]string, 0, len(fromValues))
 		for index, fieldName := range usedFields {
 			fieldsToSelect = append(fieldsToSelect,
@@ -403,10 +408,10 @@ func joinSubQueryForPaging(query *database.DB, usedFields []string, configuredFi
 				Where(configuredFields[fieldName].ColumnName+" <=> ?", fromValues[fieldName])
 		}
 		startFromRowQuery = startFromRowQuery.Select(strings.Join(fieldsToSelect, ", "))
-		startFromRowSubQuery = startFromRowQuery.Limit(1).SubQuery()
+		startFromRowQuery = startFromRowQuery.Limit(1)
 	}
 	query = query.
-		Joins("JOIN ? AS from_page", startFromRowSubQuery).
+		Joins("JOIN ? AS from_page", startFromRowQuery.SubQuery()).
 		Where(strings.Join(conditions, " OR "))
 	return query
 }

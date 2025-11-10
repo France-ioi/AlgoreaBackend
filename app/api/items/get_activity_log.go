@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/render"
 
@@ -169,7 +170,7 @@ func (srv *Service) getActivityLogForItem(responseWriter http.ResponseWriter, ht
 		return service.ErrInvalidRequest(err)
 	}
 
-	return srv.getActivityLog(responseWriter, httpRequest, &itemID)
+	return srv.getActivityLogForParticipantOrWatchedGroup(responseWriter, httpRequest, &itemID)
 }
 
 // swagger:operation GET /items/log items itemActivityLogForAllItems
@@ -255,10 +256,100 @@ func (srv *Service) getActivityLogForItem(responseWriter http.ResponseWriter, ht
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
 func (srv *Service) getActivityLogForAllItems(w http.ResponseWriter, r *http.Request) error {
-	return srv.getActivityLog(w, r, nil)
+	return srv.getActivityLogForParticipantOrWatchedGroup(w, r, nil)
 }
 
-func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpRequest *http.Request, itemID *int64) error {
+func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
+	responseWriter http.ResponseWriter, httpRequest *http.Request, ancestorItemID *int64,
+) error {
+	participantID := service.ParticipantIDFromContext(httpRequest.Context())
+	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
+	if err != nil {
+		return err
+	}
+
+	store := srv.GetStore(httpRequest)
+
+	participantsQuery := store.Raw("SELECT ? AS id", participantID)
+	visibleItemDescendantsQuery := store.Permissions().MatchingGroupAncestors(participantID).
+		Select("item_id AS id").
+		Group("item_id").
+		HavingMaxPermissionAtLeast("view", "info")
+
+	if watchedGroupIDIsSet {
+		if len(httpRequest.URL.Query()["as_team_id"]) != 0 {
+			return service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
+		}
+		participantsQuery = store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
+			Select("child_group_id AS id")
+		visibleItemDescendantsQuery = visibleItemDescendantsQuery.HavingMaxPermissionAtLeast("watch", "result")
+	}
+
+	if ancestorItemID != nil {
+		itemDescendants := store.ItemAncestors().DescendantsOf(*ancestorItemID).Select("child_item_id")
+		visibleItemDescendantsQuery = visibleItemDescendantsQuery.
+			Where("item_id = ? OR item_id IN ?", *ancestorItemID, itemDescendants.SubQuery())
+	}
+
+	return srv.getActivityLog(
+		responseWriter, httpRequest,
+		[]string{"activity_type", "participant_id", "attempt_id", "item_id", "answer_id"},
+		func(query *database.DB) *database.DB {
+			return query.
+				With("items_to_show", visibleItemDescendantsQuery).
+				With("participants", participantsQuery)
+		},
+		func(answersQuery *database.DB) *database.DB {
+			return answersQuery.
+				Where("answers.participant_id IN (SELECT id FROM participants)").
+				Where("answers.item_id IN (SELECT id FROM items_to_show)")
+		},
+		func(answersQuery *database.DB) *database.DB {
+			return answersQuery.
+				Where("answers.created_at <= NOW()").
+				Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
+				Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
+				Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
+				Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
+		},
+		func(startedResultsQuery *database.DB) *database.DB {
+			return startedResultsQuery.
+				Where("started_results.item_id <= (SELECT MAX(id) FROM items_to_show)").
+				Where("started_results.item_id >= (SELECT MIN(id) FROM items_to_show)").
+				Where("started_results.item_id IN (SELECT id FROM items_to_show)").
+				Where("started_results.started_at <= NOW()").
+				Where("started_results.participant_id <= (SELECT MAX(id) FROM participants)").
+				Where("started_results.participant_id >= (SELECT MIN(id) FROM participants)").
+				Where("started_results.participant_id IN (SELECT id FROM participants)")
+		},
+		func(validatedResultsQuery *database.DB) *database.DB {
+			return validatedResultsQuery.
+				Where("validated_results.item_id IN (SELECT id FROM items_to_show)").
+				Where("validated_results.validated_at <= NOW()").
+				Where("validated_results.participant_id IN (SELECT id FROM participants)")
+		},
+		func(unQuery *database.DB) *database.DB {
+			return unQuery.JoinsPermissionsForGroupToItems(participantID)
+		},
+		golang.LazyIfElse(watchedGroupIDIsSet,
+			func() string {
+				return fmt.Sprintf(`permissions.can_watch_generated_value >= %d AS can_watch_answer`,
+					store.PermissionsGranted().WatchIndexByName("answer"))
+			},
+			func() string { return "NULL AS can_watch_answer" }),
+		"-at,item_id,participant_id,-attempt_id",
+		true)
+}
+
+func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpRequest *http.Request,
+	pagingColumns []string,
+	addWithTablesFunc,
+	answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
+	startedResultsQueryConditionsFunc, validatedResultsQueryConditionsFunc,
+	unCanWatchAnswersConditionsFunc func(*database.DB) *database.DB,
+	canWatchAnswerColumnString, resultsSortRules string,
+	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded bool,
+) error {
 	user := srv.GetUser(httpRequest)
 
 	const (
@@ -290,20 +381,19 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 		httpRequest.URL.RawQuery = urlParams.Encode()
 	}
 
-	fromValues, err := service.ParsePagingParameters(
-		httpRequest, service.SortingAndPagingTieBreakers{
-			"activity_type":  service.FieldTypeInt64,
-			"participant_id": service.FieldTypeInt64,
-			"attempt_id":     service.FieldTypeInt64,
-			"item_id":        service.FieldTypeInt64,
-			"answer_id":      service.FieldTypeInt64,
-		})
+	fromValues, err := constructFromValuesForActivityLog(pagingColumns, httpRequest)
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
 
-	query, err := srv.constructActivityLogQuery(srv.GetStore(httpRequest), httpRequest, itemID, user, fromValues)
-	service.MustNotBeError(err)
+	query := srv.constructActivityLogQuery(
+		srv.GetStore(httpRequest), httpRequest, user, fromValues,
+		addWithTablesFunc,
+		answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
+		startedResultsQueryConditionsFunc, validatedResultsQueryConditionsFunc,
+		unCanWatchAnswersConditionsFunc, canWatchAnswerColumnString,
+		resultsSortRules,
+		doStraightJoinAndForceIndexInAnswersQueryWhenNeeded)
 
 	var result []itemActivityLogResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -332,55 +422,34 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 	return nil
 }
 
-func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request, itemID *int64,
-	user *database.User, fromValues map[string]interface{},
-) (*database.DB, error) {
-	participantID := service.ParticipantIDFromContext(httpRequest.Context())
-	watchedGroupID, watchedGroupIDIsSet, err := srv.ResolveWatchedGroupID(httpRequest)
+func constructFromValuesForActivityLog(pagingColumns []string, httpRequest *http.Request) (map[string]interface{}, error) {
+	pagingParameters := make(service.SortingAndPagingTieBreakers, len(pagingColumns))
+	for _, column := range pagingColumns {
+		pagingParameters[column] = service.FieldTypeInt64
+	}
+	fromValues, err := service.ParsePagingParameters(httpRequest, pagingParameters)
 	if err != nil {
 		return nil, err
 	}
-	participantsQuery := store.Raw("SELECT ? AS id", participantID)
+	return fromValues, nil
+}
 
-	visibleItemDescendants := store.Permissions().MatchingGroupAncestors(participantID).
-		Select("item_id AS id").
-		Group("item_id").
-		HavingMaxPermissionAtLeast("view", "info")
-
-	if watchedGroupIDIsSet {
-		if len(httpRequest.URL.Query()["as_team_id"]) != 0 {
-			return nil, service.ErrInvalidRequest(errors.New("only one of as_team_id and watched_group_id can be given"))
-		}
-		participantsQuery = store.ActiveGroupAncestors().Where("ancestor_group_id = ?", watchedGroupID).
-			Select("child_group_id AS id")
-		visibleItemDescendants = visibleItemDescendants.HavingMaxPermissionAtLeast("watch", "result")
-	}
-
-	if itemID != nil {
-		itemDescendants := store.ItemAncestors().DescendantsOf(*itemID).Select("child_item_id")
-		visibleItemDescendants = visibleItemDescendants.
-			Where("item_id = ? OR item_id IN ?", *itemID, itemDescendants.SubQuery())
-	}
-
-	participantsQuerySubQuery := participantsQuery.SubQuery()
-	visibleItemDescendantsSubQuery := visibleItemDescendants.SubQuery()
-
-	var cnt struct {
-		Cnt int
-	}
-	service.MustNotBeError(store.Raw(`
-		WITH items_to_show AS ?, participants AS ?
-		SELECT COUNT(*) AS cnt FROM answers
-		WHERE (answers.item_id IN (SELECT id FROM items_to_show)) AND
-			(answers.participant_id IN (SELECT id FROM participants))`,
-		visibleItemDescendantsSubQuery, participantsQuerySubQuery).Scan(&cnt).Error())
-
-	const answersQueryDefaultSelect = `
+func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request,
+	user *database.User, fromValues map[string]interface{},
+	addWithTablesFunc,
+	answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
+	startedResultsQueryConditionsFunc, validatedResultsQueryConditionsFunc,
+	unCanWatchAnswersConditionsFunc func(*database.DB) *database.DB,
+	canWatchAnswerColumnString, resultsSortRules string,
+	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded bool,
+) *database.DB {
+	const answersActivityTypeInt = `
 			CASE answers.type
 				WHEN 'Submission' THEN 2
 				WHEN 'Saved' THEN 4
 				WHEN 'Current' THEN 5
-			END AS activity_type_int,
+			END`
+	const answersQueryDefaultSelect = answersActivityTypeInt + ` AS activity_type_int,
 			answers.type + 0 AS type,
 			answers.created_at AS at,
 			answers.id AS answer_id,
@@ -391,21 +460,27 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 
 	answersQuery := store.Answers().DB
 
-	if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
-		httpRequest.Context().Value(service.APIServiceContextVariableName("forceStraightJoinInItemActivityLog")) == "force" {
-		// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
-		answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
-		// also, we need to FORCE INDEX to do the sorted index scan
-		answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_type_d_id_autho)").
-			Where("answers.created_at <= NOW()").
-			Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
-			Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
-			Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
-			Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
-	}
-	answersQuery = applyMandatoryAnswersConditions(answersQuery.Select(answersQuerySelect))
+	if doStraightJoinAndForceIndexInAnswersQueryWhenNeeded {
+		var cnt struct {
+			Cnt int
+		}
+		service.MustNotBeError(
+			addWithTablesFunc(answersQueryMandatoryConditionsFunc(store.Answers().Select("count(*)"))).
+				Scan(&cnt).Error())
 
-	startedResultsQuery := store.Table("results AS started_results").
+		if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
+			httpRequest.Context().Value(service.APIServiceContextVariableName("forceStraightJoinInItemActivityLog")) == "force" {
+			// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
+			answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
+			// also, we need to FORCE INDEX to do the sorted index scan
+			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_type_d_id_autho)")
+			answersQuery = answersQueryStraightJoinConditionsFunc(answersQuery)
+		}
+	}
+
+	answersQuery = answersQueryMandatoryConditionsFunc(answersQuery.Select(answersQuerySelect))
+
+	startedResultsQuery := startedResultsQueryConditionsFunc(store.Table("results AS started_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
 			1 AS activity_type_int,
@@ -413,16 +488,9 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			started_at AS at,
 			-1 AS answer_id,
 			started_results.attempt_id, started_results.participant_id, started_results.item_id, started_results.participant_id AS user_id,
-			NULL AS score`).
-		Where("started_results.item_id <= (SELECT MAX(id) FROM items_to_show)").
-		Where("started_results.item_id >= (SELECT MIN(id) FROM items_to_show)").
-		Where("started_results.item_id IN (SELECT id FROM items_to_show)").
-		Where("started_results.started_at <= NOW()").
-		Where("started_results.participant_id <= (SELECT MAX(id) FROM participants)").
-		Where("started_results.participant_id >= (SELECT MIN(id) FROM participants)").
-		Where("started_results.participant_id IN (SELECT id FROM participants)")
+			NULL AS score`))
 
-	validatedResultsQuery := store.Table("results AS validated_results").
+	validatedResultsQuery := validatedResultsQueryConditionsFunc(store.Table("results AS validated_results").
 		Select(`
 			STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */
 			3 AS activity_type_int,
@@ -431,67 +499,59 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			-1 AS answer_id,
 			validated_results.attempt_id, validated_results.participant_id,
 			validated_results.item_id, validated_results.participant_id AS user_id,
-			NULL AS score`).
-		Where("validated_results.item_id IN (SELECT id FROM items_to_show)").
-		Where("validated_results.validated_at <= NOW()").
-		Where("validated_results.participant_id IN (SELECT id FROM participants)")
+			NULL AS score`))
 
-	startFromRowSubQuery, startFromRowCTESubQuery := srv.generateSubQueriesForPagination(
+	startFromRowQuery, startFromRowCTEQuery := srv.generateQueriesForPagination(
 		store, httpRequest.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery,
-		applyMandatoryAnswersConditions(store.Answers().Select(answersQueryDefaultSelect)),
+		answersQueryMandatoryConditionsFunc(store.Answers().Select(answersQueryDefaultSelect)),
 		fromValues)
 
 	answersQuery = service.NewQueryLimiter().Apply(httpRequest, answersQuery)
+
+	answersSortRules := resultsSortRules + ",-type,answer_id"
+	answersSortFields := constructSortingAndPagingFieldsForActivityLog("answers", answersSortRules)
+	answersSortFields["answer_id"] = &service.FieldSortingParams{ColumnName: "answers.id"}  // not answers.answer_id
+	answersSortFields["at"] = &service.FieldSortingParams{ColumnName: "answers.created_at"} // not answers.at
+
 	// we have already checked for possible errors in constructActivityLogQuery()
 	answersQuery, _ = service.ApplySortingAndPaging(
 		nil, answersQuery,
 		&service.SortingAndPagingParameters{
-			Fields: service.SortingAndPagingFields{
-				"at":             {ColumnName: "answers.created_at"},
-				"item_id":        {ColumnName: "answers.item_id"},
-				"participant_id": {ColumnName: "answers.participant_id"},
-				"attempt_id":     {ColumnName: "answers.attempt_id"},
-				"type":           {ColumnName: `answers.type`},
-				"answer_id":      {ColumnName: "answers.id"},
-			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-type,answer_id",
-			IgnoreSortParameter:  true,
-			StartFromRowSubQuery: startFromRowSubQuery,
+			Fields:              answersSortFields,
+			DefaultRules:        answersSortRules,
+			IgnoreSortParameter: true,
+			StartFromRowQuery:   startFromRowQuery,
 		})
 
 	answersQuery = store.Raw("SELECT limited_answers.*, gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
 		Joins("LEFT JOIN gradings ON gradings.answer_id = limited_answers.answer_id")
 
 	startedResultsQuery = service.NewQueryLimiter().Apply(httpRequest, startedResultsQuery)
+	startedResultsSortFields := constructSortingAndPagingFieldsForActivityLog("started_results", resultsSortRules)
+	startedResultsSortFields["at"] = &service.FieldSortingParams{ColumnName: "started_results.started_at"} // not started_results.at
+
 	// we have already checked for possible errors in constructActivityLogQuery()
 	startedResultsQuery, _ = service.ApplySortingAndPaging(
 		nil, startedResultsQuery,
 		&service.SortingAndPagingParameters{
-			Fields: service.SortingAndPagingFields{
-				"at":             {ColumnName: "started_results.started_at"},
-				"item_id":        {ColumnName: "started_results.item_id"},
-				"participant_id": {ColumnName: "started_results.participant_id"},
-				"attempt_id":     {ColumnName: "started_results.attempt_id"},
-			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id",
-			IgnoreSortParameter:  true,
-			StartFromRowSubQuery: startFromRowSubQuery,
+			Fields:              startedResultsSortFields,
+			DefaultRules:        resultsSortRules,
+			IgnoreSortParameter: true,
+			StartFromRowQuery:   startFromRowQuery,
 		})
 
 	validatedResultsQuery = service.NewQueryLimiter().Apply(httpRequest, validatedResultsQuery)
+	validatedResultsSortFields := constructSortingAndPagingFieldsForActivityLog("validated_results", resultsSortRules)
+	validatedResultsSortFields["at"] = &service.FieldSortingParams{ColumnName: "validated_results.validated_at"} // not validated_results.at
+
 	// we have already checked for possible errors in constructActivityLogQuery()
 	validatedResultsQuery, _ = service.ApplySortingAndPaging(
 		nil, validatedResultsQuery,
 		&service.SortingAndPagingParameters{
-			Fields: service.SortingAndPagingFields{
-				"at":             {ColumnName: "validated_results.validated_at"},
-				"item_id":        {ColumnName: "validated_results.item_id"},
-				"participant_id": {ColumnName: "validated_results.participant_id"},
-				"attempt_id":     {ColumnName: "validated_results.attempt_id"},
-			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id",
-			IgnoreSortParameter:  true,
-			StartFromRowSubQuery: startFromRowSubQuery,
+			Fields:              validatedResultsSortFields,
+			DefaultRules:        resultsSortRules,
+			IgnoreSortParameter: true,
+			StartFromRowQuery:   startFromRowQuery,
 		})
 
 	//nolint:unqueryvet // we select all columns from subqueries having explicitly listed columns
@@ -499,24 +559,17 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery := store.Table("un")
 	unionQuery = service.NewQueryLimiter().Apply(httpRequest, unionQuery)
+	unionSortRules := resultsSortRules + ",-activity_type_int,answer_id"
 	unionQuery, _ = service.ApplySortingAndPaging(
 		nil, unionQuery,
 		&service.SortingAndPagingParameters{
-			Fields: service.SortingAndPagingFields{
-				"at":                {ColumnName: "un.at"},
-				"participant_id":    {ColumnName: "un.participant_id"},
-				"attempt_id":        {ColumnName: "un.attempt_id"},
-				"item_id":           {ColumnName: "un.item_id"},
-				"activity_type_int": {ColumnName: "un.activity_type_int"},
-				"answer_id":         {ColumnName: "un.answer_id"},
-			},
-			DefaultRules:         "-at,item_id,participant_id,-attempt_id,-activity_type_int,answer_id",
-			IgnoreSortParameter:  true,
-			StartFromRowSubQuery: startFromRowSubQuery,
+			Fields:              constructSortingAndPagingFieldsForActivityLog("un", unionSortRules),
+			DefaultRules:        unionSortRules,
+			IgnoreSortParameter: true,
+			StartFromRowQuery:   startFromRowQuery,
 		})
 
-	query := store.Raw(`
-		WITH items_to_show AS ?, participants AS ?, start_from_row AS ?, un AS ?
+	query := addWithTablesFunc(store.Raw(`
 		SELECT STRAIGHT_JOIN
 			CASE activity_type_int
 				WHEN 1 THEN 'result_started'
@@ -526,13 +579,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 				WHEN 5 THEN 'current_answer'
 			END AS activity_type,
 			at, answer_id, attempt_id, participant_id, score,
-			items.id AS item__id, items.type AS item__type,`+
-		golang.LazyIf(watchedGroupIDIsSet,
-			func() string {
-				return fmt.Sprintf(`
-			permissions.can_watch_generated_value >= %d AS can_watch_answer,`,
-					store.PermissionsGranted().WatchIndexByName("answer"))
-			})+`
+			items.id AS item__id, items.type AS item__type,
+			`+canWatchAnswerColumnString+`,
 			groups.id AS participant__id,
 			groups.name AS participant__name,
 			groups.type AS participant__type,
@@ -542,52 +590,69 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS user__first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS user__last_name,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
-		FROM ? AS activities`, visibleItemDescendantsSubQuery, participantsQuerySubQuery,
-		startFromRowCTESubQuery, unionCTEQuery.SubQuery(),
+		FROM ? AS activities`,
 		user.GroupID, user.GroupID, user.GroupID,
 		unionQuery.SubQuery()).
 		Joins("JOIN items ON items.id = item_id").
 		Joins("JOIN `groups` ON groups.id = participant_id").
 		Joins("LEFT JOIN users ON users.group_id = user_id").
 		WithPersonalInfoViewApprovals(user).
-		JoinsUserAndDefaultItemStrings(user)
+		JoinsUserAndDefaultItemStrings(user)).
+		With("start_from_row", startFromRowCTEQuery).
+		With("un", unionCTEQuery)
 
-	if watchedGroupIDIsSet {
-		query = query.JoinsPermissionsForGroupToItems(participantID)
+	query = unCanWatchAnswersConditionsFunc(query)
+
+	return query
+}
+
+func constructSortingAndPagingFieldsForActivityLog(tableName, rules string) service.SortingAndPagingFields {
+	columns := strings.Split(rules, ",")
+	result := make(service.SortingAndPagingFields, len(columns))
+	for _, column := range columns {
+		if column[0] == '-' {
+			column = column[1:]
+		}
+		result[column] = &service.FieldSortingParams{ColumnName: tableName + "." + column}
 	}
-
-	return query, nil
+	return result
 }
 
-func applyMandatoryAnswersConditions(answersQuery *database.DB) *database.DB {
-	return answersQuery.
-		Where("answers.participant_id IN (SELECT id FROM participants)").
-		Where("answers.item_id IN (SELECT id FROM items_to_show)")
-}
-
-func (srv *Service) generateSubQueriesForPagination(
+func (srv *Service) generateQueriesForPagination(
 	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
 	answersQuery *database.DB, fromValues map[string]interface{}) (
-	startFromRowSubQuery, startFromRowCTESubQuery interface{},
+	startFromRowSubQuery, startFromRowCTESubQuery *database.DB,
 ) {
-	startFromRowSubQuery = store.Table("start_from_row").SubQuery()
+	startFromRowSubQuery = store.Table("start_from_row")
 	var startFromRowQuery *database.DB
 	switch activityTypeIndex {
 	case "1": // result_started
 		startFromRowQuery = startedResultsQuery.
-			Where("started_results.participant_id = ?", fromValues["participant_id"]).
-			Where("started_results.attempt_id = ?", fromValues["attempt_id"]).
-			Where("started_results.item_id = ?", fromValues["item_id"])
+			Where("started_results.attempt_id = ?", fromValues["attempt_id"])
+		if _, ok := fromValues["participant_id"]; ok {
+			startFromRowQuery = startFromRowQuery.
+				Where("started_results.participant_id = ?", fromValues["participant_id"])
+		}
+		if _, ok := fromValues["item_id"]; ok {
+			startFromRowQuery = startFromRowQuery.
+				Where("started_results.item_id = ?", fromValues["item_id"])
+		}
 	case "2", "4", "5": // submission/saved_answer/current_answer
 		startFromRowQuery = answersQuery.Where("answers.id = ?", fromValues["answer_id"])
 	case "3": // result_validated
 		startFromRowQuery = validatedResultsQuery.
-			Where("validated_results.participant_id = ?", fromValues["participant_id"]).
-			Where("validated_results.attempt_id = ?", fromValues["attempt_id"]).
-			Where("validated_results.item_id = ?", fromValues["item_id"])
+			Where("validated_results.attempt_id = ?", fromValues["attempt_id"])
+		if _, ok := fromValues["participant_id"]; ok {
+			startFromRowQuery = startFromRowQuery.
+				Where("validated_results.participant_id = ?", fromValues["participant_id"])
+		}
+		if _, ok := fromValues["participant_id"]; ok {
+			startFromRowQuery = startFromRowQuery.
+				Where("validated_results.item_id = ?", fromValues["item_id"])
+		}
 	default:
 		startFromRowQuery = store.Raw("SELECT 1")
-		startFromRowSubQuery = service.FromFirstRow
+		startFromRowSubQuery = service.FromFirstRow()
 	}
-	return startFromRowSubQuery, startFromRowQuery.Limit(1).SubQuery()
+	return startFromRowSubQuery, startFromRowQuery.Limit(1)
 }

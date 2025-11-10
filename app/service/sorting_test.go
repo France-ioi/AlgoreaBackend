@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
@@ -17,6 +16,9 @@ import (
 )
 
 func TestApplySorting(t *testing.T) {
+	argsDB, _ := database.NewDBMock()
+	defer func() { _ = argsDB.Close() }()
+
 	type args struct {
 		urlParameters              string
 		sortingAndPagingParameters *SortingAndPagingParameters
@@ -299,9 +301,9 @@ func TestApplySorting(t *testing.T) {
 						"id":   {ColumnName: "id"},
 						"flag": {ColumnName: "bFlag"},
 					},
-					DefaultRules:         "flag,-name$,id",
-					TieBreakers:          SortingAndPagingTieBreakers{"id": FieldTypeInt64},
-					StartFromRowSubQuery: FromFirstRow,
+					DefaultRules:      "flag,-name$,id",
+					TieBreakers:       SortingAndPagingTieBreakers{"id": FieldTypeInt64},
+					StartFromRowQuery: FromFirstRow(),
 				},
 			},
 			wantSQL: "SELECT id FROM `users` " +
@@ -317,13 +319,13 @@ func TestApplySorting(t *testing.T) {
 						"id":   {ColumnName: "id"},
 						"flag": {ColumnName: "bFlag"},
 					},
-					DefaultRules:         "flag,-name$,id",
-					TieBreakers:          SortingAndPagingTieBreakers{"id": FieldTypeInt64},
-					StartFromRowSubQuery: gorm.Expr("(SELECT '1' AS name, 2 AS id, 3 AS flag)"),
+					DefaultRules:      "flag,-name$,id",
+					TieBreakers:       SortingAndPagingTieBreakers{"id": FieldTypeInt64},
+					StartFromRowQuery: argsDB.Raw("SELECT '1' AS name, 2 AS id, 3 AS flag"),
 				},
 			},
 			wantSQL: "SELECT id FROM `users` " +
-				"JOIN (SELECT '1' AS name, 2 AS id, 3 AS flag) AS from_page " +
+				"JOIN (SELECT '1' AS name, 2 AS id, 3 AS flag ) AS from_page " +
 				"WHERE ((bFlag > from_page.flag) OR " +
 				"  (bFlag <=> from_page.flag AND IF(from_page.name IS NULL, FALSE, name IS NULL OR name < from_page.name)) OR " +
 				"  (bFlag <=> from_page.flag AND name <=> from_page.name AND id > from_page.id)) " +
