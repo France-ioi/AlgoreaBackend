@@ -113,7 +113,7 @@ func (srv *Service) getAnswer(responseWriter http.ResponseWriter, httpRequest *h
 		Where("threads.item_id = answers.item_id").
 		Select("1").Limit(1).SubQuery()
 
-	// a helper should be an ancestor of the thread's helper group and the thread should be active or closed less than 2 weeks ago
+	// a helper should be a descendant of the thread's helper group and the thread should be active or closed less than 2 weeks ago
 	userIsAHelperAndTheThreadHasNotBeenExpiredSubQuery := store.Threads().
 		Where("threads.participant_id = answers.participant_id").
 		Where("threads.item_id = answers.item_id").
