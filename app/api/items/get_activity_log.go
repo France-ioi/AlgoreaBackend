@@ -473,7 +473,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
 			answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
 			// also, we need to FORCE INDEX to do the sorted index scan
-			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_type_d_id_autho)")
+			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_atype_d_id_aut)")
 			answersQuery = answersQueryStraightJoinConditionsFunc(answersQuery)
 		}
 	}
@@ -508,10 +508,12 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 
 	answersQuery = service.NewQueryLimiter().Apply(httpRequest, answersQuery)
 
-	answersSortRules := resultsSortRules + ",-type,answer_id"
+	resultsSortRules += ",-activity_type_int"
+	answersSortRules := resultsSortRules + ",answer_id"
 	answersSortFields := constructSortingAndPagingFieldsForActivityLog("answers", answersSortRules)
-	answersSortFields["answer_id"] = &service.FieldSortingParams{ColumnName: "answers.id"}  // not answers.answer_id
-	answersSortFields["at"] = &service.FieldSortingParams{ColumnName: "answers.created_at"} // not answers.at
+	answersSortFields["answer_id"] = &service.FieldSortingParams{ColumnName: "answers.id"}                   // not answers.answer_id
+	answersSortFields["at"] = &service.FieldSortingParams{ColumnName: "answers.created_at"}                  // not answers.at
+	answersSortFields["activity_type_int"] = &service.FieldSortingParams{ColumnName: answersActivityTypeInt} // not answers.activity_type_int
 
 	// we have already checked for possible errors in constructActivityLogQuery()
 	answersQuery, _ = service.ApplySortingAndPaging(
@@ -529,6 +531,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 	startedResultsQuery = service.NewQueryLimiter().Apply(httpRequest, startedResultsQuery)
 	startedResultsSortFields := constructSortingAndPagingFieldsForActivityLog("started_results", resultsSortRules)
 	startedResultsSortFields["at"] = &service.FieldSortingParams{ColumnName: "started_results.started_at"} // not started_results.at
+	startedResultsSortFields["activity_type_int"] = &service.FieldSortingParams{ColumnName: "1"}
 
 	// we have already checked for possible errors in constructActivityLogQuery()
 	startedResultsQuery, _ = service.ApplySortingAndPaging(
@@ -543,6 +546,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 	validatedResultsQuery = service.NewQueryLimiter().Apply(httpRequest, validatedResultsQuery)
 	validatedResultsSortFields := constructSortingAndPagingFieldsForActivityLog("validated_results", resultsSortRules)
 	validatedResultsSortFields["at"] = &service.FieldSortingParams{ColumnName: "validated_results.validated_at"} // not validated_results.at
+	validatedResultsSortFields["activity_type_int"] = &service.FieldSortingParams{ColumnName: "3"}
 
 	// we have already checked for possible errors in constructActivityLogQuery()
 	validatedResultsQuery, _ = service.ApplySortingAndPaging(
@@ -559,7 +563,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery := store.Table("un")
 	unionQuery = service.NewQueryLimiter().Apply(httpRequest, unionQuery)
-	unionSortRules := resultsSortRules + ",-activity_type_int,answer_id"
+	unionSortRules := answersSortRules
 	unionQuery, _ = service.ApplySortingAndPaging(
 		nil, unionQuery,
 		&service.SortingAndPagingParameters{
@@ -602,6 +606,15 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 		With("un", unionCTEQuery)
 
 	query = unCanWatchAnswersConditionsFunc(query)
+
+	query, _ = service.ApplySortingAndPaging(
+		nil, query,
+		&service.SortingAndPagingParameters{
+			Fields:              constructSortingAndPagingFieldsForActivityLog("activities", unionSortRules),
+			DefaultRules:        unionSortRules,
+			IgnoreSortParameter: true,
+			StartFromRowQuery:   service.FromFirstRow(),
+		})
 
 	return query
 }
