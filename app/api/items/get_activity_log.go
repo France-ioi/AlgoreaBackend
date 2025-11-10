@@ -79,7 +79,7 @@ type itemActivityLogResponseRow struct {
 //		(only one of `{as_team_id}` and `{watched_group_id}` can be given).
 //
 //
-//		If possible, items titles are shown in the authenticated user's default language.
+//		If possible, item titles are shown in the authenticated user's default language.
 //		Otherwise, the item's default language is used.
 //
 //
