@@ -53,7 +53,7 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 	scenarioContext.Step(`^I am a manager of the group (.+) and can watch for submissions from the group and its descendants$`,
 		ctx.IAmAManagerOfTheGroupAndCanWatchItsMembers)
 	scenarioContext.Step(
-		`^the group (@\w+) is a manager of the group (@\w+) and can watch for submissions from the group and its descendants$`,
+		`^the group (@\w+) is a manager of the group (.+) and can watch for submissions from the group and its descendants$`,
 		ctx.GroupIsAManagerOfTheGroupAndCanWatchItsMembers)
 	scenarioContext.Step(`^the group (@\w+) is a manager of the group (@\w+) and can grant group access`,
 		ctx.GroupIsAManagerOfTheGroupAndCanGrantGroupAccess)

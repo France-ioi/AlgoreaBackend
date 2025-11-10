@@ -65,7 +65,7 @@ type itemActivityLogResponseRow struct {
 			Title *string `json:"title"`
 		} `json:"string" gorm:"embedded;embedded_prefix:string__"`
 	} `json:"item" gorm:"embedded;embedded_prefix:item__"`
-	// only when `{watched_group_id}` is given
+	// only when `{watched_group_id}` is given or when getting activity log for a thread
 	CanWatchAnswer *bool `json:"can_watch_answer,omitempty"`
 }
 
