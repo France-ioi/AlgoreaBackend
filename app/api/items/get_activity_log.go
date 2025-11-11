@@ -353,11 +353,11 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 	user := srv.GetUser(httpRequest)
 
 	const (
-		resultStarted  = 1
-		submission     = 2
-		resultValidate = 3
-		savedAnswer    = 4
-		currentAnswer  = 5
+		resultStarted   = 1
+		submission      = 2
+		resultValidated = 3
+		savedAnswer     = 4
+		currentAnswer   = 5
 	)
 
 	// check and patch from.activity_type to make it integer
@@ -369,7 +369,7 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 		if intValue, fromActivityTypeIsCorrect = map[string]int{
 			"result_started":   resultStarted,
 			"submission":       submission,
-			"result_validated": resultValidate,
+			"result_validated": resultValidated,
 			"saved_answer":     savedAnswer,
 			"current_answer":   currentAnswer,
 		}[stringValue]; !fromActivityTypeIsCorrect {
