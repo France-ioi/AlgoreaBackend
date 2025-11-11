@@ -460,7 +460,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			Cnt int
 		}
 		service.MustNotBeError(
-			addWithTablesFunc(answersQueryMandatoryConditionsFunc(store.Answers().Select("count(*)"))).
+			addWithTablesFunc(answersQueryMandatoryConditionsFunc(store.Answers().Select("count(*) AS cnt"))).
 				Scan(&cnt).Error())
 
 		if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
