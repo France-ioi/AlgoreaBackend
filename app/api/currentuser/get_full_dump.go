@@ -124,7 +124,10 @@ func (srv *Service) getDumpCommon(responseWriter http.ResponseWriter, httpReques
 	if full {
 		writeComma(responseWriter)
 		writeJSONObjectArrayElement("answers", responseWriter, func(_ io.Writer) {
-			service.MustNotBeError(store.Answers().Where("author_id = ?", user.GroupID).
+			columns := getColumnsList(store, "answers", []string{"activity_type_int"})
+			service.MustNotBeError(store.Answers().
+				Select(columns).
+				Where("author_id = ?", user.GroupID).
 				Order("id").
 				ScanAndHandleMaps(streamerFunc(responseWriter)).Error())
 		})

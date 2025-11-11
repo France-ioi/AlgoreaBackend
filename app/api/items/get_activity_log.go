@@ -443,13 +443,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 	canWatchAnswerColumnString, resultsSortRules string,
 	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded bool,
 ) *database.DB {
-	const answersActivityTypeInt = `
-			CASE answers.type
-				WHEN 'Submission' THEN 2
-				WHEN 'Saved' THEN 4
-				WHEN 'Current' THEN 5
-			END`
-	const answersQueryDefaultSelect = answersActivityTypeInt + ` AS activity_type_int,
+	const answersQueryDefaultSelect = `
+			answers.activity_type_int,
 			answers.type + 0 AS type,
 			answers.created_at AS at,
 			answers.id AS answer_id,
@@ -473,7 +468,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
 			answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
 			// also, we need to FORCE INDEX to do the sorted index scan
-			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_atype_d_id_aut)")
+			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_atype_d_id_a_t)")
 			answersQuery = answersQueryStraightJoinConditionsFunc(answersQuery)
 		}
 	}
@@ -511,9 +506,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 	resultsSortRules += ",-activity_type_int"
 	answersSortRules := resultsSortRules + ",answer_id"
 	answersSortFields := constructSortingAndPagingFieldsForActivityLog("answers", answersSortRules)
-	answersSortFields["answer_id"] = &service.FieldSortingParams{ColumnName: "answers.id"}                   // not answers.answer_id
-	answersSortFields["at"] = &service.FieldSortingParams{ColumnName: "answers.created_at"}                  // not answers.at
-	answersSortFields["activity_type_int"] = &service.FieldSortingParams{ColumnName: answersActivityTypeInt} // not answers.activity_type_int
+	answersSortFields["answer_id"] = &service.FieldSortingParams{ColumnName: "answers.id"}  // not answers.answer_id
+	answersSortFields["at"] = &service.FieldSortingParams{ColumnName: "answers.created_at"} // not answers.at
 
 	// we have already checked for possible errors in constructActivityLogQuery()
 	answersQuery, _ = service.ApplySortingAndPaging(
