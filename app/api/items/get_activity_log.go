@@ -386,7 +386,7 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 		return service.ErrInvalidRequest(err)
 	}
 
-	query := srv.constructActivityLogQuery(
+	query := constructActivityLogQuery(
 		srv.GetStore(httpRequest), httpRequest, user, fromValues,
 		addWithTablesFunc,
 		answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
@@ -434,7 +434,7 @@ func constructFromValuesForActivityLog(pagingColumns []string, httpRequest *http
 	return fromValues, nil
 }
 
-func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request,
+func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request,
 	user *database.User, fromValues map[string]interface{},
 	addWithTablesFunc,
 	answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
@@ -496,7 +496,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			validated_results.item_id, validated_results.participant_id AS user_id,
 			NULL AS score`))
 
-	startFromRowQuery, startFromRowCTEQuery := srv.generateQueriesForPagination(
+	startFromRowQuery, startFromRowCTEQuery := generateQueriesForActivityLogPagination(
 		store, httpRequest.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery,
 		answersQueryMandatoryConditionsFunc(store.Answers().Select(answersQueryDefaultSelect)),
 		fromValues)
@@ -625,7 +625,7 @@ func constructSortingAndPagingFieldsForActivityLog(tableName, rules string) serv
 	return result
 }
 
-func (srv *Service) generateQueriesForPagination(
+func generateQueriesForActivityLogPagination(
 	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
 	answersQuery *database.DB, fromValues map[string]interface{}) (
 	startFromRowSubQuery, startFromRowCTESubQuery *database.DB,
