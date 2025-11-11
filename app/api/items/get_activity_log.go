@@ -353,11 +353,11 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 	user := srv.GetUser(httpRequest)
 
 	const (
-		resultStarted  = 1
-		submission     = 2
-		resultValidate = 3
-		savedAnswer    = 4
-		currentAnswer  = 5
+		resultStarted   = 1
+		submission      = 2
+		resultValidated = 3
+		savedAnswer     = 4
+		currentAnswer   = 5
 	)
 
 	// check and patch from.activity_type to make it integer
@@ -369,7 +369,7 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 		if intValue, fromActivityTypeIsCorrect = map[string]int{
 			"result_started":   resultStarted,
 			"submission":       submission,
-			"result_validated": resultValidate,
+			"result_validated": resultValidated,
 			"saved_answer":     savedAnswer,
 			"current_answer":   currentAnswer,
 		}[stringValue]; !fromActivityTypeIsCorrect {
@@ -386,7 +386,7 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 		return service.ErrInvalidRequest(err)
 	}
 
-	query := srv.constructActivityLogQuery(
+	query := constructActivityLogQuery(
 		srv.GetStore(httpRequest), httpRequest, user, fromValues,
 		addWithTablesFunc,
 		answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
@@ -434,7 +434,7 @@ func constructFromValuesForActivityLog(pagingColumns []string, httpRequest *http
 	return fromValues, nil
 }
 
-func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request,
+func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request,
 	user *database.User, fromValues map[string]interface{},
 	addWithTablesFunc,
 	answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
@@ -443,13 +443,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 	canWatchAnswerColumnString, resultsSortRules string,
 	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded bool,
 ) *database.DB {
-	const answersActivityTypeInt = `
-			CASE answers.type
-				WHEN 'Submission' THEN 2
-				WHEN 'Saved' THEN 4
-				WHEN 'Current' THEN 5
-			END`
-	const answersQueryDefaultSelect = answersActivityTypeInt + ` AS activity_type_int,
+	const answersQueryDefaultSelect = `
+			answers.activity_type_int,
 			answers.type + 0 AS type,
 			answers.created_at AS at,
 			answers.id AS answer_id,
@@ -465,7 +460,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			Cnt int
 		}
 		service.MustNotBeError(
-			addWithTablesFunc(answersQueryMandatoryConditionsFunc(store.Answers().Select("count(*)"))).
+			addWithTablesFunc(answersQueryMandatoryConditionsFunc(store.Answers().Select("count(*) AS cnt"))).
 				Scan(&cnt).Error())
 
 		if cnt.Cnt > itemActivityLogStraightJoinBoundary ||
@@ -473,7 +468,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
 			answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
 			// also, we need to FORCE INDEX to do the sorted index scan
-			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_atype_d_id_aut)")
+			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_atype_d_id_a_t)")
 			answersQuery = answersQueryStraightJoinConditionsFunc(answersQuery)
 		}
 	}
@@ -501,7 +496,7 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 			validated_results.item_id, validated_results.participant_id AS user_id,
 			NULL AS score`))
 
-	startFromRowQuery, startFromRowCTEQuery := srv.generateQueriesForPagination(
+	startFromRowQuery, startFromRowCTEQuery := generateQueriesForActivityLogPagination(
 		store, httpRequest.URL.Query().Get("from.activity_type"), startedResultsQuery, validatedResultsQuery,
 		answersQueryMandatoryConditionsFunc(store.Answers().Select(answersQueryDefaultSelect)),
 		fromValues)
@@ -511,9 +506,8 @@ func (srv *Service) constructActivityLogQuery(store *database.DataStore, httpReq
 	resultsSortRules += ",-activity_type_int"
 	answersSortRules := resultsSortRules + ",answer_id"
 	answersSortFields := constructSortingAndPagingFieldsForActivityLog("answers", answersSortRules)
-	answersSortFields["answer_id"] = &service.FieldSortingParams{ColumnName: "answers.id"}                   // not answers.answer_id
-	answersSortFields["at"] = &service.FieldSortingParams{ColumnName: "answers.created_at"}                  // not answers.at
-	answersSortFields["activity_type_int"] = &service.FieldSortingParams{ColumnName: answersActivityTypeInt} // not answers.activity_type_int
+	answersSortFields["answer_id"] = &service.FieldSortingParams{ColumnName: "answers.id"}  // not answers.answer_id
+	answersSortFields["at"] = &service.FieldSortingParams{ColumnName: "answers.created_at"} // not answers.at
 
 	// we have already checked for possible errors in constructActivityLogQuery()
 	answersQuery, _ = service.ApplySortingAndPaging(
@@ -631,7 +625,7 @@ func constructSortingAndPagingFieldsForActivityLog(tableName, rules string) serv
 	return result
 }
 
-func (srv *Service) generateQueriesForPagination(
+func generateQueriesForActivityLogPagination(
 	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
 	answersQuery *database.DB, fromValues map[string]interface{}) (
 	startFromRowSubQuery, startFromRowCTESubQuery *database.DB,
