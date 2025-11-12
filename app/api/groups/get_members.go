@@ -109,8 +109,8 @@ func (srv *Service) getMembers(responseWriter http.ResponseWriter, httpRequest *
 			users.group_id AS user__group_id,
 			users.login AS user__login,
 			users.group_id = ? OR personal_info_view_approvals.approved AS user__show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS user__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS user__last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS user__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS user__last_name,
 			users.grade AS user__grade`, user.GroupID, user.GroupID, user.GroupID).
 		Joins("JOIN users ON users.group_id = groups_groups.child_group_id").
 		WithPersonalInfoViewApprovals(user).

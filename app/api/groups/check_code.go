@@ -120,8 +120,8 @@ func (srv *Service) checkCode(responseWriter http.ResponseWriter, httpRequest *h
 		service.MustNotBeError(store.GroupManagers().
 			Select(`
 				users.group_id AS id, login,
-				users.profile->>'$.first_name' AS first_name,
-				users.profile->>'$.last_name' AS last_name`).
+				users.profile_first_name AS first_name,
+				users.profile_last_name AS last_name`).
 			Where("group_managers.group_id = ?", groupID).
 			Joins("JOIN users ON users.group_id = group_managers.manager_id").
 			Order("users.login, users.group_id").Scan(&response.Group.Managers).Error())

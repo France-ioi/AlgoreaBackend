@@ -169,8 +169,8 @@ func constructQueryForGettingAttemptsList(store *database.DataStore, participant
 			results.started_at, results.latest_activity_at, results.help_requested,
 			users.login AS user_creator__login,
 			users.group_id = ? OR personal_info_view_approvals.approved AS user_creator__show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS user_creator__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS user_creator__last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS user_creator__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS user_creator__last_name,
 			users.group_id AS user_creator__group_id`, user.GroupID, user.GroupID, user.GroupID)
 }
 

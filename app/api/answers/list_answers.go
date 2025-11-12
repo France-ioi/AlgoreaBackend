@@ -104,8 +104,8 @@ func (srv *Service) listAnswers(responseWriter http.ResponseWriter, httpRequest 
 			answers.id, answers.type, answers.created_at, gradings.score,
 			users.login,
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS last_name`,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS last_name`,
 			user.GroupID, user.GroupID, user.GroupID).
 		Where("answers.item_id = ?", itemID).
 		WithPersonalInfoViewApprovals(user)

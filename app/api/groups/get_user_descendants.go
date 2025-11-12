@@ -77,8 +77,8 @@ func (srv *Service) getUserDescendants(responseWriter http.ResponseWriter, httpR
 		Select(`
 			groups.id, groups.name,
 			users.group_id = ? OR MAX(personal_info_view_approvals.approved) AS show_personal_info,
-			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile->>'$.first_name', NULL) AS first_name,
-			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile->>'$.last_name', NULL) AS last_name,
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile_first_name, NULL) AS first_name,
+			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile_last_name, NULL) AS last_name,
 			users.login, users.grade`, user.GroupID, user.GroupID, user.GroupID).
 		Joins("JOIN groups_groups_active ON groups_groups_active.child_group_id = groups.id").
 		Joins(`
