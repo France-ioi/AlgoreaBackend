@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.32.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.31.0...v2.32.0) - 2025-11-12
+- new service: item activity log for threads
+- fix performance issues of `itemActivityLogForAllItems`
+
 ## [v2.31.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.30.9...v2.31.0) - 2025-10-30
 - use names from `users.profile` everywhere + return profile in `userData`, `userViewByID`, and `userViewByLogin`
 - use internal table `results_propagate_internal` instead of `results_propagate` in async results propagation
