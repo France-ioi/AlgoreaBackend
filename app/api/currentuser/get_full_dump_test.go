@@ -24,7 +24,7 @@ func TestService_getDump_ReturnsErrorRightInsideTheResponseBody(t *testing.T) {
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT CONCAT('`', TABLE_NAME, '`.`', COLUMN_NAME, '`') FROM `INFORMATION_SCHEMA`.`COLUMNS`  "+
 					"WHERE (TABLE_SCHEMA = DATABASE()) AND (TABLE_NAME = ?)",
-			) + "$").WillReturnRows(sqlmock.NewRows([]string{"names"}).AddRow("users.group_id").AddRow("users.name"))
+			)).WillReturnRows(sqlmock.NewRows([]string{"names"}).AddRow("users.group_id").AddRow("users.name"))
 			sqlmock.ExpectQuery("^" + regexp.QuoteMeta(
 				"SELECT users.group_id, users.name FROM `users`  WHERE (users.group_id = ?)") + "$").
 				WillReturnError(errors.New("some error"))
