@@ -146,7 +146,7 @@ func (srv *Service) generateThreadToken(itemID, participantID int64, threadInfo 
 		IsMine:        participantID == user.GroupID,
 		CanWatch:      userCanWatchForThread(threadInfo),
 		CanWrite:      userCanWriteInThread(user, participantID, threadInfo),
-		Exp:           strconv.FormatInt(expirationTime.Unix(), 10),
+		Exp:           expirationTime.Unix(),
 	}}).Sign(srv.TokenConfig.PrivateKey)
 
 	return threadToken, err
