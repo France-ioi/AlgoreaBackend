@@ -25,7 +25,7 @@ type threadGetResponse struct {
 	// required:true
 	// enum: not_started,waiting_for_participant,waiting_for_trainer,closed
 	Status string `json:"status"`
-	// The ThreadToken
+	// The ThreadToken with lifetime of 2 hours
 	// required:true
 	ThreadToken string `json:"token"`
 	// This field is not really present, it is here only to document the content of token.
