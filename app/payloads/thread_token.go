@@ -24,5 +24,5 @@ type ThreadToken struct {
 	CanWrite bool `json:"can_write"`
 	// Expiry date in the number of seconds since 01/01/1970 UTC.
 	// required:true
-	Exp string `json:"exp"`
+	Exp int64 `json:"exp"`
 }

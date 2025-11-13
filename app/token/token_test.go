@@ -60,7 +60,7 @@ func marshalAndSignTests() []marshalAndSignTest {
 			name:        "thread token",
 			currentTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 			structType:  reflect.TypeOf(Token[payloads.ThreadToken]{}),
-			payloadMap:  payloadstest.ThreadPayloadFromAlgoreaPlatformOriginal(),
+			payloadMap:  payloadstest.ThreadPayloadFromAlgoreaBackend(),
 			payloadType: reflect.TypeOf(payloads.ThreadToken{}),
 		},
 	}
