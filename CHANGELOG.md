@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.32.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.32.0...v2.32.1) - 2025-11-13
+- render `first_name` & `last_name` from `users.profile` as `null` (not "null") when they are nulls
+- make `ThreadToken.Exp` numeric
+- revert migration hacks
+
 ## [v2.32.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.31.0...v2.32.0) - 2025-11-12
 - new service: item activity log for threads
 - fix performance issues of `itemActivityLogForAllItems`
