@@ -253,3 +253,27 @@ func filterIDs(ids []int64, idsToExclude *golang.Set[int64]) (filtered []int64) 
 	}
 	return filtered
 }
+
+func TestUserStore_profileFields(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
+		users:
+			- {group_id: 1, login: "user1", profile: '{"first_name": "John", "last_name": "Doe"}'}
+			- {group_id: 2, login: "user2", profile: '{"first_name": "null", "last_name": "null"}'}
+			- {group_id: 3, login: "user3", profile: '{"first_name": "John", "last_name": null}'}
+			- {group_id: 4, login: "user4", profile: '{"first_name": null, "last_name": "Doe"}'}`)
+	defer func() { _ = db.Close() }()
+
+	var result []map[string]interface{}
+	require.NoError(t, database.NewDataStore(db).Users().Order("group_id").
+		Select("profile_first_name, profile_last_name").
+		ScanIntoSliceOfMaps(&result).Error())
+
+	assert.Equal(t, []map[string]interface{}{
+		{"profile_first_name": "John", "profile_last_name": "Doe"},
+		{"profile_first_name": "null", "profile_last_name": "null"},
+		{"profile_first_name": "John", "profile_last_name": nil},
+		{"profile_first_name": nil, "profile_last_name": "Doe"},
+	}, result, "wrong profile fields")
+}

@@ -144,8 +144,8 @@ func (srv *Service) getUser(responseWriter http.ResponseWriter, httpRequest *htt
 		Select(`
 			group_id, temp_user, login, free_text, web_site, profile,
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS last_name,
 			manager_access.found AS current_user_is_manager,
 			IF(manager_access.found, manager_access.can_grant_group_access, 0) AS current_user_can_grant_user_access,
 			IF(manager_access.found, manager_access.can_watch_members, 0) AS current_user_can_watch_user`,

@@ -153,13 +153,13 @@ func (srv *Service) getRequests(responseWriter http.ResponseWriter, httpRequest 
 			joining_user.group_id AS joining_user__group_id,
 			joining_user.login AS joining_user__login,
 			joining_user_with_approval.group_id IS NOT NULL AS joining_user__show_personal_info,
-			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.profile->>'$.first_name') AS joining_user__first_name,
-			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.profile->>'$.last_name') AS joining_user__last_name,
+			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.profile_first_name) AS joining_user__first_name,
+			IF(joining_user_with_approval.group_id IS NULL, NULL, joining_user.profile_last_name) AS joining_user__last_name,
 			joining_user.grade AS joining_user__grade,
 			inviting_user.group_id AS inviting_user__group_id,
 			inviting_user.login AS inviting_user__login,
-			inviting_user.profile->>'$.first_name' AS inviting_user__first_name,
-			inviting_user.profile->>'$.last_name' AS inviting_user__last_name`).
+			inviting_user.profile_first_name AS inviting_user__first_name,
+			inviting_user.profile_last_name AS inviting_user__last_name`).
 		Joins(`
 			LEFT JOIN users AS inviting_user
 				ON inviting_user.group_id = initiator_id AND group_membership_changes.action = 'invitation_created'`).

@@ -73,7 +73,7 @@ func (srv *Service) getDumpCommon(responseWriter http.ResponseWriter, httpReques
 	service.MustNotBeError(err)
 
 	writeJSONObjectElement("current_user", responseWriter, func(_ io.Writer) {
-		columns := getColumnsList(store, "users", nil)
+		columns := getColumnsList(store, "users", []string{"profile_first_name", "profile_last_name"})
 		var userData []map[string]interface{}
 		service.MustNotBeError(store.Users().ByID(user.GroupID).Select(columns).
 			ScanIntoSliceOfMaps(&userData).Error())

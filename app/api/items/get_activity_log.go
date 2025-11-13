@@ -585,8 +585,8 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 			users.login AS user__login,
 			users.group_id AS user__id,
 			users.group_id = ? OR personal_info_view_approvals.approved AS user__show_personal_info,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.first_name', NULL) AS user__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile->>'$.last_name', NULL) AS user__last_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS user__first_name,
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS user__last_name,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS item__string__title
 		FROM ? AS activities`,
 		user.GroupID, user.GroupID, user.GroupID,

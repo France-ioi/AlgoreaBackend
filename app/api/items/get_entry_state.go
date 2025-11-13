@@ -299,8 +299,8 @@ func getEntryStateInfo(groupID, itemID int64, user *database.User, store *databa
 			Order("groups_groups_active.child_group_id").
 			Select(`
 				MAX(personal_info_view_approvals.approved) AS show_personal_info,
-				IF(MAX(personal_info_view_approvals.approved), users.profile->>'$.first_name', NULL) AS first_name,
-				IF(MAX(personal_info_view_approvals.approved), users.profile->>'$.last_name', NULL) AS last_name,
+				IF(MAX(personal_info_view_approvals.approved), users.profile_first_name, NULL) AS first_name,
+				IF(MAX(personal_info_view_approvals.approved), users.profile_last_name, NULL) AS last_name,
         users.group_id AS group_id, users.login,
 				(? OR IFNULL(MAX(permissions_granted.can_enter_from <= NOW() AND NOW() < permissions_granted.can_enter_until), 0)) AND
 				MAX(items.entering_time_min) <= NOW() AND NOW() < MAX(items.entering_time_max) AS can_enter`, result.teamCanEnter).

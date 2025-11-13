@@ -144,8 +144,8 @@ func (srv *Service) getUserRequests(responseWriter http.ResponseWriter, httpRequ
 			user.group_id AS user__group_id,
 			user.login AS user__login,
 			users_with_approval.group_id IS NOT NULL AS user__show_personal_info,
-			IF(users_with_approval.group_id IS NOT NULL, user.profile->>'$.first_name', NULL) AS user__first_name,
-			IF(users_with_approval.group_id IS NOT NULL, user.profile->>'$.last_name', NULL) AS user__last_name,
+			IF(users_with_approval.group_id IS NOT NULL, user.profile_first_name, NULL) AS user__first_name,
+			IF(users_with_approval.group_id IS NOT NULL, user.profile_last_name, NULL) AS user__last_name,
 			user.grade AS user__grade`).
 		Joins("JOIN `groups` AS `group` ON group.id = group_pending_requests.group_id").
 		Joins(`LEFT JOIN users AS user ON user.group_id = member_id`).
