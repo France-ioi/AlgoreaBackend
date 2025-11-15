@@ -18,11 +18,12 @@ type RawItemResultFields struct {
 	EndedAt          *database.Time
 
 	// attempts
+	HasAttempt                    bool
 	AttemptAllowsSubmissionsUntil database.Time
 }
 
 func (raw *RawItemResultFields) asItemResult() *structures.ItemResult {
-	if raw.AttemptID == nil {
+	if raw.AttemptID == nil || !raw.HasAttempt {
 		return nil
 	}
 	return &structures.ItemResult{

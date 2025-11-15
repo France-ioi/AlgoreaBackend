@@ -245,7 +245,7 @@ Feature: Get navigation for an item
       | 1000     | 1300    | solution           | solution_with_grant      | none                | none               | false              |
       | 1000     | 1400    | solution           | solution_with_grant      | none                | none               | false              |
       | 1000     | 1500    | solution           | solution_with_grant      | none                | none               | false              |
-      And the database has the following table "items_items":
+    And the database has the following table "items_items":
       | parent_item_id | child_item_id | child_order | content_view_propagation |
       | 1000           | 1100          | 1           | none                     |
       | 1100           | 1110          | 1           | none                     |
@@ -760,3 +760,40 @@ Feature: Get navigation for an item
         ]
       }
       """
+
+  Scenario: Should return children when there are no results for the given attempt, but there is a result for another attempt
+    Given the DB time now is "3019-10-10 11:10:11"
+    And the time now is "3019-10-10T11:10:11Z"
+    And I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id | default_language_tag | duration | requires_explicit_entry | participants_group_id |
+      | 10 | fr                   | 01:00:00 | true                    | 99                    |
+      | 20 | fr                   | 02:00:00 | true                    | 98                    |
+      | 30 | fr                   | null     | false                   | null                  |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | content_view_propagation |
+      | 10             | 30            | 1           | as_content               |
+      | 20             | 30            | 1           | as_content               |
+    And the database table "items_ancestors" also has the following rows:
+      | ancestor_item_id | child_item_id |
+      | 10               | 30            |
+      | 20               | 30            |
+    And the database table "attempts" also has the following rows:
+      | id  | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | allows_submissions_until |
+      | 100 | 11             | 2019-05-30 11:00:00 | null       | null              | null         | 9999-12-31 23:59:59      |
+      | 101 | 11             | 3019-10-10 10:10:10 | 11         | 0                 | 10           | 3019-10-10 11:10:10      |
+      | 102 | 11             | 3019-10-10 11:10:11 | 11         | 0                 | 20           | 3019-10-10 13:10:11      |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          |
+      | 100        | 11             | 10      | 3019-10-10 10:10:10 |
+      | 101        | 11             | 30      | 3019-10-10 10:10:10 |
+      | 102        | 11             | 20      | 3019-10-10 11:10:11 |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 10      | content            |
+      | 11       | 20      | content            |
+      | 11       | 30      | content            |
+    When I send a GET request to "/items/20/navigation?attempt_id=102"
+    Then the response code should be 200
+    And the response at $.children[*].id should be:
+      | 30 |
