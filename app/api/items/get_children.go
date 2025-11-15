@@ -317,10 +317,7 @@ func constructItemChildrenQuery(
 				Where("items_items.parent_item_id = ?", parentItemID)
 		},
 		func(db *database.DB) *database.DB {
-			return db.
-				Where(
-					"WHERE attempts.id IS NULL OR IF(attempts.root_item_id <=> results.item_id, attempts.parent_attempt_id, attempts.id) = ?",
-					attemptID)
+			return db.Where("IF(attempts.root_item_id <=> results.item_id, attempts.parent_attempt_id, attempts.id) = ?", attemptID)
 		})
 }
 

@@ -789,3 +789,44 @@ Feature: Get item children
       | id  | type  |
       | 301 | Skill |
       | 302 | Task  |
+
+  Scenario: Should return children when there are no results for the given attempt, but there is a result for another attempt
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id | default_language_tag |
+      | 10 | fr                   |
+      | 20 | fr                   |
+      | 30 | fr                   |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order |
+      | 10             | 30            | 1           |
+      | 20             | 30            | 1           |
+    And the database table "items_ancestors" also has the following rows:
+      | ancestor_item_id | child_item_id |
+      | 10               | 30            |
+      | 20               | 30            |
+    And the database table "attempts" also has the following rows:
+      | id  | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 100 | 11             | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 101 | 11             | 2019-10-10 10:10:10 | 11         | 0                 | 10           |
+      | 102 | 11             | 2019-10-10 11:10:11 | 11         | 0                 | 20           |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          |
+      | 100        | 11             | 10      | 2019-10-10 10:10:10 |
+      | 101        | 11             | 30      | 2019-10-10 10:10:10 |
+      | 102        | 11             | 20      | 2019-10-10 11:10:11 |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 10      | content            |
+      | 11       | 20      | content            |
+      | 11       | 30      | content            |
+    When I send a GET request to "/items/20/children?attempt_id=102"
+    Then the response code should be 200
+    And the response at $[*].id in JSON should be:
+    """
+    ["30"]
+    """
+    And the response at $[*].results in JSON should be:
+    """
+    [[]]
+    """

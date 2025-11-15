@@ -49,7 +49,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 			commonAttributes+`, 0 AS requires_explicit_entry, NULL AS parent_item_id, NULL AS entry_participant_type,
 				0 AS no_score, 0 AS has_visible_children, NULL AS child_order,
 				NULL AS watched_group_can_view, 0 AS can_watch_for_group_results, 0 AS watched_group_avg_score, 0 AS watched_group_all_validated,
-				results.attempt_id,
+				results.attempt_id, 1 AS has_attempt,
 				NULL AS score_computed, NULL AS validated, NULL AS started_at, NULL AS latest_activity_at,
 				NULL AS allows_submissions_until, NULL AS ended_at`).
 		Joins(`
@@ -113,6 +113,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 			items.parent_item_id AS parent_item_id,
 			items.can_view_generated_value,
 			items.attempt_id,
+			items.has_attempt,
 			items.score_computed, items.validated, items.started_at, items.latest_activity_at,
 			items.allows_submissions_until AS attempt_allows_submissions_until,
 			items.ended_at,
@@ -191,14 +192,19 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64, requir
 		externalColumnList += ", "
 	}
 
-	itemsQuery := filterAttemptsFunc(dataStore.Raw(`
-			SELECT items.*, `+externalColumnList+`results.attempt_id,
+	attemptsQuery := dataStore.Attempts().
+		Where("attempts.participant_id = results.participant_id").
+		Where("attempts.id = results.attempt_id")
+	attemptsQuery = filterAttemptsFunc(attemptsQuery)
+
+	itemsQuery := dataStore.Raw(`
+			SELECT items.*, `+externalColumnList+`results.attempt_id, attempts.id IS NOT NULL AS has_attempt,
 				results.score_computed, results.validated, results.started_at, results.latest_activity_at,
 				attempts.allows_submissions_until AS attempt_allows_submissions_until, attempts.ended_at
 			FROM ? AS items
 			LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id
-			LEFT JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id`,
-		itemsWithoutResultsQuery.SubQuery(), groupID)).
+			LEFT JOIN LATERAL ? AS attempts ON 1`,
+		itemsWithoutResultsQuery.SubQuery(), groupID, attemptsQuery.SubQuery()).
 		Order("child_order, items.id, attempt_id")
 	service.MustNotBeError(itemsQuery.Error())
 	return itemsQuery
