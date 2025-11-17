@@ -68,21 +68,6 @@ Feature: List attempts for current user and item_id
         "user_creator": null,
         "validated": false,
         "help_requested": false
-      },
-      {
-        "id": "1",
-        "created_at": "2018-05-29T05:38:38Z",
-        "score_computed": 100,
-        "allows_submissions_until": "9999-12-31T23:59:59Z",
-        "started_at": "2018-05-29T06:38:38Z",
-        "ended_at": "2018-05-29T05:38:38Z",
-        "latest_activity_at": "2018-05-29T06:38:39Z",
-        "user_creator": {
-          "group_id": "21",
-          "login": "other"
-        },
-        "validated": true,
-        "help_requested": true
       }
     ]
     """
@@ -90,65 +75,6 @@ Feature: List attempts for current user and item_id
   Scenario: User has access to the item and the attempts.participant_id = authenticated user's group_id (with limit)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?parent_attempt_id=0&limit=1"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "id": "0",
-        "created_at": "2018-05-29T05:38:38Z",
-        "score_computed": 99,
-        "allows_submissions_until": "9999-12-31T23:59:59Z",
-        "started_at": "2018-05-29T06:38:38Z",
-        "ended_at": null,
-        "latest_activity_at": "2018-05-29T06:38:39Z",
-        "user_creator": null,
-        "validated": false,
-        "help_requested": false
-      }
-    ]
-    """
-
-  Scenario: User has access to the item and the attempts.participant_id = authenticated user's group_id (reverse order)
-    Given I am the user with id "11"
-    When I send a GET request to "/items/200/attempts?parent_attempt_id=0&sort=-id"
-    Then the response code should be 200
-    And the response body should be, in JSON:
-    """
-    [
-      {
-        "id": "1",
-        "created_at": "2018-05-29T05:38:38Z",
-        "score_computed": 100,
-        "allows_submissions_until": "9999-12-31T23:59:59Z",
-        "started_at": "2018-05-29T06:38:38Z",
-        "ended_at": "2018-05-29T05:38:38Z",
-        "latest_activity_at": "2018-05-29T06:38:39Z",
-        "user_creator": {
-          "group_id": "21",
-          "login": "other"
-        },
-        "validated": true,
-        "help_requested": true
-      },
-      {
-        "id": "0",
-        "created_at": "2018-05-29T05:38:38Z",
-        "score_computed": 99,
-        "allows_submissions_until": "9999-12-31T23:59:59Z",
-        "started_at": "2018-05-29T06:38:38Z",
-        "ended_at": null,
-        "latest_activity_at": "2018-05-29T06:38:39Z",
-        "user_creator": null,
-        "validated": false,
-        "help_requested": false
-      }
-    ]
-    """
-
-  Scenario: User has access to the item and the attempts.participant_id = authenticated user's group_id (reverse order, start from the second row)
-    Given I am the user with id "11"
-    When I send a GET request to "/items/200/attempts?parent_attempt_id=0&sort=-id&from.id=1"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
@@ -210,6 +136,73 @@ Feature: List attempts for current user and item_id
     ]
     """
 
+  Scenario: Team has access to the item and the attempts.participant_id = team's group_id (reverse order)
+    Given I am the user with id "21"
+    When I send a GET request to "/items/210/attempts?parent_attempt_id=0&as_team_id=23&sort=-id"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "1",
+        "created_at": "2019-05-29T05:38:38Z",
+        "score_computed": 99,
+        "allows_submissions_until": "9999-12-31T23:59:59Z",
+        "started_at": "2019-05-29T06:38:38Z",
+        "ended_at": null,
+        "latest_activity_at": "2019-05-29T06:38:39Z",
+        "user_creator": {
+          "group_id": "24",
+          "first_name": "Jane",
+          "last_name": "Joe",
+          "login": "jane"
+        },
+        "validated": true,
+        "help_requested": false
+      },
+      {
+        "id": "0",
+        "created_at": "2019-05-29T05:38:38Z",
+        "score_computed": 99,
+        "allows_submissions_until": "9999-12-31T23:59:59Z",
+        "started_at": "2019-05-29T06:38:38Z",
+        "ended_at": null,
+        "latest_activity_at": "2019-05-29T06:38:39Z",
+        "user_creator": {
+          "group_id": "11",
+          "login": "jdoe"
+        },
+        "validated": true,
+        "help_requested": true
+      }
+    ]
+    """
+
+  Scenario: Team has access to the item and the attempts.participant_id = team's group_id (reverse order, start from the second row)
+    Given I am the user with id "21"
+    When I send a GET request to "/items/210/attempts?parent_attempt_id=0&as_team_id=23&sort=-id&from.id=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "0",
+        "created_at": "2019-05-29T05:38:38Z",
+        "score_computed": 99,
+        "allows_submissions_until": "9999-12-31T23:59:59Z",
+        "started_at": "2019-05-29T06:38:38Z",
+        "ended_at": null,
+        "latest_activity_at": "2019-05-29T06:38:39Z",
+        "user_creator": {
+          "group_id": "11",
+          "login": "jdoe"
+        },
+        "validated": true,
+        "help_requested": true
+      }
+    ]
+    """
+
   Scenario Outline: attempt_id is given
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?attempt_id=<attempt_id>"
@@ -255,3 +248,41 @@ Feature: List attempts for current user and item_id
     | attempt_id |
     | 2          |
     | 1          |
+
+  Scenario: No results for the given attempt, but there is a result for another attempt with root_item_id != item_id
+    Given I am @User
+    And the database table "items" also has the following rows:
+      | id | default_language_tag |
+      | 10 | fr                   |
+      | 20 | fr                   |
+      | 30 | fr                   |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order |
+      | 10             | 30            | 1           |
+      | 20             | 30            | 1           |
+    And the database table "items_ancestors" also has the following rows:
+      | ancestor_item_id | child_item_id |
+      | 10               | 30            |
+      | 20               | 30            |
+    And the database table "attempts" also has the following rows:
+      | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 0  | @User          | 2019-05-30 11:00:00 | null       | null              | null         |
+      | 1  | @User          | 2019-10-10 10:10:10 | 11         | 0                 | 10           |
+      | 2  | @User          | 2019-10-10 11:10:11 | 11         | 0                 | 20           |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | @User          | 10      | 2019-10-10 10:10:10 |
+      | 1          | @User          | 30      | 2019-10-10 10:10:10 |
+      | 2          | @User          | 20      | 2019-10-10 11:10:11 |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | @User    | 10      | content            |
+      | @User    | 20      | content            |
+      | @User    | 30      | content            |
+    When I send a GET request to "/items/30/attempts?parent_attempt_id=0"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+    ]
+    """
