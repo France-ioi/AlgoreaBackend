@@ -128,7 +128,8 @@ func (srv *Service) listAttempts(responseWriter http.ResponseWriter, httpRequest
 	user := srv.GetUser(httpRequest)
 
 	query := constructQueryForGettingAttemptsList(srv.GetStore(httpRequest), participantID, itemID, user).
-		Where("attempts.id = ? OR attempts.parent_attempt_id = ?", parentAttemptID, parentAttemptID)
+		Where("attempts.id = ? OR (attempts.parent_attempt_id = ? AND attempts.root_item_id = ?)",
+			parentAttemptID, parentAttemptID, itemID)
 
 	query = service.NewQueryLimiter().Apply(httpRequest, query)
 	query, err = service.ApplySortingAndPaging(
