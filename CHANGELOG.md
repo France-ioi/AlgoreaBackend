@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.32.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.32.1...v2.32.2) - 2025-11-17
+- filter child attempts by `root_item_id` in `attemptsList`
+- correct results linking in `itemChildrenView` & `itemNavigationView`
+
 ## [v2.32.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.32.0...v2.32.1) - 2025-11-13
 - render `first_name` & `last_name` from `users.profile` as `null` (not "null") when they are nulls
 - make `ThreadToken.Exp` numeric
