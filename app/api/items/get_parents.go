@@ -108,8 +108,7 @@ func (srv *Service) getItemParents(responseWriter http.ResponseWriter, httpReque
 	var rawData []RawListItem
 	service.MustNotBeError(
 		constructItemParentsQuery(store, params.itemID, params.participantID,
-			params.attemptID, params.watchedGroupIDIsSet, params.watchedGroupID).
-			JoinsUserAndDefaultItemStrings(params.user).
+			params.attemptID, params.watchedGroupIDIsSet, params.watchedGroupID, params.user).
 			Scan(&rawData).Error())
 
 	response := parentItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
@@ -153,37 +152,48 @@ func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Reque
 }
 
 func constructItemParentsQuery(dataStore *database.DataStore, childItemID, groupID, attemptID int64,
-	watchedGroupIDIsSet bool, watchedGroupID int64,
+	watchedGroupIDIsSet bool, watchedGroupID int64, user *database.User,
 ) *database.DB {
-	return constructItemListQuery(
-		dataStore, groupID, "info", watchedGroupIDIsSet, watchedGroupID,
-		`items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
+	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, "info",
+		watchedGroupIDIsSet, watchedGroupID, `items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
 			validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
 			can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
 			IFNULL(
 				(SELECT MAX(results.score_computed) AS best_score
 				FROM results
 				WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
-			child_order`,
-		[]interface{}{groupID},
-		`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
-			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
-			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
-			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
+			child_order, 1 AS has_attempt`, []interface{}{groupID},
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items_items ON items_items.child_item_id = ? AND items_items.parent_item_id = items.id", childItemID)
 		},
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items_items ON items_items.parent_item_id = item_id").
 				Where("items_items.child_item_id = ?", childItemID)
-		},
-		func(db *database.DB) *database.DB {
-			return db.
-				Where(`
-					WHERE attempts.id IS NULL OR
-						attempts.id = (SELECT IF(root_item_id = ?, parent_attempt_id, id) FROM attempts WHERE id = ? AND participant_id = ?)`,
-					childItemID, attemptID, groupID)
 		})
+
+	itemsQuery := dataStore.Raw(`
+		SELECT items.*,
+			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
+			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
+			IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
+			IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle,
+			results.attempt_id,
+			results.score_computed, results.validated, results.started_at, results.latest_activity_at,
+			attempts.allows_submissions_until AS attempt_allows_submissions_until, attempts.ended_at
+		FROM ? AS items
+		LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id
+		LEFT JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id`,
+		itemsWithoutResultsQuery.SubQuery(), groupID).
+		Where(`
+			WHERE attempts.id IS NULL OR
+				attempts.id = (SELECT IF(root_item_id = ?, parent_attempt_id, id) FROM attempts WHERE id = ? AND participant_id = ?)`,
+			childItemID, attemptID, groupID).
+		JoinsUserAndDefaultItemStrings(user).
+		Order("child_order, items.id, attempt_id")
+
+	service.MustNotBeError(itemsQuery.Error())
+
+	return itemsQuery
 }
 
 func parentItemsFromRawData(rawData []RawListItem, watchedGroupIDIsSet bool,
