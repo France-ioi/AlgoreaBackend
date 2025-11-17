@@ -50,7 +50,7 @@ Feature: List attempts for current user and item_id
       | 1          | 11             | 200     | 100            | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 | true           |
       | 2          | 11             | 200     | 100            | 2018-05-29 07:00:00 | 2018-05-29 06:38:38 | 2018-05-29 06:38:39 | false          |
 
-  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id
+  Scenario: User has access to the item and the attempts.participant_id = authenticated user's group_id
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?parent_attempt_id=0"
     Then the response code should be 200
@@ -87,7 +87,7 @@ Feature: List attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (with limit)
+  Scenario: User has access to the item and the attempts.participant_id = authenticated user's group_id (with limit)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?parent_attempt_id=0&limit=1"
     Then the response code should be 200
@@ -109,7 +109,7 @@ Feature: List attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (reverse order)
+  Scenario: User has access to the item and the attempts.participant_id = authenticated user's group_id (reverse order)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?parent_attempt_id=0&sort=-id"
     Then the response code should be 200
@@ -146,7 +146,7 @@ Feature: List attempts for current user and item_id
     ]
     """
 
-  Scenario: User has access to the item and the attempts.group_id = authenticated user's group_id (reverse order, start from the second row)
+  Scenario: User has access to the item and the attempts.participant_id = authenticated user's group_id (reverse order, start from the second row)
     Given I am the user with id "11"
     When I send a GET request to "/items/200/attempts?parent_attempt_id=0&sort=-id&from.id=1"
     Then the response code should be 200
@@ -168,7 +168,7 @@ Feature: List attempts for current user and item_id
     ]
     """
 
-  Scenario: Team has access to the item and the attempts.group_id = team's group_id
+  Scenario: Team has access to the item and the attempts.participant_id = team's group_id
     Given I am the user with id "21"
     When I send a GET request to "/items/210/attempts?parent_attempt_id=0&as_team_id=23"
     Then the response code should be 200
