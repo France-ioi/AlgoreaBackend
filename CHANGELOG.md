@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.33.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.32.2...v2.33.0) - 2025-11-24
+- allow using `attemptsList` with `can_view=info` on the item
+
 ## [v2.32.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.32.1...v2.32.2) - 2025-11-17
 - filter child attempts by `root_item_id` in `attemptsList`
 - correct results linking in `itemChildrenView` & `itemNavigationView`
