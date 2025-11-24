@@ -21,7 +21,7 @@ Feature: List attempts for current user and item_id - robustness
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated |
       | 11       | 210     | content            |
-      | 13       | 210     | info               |
+      | 13       | 210     | none               |
       | 15       | 210     | solution           |
     And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | ended_at |
