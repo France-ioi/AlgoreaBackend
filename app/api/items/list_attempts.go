@@ -60,7 +60,7 @@ type attemptsListResponseRow struct {
 //
 //	 Restrictions:
 //		 * `{as_team_id}` (if given) should be the current user's team,
-//		 * the participant should have at least 'content' access on the item,
+//		 * the participant should have at least 'info' access on the item,
 //		 * if `{attempt_id}` is given, it should exist for the participant in order to determine `{parent_attempt_id}`
 //			 (we assume that the 'zero attempt' always exists and it is its own parent attempt),
 //
@@ -207,7 +207,7 @@ func (srv *Service) resolveParametersForListAttempts(httpRequest *http.Request) 
 	}
 
 	found, err := store.Permissions().MatchingGroupAncestors(participantID).
-		WherePermissionIsAtLeast("view", "content").
+		WherePermissionIsAtLeast("view", "info").
 		Where("item_id = ?", itemID).HasRows()
 
 	service.MustNotBeError(err)

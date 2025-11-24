@@ -32,8 +32,8 @@ Feature: List attempts for current user and item_id
       | 210 | 1                        | fr                   |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |
-      | 13       | 200     | content                  |
-      | 13       | 210     | info                     |
+      | 13       | 200     | info                     |
+      | 13       | 210     | none                     |
       | 23       | 210     | content_with_descendants |
     And the database has the following table "attempts":
       | id | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id | ended_at            |
