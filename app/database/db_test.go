@@ -2152,3 +2152,145 @@ func Test_sleepBeforeRetrying(t *testing.T) {
 	assert.Equal(t, ctx.Err(), err)
 	assert.False(t, timerExpired)
 }
+
+func TestDB_retryOnRetryableError_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T) {
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			for _, test := range []struct {
+				name                  string
+				funcToSetExpectations func(sqlmock.Sqlmock, uint16)
+				funcToCall            func(*DB) error
+			}{
+				{
+					name: "sqlConnWrapper.QueryRowContext",
+					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
+						mock.ExpectQuery("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
+						mock.ExpectQuery("SELECT 1").WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
+					},
+					funcToCall: func(db *DB) error {
+						dbWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+						require.True(t, ok)
+						connWrapper, err := dbWrapper.conn(db.ctx())
+						require.NoError(t, err)
+						row := connWrapper.QueryRowContext(db.ctx(), "SELECT 1")
+						return row.Err()
+					},
+				},
+				{
+					name: "sqlDBWrapper.Exec",
+					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
+						mock.ExpectExec("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
+						mock.ExpectExec("SELECT 1").WillReturnResult(sqlmock.NewResult(0, 1))
+					},
+					funcToCall: func(db *DB) error {
+						return db.Exec("SELECT 1").Error()
+					},
+				},
+				{
+					name: "sqlDBWrapper.Query",
+					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
+						mock.ExpectQuery("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
+						mock.ExpectQuery("SELECT 1").WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
+					},
+					funcToCall: func(db *DB) error {
+						var result []int64
+						return db.Raw("SELECT 1").Scan(&result).Error()
+					},
+				},
+				{
+					name: "sqlDBWrapper.QueryRow",
+					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
+						mock.ExpectQuery("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
+						mock.ExpectQuery("SELECT 1").WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
+					},
+					funcToCall: func(db *DB) error {
+						dbWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+						require.True(t, ok)
+						row := dbWrapper.QueryRow("SELECT 1")
+						return row.Err()
+					},
+				},
+			} {
+				test := test
+
+				t.Run(test.name, func(t *testing.T) {
+					testoutput.SuppressIfPasses(t)
+
+					var sleepCount int
+					monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+					defer monkey.UnpatchAll()
+
+					ctx, _, logHook := logging.NewContextWithNewMockLogger()
+					db, mock := NewDBMock(ctx)
+					defer func() { _ = db.Close() }()
+
+					test.funcToSetExpectations(mock, errorNumber)
+					require.NoError(t, test.funcToCall(db))
+
+					assert.Equal(t, 1, sleepCount)
+					require.NoError(t, mock.ExpectationsWereMet())
+
+					logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
+					assert.Contains(t, logs, fmt.Sprintf("Retrying a query (count: 1) after Error %d:", errorNumber))
+				})
+			}
+		})
+	}
+}
+
+func TestDB_retryOnRetryableError_RetriesAllowedUpToTheLimit(t *testing.T) {
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+			defer monkey.UnpatchAll()
+
+			var cnt int
+			funcToCall := func() error {
+				cnt++
+				if cnt <= retriesLimit {
+					return &mysql.MySQLError{Number: errorNumber}
+				}
+				return nil
+			}
+
+			ctx, _, _ := logging.NewContextWithNewMockLogger()
+			require.NoError(t, retryOnRetriableError(ctx, funcToCall))
+			assert.Equal(t, retriesLimit, sleepCount)
+		})
+	}
+}
+
+func TestDB_retryOnRetryableError_RetriesAboveTheLimitAreDisallowed(t *testing.T) {
+	for _, errorNumber := range []uint16{1213, 1205} {
+		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
+			conf := viper.New()
+			conf.Set("Level", "error")
+			logger.Configure(conf)
+
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+			defer monkey.UnpatchAll()
+
+			f := func() error {
+				return &mysql.MySQLError{Number: errorNumber}
+			}
+
+			assert.Equal(t, errors.New("retries limit exceeded"), retryOnRetriableError(ctx, f))
+			assert.Equal(t, retriesLimit, sleepCount)
+
+			require.Len(t, loggerHook.AllEntries(), 1)
+			assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
+			assert.Equal(t,
+				fmt.Sprintf("retries limit has been exceeded, cannot retry the error: Error %d: ", errorNumber),
+				loggerHook.LastEntry().Message)
+		})
+	}
+}

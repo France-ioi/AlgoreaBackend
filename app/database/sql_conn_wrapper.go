@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
-	_ "unsafe" // required to use //go:linkname
+	"unsafe"
 
 	"github.com/jinzhu/gorm"
 )
@@ -27,13 +27,7 @@ func (c *sqlConnWrapper) PingContext(ctx context.Context) error {
 // ExecContext executes a query without returning any rows.
 // The args are for any placeholder parameters in the query.
 func (c *sqlConnWrapper) ExecContext(ctx context.Context, query string, args ...any) (result sql.Result, err error) {
-	defer getSQLExecutionPlanLoggingFunc(c, c.LogConfig, query, args...)()
-	defer getSQLQueryLoggingFunc(func() *int64 {
-		rowsAffected, _ := result.RowsAffected()
-		return &rowsAffected
-	}, &err, gorm.NowFunc(), query, args...)(c.LogConfig)
-
-	return c.conn.ExecContext(ctx, query, args...)
+	return execCallingExecContext(ctx, c.logConfig, c, c.conn, query, args...)
 }
 */
 
@@ -41,10 +35,17 @@ func (c *sqlConnWrapper) ExecContext(ctx context.Context, query string, args ...
 // QueryContext executes a query that returns rows, typically a SELECT.
 // The args are for any placeholder parameters in the query.
 func (c *sqlConnWrapper) QueryContext(ctx context.Context, query string, args ...any) (rows *sql.Rows, err error) {
-	defer getSQLExecutionPlanLoggingFunc(c, c.LogConfig, query, args...)()
-	defer getSQLQueryLoggingFunc(nil, &err, gorm.NowFunc(), query, args...)(c.LogConfig)
+	err = retryOnRetriableError(ctx, func() error {
+		defer getSQLExecutionPlanLoggingFunc(ctx, c, c.logConfig, query, args...)()
+		defer getSQLQueryLoggingFunc(ctx, nil, &err, gorm.NowFunc(), query, args...)(c.logConfig)
 
-	return c.conn.QueryContext(ctx, query, args...)
+		rows, err = c.conn.QueryContext(ctx, query, args...)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return rows, nil
 }
 */
 
@@ -55,14 +56,19 @@ func (c *sqlConnWrapper) QueryContext(ctx context.Context, query string, args ..
 // Otherwise, the *Row's Scan scans the first selected row and discards
 // the rest.
 func (c *sqlConnWrapper) QueryRowContext(ctx context.Context, query string, args ...any) (row *sql.Row) {
-	defer getSQLExecutionPlanLoggingFunc(ctx, c, c.logConfig, query, args...)()
-	startTime := gorm.NowFunc()
-	defer func() {
-		err := row.Err()
-		getSQLQueryLoggingFunc(ctx, nil, &err, startTime, query, args...)(c.logConfig)
-	}()
+	err := retryOnRetriableError(ctx, func() error {
+		defer getSQLExecutionPlanLoggingFunc(ctx, c, c.logConfig, query, args...)()
+		startTime := gorm.NowFunc()
+		defer func() {
+			err := row.Err()
+			getSQLQueryLoggingFunc(ctx, nil, &err, startTime, query, args...)(c.logConfig)
+		}()
 
-	return c.conn.QueryRowContext(ctx, query, args...)
+		row = c.conn.QueryRowContext(ctx, query, args...)
+		return row.Err()
+	})
+	(*struct{ err error })(unsafe.Pointer(row)).err = err //nolint:gosec // here we replace row.err
+	return row
 }
 
 /*
@@ -113,7 +119,7 @@ func (c *sqlConnWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql
 		logSQLQuery(ctx, gorm.NowFunc().Sub(startTime), beginTransactionLogMessage, nil, nil)
 	}
 	if err != nil {
-		logDBError(ctx, c.logConfig, err)
+		logDBError(ctx, err)
 		return nil, err
 	}
 	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, logConfig: c.logConfig}, nil
