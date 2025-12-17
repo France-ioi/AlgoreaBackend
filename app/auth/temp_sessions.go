@@ -19,7 +19,6 @@ func CreateNewTempSession(store *database.DataStore, userID int64) (
 	accessToken, err = GenerateKey()
 	mustNotBeError(err)
 
-	// the transaction is needed to retry in case of lock wait timeout or deadlock
 	err = store.EnsureTransaction(func(store *database.DataStore) error {
 		var sessionID int64
 		err = store.RetryOnDuplicateKeyError("sessions", "PRIMARY", "session_id", func(s *database.DataStore) error {
@@ -53,10 +52,7 @@ func RefreshTempUserSession(store *database.DataStore, userID, sessionID int64) 
 	accessToken, err = GenerateKey()
 	mustNotBeError(err)
 
-	// the transaction is needed to retry the insert in case of lock wait timeout or deadlock
-	err = store.EnsureTransaction(func(store *database.DataStore) error {
-		return store.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn)
-	})
+	err = store.AccessTokens().InsertNewToken(sessionID, accessToken, expiresIn)
 
 	if err == nil {
 		logging.EntryFromContext(store.GetContext()).
