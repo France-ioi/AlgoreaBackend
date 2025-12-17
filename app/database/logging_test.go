@@ -185,6 +185,165 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 			skipAnalyzeSQLQueriesTesting: true,
 		},
 		{
+			name: "sqlConnWrapper.Exec with error",
+			funcToRun: generateTestFuncToCheckSQLConnWrapperQueryOrExecWithError(
+				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
+					mock.ExpectExec(expectedSQL).WillReturnError(expectedError)
+				},
+				func(conn *sqlConnWrapper, expectedQuery string) (interface{}, error) {
+					return conn.Exec(expectedQuery)
+				}),
+		},
+		{
+			name: "sqlConnWrapper.Exec with success",
+			funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+				expectedQuery string, expectedAffectedRows *int64, expectedError error,
+			) {
+				t.Helper()
+
+				expectedQuery = updateQueryForTesting
+				expectedAffectedRows = golang.Ptr(int64(1))
+				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+				mock.ExpectExec("^" + regexp.QuoteMeta(expectedQuery) + "$").
+					WillReturnResult(sqlmock.NewResult(-1, *expectedAffectedRows))
+				var result sql.Result
+				var err error
+				err = db.WithFixedConnection(func(db *DB) error {
+					connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+					require.True(t, ok)
+					result, err = connWrapper.Exec(expectedQuery)
+					require.NoError(t, err)
+					return err
+				})
+				require.NoError(t, err)
+				assert.NotNil(t, result)
+				return expectedQuery, expectedAffectedRows, expectedError
+			},
+		},
+		{
+			name: "sqlConnWrapper.Query with error",
+			funcToRun: generateTestFuncToCheckSQLConnWrapperQueryOrExecWithError(
+				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
+					mock.ExpectQuery(expectedSQL).WillReturnError(expectedError)
+				},
+				func(conn *sqlConnWrapper, expectedQuery string) (interface{}, error) {
+					return conn.Query(expectedQuery) //nolint:rowserrcheck // the caller is responsible for checking
+				}),
+		},
+		{
+			name: "sqlConnWrapper.Query with success",
+			funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+				expectedQuery string, expectedAffectedRows *int64, expectedError error,
+			) {
+				t.Helper()
+
+				expectedQuery = selectQueryForTesting
+				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+				mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
+					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
+				var rows *sql.Rows
+				var err error
+				require.NoError(t, db.WithFixedConnection(func(db *DB) error {
+					connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+					require.True(t, ok)
+					rows, err = connWrapper.Query(expectedQuery)
+					require.NoError(t, err)
+					require.NotNil(t, rows)
+					defer func() { _ = rows.Close() }()
+					require.NoError(t, rows.Err())
+					return nil
+				}))
+				return expectedQuery, expectedAffectedRows, expectedError
+			},
+		},
+		{
+			name: "sqlConnWrapper.QueryRow with error",
+			funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+				expectedQuery string, expectedAffectedRows *int64, expectedError error,
+			) {
+				t.Helper()
+
+				expectedError = errors.New("some error")
+				expectedQuery = selectQueryForTesting
+				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+				mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").WillReturnError(expectedError)
+				var row *sql.Row
+				require.NoError(t, db.WithFixedConnection(func(db *DB) error {
+					connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+					require.True(t, ok)
+					row = connWrapper.QueryRow(expectedQuery)
+					return nil
+				}))
+				assert.Equal(t, expectedError, row.Err())
+				return expectedQuery, expectedAffectedRows, expectedError
+			},
+		},
+		{
+			name: "sqlConnWrapper.QueryRow with success",
+			funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+				expectedQuery string, expectedAffectedRows *int64, expectedError error,
+			) {
+				t.Helper()
+
+				expectedQuery = selectQueryForTesting
+				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+				mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
+					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
+				require.NoError(t, db.WithFixedConnection(func(db *DB) error {
+					connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+					require.True(t, ok)
+					row := connWrapper.QueryRow(expectedQuery)
+					require.NoError(t, row.Err())
+					_ = row.Scan()
+					return nil
+				}))
+				return expectedQuery, expectedAffectedRows, expectedError
+			},
+		},
+		{
+			name: "sqlConnWrapper.BeginTx with error",
+			funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
+				expectedQuery string, expectedAffectedRows *int64, expectedError error,
+			) {
+				t.Helper()
+
+				expectedError = errors.New("some error")
+				expectedQuery = beginTransactionLogMessage
+				mock.ExpectBegin().WillReturnError(expectedError)
+				require.NoError(t, db.WithFixedConnection(func(db *DB) error {
+					connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+					require.True(t, ok)
+					tx, err := connWrapper.BeginTx(db.ctx(), &sql.TxOptions{})
+					assert.Equal(t, expectedError, err)
+					assert.Nil(t, tx)
+					return nil
+				}))
+				return expectedQuery, expectedAffectedRows, expectedError
+			},
+			skipAnalyzeSQLQueriesTesting: true,
+		},
+		{
+			name: "sqlConnWrapper.BeginTx with success",
+			funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, _ bool) (
+				expectedQuery string, expectedAffectedRows *int64, expectedError error,
+			) {
+				t.Helper()
+
+				expectedQuery = beginTransactionLogMessage
+				mock.ExpectBegin()
+				require.NoError(t, db.WithFixedConnection(func(db *DB) error {
+					connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+					require.True(t, ok)
+					tx, err := connWrapper.BeginTx(db.ctx(), &sql.TxOptions{})
+					require.NoError(t, err)
+					assert.NotNil(t, tx)
+					return nil
+				}))
+				return expectedQuery, expectedAffectedRows, expectedError
+			},
+			skipAnalyzeSQLQueriesTesting: true,
+		},
+		{
 			name: "sqlConnWrapper.QueryRowContext with error",
 			funcToRun: func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 				expectedQuery string, expectedAffectedRows *int64, expectedError error,
@@ -579,6 +738,34 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				commitTransactionLogMessage),
 			skipAnalyzeSQLQueriesTesting: true,
 		},
+	}
+}
+
+func generateTestFuncToCheckSQLConnWrapperQueryOrExecWithError(
+	mockCallOnDBFunc func(sqlmock.Sqlmock, string, error),
+	callOnConnFunc func(*sqlConnWrapper, string) (interface{}, error),
+) funcToRunInSQLQueryLoggingTests {
+	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
+		expectedQuery string, expectedAffectedRows *int64, expectedError error,
+	) {
+		t.Helper()
+
+		expectedError = errors.New("some error")
+		expectedQuery = updateQueryForTesting
+		expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
+		mockCallOnDBFunc(mock, "^"+regexp.QuoteMeta(expectedQuery)+"$", expectedError)
+		var resultOrRows interface{}
+		var err error
+		err = db.WithFixedConnection(func(db *DB) error {
+			connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+			require.True(t, ok)
+			resultOrRows, err = callOnConnFunc(connWrapper, expectedQuery)
+			assert.Equal(t, expectedError, err)
+			return err
+		})
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, resultOrRows)
+		return expectedQuery, expectedAffectedRows, expectedError
 	}
 }
 

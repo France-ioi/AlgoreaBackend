@@ -558,6 +558,9 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 // ErrNoTransaction means that a called method/function cannot work outside of a transaction.
 var ErrNoTransaction = errors.New("should be executed in a transaction")
 
+// ErrConnNotFixed means that a called method/function requires a DB connection to be fixed.
+var ErrConnNotFixed = errors.New("the DB connection should be fixed")
+
 // WithExclusiveWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
 // For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
 // and acquire an exclusive lock on them, preventing other transactions from modifying them and
@@ -625,6 +628,29 @@ func (conn *DB) Prepare(query string) (*SQLStmtWrapper, error) {
 // GetContext returns the context of the DB connection.
 func (conn *DB) GetContext() context.Context {
 	return conn.ctx()
+}
+
+// WithFixedConnection passes a fixed DB connection into the given function and
+// releases the connection afterward.
+func (conn *DB) WithFixedConnection(funcToCall func(*DB) error) (err error) {
+	sqlDB := conn.GetSQLDB()
+	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig()}
+
+	contextWithCancel, cancelFunc := context.WithCancel(sqlDBWrapped.ctx)
+	fixedConn, err := sqlDBWrapped.conn(contextWithCancel)
+	if err != nil {
+		cancelFunc()
+		return err
+	}
+	defer func() {
+		cancelFunc()
+		_ = fixedConn.close(nil)
+	}()
+
+	clonedDB := cloneGormDB(conn.db)
+	replaceDBInGormDB(clonedDB, fixedConn)
+
+	return funcToCall(newDB(clonedDB, nil))
 }
 
 func (conn *DB) ctx() context.Context {
@@ -735,6 +761,13 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 
 func (conn *DB) isInTransaction() bool {
 	if _, ok := interface{}(conn.db.CommonDB()).(driver.Tx); ok {
+		return true
+	}
+	return false
+}
+
+func (conn *DB) isFixed() bool {
+	if _, ok := interface{}(conn.db.CommonDB()).(*sqlConnWrapper); ok || conn.isInTransaction() {
 		return true
 	}
 	return false
@@ -903,6 +936,12 @@ func (conn *DB) constructInsertMapsStatement(
 func (conn *DB) mustBeInTransaction() {
 	if !conn.isInTransaction() {
 		panic(ErrNoTransaction)
+	}
+}
+
+func (conn *DB) mustBeFixed() {
+	if !conn.isFixed() {
+		panic(ErrConnNotFixed)
 	}
 }
 

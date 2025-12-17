@@ -743,6 +743,34 @@ func TestNewDataStoreWithContext_WithSQLDBWrapper(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+func TestNewDataStoreWithContext_WithSQLConnWrapper(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	require.NoError(t, db.WithFixedConnection(func(db *DB) error {
+		ctx := context.WithValue(context.Background(), testContextKey("key"), "value")
+		dataStore := NewDataStoreWithContext(ctx, db)
+
+		assert.Equal(t, db.ctes, dataStore.ctes)
+		assert.Equal(t, db.logConfig(), dataStore.logConfig())
+		assert.Equal(t, ctx, dataStore.ctx())
+
+		connWrapper, ok := dataStore.db.CommonDB().(*sqlConnWrapper)
+		require.True(t, ok)
+		assert.Equal(t, ctx, connWrapper.ctx)
+		assert.Equal(t, db.logConfig(), connWrapper.logConfig)
+		dbConnWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+		require.True(t, ok)
+		assert.Equal(t, dbConnWrapper.conn, connWrapper.conn)
+		dialect := dataStore.db.Dialect()
+		//nolint:gosec // unsafe.Pointer is used to access the private field of gorm.Dialect
+		assert.Equal(t, connWrapper, (*gormDialectDBAccessor)(unsafe.Pointer(&dialect)).v.db)
+		return nil
+	}))
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestNewDataStoreWithContext_WithSQLTxWrapper(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
