@@ -627,6 +627,29 @@ func (conn *DB) GetContext() context.Context {
 	return conn.ctx()
 }
 
+// WithFixedConnection passes a fixed DB connection into the given function and
+// releases the connection afterward.
+func (conn *DB) WithFixedConnection(funcToCall func(*DB) error) (err error) {
+	sqlDB := conn.GetSQLDB()
+	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig()}
+
+	contextWithCancel, cancelFunc := context.WithCancel(sqlDBWrapped.ctx)
+	fixedConn, err := sqlDBWrapped.conn(contextWithCancel)
+	if err != nil {
+		cancelFunc()
+		return err
+	}
+	defer func() {
+		cancelFunc()
+		_ = fixedConn.close(nil)
+	}()
+
+	clonedDB := cloneGormDB(conn.db)
+	replaceDBInGormDB(clonedDB, fixedConn)
+
+	return funcToCall(newDB(clonedDB, nil))
+}
+
 func (conn *DB) ctx() context.Context {
 	//nolint:forcetypeassert // panic if conn.db doesn't implement contextGetter: both sqlDBWrapper and sqlTxWrapper do
 	return conn.db.CommonDB().(contextGetter).getContext()

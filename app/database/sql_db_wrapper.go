@@ -161,6 +161,12 @@ func (sqlDB *sqlDBWrapper) Close() error {
 
 var _ interface{ Close() error } = &sqlDBWrapper{}
 
+type txBeginner interface {
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sqlTxWrapper, error)
+}
+
+var _ txBeginner = &sqlDBWrapper{}
+
 type queryRowWithoutLogging interface {
 	queryRowWithoutLogging(query string, args ...interface{}) *sql.Row
 }
@@ -207,5 +213,5 @@ func (sqlDB *sqlDBWrapper) conn(ctx context.Context) (*sqlConnWrapper, error) {
 		logDBError(sqlDB.ctx, err)
 		return nil, err
 	}
-	return &sqlConnWrapper{conn: conn, logConfig: sqlDB.logConfig}, nil
+	return &sqlConnWrapper{conn: conn, ctx: ctx, logConfig: sqlDB.logConfig}, nil
 }

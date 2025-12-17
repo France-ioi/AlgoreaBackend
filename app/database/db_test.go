@@ -2125,6 +2125,48 @@ func TestDB_GetContext(t *testing.T) {
 	}))
 }
 
+func TestDB_WithFixedConnection(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	expectedError := errors.New("expected error")
+	mock.ExpectQuery("SELECT 1 FROM `t1` LIMIT 1").WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
+
+	db = cloneDBWithNewContext(context.WithValue(db.ctx(), testContextKey("key"), "value"), db)
+	err := db.WithFixedConnection(func(dbFixed *DB) error {
+		connWrapper, ok := dbFixed.db.CommonDB().(*sqlConnWrapper)
+		require.True(t, ok)
+		require.Equal(t, db.logConfig(), connWrapper.logConfig)
+		require.Equal(t, "value", connWrapper.ctx.Value(testContextKey("key")))
+
+		_, err := dbFixed.Table("t1").HasRows()
+		require.NoError(t, err)
+
+		return expectedError
+	})
+	assert.Equal(t, expectedError, err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_WithFixedConnection_Error(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	cancelledCtx, cancelFunc := context.WithCancel(db.GetContext())
+	cancelFunc()
+	db = cloneDBWithNewContext(cancelledCtx, db)
+
+	err := db.WithFixedConnection(func(_ *DB) error {
+		require.Fail(t, "should not be called")
+		return nil
+	})
+	require.Error(t, err)
+	require.Equal(t, cancelledCtx.Err(), err)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func Test_sleepBeforeRetrying(t *testing.T) {
 	var duration time.Duration
 	var newTimerPatchGuard *monkey.PatchGuard
@@ -2164,18 +2206,58 @@ func TestDB_retryOnRetryableError_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *t
 				funcToCall            func(*DB) error
 			}{
 				{
+					name: "sqlConnWrapper.Exec",
+					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
+						mock.ExpectExec("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
+						mock.ExpectExec("SELECT 1").WillReturnResult(sqlmock.NewResult(0, 1))
+					},
+					funcToCall: func(db *DB) error {
+						return db.WithFixedConnection(func(db *DB) error {
+							return db.Exec("SELECT 1").Error()
+						})
+					},
+				},
+				{
+					name: "sqlConnWrapper.Query",
+					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
+						mock.ExpectQuery("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
+						mock.ExpectQuery("SELECT 1").WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
+					},
+					funcToCall: func(db *DB) error {
+						return db.WithFixedConnection(func(db *DB) error {
+							var result []int64
+							return db.Raw("SELECT 1").Scan(&result).Error()
+						})
+					},
+				},
+				{
+					name: "sqlConnWrapper.QueryRow",
+					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
+						mock.ExpectQuery("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
+						mock.ExpectQuery("SELECT 1").WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
+					},
+					funcToCall: func(db *DB) error {
+						return db.WithFixedConnection(func(db *DB) error {
+							connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+							require.True(t, ok)
+							row := connWrapper.QueryRow("SELECT 1")
+							return row.Err()
+						})
+					},
+				},
+				{
 					name: "sqlConnWrapper.QueryRowContext",
 					funcToSetExpectations: func(mock sqlmock.Sqlmock, errorNumber uint16) {
 						mock.ExpectQuery("SELECT 1").WillReturnError(&mysql.MySQLError{Number: errorNumber})
 						mock.ExpectQuery("SELECT 1").WillReturnRows(sqlmock.NewRows([]string{"1"}).AddRow(1))
 					},
 					funcToCall: func(db *DB) error {
-						dbWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
-						require.True(t, ok)
-						connWrapper, err := dbWrapper.conn(db.ctx())
-						require.NoError(t, err)
-						row := connWrapper.QueryRowContext(db.ctx(), "SELECT 1")
-						return row.Err()
+						return db.WithFixedConnection(func(db *DB) error {
+							connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
+							require.True(t, ok)
+							row := connWrapper.QueryRowContext(db.ctx(), "SELECT 1")
+							return row.Err()
+						})
 					},
 				},
 				{
