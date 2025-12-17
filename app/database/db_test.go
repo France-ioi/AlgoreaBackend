@@ -183,8 +183,8 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 			db, mock := NewDBMock(ctx)
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
 			mock.ExpectBegin()
@@ -200,7 +200,7 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 				var result []interface{}
 				return db.Raw("SELECT 1").Scan(&result).Error()
 			}))
-			assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
+			assert.Equal(t, 1, sleepCount)
 			require.NoError(t, mock.ExpectationsWereMet())
 
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
@@ -217,8 +217,8 @@ func TestDB_inTransaction_SkipsRetryingOnDeadlockAndLockWaitTimeoutErrorsOnRollb
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
 			expectedError := errors.New("rollback error")
@@ -233,7 +233,7 @@ func TestDB_inTransaction_SkipsRetryingOnDeadlockAndLockWaitTimeoutErrorsOnRollb
 			})
 			assert.Equal(t, expectedError, err)
 
-			assert.Zero(t, duration)
+			assert.Zero(t, sleepCount)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
@@ -247,8 +247,8 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T)
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
 			mock.ExpectBegin()
@@ -265,7 +265,7 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutPanic(t *testing.T)
 				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 				return nil
 			}))
-			assert.InEpsilon(t, transactionDelayBetweenRetries, duration, 0.05)
+			assert.Equal(t, 1, sleepCount)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
@@ -294,7 +294,7 @@ func patchGormBeginTxWithVerifier(
 	return patch
 }
 
-func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
+func TestDB_inTransaction_RetriesOnDeadlockPanic_WithTxOptions(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	var calledCount int
@@ -305,7 +305,7 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	monkey.Patch(time.Sleep, func(_ time.Duration) {})
+	monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { return true, nil })
 	defer monkey.UnpatchAll()
 
 	mock.ExpectBegin()
@@ -326,7 +326,7 @@ func TestDB_inTransaction_RetriesOnDeadLockPanic_WithTxOptions(t *testing.T) {
 	assert.Equal(t, 2, calledCount)
 }
 
-func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
+func TestDB_inTransaction_RetriesOnDeadlockError_WithTxOptions(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	var calledCount int
@@ -337,7 +337,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	monkey.Patch(time.Sleep, func(_ time.Duration) {})
+	monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { return true, nil })
 	defer monkey.UnpatchAll()
 
 	mock.ExpectBegin()
@@ -357,7 +357,7 @@ func TestDB_inTransaction_RetriesOnDeadLockError_WithTxOptions(t *testing.T) {
 	assert.Equal(t, 2, calledCount)
 }
 
-func TestDB_inTransaction_SkipsRetryingOnDeadockAndLockWaitTimeoutPanicOnRollbackError(t *testing.T) {
+func TestDB_inTransaction_SkipsRetryingOnDeadlockAndLockWaitTimeoutPanicOnRollbackError(t *testing.T) {
 	for _, errorNumber := range []uint16{1213, 1205} {
 		t.Run(fmt.Sprintf("error%d", errorNumber), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
@@ -365,8 +365,8 @@ func TestDB_inTransaction_SkipsRetryingOnDeadockAndLockWaitTimeoutPanicOnRollbac
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
 			expectedError := errors.New("rollback error")
@@ -382,7 +382,7 @@ func TestDB_inTransaction_SkipsRetryingOnDeadockAndLockWaitTimeoutPanicOnRollbac
 			})
 			assert.Equal(t, expectedError, err)
 
-			assert.Zero(t, duration)
+			assert.Zero(t, sleepCount)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
@@ -396,11 +396,11 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < transactionRetriesLimit; i++ {
+			for i := 0; i < retriesLimit; i++ {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -416,7 +416,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 				mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 				return nil
 			}))
-			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.Equal(t, retriesLimit, sleepCount)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
@@ -430,11 +430,11 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 			db, mock := NewDBMock()
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < transactionRetriesLimit; i++ {
+			for i := 0; i < retriesLimit; i++ {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -449,7 +449,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 				var result []interface{}
 				return db.Raw("SELECT 1").Scan(&result).Error()
 			}))
-			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.Equal(t, retriesLimit, sleepCount)
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
 	}
@@ -467,11 +467,11 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 			db, mock := NewDBMock(ctx)
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < transactionRetriesLimit+1; i++ {
+			for i := 0; i < retriesLimit+1; i++ {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -484,7 +484,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 					mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
 					return nil
 				}))
-			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.Equal(t, retriesLimit, sleepCount)
 			require.NoError(t, mock.ExpectationsWereMet())
 
 			require.Len(t, loggerHook.AllEntries(), 1)
@@ -508,11 +508,11 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 			db, mock := NewDBMock(ctx)
 			defer func() { _ = db.Close() }()
 
-			var duration time.Duration
-			monkey.Patch(time.Sleep, func(d time.Duration) { duration += d })
+			var sleepCount int
+			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < transactionRetriesLimit+1; i++ {
+			for i := 0; i < retriesLimit+1; i++ {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -524,7 +524,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 					var result []interface{}
 					return db.Raw("SELECT 1").Scan(&result).Error()
 				}))
-			assert.InEpsilon(t, transactionRetriesLimit*transactionDelayBetweenRetries, duration, transactionRetriesLimit*0.05)
+			assert.Equal(t, retriesLimit, sleepCount)
 			require.NoError(t, mock.ExpectationsWereMet())
 
 			require.Len(t, loggerHook.AllEntries(), 1)
@@ -2123,4 +2123,32 @@ func TestDB_GetContext(t *testing.T) {
 		assert.Equal(t, expectedContext, db.GetContext())
 		return nil
 	}))
+}
+
+func Test_sleepBeforeRetrying(t *testing.T) {
+	var duration time.Duration
+	var newTimerPatchGuard *monkey.PatchGuard
+	newTimerPatchGuard = monkey.Patch(time.NewTimer, func(d time.Duration) *time.Timer {
+		duration = d
+		newTimerPatchGuard.Unpatch()
+		defer newTimerPatchGuard.Restore()
+		return time.NewTimer(duration)
+	})
+	defer newTimerPatchGuard.Unpatch()
+
+	ctx := context.Background()
+	timerExpired, err := sleepBeforeRetrying(ctx)
+
+	assert.InEpsilon(t, delayBetweenRetries, duration, 0.05)
+	require.NoError(t, err)
+	assert.True(t, timerExpired)
+
+	var cancelFunc context.CancelFunc
+	ctx, cancelFunc = context.WithCancel(ctx)
+	cancelFunc()
+	duration = 1 * time.Second
+	timerExpired, err = sleepBeforeRetrying(ctx)
+	assert.InEpsilon(t, delayBetweenRetries, duration, 0.05)
+	assert.Equal(t, ctx.Err(), err)
+	assert.False(t, timerExpired)
 }

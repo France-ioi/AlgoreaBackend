@@ -643,12 +643,14 @@ func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOption
 }
 
 const (
-	transactionRetriesLimit        = 30
-	transactionDelayBetweenRetries = 50 * time.Millisecond
+	retriesLimit        = 30
+	delayBetweenRetries = 50 * time.Millisecond
 )
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
-	conn.sleepBeforeStartingTransactionIfNeeded(count)
+	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
+		_, _ = sleepBeforeRetrying(conn.ctx())
+	}
 
 	txOpts := &sql.TxOptions{}
 	if len(txOptions) > 0 {
@@ -696,9 +698,14 @@ func isRetryableError(err error) bool {
 	return IsDeadlockError(err) || IsLockWaitTimeoutExceededError(err)
 }
 
-func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
-	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
-		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:mnd // ±5%
+func sleepBeforeRetrying(ctx context.Context) (bool, error) {
+	timer := time.NewTimer(time.Duration(float64(delayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:mnd // ±5%
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return true, nil
+	case <-ctx.Done():
+		return false, ctx.Err()
 	}
 }
 
@@ -716,7 +723,7 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 			return true
 		}
 		// retry
-		if count == transactionRetriesLimit {
+		if count == retriesLimit {
 			logDBError(conn.ctx(), conn.logConfig(),
 				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %w", errToHandleError))
 			*returnErr = errors.New("transaction retries limit exceeded")
