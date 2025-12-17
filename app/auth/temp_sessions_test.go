@@ -129,9 +129,6 @@ func TestRefreshTempUserSession_HandlesDBError_WhenCreatingAccessTokens(t *testi
 		})
 	defer monkey.UnpatchAll()
 
-	mock.ExpectBegin()
-	mock.ExpectRollback()
-
 	accessToken, expireIn, err := RefreshTempUserSession(dataStore, expectedUserID, expectedSessionID)
 	assert.Equal(t, expectedError, err)
 	assert.Empty(t, accessToken)

@@ -141,7 +141,7 @@ func (sqlTX *sqlTxWrapper) prepare(query string) (*SQLStmtWrapper, error) {
 	stmt, err := sqlTX.sqlTx.PrepareContext(sqlTX.ctx, query)
 	err = sqlTX.handleError(err)
 	if err != nil {
-		logDBError(sqlTX.ctx, sqlTX.logConfig, err)
+		logDBError(sqlTX.ctx, err)
 		return nil, err
 	}
 	return &SQLStmtWrapper{db: sqlTX, sql: query, stmt: stmt, logConfig: sqlTX.logConfig}, nil

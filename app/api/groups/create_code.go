@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/render"
 
-	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
@@ -67,27 +66,24 @@ func (srv *Service) createCode(responseWriter http.ResponseWriter, httpRequest *
 	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
 	var newCode string
-	service.MustNotBeError(store.InTransaction(func(store *database.DataStore) error {
-		for retryCount := 1; ; retryCount++ {
-			if retryCount > maxNumberOfRetriesForCodeGenerator {
-				generatorErr := errors.New("the code generator is broken")
-				logging.GetLogEntry(httpRequest).Error(generatorErr)
-				return generatorErr
-			}
-
-			newCode, err = GenerateGroupCode()
-			service.MustNotBeError(err)
-
-			err = store.Groups().Where("id = ?", groupID).UpdateColumn(map[string]interface{}{"code": newCode}).Error()
-			if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
-				continue
-			}
-			service.MustNotBeError(err)
-
-			break
+	for retryCount := 1; ; retryCount++ {
+		if retryCount > maxNumberOfRetriesForCodeGenerator {
+			generatorErr := errors.New("the code generator is broken")
+			logging.GetLogEntry(httpRequest).Error(generatorErr)
+			panic(generatorErr)
 		}
-		return nil
-	}))
+
+		newCode, err = GenerateGroupCode()
+		service.MustNotBeError(err)
+
+		err = store.Groups().Where("id = ?", groupID).UpdateColumn(map[string]interface{}{"code": newCode}).Error()
+		if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
+			continue
+		}
+		service.MustNotBeError(err)
+
+		break
+	}
 
 	render.Respond(responseWriter, httpRequest, struct {
 		Code string `json:"code"`

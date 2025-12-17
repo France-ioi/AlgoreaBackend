@@ -26,9 +26,8 @@ import (
 
 // LogConfig is the configuration for the database logs.
 type LogConfig struct {
-	LogSQLQueries            bool
-	AnalyzeSQLQueries        bool
-	LogRetryableErrorsAsInfo bool
+	LogSQLQueries     bool
+	AnalyzeSQLQueries bool
 }
 
 type cte struct {
@@ -643,12 +642,14 @@ func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOption
 }
 
 const (
-	transactionRetriesLimit        = 30
-	transactionDelayBetweenRetries = 50 * time.Millisecond
+	retriesLimit        = 30
+	delayBetweenRetries = 50 * time.Millisecond
 )
 
 func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
-	conn.sleepBeforeStartingTransactionIfNeeded(count)
+	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
+		_, _ = sleepBeforeRetrying(conn.ctx())
+	}
 
 	txOpts := &sql.TxOptions{}
 	if len(txOptions) > 0 {
@@ -685,9 +686,6 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
 	}()
-	//nolint:forcetypeassert // panic if txDB.CommonDB() is not *sqlTxWrapper
-	txLogConfig := txDB.CommonDB().(*sqlTxWrapper).logConfig
-	txLogConfig.LogRetryableErrorsAsInfo = true
 	err = txFunc(newDB(txDB, nil))
 	return err
 }
@@ -696,9 +694,14 @@ func isRetryableError(err error) bool {
 	return IsDeadlockError(err) || IsLockWaitTimeoutExceededError(err)
 }
 
-func (conn *DB) sleepBeforeStartingTransactionIfNeeded(count int64) {
-	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
-		time.Sleep(time.Duration(float64(transactionDelayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:mnd // ±5%
+func sleepBeforeRetrying(ctx context.Context) (bool, error) {
+	timer := time.NewTimer(time.Duration(float64(delayBetweenRetries) * (1.0 + (rand.Float64()-0.5)*0.1))) //nolint:mnd // ±5%
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return true, nil
+	case <-ctx.Done():
+		return false, ctx.Err()
 	}
 }
 
@@ -716,9 +719,9 @@ func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count i
 			return true
 		}
 		// retry
-		if count == transactionRetriesLimit {
-			logDBError(conn.ctx(), conn.logConfig(),
-				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %w", errToHandleError))
+		if count == retriesLimit {
+			logDBError(conn.ctx(),
+				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %s", errToHandleError.Error()))
 			*returnErr = errors.New("transaction retries limit exceeded")
 			return true
 		}
@@ -735,6 +738,31 @@ func (conn *DB) isInTransaction() bool {
 		return true
 	}
 	return false
+}
+
+func retryOnRetriableError(ctx context.Context, funcToCall func() error) error {
+	count := 0
+	for {
+		if count > 0 {
+			_, _ = sleepBeforeRetrying(ctx)
+		}
+
+		err := funcToCall()
+		if !isRetryableError(err) {
+			return err
+		}
+
+		// retry
+		if count == retriesLimit {
+			logDBError(ctx,
+				fmt.Errorf("retries limit has been exceeded, cannot retry the error: %s", err.Error()))
+			return errors.New("retries limit exceeded")
+		}
+
+		log.EntryFromContext(ctx).WithField("type", "db").
+			Infof("Retrying a query (count: %d) after %s", count+1, err.Error())
+		count++
+	}
 }
 
 func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall func(*DB) error) (err error) {
@@ -773,7 +801,7 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 			// on error we just close the connection to release the lock
 			shouldDiscardNamedLockDBConnection = true
 			// do not return an error, it should not affect the result
-			logDBError(conn.ctx(), conn.logConfig(),
+			logDBError(conn.ctx(),
 				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
 		}
 	}()
@@ -909,7 +937,7 @@ func (conn *DB) retryOnDuplicateKeyError(tableName, keyName, nameInError string,
 		return nil
 	}
 	err := fmt.Errorf("cannot generate a new %s", nameInError)
-	logDBError(conn.ctx(), conn.logConfig(), err)
+	logDBError(conn.ctx(), err)
 	return err
 }
 
