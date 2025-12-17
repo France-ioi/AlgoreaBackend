@@ -32,16 +32,13 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 		` (` + golang.If(s.arePropagationsSync(), "connection_id, ") + `group_id, item_id, propagate_to)
 		SELECT
 			` + golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ") + `
-			parents.group_id,
+			parents_propagate.group_id,
 			items_items.child_item_id,
 			'self' as propagate_to
 		FROM items_items
-		JOIN permissions_generated AS parents
-			ON parents.item_id = items_items.parent_item_id
 		JOIN ` + permissionsPropagateTableName + ` AS parents_propagate
-			ON parents_propagate.group_id = parents.group_id AND parents_propagate.item_id = parents.item_id
+			ON parents_propagate.item_id = items_items.parent_item_id
 		WHERE parents_propagate.propagate_to = 'children'
-		GROUP BY parents.group_id, items_items.child_item_id
 		ON DUPLICATE KEY UPDATE propagate_to='self'`
 
 	// deleting 'children' permissions_propagate
@@ -52,23 +49,31 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	const queryCreateTemporaryTable = `CREATE TEMPORARY TABLE permissions_propagate_processing ` +
 		`(group_id BIGINT(20) NOT NULL, item_id BIGINT(20) NOT NULL, PRIMARY KEY (group_id, item_id))`
 
-	// marking 'self' permissions_propagate that are not descendants of other 'self' permissions_propagate for processing
-	// in permissions_propagate_processing
+	const queryDropTemporaryTableForPostponedPermissions = `DROP TEMPORARY TABLE IF EXISTS permissions_propagate_postponed`
+	const queryCreateTemporaryTableForPostponedPermissions = `CREATE TEMPORARY TABLE permissions_propagate_postponed ` +
+		`(group_id BIGINT(2) NOT NULL, item_id BIGINT(20) NOT NULL, PRIMARY KEY (group_id, item_id))`
+
+	// prepare the list of descendant permissions to postpone processing (their ancestors permissions have not been processed yet)
+	// (this is much faster than searching for not processed ancestors for each item separately on the next insert)
+	queryMarkPostponedPermissions := `
+		INSERT INTO permissions_propagate_postponed (group_id, item_id)
+		SELECT group_id, child_item_id
+		FROM ` + permissionsPropagateTableName + ` AS permissions_propagate
+		JOIN items_ancestors ON items_ancestors.ancestor_item_id = permissions_propagate.item_id
+		ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)`
+
+	// marking 'self' permissions_propagate that are not postponed (i.e. are not descendants of other 'self' permissions_propagate)
+	// for processing in permissions_propagate_processing
 	queryInsertIntoPermissionsPropagateProcessing := `
 		INSERT INTO permissions_propagate_processing (group_id, item_id)
-		SELECT group_id, item_id
-		FROM ` + permissionsPropagateTableName + `
-		WHERE propagate_to = 'self' AND (
+		SELECT permissions_propagate.group_id, permissions_propagate.item_id
+		FROM ` + permissionsPropagateTableName + ` AS permissions_propagate
+		WHERE propagate_to = 'self' AND NOT EXISTS (
 			SELECT 1
-			FROM ` + permissionsPropagateTableName + ` AS ancestor_propagate
-			JOIN items_ancestors
-				ON items_ancestors.child_item_id = ` + permissionsPropagateTableName + `.item_id AND
-				   items_ancestors.ancestor_item_id = ancestor_propagate.item_id
-			WHERE ancestor_propagate.group_id = ` + permissionsPropagateTableName + `.group_id AND
-			      ancestor_propagate.propagate_to = 'self'
-			LIMIT 1
-			FOR SHARE
-		) IS NULL
+			FROM permissions_propagate_postponed
+			WHERE permissions_propagate_postponed.group_id = permissions_propagate.group_id AND
+			      permissions_propagate_postponed.item_id = permissions_propagate.item_id
+		)
 		FOR SHARE`
 
 	// computation for group-item pairs marked as 'self' in permissions_propagate (so all of them)
@@ -142,6 +147,11 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 
 			mustNotBeError(store.Exec(queryMarkChildrenOfChildrenAsSelf).Error())
 			mustNotBeError(store.Exec(queryDeleteProcessedChildren).Error())
+
+			mustNotBeError(store.Exec(queryCreateTemporaryTableForPostponedPermissions).Error())
+			defer store.Exec(queryDropTemporaryTableForPostponedPermissions)
+
+			mustNotBeError(store.Exec(queryMarkPostponedPermissions).Error())
 			mustNotBeError(store.Exec(queryInsertIntoPermissionsPropagateProcessing).Error())
 			mustNotBeError(store.Exec(queryUpdatePermissionsGenerated).Error())
 
