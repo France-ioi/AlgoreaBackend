@@ -558,6 +558,9 @@ func (conn *DB) Set(name string, value interface{}) *DB {
 // ErrNoTransaction means that a called method/function cannot work outside of a transaction.
 var ErrNoTransaction = errors.New("should be executed in a transaction")
 
+// ErrConnNotFixed means that a called method/function requires a DB connection to be fixed.
+var ErrConnNotFixed = errors.New("the DB connection should be fixed")
+
 // WithExclusiveWriteLock converts "SELECT ..." statement into "SELECT ... FOR UPDATE" statement.
 // For existing rows, it will read the latest committed data (instead of the data from the repeatable-read snapshot)
 // and acquire an exclusive lock on them, preventing other transactions from modifying them and
@@ -763,6 +766,13 @@ func (conn *DB) isInTransaction() bool {
 	return false
 }
 
+func (conn *DB) isFixed() bool {
+	if _, ok := interface{}(conn.db.CommonDB()).(*sqlConnWrapper); ok || conn.isInTransaction() {
+		return true
+	}
+	return false
+}
+
 func retryOnRetriableError(ctx context.Context, funcToCall func() error) error {
 	count := 0
 	for {
@@ -926,6 +936,12 @@ func (conn *DB) constructInsertMapsStatement(
 func (conn *DB) mustBeInTransaction() {
 	if !conn.isInTransaction() {
 		panic(ErrNoTransaction)
+	}
+}
+
+func (conn *DB) mustBeFixed() {
+	if !conn.isFixed() {
+		panic(ErrConnNotFixed)
 	}
 }
 

@@ -2125,6 +2125,44 @@ func TestDB_GetContext(t *testing.T) {
 	}))
 }
 
+func TestDB_isFixed_ReturnsTrue(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+
+	assert.NoError(t, db.inTransaction(func(db *DB) error {
+		assert.True(t, db.isFixed())
+		return nil
+	}))
+
+	assert.NoError(t, db.WithFixedConnection(func(db *DB) error {
+		assert.True(t, db.isFixed())
+		return nil
+	}))
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_isFixed_ReturnsFalse(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.False(t, db.isFixed())
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_mustBeFixed_PanicsWhenNotFixed(t *testing.T) {
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.PanicsWithValue(t, ErrConnNotFixed, func() { db.mustBeFixed() })
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
 func TestDB_WithFixedConnection(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 	db, mock := NewDBMock()
