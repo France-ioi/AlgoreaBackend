@@ -25,10 +25,11 @@ import (
 //   - Processed group-item pairs are removed from permissions_propagate.
 func (s *PermissionGrantedStore) computeAllAccess() {
 	permissionsPropagateTableName := s.permissionsPropagateTableName()
+	permissionsPropagateTableNameQuoted := QuoteName(permissionsPropagateTableName)
 
 	// marking group-item pairs whose parents are marked with propagate_to = 'children' as 'self'
 	queryMarkChildrenOfChildrenAsSelf := `
-		INSERT INTO ` + permissionsPropagateTableName +
+		INSERT INTO ` + permissionsPropagateTableNameQuoted +
 		` (` + golang.If(s.arePropagationsSync(), "connection_id, ") + `group_id, item_id, propagate_to)
 		SELECT
 			` + golang.If(s.arePropagationsSync(), "CONNECTION_ID(), ") + `
@@ -36,13 +37,13 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 			items_items.child_item_id,
 			'self' as propagate_to
 		FROM items_items
-		JOIN ` + permissionsPropagateTableName + ` AS parents_propagate
+		JOIN ` + permissionsPropagateTableNameQuoted + ` AS parents_propagate
 			ON parents_propagate.item_id = items_items.parent_item_id
 		WHERE parents_propagate.propagate_to = 'children'
 		ON DUPLICATE KEY UPDATE propagate_to='self'`
 
 	// deleting 'children' permissions_propagate
-	queryDeleteProcessedChildren := `DELETE FROM ` + permissionsPropagateTableName + ` WHERE propagate_to = 'children'`
+	queryDeleteProcessedChildren := `DELETE FROM ` + permissionsPropagateTableNameQuoted + ` WHERE propagate_to = 'children'`
 
 	const queryDropTemporaryTable = `DROP TEMPORARY TABLE IF EXISTS permissions_propagate_processing`
 	// creating permissions_propagate_processing
@@ -58,7 +59,7 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	queryMarkPostponedPermissions := `
 		INSERT INTO permissions_propagate_postponed (group_id, item_id)
 		SELECT group_id, child_item_id
-		FROM ` + permissionsPropagateTableName + ` AS permissions_propagate
+		FROM ` + permissionsPropagateTableNameQuoted + ` AS permissions_propagate
 		JOIN items_ancestors ON items_ancestors.ancestor_item_id = permissions_propagate.item_id
 		ON DUPLICATE KEY UPDATE item_id = VALUES(item_id)`
 
@@ -67,7 +68,7 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 	queryInsertIntoPermissionsPropagateProcessing := `
 		INSERT INTO permissions_propagate_processing (group_id, item_id)
 		SELECT permissions_propagate.group_id, permissions_propagate.item_id
-		FROM ` + permissionsPropagateTableName + ` AS permissions_propagate
+		FROM ` + permissionsPropagateTableNameQuoted + ` AS permissions_propagate
 		WHERE propagate_to = 'self' AND NOT EXISTS (
 			SELECT 1
 			FROM permissions_propagate_postponed
@@ -126,11 +127,11 @@ func (s *PermissionGrantedStore) computeAllAccess() {
 
 	// marking 'self' permissions_propagate (so all of them) as 'children'
 	queryMarkSelfAsChildren := `
-		UPDATE ` + permissionsPropagateTableName + `
+		UPDATE ` + permissionsPropagateTableNameQuoted + ` AS permissions_propagate
 		JOIN permissions_propagate_processing
-			ON permissions_propagate_processing.group_id = ` + permissionsPropagateTableName + `.group_id AND
-			   permissions_propagate_processing.item_id = ` + permissionsPropagateTableName + `.item_id
-		SET ` + permissionsPropagateTableName + `.propagate_to = 'children'`
+			ON permissions_propagate_processing.group_id = permissions_propagate.group_id AND
+			   permissions_propagate_processing.item_id = permissions_propagate.item_id
+		SET permissions_propagate.propagate_to = 'children'`
 
 	// ------------------------------------------------------------------------------------
 	// Here we execute the statements
