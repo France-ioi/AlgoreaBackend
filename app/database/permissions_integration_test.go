@@ -20,7 +20,11 @@ const joinsPermissionsForGroupToItemsFixture = `
 			- {ancestor_group_id: 1, child_group_id: 5}
 			- {ancestor_group_id: 2, child_group_id: 5, expires_at: 2019-05-30 11:00:00}
 			- {ancestor_group_id: 3, child_group_id: 5}
-		items: [{id: 2, default_language_tag: 2}, {id: 3, default_language_tag: 2}, {id: 4, default_language_tag: 2}]
+		items:
+			- {id: 2, default_language_tag: en}
+			- {id: 3, default_language_tag: en}
+			- {id: 4, default_language_tag: en}
+			- {id: 6, default_language_tag: en}
 		permissions_generated:
 			- {group_id: 1, item_id: 2, can_view_generated: none, can_grant_view_generated: content, can_watch_generated: answer,
 			   can_edit_generated: all, is_owner_generated: 0}
@@ -66,6 +70,15 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 				{
 					"id": int64(4), "item_id": int64(4), "can_view_generated_value": int64(1), "can_grant_view_generated_value": int64(2),
 					"can_watch_generated_value": int64(1), "can_edit_generated_value": int64(2), "is_owner_generated": int64(1),
+				},
+			},
+		},
+		{
+			ids: []int64{6},
+			expectedResult: []map[string]interface{}{
+				{
+					"id": int64(6), "item_id": int64(6), "can_view_generated_value": int64(1), "can_grant_view_generated_value": int64(1),
+					"can_watch_generated_value": int64(1), "can_edit_generated_value": int64(1), "is_owner_generated": int64(0),
 				},
 			},
 		},

@@ -1,6 +1,7 @@
-- {group_id: 1, item_id: 1, source_group_id: 1}
-- {group_id: 1, item_id: 2, source_group_id: 1}
-- {group_id: 1, item_id: 3, source_group_id: 1}
-- {group_id: 1, item_id: 4, can_view: solution, source_group_id: 1}
-- {group_id: 2, item_id: 1, source_group_id: 1}
-- {group_id: 2, item_id: 11, source_group_id: 1}
+- {group_id: 1, item_id: 1, source_group_id: 1, origin: group_membership}
+- {group_id: 1, item_id: 2, source_group_id: 1, origin: item_unlocking}
+- {group_id: 1, item_id: 3, source_group_id: 1, origin: self}
+- {group_id: 1, item_id: 4, can_view: solution, source_group_id: 1, origin: other}
+- {group_id: 2, item_id: 1, source_group_id: 1, origin: group_membership}
+- {group_id: 2, item_id: 11, source_group_id: 1, origin: group_membership}
+- {group_id: 2, item_id: 11, source_group_id: 1, origin: other}

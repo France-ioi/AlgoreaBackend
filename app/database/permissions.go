@@ -25,7 +25,17 @@ func (conn *DB) JoinsPermissionsForGroupToItems(groupID int64) *DB {
 		Where("permissions.item_id = items.id") // This condition is needed to filter by item_id before aggregating
 	// The JOIN LATERAL allows us to filter permissions on both group_id & item_id here
 	// instead of calculating permissions for all the items before joining
-	return conn.Joins("JOIN LATERAL ? AS permissions ON permissions.item_id = items.id", permissionsQuery.SubQuery())
+	return conn.Joins(`
+		JOIN LATERAL (
+			SELECT
+				COALESCE(MAX(item_id), items.id) AS item_id,
+				COALESCE(MAX(can_view_generated_value), 1) AS can_view_generated_value,
+				COALESCE(MAX(can_grant_view_generated_value), 1) AS can_grant_view_generated_value,
+				COALESCE(MAX(can_watch_generated_value), 1) AS can_watch_generated_value,
+				COALESCE(MAX(can_edit_generated_value), 1) AS can_edit_generated_value,
+				COALESCE(MAX(is_owner_generated), 0) AS is_owner_generated
+			FROM ? AS permissions
+		) AS permissions ON permissions.item_id = items.id`, permissionsQuery.SubQuery())
 }
 
 // JoinsPermissionsForGroupToItemsWherePermissionAtLeast returns a composable query with access rights (as permissions.*_generated_value)
