@@ -10,12 +10,19 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
 type permissionsGeneratedResultRow struct {
 	GroupID          int64
+	ItemID           int64
+	CanViewGenerated string
+}
+
+type permissionsExplanationResultRow struct {
+	GroupID          string
 	ItemID           int64
 	CanViewGenerated string
 }
@@ -46,7 +53,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("can_view", "content").Error())
-	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11").
+	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11 AND origin='group_membership'").
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
 		return ds.PermissionsGranted().ComputeAllAccess()
@@ -57,48 +64,52 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 	var result []permissionsGeneratedResultRow
 	require.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
 	assertPermissionsGeneratedResultRowsEqual(t, []permissionsGeneratedResultRow{
-		{
-			GroupID:          1,
-			ItemID:           1,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          1,
-			ItemID:           2,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          1,
-			ItemID:           3,
-			CanViewGenerated: "content",
-		},
+		{GroupID: 1, ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: 1, ItemID: 2, CanViewGenerated: "content"},
+		{GroupID: 1, ItemID: 3, CanViewGenerated: "content"},
 		expectedRow14(),
-		{
-			GroupID:          1,
-			ItemID:           11,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          1,
-			ItemID:           12,
-			CanViewGenerated: "content", // content_view_propagation = 'as_content' (from 4)
-		},
-		{
-			GroupID:          2,
-			ItemID:           1,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          2,
-			ItemID:           11,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          2,
-			ItemID:           12,
-			CanViewGenerated: "none", // content_view_propagation = 'none' (from 11)
-		},
+		{GroupID: 1, ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: 1, ItemID: 12, CanViewGenerated: "content"}, // content_view_propagation = 'as_content' (from 4)
+		{GroupID: 2, ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: 2, ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: 2, ItemID: 12, CanViewGenerated: "none"}, // content_view_propagation = 'none' (from 11)
 	}, result)
+
+	//nolint:dupl // it's not a duplicate: CavViewGenerated mostly has different values
+	verifyPermissionExplanation(t, db, nil, []permissionsExplanationResultRow{
+		{GroupID: "1|1|1|group_membership", ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: "1|1|1|group_membership", ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: "1|1|1|group_membership", ItemID: 12, CanViewGenerated: "none"},
+		{GroupID: "1|2|1|item_unlocking", ItemID: 2, CanViewGenerated: "content"},
+		{GroupID: "1|2|1|item_unlocking", ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: "1|2|1|item_unlocking", ItemID: 12, CanViewGenerated: "content"},
+		{GroupID: "1|3|1|self", ItemID: 3, CanViewGenerated: "content"},
+		{GroupID: "1|3|1|self", ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: "1|3|1|self", ItemID: 12, CanViewGenerated: "none"},
+		{GroupID: "1|4|1|other", ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: "1|4|1|other", ItemID: 2, CanViewGenerated: "content"},
+		{GroupID: "1|4|1|other", ItemID: 3, CanViewGenerated: "content"},
+		{GroupID: "1|4|1|other", ItemID: 4, CanViewGenerated: "solution"},
+		{GroupID: "1|4|1|other", ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: "1|4|1|other", ItemID: 12, CanViewGenerated: "content"},
+		{GroupID: "2|1|1|group_membership", ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: "2|1|1|group_membership", ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: "2|1|1|group_membership", ItemID: 12, CanViewGenerated: "none"},
+		{GroupID: "2|11|1|group_membership", ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: "2|11|1|group_membership", ItemID: 12, CanViewGenerated: "none"},
+		{GroupID: "2|11|1|other", ItemID: 11, CanViewGenerated: "none"},
+		{GroupID: "2|11|1|other", ItemID: 12, CanViewGenerated: "none"},
+	})
+	verifyPermissionExplanation(t, db, golang.Ptr(int64(3)), []permissionsExplanationResultRow{
+		{GroupID: "1|1|1|group_membership", ItemID: 1, CanViewGenerated: "content"}, // inserted on the first iteration
+		{GroupID: "1|2|1|item_unlocking", ItemID: 2, CanViewGenerated: "content"},   // inserted on the first iteration
+		{GroupID: "1|3|1|self", ItemID: 3, CanViewGenerated: "content"},
+		{GroupID: "1|4|1|other", ItemID: 3, CanViewGenerated: "content"},
+		{GroupID: "1|4|1|other", ItemID: 4, CanViewGenerated: "solution"},
+		{GroupID: "2|1|1|group_membership", ItemID: 1, CanViewGenerated: "content"},   // inserted on the first iteration
+		{GroupID: "2|11|1|group_membership", ItemID: 11, CanViewGenerated: "content"}, // inserted on the first iteration
+		{GroupID: "2|11|1|other", ItemID: 11, CanViewGenerated: "none"},               // inserted on the first iteration
+	})
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t *testing.T) {
@@ -117,7 +128,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=1").
 		UpdateColumn("can_view", "content").Error())
-	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11").
+	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11 AND origin='group_membership'").
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.ItemItems().UpdateColumn(map[string]interface{}{
 		"content_view_propagation": "as_info",
@@ -131,48 +142,42 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 	var result []permissionsGeneratedResultRow
 	require.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
 	assertPermissionsGeneratedResultRowsEqual(t, []permissionsGeneratedResultRow{
-		{
-			GroupID:          1,
-			ItemID:           1,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          1,
-			ItemID:           2,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          1,
-			ItemID:           3,
-			CanViewGenerated: "content",
-		},
+		{GroupID: 1, ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: 1, ItemID: 2, CanViewGenerated: "content"},
+		{GroupID: 1, ItemID: 3, CanViewGenerated: "content"},
 		expectedRow14(),
-		{
-			GroupID:          1,
-			ItemID:           11,
-			CanViewGenerated: "info", // since content_view_propagation = "as_info"
-		},
-		{
-			GroupID:          1,
-			ItemID:           12,
-			CanViewGenerated: "info", // since content_view_propagation = "as_info"
-		},
-		{
-			GroupID:          2,
-			ItemID:           1,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          2,
-			ItemID:           11,
-			CanViewGenerated: "content",
-		},
-		{
-			GroupID:          2,
-			ItemID:           12,
-			CanViewGenerated: "info", // since content_view_propagation = "as_info"
-		},
+		{GroupID: 1, ItemID: 11, CanViewGenerated: "info"}, // since content_view_propagation = "as_info"
+		{GroupID: 1, ItemID: 12, CanViewGenerated: "info"}, // since content_view_propagation = "as_info"
+		{GroupID: 2, ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: 2, ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: 2, ItemID: 12, CanViewGenerated: "info"}, // since content_view_propagation = "as_info"
 	}, result)
+
+	//nolint:dupl // it's not a duplicate: CavViewGenerated mostly has different values
+	verifyPermissionExplanation(t, db, nil, []permissionsExplanationResultRow{
+		{GroupID: "1|1|1|group_membership", ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: "1|1|1|group_membership", ItemID: 11, CanViewGenerated: "info"},
+		{GroupID: "1|1|1|group_membership", ItemID: 12, CanViewGenerated: "info"},
+		{GroupID: "1|2|1|item_unlocking", ItemID: 2, CanViewGenerated: "content"},
+		{GroupID: "1|2|1|item_unlocking", ItemID: 11, CanViewGenerated: "info"},
+		{GroupID: "1|2|1|item_unlocking", ItemID: 12, CanViewGenerated: "info"},
+		{GroupID: "1|3|1|self", ItemID: 3, CanViewGenerated: "content"},
+		{GroupID: "1|3|1|self", ItemID: 11, CanViewGenerated: "info"},
+		{GroupID: "1|3|1|self", ItemID: 12, CanViewGenerated: "none"},
+		{GroupID: "1|4|1|other", ItemID: 1, CanViewGenerated: "info"},
+		{GroupID: "1|4|1|other", ItemID: 2, CanViewGenerated: "info"},
+		{GroupID: "1|4|1|other", ItemID: 3, CanViewGenerated: "info"},
+		{GroupID: "1|4|1|other", ItemID: 4, CanViewGenerated: "solution"},
+		{GroupID: "1|4|1|other", ItemID: 11, CanViewGenerated: "info"},
+		{GroupID: "1|4|1|other", ItemID: 12, CanViewGenerated: "info"},
+		{GroupID: "2|1|1|group_membership", ItemID: 1, CanViewGenerated: "content"},
+		{GroupID: "2|1|1|group_membership", ItemID: 11, CanViewGenerated: "info"},
+		{GroupID: "2|1|1|group_membership", ItemID: 12, CanViewGenerated: "info"},
+		{GroupID: "2|11|1|group_membership", ItemID: 11, CanViewGenerated: "content"},
+		{GroupID: "2|11|1|group_membership", ItemID: 12, CanViewGenerated: "info"},
+		{GroupID: "2|11|1|other", ItemID: 11, CanViewGenerated: "none"},
+		{GroupID: "2|11|1|other", ItemID: 12, CanViewGenerated: "none"},
+	})
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) {
@@ -197,7 +202,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 				UpdateColumn("can_view", access).Error())
 			assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=1").
 				UpdateColumn("can_view", access).Error())
-			assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11").
+			assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11 AND origin='group_membership'").
 				UpdateColumn("can_view", access).Error())
 			assert.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {
 				return ds.PermissionsGranted().ComputeAllAccess()
@@ -208,48 +213,41 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 			var result []permissionsGeneratedResultRow
 			require.NoError(t, permissionGeneratedStore.Order("group_id, item_id").Scan(&result).Error())
 			assertPermissionsGeneratedResultRowsEqual(t, []permissionsGeneratedResultRow{
-				{
-					GroupID:          1,
-					ItemID:           1,
-					CanViewGenerated: access,
-				},
-				{
-					GroupID:          1,
-					ItemID:           2,
-					CanViewGenerated: access,
-				},
-				{
-					GroupID:          1,
-					ItemID:           3,
-					CanViewGenerated: access,
-				},
+				{GroupID: 1, ItemID: 1, CanViewGenerated: access},
+				{GroupID: 1, ItemID: 2, CanViewGenerated: access},
+				{GroupID: 1, ItemID: 3, CanViewGenerated: access},
 				expectedRow14(),
-				{
-					GroupID:          1,
-					ItemID:           11,
-					CanViewGenerated: "content", // since content_view_propagation = "as_content"
-				},
-				{
-					GroupID:          1,
-					ItemID:           12,
-					CanViewGenerated: "content", // since content_view_propagation = "as_content" (from 4)
-				},
-				{
-					GroupID:          2,
-					ItemID:           1,
-					CanViewGenerated: access,
-				},
-				{
-					GroupID:          2,
-					ItemID:           11,
-					CanViewGenerated: access,
-				},
-				{
-					GroupID:          2,
-					ItemID:           12,
-					CanViewGenerated: "none", // since content_view_propagation = "none" (from 11)
-				},
+				{GroupID: 1, ItemID: 11, CanViewGenerated: "content"}, // since content_view_propagation = "as_content"
+				{GroupID: 1, ItemID: 12, CanViewGenerated: "content"}, // since content_view_propagation = "as_content" (from 4)
+				{GroupID: 2, ItemID: 1, CanViewGenerated: access},
+				{GroupID: 2, ItemID: 11, CanViewGenerated: access},
+				{GroupID: 2, ItemID: 12, CanViewGenerated: "none"}, // since content_view_propagation = "none" (from 11)
 			}, result)
+
+			verifyPermissionExplanation(t, db, nil, []permissionsExplanationResultRow{
+				{GroupID: "1|1|1|group_membership", ItemID: 1, CanViewGenerated: access},
+				{GroupID: "1|1|1|group_membership", ItemID: 11, CanViewGenerated: "content"},
+				{GroupID: "1|1|1|group_membership", ItemID: 12, CanViewGenerated: "none"},
+				{GroupID: "1|2|1|item_unlocking", ItemID: 2, CanViewGenerated: access},
+				{GroupID: "1|2|1|item_unlocking", ItemID: 11, CanViewGenerated: "content"},
+				{GroupID: "1|2|1|item_unlocking", ItemID: 12, CanViewGenerated: "content"},
+				{GroupID: "1|3|1|self", ItemID: 3, CanViewGenerated: access},
+				{GroupID: "1|3|1|self", ItemID: 11, CanViewGenerated: "content"},
+				{GroupID: "1|3|1|self", ItemID: 12, CanViewGenerated: "none"},
+				{GroupID: "1|4|1|other", ItemID: 1, CanViewGenerated: "content"},
+				{GroupID: "1|4|1|other", ItemID: 2, CanViewGenerated: "content"},
+				{GroupID: "1|4|1|other", ItemID: 3, CanViewGenerated: "content"},
+				{GroupID: "1|4|1|other", ItemID: 4, CanViewGenerated: "solution"},
+				{GroupID: "1|4|1|other", ItemID: 11, CanViewGenerated: "content"},
+				{GroupID: "1|4|1|other", ItemID: 12, CanViewGenerated: "content"},
+				{GroupID: "2|1|1|group_membership", ItemID: 1, CanViewGenerated: access},
+				{GroupID: "2|1|1|group_membership", ItemID: 11, CanViewGenerated: "content"},
+				{GroupID: "2|1|1|group_membership", ItemID: 12, CanViewGenerated: "none"},
+				{GroupID: "2|11|1|group_membership", ItemID: 11, CanViewGenerated: access},
+				{GroupID: "2|11|1|group_membership", ItemID: 12, CanViewGenerated: "none"},
+				{GroupID: "2|11|1|other", ItemID: 11, CanViewGenerated: "none"},
+				{GroupID: "2|11|1|other", ItemID: 12, CanViewGenerated: "none"},
+			})
 		})
 	}
 }
@@ -729,7 +727,7 @@ func testPropagates(t *testing.T, column, propagationColumn, valueForParent stri
 	})
 }
 
-func assertPermissionsGeneratedResultRowsEqual(t *testing.T, expected, got []permissionsGeneratedResultRow) {
+func assertPermissionsGeneratedResultRowsEqual[T any](t *testing.T, expected, got []T) {
 	t.Helper()
 
 	if len(got) != len(expected) {
@@ -748,4 +746,35 @@ func assertAllPermissionsGeneratedAreDone(t *testing.T, permissionGeneratedStore
 	var cnt int
 	require.NoError(t, permissionGeneratedStore.Table("permissions_propagate").Count(&cnt).Error())
 	assert.Zero(t, cnt, "found not done group-item pairs")
+}
+
+func verifyPermissionExplanation(t *testing.T, db *database.DB, itemID *int64, expectedExplanation []permissionsExplanationResultRow) {
+	t.Helper()
+
+	require.NoError(t, db.WithFixedConnection(func(db *database.DB) error {
+		permissionGrantedStore := database.NewDataStore(db).PermissionsGranted()
+
+		cleanupFunc, err := permissionGrantedStore.CreateTemporaryTablesForPermissionsExplanation()
+		defer cleanupFunc()
+		require.NoError(t, err)
+
+		require.NoError(t, db.Exec(`
+			INSERT INTO permissions_granted_exp (group_id, item_id, source_group_id, origin, can_view, can_grant_view, can_watch, can_edit, is_owner)
+			SELECT CONCAT(group_id, '|', item_id, '|', source_group_id, '|', origin) AS group_id,
+			       item_id, source_group_id, origin, can_view, can_grant_view, can_watch, can_edit, is_owner
+			FROM permissions_granted`).Error())
+
+		require.NoError(t, db.Exec(`
+			INSERT INTO permissions_propagate_exp (group_id, item_id, propagate_to)
+			SELECT group_id, item_id, 'self'
+			FROM permissions_granted_exp`).Error())
+
+		require.NoError(t, permissionGrantedStore.ComputePermissionsExplanation(itemID))
+
+		var result []permissionsExplanationResultRow
+		require.NoError(t, db.Table("permissions_generated_exp").Order("group_id, item_id").Scan(&result).Error())
+		assertPermissionsGeneratedResultRowsEqual(t, expectedExplanation, result)
+
+		return nil
+	}))
 }
