@@ -376,7 +376,7 @@ func (s *PermissionGrantedStore) CreateTemporaryTablesForPermissionsExplanation(
 //
 // Note: The method propagates permissions synchronously. It does not use propagations scheduling.
 // It's a good idea to call this method on a fixed MySQL connection outside of transactions
-// to ensure it will not lock the database.
+// to ensure it will not block the database.
 func (s *PermissionGrantedStore) ComputePermissionsExplanation(itemID *int64) (err error) {
 	s.mustBeFixed()
 	defer recoverPanics(&err)
