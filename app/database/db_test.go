@@ -1573,7 +1573,7 @@ func TestOpen_DSN(t *testing.T) {
 	defer patchGuard.Unpatch()
 
 	ctx, _, _ := logging.NewContextWithNewMockLogger()
-	db, err := Open(ctx, "/db")
+	db, err := Open(ctx, "tcp(127.0.0.1:23456)/db")
 	require.Error(t, err)
 	assert.Nil(t, db)
 }
