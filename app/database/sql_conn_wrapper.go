@@ -6,6 +6,8 @@ import (
 	"unsafe"
 
 	"github.com/jinzhu/gorm"
+
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 type sqlConnWrapper struct {
@@ -187,7 +189,7 @@ func (c *sqlConnWrapper) Close() error {
 */
 
 func (c *sqlConnWrapper) queryRowWithoutLogging(query string, args ...any) *sql.Row {
-	return c.conn.QueryRowContext(context.Background(), query, args...)
+	return c.conn.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(c.ctx)), query, args...)
 }
 
 var _ queryRowWithoutLogging = &sqlConnWrapper{}

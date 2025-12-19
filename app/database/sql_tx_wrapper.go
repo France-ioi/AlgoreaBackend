@@ -175,7 +175,7 @@ var (
 )
 
 func (sqlTX *sqlTxWrapper) queryRowWithoutLogging(query string, args ...interface{}) *sql.Row {
-	return sqlTX.sqlTx.QueryRowContext(context.Background(), query, args...)
+	return sqlTX.sqlTx.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlTX.ctx)), query, args...)
 }
 
 var _ queryRowWithoutLogging = &sqlTxWrapper{}
