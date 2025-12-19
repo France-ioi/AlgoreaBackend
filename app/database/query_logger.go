@@ -42,7 +42,7 @@ func logDBError(ctx context.Context, err error) {
 
 var _ queryRowWithoutLogging = &sqlDBWrapper{}
 
-var explainableStatementRegexp = regexp.MustCompile(`(?i)^\s*(SELECT|DELETE|INSERT|REPLACE|UPDATE|TABLE)\s`)
+var explainableStatementRegexp = regexp.MustCompile(`(?i)^\s*(WITH|SELECT|DELETE|INSERT|REPLACE|UPDATE|TABLE)\s`)
 
 //nolint:gochecknoglobals // emptyFunc is a function that does nothing, the variable is used for testing purposes
 var emptyFunc = func() {}
