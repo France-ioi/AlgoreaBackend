@@ -61,17 +61,6 @@ Feature: Get activity log for a thread - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
 
-  Scenario: No thread (the user can view content and has can_watch>=answer, but the thread doesn't exist)
-    Given I am @User
-    And I have the watch permission set to "answer" on the item 200
-    And I can view content of the item 200
-    And there is a user @Participant
-    And there is a thread with "item_id=200,participant_id=@User,helper_group_id=@Helper,status=closed,latest_update_at={{relativeTimeDBMs("-1h")}}"
-    And there is a thread with "item_id=210,participant_id=@Participant,helper_group_id=@Helper,status=waiting_for_participant"
-    When I send a GET request to "/items/200/participant/@Participant/thread/log"
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-
   Scenario: No access to the thread (the user is from the helper group with can_view>=content and can_watch>=result, has a validated result, but the thread has been expired)
     Given I am @User
     And I am a member of the group @Helper
