@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -33,8 +34,9 @@ func expectAnalyzeForQuery(mock sqlmock.Sqlmock, query string, err error, withAn
 }
 
 const (
-	updateQueryForTesting = "UPDATE users SET name = 'John' WHERE id = 1"
-	selectQueryForTesting = "SELECT id FROM users"
+	updateQueryForTesting         = "UPDATE users SET name = 'John' WHERE id = 1"
+	selectQueryForTesting         = "SELECT id FROM users"
+	selectQueryWithWithForTesting = "WITH users AS (SELECT 2 AS id) SELECT id FROM users"
 )
 
 type funcToRunInSQLQueryLoggingTests func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
@@ -135,7 +137,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 			) {
 				t.Helper()
 
-				expectedQuery = selectQueryForTesting
+				expectedQuery = selectQueryWithWithForTesting
 				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 				mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
@@ -237,7 +239,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 			) {
 				t.Helper()
 
-				expectedQuery = selectQueryForTesting
+				expectedQuery = selectQueryWithWithForTesting
 				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 				mock.ExpectQuery("^" + regexp.QuoteMeta(expectedQuery) + "$").
 					WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2))
@@ -986,7 +988,7 @@ func verifySQLLogs(t *testing.T, logSQLQueries, analyzeSQLQueries bool, test sql
 	if analyzeSQLQueries {
 		expectedLen++
 	}
-	require.Len(t, logEntries, expectedLen)
+	require.Len(t, logEntries, expectedLen, "logs: %s", (&loggingtest.Hook{Hook: loggerHook}).GetAllLogs())
 	index := 0
 	if logSQLQueries {
 		assert.Equal(t, "info", logEntries[0].Level.String())
@@ -1091,7 +1093,7 @@ func Test_SQLQueryLogging_Update(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func Test_SQLQueryLogging__SQLWithInterrogationMark(t *testing.T) {
+func Test_SQLQueryLogging_SQLWithInterrogationMark(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()

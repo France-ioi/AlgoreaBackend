@@ -6,6 +6,8 @@ import (
 	"unsafe"
 
 	"github.com/jinzhu/gorm"
+
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 type sqlDBWrapper struct {
@@ -172,7 +174,7 @@ type queryRowWithoutLogging interface {
 }
 
 func (sqlDB *sqlDBWrapper) queryRowWithoutLogging(query string, args ...interface{}) *sql.Row {
-	return sqlDB.sqlDB.QueryRowContext(context.Background(), query, args...)
+	return sqlDB.sqlDB.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlDB.ctx)), query, args...)
 }
 
 var _ queryRowWithoutLogging = &sqlDBWrapper{}
