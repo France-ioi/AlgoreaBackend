@@ -28,8 +28,6 @@ import (
 //		and the `{item_id}` item.
 //
 //
-//			- The thread for the `{participant_id}`-`{item_id}` pair should exist AND
-//
 //			- The current user or one of his teams should be allowed to view the `{item_id}` item (`can_view` >= 'content) AND
 //
 //			- One of the following:
@@ -116,25 +114,25 @@ func (srv *Service) getActivityLogForThread(responseWriter http.ResponseWriter, 
 			Select("groups_groups_active.parent_group_id AS id").SubQuery(),
 		user.GroupID)
 
-	// the current user has at least 'content' access on the threads.item_id
+	// the current user has at least 'content' access on the item_id item
 	userHasViewContentPermOnItemSubQuery := store.Permissions().MatchingUserAncestors(user).
 		WherePermissionIsAtLeast("view", "content").
-		Where("permissions.item_id = threads.item_id").
+		Where("permissions.item_id = ?", itemID).
 		Select("1").Limit(1).SubQuery()
-	// a team of the current user has at least 'content' access on the threads.item_id
+	// a team of the current user has at least 'content' access on the item_id item
 	userTeamHasViewContentPermOnItemSubQuery := store.Permissions().
 		Joins("JOIN `groups_ancestors_active` ON groups_ancestors_active.ancestor_group_id = permissions.group_id").
 		Joins("JOIN `groups_groups_active` ON groups_groups_active.parent_group_id = groups_ancestors_active.child_group_id").
 		Where("groups_groups_active.child_group_id = ?", user.GroupID).
 		Where("groups_groups_active.is_team_membership = 1").
 		WherePermissionIsAtLeast("view", "content").
-		Where("permissions.item_id = threads.item_id").
+		Where("permissions.item_id = ?", itemID).
 		Select("1").Limit(1).SubQuery()
 
-	// the current user has 'can_watch'>='answer' permission on the threads.item_id
+	// the current user has 'can_watch'>='answer' permission on the item_id item
 	userHasCanWatchAnswerPermOnItemSubQuery := store.Permissions().MatchingUserAncestors(user).
 		WherePermissionIsAtLeast("watch", "answer").
-		Where("permissions.item_id = threads.item_id").
+		Where("permissions.item_id = ?", itemID).
 		Select("1").Limit(1).SubQuery()
 	// the current user has 'can_watch'>='result' permission on the threads.item_id
 	userHasCanWatchResultPermOnItemSubQuery := store.Permissions().MatchingUserAncestors(user).
@@ -155,15 +153,14 @@ func (srv *Service) getActivityLogForThread(responseWriter http.ResponseWriter, 
 		Select("1").Limit(1).SubQuery()
 
 	var found []struct{}
-	err = store.Threads().
+	err = store.Table("(SELECT 1) AS t").
+		Joins("LEFT JOIN threads ON threads.participant_id = ? AND threads.item_id = ?", participantID, itemID).
 		Select("1").
-		Where("threads.participant_id = ?", participantID).
-		Where("threads.item_id = ?", itemID).
 		With("user_and_his_teams", userAndHisTeamsQuery).
 		Where(`
 				(? OR ?) AND
 				(
-					threads.participant_id IN (SELECT id from user_and_his_teams) OR
+					? IN (SELECT id from user_and_his_teams) OR
 					? OR
 					(? AND ? AND ?)
 				)`,
@@ -172,7 +169,7 @@ func (srv *Service) getActivityLogForThread(responseWriter http.ResponseWriter, 
 			/* ) */
 			/* AND */
 			/* ( */
-			/*   [the user/(his team) is the participant] */
+			participantID, // is the user/(his team)
 			/*   OR */
 			userHasCanWatchAnswerPermOnItemSubQuery,
 			/*   OR */

@@ -47,7 +47,7 @@ type threadGetResponse struct {
 //		Restrictions:
 //			* the current user should have `can_view` >= content permission on the item AND
 //			* one of these conditions must match:
-//				- the current user should be the thread's participant OR
+//				- the current user should be `{participant_id}` OR
 //				- the current user should have `can_watch` >= answer permission on the item OR
 //				- all the following rules should be satisfied:
 //					* the current user should have `can_watch` >= result permission on the item AND
