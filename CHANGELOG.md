@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.34.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.33.0...v2.34.0) - 2026-01-06
+- new service: `permissionExplanationView`
+- speed up permission propagation
+- retry DB queries on lock wait timeout & deadlock errors outside transactions
+- allow access to `itemActivityLogForThread` when `participant_id` is the user (or their team) or the user can watch answers on the item, even when there is no thread linked to the given `item_id`-`participant_id` pair
+- fix SQL query analyzing issues
+- introduce fixed DB connection methods
+
 ## [v2.33.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.32.2...v2.33.0) - 2025-11-24
 - allow using `attemptsList` with `can_view=info` on the item
 
