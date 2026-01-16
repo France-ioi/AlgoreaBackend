@@ -36,3 +36,6 @@ openapi3.yaml
 
 # Generated doc
 /db/doc
+
+# Local cursor rules
+/.cursor/rules/local.mdc
