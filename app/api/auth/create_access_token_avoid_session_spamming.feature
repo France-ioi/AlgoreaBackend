@@ -139,6 +139,14 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "badges":null,"client_id":null,"verification":null,"subscription_news":false
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1609462820,
+        "user_id": "@UserWith9Sessions"
+      }
+      """
     When I send a POST request to "/auth/token?code=codefromauth"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -148,7 +156,8 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "message": "created",
         "data": {
           "access_token": "access_token_from_oauth",
-          "expires_in": 31622420
+          "expires_in": 31622420,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -183,6 +192,14 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "badges":null,"client_id":null,"verification":null,"subscription_news":false
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1609462820,
+        "user_id": "@UserWith10Sessions"
+      }
+      """
     When I send a POST request to "/auth/token?code=codefromauth"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -192,7 +209,8 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "message": "created",
         "data": {
           "access_token": "access_token_from_oauth",
-          "expires_in": 31622420
+          "expires_in": 31622420,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -228,6 +246,14 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "badges":null,"client_id":null,"verification":null,"subscription_news":false
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1609462820,
+        "user_id": "@UserWith10Sessions_2"
+      }
+      """
     When I send a POST request to "/auth/token?code=codefromauth"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -237,7 +263,8 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "message": "created",
         "data": {
           "access_token": "access_token_from_oauth",
-          "expires_in": 31622420
+          "expires_in": 31622420,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -273,6 +300,14 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "badges":null,"client_id":null,"verification":null,"subscription_news":false
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1609462820,
+        "user_id": "@UserWith11Sessions"
+      }
+      """
     When I send a POST request to "/auth/token?code=codefromauth"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -282,7 +317,8 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         "message": "created",
         "data": {
           "access_token": "access_token_from_oauth",
-          "expires_in": 31622420
+          "expires_in": 31622420,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """

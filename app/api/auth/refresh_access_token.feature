@@ -123,6 +123,14 @@ Feature: Create a new access token
       | 2          | 2020-01-01 01:00:00 | 2020-01-01 03:00:00 | jane_old1_token |
       | 2          | 2020-01-01 01:00:00 | 2020-01-01 03:00:00 | jane_old2_token |
       | 2          | 2020-01-01 01:00:00 | 2020-01-01 03:00:00 | jane_old3_token |
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1577850600,
+        "user_id": "13"
+      }
+      """
     And the "Cookie" request header is "access_token=<token_cookie>"
     When I send a POST request to "/auth/token?use_cookie=1&cookie_secure=1"
     Then the response code should be 201
@@ -131,7 +139,7 @@ Feature: Create a new access token
       {
         "success": true,
         "message": "created",
-        "data": {"expires_in": 6600}
+        "data": {"expires_in": 6600, "identity_token": "{{expectedJWSToken}}"}
       }
       """
     And the response headers "Set-Cookie" should be:

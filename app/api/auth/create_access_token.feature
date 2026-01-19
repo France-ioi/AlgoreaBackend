@@ -82,7 +82,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151748,
+        "exp": 1594936948,
         "user_id": "5577006791947779410"
       }
       """
@@ -254,7 +254,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151768,
+        "exp": 1594936968,
         "user_id": "11"
       }
       """
@@ -414,7 +414,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151748,
+        "exp": 1594936949,
         "user_id": "5577006791947779410"
       }
       """
@@ -508,7 +508,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151769,
+        "exp": 1594936969,
         "user_id": "11"
       }
       """
@@ -575,7 +575,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151748,
+        "exp": 1594936949,
         "user_id": "5577006791947779410"
       }
       """
@@ -652,7 +652,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151749,
+        "exp": 1594936949,
         "user_id": "5577006791947779410"
       }
       """
@@ -730,7 +730,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151748,
+        "exp": 1594936948,
         "user_id": "5577006791947779410"
       }
       """
@@ -851,7 +851,7 @@ Feature: Create an access token
       """
       {
         "date": "16-07-2019",
-        "exp": 1595151748,
+        "exp": 1594936948,
         "user_id": "5577006791947779410"
       }
       """
@@ -958,6 +958,14 @@ Feature: Create an access token
     And the database table "groups" also has the following rows:
       | id                  | name       | type  | description | is_open | send_emails | text_id                                 | require_personal_info_access_approval |
       | 8674665223082153551 | Example #1 | Other | null        | false   | false       | https://badges.example.com/examples/one | edit                                  |
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1594936948,
+        "user_id": "5577006791947779410"
+      }
+      """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -967,7 +975,8 @@ Feature: Create an access token
         "message": "created",
         "data": {
           "access_token": "{{access_token_from_oauth}}",
-          "expires_in": 31622400
+          "expires_in": 31622400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -1129,6 +1138,14 @@ Feature: Create an access token
       """
       {{profile_with_null_fields}}
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1594936968,
+        "user_id": "11"
+      }
+      """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -1138,7 +1155,8 @@ Feature: Create an access token
         "message": "created",
         "data": {
           "access_token": "{{access_token_from_oauth}}",
-          "expires_in": 31622420
+          "expires_in": 31622420,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """

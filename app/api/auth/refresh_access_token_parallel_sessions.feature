@@ -31,6 +31,14 @@ Feature: Support for parallel sessions
       """
 
   Scenario: Should return the most recent access token if the one used to refresh isn't the most recent one, along with the right expiration time
+    Given "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1577845800,
+        "user_id": "@User1"
+      }
+      """
     When the "Authorization" request header is "Bearer t_user_1_session_1_old"
     When I send a POST request to "/auth/token"
     Then the response code should be 201
@@ -42,12 +50,21 @@ Feature: Support for parallel sessions
         "message": "created",
         "data": {
           "access_token": "t_user_1_session_1_most_recent",
-          "expires_in": 5400
+          "expires_in": 5400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
 
   Scenario: Should return the same access token if we try to refresh a token not older than 5 minutes
+    Given "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1577847360,
+        "user_id": "@User1"
+      }
+      """
     When the "Authorization" request header is "Bearer t_user_1_session_2_most_recent_less_5min"
     When I send a POST request to "/auth/token"
     Then the response code should be 201
@@ -59,7 +76,8 @@ Feature: Support for parallel sessions
         "message": "created",
         "data": {
           "access_token": "t_user_1_session_2_most_recent_less_5min",
-          "expires_in": 6960
+          "expires_in": 6960,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -74,6 +92,14 @@ Feature: Support for parallel sessions
         "refresh_token":"rt_user_1_session_3_new"
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1577847600,
+        "user_id": "@User1"
+      }
+      """
     When the "Authorization" request header is "Bearer t_user_1_session_3_most_recent_more_5min"
     When I send a POST request to "/auth/token"
     Then the response code should be 201
@@ -84,7 +110,8 @@ Feature: Support for parallel sessions
         "message": "created",
         "data": {
           "access_token": "t_user_1_session_3_new",
-          "expires_in": 7200
+          "expires_in": 7200,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
