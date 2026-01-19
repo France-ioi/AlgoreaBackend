@@ -24,9 +24,7 @@ const identityTokenLifetime = 2 * time.Hour
 //
 //	responses:
 //		"201":
-//			description: "Created. The identity token was generated successfully."
-//			schema:
-//				"$ref": "#/definitions/identityTokenResponse"
+//			"$ref": "#/responses/identityTokenResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
 //		"500":
