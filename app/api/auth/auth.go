@@ -29,6 +29,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
 	router.With(auth.UserMiddleware(srv.Base)).
 		Post("/auth/logout", service.AppHandler(srv.logout).ServeHTTP)
+	router.With(auth.UserMiddleware(srv.Base)).
+		Post("/auth/identity-token", service.AppHandler(srv.generateIdentityToken).ServeHTTP)
 }
 
 func validateAndGetExpiresInFromOAuth2Token(token *oauth2.Token) (expiresIn int32, err error) {
