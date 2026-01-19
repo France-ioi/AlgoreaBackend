@@ -1,7 +1,7 @@
 # AlgoreaBackend Architecture
 
 **This file is mainly targeted to agents.**
-**Last Updated**: 2026-01-16
+**Last Updated**: 2026-01-19
 
 ## Table of Contents
 
@@ -570,6 +570,97 @@ store.SetPropagationsModeToSync()
 1. **Unit Tests**: Standard Go tests tagged with `//go:build unit`
 2. **Integration Tests**: Tests requiring DB, tagged with `//go:build !unit`
 3. **BDD Tests**: Gherkin feature files tested with godog
+
+### Gherkin Feature File Categories
+
+Feature files follow naming conventions to organize tests by purpose:
+
+#### 1. Regular Feature Files (`<operation>.feature`)
+
+Test the **main functionality** and expected behaviors (happy paths):
+- Successful API responses
+- Valid use cases with correct permissions
+- Expected data transformations
+
+**Example**: `get_thread.feature`
+```gherkin
+Scenario: Should return all fields when the thread exists
+  Given I am the user with id "1"
+  When I send a GET request to "/items/21/participant/1/thread"
+  Then the response code should be 200
+  And the response body should be, in JSON:
+    """
+    { "participant_id": "1", "item_id": "21", "status": "waiting_for_trainer" }
+    """
+```
+
+#### 2. Robustness Feature Files (`<operation>.robustness.feature`)
+
+Test **error handling, edge cases, and failure scenarios**:
+- Authentication failures (missing/invalid/expired tokens)
+- Authorization failures (insufficient permissions)
+- Input validation errors (wrong types, missing parameters)
+- Business rule violations
+
+**Example**: `get_thread.robustness.feature`
+```gherkin
+Scenario: Should be logged
+  When I send a GET request to "/items/10/participant/1/thread"
+  Then the response code should be 401
+  And the response error message should contain "No access token provided"
+
+Scenario: The item_id parameter should be an int64
+  Given I am the user with id "1"
+  When I send a GET request to "/items/aaa/participant/1/thread"
+  Then the response code should be 400
+  And the response error message should contain "Wrong value for item_id (should be int64)"
+```
+
+#### 3. Split Feature Files (`<operation>.<aspect>.feature`)
+
+When an endpoint has many test scenarios, split by **aspect being tested**:
+- `<operation>.access.feature` - Access control and permission scenarios
+- `<operation>.pagination.feature` - Pagination behavior
+- `<operation>.visibility.feature` - Visibility rules for returned data
+
+**Example**: `get_permission_explanation` is split into:
+- `get_permission_explanation.feature` - Main functionality
+- `get_permission_explanation.robustness.feature` - Error cases
+- `get_permission_explanation.access.feature` - Access control scenarios
+- `get_permission_explanation.pagination.feature` - Pagination scenarios
+- `get_permission_explanation.visibility.feature` - Visibility rules
+
+### Go Integration Tests (`*_integration_test.go`)
+
+Standard Go tests (not Gherkin) that require database access for testing internal functions:
+- Use `//go:build !unit` tag
+- Use `testify` for assertions
+- Test complex internal logic that isn't directly exposed via API
+- Use YAML fixtures loaded via `testhelpers.SetupDBWithFixtureString()`
+
+**Example**: `create_invitations_integration_test.go`
+```go
+func Test_filterOtherTeamsMembersOut(t *testing.T) {
+    tests := []struct {
+        name           string
+        fixture        string
+        groupsToInvite []int64
+        want           []int64
+    }{
+        {
+            name: "parent group is not a team",
+            fixture: `
+                groups:
+                    - {id: 1, type: Class}
+                    - {id: 10, type: User}
+                groups_groups: [{parent_group_id: 2, child_group_id: 10}]`,
+            groupsToInvite: []int64{10},
+            want:           []int64{10},
+        },
+    }
+    // ... test implementation
+}
+```
 
 ### Running Tests
 
