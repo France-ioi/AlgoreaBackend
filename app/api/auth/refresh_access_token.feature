@@ -40,6 +40,7 @@ Feature: Create a new access token
         "data": {<token_in_data> "expires_in": 7200}
       }
       """
+    And the response at $.data.identity_token should be "<undefined>"
     And the response header "Set-Cookie" should be "<expected_cookie>"
     And logs should contain:
       """
@@ -75,6 +76,14 @@ Feature: Create a new access token
         "refresh_token":"jane_new_refreshtoken"
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "01-01-2020",
+        "exp": 1609466400,
+        "user_id": "13"
+      }
+      """
     And the "Authorization" request header is "Bearer jane_current_token"
     When I send a POST request to "/auth/token<query>"
     Then the response code should be 201
@@ -83,7 +92,7 @@ Feature: Create a new access token
       {
         "success": true,
         "message": "created",
-        "data": {<token_in_data> "expires_in": 31622400}
+        "data": {<token_in_data> "expires_in": 31622400, "identity_token": "{{expectedJWSToken}}"}
       }
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"

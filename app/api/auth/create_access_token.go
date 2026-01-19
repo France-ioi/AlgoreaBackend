@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
@@ -20,8 +22,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 )
 
 type ctxKey int
@@ -189,9 +193,7 @@ const maxNumberOfUserSessionsToKeep = 10
 //						description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //	responses:
 //		"201":
-//			description: >
-//				Created.
-//				Success response with the new access token"
+//			description: Created. Success response with the new access and identity tokens.
 //			in: body
 //			schema:
 //				"$ref": "#/definitions/userCreateTmpResponse"
@@ -265,29 +267,30 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", *requestParameters.RedirectURI))
 	}
 
-	token, err := oauthConfig.Exchange(httpRequest.Context(), *requestParameters.Code, oauthOptions...)
+	oauthToken, err := oauthConfig.Exchange(httpRequest.Context(), *requestParameters.Code, oauthOptions...)
 	service.MustNotBeError(err)
 
-	expiresIn, err := validateAndGetExpiresInFromOAuth2Token(token)
+	expiresIn, err := validateAndGetExpiresInFromOAuth2Token(oauthToken)
 	service.MustNotBeError(err)
 
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
-		GetUserProfile(httpRequest.Context(), token.AccessToken)
+		GetUserProfile(httpRequest.Context(), oauthToken.AccessToken)
 	service.MustNotBeError(err)
 
 	domainConfig := domain.ConfigFromContext(httpRequest.Context())
 	userIP := strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
 
+	var userID int64
 	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
-		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig, userIP)
+		userID = createOrUpdateUser(store.Users(), userProfile, domainConfig, userIP)
 		logging.LogEntrySetField(httpRequest, "user_id", userID)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile.Badges, userID, true))
 
 		sessionID := rand.Int63()
 		service.MustNotBeError(store.Exec(
 			"INSERT INTO sessions (session_id, user_id, refresh_token) VALUES (?, ?, ?)",
-			sessionID, userID, token.RefreshToken).Error())
-		service.MustNotBeError(store.AccessTokens().InsertNewToken(sessionID, token.AccessToken, expiresIn))
+			sessionID, userID, oauthToken.RefreshToken).Error())
+		service.MustNotBeError(store.AccessTokens().InsertNewToken(sessionID, oauthToken.AccessToken, expiresIn))
 
 		// Delete the oldest sessions of the user keeping up to maxNumberOfUserSessionsToKeep sessions.
 		store.Sessions().DeleteOldSessionsToKeepMaximum(userID, maxNumberOfUserSessionsToKeep)
@@ -295,14 +298,25 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 		return nil
 	}))
 
-	srv.respondWithNewAccessToken(
-		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token.AccessToken, expiresIn, cookieAttributes)
+	identityToken := srv.generateIdentityToken(userID, expiresIn)
+	srv.respondWithNewTokens(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}],
+		oauthToken.AccessToken, expiresIn, cookieAttributes, &identityToken)
 	return nil
 }
 
-func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request,
-	rendererGenerator func(map[string]interface{}) render.Renderer, token string, expiresIn int32,
-	cookieAttributes *auth.SessionCookieAttributes,
+func (srv *Service) generateIdentityToken(userID int64, expiresIn int32) string {
+	identityToken, err := (&token.Token[payloads.IdentityToken]{Payload: payloads.IdentityToken{
+		UserID: strconv.FormatInt(userID, 10),
+		Exp:    time.Now().Add(time.Duration(expiresIn) * time.Second).Unix(),
+	}}).Sign(srv.TokenConfig.PrivateKey)
+	service.MustNotBeError(err)
+	return identityToken
+}
+
+func (srv *Service) respondWithNewTokens(responseWriter http.ResponseWriter, httpRequest *http.Request,
+	rendererGenerator func(map[string]interface{}) render.Renderer, accessToken string, expiresIn int32,
+	cookieAttributes *auth.SessionCookieAttributes, identityToken *string,
 ) {
 	response := map[string]interface{}{
 		"expires_in": expiresIn,
@@ -316,10 +330,15 @@ func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter
 		http.SetCookie(responseWriter, oldCookieAttributes.SessionCookie("", -1000))
 	}
 	if cookieAttributes.UseCookie {
-		http.SetCookie(responseWriter, cookieAttributes.SessionCookie(token, expiresIn))
+		http.SetCookie(responseWriter, cookieAttributes.SessionCookie(accessToken, expiresIn))
 	} else {
-		response["access_token"] = token
+		response["access_token"] = accessToken
 	}
+
+	if identityToken != nil {
+		response["identity_token"] = *identityToken
+	}
+
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, rendererGenerator(response)))
 }
 

@@ -60,8 +60,14 @@ func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpR
 		service.MustNotBeError(store.AccessTokens().DeleteExpiredTokensOfUser(user.GroupID))
 	}
 
-	srv.respondWithNewAccessToken(
-		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], newToken, expiresIn, cookieAttributes)
+	var identityToken *string
+	if !user.IsTempUser {
+		token := srv.generateIdentityToken(user.GroupID, expiresIn)
+		identityToken = &token
+	}
+
+	srv.respondWithNewTokens(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], newToken, expiresIn, cookieAttributes, identityToken)
 	return nil
 }
 

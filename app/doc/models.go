@@ -27,6 +27,11 @@ type userCreateTmpResponse struct {
 		// (when received by the UI, must be converted to actual time)
 		// required:true
 		ExpiresIn int32 `json:"expires_in"`
+		// An identity token containing the user_id, signed with the backend's private key.
+		// Only present for non-temporary users. Can be used to authenticate the user
+		// against external services without exposing session tokens.
+		// See IdentityToken model for token payload structure.
+		IdentityToken string `json:"identity_token,omitempty"`
 	} `json:"data"`
 }
 

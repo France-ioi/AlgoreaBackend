@@ -78,6 +78,14 @@ Feature: Create an access token
         "client_id":1,"verification":[],"subscription_news":true
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151748,
+        "user_id": "5577006791947779410"
+      }
+      """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url<query>"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -87,7 +95,8 @@ Feature: Create an access token
         "message": "created",
         "data": {
           <token_in_data>
-          "expires_in": 31622400
+          "expires_in": 31622400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -241,6 +250,14 @@ Feature: Create an access token
       """
       {{<profile_response_name>}}
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151768,
+        "user_id": "11"
+      }
+      """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -250,7 +267,8 @@ Feature: Create an access token
         "message": "created",
         "data": {
           "access_token": "{{access_token_from_oauth}}",
-          "expires_in": 31622420
+          "expires_in": 31622420,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -392,6 +410,14 @@ Feature: Create an access token
         "profile": {"first_name": "Mohammed", "last_name": "Amrani"}
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151748,
+        "user_id": "5577006791947779410"
+      }
+      """
     And the "Content-Type" request header is "<content-type>"
     When I send a POST request to "/auth/token?code=wrong_code&code_verifier=123456" with the following body:
       """
@@ -405,7 +431,8 @@ Feature: Create an access token
         "message": "created",
         "data": {
           "access_token": "{{access_token_from_oauth}}",
-          "expires_in": 31622400
+          "expires_in": 31622400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -477,6 +504,14 @@ Feature: Create an access token
         "profile": {"first_name": "Jane", "last_name": "Doe"}
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151769,
+        "user_id": "11"
+      }
+      """
     When I send a POST request to "/auth/token<query>"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -485,7 +520,8 @@ Feature: Create an access token
         "success": true,
         "message": "created",
         "data": {
-          "expires_in": 31622420
+          "expires_in": 31622420,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -535,6 +571,14 @@ Feature: Create an access token
         "profile": {"first_name": "Mohammed", "last_name": "Amrani"}
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151748,
+        "user_id": "5577006791947779410"
+      }
+      """
     And the "Content-Type" request header is "<content-type>"
     When I send a POST request to "/auth/token?code=wrong_code&code_verifier=123456" with the following body:
       """
@@ -547,7 +591,8 @@ Feature: Create an access token
         "success": true,
         "message": "created",
         "data": {
-          "expires_in": 31622400
+          "expires_in": 31622400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -603,6 +648,14 @@ Feature: Create an access token
         "profile": {"first_name": "Mohammed", "last_name": "Amrani"}
       }
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151749,
+        "user_id": "5577006791947779410"
+      }
+      """
     When I send a POST request to "/auth/token?code=somecode&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -611,7 +664,8 @@ Feature: Create an access token
         "success": true,
         "message": "created",
         "data": {
-          "expires_in": 31622400
+          "expires_in": 31622400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -672,6 +726,14 @@ Feature: Create an access token
         "profile": {"first_name": "Mohammed", "last_name": "Amrani"},
         "client_id":1,"verification":[],"subscription_news":true}
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151748,
+        "user_id": "5577006791947779410"
+      }
+      """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -681,7 +743,8 @@ Feature: Create an access token
         "message": "created",
         "data": {
           "access_token": "{{access_token_from_oauth}}",
-          "expires_in": 31622400
+          "expires_in": 31622400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -784,6 +847,14 @@ Feature: Create an access token
         "profile": {"first_name": "Mohammed", "last_name": "Amrani"},
         "client_id":1,"verification":[],"subscription_news":true}
       """
+    And "expectedJWSToken" is a token signed by the app with the following payload:
+      """
+      {
+        "date": "16-07-2019",
+        "exp": 1595151748,
+        "user_id": "5577006791947779410"
+      }
+      """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}&code_verifier=123456&redirect_uri=http%3A%2F%2Fmy.url"
     Then the response code should be 201
     And the response body should be, in JSON:
@@ -793,7 +864,8 @@ Feature: Create an access token
         "message": "created",
         "data": {
           "access_token": "{{access_token_from_oauth}}",
-          "expires_in": 31622400
+          "expires_in": 31622400,
+          "identity_token": "{{expectedJWSToken}}"
         }
       }
       """
@@ -945,6 +1017,7 @@ Feature: Create an access token
     Then the response code should be 201
     And the response at $.data.access_token should be "generated_auth_key"
     And the response at $.data.expires_in should be "7200"
+    And the response at $.data.identity_token should be "<undefined>"
     And the table "users" at group_id "5577006791947779410" should be:
       | group_id            | login_id | login        | temp_user | default_language            | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | <expected_default_language> | true                                                 | 127.0.0.1 |
@@ -977,6 +1050,7 @@ Feature: Create an access token
     Then the response code should be 201
     And the response at $.data.access_token should be "generated_auth_key"
     And the response at $.data.expires_in should be "7200"
+    And the response at $.data.identity_token should be "<undefined>"
     And the table "users" at group_id "5577006791947779410" should be:
       | group_id            | login_id | login        | temp_user | default_language | ABS(TIMESTAMPDIFF(SECOND, registered_at, NOW())) < 3 | last_ip   |
       | 5577006791947779410 | 0        | tmp-49727887 | true      | fr                | true                                                 | 127.0.0.1 |

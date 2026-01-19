@@ -108,8 +108,8 @@ func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpReque
 		return err
 	}))
 
-	srv.respondWithNewAccessToken(
-		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token, expiresIn, cookieAttributes)
+	srv.respondWithNewTokens(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token, expiresIn, cookieAttributes, nil)
 	return nil
 }
 
