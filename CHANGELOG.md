@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.35.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.34.0...v2.35.0) - 2026-01-19
+- new service `generateIdentityToken` to get an identity token
+
 ## [v2.34.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.33.0...v2.34.0) - 2026-01-06
 - new service: `permissionExplanationView`
 - speed up permission propagation
