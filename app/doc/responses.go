@@ -241,3 +241,26 @@ type itemEnterResponse struct {
 		} `json:"data"`
 	}
 }
+
+// Created. The identity token was generated successfully.
+// swagger:response identityTokenResponse
+type identityTokenResponse struct {
+	// in:body
+	Body struct {
+		// enum: created
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// The signed JWS identity token
+			// required: true
+			IdentityToken string `json:"identity_token"`
+			// Token lifetime in seconds
+			// required: true
+			ExpiresIn int32 `json:"expires_in"`
+		} `json:"data"`
+	}
+}
