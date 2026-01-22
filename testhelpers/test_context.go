@@ -15,6 +15,7 @@ import (
 	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
@@ -40,6 +41,7 @@ type TestContext struct {
 	previousRandSource              *rand.RngSource
 	previousGeneratedGroupCodeIndex int
 	generatedGroupCodeIndex         int
+	mockEventDispatcher             *event.MockDispatcher
 }
 
 const (
@@ -148,6 +150,7 @@ func (ctx *TestContext) setupApp() {
 	if err != nil {
 		panic(fmt.Errorf("unable to load the app: %w", err))
 	}
+	ctx.mockEventDispatcher = event.NewMockDispatcher()
 }
 
 func (ctx *TestContext) tearDownApp() {

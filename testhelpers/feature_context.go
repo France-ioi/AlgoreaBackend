@@ -128,6 +128,12 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 	scenarioContext.Step(`^"([^"]+)" is a falsified token signed by (.+) with the following payload:$`, ctx.FalsifiedSignedTokenIsDistributed)
 	scenarioContext.Step(`^logs should contain:$`, ctx.LogsShouldContain)
 
+	// Event dispatching steps
+	scenarioContext.Step(`^an event "([^"]+)" should have been dispatched$`, ctx.AnEventShouldHaveBeenDispatched)
+	scenarioContext.Step(`^an event "([^"]+)" should have been dispatched with:$`, ctx.AnEventShouldHaveBeenDispatchedWith)
+	scenarioContext.Step(`^no event should have been dispatched$`, ctx.NoEventShouldHaveBeenDispatched)
+	scenarioContext.Step(`^no event "([^"]+)" should have been dispatched$`, ctx.NoEventOfTypeShouldHaveBeenDispatched)
+
 	scenarioContext.Step(`^the login module "token" endpoint for code "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleTokenEndpointForCodeReturns)
 	scenarioContext.Step(`^the login module "token" endpoint for code "([^"]*)" and code_verifier "([^"]*)" returns (\d+) with body:$`,

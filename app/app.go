@@ -16,6 +16,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	_ "github.com/France-ioi/AlgoreaBackend/v2/app/doc" // for doc generation
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
@@ -60,15 +61,25 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 		return fmt.Errorf("unable to load the 'token' configuration: %w", err)
 	}
 	serverConfig := ServerConfig(config)
+	eventConfig := EventConfig(config)
 
 	logger := resolveOrCreateLogger(loggingConfig, loggerOptional)
+
+	ctx := logging.ContextWithLogger(context.Background(), logger)
+
+	// Init event dispatcher (nil if not configured)
+	eventDispatcher, err := event.NewDispatcherFromConfig(ctx, eventConfig)
+	if err != nil {
+		logger.WithContext(ctx).WithField("module", "event").Error(err)
+		return fmt.Errorf("unable to initialize event dispatcher: %w", err)
+	}
+	eventInstance := event.GetInstance(eventConfig)
 
 	// Init DB
 	if dbConfig.Params == nil {
 		dbConfig.Params = make(map[string]string, 1)
 	}
 	dbConfig.Params["charset"] = "utf8mb4"
-	ctx := logging.ContextWithLogger(context.Background(), logger)
 	db, err := database.Open(ctx, dbConfig.FormatDSN())
 	if err != nil {
 		logger.WithContext(ctx).WithField("module", "database").Error(err)
@@ -86,9 +97,12 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	router := chi.NewRouter()
 
 	router.Use(logging.ContextWithLoggerMiddleware(logger))
+	router.Use(event.ContextWithDispatcherMiddleware(eventDispatcher))
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r.WithContext(database.NewDataStore(app.Database).MergeContext(r.Context())))
+			ctx := database.NewDataStore(app.Database).MergeContext(r.Context())
+			ctx = event.ContextWithConfig(ctx, eventInstance)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	})
 

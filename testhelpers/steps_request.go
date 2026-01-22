@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
 )
 
@@ -46,7 +47,10 @@ func (ctx *TestContext) iSendrequestGeneric(method, path, reqBody string) error 
 	// app server
 	httpHandler := chi.NewRouter().With(func(_ http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx.application.HTTPHandler.ServeHTTP(w, r.WithContext(database.ContextWithTransactionRetrying(r.Context())))
+			// Inject mock event dispatcher and transaction retrying into context
+			reqCtx := database.ContextWithTransactionRetrying(r.Context())
+			reqCtx = event.ContextWithDispatcher(reqCtx, ctx.mockEventDispatcher)
+			ctx.application.HTTPHandler.ServeHTTP(w, r.WithContext(reqCtx))
 		})
 	})
 	httpHandler.Mount("/", ctx.application.HTTPHandler)

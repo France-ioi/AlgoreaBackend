@@ -87,6 +87,10 @@ Feature: Submit a new answer
       | 1          | 201            | 50      | [{"rotorIndex":0,"cellRank":0}] | 2            | 1           | 0                                                         | null                                                           |
     And the table "results_propagate" should be empty
     And the table "results_propagate_internal" should be empty
+    And an event "submission_created" should have been dispatched with:
+      """
+      {"author_id": "101", "participant_id": "101", "item_id": "50", "attempt_id": "1"}
+      """
 
   Scenario: User is able to submit a new answer for his team (participant_id is the first integer in the idAttempt in the task token)
     Given the server time is frozen

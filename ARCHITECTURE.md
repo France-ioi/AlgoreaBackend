@@ -14,12 +14,13 @@
 7. [Authentication & Authorization](#authentication--authorization)
 8. [Service Layer Pattern](#service-layer-pattern)
 9. [Data Propagation System](#data-propagation-system)
-10. [Testing Framework](#testing-framework)
-11. [Configuration Management](#configuration-management)
-12. [CLI Commands](#cli-commands)
-13. [Database Schema Overview](#database-schema-overview)
-14. [Development Workflow](#development-workflow)
-15. [Key Conventions and Patterns](#key-conventions-and-patterns)
+10. [Event Dispatch System](#event-dispatch-system)
+11. [Testing Framework](#testing-framework)
+12. [Configuration Management](#configuration-management)
+13. [CLI Commands](#cli-commands)
+14. [Database Schema Overview](#database-schema-overview)
+15. [Development Workflow](#development-workflow)
+16. [Key Conventions and Patterns](#key-conventions-and-patterns)
 
 ---
 
@@ -560,6 +561,81 @@ store.SetPropagationsModeToSync()
 - `tasks_tried`, `tasks_with_help`
 - `validated_at`
 - `score_computed`
+
+---
+
+## Event Dispatch System
+
+The event dispatch system sends domain events to external systems (e.g., AWS SQS) for further processing.
+
+### Architecture
+
+```
+HTTP Handler → Transaction Commits → Dispatch Event
+                                          ↓
+                                    Dispatcher (SQS or NoOp)
+                                          ↓
+                                    AWS SQS → EventBridge
+```
+
+### Event Structure
+
+```go
+type Event struct {
+    Version   string                 `json:"version"`    // Schema version (e.g., "1.0")
+    Type      string                 `json:"type"`       // Event type (e.g., "submission_created")
+    SourceApp string                 `json:"source_app"` // Always "algoreabackend"
+    Instance  string                 `json:"instance"`   // Optional (e.g., "prod", "staging")
+    Time      time.Time              `json:"time"`       // When the event occurred
+    RequestID string                 `json:"request_id"` // For correlation with logs
+    Payload   map[string]interface{} `json:"payload"`    // Event-specific data
+}
+```
+
+### Event Types
+
+- `submission_created`: User submitted an answer
+- `score_updated`: User's score was updated
+- `item_unlocked`: Item was unlocked for a user
+- `thread_opened`: Help thread was opened
+- `thread_closed`: Help thread was closed
+
+### Configuration
+
+```yaml
+event:
+  dispatcher: "sqs"        # "sqs" or empty for no-op
+  instance: "prod"         # Optional instance identifier
+  sqs:
+    queueURL: "https://sqs.eu-west-1.amazonaws.com/..."
+    region: "eu-west-1"
+```
+
+### Usage in Handlers
+
+```go
+// After transaction commits
+event.Dispatch(httpRequest.Context(), event.TypeSubmissionCreated, map[string]interface{}{
+    "author_id":      userID,
+    "participant_id": participantID,
+    "item_id":        itemID,
+    "attempt_id":     attemptID,
+    "answer_id":      answerID,
+})
+```
+
+### Key Design Decisions
+
+- **Timing**: Events are dispatched synchronously after transaction commits (required for Lambda)
+- **Error Handling**: Dispatch errors are logged but don't fail the request (best-effort)
+- **Timeout**: SQS calls have a 1-second timeout
+- **Testing**: Mock dispatcher is injected via context for BDD tests
+
+### Versioning
+
+Event schema versions follow semver-like rules:
+- **Minor bump** (1.0 → 1.1): Non-breaking changes (adding optional fields)
+- **Major bump** (1.x → 2.0): Breaking changes (removing fields, changing semantics)
 
 ---
 

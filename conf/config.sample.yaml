@@ -31,6 +31,12 @@ logging:
   logSQLQueries: true
   logRawSQLQueries: false # log low-level db operations, including row fetching and statement preparation (only needed for debugging during development)
   analyzeSQLQueries: false # run EXPLAIN ANALYZE on all SQL queries (works only if logSQLQueries is true)
+event:
+  dispatcher: "" # "sqs" or empty for no-op (events are not dispatched)
+  instance: "" # optional instance identifier (e.g., "prod", "staging")
+  sqs:
+    queueURL: "" # SQS queue URL (required if dispatcher is "sqs")
+    region: "" # AWS region (e.g., "eu-west-1"). If empty, uses default from AWS config.
 domains:
   -
     domains: [default] # of a list of domains
