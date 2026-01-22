@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api"
@@ -19,6 +20,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
 )
 
@@ -43,50 +45,72 @@ func New(loggerOptional ...*logging.Logger) (*Application, error) {
 	return application, nil
 }
 
-// Reset reinitializes the application with the given config.
-// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
-func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Logger) error {
+type appConfigs struct {
+	db      *mysql.Config
+	auth    *viper.Viper
+	logging *viper.Viper
+	domains []domain.ConfigItem
+	token   *token.Config
+	server  *viper.Viper
+	event   *viper.Viper
+}
+
+func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {
 	dbConfig, err := DBConfig(config)
 	if err != nil {
-		return fmt.Errorf("unable to load the 'database' configuration: %w", err)
+		return nil, fmt.Errorf("unable to load the 'database' configuration: %w", err)
 	}
-	authConfig := AuthConfig(config)
-	loggingConfig := LoggingConfig(config)
 	domainsConfig, err := DomainsConfig(config)
 	if err != nil {
-		return fmt.Errorf("unable to load the 'domain' configuration: %w", err)
+		return nil, fmt.Errorf("unable to load the 'domain' configuration: %w", err)
 	}
 	tokenConfig, err := TokenConfig(config)
 	if err != nil {
-		return fmt.Errorf("unable to load the 'token' configuration: %w", err)
+		return nil, fmt.Errorf("unable to load the 'token' configuration: %w", err)
 	}
-	serverConfig := ServerConfig(config)
-	eventConfig := EventConfig(config)
+	return &appConfigs{
+		db:      dbConfig,
+		auth:    AuthConfig(config),
+		logging: LoggingConfig(config),
+		domains: domainsConfig,
+		token:   tokenConfig,
+		server:  ServerConfig(config),
+		event:   EventConfig(config),
+	}, nil
+}
 
-	logger := resolveOrCreateLogger(loggingConfig, loggerOptional)
+// Reset reinitializes the application with the given config.
+// loggerOptional is an optional logger to use, if not provided, a new logger will be created from the config.
+func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Logger) error {
+	configs, err := loadAppConfigs(config)
+	if err != nil {
+		return err
+	}
+
+	logger := resolveOrCreateLogger(configs.logging, loggerOptional)
 
 	ctx := logging.ContextWithLogger(context.Background(), logger)
 
 	// Init event dispatcher (nil if not configured)
-	eventDispatcher, err := event.NewDispatcherFromConfig(ctx, eventConfig)
+	eventDispatcher, err := event.NewDispatcherFromConfig(ctx, configs.event)
 	if err != nil {
 		logger.WithContext(ctx).WithField("module", "event").Error(err)
 		return fmt.Errorf("unable to initialize event dispatcher: %w", err)
 	}
-	eventInstance := event.GetInstance(eventConfig)
+	eventInstance := event.GetInstance(configs.event)
 
 	// Init DB
-	if dbConfig.Params == nil {
-		dbConfig.Params = make(map[string]string, 1)
+	if configs.db.Params == nil {
+		configs.db.Params = make(map[string]string, 1)
 	}
-	dbConfig.Params["charset"] = "utf8mb4"
-	db, err := database.Open(ctx, dbConfig.FormatDSN())
+	configs.db.Params["charset"] = "utf8mb4"
+	db, err := database.Open(ctx, configs.db.FormatDSN())
 	if err != nil {
 		logger.WithContext(ctx).WithField("module", "database").Error(err)
 		return err
 	}
 
-	if serverConfig.GetBool("disableResultsPropagation") {
+	if configs.server.GetBool("disableResultsPropagation") {
 		database.ProhibitResultsPropagation(db)
 	}
 
@@ -109,7 +133,7 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	router.Use(version.AddVersionHeader)
 
 	router.Use(middleware.RealIP) // must be before logger or any middleware using remote IP
-	if serverConfig.GetBool("compress") {
+	if configs.server.GetBool("compress") {
 		router.Use(middleware.DefaultCompress) // apply last on response
 	}
 	router.Use(middleware.RequestID)          // must be before any middleware using the request id (the logger and the recoverer do)
@@ -117,15 +141,15 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	router.Use(middleware.Recoverer)          // must be before logger so that it an log panics
 
 	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
-	router.Use(domain.Middleware(domainsConfig, serverConfig.GetString("domainOverride")))
+	router.Use(domain.Middleware(configs.domains, configs.server.GetString("domainOverride")))
 
 	if appenv.IsEnvDev() {
 		router.Mount("/debug", middleware.Profiler())
 	}
 
-	serverConfig.SetDefault("rootPath", "/")
-	apiCtx, apiRouter := api.Router(db, serverConfig, authConfig, domainsConfig, tokenConfig)
-	router.Mount(serverConfig.GetString("rootPath"), apiRouter)
+	configs.server.SetDefault("rootPath", "/")
+	apiCtx, apiRouter := api.Router(db, configs.server, configs.auth, configs.domains, configs.token)
+	router.Mount(configs.server.GetString("rootPath"), apiRouter)
 
 	app.HTTPHandler = router
 	app.Config = config
