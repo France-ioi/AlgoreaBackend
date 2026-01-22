@@ -41,7 +41,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(t, app.Database)
 	assert.NotNil(t, app.HTTPHandler)
 	assert.NotNil(t, app.apiCtx)
-	assert.Len(t, app.HTTPHandler.Middlewares(), 10)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 11)
 	require.NotEmpty(t, app.HTTPHandler.Routes())
 	assert.Equal(t, "/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
@@ -55,7 +55,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
-	assert.Len(t, app.HTTPHandler.Middlewares(), 9)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 10)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
