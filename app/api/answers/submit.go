@@ -13,6 +13,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/doc"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -144,6 +145,15 @@ func (srv *Service) submit(responseWriter http.ResponseWriter, httpRequest *http
 	})
 
 	service.MustNotBeError(err)
+
+	// Dispatch event after transaction commits
+	event.Dispatch(httpRequest.Context(), event.TypeSubmissionCreated, map[string]interface{}{
+		"author_id":      strconv.FormatInt(requestData.TaskToken.Payload.Converted.UserID, 10),
+		"participant_id": strconv.FormatInt(requestData.TaskToken.Payload.Converted.ParticipantID, 10),
+		"item_id":        strconv.FormatInt(requestData.TaskToken.Payload.Converted.LocalItemID, 10),
+		"attempt_id":     strconv.FormatInt(requestData.TaskToken.Payload.Converted.AttemptID, 10),
+		"answer_id":      strconv.FormatInt(answerID, 10),
+	})
 
 	answerToken, err := (&token.Token[payloads.AnswerToken]{Payload: payloads.AnswerToken{
 		Answer:          *requestData.Answer,

@@ -50,3 +50,29 @@ make test-dev
 Note: There may be a flaky timeout test in `app/database` that occasionally hangs. This is a known issue and doesn't indicate a real problem.
 
 If you get DB connection errors, ensure docker-compose services are running with `docker-compose ps`.
+
+## Event System
+
+The project has an event dispatch system that sends domain events to external systems (e.g., AWS SQS).
+
+### Event Versioning Rules
+
+Events include a `version` field that follows semver-like rules. When modifying event schemas:
+
+- **Minor version bump** (1.0 → 1.1): Non-breaking changes only
+  - Adding new optional fields to the payload
+  - Adding new event types
+  
+- **Major version bump** (1.x → 2.0): Breaking changes
+  - Removing fields from the payload
+  - Changing field types or semantics
+  - Renaming fields
+
+The version constant is defined in `app/event/event.go` as `EventVersion`. Update it when making schema changes.
+
+### Adding New Events
+
+1. Add a new event type constant in `app/event/types.go`
+2. Call `event.Dispatch()` after the relevant transaction commits
+3. Add BDD tests to verify the event is dispatched with the correct payload
+4. Update `ARCHITECTURE.md` with the new event type

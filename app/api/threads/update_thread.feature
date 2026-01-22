@@ -86,13 +86,17 @@ Feature: Update thread
     And the table "threads" at item_id "1000" should be:
       | latest_update_at    | message_count | status              | helper_group_id |
       | 2022-01-01 00:00:00 | 1             | waiting_for_trainer | 100             |
+    And an event "thread_status_changed" should have been dispatched with:
+      """
+      {"participant_id": "3", "item_id": "1000", "new_status": "waiting_for_trainer", "former_status": "not_started", "helper_group_id": "100"}
+      """
 
   # To write on a thread, a user must fulfill either of those conditions:
   #  (1) be the participant of the thread
   #  (2) have can_watch>=answer permission on the item AND can_watch_members on the participant
   #  (3) be part of the group the participant has requested help to AND either have can_watch>=answer on the item
   #    OR (have can_watch>=answer on the item AND have a validated result on the item).
-  Scenario: Can write to thread condition (1) when status is not set
+  Scenario: Can write to thread condition (1) when status is not set (no event dispatched)
     Given I am the user with id "1"
     And there is a thread with "item_id=10,participant_id=1"
     And I can view content of the item 10
@@ -107,6 +111,7 @@ Feature: Update thread
     And the table "threads" at item_id "10" should be:
       | latest_update_at    | message_count |
       | 2022-01-01 00:00:00 | 1             |
+    And no event "thread_status_changed" should have been dispatched
 
   Scenario: Can write to thread condition (2) when status is not set
     Given I am the user with id "2"
@@ -215,6 +220,26 @@ Feature: Update thread
       | 70      | 3                       | 13            |
       | 80      | -5                      | 5             |
       | 90      | 0                       | 10            |
+
+  Scenario: Participant of a thread can close a thread (with event dispatch)
+    Given I am the user with id "3"
+    And there is a thread with "item_id=99,participant_id=3,status=waiting_for_trainer,helper_group_id=10"
+    And I can view content of the item 99
+    And I have the watch permission set to "none" on the item 99
+    When I send a PUT request to "/items/99/participant/3/thread" with the following body:
+      """
+      {
+        "status": "closed"
+      }
+      """
+    Then the response should be "updated"
+    And the table "threads" at item_id "99" should be:
+      | latest_update_at    | status |
+      | 2022-01-01 00:00:00 | closed |
+    And an event "thread_status_changed" should have been dispatched with:
+      """
+      {"participant_id": "3", "item_id": "99", "new_status": "closed", "former_status": "waiting_for_trainer", "helper_group_id": "10"}
+      """
 
   Scenario Outline: Participant of a thread can always switch the thread from open to any other status
     Given I am the user with id "3"

@@ -3,12 +3,14 @@ package threads
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
@@ -133,6 +135,11 @@ func (srv *Service) updateThread(responseWriter http.ResponseWriter, httpRequest
 		return service.ErrAPIInsufficientAccessRights
 	}
 
+	// Variables to capture data for event dispatch
+	var statusChanged bool
+	var formerStatus, newStatus string
+	var helperGroupID int64
+
 	err = store.InTransaction(func(store *database.DataStore) error {
 		var oldThreadInfo threadInfo
 		err = database.NewDataStore(constructThreadInfoQuery(store, user, itemID, participantID)).
@@ -175,9 +182,30 @@ func (srv *Service) updateThread(responseWriter http.ResponseWriter, httpRequest
 			formData, oldThreadInfo.ThreadMessageCount, oldThreadInfo.ThreadHelperGroupID, input, itemID, participantID)
 		service.MustNotBeError(store.Threads().InsertOrUpdateMap(threadData, nil, nil))
 
+		// Capture data for event dispatch if status changed
+		if input.Status != "" && input.Status != oldThreadInfo.ThreadStatus {
+			statusChanged = true
+			formerStatus = oldThreadInfo.ThreadStatus
+			newStatus = input.Status
+			if hgID, ok := threadData["helper_group_id"].(int64); ok {
+				helperGroupID = hgID
+			}
+		}
+
 		return nil
 	})
 	service.MustNotBeError(err)
+
+	// Dispatch thread_status_changed event after transaction commits
+	if statusChanged {
+		event.Dispatch(httpRequest.Context(), event.TypeThreadStatusChanged, map[string]interface{}{
+			"participant_id":  strconv.FormatInt(participantID, 10),
+			"item_id":         strconv.FormatInt(itemID, 10),
+			"new_status":      newStatus,
+			"former_status":   formerStatus,
+			"helper_group_id": strconv.FormatInt(helperGroupID, 10),
+		})
+	}
 
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))
 	return nil

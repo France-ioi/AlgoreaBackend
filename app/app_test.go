@@ -41,7 +41,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(t, app.Database)
 	assert.NotNil(t, app.HTTPHandler)
 	assert.NotNil(t, app.apiCtx)
-	assert.Len(t, app.HTTPHandler.Middlewares(), 10)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 11)
 	require.NotEmpty(t, app.HTTPHandler.Routes())
 	assert.Equal(t, "/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
@@ -55,7 +55,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
-	assert.Len(t, app.HTTPHandler.Middlewares(), 9)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 10)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
@@ -140,6 +140,23 @@ func TestNew_DBErr(t *testing.T) {
 	assert.Equal(t, logrus.ErrorLevel, logMsg.Level)
 	assert.Equal(t, "db opening error", logMsg.Message)
 	assert.Equal(t, "database", logMsg.Data["module"])
+}
+
+func TestNew_EventDispatcherErr(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	appenv.SetDefaultEnvToTest()
+	// Set an invalid dispatcher type to trigger an error
+	t.Setenv("ALGOREA_EVENT__DISPATCHER", "invalid_dispatcher")
+	logger, hook := logging.NewMockLogger()
+	app, err := New(logger)
+	assert.Nil(t, app)
+	require.EqualError(t, err, "unable to initialize event dispatcher: unknown event dispatcher type: invalid_dispatcher")
+	logMsg := hook.LastEntry()
+	require.NotNil(t, logMsg)
+	assert.Equal(t, logrus.ErrorLevel, logMsg.Level)
+	assert.Equal(t, "unknown event dispatcher type: invalid_dispatcher", logMsg.Message)
+	assert.Equal(t, "event", logMsg.Data["module"])
 }
 
 func TestNew_DBConfigError(t *testing.T) {

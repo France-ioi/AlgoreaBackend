@@ -29,6 +29,7 @@ const (
 	authConfigKey     string = "auth"
 	tokenConfigKey    string = "token"
 	domainsConfigKey  string = "domains"
+	eventConfigKey    string = "event"
 )
 
 // LoadConfig loads and return the global configuration from files, flags, env, ...
@@ -167,4 +168,10 @@ func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem, err e
 		return nil, err
 	}
 	return config, nil
+}
+
+// EventConfig returns an event dynamic config from the global config
+// (env var changes impacts values).
+func EventConfig(globalConfig *viper.Viper) *viper.Viper {
+	return subconfig(globalConfig, eventConfigKey)
 }
