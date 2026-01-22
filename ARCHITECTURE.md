@@ -595,10 +595,9 @@ type Event struct {
 ### Event Types
 
 - `submission_created`: User submitted an answer
-- `score_updated`: User's score was updated
+- `grade_saved`: A grade was saved for an answer
 - `item_unlocked`: Item was unlocked for a user
-- `thread_opened`: Help thread was opened
-- `thread_closed`: Help thread was closed
+- `thread_status_changed`: Help thread status changed
 
 ### Configuration
 
