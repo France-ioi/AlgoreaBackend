@@ -150,12 +150,12 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 
 	// Dispatch grade_saved event after transaction commits
 	event.Dispatch(httpRequest.Context(), event.TypeGradeSaved, map[string]interface{}{
-		"answer_id":      requestData.ScoreToken.Payload.Converted.UserAnswerID,
-		"participant_id": requestData.ScoreToken.Payload.Converted.ParticipantID,
-		"attempt_id":     requestData.ScoreToken.Payload.Converted.AttemptID,
-		"item_id":        requestData.ScoreToken.Payload.Converted.LocalItemID,
+		"answer_id":      strconv.FormatInt(requestData.ScoreToken.Payload.Converted.UserAnswerID, 10),
+		"participant_id": strconv.FormatInt(requestData.ScoreToken.Payload.Converted.ParticipantID, 10),
+		"attempt_id":     strconv.FormatInt(requestData.ScoreToken.Payload.Converted.AttemptID, 10),
+		"item_id":        strconv.FormatInt(requestData.ScoreToken.Payload.Converted.LocalItemID, 10),
 		"validated":      validated,
-		"caller_id":      requestData.ScoreToken.Payload.Converted.UserID,
+		"caller_id":      strconv.FormatInt(requestData.ScoreToken.Payload.Converted.UserID, 10),
 		"score":          requestData.ScoreToken.Payload.Converted.Score,
 	})
 
