@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.36.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.35.0...v2.36.0) - 2026-01-22
+- new `event` package to dispatch event to external services
+- support for "submission_created", "grade_saved", and "thread_status_changed" events
+
 ## [v2.35.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.34.0...v2.35.0) - 2026-01-19
 - new service `generateIdentityToken` to get an identity token
 
