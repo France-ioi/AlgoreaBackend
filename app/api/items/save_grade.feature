@@ -101,6 +101,10 @@ Feature: Save grading result
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
     And the table "results_propagate_internal" should be empty
+    And an event "grade_saved" should have been dispatched with:
+      """
+      {"answer_id": 123, "participant_id": 101, "attempt_id": 0, "item_id": 50, "validated": true, "caller_id": 101, "score": 100}
+      """
 
   Scenario: User is able to save the grading result for a team (participant_id is the first integer in idAttempt in the score token)
     Given the database has the following table "attempts":

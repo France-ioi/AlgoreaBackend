@@ -13,6 +13,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
@@ -146,6 +147,17 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 	if !newGradingSaved {
 		return service.ErrForbidden(errors.New("the answer has been already graded or is not found"))
 	}
+
+	// Dispatch grade_saved event after transaction commits
+	event.Dispatch(httpRequest.Context(), event.TypeGradeSaved, map[string]interface{}{
+		"answer_id":      requestData.ScoreToken.Payload.Converted.UserAnswerID,
+		"participant_id": requestData.ScoreToken.Payload.Converted.ParticipantID,
+		"attempt_id":     requestData.ScoreToken.Payload.Converted.AttemptID,
+		"item_id":        requestData.ScoreToken.Payload.Converted.LocalItemID,
+		"validated":      validated,
+		"caller_id":      requestData.ScoreToken.Payload.Converted.UserID,
+		"score":          requestData.ScoreToken.Payload.Converted.Score,
+	})
 
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
 		"validated":      validated,

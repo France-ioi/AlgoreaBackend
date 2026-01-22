@@ -5,8 +5,8 @@ const (
 	// TypeSubmissionCreated is dispatched when a user submits an answer.
 	TypeSubmissionCreated = "submission_created"
 
-	// TypeScoreUpdated is dispatched when a user's score is updated.
-	TypeScoreUpdated = "score_updated"
+	// TypeGradeSaved is dispatched when a grade is saved for an answer.
+	TypeGradeSaved = "grade_saved"
 
 	// TypeItemUnlocked is dispatched when an item is unlocked for a user.
 	TypeItemUnlocked = "item_unlocked"
