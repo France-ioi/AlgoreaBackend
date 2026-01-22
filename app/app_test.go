@@ -142,6 +142,23 @@ func TestNew_DBErr(t *testing.T) {
 	assert.Equal(t, "database", logMsg.Data["module"])
 }
 
+func TestNew_EventDispatcherErr(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	appenv.SetDefaultEnvToTest()
+	// Set an invalid dispatcher type to trigger an error
+	t.Setenv("ALGOREA_EVENT__DISPATCHER", "invalid_dispatcher")
+	logger, hook := logging.NewMockLogger()
+	app, err := New(logger)
+	assert.Nil(t, app)
+	require.EqualError(t, err, "unable to initialize event dispatcher: unknown event dispatcher type: invalid_dispatcher")
+	logMsg := hook.LastEntry()
+	require.NotNil(t, logMsg)
+	assert.Equal(t, logrus.ErrorLevel, logMsg.Level)
+	assert.Equal(t, "unknown event dispatcher type: invalid_dispatcher", logMsg.Message)
+	assert.Equal(t, "event", logMsg.Data["module"])
+}
+
 func TestNew_DBConfigError(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
