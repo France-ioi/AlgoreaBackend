@@ -11,9 +11,6 @@ const (
 	// TypeItemUnlocked is dispatched when an item is unlocked for a user.
 	TypeItemUnlocked = "item_unlocked"
 
-	// TypeThreadOpened is dispatched when a help thread is opened.
-	TypeThreadOpened = "thread_opened"
-
-	// TypeThreadClosed is dispatched when a help thread is closed.
-	TypeThreadClosed = "thread_closed"
+	// TypeThreadStatusChanged is dispatched when a thread's status changes.
+	TypeThreadStatusChanged = "thread_status_changed"
 )
