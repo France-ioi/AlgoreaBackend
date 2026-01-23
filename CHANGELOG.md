@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.36.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.0...v2.36.1) - 2026-01-23
+- fix: level-2 configurations were not parsed correctly from environment variables
+
 ## [v2.36.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.35.0...v2.36.0) - 2026-01-22
 - new `event` package to dispatch event to external services
 - support for "submission_created", "grade_saved", and "thread_status_changed" events
