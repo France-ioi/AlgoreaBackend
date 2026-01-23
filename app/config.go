@@ -108,6 +108,7 @@ func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
 	globalConfig.SetDefault(subconfigKey, map[string]interface{}{})
 	subConfig := globalConfig.Sub(subconfigKey)
 	subConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, subconfigKey))
+	subConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
 	subConfig.AutomaticEnv()
 	return subConfig
 }

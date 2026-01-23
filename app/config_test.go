@@ -278,6 +278,35 @@ func TestServerConfig(t *testing.T) {
 	assert.Equal(t, 999, config.GetInt("anykey"))
 }
 
+func TestEventConfig(t *testing.T) {
+	globalConfig := viper.New()
+	globalConfig.Set("event.dispatcher", "sqs")
+	config := EventConfig(globalConfig)
+	require.NotNil(t, config)
+	assert.Equal(t, "sqs", config.GetString("dispatcher"))
+	t.Setenv("ALGOREA_EVENT__DISPATCHER", "none")
+	assert.Equal(t, "none", config.GetString("dispatcher"))
+}
+
+func TestEventConfig_NestedKeys(t *testing.T) {
+	globalConfig := viper.New()
+	globalConfig.Set("event.sqs.queueURL", "https://initial.example.com/queue")
+	globalConfig.Set("event.sqs.region", "us-east-1")
+	config := EventConfig(globalConfig)
+	require.NotNil(t, config)
+
+	// Verify initial values from config
+	assert.Equal(t, "https://initial.example.com/queue", config.GetString("sqs.queueURL"))
+	assert.Equal(t, "us-east-1", config.GetString("sqs.region"))
+
+	// Verify env vars override nested keys
+	t.Setenv("ALGOREA_EVENT__SQS__QUEUEURL", "https://override.example.com/queue")
+	assert.Equal(t, "https://override.example.com/queue", config.GetString("sqs.queueURL"))
+
+	t.Setenv("ALGOREA_EVENT__SQS__REGION", "eu-west-1")
+	assert.Equal(t, "eu-west-1", config.GetString("sqs.region"))
+}
+
 func TestDomainsConfig_Success(t *testing.T) {
 	globalConfig := viper.New()
 	sampleDomain := domain.ConfigItem{
