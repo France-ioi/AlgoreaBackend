@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.36.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.1...v2.36.2) - 2026-01-27
+- add who has updated the thread in the thread-update bus event
+
 ## [v2.36.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.0...v2.36.1) - 2026-01-23
 - fix: level-2 configurations were not parsed correctly from environment variables
 
