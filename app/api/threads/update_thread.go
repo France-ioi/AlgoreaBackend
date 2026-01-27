@@ -204,6 +204,7 @@ func (srv *Service) updateThread(responseWriter http.ResponseWriter, httpRequest
 			"new_status":      newStatus,
 			"former_status":   formerStatus,
 			"helper_group_id": strconv.FormatInt(helperGroupID, 10),
+			"updated_by":      strconv.FormatInt(user.GroupID, 10),
 		})
 	}
 
