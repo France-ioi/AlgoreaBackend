@@ -88,7 +88,7 @@ Feature: Update thread
       | 2022-01-01 00:00:00 | 1             | waiting_for_trainer | 100             |
     And an event "thread_status_changed" should have been dispatched with:
       """
-      {"participant_id": "3", "item_id": "1000", "new_status": "waiting_for_trainer", "former_status": "not_started", "helper_group_id": "100"}
+      {"participant_id": "3", "item_id": "1000", "new_status": "waiting_for_trainer", "former_status": "not_started", "helper_group_id": "100", "updated_by": "3"}
       """
 
   # To write on a thread, a user must fulfill either of those conditions:
@@ -238,7 +238,7 @@ Feature: Update thread
       | 2022-01-01 00:00:00 | closed |
     And an event "thread_status_changed" should have been dispatched with:
       """
-      {"participant_id": "3", "item_id": "99", "new_status": "closed", "former_status": "waiting_for_trainer", "helper_group_id": "10"}
+      {"participant_id": "3", "item_id": "99", "new_status": "closed", "former_status": "waiting_for_trainer", "helper_group_id": "10", "updated_by": "3"}
       """
 
   Scenario Outline: Participant of a thread can always switch the thread from open to any other status
