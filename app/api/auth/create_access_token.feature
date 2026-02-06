@@ -92,6 +92,10 @@ Feature: Create an access token
       }
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed 🐱", "last_name": "Amrani 🐱"}}
+      """
     And the table "users" should be:
       | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name  | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text              | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
       | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed 🐱 | Amrani 🐱 | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani 🐱 | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
@@ -255,6 +259,10 @@ Feature: Create an access token
       }
       """
     And the response header "Set-Cookie" should not be set
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "11", "login_id": "100000001", "login": "jane", "user_ip": "127.0.0.1", "profile": {"first_name": {{"<first_name>" != "null" ? "\"<first_name>\"" : "null"}}, "last_name": {{"<last_name>" != "null" ? "\"<last_name>\"" : "null"}}}}
+      """
     And the table "users" should remain unchanged, regardless of the row with group_id "11"
     And the table "users" at group_id "11" should be:
       | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text   | web_site   | sex   | email_verified   | last_ip   | time_zone   | notify_news   | photo_autoload   | public_first_name   | public_last_name    |
@@ -334,6 +342,10 @@ Feature: Create an access token
       """
     When I send a POST request to "/auth/token?code={{code_from_oauth}}"
     Then the response code should be 201
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "11", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
+      """
     And the table "users" should remain unchanged, regardless of the row with group_id "11"
     And the table "users" at group_id "11" should be:
       | group_id |
@@ -410,6 +422,10 @@ Feature: Create an access token
       }
       """
     And the response header "Set-Cookie" should not be set
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
+      """
     And the table "sessions" should be:
       | session_id          | user_id             |
       | 8674665223082153551 | 5577006791947779410 |
@@ -490,6 +506,10 @@ Feature: Create an access token
       }
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "11", "login_id": "100000001", "login": "jane", "user_ip": "127.0.0.1", "profile": {"first_name": "Jane", "last_name": "Doe"}}
+      """
     And the table "access_tokens" should be:
       | session_id          | token                       |
       | 1                   | previousaccesstoken1        |
@@ -552,6 +572,10 @@ Feature: Create an access token
       }
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
+      """
     And the table "sessions" should be:
       | session_id          | user_id             |
       | 8674665223082153551 | 5577006791947779410 |
@@ -620,6 +644,10 @@ Feature: Create an access token
       access_token=; Path=/api/; Domain=example.org; Expires=Tue, 16 Jul 2019 21:45:49 GMT; Max-Age=0; HttpOnly; SameSite=Strict
       access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None
     """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
+      """
 
   Scenario: Create a new user with cycled badges (should refuse to create cycles)
     Given the time now is "2019-07-16T22:02:28Z"
@@ -684,6 +712,10 @@ Feature: Create an access token
           "expires_in": 31622400
         }
       }
+      """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
       """
     And logs should contain:
       """
@@ -797,6 +829,10 @@ Feature: Create an access token
         }
       }
       """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
+      """
     And the table "users" should be:
       | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
       | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
@@ -898,6 +934,10 @@ Feature: Create an access token
           "expires_in": 31622400
         }
       }
+      """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
       """
     And logs should contain:
       """
@@ -1067,6 +1107,10 @@ Feature: Create an access token
           "expires_in": 31622420
         }
       }
+      """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "11", "login_id": "100000001", "login": "jane", "user_ip": "127.0.0.1", "profile": null}
       """
     And the column "users.profile" at group_id "11" should be, in JSON:
       """

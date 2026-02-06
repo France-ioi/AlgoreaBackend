@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/render"
@@ -18,6 +19,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/auth"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loginmodule"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
@@ -278,8 +280,9 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 	domainConfig := domain.ConfigFromContext(httpRequest.Context())
 	userIP := strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0] //nolint:mnd // cut off the port
 
+	var userID int64
 	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
-		userID := createOrUpdateUser(store.Users(), userProfile, domainConfig, userIP)
+		userID = createOrUpdateUser(store.Users(), userProfile, domainConfig, userIP)
 		logging.LogEntrySetField(httpRequest, "user_id", userID)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile.Badges, userID, true))
 
@@ -294,6 +297,9 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 
 		return nil
 	}))
+
+	event.Dispatch(httpRequest.Context(), event.TypeUserAuthenticated,
+		userAuthenticatedEventPayload(userID, userProfile, userIP))
 
 	srv.respondWithNewAccessToken(
 		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token.AccessToken, expiresIn, cookieAttributes)
@@ -525,4 +531,19 @@ func createGroupFromLogin(store *database.GroupStore, login string, domainConfig
 
 func contextWithParsedCookieParameters(ctx context.Context, cookieParameters *CookieParameters) context.Context {
 	return context.WithValue(ctx, ctxKeyParsedCookieParameters, cookieParameters)
+}
+
+func userAuthenticatedEventPayload(userID int64, userProfile *loginmodule.UserProfile, userIP string) map[string]interface{} {
+	var profile interface{}
+	if userProfile.Profile != nil {
+		profile = *userProfile.Profile
+	}
+
+	return map[string]interface{}{
+		"user_id":  strconv.FormatInt(userID, 10),
+		"login_id": strconv.FormatInt(userProfile.LoginID, 10),
+		"login":    userProfile.Login,
+		"user_ip":  userIP,
+		"profile":  profile,
+	}
 }

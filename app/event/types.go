@@ -13,4 +13,7 @@ const (
 
 	// TypeThreadStatusChanged is dispatched when a thread's status changes.
 	TypeThreadStatusChanged = "thread_status_changed"
+
+	// TypeUserAuthenticated is dispatched when a user authenticates via the login module.
+	TypeUserAuthenticated = "user_authenticated"
 )
