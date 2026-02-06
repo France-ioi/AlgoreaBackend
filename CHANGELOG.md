@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.36.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.2...v2.36.3) - 2026-02-06
+- new event dispatched: user_authenticated
+
 ## [v2.36.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.1...v2.36.2) - 2026-01-27
 - add who has updated the thread in the thread-update bus event
 
