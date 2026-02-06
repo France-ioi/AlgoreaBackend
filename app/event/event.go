@@ -21,5 +21,5 @@ const (
 	// EventVersion is the current event schema version.
 	// Increment minor for non-breaking changes (adding optional fields).
 	// Increment major for breaking changes (removing fields, changing semantics).
-	EventVersion = "1.1"
+	EventVersion = "1.2"
 )

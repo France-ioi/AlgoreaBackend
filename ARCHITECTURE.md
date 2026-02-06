@@ -598,6 +598,7 @@ type Event struct {
 - `grade_saved`: A grade was saved for an answer
 - `item_unlocked`: Item was unlocked for a user
 - `thread_status_changed`: Help thread status changed
+- `user_authenticated`: User authenticated via login module (new login with code)
 
 ### Configuration
 

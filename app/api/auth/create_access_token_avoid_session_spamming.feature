@@ -152,6 +152,10 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         }
       }
       """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "@UserWith9Sessions", "login_id": "9", "login": "login", "user_ip": "127.0.0.1", "profile": null}
+      """
     And there are 10 sessions for user @UserWith9Sessions
 
   Scenario: Should add the new session and delete the oldest one when the user have 10 sessions
@@ -195,6 +199,10 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
           "expires_in": 31622420
         }
       }
+      """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "@UserWith10Sessions", "login_id": "10", "login": "login", "user_ip": "127.0.0.1", "profile": null}
       """
     And there are 10 sessions for user @UserWith10Sessions
     And there is no session @Session_UserWith10Sessions_1
@@ -241,6 +249,10 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
         }
       }
       """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "@UserWith10Sessions_2", "login_id": "102", "login": "login", "user_ip": "127.0.0.1", "profile": null}
+      """
     And there are 10 sessions for user @UserWith10Sessions_2
     And there is no session @Session_UserWith10Sessions_2_1
 
@@ -285,6 +297,10 @@ Feature: To avoid session creation spamming, we allow a maximum of 10 sessions p
           "expires_in": 31622420
         }
       }
+      """
+    And an event "user_authenticated" should have been dispatched with:
+      """
+      {"user_id": "@UserWith11Sessions", "login_id": "11", "login": "login", "user_ip": "127.0.0.1", "profile": null}
       """
     And there are 10 sessions for user @UserWith10Sessions
     And there is no session @Session_UserWith11Sessions_2
