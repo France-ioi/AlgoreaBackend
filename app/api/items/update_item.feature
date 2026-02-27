@@ -783,3 +783,17 @@ Background:
     And the table "items_items" at parent_item_id "21" should be:
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 112           | 1           | Challenge | 2            | as_content               | as_is                         | true                   | true              | true             |
+
+  Scenario: Valid (set children_layout to Hide)
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/60" with the following body:
+      """
+      {
+        "children_layout": "Hide"
+      }
+      """
+    Then the response should be "updated"
+    And the table "items" should remain unchanged, regardless of the row with id "60"
+    And the table "items" at id "60" should be:
+      | id | type    | children_layout |
+      | 60 | Chapter | Hide            |

@@ -135,7 +135,7 @@ type itemResponse struct {
 	// enum: forceYes,forceNo,default
 	FullScreen string `json:"full_screen"`
 	// required: true
-	// enum: List,Grid
+	// enum: List,Grid,Hide
 	ChildrenLayout string `json:"children_layout"`
 	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`

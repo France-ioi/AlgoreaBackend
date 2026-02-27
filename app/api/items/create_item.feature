@@ -538,3 +538,28 @@ Feature: Create item
       | 0          | 11             | 21      | 0              |
       | 0          | 11             | 30      | 25             |
       | 0          | 11             | 31      | 50             |
+
+  Scenario: Valid (set children_layout to Hide)
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Chapter",
+        "language_tag": "sl",
+        "title": "my chapter",
+        "children_layout": "Hide",
+        "parent": {"item_id": "21"}
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": { "id": "5577006791947779410" }
+      }
+      """
+    And the table "items" at id "5577006791947779410" should be:
+      | id                  | type    | children_layout |
+      | 5577006791947779410 | Chapter | Hide            |

@@ -712,3 +712,18 @@ Feature: Get item view information
     | none                | enter                    | none                              | false                  | true                            | {{watched_group_permissions}}                   |
     | none                | none                     | content                           | false                  | true                            | {{watched_group_permissions}}                   |
     | result              | none                     | none                              | false                  | false                           | {{watched_group_average_score_and_permissions}} |
+
+  Scenario: Chapter with children_layout set to Hide
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id  | type    | default_language_tag | children_layout |
+      | 230 | Chapter | en                   | Hide            |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title     |
+      | 230     | en           | Chapter C |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
+      | 11       | 230     | solution           | none                     | none               | none                | false              |
+    When I send a GET request to "/items/230"
+    Then the response code should be 200
+    And the response at $.children_layout should be "Hide"
