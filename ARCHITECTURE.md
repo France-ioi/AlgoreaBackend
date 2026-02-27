@@ -1080,10 +1080,11 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 
 ### Migrations
 
-- Named: `YYMMDDHHMMSS_description.sql` or `.go`
+- Named: `YYMMDDHHMM_description.sql` or `.go` (10-digit timestamp)
 - Up and down in same file (for SQL)
 - Use `goose` for migration management
 - Never modify old migrations (create new ones)
+- **`db/schema/schema.sql`** is the base schema snapshot loaded by `db-restore`. Migrations are applied on top of it by `db-migrate`. Do **not** manually edit `schema.sql` to reflect migration changes.
 
 ---
 
