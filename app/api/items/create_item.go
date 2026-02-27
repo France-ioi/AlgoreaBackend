@@ -29,7 +29,7 @@ type Item struct {
 	TextID                 *string `json:"text_id"`
 	DisplayDetailsInParent bool    `json:"display_details_in_parent"`
 	ReadOnly               bool    `json:"read_only"`
-	// enum: List,Grid
+	// enum: List,Grid,Hide
 	ChildrenLayout string `json:"children_layout"`
 	// enum: forceYes,forceNo,default
 	FullScreen   string `json:"full_screen"   validate:"oneof=forceYes forceNo default"`

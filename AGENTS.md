@@ -51,6 +51,14 @@ Note: There may be a flaky timeout test in `app/database` that occasionally hang
 
 If you get DB connection errors, ensure docker-compose services are running with `docker-compose ps`.
 
+## Database Migrations
+
+Migrations live in `db/migrations/` and use [goose](https://github.com/pressly/goose). They can be SQL (`.sql`) or Go (`.go`) files.
+
+**Naming convention**: `YYMMDDHHMM_description.sql` (10-digit timestamp, e.g., `2602270000_add_hide_to_items_children_layout.sql`).
+
+**Important**: `db/schema/schema.sql` is the base schema snapshot loaded by `db-restore`. Migrations are applied on top of it by `db-migrate`. Do **not** manually edit `schema.sql` to reflect migration changes -- the migration file is the sole source of truth for schema evolution.
+
 ## Event System
 
 The project has an event dispatch system that sends domain events to external systems (e.g., AWS SQS).
