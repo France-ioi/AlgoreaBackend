@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.37.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.3...v2.37.0) - 2026-02-27
+- add "Hide" option for `children_layout` item property
+
 ## [v2.36.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.2...v2.36.3) - 2026-02-06
 - new event dispatched: user_authenticated
 
