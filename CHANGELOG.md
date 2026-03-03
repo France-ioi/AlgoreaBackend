@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.38.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.37.0...v2.38.0) - 2026-03-03
+- allow `Base` group to be given as input to `path-from-root`
+
 ## [v2.37.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.36.3...v2.37.0) - 2026-02-27
 - add "Hide" option for `children_layout` item property
 
