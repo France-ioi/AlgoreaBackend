@@ -18,13 +18,15 @@ import (
 //		Finds a path from any of root groups to a given group.
 //
 //
-//		A path is an array of group ids from a visible group root
-//		(a visible non-"base" group without non-"base" parent) to the input group.
-//		Each group must be visible, so either
+//		A path is an array of group ids from a visible group root to the input group.
+//		The input group may be of any type including "Base".
+//		Each non-terminal group in the path must be a visible non-"Base" group, so either
 //		1) ancestors of groups he joined,
 //		2) ancestors of non-user groups he manages,
 //		3) descendants of groups he manages,
 //		4) groups with is_public=1.
+//		The terminal group (the input group itself) must also be visible but may be of type "Base".
+//		Base groups are never included as intermediate nodes in the path.
 //		Of all possible paths the service chooses any of shortest ones.
 //
 //
@@ -79,7 +81,7 @@ func findGroupPath(store *database.DataStore, groupID int64, user *database.User
 		store.ActiveGroupAncestors().Where("child_group_id = ?", groupID).
 			Joins("JOIN `groups` ON groups.id = ancestor_group_id"), user).
 		Select("ancestor_group_id AS id").
-		Where("groups.type != 'Base'")
+		Where("groups.type != 'Base' OR ancestor_group_id = ?", groupID)
 
 	var pathStrings []string
 	service.MustNotBeError(store.Raw(`
