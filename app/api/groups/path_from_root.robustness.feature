@@ -144,9 +144,7 @@ Feature: Find a group path - robustness
     And the response error message should contain "Insufficient access rights"
   Examples:
     | group_id |
-    | 1        |
     | 10       |
-    | 12       |
     | 50       |
 
   Scenario: Ancestors of managed users are not visible

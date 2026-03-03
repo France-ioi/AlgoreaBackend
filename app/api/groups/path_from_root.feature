@@ -154,6 +154,24 @@ Feature: Find a group path
     | 23       | "26","22","23"      |
     | 38       | "38"                |
     | 41       | "26","4","41"       |
+    | 1        | "1"                 |
+    | 2        | "2"                 |
+    | 3        | "3"                 |
+    | 12       | "12"                |
+    | 27       | "26","27"           |
+
+  Scenario: Paths through Base groups are not returned
+    Given I am the user with id "41"
+    # Group 4 (Joined Class) has two parents: group 3 (Base) and group 26 (Class).
+    # The path through the Base parent (3 -> 4) is ignored; the non-Base path (26 -> 4) is returned.
+    When I send a GET request to "/groups/4/path-from-root"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "path": ["26","4"]
+    }
+    """
 
   Scenario: Ancestors of managed groups are visible
     Given I am the user with id "50"
