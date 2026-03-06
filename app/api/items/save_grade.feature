@@ -103,7 +103,7 @@ Feature: Save grading result
     And the table "results_propagate_internal" should be empty
     And an event "grade_saved" should have been dispatched with:
       """
-      {"answer_id": "123", "participant_id": "101", "attempt_id": "0", "item_id": "50", "validated": true, "caller_id": "101", "score": 100}
+      {"answer_id": "123", "participant_id": "101", "attempt_id": "0", "item_id": "50", "validated": true, "caller_id": "101", "score": 100, "score_improved": true}
       """
 
   Scenario: User is able to save the grading result for a team (participant_id is the first integer in idAttempt in the score token)
@@ -215,6 +215,10 @@ Feature: Save grading result
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
     And the table "results_propagate_internal" should be empty
+    And an event "grade_saved" should have been dispatched with:
+      """
+      {"answer_id": "123", "participant_id": "101", "attempt_id": "0", "item_id": "50", "validated": false, "caller_id": "101", "score": <score>, "score_improved": true}
+      """
   Examples:
     | score | score_edit_rule | score_edit_value | score_computed | parent_score |
     | 99    | null            | null             | 99             | 49.5         |
@@ -283,6 +287,10 @@ Feature: Save grading result
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
     And the table "results_propagate_internal" should be empty
+    And an event "grade_saved" should have been dispatched with:
+      """
+      {"answer_id": "124", "participant_id": "101", "attempt_id": "1", "item_id": "60", "validated": false, "caller_id": "101", "score": 99, "score_improved": true}
+      """
 
   Scenario Outline: Should keep previous score if it is greater
     Given the database has the following table "answers":
@@ -298,10 +306,10 @@ Feature: Save grading result
       | id | participant_id |
       | 0  | 101            |
     And the database has the following table "results":
-      | participant_id | attempt_id | item_id | score_computed | score_obtained_at   | score_edit_rule   | score_edit_value   |
-      | 101            | 0          | 10      | 20             | 2018-05-29 06:38:38 | null              | null               |
-      | 101            | 0          | 50      | 20             | 2018-05-29 06:38:38 | <score_edit_rule> | <score_edit_value> |
-      | 101            | 0          | 60      | 20             | 2018-05-29 06:38:38 | null              | null               |
+      | participant_id | attempt_id | item_id | score_computed | score_obtained_at   | tasks_tried | score_edit_rule   | score_edit_value   |
+      | 101            | 0          | 10      | 20             | 2018-05-29 06:38:38 | 1           | null              | null               |
+      | 101            | 0          | 50      | 20             | 2018-05-29 06:38:38 | 1           | <score_edit_rule> | <score_edit_value> |
+      | 101            | 0          | 60      | 20             | 2018-05-29 06:38:38 | 1           | null              | null               |
     And "scoreToken" is a token signed by the task platform with the following payload:
       """
       {
@@ -337,6 +345,10 @@ Feature: Save grading result
       | 124       | <score> | 1                                                |
       | 125       | 20      | 0                                                |
     And the table "results" should remain unchanged
+    And an event "grade_saved" should have been dispatched with:
+      """
+      {"answer_id": "124", "participant_id": "101", "attempt_id": "0", "item_id": "60", "validated": false, "caller_id": "101", "score": <score>, "score_improved": false}
+      """
     Examples:
       | score | score_edit_rule | score_edit_value |
       | 19    | null            | null             |
@@ -640,3 +652,7 @@ Feature: Save grading result
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
     And the table "results_propagate_internal" should be empty
+    And an event "grade_saved" should have been dispatched with:
+      """
+      {"answer_id": "123", "participant_id": "101", "attempt_id": "0", "item_id": "50", "validated": true, "caller_id": "101", "score": 100, "score_improved": false}
+      """

@@ -114,12 +114,12 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 
 	logging.LogEntrySetField(httpRequest, "user_id", requestData.ScoreToken.Payload.Converted.UserID)
 
-	var validated, newGradingSaved bool
+	var validated, newGradingSaved, scoreImproved bool
 	unlockedItems := make([]map[string]interface{}, 0)
 	err = store.InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.SetPropagationsModeToSync())
 		var unlockedItemIDs *golang.Set[int64]
-		validated, newGradingSaved, unlockedItemIDs = saveGradingResultsIntoDB(store, &requestData)
+		validated, newGradingSaved, scoreImproved, unlockedItemIDs = saveGradingResultsIntoDB(store, &requestData)
 
 		if !newGradingSaved || unlockedItemIDs.Size() == 0 {
 			return nil
@@ -157,6 +157,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 		"validated":      validated,
 		"caller_id":      strconv.FormatInt(requestData.ScoreToken.Payload.Converted.UserID, 10),
 		"score":          requestData.ScoreToken.Payload.Converted.Score,
+		"score_improved": scoreImproved,
 	})
 
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
@@ -167,7 +168,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 }
 
 func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeRequestParsed) (
-	validated, ok bool, unlockedItemIDs *golang.Set[int64],
+	validated, ok, scoreImproved bool, unlockedItemIDs *golang.Set[int64],
 ) {
 	score := requestData.ScoreToken.Payload.Converted.Score
 
@@ -175,7 +176,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 	gotFullScore := score == maxScore
 	validated = gotFullScore // currently a validated task is only a task with a full score (score == 100)
 	if !saveNewScoreIntoGradings(store, requestData, score) {
-		return validated, false, golang.NewSet[int64]()
+		return validated, false, false, golang.NewSet[int64]()
 	}
 
 	// Build query to update results
@@ -222,8 +223,11 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 	updateResult := store.Exec("UPDATE results JOIN answers ON answers.id = ? "+
 		updateExpr+" WHERE results.participant_id = ? AND results.attempt_id = ? AND results.item_id = ?", values...)
 	service.MustNotBeError(updateResult.Error())
-	if updateResult.RowsAffected() == 0 { // nothing to propagate
-		return validated, true, golang.NewSet[int64]()
+	// RowsAffected() == 0 means the result row didn't change, i.e., the score was not improved.
+	// When there is no prior grading, tasks_tried is 0 and will change to 1, making the row change
+	// even if the computed score stays at 0 — going from "no grading" to "score 0" is treated as an improvement.
+	if updateResult.RowsAffected() == 0 {
+		return validated, true, false, golang.NewSet[int64]()
 	}
 
 	resultStore := store.Results()
@@ -234,7 +238,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 	unlockedItemIDs, err := resultStore.PropagateAndCollectUnlockedItemsForParticipant(requestData.ScoreToken.Payload.Converted.ParticipantID)
 	service.MustNotBeError(err)
 
-	return validated, true, unlockedItemIDs
+	return validated, true, true, unlockedItemIDs
 }
 
 func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeRequestParsed, score float64) bool {
