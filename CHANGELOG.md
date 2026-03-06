@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.39.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.38.0...v2.39.0) - 2026-03-06
+- add `score_improved` field to the `grade_saved` event payload
+
 ## [v2.38.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.37.0...v2.38.0) - 2026-03-03
 - allow `Base` group to be given as input to `path-from-root`
 
