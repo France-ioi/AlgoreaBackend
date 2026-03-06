@@ -595,7 +595,7 @@ type Event struct {
 ### Event Types
 
 - `submission_created`: User submitted an answer
-- `grade_saved`: A grade was saved for an answer
+- `grade_saved`: A grade was saved for an answer. Payload includes `score_improved` (bool) indicating whether the result's computed score was updated (i.e., the new grade set a new best score).
 - `item_unlocked`: Item was unlocked for a user
 - `thread_status_changed`: Help thread status changed
 - `user_authenticated`: User authenticated via login module (new login with code)
