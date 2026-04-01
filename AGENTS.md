@@ -51,6 +51,17 @@ Note: There may be a flaky timeout test in `app/database` that occasionally hang
 
 If you get DB connection errors, ensure docker-compose services are running with `docker-compose ps`.
 
+## Comments
+- Do NOT add obvious, narrating comments (e.g., `// increment counter`, `// return result`).
+- DO add comments when a non-trivial choice has been made and the reasoning is not self-evident from the code. Examples:
+  - Why a particular algorithm, data structure, or approach was chosen over alternatives
+  - Why a value is hardcoded or why a specific threshold/constant was picked
+  - Workarounds for library quirks, database engine behavior, or API limitations
+  - Non-obvious performance considerations or trade-offs
+  - Business logic constraints that aren't apparent from the code alone
+  - Why something is intentionally left out (e.g., `// No error check needed: Write() on bytes.Buffer never fails`)
+- When refactoring or rewriting code, **preserve all existing explanatory comments**. Move them to the appropriate new location if the code they describe has moved. Only remove a comment if the code change makes the comment factually obsolete.
+
 ## Database Migrations
 
 Migrations live in `db/migrations/` and use [goose](https://github.com/pressly/goose). They can be SQL (`.sql`) or Go (`.go`) files.
