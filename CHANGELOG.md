@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.40.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.39.0...v2.40.0) - 2026-04-10
+- new service: `generatePermissionsToken` to get a signed token with the user's permissions on an item
+
 ## [v2.39.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.38.0...v2.39.0) - 2026-03-06
 - add `score_improved` field to the `grade_saved` event payload
 
