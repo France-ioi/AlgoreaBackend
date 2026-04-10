@@ -53,6 +53,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.applyDependency).ServeHTTP)
 	routerWithAuthAndParticipant.Get("/items/{item_id}/dependencies", service.AppHandler(srv.getItemDependencies).ServeHTTP)
 	routerWithAuth.Get("/items/search", service.AppHandler(srv.searchForItems).ServeHTTP)
+	routerWithAuth.Post("/items/{item_id}/permissions-token", service.AppHandler(srv.generatePermissionsToken).ServeHTTP)
 
 	routerWithAuthAndParticipant.Post("/items/{item_id}/attempts/{attempt_id}/generate-task-token",
 		service.AppHandler(srv.generateTaskToken).ServeHTTP)

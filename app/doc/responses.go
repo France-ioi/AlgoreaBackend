@@ -264,3 +264,26 @@ type identityTokenResponse struct {
 		} `json:"data"`
 	}
 }
+
+// Created. The permissions token was generated successfully.
+// swagger:response permissionsTokenResponse
+type permissionsTokenResponse struct {
+	// in:body
+	Body struct {
+		// enum: created
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// The signed JWS permissions token
+			// required: true
+			PermissionsToken string `json:"permissions_token"`
+			// Token lifetime in seconds
+			// required: true
+			ExpiresIn int32 `json:"expires_in"`
+		} `json:"data"`
+	}
+}
