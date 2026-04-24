@@ -55,7 +55,7 @@ type updatedStartResultResponse struct { //nolint:unused // used in swagger docu
 //			- name: ids
 //				in: path
 //				type: string
-//				description: slash-separated list of item IDs (no more than 10 IDs)
+//				description: slash-separated list of item IDs (no more than 15 IDs)
 //				required: true
 //			- name: attempt_id
 //				in: query

@@ -39,9 +39,9 @@ Feature: Start results for an item path - robustness
 
   Scenario: The path is too long
     Given I am the user with id "101"
-    When I send a POST request to "/items/1/2/3/4/5/6/7/8/9/10/11/start-result-path"
+    When I send a POST request to "/items/1/2/3/4/5/6/7/8/9/10/11/12/13/14/15/16/start-result-path"
     Then the response code should be 400
-    And the response error message should contain "No more than 10 ids expected"
+    And the response error message should contain "No more than 15 ids expected"
     And the table "results" should remain unchanged
 
   Scenario: Invalid as_team_id

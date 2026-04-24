@@ -160,11 +160,11 @@ Feature: Get item breadcrumbs - robustness
     Then the response code should be 400
     And the response error message should contain "Unable to parse one of the integers given as query args (value: '11111111111111111111111111111', param: 'ids')"
 
-  Scenario: More than 10 ids
+  Scenario: More than 15 ids
     And I am the user with id "11"
-    When I send a GET request to "/items/1/2/3/4/5/6/7/8/9/10/11/breadcrumbs"
+    When I send a GET request to "/items/1/2/3/4/5/6/7/8/9/10/11/12/13/14/15/16/breadcrumbs"
     Then the response code should be 400
-    And the response error message should contain "No more than 10 ids expected"
+    And the response error message should contain "No more than 15 ids expected"
 
   Scenario: Invalid attempt_id
     And I am the user with id "11"
