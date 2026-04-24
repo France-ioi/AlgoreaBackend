@@ -164,8 +164,22 @@ func findItemPaths(store *database.DataStore, participantID, itemID int64, limit
 			        CAST(LPAD(IFNULL(attempts.id, '!'), 20, 0) AS CHAR(1024)), results.started_at IS NOT NULL,
 			        attempts.ended_at IS NULL AND NOW() < attempts.allows_submissions_until
 			FROM root_ancestors
-			LEFT JOIN attempts ON attempts.participant_id = ? AND
-				(NOT root_ancestors.requires_explicit_entry OR attempts.root_item_id = root_ancestors.id)
+			-- For items requiring explicit entry, the matched attempt usually must be rooted at the item itself.
+			-- We additionally allow non-rooted attempts when there is a STARTED result for the item on that attempt:
+			-- having such a started result is what proves the participant has actually entered the item, even if the
+			-- result is not on an attempt rooted at it (this can happen e.g. when "requires_explicit_entry" was flipped
+			-- on after the result was created). A non-started result is intentionally NOT enough on its own.
+			LEFT JOIN attempts ON attempts.participant_id = ? AND (
+				NOT root_ancestors.requires_explicit_entry
+				OR attempts.root_item_id = root_ancestors.id
+				OR EXISTS (
+					SELECT 1 FROM results AS started_results
+					WHERE started_results.participant_id = attempts.participant_id
+						AND started_results.attempt_id = attempts.id
+						AND started_results.item_id = root_ancestors.id
+						AND started_results.started_at IS NOT NULL
+				)
+			)
 			LEFT JOIN results ON results.participant_id = attempts.participant_id AND
 				attempts.id = results.attempt_id AND results.item_id = root_ancestors.id
 			WHERE root_ancestors.id = ? OR (
@@ -182,8 +196,20 @@ func findItemPaths(store *database.DataStore, participantID, itemID int64, limit
 			FROM paths
 			JOIN items_items ON items_items.parent_item_id = paths.final_item_id
 			JOIN item_ancestors ON item_ancestors.id = items_items.child_item_id
-			LEFT JOIN attempts ON attempts.participant_id = ? AND
-				(NOT item_ancestors.requires_explicit_entry OR attempts.root_item_id = item_ancestors.id) AND
+			-- Same relaxation as in the base case above: explicit-entry items normally require an attempt rooted
+			-- at the item, but we also accept non-rooted attempts that carry a STARTED result for the item.
+			-- A non-started result is intentionally NOT enough on its own to justify the relaxation.
+			LEFT JOIN attempts ON attempts.participant_id = ? AND (
+				NOT item_ancestors.requires_explicit_entry
+				OR attempts.root_item_id = item_ancestors.id
+				OR EXISTS (
+					SELECT 1 FROM results AS started_results
+					WHERE started_results.participant_id = attempts.participant_id
+						AND started_results.attempt_id = attempts.id
+						AND started_results.item_id = item_ancestors.id
+						AND started_results.started_at IS NOT NULL
+				)
+			) AND
 				IF(attempts.root_item_id = item_ancestors.id, attempts.parent_attempt_id, attempts.id) = paths.final_attempt_id
 			LEFT JOIN results ON results.participant_id = attempts.participant_id AND
 				attempts.id = results.attempt_id AND results.item_id = item_ancestors.id
