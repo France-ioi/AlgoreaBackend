@@ -36,7 +36,7 @@ import (
 //		- name: ids
 //			in: path
 //			type: string
-//			description: slash-separated list of IDs (no more than 10 IDs)
+//			description: slash-separated list of IDs (no more than 15 IDs)
 //			required: true
 //		- name: parent_attempt_id
 //			description: "`id` of an attempt for the second to the final item in the path.
@@ -195,7 +195,11 @@ func attemptIDOrParentAttemptID(httpRequest *http.Request) (
 	return attemptID, parentAttemptID, attemptIDSet, nil
 }
 
-const maxNumberOfIDsInItemPath = 10
+// maxNumberOfIDsInItemPath caps the depth of any item path passed in URLs (breadcrumbs, start-result(-path),
+// enter, attempts). It cannot grow much larger because BreadcrumbsHierarchy* SQL builds ~4·N joined tables
+// per path of length N (visible_items + results + attempts + items_items per step, plus a tail results+attempts),
+// and MySQL has a hard limit of 61 joined tables per query (~4·15 − 1 = 59, safely under the limit).
+const maxNumberOfIDsInItemPath = 15
 
 func idsFromRequest(r *http.Request) ([]int64, error) {
 	return service.ResolveURLQueryPathInt64SliceFieldWithLimit(r, "ids", maxNumberOfIDsInItemPath)

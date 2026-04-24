@@ -4,7 +4,9 @@ package database_test
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -1038,6 +1040,86 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			}))
 		})
 	}
+}
+
+// TestItemStore_BreadcrumbsHierarchy_AtMaxItemPathLength guards against MySQL's hard limit
+// of 61 joined tables per query. The breadcrumbs SQL builds ~4·N table references for a path
+// of length N, so we exercise the full chain at the maximum depth allowed by URL routing
+// (maxNumberOfIDsInItemPath in app/api/items/get_breadcrumbs.go) to make sure the query
+// still executes. If maxNumberOfIDsInItemPath is bumped, this constant must be bumped too
+// (and the SQL must be checked for fitting under the MySQL limit).
+func TestItemStore_BreadcrumbsHierarchy_AtMaxItemPathLength(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	const maxItemPathLength = 15
+	const groupID = int64(101)
+	const attemptID = int64(0)
+
+	ids := make([]int64, maxItemPathLength)
+	for i := range ids {
+		ids[i] = int64(i + 1)
+	}
+
+	var fixture strings.Builder
+	fixture.WriteString("items:\n")
+	for _, id := range ids {
+		fmt.Fprintf(&fixture, "  - {id: %d, default_language_tag: fr}\n", id)
+	}
+	fixture.WriteString("items_items:\n")
+	for i := 0; i < len(ids)-1; i++ {
+		fmt.Fprintf(&fixture, "  - {parent_item_id: %d, child_item_id: %d, child_order: 1}\n", ids[i], ids[i+1])
+	}
+	fmt.Fprintf(&fixture, "groups:\n  - {id: %d, root_activity_id: %d}\n", groupID, ids[0])
+	fixture.WriteString("permissions_generated:\n")
+	for _, id := range ids {
+		fmt.Fprintf(&fixture, "  - {group_id: %d, item_id: %d, can_view_generated: content}\n", groupID, id)
+	}
+	fmt.Fprintf(&fixture, "attempts:\n  - {participant_id: %d, id: %d}\n", groupID, attemptID)
+	fixture.WriteString("results:\n")
+	for _, id := range ids {
+		fmt.Fprintf(&fixture, "  - {participant_id: %d, attempt_id: %d, item_id: %d, started_at: 2019-05-30 11:00:00}\n",
+			groupID, attemptID, id)
+	}
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), fixture.String())
+	defer func() { _ = db.Close() }()
+
+	wantAttemptIDMapForAttempt := make(map[int64]int64, len(ids))
+	for _, id := range ids {
+		wantAttemptIDMapForAttempt[id] = attemptID
+	}
+	wantAttemptIDMapForParentAttempt := make(map[int64]int64, len(ids)-1)
+	for _, id := range ids[:len(ids)-1] {
+		wantAttemptIDMapForParentAttempt[id] = attemptID
+	}
+	wantAttemptNumberMap := map[int64]int{}
+
+	testEachWriteLockMode(t, "BreadcrumbsHierarchyForAttempt", func(t *testing.T, writeLock bool) {
+		t.Helper()
+		testoutput.SuppressIfPasses(t)
+
+		assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+			gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(ids, groupID, attemptID, writeLock)
+			require.NoError(t, err,
+				"BreadcrumbsHierarchyForAttempt failed at the max path length; "+
+					"the MySQL 61-tables-per-join limit may have been exceeded")
+			assertBreadcrumbsHierarchy(t, wantAttemptIDMapForAttempt, gotIDs, wantAttemptNumberMap, gotNumbers, err)
+			return nil
+		}))
+	})
+	testEachWriteLockMode(t, "BreadcrumbsHierarchyForParentAttempt", func(t *testing.T, writeLock bool) {
+		t.Helper()
+		testoutput.SuppressIfPasses(t)
+
+		assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+			gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForParentAttempt(ids, groupID, attemptID, writeLock)
+			require.NoError(t, err,
+				"BreadcrumbsHierarchyForParentAttempt failed at the max path length; "+
+					"the MySQL 61-tables-per-join limit may have been exceeded")
+			assertBreadcrumbsHierarchy(t, wantAttemptIDMapForParentAttempt, gotIDs, wantAttemptNumberMap, gotNumbers, err)
+			return nil
+		}))
+	})
 }
 
 func testEachWriteLockMode(t *testing.T, testName string, testFunc func(t *testing.T, writeLock bool)) {
