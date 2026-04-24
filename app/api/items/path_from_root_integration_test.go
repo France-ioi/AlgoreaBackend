@@ -621,6 +621,136 @@ func Test_findItemPaths(t *testing.T) {
 			args: args{participantID: 103, itemID: 2, limit: 1},
 		},
 		{
+			name: "supports paths starting with a root item requiring explicit entry having a started result on attempt 0 (no rooted attempt)",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 100, itemID: 22, limit: 1},
+			want: []items.ItemPath{{Path: []string{"22"}, IsStarted: true}},
+		},
+		{
+			name: "supports paths through a non-final root item requiring explicit entry having a started result on attempt 0 (no rooted attempt)",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				items:
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+					- {group_id: 100, item_id: 30, can_view_generated: info}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 100, itemID: 30, limit: 1},
+			want: []items.ItemPath{{Path: []string{"22", "30"}, IsStarted: false}},
+		},
+		{
+			name: "supports paths through an intermediate item requiring explicit entry having a started result on attempt 0 (no rooted attempt)",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 5}
+					- {parent_item_id: 21, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 30, can_view_generated: info}
+				results:
+					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 0, item_id: 21, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 101, itemID: 30, limit: 1},
+			want: []items.ItemPath{{Path: []string{"1", "21", "30"}, IsStarted: false}},
+		},
+		{
+			name: "still ignores paths through a root item requiring explicit entry without any result for it",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				items:
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+					- {group_id: 100, item_id: 30, can_view_generated: info}
+			`,
+			args: args{participantID: 100, itemID: 30, limit: 1},
+		},
+		{
+			name: "still ignores paths through an intermediate item requiring explicit entry without any result for it",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 5}
+					- {parent_item_id: 21, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 30, can_view_generated: info}
+				results:
+					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 101, itemID: 30, limit: 1},
+		},
+		// The two cases below verify that a NON-STARTED result on a non-rooted attempt is not enough to
+		// justify the relaxation that lets explicit-entry items be matched on attempts not rooted at them.
+		// A result row whose started_at is NULL can legitimately appear as a side effect of score propagation
+		// from descendants (or as a placeholder created during attempt setup): it does not prove that the
+		// participant ever actually started/entered the item on that attempt. Only a result with a non-NULL
+		// started_at provides that evidence, so paths based on such a not-started result must be rejected.
+		{
+			name: "still ignores paths through a root explicit-entry item with only a not-started result on a non-rooted attempt",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				items:
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+					- {group_id: 100, item_id: 30, can_view_generated: info}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 22}
+			`,
+			args: args{participantID: 100, itemID: 30, limit: 1},
+		},
+		{
+			name: "still ignores paths through an intermediate explicit-entry item with only a not-started result on a non-rooted attempt",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 5}
+					- {parent_item_id: 21, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 30, can_view_generated: info}
+				results:
+					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 0, item_id: 21}
+			`,
+			args: args{participantID: 101, itemID: 30, limit: 1},
+		},
+		{
 			name: "returns all the paths when there is more than one",
 			fixture: `
 					groups:
