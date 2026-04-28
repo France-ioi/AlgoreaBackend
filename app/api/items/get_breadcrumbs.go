@@ -196,9 +196,13 @@ func attemptIDOrParentAttemptID(httpRequest *http.Request) (
 }
 
 // maxNumberOfIDsInItemPath caps the depth of any item path passed in URLs (breadcrumbs, start-result(-path),
-// enter, attempts). It cannot grow much larger because BreadcrumbsHierarchy* SQL builds ~4·N joined tables
-// per path of length N (visible_items + results + attempts + items_items per step, plus a tail results+attempts),
-// and MySQL has a hard limit of 61 joined tables per query (~4·15 − 1 = 59, safely under the limit).
+// enter, attempts). It cannot grow much larger because BreadcrumbsHierarchy* / IsValidParticipationHierarchy*
+// SQL builds ~4·N joined tables per path of length N (visible_items + results + attempts + items_items per
+// step, plus a tail results+attempts):
+//   - MySQL has a hard limit of 61 joined tables per query (~4·15 − 1 = 59, safely under the limit).
+//   - The optimizer's join-order search would also be exponential at this depth (default
+//     optimizer_search_depth=62), so itemAttemptChainWithoutAttemptForTail uses STRAIGHT_JOIN to keep
+//     planning linear in N. Bumping this constant requires both checks to keep passing.
 const maxNumberOfIDsInItemPath = 15
 
 func idsFromRequest(r *http.Request) ([]int64, error) {
