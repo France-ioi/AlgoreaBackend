@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.41.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.40.0...v2.41.0) - 2026-04-28
+- allow up to 15 item IDs (instead of 10) in item path parameters of `itemBreadcrumbs`, `start-result`, `start-result-path`, `enter`, and `create-attempt`
+- fix `path-from-root` to accept explicit-entry items matched on a non-rooted attempt with a started result
+- speed up `itemBreadcrumbs` queries on long item paths
+
 ## [v2.40.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.39.0...v2.40.0) - 2026-04-10
 - new service: `generatePermissionsToken` to get a signed token with the user's permissions on an item
 
