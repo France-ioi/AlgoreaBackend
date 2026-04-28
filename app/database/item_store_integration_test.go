@@ -1042,12 +1042,16 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 	}
 }
 
-// TestItemStore_BreadcrumbsHierarchy_AtMaxItemPathLength guards against MySQL's hard limit
-// of 61 joined tables per query. The breadcrumbs SQL builds ~4·N table references for a path
-// of length N, so we exercise the full chain at the maximum depth allowed by URL routing
-// (maxNumberOfIDsInItemPath in app/api/items/get_breadcrumbs.go) to make sure the query
-// still executes. If maxNumberOfIDsInItemPath is bumped, this constant must be bumped too
-// (and the SQL must be checked for fitting under the MySQL limit).
+// TestItemStore_BreadcrumbsHierarchy_AtMaxItemPathLength guards two limits at once for the full
+// breadcrumbs chain (~4·N joined tables for a path of length N):
+//   - MySQL's hard 61-tables-per-join cap (~4·15 − 1 = 59, just under).
+//   - the optimizer's planning cost: without STRAIGHT_JOIN in itemAttemptChainWithoutAttemptForTail,
+//     MySQL would do an exhaustive join-order search and the query would hang for many minutes on
+//     constrained DB hosts (we observed ~9-10 min on CircleCI before adding STRAIGHT_JOIN). This test
+//     therefore also catches any future change that re-introduces ordinary JOINs in the chain.
+//
+// If maxNumberOfIDsInItemPath is bumped, this constant must be bumped too (and both checks above
+// re-verified).
 func TestItemStore_BreadcrumbsHierarchy_AtMaxItemPathLength(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 

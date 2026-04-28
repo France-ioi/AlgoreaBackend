@@ -277,6 +277,14 @@ func (s *ItemStore) participationHierarchyForParentAttempt(
 		With("visible_items", s.visibleItemsFromListForGroupQuery(ids, groupID))
 }
 
+// itemAttemptChainWithoutAttemptForTail builds the long chain query used by the breadcrumbs and
+// participation-hierarchy services. It produces ~4*N joined tables for a path of length N, which
+// would push MySQL's optimizer into an exhaustive join-order search (default optimizer_search_depth=62)
+// and take many minutes on small DB hosts at our maxNumberOfIDsInItemPath. We use STRAIGHT_JOIN so
+// the planner keeps the natural left-deep order, which is also the only sensible execution order:
+// each step's join key (results.item_id, attempts.id, items_items.parent_item_id, child_item_id)
+// is fully determined by tables already on its left, and all keys are indexed. Planning then becomes
+// linear in N rather than exponential.
 func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID int64,
 	requireAttemptsToBeActive, requireContentAccessToTheFinalItem, withWriteLock bool,
 ) *DB {
@@ -301,16 +309,16 @@ func (s *ItemStore) itemAttemptChainWithoutAttemptForTail(ids []int64, groupID i
 
 	for idIndex := 1; idIndex < len(ids); idIndex++ {
 		subQuery = subQuery.Joins(fmt.Sprintf(`
-				JOIN results AS results%d ON results%d.participant_id = ? AND
+				STRAIGHT_JOIN results AS results%d ON results%d.participant_id = ? AND
 					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1), groupID).
 			Joins(fmt.Sprintf(`
-				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
+				STRAIGHT_JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
 					attempts%d.id = results%d.attempt_id`, idIndex-1, idIndex-1, idIndex-1, idIndex-1, idIndex-1)).
 			Joins(
 				fmt.Sprintf(
-					"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
+					"STRAIGHT_JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
 					idIndex, idIndex, idIndex-1, idIndex), ids[idIndex]).
-			Joins(fmt.Sprintf("JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex, idIndex, idIndex)).
+			Joins(fmt.Sprintf("STRAIGHT_JOIN visible_items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex, idIndex, idIndex)).
 			Where(fmt.Sprintf("items%d.can_view_generated_value >= ?", idIndex-1),
 				s.PermissionsGranted().ViewIndexByName("content"))
 
@@ -344,11 +352,11 @@ func (s *ItemStore) breadcrumbsHierarchyForAttempt(
 		Where(fmt.Sprintf("attempts%d.id = ?", finalItemIndex), attemptID)
 	subQuery = subQuery.
 		Joins(fmt.Sprintf(`
-				JOIN results AS results%d ON results%d.participant_id = ? AND
+				STRAIGHT_JOIN results AS results%d ON results%d.participant_id = ? AND
 					results%d.item_id = items%d.id AND results%d.started_at IS NOT NULL`,
 			finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex), groupID).
 		Joins(fmt.Sprintf(`
-				JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
+				STRAIGHT_JOIN attempts AS attempts%d ON attempts%d.participant_id = results%d.participant_id AND
 					attempts%d.id = results%d.attempt_id`, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex, finalItemIndex))
 	if len(ids) > 1 {
 		subQuery = subQuery.Where(fmt.Sprintf(
