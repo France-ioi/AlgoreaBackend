@@ -486,11 +486,16 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			},
 		},
 		{
-			// This pins the tie-break introduced by the relaxation: when an explicit-entry item has BOTH
-			// a non-rooted attempt with a STARTED result AND rooted-but-not-started attempts available,
-			// the non-rooted started attempt wins (lower score). Before the relaxation the rooted attempt
-			// was the only viable candidate, so attempt_id2 used to be 1; under the new semantics it is 0.
-			name: "prefers a non-rooted attempt with a started result over a rooted attempt with a not-started result for an explicit-entry item",
+			// Locks in the rooted-vs-non-rooted preference for explicit-entry items. The non-rooted
+			// attempt 0 has a STARTED result for item 22 (so it would be allowed by the WHERE
+			// relaxation), and the rooted attempt 1 has only a NOT-STARTED result. Even though the
+			// non-rooted candidate would win on the LOW "started_at IS NULL" bit, the HIGH bit in
+			// the score penalizes "non-rooted on explicit-entry item" and dominates: the rooted
+			// attempt is selected, preserving the "explicit entry creates a child attempt rooted
+			// at the item" semantics whenever a rooted alternative is reachable. attempt 2 is
+			// rooted too but its parent_attempt_id=1 is unreachable (item 2's only viable attempt
+			// is 0), so the highest reachable rooted candidate is 1.
+			name: "prefers a rooted attempt with a not-started result over a non-rooted attempt with a started result for an explicit-entry item",
 			fixture: `
 				permissions_generated:
 					- {group_id: 100, item_id: 1, can_view_generated: content}
@@ -511,7 +516,36 @@ func Test_getDataForResultPathStart(t *testing.T) {
 				{
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(1),
-					"attempt_id2": int64(0), "has_started_result2": int64(1),
+					"attempt_id2": int64(1), "has_started_result2": int64(0),
+				},
+			},
+		},
+		{
+			// Sibling lock-in: when BOTH a rooted attempt and a non-rooted attempt have a STARTED
+			// result for the same explicit-entry item, the rooted one must still win. With the
+			// score above this is decided by the HIGH bit (rooted = 0, non-rooted = 1), so the
+			// `attempts.id DESC` tie-break never has to step in. This guards against any future
+			// score change that would let the lower id (attempt 0) outrank the rooted attempt.
+			name: "prefers a rooted attempt with a started result over a non-rooted attempt with a started result for an explicit-entry item",
+			fixture: `
+				permissions_generated:
+					- {group_id: 100, item_id: 1, can_view_generated: content}
+					- {group_id: 100, item_id: 2, can_view_generated: content}
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+				attempts:
+					- {participant_id: 100, id: 1, parent_attempt_id: 0, root_item_id: 22}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 100, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 100, attempt_id: 1, item_id: 22, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 100, ids: []int64{1, 2, 22}},
+			want: []map[string]interface{}{
+				{
+					"attempt_id0": int64(0), "has_started_result0": int64(1),
+					"attempt_id1": int64(0), "has_started_result1": int64(1),
+					"attempt_id2": int64(1), "has_started_result2": int64(1),
 				},
 			},
 		},

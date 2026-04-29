@@ -201,7 +201,20 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		attemptIsActiveCondition = fmt.Sprintf(
 			"attempts%[1]d.ended_at IS NULL AND NOW() < attempts%[1]d.allows_submissions_until AND %[2]s",
 			idIndex, attemptIsActiveCondition)
-		score += fmt.Sprintf("((results%[1]d.started_at IS NULL) << %[2]d)", idIndex, len(ids)-idIndex-1)
+		// Per-position score (lower is better), summed across positions; bits at distinct shifts
+		// never overlap so the sum behaves like a bitwise OR. The HIGH half (shift `2*len-i-1`)
+		// penalizes "non-rooted attempt on an explicit-entry item" and dominates the LOW half
+		// (shift `len-i-1`, which penalizes "result not started yet"). Effect: when a rooted
+		// alternative exists for an explicit-entry item, it ALWAYS beats a non-rooted attempt --
+		// even if the rooted attempt's result is not yet started and the non-rooted one's is.
+		// The non-rooted-with-started-result candidacy (allowed by the WHERE relaxation below)
+		// therefore acts only as a fallback when no rooted alternative is reachable in the chain.
+		// `<=>` is used for a NULL-safe equality so attempts with `root_item_id IS NULL` count as
+		// non-rooted rather than "unknown".
+		score += fmt.Sprintf(
+			"((items%[1]d.requires_explicit_entry AND NOT (attempts%[1]d.root_item_id <=> items%[1]d.id)) << %[3]d)"+
+				" + ((results%[1]d.started_at IS NULL) << %[2]d)",
+			idIndex, len(ids)-idIndex-1, 2*len(ids)-idIndex-1)
 		query = query.
 			Joins(fmt.Sprintf("JOIN attempts AS attempts%[1]d ON attempts%[1]d.participant_id = ?"+previousAttemptCondition, idIndex),
 				participantID).
@@ -213,7 +226,10 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 			// AND carry a result for it. We additionally allow non-rooted attempts when there is a STARTED result
 			// for the item on the chosen attempt: such a started result is what proves the participant has actually
 			// entered the item, even if the result is not on an attempt rooted at it (this can happen e.g. when
-			// "requires_explicit_entry" was flipped on after the result was created). A non-started result on a
+			// "requires_explicit_entry" was flipped on after the result was created). This non-rooted candidacy
+			// is intentionally a FALLBACK only -- the score above ensures a rooted alternative wins whenever one
+			// exists in the chain, so stale-but-started rows on a parent attempt do not silently bypass the
+			// "explicit entry creates a child attempt rooted at the item" semantics. A non-started result on a
 			// non-rooted attempt is intentionally NOT enough on its own. The two clauses below are kept separate
 			// for clarity: the first picks which attempt is acceptable, the second enforces that the chosen
 			// attempt actually has a result for the explicit-entry item.
