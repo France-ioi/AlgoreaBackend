@@ -189,22 +189,22 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 			const comma = ", "
 			columns += comma
 			previousAttemptCondition = fmt.Sprintf(` AND
-					IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id`,
-				idIndex, idIndex, idIndex, idIndex, idIndex-1)
+					IF(attempts%[1]d.root_item_id = items%[1]d.id, attempts%[1]d.parent_attempt_id, attempts%[1]d.id) = attempts%[2]d.id`,
+				idIndex, idIndex-1)
 		}
 
 		columnsForOrder += fmt.Sprintf(", attempts%d.id DESC", idIndex)
 		attemptIsActiveCondition = fmt.Sprintf(
-			"attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until AND %s", idIndex, idIndex, attemptIsActiveCondition)
-		score += fmt.Sprintf("((results%d.started_at IS NULL) << %d)", idIndex, len(ids)-idIndex-1)
+			"attempts%[1]d.ended_at IS NULL AND NOW() < attempts%[1]d.allows_submissions_until AND %[2]s",
+			idIndex, attemptIsActiveCondition)
+		score += fmt.Sprintf("((results%[1]d.started_at IS NULL) << %[2]d)", idIndex, len(ids)-idIndex-1)
 		query = query.
-			Joins(fmt.Sprintf("JOIN attempts AS attempts%d ON attempts%d.participant_id = ?"+previousAttemptCondition,
-				idIndex, idIndex),
+			Joins(fmt.Sprintf("JOIN attempts AS attempts%[1]d ON attempts%[1]d.participant_id = ?"+previousAttemptCondition, idIndex),
 				participantID).
 			Joins(fmt.Sprintf(`
-				LEFT JOIN results AS results%d ON results%d.participant_id = attempts%d.participant_id AND
-					attempts%d.id = results%d.attempt_id AND results%d.item_id = items%d.id`,
-				idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex)).
+				LEFT JOIN results AS results%[1]d ON results%[1]d.participant_id = attempts%[1]d.participant_id AND
+					attempts%[1]d.id = results%[1]d.attempt_id AND results%[1]d.item_id = items%[1]d.id`,
+				idIndex)).
 			// For items requiring explicit entry, the matched attempt usually must be rooted at the item itself
 			// AND carry a result for it. We additionally allow non-rooted attempts when there is a STARTED result
 			// for the item on the chosen attempt: such a started result is what proves the participant has actually
@@ -222,12 +222,12 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 
 		if idIndex != len(ids)-1 {
 			query = query.Joins(fmt.Sprintf(
-				"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
-				idIndex+1, idIndex+1, idIndex, idIndex+1), ids[idIndex+1]).
-				Joins(fmt.Sprintf("JOIN items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex+1, idIndex+1, idIndex+1))
+				"JOIN items_items AS items_items%[2]d ON items_items%[2]d.parent_item_id = items%[1]d.id AND items_items%[2]d.child_item_id = ?",
+				idIndex, idIndex+1), ids[idIndex+1]).
+				Joins(fmt.Sprintf("JOIN items AS items%[1]d ON items%[1]d.id = items_items%[1]d.child_item_id", idIndex+1))
 		}
 		columns += fmt.Sprintf(
-			"attempts%d.id AS attempt_id%d, results%d.started_at IS NOT NULL AS has_started_result%d", idIndex, idIndex, idIndex, idIndex)
+			"attempts%[1]d.id AS attempt_id%[1]d, results%[1]d.started_at IS NOT NULL AS has_started_result%[1]d", idIndex)
 	}
 	query = query.Select(columns).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
 		Order(score + columnsForOrder).Limit(1)
