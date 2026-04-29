@@ -167,6 +167,52 @@ Feature: Start results for an item path
     And the table "results_propagate" should be empty
     And the table "results_propagate_internal" should be empty
 
+  # Regression: when "requires_explicit_entry" is flipped on after a started result already exists,
+  # the participant's existing started result for the explicit-entry item sits on a non-rooted attempt
+  # (here, attempt 0) instead of an attempt rooted at it. The chain must still resolve to that attempt
+  # and return 200, reusing the pre-existing started result without overwriting its started_at.
+  Scenario: Can start the path for an explicit-entry item via a pre-existing started result on a non-rooted attempt
+    Given I am the user with id "111"
+    And the database table "items" also has the following row:
+      | id | url  | type | allows_multiple_attempts | default_language_tag | requires_explicit_entry |
+      | 80 | null | Task | 1                        | fr                   | 1                       |
+    And the database table "items_items" also has the following row:
+      | parent_item_id | child_item_id | child_order |
+      | 10             | 80            | 2           |
+    And the database table "items_ancestors" also has the following row:
+      | ancestor_item_id | child_item_id |
+      | 10               | 80            |
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated |
+      | 111      | 80      | content            |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  |
+      | 0          | 111            | 80      | 2019-05-30 11:00:00 | 2019-05-30 11:00:00 |
+    When I send a POST request to "/items/10/80/start-result-path"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "message": "updated",
+        "success": true,
+        "data": {
+          "attempt_id": "0"
+        }
+      }
+      """
+    And the table "attempts" should remain unchanged
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 0          | 111            | 10      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+      | 0          | 111            | 80      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 1          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 10      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+      | 3          | 102            | 60      | 0              | 0           | 0                                                         | null                 | null              | null         | 0                                                 |
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
+
   Scenario: Can create new results for all the path
     Given I am the user with id "101"
     When I send a POST request to "/items/60/70/start-result-path?as_team_id=102"
