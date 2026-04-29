@@ -174,7 +174,6 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, id: 4, parent_attempt_id: 0, root_item_id: 22}
 				results:
 					- {participant_id: 100, attempt_id: 0, started_at: 2019-05-30 11:00:00, item_id: 2}
-					- {participant_id: 100, attempt_id: 0, started_at: 2019-05-30 11:00:00, item_id: 22}
 					- {participant_id: 100, attempt_id: 1, item_id: 22}
 					- {participant_id: 100, attempt_id: 2, item_id: 22}
 					- {participant_id: 100, attempt_id: 3, item_id: 22}
@@ -419,6 +418,149 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 103, attempt_id: 1, item_id: 1}
 			`,
 			args: args{participantID: 103, ids: []int64{1}},
+		},
+		{
+			name: "supports root explicit-entry single-item path with only a started result on attempt 0 (no rooted attempt)",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 100, ids: []int64{22}},
+			want: []map[string]interface{}{
+				{"attempt_id0": int64(0), "has_started_result0": int64(1)},
+			},
+		},
+		{
+			name: "supports paths through a non-final root explicit-entry item with only a started result on attempt 0 (no rooted attempt)",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				items:
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+					- {group_id: 100, item_id: 30, can_view_generated: content}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 100, ids: []int64{22, 30}},
+			want: []map[string]interface{}{
+				{
+					"attempt_id0": int64(0), "has_started_result0": int64(1),
+					"attempt_id1": int64(0), "has_started_result1": int64(0),
+				},
+			},
+		},
+		{
+			name: "supports paths through an intermediate explicit-entry item with only a started result on attempt 0 (no rooted attempt)",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 5}
+					- {parent_item_id: 21, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 30, can_view_generated: content}
+				results:
+					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 0, item_id: 21, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 101, ids: []int64{1, 21, 30}},
+			want: []map[string]interface{}{
+				{
+					"attempt_id0": int64(0), "has_started_result0": int64(1),
+					"attempt_id1": int64(0), "has_started_result1": int64(1),
+					"attempt_id2": int64(0), "has_started_result2": int64(0),
+				},
+			},
+		},
+		// The four cases below verify the negative side of the relaxation: missing or NOT-STARTED results
+		// on non-rooted attempts must NOT unlock chains for explicit-entry items. A result row whose
+		// started_at is NULL can legitimately appear as a side effect of score propagation from descendants
+		// (or as a placeholder created during attempt setup): it does not prove that the participant ever
+		// actually started/entered the item on that attempt. Only a result with a non-NULL started_at
+		// provides that evidence.
+		{
+			name: "still ignores paths through a root explicit-entry item without any result for it",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				items:
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+					- {group_id: 100, item_id: 30, can_view_generated: content}
+			`,
+			args: args{participantID: 100, ids: []int64{22, 30}},
+		},
+		{
+			name: "still ignores paths through an intermediate explicit-entry item without any result for it",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 5}
+					- {parent_item_id: 21, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 30, can_view_generated: content}
+				results:
+					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 101, ids: []int64{1, 21, 30}},
+		},
+		{
+			name: "still ignores paths through a root explicit-entry item with only a not-started result on a non-rooted attempt",
+			fixture: `
+				groups: [{id: 110, root_activity_id: 22}]
+				groups_groups:
+					- {parent_group_id: 110, child_group_id: 100}
+				items:
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 22, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+					- {group_id: 100, item_id: 30, can_view_generated: content}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 22}
+			`,
+			args: args{participantID: 100, ids: []int64{22, 30}},
+		},
+		{
+			name: "still ignores paths through an intermediate explicit-entry item with only a not-started result on a non-rooted attempt",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 5}
+					- {parent_item_id: 21, child_item_id: 30, child_order: 1}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 30, can_view_generated: content}
+				results:
+					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 0, item_id: 21}
+			`,
+			args: args{participantID: 101, ids: []int64{1, 21, 30}},
 		},
 	}
 	const globalFixture = `

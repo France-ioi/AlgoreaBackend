@@ -198,18 +198,27 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 			"attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until AND %s", idIndex, idIndex, attemptIsActiveCondition)
 		score += fmt.Sprintf("((results%d.started_at IS NULL) << %d)", idIndex, len(ids)-idIndex-1)
 		query = query.
-			Joins(fmt.Sprintf(`
-				JOIN attempts AS attempts%d ON attempts%d.participant_id = ? AND
-					(NOT items%d.requires_explicit_entry OR attempts%d.root_item_id = items%d.id)`+previousAttemptCondition,
-				idIndex, idIndex, idIndex, idIndex, idIndex),
+			Joins(fmt.Sprintf("JOIN attempts AS attempts%d ON attempts%d.participant_id = ?"+previousAttemptCondition,
+				idIndex, idIndex),
 				participantID).
 			Joins(fmt.Sprintf(`
 				LEFT JOIN results AS results%d ON results%d.participant_id = attempts%d.participant_id AND
 					attempts%d.id = results%d.attempt_id AND results%d.item_id = items%d.id`,
 				idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex)).
-			Where(
-				fmt.Sprintf("(NOT items%d.requires_explicit_entry OR results%d.attempt_id IS NOT NULL) AND (results%d.started_at IS NOT NULL OR %s)",
-					idIndex, idIndex, idIndex, attemptIsActiveCondition))
+			// For items requiring explicit entry, the matched attempt usually must be rooted at the item itself
+			// AND carry a result for it. We additionally allow non-rooted attempts when there is a STARTED result
+			// for the item on the chosen attempt: such a started result is what proves the participant has actually
+			// entered the item, even if the result is not on an attempt rooted at it (this can happen e.g. when
+			// "requires_explicit_entry" was flipped on after the result was created). A non-started result on a
+			// non-rooted attempt is intentionally NOT enough on its own. The two clauses below are kept separate
+			// for clarity: the first picks which attempt is acceptable, the second enforces that the chosen
+			// attempt actually has a result for the explicit-entry item.
+			Where(fmt.Sprintf(
+				"(NOT items%[1]d.requires_explicit_entry OR attempts%[1]d.root_item_id = items%[1]d.id "+
+					"OR results%[1]d.started_at IS NOT NULL) AND "+
+					"(NOT items%[1]d.requires_explicit_entry OR results%[1]d.attempt_id IS NOT NULL) AND "+
+					"(results%[1]d.started_at IS NOT NULL OR %[2]s)",
+				idIndex, attemptIsActiveCondition))
 
 		if idIndex != len(ids)-1 {
 			query = query.Joins(fmt.Sprintf(
