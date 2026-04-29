@@ -485,6 +485,36 @@ func Test_getDataForResultPathStart(t *testing.T) {
 				},
 			},
 		},
+		{
+			// This pins the tie-break introduced by the relaxation: when an explicit-entry item has BOTH
+			// a non-rooted attempt with a STARTED result AND rooted-but-not-started attempts available,
+			// the non-rooted started attempt wins (lower score). Before the relaxation the rooted attempt
+			// was the only viable candidate, so attempt_id2 used to be 1; under the new semantics it is 0.
+			name: "prefers a non-rooted attempt with a started result over a rooted attempt with a not-started result for an explicit-entry item",
+			fixture: `
+				permissions_generated:
+					- {group_id: 100, item_id: 1, can_view_generated: content}
+					- {group_id: 100, item_id: 2, can_view_generated: content}
+					- {group_id: 100, item_id: 22, can_view_generated: content}
+				attempts:
+					- {participant_id: 100, id: 1, parent_attempt_id: 0, root_item_id: 22}
+					- {participant_id: 100, id: 2, parent_attempt_id: 1, root_item_id: 22}
+				results:
+					- {participant_id: 100, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 100, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 100, attempt_id: 1, item_id: 22}
+					- {participant_id: 100, attempt_id: 2, item_id: 22}
+			`,
+			args: args{participantID: 100, ids: []int64{1, 2, 22}},
+			want: []map[string]interface{}{
+				{
+					"attempt_id0": int64(0), "has_started_result0": int64(1),
+					"attempt_id1": int64(0), "has_started_result1": int64(1),
+					"attempt_id2": int64(0), "has_started_result2": int64(1),
+				},
+			},
+		},
 		// The four cases below verify the negative side of the relaxation: missing or NOT-STARTED results
 		// on non-rooted attempts must NOT unlock chains for explicit-entry items. A result row whose
 		// started_at is NULL can legitimately appear as a side effect of score propagation from descendants
