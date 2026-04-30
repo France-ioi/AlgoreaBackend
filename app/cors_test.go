@@ -53,23 +53,32 @@ func TestResolveAllowedOrigins_ExplicitListIsForwarded(t *testing.T) {
 	assert.Equal(t, []string{"https://www.france-ioi.org", "https://algorea.org"}, got)
 }
 
-func TestResolveAllowedOrigins_MissingKeyDefaultsToEmpty(t *testing.T) {
+func TestResolveAllowedOrigins_MissingKeyDefaultsToDisallowedSentinel(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	// Unset allowedOrigins must NOT pass through as an empty slice -- that
+	// would flip go-chi/cors into "allow any origin" mode (see
+	// disallowedAllOriginsSentinel for the rationale). Instead we expect
+	// the sentinel substitution that keeps the runtime behavior
+	// fail-closed for every cross-origin request.
 	corsConf := viper.New()
 
 	got := resolveAllowedOrigins(corsConf)
-	assert.Empty(t, got)
+	assert.Equal(t, []string{disallowedAllOriginsSentinel}, got)
 }
 
-func TestResolveAllowedOrigins_ExplicitEmptyListStaysEmpty(t *testing.T) {
+func TestResolveAllowedOrigins_ExplicitEmptyListResolvesToDisallowedSentinel(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
+	// Explicitly setting allowedOrigins to [] must behave the same as
+	// leaving the key unset: both resolve to the sentinel, otherwise an
+	// "I want CORS off" intent expressed as `allowedOrigins: []` would
+	// silently turn into the dangerous "allow any origin" branch.
 	corsConf := viper.New()
 	corsConf.Set(allowedOriginsKey, []string{})
 
 	got := resolveAllowedOrigins(corsConf)
-	assert.Empty(t, got)
+	assert.Equal(t, []string{disallowedAllOriginsSentinel}, got)
 }
 
 func TestResolveAllowedOrigins_WildcardEntryIsPassedThrough(t *testing.T) {
@@ -175,7 +184,7 @@ func TestCORSConfig_RejectsWildcardWithCredentials(t *testing.T) {
 	corsConf.Set(allowCredentialsKey, true)
 
 	corsHandler, err := corsConfig(corsConf)
-	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
+	require.ErrorIs(t, err, errCORSCredentialsRequireExplicitOrigins)
 	assert.Nil(t, corsHandler)
 }
 
@@ -208,21 +217,25 @@ func TestCORSConfig_RejectsWildcardMixedWithExplicit(t *testing.T) {
 	corsConf.Set(allowCredentialsKey, true)
 
 	corsHandler, err := corsConfig(corsConf)
-	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
+	require.ErrorIs(t, err, errCORSCredentialsRequireExplicitOrigins)
 	assert.Nil(t, corsHandler)
 }
 
 func TestCORSConfig_RejectsEmptyOriginsWithCredentials(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	// go-chi/cors treats an empty AllowedOrigins slice as "allow any origin",
-	// so combined with credentials it is just as dangerous as the bare "*".
+	// An explicit `allowedOrigins: []` resolves to the disallowed-origins
+	// sentinel, so the runtime behavior is fail-closed -- but pairing it
+	// with allowCredentials=true is still an operator misconfiguration
+	// (credentials enabled with no usable trusted origin), which we want
+	// to surface at startup rather than silently boot a permanently broken
+	// credentialed setup.
 	corsConf := viper.New()
 	corsConf.Set(allowedOriginsKey, []string{})
 	corsConf.Set(allowCredentialsKey, true)
 
 	corsHandler, err := corsConfig(corsConf)
-	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
+	require.ErrorIs(t, err, errCORSCredentialsRequireExplicitOrigins)
 	assert.Nil(t, corsHandler)
 }
 
@@ -231,14 +244,45 @@ func TestCORSConfig_RejectsMissingOriginsWithCredentials(t *testing.T) {
 
 	// "Credentials-only" config: only allowCredentials is set (e.g. via
 	// ALGOREA_CORS__ALLOWCREDENTIALS=true), allowedOrigins is left unset.
-	// Resolves to an empty slice, which go-chi/cors treats as "allow any
-	// origin" -- must be rejected at startup.
+	// Resolves to the disallowed-origins sentinel, so nothing would ever
+	// match at runtime -- but credentials enabled without any trusted
+	// origin is almost always an operator mistake, so we still reject it
+	// at startup with a clear error.
 	corsConf := viper.New()
 	corsConf.Set(allowCredentialsKey, true)
 
 	corsHandler, err := corsConfig(corsConf)
-	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
+	require.ErrorIs(t, err, errCORSCredentialsRequireExplicitOrigins)
 	assert.Nil(t, corsHandler)
+}
+
+func TestCORSConfig_DefaultBlocksAllOrigins(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// Without any cors configuration the middleware must deny every
+	// cross-origin request -- even non-credentialed ones. This is the
+	// regression test for the "default safe" framing in ARCHITECTURE.md:
+	// before the disallowedAllOriginsSentinel substitution, an unset
+	// allowedOrigins fell through to go-chi/cors's allowedOriginsAll
+	// branch and echoed any caller's Origin back, leaving every public
+	// endpoint cross-origin readable from any site by default.
+	corsConf := viper.New()
+
+	corsHandler, err := corsConfig(corsConf)
+	require.NoError(t, err)
+	require.NotNil(t, corsHandler)
+
+	headers, nextCalled := dispatchCORSRequest(t, corsHandler, http.MethodGet, "https://attacker.example")
+	assert.True(t, nextCalled, "wrapped handler still runs; CORS just withholds headers")
+	assert.Empty(t, headers.Get("Access-Control-Allow-Origin"))
+	assert.Empty(t, headers.Get("Access-Control-Allow-Credentials"))
+
+	// Preflight must also be denied: no allowed methods/credentials leak
+	// for an origin that is not on the list.
+	preflight, _ := dispatchCORSRequest(t, corsHandler, http.MethodOptions, "https://attacker.example")
+	assert.Empty(t, preflight.Get("Access-Control-Allow-Origin"))
+	assert.Empty(t, preflight.Get("Access-Control-Allow-Methods"))
+	assert.Empty(t, preflight.Get("Access-Control-Allow-Credentials"))
 }
 
 func TestCORSConfig_PerHostWildcardWithCredentialsIsAllowed(t *testing.T) {

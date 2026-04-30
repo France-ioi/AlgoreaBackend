@@ -40,36 +40,42 @@ event:
 # CORS allow-list applied to every API response.
 # - allowedOrigins: full origins (scheme + host + optional port). Supports the
 #   wildcard "*" to allow any origin and per-host wildcards like
-#   "https://*.example.com". Defaults to [] in every environment when unset.
-#   IMPORTANT: the underlying go-chi/cors library treats an empty list as
-#   "allow any origin". With the default allowCredentials=false the middleware
-#   therefore still echoes every caller's Origin back (without
-#   Access-Control-Allow-Credentials) -- any site can read non-credentialed
-#   responses. To actually deny every cross-origin call, set
-#   allowCredentials=true together with an explicit list of trusted origins;
-#   the safety rule below then refuses to start when that list is missing or
-#   contains "*", giving you a fail-closed credentialed configuration.
+#   "https://*.example.com". When unset (or set to []), the resolved list is
+#   the sentinel ["none"]: a value no real browser will ever send as Origin,
+#   which keeps go-chi/cors out of its "allow any origin" branch (triggered
+#   by len(AllowedOrigins) == 0) and makes the default fail-closed for every
+#   cross-origin request -- credentialed or not. To expose endpoints
+#   cross-origin you MUST list the trusted origins explicitly here.
 # - allowCredentials: whether to send "Access-Control-Allow-Credentials: true"
 #   so cookies / Authorization headers are usable cross-origin. Defaults to
 #   false.
 # Safety rule (enforced at startup; the app refuses to boot otherwise):
 #   When allowCredentials is true, allowedOrigins MUST be an explicit
-#   non-empty list that does not contain the bare "*". Note that the
-#   underlying go-chi/cors library treats an unset/empty list as "allow any
-#   origin", so a "credentials-only" config like
-#     cors: { allowCredentials: true }
-#   would otherwise echo every caller's Origin back with
-#   Access-Control-Allow-Credentials: true (the canonical CSRF-via-CORS
-#   misconfiguration). Per-host wildcards like "https://*.example.com" are
-#   still permitted with credentials.
+#   non-empty list that does not contain the bare "*". Two configurations
+#   are rejected:
+#     1. unset/empty allowedOrigins (resolves to the "none" sentinel) --
+#        rejected because credentials enabled with no usable trusted origin
+#        is almost always an operator mistake (e.g. only setting
+#        ALGOREA_CORS__ALLOWCREDENTIALS=true and forgetting the companion
+#        list); we surface it at startup instead of silently booting a
+#        permanently-broken credentialed setup.
+#     2. allowedOrigins containing the bare "*" -- rejected because
+#        go-chi/cors then echoes every caller's Origin back together with
+#        Access-Control-Allow-Credentials: true, the canonical
+#        CSRF-via-CORS misconfiguration.
+#   Per-host wildcards like "https://*.example.com" remain permitted with
+#   credentials.
 # Migration note: previous releases hardcoded ["*"] + AllowCredentials:true,
-#   and the first configurable version kept ["*"] as a dev/test fallback
+#   and earlier configurable versions kept ["*"] as a dev/test fallback
 #   when this key was unset. Both behaviours are gone -- the unset case now
-#   resolves to [] + allowCredentials=false in every environment. If a local
+#   resolves to the "none" sentinel + allowCredentials=false in every
+#   environment, denying every cross-origin request by default. If a local
 #   dev frontend (or any browser-driven integration test) relied on
 #   credentialed cross-origin requests, you must add an explicit cors block
-#   here with the trusted origins and allowCredentials: true to restore that
-#   behaviour.
+#   here with the trusted origins and allowCredentials: true to restore
+#   that behaviour. If you only need non-credentialed cross-origin reads
+#   (e.g. public catalog endpoints), still list the origins explicitly --
+#   leaving the section out no longer opens the API up to any site.
 #cors:
 #  allowedOrigins:
 #    # When allowCredentials is true (below), this list MUST be non-empty

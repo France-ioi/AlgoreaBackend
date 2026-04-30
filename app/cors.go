@@ -14,42 +14,67 @@ const (
 	allowCredentialsKey = "allowCredentials"
 )
 
-// errCORSPermissiveOriginsWithCredentials is returned whenever the resolved
-// allow-list would let go-chi/cors match every origin while
-// "allowCredentials" is true. That covers two cases that are semantically
-// identical inside the library:
-//   - the bare "*" appears in "allowedOrigins"; or
-//   - "allowedOrigins" is empty/unset -- go-chi/cors@v1.0.0 sets
-//     allowedOriginsAll=true when len(AllowedOrigins)==0, so the
-//     "credentials-only" config (only allowCredentials=true, e.g. set via the
-//     ALGOREA_CORS__ALLOWCREDENTIALS env var) silently behaves like "*".
-//
-// In both cases the middleware would echo the caller's Origin back together
-// with Access-Control-Allow-Credentials: true, the canonical CSRF-via-CORS
-// misconfiguration. Per-host wildcards like "https://*.example.com" are not
-// affected and remain allowed alongside credentials.
-var errCORSPermissiveOriginsWithCredentials = errors.New(
-	`cors: "allowCredentials"=true requires "allowedOrigins" to be an explicit non-empty list that does not contain "*" ` +
-		`(go-chi/cors treats both an empty list and a bare "*" as "allow any origin", ` +
-		`which combined with credentials is the canonical CSRF-via-CORS misconfiguration)`)
+// disallowedAllOriginsSentinel is the placeholder value injected into
+// AllowedOrigins when the operator did not configure any origin (key unset
+// or set to an empty list). It exists to short-circuit a footgun in
+// go-chi/cors@v1.0.0: passing an empty AllowedOrigins slice flips the
+// internal allowedOriginsAll flag, after which handleActualRequest echoes
+// the caller's Origin header back on every response. That makes every
+// public endpoint cross-origin readable from any site by default, even
+// without credentials. By substituting a string that no real browser will
+// ever send as Origin, we keep the slice non-empty (allowedOriginsAll
+// stays false) and make the default fail-closed: isOriginAllowed returns
+// false for every actual origin, so Access-Control-Allow-Origin is never
+// set. Operators who want to expose endpoints cross-origin must add an
+// explicit allowedOrigins list.
+const disallowedAllOriginsSentinel = "none"
 
-// resolveAllowedOrigins returns the configured CORS allow-list verbatim.
-// Per-host wildcards like "https://*.example.com" are supported by go-chi/cors
-// and are always safe. There is no env-based fallback -- an unset key
-// resolves to an empty slice in every environment.
+// errCORSCredentialsRequireExplicitOrigins is returned whenever
+// "allowCredentials" is true but "allowedOrigins" cannot safely carry
+// credentials. Two configurations trip it:
+//   - the bare "*" appears in "allowedOrigins": go-chi/cors then echoes any
+//     caller's Origin back together with Access-Control-Allow-Credentials:
+//     true, the canonical CSRF-via-CORS misconfiguration; or
+//   - "allowedOrigins" is unset/empty (so resolveAllowedOrigins substitutes
+//     the disallowedAllOriginsSentinel): the runtime behavior is fail-closed
+//     -- no real origin can match -- but combining "credentials enabled" with
+//     "no usable trusted origins" is almost always an operator mistake (e.g.
+//     setting only ALGOREA_CORS__ALLOWCREDENTIALS=true and forgetting the
+//     companion list), so we surface it at startup rather than letting the
+//     server boot into a permanently-broken credentialed setup.
 //
-// In contrast, three configurations make go-chi/cors match every origin: the
-// bare "*" alone, "*" mixed with explicit entries, and an empty/unset list
-// (the library sets allowedOriginsAll=true when len(AllowedOrigins)==0). All
-// three are accepted here -- the safety check in corsConfig rejects them at
-// startup when allowCredentials is also true, so they remain the only shapes
-// that can produce a fail-closed credentialed configuration. Do NOT remove
-// the containsString / len() guards in corsConfig without thinking through
-// that interaction (TestCORSConfig_RejectsWildcardWithCredentials,
-// TestCORSConfig_RejectsWildcardMixedWithExplicit, and
-// TestCORSConfig_RejectsEmptyOriginsWithCredentials lock the rule in).
+// Per-host wildcards like "https://*.example.com" are not affected and remain
+// allowed alongside credentials.
+var errCORSCredentialsRequireExplicitOrigins = errors.New(
+	`cors: "allowCredentials"=true requires "allowedOrigins" to be an explicit non-empty list of trusted origins that does not contain "*" ` +
+		`(an unset/empty list is rewritten to the "none" sentinel and would deny every cross-origin request, ` +
+		`while a bare "*" mixed with credentials is the canonical CSRF-via-CORS misconfiguration ` +
+		`where go-chi/cors echoes the caller's Origin back)`)
+
+// resolveAllowedOrigins returns the configured CORS allow-list, with one
+// transformation: an unset/empty list is rewritten to
+// []string{disallowedAllOriginsSentinel}. That keeps go-chi/cors out of its
+// "allow any origin" branch (triggered by len(AllowedOrigins) == 0), so the
+// out-of-the-box default is fail-closed for every request -- credentialed or
+// not. Per-host wildcards like "https://*.example.com" are forwarded
+// unchanged and remain matched normally by the library.
+//
+// The bare "*" is still accepted here (and simply forwarded), because the
+// safety check in corsConfig is what enforces the rule that "*" cannot be
+// combined with allowCredentials=true. Do NOT remove that check or the
+// sentinel substitution without revisiting
+// TestCORSConfig_DefaultBlocksAllOrigins,
+// TestCORSConfig_RejectsWildcardWithCredentials,
+// TestCORSConfig_RejectsWildcardMixedWithExplicit,
+// TestCORSConfig_RejectsEmptyOriginsWithCredentials, and
+// TestCORSConfig_RejectsMissingOriginsWithCredentials, which together lock
+// in both halves of the policy.
 func resolveAllowedOrigins(corsConf *viper.Viper) []string {
-	return corsConf.GetStringSlice(allowedOriginsKey)
+	origins := corsConf.GetStringSlice(allowedOriginsKey)
+	if len(origins) == 0 {
+		return []string{disallowedAllOriginsSentinel}
+	}
+	return origins
 }
 
 // containsString reports whether s is present in slice. Inlined instead of
@@ -65,23 +90,35 @@ func containsString(slice []string, s string) bool {
 	return false
 }
 
+// isOnlyDisallowedSentinel reports whether the resolved list is exactly the
+// fail-closed default produced by resolveAllowedOrigins for an unset/empty
+// configuration. Used by corsConfig to surface the credentials-without-origins
+// misconfiguration at startup instead of silently booting into a state where
+// no cross-origin request can ever succeed.
+func isOnlyDisallowedSentinel(origins []string) bool {
+	return len(origins) == 1 && origins[0] == disallowedAllOriginsSentinel
+}
+
 // corsConfig builds the CORS middleware from the "cors" subconfig:
-//   - allowedOrigins ([]string, default []): see resolveAllowedOrigins.
+//   - allowedOrigins ([]string, default ["none"] sentinel): see
+//     resolveAllowedOrigins. The sentinel default makes every cross-origin
+//     request -- credentialed or not -- fail-closed until the operator
+//     opts in by listing trusted origins.
 //   - allowCredentials (bool, default false): whether to send
 //     Access-Control-Allow-Credentials: true so cookies / Authorization
 //     headers are usable cross-origin.
 //
-// When allowCredentials is true, an allowedOrigins list that go-chi/cors
-// would treat as "any origin" (empty/unset, or containing the bare "*") is
-// rejected with errCORSPermissiveOriginsWithCredentials so the application
-// refuses to start instead of silently exposing every authenticated endpoint
-// to any origin.
+// When allowCredentials is true, an allowedOrigins list that is either the
+// fail-closed sentinel or contains the bare "*" is rejected with
+// errCORSCredentialsRequireExplicitOrigins so the application refuses to
+// start instead of either silently exposing every authenticated endpoint to
+// any origin or booting into a permanently-broken credentialed setup.
 func corsConfig(corsConf *viper.Viper) (*cors.Cors, error) {
 	allowedOrigins := resolveAllowedOrigins(corsConf)
 	allowCredentials := corsConf.GetBool(allowCredentialsKey)
 
-	if allowCredentials && (len(allowedOrigins) == 0 || containsString(allowedOrigins, "*")) {
-		return nil, errCORSPermissiveOriginsWithCredentials
+	if allowCredentials && (isOnlyDisallowedSentinel(allowedOrigins) || containsString(allowedOrigins, "*")) {
+		return nil, errCORSCredentialsRequireExplicitOrigins
 	}
 
 	return cors.New(cors.Options{
