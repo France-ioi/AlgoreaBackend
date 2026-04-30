@@ -1101,7 +1101,10 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 
 - **SQL injection**: Prevented by parameterized queries
 - **Authorization**: Checked in every handler via `PickVisibleGroups`, `PickVisibleItems`
-- **CORS**: Configured in `app/cors.go`
+- **CORS**: Configured in `app/cors.go` from the top-level `cors` section:
+  - `cors.allowedOrigins`: full origins (scheme + host + optional port). Supports the bare `*` wildcard and per-host wildcards like `https://*.example.com`. Defaults to `[]` in **every** environment when unset (no env-based bypass), so misconfigured deployments fail closed.
+  - `cors.allowCredentials`: whether the middleware sends `Access-Control-Allow-Credentials: true`. Defaults to `false`.
+  - Startup safety rule: the application refuses to start if `allowedOrigins` contains `"*"` while `allowCredentials` is `true`. This is the canonical CSRF-via-CORS misconfiguration -- `go-chi/cors` would echo any caller's `Origin` back together with `Access-Control-Allow-Credentials: true`, allowing any site to read responses on behalf of a logged-in user. Per-host wildcards (`https://*.example.com`) are not affected and remain allowed alongside credentials.
 - **Token validation**: In `auth.UserMiddleware`
 
 ### Observability

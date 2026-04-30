@@ -278,6 +278,18 @@ func TestServerConfig(t *testing.T) {
 	assert.Equal(t, 999, config.GetInt("anykey"))
 }
 
+func TestCORSConfig(t *testing.T) {
+	globalConfig := viper.New()
+	globalConfig.Set("cors.allowedOrigins", []string{"https://example.com"})
+	globalConfig.Set("cors.allowCredentials", true)
+	config := CORSConfig(globalConfig)
+	require.NotNil(t, config)
+	assert.Equal(t, []string{"https://example.com"}, config.GetStringSlice("allowedOrigins"))
+	assert.True(t, config.GetBool("allowCredentials"))
+	t.Setenv("ALGOREA_CORS__ALLOWCREDENTIALS", "false")
+	assert.False(t, config.GetBool("allowCredentials"))
+}
+
 func TestEventConfig(t *testing.T) {
 	globalConfig := viper.New()
 	globalConfig.Set("event.dispatcher", "sqs")

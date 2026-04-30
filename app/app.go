@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/go-sql-driver/mysql"
 	"github.com/spf13/viper"
@@ -53,6 +54,7 @@ type appConfigs struct {
 	token   *token.Config
 	server  *viper.Viper
 	event   *viper.Viper
+	cors    *cors.Cors
 }
 
 func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {
@@ -68,6 +70,10 @@ func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to load the 'token' configuration: %w", err)
 	}
+	corsHandler, err := corsConfig(CORSConfig(config))
+	if err != nil {
+		return nil, fmt.Errorf("unable to load the 'cors' configuration: %w", err)
+	}
 	return &appConfigs{
 		db:      dbConfig,
 		auth:    AuthConfig(config),
@@ -76,6 +82,7 @@ func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {
 		token:   tokenConfig,
 		server:  ServerConfig(config),
 		event:   EventConfig(config),
+		cors:    corsHandler,
 	}, nil
 }
 
@@ -140,7 +147,7 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	router.Use(logging.NewStructuredLogger()) //
 	router.Use(middleware.Recoverer)          // must be before logger so that it an log panics
 
-	router.Use(corsConfig().Handler) // no need for CORS if served through the same domain
+	router.Use(configs.cors.Handler) // no need for CORS if served through the same domain
 	router.Use(domain.Middleware(configs.domains, configs.server.GetString("domainOverride")))
 
 	if appenv.IsEnvDev() {
