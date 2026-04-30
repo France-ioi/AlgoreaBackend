@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"slices"
 
 	"github.com/go-chi/cors"
 	"github.com/spf13/viper"
@@ -45,12 +44,25 @@ var errCORSPermissiveOriginsWithCredentials = errors.New(
 // three are accepted here -- the safety check in corsConfig rejects them at
 // startup when allowCredentials is also true, so they remain the only shapes
 // that can produce a fail-closed credentialed configuration. Do NOT remove
-// the slices.Contains / len() guards in corsConfig without thinking through
+// the containsString / len() guards in corsConfig without thinking through
 // that interaction (TestCORSConfig_RejectsWildcardWithCredentials,
 // TestCORSConfig_RejectsWildcardMixedWithExplicit, and
 // TestCORSConfig_RejectsEmptyOriginsWithCredentials lock the rule in).
 func resolveAllowedOrigins(corsConf *viper.Viper) []string {
 	return corsConf.GetStringSlice(allowedOriginsKey)
+}
+
+// containsString reports whether s is present in slice. Inlined instead of
+// using the stdlib "slices" package so this file builds against pre-1.21 Go
+// toolchains that some local environments still pin via GOROOT/GOTOOLCHAIN,
+// even when go.mod declares 1.21.
+func containsString(slice []string, s string) bool {
+	for _, v := range slice {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }
 
 // corsConfig builds the CORS middleware from the "cors" subconfig:
@@ -68,7 +80,7 @@ func corsConfig(corsConf *viper.Viper) (*cors.Cors, error) {
 	allowedOrigins := resolveAllowedOrigins(corsConf)
 	allowCredentials := corsConf.GetBool(allowCredentialsKey)
 
-	if allowCredentials && (len(allowedOrigins) == 0 || slices.Contains(allowedOrigins, "*")) {
+	if allowCredentials && (len(allowedOrigins) == 0 || containsString(allowedOrigins, "*")) {
 		return nil, errCORSPermissiveOriginsWithCredentials
 	}
 
