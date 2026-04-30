@@ -278,6 +278,51 @@ func TestServerConfig(t *testing.T) {
 	assert.Equal(t, 999, config.GetInt("anykey"))
 }
 
+func TestCORSConfig(t *testing.T) {
+	globalConfig := viper.New()
+	globalConfig.Set("cors.allowedOrigins", []string{"https://example.com"})
+	globalConfig.Set("cors.allowCredentials", true)
+	config := CORSConfig(globalConfig)
+	require.NotNil(t, config)
+	assert.Equal(t, []string{"https://example.com"}, config.GetStringSlice("allowedOrigins"))
+	assert.True(t, config.GetBool("allowCredentials"))
+	t.Setenv("ALGOREA_CORS__ALLOWCREDENTIALS", "false")
+	assert.False(t, config.GetBool("allowCredentials"))
+}
+
+// TestCORSConfig_AllowedOriginsEnvOverride pins the operator-facing escape
+// hatch that Docker / k8s deployments rely on: setting
+// ALGOREA_CORS__ALLOWEDORIGINS at the container level must produce the
+// same allow-list a YAML `cors.allowedOrigins` block would. Without an
+// explicit regression test for this, a viper or cast upgrade that
+// changes how env-var stringSlice values are split (whitespace today,
+// comma in some configurations, JSON in others) could silently turn an
+// operator's two-origin list into one nonsensical "https://a,https://b"
+// entry that no browser ever matches -- and because the resolved slice
+// would then have len == 1 (not 0), the disallowedAllOriginsSentinel
+// substitution in resolveAllowedOrigins would NOT kick in, so the safety
+// net of the credentials-without-origins startup check would be bypassed
+// too. The split-on-comma / trim-whitespace / drop-empty normalization
+// in resolveAllowedOrigins is what makes this test pass on viper v1.3.1
+// (where cast.ToStringSliceE uses strings.Fields and would otherwise
+// hand us the raw comma-glued string). See the resolveAllowedOrigins
+// doc comment for the full rationale.
+func TestCORSConfig_AllowedOriginsEnvOverride(t *testing.T) {
+	t.Setenv("ALGOREA_CORS__ALLOWEDORIGINS", "https://a.example,https://b.example")
+	t.Setenv("ALGOREA_CORS__ALLOWCREDENTIALS", "true")
+
+	globalConfig := viper.New()
+	corsConf := CORSConfig(globalConfig)
+	require.NotNil(t, corsConf)
+
+	resolved := resolveAllowedOrigins(corsConf)
+	assert.Equal(t, []string{"https://a.example", "https://b.example"}, resolved)
+
+	corsHandler, err := corsConfig(corsConf)
+	require.NoError(t, err)
+	require.NotNil(t, corsHandler)
+}
+
 func TestEventConfig(t *testing.T) {
 	globalConfig := viper.New()
 	globalConfig.Set("event.dispatcher", "sqs")

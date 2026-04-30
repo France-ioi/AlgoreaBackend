@@ -37,6 +37,68 @@ event:
   sqs:
     queueURL: "" # SQS queue URL (required if dispatcher is "sqs")
     region: "" # AWS region (e.g., "eu-west-1"). If empty, uses default from AWS config.
+# CORS allow-list applied to every API response.
+# - allowedOrigins: full origins (scheme + host + optional port). Supports the
+#   wildcard "*" to allow any origin and per-host wildcards like
+#   "https://*.example.com". When unset (or set to []), the resolved list is
+#   the sentinel ["none"]: a value no real browser will ever send as Origin,
+#   which keeps go-chi/cors out of its "allow any origin" branch (triggered
+#   by len(AllowedOrigins) == 0) and makes the default fail-closed for every
+#   cross-origin request -- credentialed or not. To expose endpoints
+#   cross-origin you MUST list the trusted origins explicitly here.
+#   Each entry is split on commas, trimmed of surrounding whitespace, and
+#   empty entries are dropped, so the operator-facing escape hatch
+#   "ALGOREA_CORS__ALLOWEDORIGINS=https://a.example,https://b.example"
+#   produces the same two-origin list as the YAML form below. Origins
+#   never contain commas (RFC 6454: scheme://host[:port]), so the split
+#   is a no-op for a properly-formed YAML list (one origin per entry).
+#   It is NOT a no-op for a typo where multiple origins are collapsed
+#   into a single quoted entry, e.g.
+#       allowedOrigins: ["https://a.example, https://b.example"]
+#   which the comma-split silently expands into two real trusted
+#   origins. Always use the multi-line YAML form below (one
+#   "- https://..." per line) so a stray comma stays inside one entry
+#   and fails loud at the first browser preflight instead of widening
+#   the allow-list, especially when allowCredentials is true.
+# - allowCredentials: whether to send "Access-Control-Allow-Credentials: true"
+#   so cookies / Authorization headers are usable cross-origin. Defaults to
+#   false.
+# Safety rule (enforced at startup; the app refuses to boot otherwise):
+#   When allowCredentials is true, allowedOrigins MUST be an explicit
+#   non-empty list that does not contain the bare "*". Two configurations
+#   are rejected:
+#     1. unset/empty allowedOrigins (resolves to the "none" sentinel) --
+#        rejected because credentials enabled with no usable trusted origin
+#        is almost always an operator mistake (e.g. only setting
+#        ALGOREA_CORS__ALLOWCREDENTIALS=true and forgetting the companion
+#        list); we surface it at startup instead of silently booting a
+#        permanently-broken credentialed setup.
+#     2. allowedOrigins containing the bare "*" -- rejected because
+#        go-chi/cors then echoes every caller's Origin back together with
+#        Access-Control-Allow-Credentials: true, the canonical
+#        CSRF-via-CORS misconfiguration.
+#   Per-host wildcards like "https://*.example.com" remain permitted with
+#   credentials.
+# Migration note: previous releases hardcoded ["*"] + AllowCredentials:true,
+#   and earlier configurable versions kept ["*"] as a dev/test fallback
+#   when this key was unset. Both behaviours are gone -- the unset case now
+#   resolves to the "none" sentinel + allowCredentials=false in every
+#   environment, denying every cross-origin request by default. If a local
+#   dev frontend (or any browser-driven integration test) relied on
+#   credentialed cross-origin requests, you must add an explicit cors block
+#   here with the trusted origins and allowCredentials: true to restore
+#   that behaviour. If you only need non-credentialed cross-origin reads
+#   (e.g. public catalog endpoints), still list the origins explicitly --
+#   leaving the section out no longer opens the API up to any site.
+#cors:
+#  allowedOrigins:
+#    # When allowCredentials is true (below), this list MUST be non-empty
+#    # AND MUST NOT contain the bare "*". Per-host wildcards like
+#    # "https://*.example.com" remain allowed alongside credentials.
+#    - https://www.france-ioi.org
+#    - https://algorea.org
+#    # - "*" # the bare "*" is rejected at startup when allowCredentials is true
+#  allowCredentials: true
 domains:
   -
     domains: [default] # of a list of domains

@@ -1101,7 +1101,24 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 
 - **SQL injection**: Prevented by parameterized queries
 - **Authorization**: Checked in every handler via `PickVisibleGroups`, `PickVisibleItems`
-- **CORS**: Configured in `app/cors.go`
+- **CORS**: Configured in `app/cors.go` from the top-level `cors` section:
+  - `cors.allowedOrigins`: full origins (scheme + host + optional port).
+    - Supports the bare `*` wildcard and per-host wildcards like `https://*.example.com`.
+    - When unset (or set to `[]`), `resolveAllowedOrigins` substitutes the `["none"]` sentinel before passing the list to `go-chi/cors`.
+    - The sentinel is a value no real browser ever sends as `Origin`, so it keeps the library out of its `allowedOriginsAll = true` branch (triggered by `len(AllowedOrigins) == 0`) and makes the default fail-closed for **every** cross-origin request, including non-credentialed reads of public endpoints.
+    - To expose endpoints cross-origin you MUST list the trusted origins explicitly.
+    - `resolveAllowedOrigins` normalizes each entry by splitting on commas, trimming surrounding whitespace, and dropping empty pieces. This (a) makes the operator-facing escape hatch `ALGOREA_CORS__ALLOWEDORIGINS=https://a.example,https://b.example` produce the same two-origin list as the YAML form (viper v1.3.1 hands env-var slices through `strings.Fields`, which would otherwise leave the comma-glued string as one nonsensical entry whose `len > 0` would defeat the sentinel substitution and the credentials-without-origins startup check), and (b) collapses pathological lists like `[""]` to the `["none"]` sentinel so a phantom empty-string origin can never silently coexist with `len > 0`. RFC 6454 origins are `scheme://host[:port]` and never contain commas, so the split is a no-op for a properly-formed YAML list (one origin per entry).
+    - **YAML typo trade-off**: viper does not expose which source a key came from, so the same comma-split runs on YAML lists too. For a typo that collapses several origins into a single quoted entry -- `allowedOrigins: ["https://a.example, https://b.example"]` -- the split silently expands the trusted set instead of leaving one nonsensical glued string the browser would never match. Combined with `allowCredentials: true`, that turns "loud failure on the first preflight" into "silent acceptance of un-reviewed origins". Always use the multi-line YAML form (one `- https://...` per entry) so a stray comma stays inside one entry. The env-var-style escape hatch is intentionally preserved for deployments that rely on it.
+  - `cors.allowCredentials`: whether the middleware sends `Access-Control-Allow-Credentials: true`. Defaults to `false`.
+  - Startup safety rule: when `allowCredentials` is `true`, `allowedOrigins` MUST be an explicit non-empty list that does not contain the bare `"*"`. Two configurations are rejected with `errCORSCredentialsRequireExplicitOrigins`:
+    - **Unset/empty `allowedOrigins`** (resolves to the `["none"]` sentinel): runtime behaviour would already be fail-closed, but credentials enabled with no usable trusted origin is almost always an operator mistake (e.g. only `allowCredentials: true` set via `ALGOREA_CORS__ALLOWCREDENTIALS=true`), so we surface it at startup instead of silently booting a permanently-broken credentialed setup.
+    - **A list containing the bare `"*"`**: `go-chi/cors` would echo any caller's `Origin` back together with `Access-Control-Allow-Credentials: true`, the canonical CSRF-via-CORS misconfiguration.
+    - Per-host wildcards (`https://*.example.com`) are not affected and remain allowed alongside credentials.
+  - **Migration note**: the previous implementation hardcoded `AllowedOrigins: ["*"]` and `AllowCredentials: true`, then a configurable version kept `["*"]` as a dev/test fallback when the key was unset, and an interim version still let an unset list fall through to `go-chi/cors`'s `allowedOriginsAll = true` branch (echoing any `Origin` back without credentials).
+    - All three behaviours are gone -- the unset case now resolves to the `["none"]` sentinel + `allowCredentials=false` in **every** environment, denying every cross-origin request by default.
+    - Effective consequences for existing setups: any local dev frontend (or browser-driven integration test) that relied on the backend echoing arbitrary origins back -- even for non-credentialed reads -- will silently stop receiving an `Access-Control-Allow-Origin` header.
+    - To restore cross-origin access, add an explicit `cors:` block with the trusted origins (and `allowCredentials: true` if you also need cookies/Authorization headers cross-origin).
+    - The repo's own BDD/Cucumber suite invokes the chi handler in-process and does not exercise CORS, so it is unaffected.
 - **Token validation**: In `auth.UserMiddleware`
 
 ### Observability

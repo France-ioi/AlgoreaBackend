@@ -30,6 +30,7 @@ const (
 	tokenConfigKey    string = "token"
 	domainsConfigKey  string = "domains"
 	eventConfigKey    string = "event"
+	corsConfigKey     string = "cors"
 )
 
 // LoadConfig loads and return the global configuration from files, flags, env, ...
@@ -175,4 +176,13 @@ func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem, err e
 // (env var changes impacts values).
 func EventConfig(globalConfig *viper.Viper) *viper.Viper {
 	return subconfig(globalConfig, eventConfigKey)
+}
+
+// CORSConfig returns a CORS subconfig from the global config.
+// Note: although the returned *viper.Viper is dynamic, the *cors.Cors handler
+// is built once in loadAppConfigs and cached on appConfigs.cors, so values are
+// only read at Reset() time -- runtime env var changes do not propagate to
+// the live middleware.
+func CORSConfig(globalConfig *viper.Viper) *viper.Viper {
+	return subconfig(globalConfig, corsConfigKey)
 }
