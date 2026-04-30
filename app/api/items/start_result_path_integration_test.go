@@ -549,6 +549,48 @@ func Test_getDataForResultPathStart(t *testing.T) {
 				},
 			},
 		},
+		{
+			// Chain-forward through the relaxation. Item 21 (B, explicit-entry) is matched on
+			// attempt 0 via the WHERE relaxation (started result on a non-rooted attempt). At the
+			// next rung, item 30 (C, non-EE) genuinely has TWO valid candidates: stay on attempt 0
+			// (chain link's "false" branch -- non-rooted attempt id propagates) or step into the
+			// rooted-at-30 attempt 5 whose parent_attempt_id = 0 (chain link's "true" branch).
+			// Both pass the WHERE: attempt 0 has no result for item 30 but is active; attempt 5
+			// carries a started result. The score breaks the tie via the LOW "started_at IS NULL"
+			// bit at item 30's position (attempt 5: 0, attempt 0: 1), so attempt_id2 = 5. The HIGH
+			// "non-rooted on EE" bit fires for item 21 on attempt 0 and contributes the same value
+			// to both candidate paths, so it does not affect the choice. This locks in that the
+			// chain link walks forward into a rooted child attempt downstream of an EE rung that
+			// was matched via the relaxation, and that the score interaction stays consistent
+			// across this transition.
+			name: "chain steps into a rooted child attempt downstream of an explicit-entry rung matched via the relaxation",
+			fixture: `
+				items:
+					- {id: 21, default_language_tag: fr, requires_explicit_entry: true}
+					- {id: 30, default_language_tag: fr}
+				items_items:
+					- {parent_item_id: 1, child_item_id: 21, child_order: 5}
+					- {parent_item_id: 21, child_item_id: 30, child_order: 1}
+				attempts:
+					- {participant_id: 101, id: 5, parent_attempt_id: 0, root_item_id: 30}
+				permissions_generated:
+					- {group_id: 101, item_id: 1, can_view_generated: content}
+					- {group_id: 101, item_id: 21, can_view_generated: content}
+					- {group_id: 101, item_id: 30, can_view_generated: content}
+				results:
+					- {participant_id: 101, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 0, item_id: 21, started_at: 2019-05-30 11:00:00}
+					- {participant_id: 101, attempt_id: 5, item_id: 30, started_at: 2019-05-30 11:00:00}
+			`,
+			args: args{participantID: 101, ids: []int64{1, 21, 30}},
+			want: []map[string]interface{}{
+				{
+					"attempt_id0": int64(0), "has_started_result0": int64(1),
+					"attempt_id1": int64(0), "has_started_result1": int64(1),
+					"attempt_id2": int64(5), "has_started_result2": int64(1),
+				},
+			},
+		},
 		// The four cases below verify the negative side of the relaxation: missing or NOT-STARTED results
 		// on non-rooted attempts must NOT unlock chains for explicit-entry items. A result row whose
 		// started_at is NULL can legitimately appear as a side effect of score propagation from descendants
