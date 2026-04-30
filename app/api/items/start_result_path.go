@@ -21,8 +21,10 @@ import (
 //		Of all possible chains of attempts the service chooses the one having missing/not-started results located closer
 //		to the end of the path, preferring chains having less missing/not-started results and having higher values of `attempt_id`.
 //		If there is no result for the first item, the service tries to create an attempt chain starting with the zero attempt.
-//		The chain of attempts cannot have missing results for items requiring explicit entry or require to start/create results
-//		within or below ended/not-allowing-submissions attempts.
+//		For each item requiring explicit entry, the chosen attempt must either be rooted at that item or carry a started
+//		(not merely propagated) result for it; chains that cannot satisfy this for an explicit-entry item are rejected.
+//		When both options exist for the same explicit-entry item, the rooted attempt is preferred. The chain also cannot
+//		require starting/creating results within or below ended/not-allowing-submissions attempts.
 //
 //		If `as_team_id` is given, the created/updated results are linked to the `as_team_id` group instead of the user's self group.
 //
