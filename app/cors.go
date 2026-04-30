@@ -34,13 +34,21 @@ var errCORSPermissiveOriginsWithCredentials = errors.New(
 		`(go-chi/cors treats both an empty list and a bare "*" as "allow any origin", ` +
 		`which combined with credentials is the canonical CSRF-via-CORS misconfiguration)`)
 
-// resolveAllowedOrigins returns the configured CORS allow-list. The wildcard
-// "*" is allowed (alone or mixed with explicit entries) and per-host wildcards
-// like "https://*.example.com" are also supported by go-chi/cors. An unset key
-// resolves to an empty slice in every environment: there is no env-based
-// fallback. Note that go-chi/cors interprets an empty slice the same as
-// ["*"]; the safety check in corsConfig closes that loophole when credentials
-// are enabled.
+// resolveAllowedOrigins returns the configured CORS allow-list verbatim.
+// Per-host wildcards like "https://*.example.com" are supported by go-chi/cors
+// and are always safe. There is no env-based fallback -- an unset key
+// resolves to an empty slice in every environment.
+//
+// In contrast, three configurations make go-chi/cors match every origin: the
+// bare "*" alone, "*" mixed with explicit entries, and an empty/unset list
+// (the library sets allowedOriginsAll=true when len(AllowedOrigins)==0). All
+// three are accepted here -- the safety check in corsConfig rejects them at
+// startup when allowCredentials is also true, so they remain the only shapes
+// that can produce a fail-closed credentialed configuration. Do NOT remove
+// the slices.Contains / len() guards in corsConfig without thinking through
+// that interaction (TestCORSConfig_RejectsWildcardWithCredentials,
+// TestCORSConfig_RejectsWildcardMixedWithExplicit, and
+// TestCORSConfig_RejectsEmptyOriginsWithCredentials lock the rule in).
 func resolveAllowedOrigins(corsConf *viper.Viper) []string {
 	return corsConf.GetStringSlice(allowedOriginsKey)
 }
