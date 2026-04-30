@@ -92,7 +92,7 @@ func TestCORSConfig_RejectsWildcardWithCredentials(t *testing.T) {
 	corsConf.Set(allowCredentialsKey, true)
 
 	c, err := corsConfig(corsConf)
-	require.ErrorIs(t, err, errCORSWildcardWithCredentials)
+	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
 	assert.Nil(t, c)
 }
 
@@ -119,7 +119,36 @@ func TestCORSConfig_RejectsWildcardMixedWithExplicit(t *testing.T) {
 	corsConf.Set(allowCredentialsKey, true)
 
 	c, err := corsConfig(corsConf)
-	require.ErrorIs(t, err, errCORSWildcardWithCredentials)
+	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
+	assert.Nil(t, c)
+}
+
+func TestCORSConfig_RejectsEmptyOriginsWithCredentials(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// go-chi/cors treats an empty AllowedOrigins slice as "allow any origin",
+	// so combined with credentials it is just as dangerous as the bare "*".
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{})
+	corsConf.Set(allowCredentialsKey, true)
+
+	c, err := corsConfig(corsConf)
+	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
+	assert.Nil(t, c)
+}
+
+func TestCORSConfig_RejectsMissingOriginsWithCredentials(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// "Credentials-only" config: only allowCredentials is set (e.g. via
+	// ALGOREA_CORS__ALLOWCREDENTIALS=true), allowedOrigins is left unset.
+	// Resolves to an empty slice, which go-chi/cors treats as "allow any
+	// origin" -- must be rejected at startup.
+	corsConf := viper.New()
+	corsConf.Set(allowCredentialsKey, true)
+
+	c, err := corsConfig(corsConf)
+	require.ErrorIs(t, err, errCORSPermissiveOriginsWithCredentials)
 	assert.Nil(t, c)
 }
 

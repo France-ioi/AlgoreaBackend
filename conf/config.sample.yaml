@@ -46,9 +46,15 @@ event:
 #   so cookies / Authorization headers are usable cross-origin. Defaults to
 #   false.
 # Safety rule (enforced at startup; the app refuses to boot otherwise):
-#   allowedOrigins MUST NOT contain "*" when allowCredentials is true. The
-#   browser would refuse the response anyway, but echoing arbitrary origins
-#   back with credentials is the canonical CSRF-via-CORS footgun.
+#   When allowCredentials is true, allowedOrigins MUST be an explicit
+#   non-empty list that does not contain the bare "*". Note that the
+#   underlying go-chi/cors library treats an unset/empty list as "allow any
+#   origin", so a "credentials-only" config like
+#     cors: { allowCredentials: true }
+#   would otherwise echo every caller's Origin back with
+#   Access-Control-Allow-Credentials: true (the canonical CSRF-via-CORS
+#   misconfiguration). Per-host wildcards like "https://*.example.com" are
+#   still permitted with credentials.
 #cors:
 #  allowedOrigins:
 #    - https://www.france-ioi.org
