@@ -21,8 +21,10 @@ import (
 //		Of all possible chains of attempts the service chooses the one having missing/not-started results located closer
 //		to the end of the path, preferring chains having less missing/not-started results and having higher values of `attempt_id`.
 //		If there is no result for the first item, the service tries to create an attempt chain starting with the zero attempt.
-//		The chain of attempts cannot have missing results for items requiring explicit entry or require to start/create results
-//		within or below ended/not-allowing-submissions attempts.
+//		For each item requiring explicit entry, the chosen attempt must either be rooted at that item or carry a started
+//		(not merely propagated) result for it; chains that cannot satisfy this for an explicit-entry item are rejected.
+//		When both options exist for the same explicit-entry item, the rooted attempt is preferred. The chain also cannot
+//		require starting/creating results within or below ended/not-allowing-submissions attempts.
 //
 //		If `as_team_id` is given, the created/updated results are linked to the `as_team_id` group instead of the user's self group.
 //
@@ -188,37 +190,67 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 			score += " + "
 			const comma = ", "
 			columns += comma
+			// Chain link: when the attempt is rooted at this item the chain steps into a child attempt
+			// (linked via parent_attempt_id); otherwise the same attempt id propagates from the previous rung.
+			// The IF condition itself is unchanged by the relaxation below; the relaxation merely makes the
+			// "false" branch reachable for explicit-entry items too (so e.g. attempt 0 can carry through the
+			// chain when an explicit-entry item is matched on it via a started result).
 			previousAttemptCondition = fmt.Sprintf(` AND
-					IF(attempts%d.root_item_id = items%d.id, attempts%d.parent_attempt_id, attempts%d.id) = attempts%d.id`,
-				idIndex, idIndex, idIndex, idIndex, idIndex-1)
+					IF(attempts%[1]d.root_item_id = items%[1]d.id, attempts%[1]d.parent_attempt_id, attempts%[1]d.id) = attempts%[2]d.id`,
+				idIndex, idIndex-1)
 		}
 
 		columnsForOrder += fmt.Sprintf(", attempts%d.id DESC", idIndex)
 		attemptIsActiveCondition = fmt.Sprintf(
-			"attempts%d.ended_at IS NULL AND NOW() < attempts%d.allows_submissions_until AND %s", idIndex, idIndex, attemptIsActiveCondition)
-		score += fmt.Sprintf("((results%d.started_at IS NULL) << %d)", idIndex, len(ids)-idIndex-1)
+			"attempts%[1]d.ended_at IS NULL AND NOW() < attempts%[1]d.allows_submissions_until AND %[2]s",
+			idIndex, attemptIsActiveCondition)
+		// Per-position score (lower is better), summed across positions; bits at distinct shifts
+		// never overlap so the sum behaves like a bitwise OR. The HIGH half (shift `2*len-i-1`)
+		// penalizes "non-rooted attempt on an explicit-entry item" and dominates the LOW half
+		// (shift `len-i-1`, which penalizes "result not started yet"). Effect: when a rooted
+		// alternative exists for an explicit-entry item, it ALWAYS beats a non-rooted attempt --
+		// even if the rooted attempt's result is not yet started and the non-rooted one's is.
+		// The non-rooted-with-started-result candidacy (allowed by the WHERE relaxation below)
+		// therefore acts only as a fallback when no rooted alternative is reachable in the chain.
+		// `<=>` is used for a NULL-safe equality so attempts with `root_item_id IS NULL` count as
+		// non-rooted rather than "unknown".
+		score += fmt.Sprintf(
+			"((items%[1]d.requires_explicit_entry AND NOT (attempts%[1]d.root_item_id <=> items%[1]d.id)) << %[3]d)"+
+				" + ((results%[1]d.started_at IS NULL) << %[2]d)",
+			idIndex, len(ids)-idIndex-1, 2*len(ids)-idIndex-1)
 		query = query.
-			Joins(fmt.Sprintf(`
-				JOIN attempts AS attempts%d ON attempts%d.participant_id = ? AND
-					(NOT items%d.requires_explicit_entry OR attempts%d.root_item_id = items%d.id)`+previousAttemptCondition,
-				idIndex, idIndex, idIndex, idIndex, idIndex),
+			Joins(fmt.Sprintf("JOIN attempts AS attempts%[1]d ON attempts%[1]d.participant_id = ?"+previousAttemptCondition, idIndex),
 				participantID).
 			Joins(fmt.Sprintf(`
-				LEFT JOIN results AS results%d ON results%d.participant_id = attempts%d.participant_id AND
-					attempts%d.id = results%d.attempt_id AND results%d.item_id = items%d.id`,
-				idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex)).
-			Where(
-				fmt.Sprintf("(NOT items%d.requires_explicit_entry OR results%d.attempt_id IS NOT NULL) AND (results%d.started_at IS NOT NULL OR %s)",
-					idIndex, idIndex, idIndex, attemptIsActiveCondition))
+				LEFT JOIN results AS results%[1]d ON results%[1]d.participant_id = attempts%[1]d.participant_id AND
+					attempts%[1]d.id = results%[1]d.attempt_id AND results%[1]d.item_id = items%[1]d.id`,
+				idIndex)).
+			// For items requiring explicit entry, the matched attempt usually must be rooted at the item itself
+			// AND carry a result for it. We additionally allow non-rooted attempts when there is a STARTED result
+			// for the item on the chosen attempt: such a started result is what proves the participant has actually
+			// entered the item, even if the result is not on an attempt rooted at it (this can happen e.g. when
+			// "requires_explicit_entry" was flipped on after the result was created). This non-rooted candidacy
+			// is intentionally a FALLBACK only -- the score above ensures a rooted alternative wins whenever one
+			// exists in the chain, so stale-but-started rows on a parent attempt do not silently bypass the
+			// "explicit entry creates a child attempt rooted at the item" semantics. A non-started result on a
+			// non-rooted attempt is intentionally NOT enough on its own. The two clauses below are kept separate
+			// for clarity: the first picks which attempt is acceptable, the second enforces that the chosen
+			// attempt actually has a result for the explicit-entry item.
+			Where(fmt.Sprintf(
+				"(NOT items%[1]d.requires_explicit_entry OR attempts%[1]d.root_item_id = items%[1]d.id "+
+					"OR results%[1]d.started_at IS NOT NULL) AND "+
+					"(NOT items%[1]d.requires_explicit_entry OR results%[1]d.attempt_id IS NOT NULL) AND "+
+					"(results%[1]d.started_at IS NOT NULL OR %[2]s)",
+				idIndex, attemptIsActiveCondition))
 
 		if idIndex != len(ids)-1 {
 			query = query.Joins(fmt.Sprintf(
-				"JOIN items_items AS items_items%d ON items_items%d.parent_item_id = items%d.id AND items_items%d.child_item_id = ?",
-				idIndex+1, idIndex+1, idIndex, idIndex+1), ids[idIndex+1]).
-				Joins(fmt.Sprintf("JOIN items AS items%d ON items%d.id = items_items%d.child_item_id", idIndex+1, idIndex+1, idIndex+1))
+				"JOIN items_items AS items_items%[2]d ON items_items%[2]d.parent_item_id = items%[1]d.id AND items_items%[2]d.child_item_id = ?",
+				idIndex, idIndex+1), ids[idIndex+1]).
+				Joins(fmt.Sprintf("JOIN items AS items%[1]d ON items%[1]d.id = items_items%[1]d.child_item_id", idIndex+1))
 		}
 		columns += fmt.Sprintf(
-			"attempts%d.id AS attempt_id%d, results%d.started_at IS NOT NULL AS has_started_result%d", idIndex, idIndex, idIndex, idIndex)
+			"attempts%[1]d.id AS attempt_id%[1]d, results%[1]d.started_at IS NOT NULL AS has_started_result%[1]d", idIndex)
 	}
 	query = query.Select(columns).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
 		Order(score + columnsForOrder).Limit(1)
