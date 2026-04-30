@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.41.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.41.0...v2.41.1) - 2026-04-30
+- fix `start-result-path` to allow explicit-entry items when the resolved attempt already has a started result (prefer non-default attempt when breaking ties)
+
 ## [v2.41.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.40.0...v2.41.0) - 2026-04-28
 - allow up to 15 item IDs (instead of 10) in item path parameters of `itemBreadcrumbs`, `start-result`, `start-result-path`, `enter`, and `create-attempt`
 - fix `path-from-root` to accept explicit-entry items matched on a non-rooted attempt with a started result
