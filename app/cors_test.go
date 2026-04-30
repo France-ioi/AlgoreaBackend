@@ -109,6 +109,23 @@ func TestResolveAllowedOrigins_SplitsCommaSeparatedEntry(t *testing.T) {
 	assert.Equal(t, []string{"https://a.example", "https://b.example"}, got)
 }
 
+func TestResolveAllowedOrigins_SplitsCommaSeparatedEntryContainingWildcard(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// A comma-glued env-var value that includes the bare "*" must surface
+	// "*" as a real entry in the resolved list, not stay buried inside a
+	// nonsensical "*,https://safe.example" string. This is what makes the
+	// credentials-vs-wildcard safety check in corsConfig actually reachable
+	// for the env-var path: ALGOREA_CORS__ALLOWEDORIGINS="*,https://safe.example"
+	// + ALGOREA_CORS__ALLOWCREDENTIALS=true must fail at startup, which it
+	// only does once the comma-split exposes the "*" to containsString.
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{"*,https://safe.example"})
+
+	got := resolveAllowedOrigins(corsConf)
+	assert.Equal(t, []string{"*", "https://safe.example"}, got)
+}
+
 func TestResolveAllowedOrigins_TrimsWhitespaceAndDropsEmpty(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
@@ -265,6 +282,51 @@ func TestCORSConfig_RejectsWildcardMixedWithExplicit(t *testing.T) {
 	// reject the combination just as we would for a lone "*".
 	corsConf := viper.New()
 	corsConf.Set(allowedOriginsKey, []string{"https://www.france-ioi.org", "*"})
+	corsConf.Set(allowCredentialsKey, true)
+
+	corsHandler, err := corsConfig(corsConf)
+	require.ErrorIs(t, err, errCORSCredentialsRequireExplicitOrigins)
+	assert.Nil(t, corsHandler)
+}
+
+func TestCORSConfig_RejectsCommaSeparatedWildcardWithCredentials(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// Operator-facing env-var path:
+	//   ALGOREA_CORS__ALLOWEDORIGINS=*,https://safe.example
+	//   ALGOREA_CORS__ALLOWCREDENTIALS=true
+	// Viper hands resolveAllowedOrigins a single "*,https://safe.example"
+	// entry (cast.ToStringSliceE -> strings.Fields). The comma-split must
+	// surface "*" as a real list element so the credentials-vs-wildcard
+	// rejection fires; otherwise the bare "*" would stay hidden inside the
+	// glued string, containsString would return false, and the app would
+	// boot with the canonical CSRF-via-CORS misconfiguration (any caller's
+	// Origin echoed back together with Access-Control-Allow-Credentials:
+	// true). A future refactor that drops the comma-split, or inserts the
+	// wildcard check before the split, would silently re-open this hole;
+	// this test is what catches it.
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{"*,https://safe.example"})
+	corsConf.Set(allowCredentialsKey, true)
+
+	corsHandler, err := corsConfig(corsConf)
+	require.ErrorIs(t, err, errCORSCredentialsRequireExplicitOrigins)
+	assert.Nil(t, corsHandler)
+}
+
+func TestCORSConfig_RejectsWhitespacePaddedWildcardWithCredentials(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// `allowedOrigins: [" * "]` (or the equivalent env-var value with
+	// surrounding spaces) must trip the same credentials-vs-wildcard
+	// rejection as a bare "*". resolveAllowedOrigins trims surrounding
+	// whitespace before containsString runs, so the safety rule fires
+	// here today; pinning it ensures that a future "drop the trim" or
+	// "compare against the raw entry" refactor does not silently let a
+	// whitespace-padded wildcard slip past the check and boot the app
+	// into the CSRF-via-CORS misconfiguration.
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{" * "})
 	corsConf.Set(allowCredentialsKey, true)
 
 	corsHandler, err := corsConfig(corsConf)

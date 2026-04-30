@@ -50,8 +50,16 @@ event:
 #   empty entries are dropped, so the operator-facing escape hatch
 #   "ALGOREA_CORS__ALLOWEDORIGINS=https://a.example,https://b.example"
 #   produces the same two-origin list as the YAML form below. Origins
-#   never contain commas (RFC 6454: scheme://host[:port]), so this
-#   normalization is safe for explicit YAML lists too.
+#   never contain commas (RFC 6454: scheme://host[:port]), so the split
+#   is a no-op for a properly-formed YAML list (one origin per entry).
+#   It is NOT a no-op for a typo where multiple origins are collapsed
+#   into a single quoted entry, e.g.
+#       allowedOrigins: ["https://a.example, https://b.example"]
+#   which the comma-split silently expands into two real trusted
+#   origins. Always use the multi-line YAML form below (one
+#   "- https://..." per line) so a stray comma stays inside one entry
+#   and fails loud at the first browser preflight instead of widening
+#   the allow-list, especially when allowCredentials is true.
 # - allowCredentials: whether to send "Access-Control-Allow-Credentials: true"
 #   so cookies / Authorization headers are usable cross-origin. Defaults to
 #   false.

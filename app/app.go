@@ -54,7 +54,13 @@ type appConfigs struct {
 	token   *token.Config
 	server  *viper.Viper
 	event   *viper.Viper
-	cors    *cors.Cors
+	// cors is intentionally a fully-built *cors.Cors rather than a *viper.Viper:
+	// unlike the sibling dynamic subconfigs above (auth/logging/server/event),
+	// CORS is resolved once in loadAppConfigs so runtime env-var changes do NOT
+	// propagate to the live middleware. See CORSConfig's doc comment for the
+	// rationale; do not refactor this to *viper.Viper without re-deriving the
+	// fail-closed sentinel + credentials safety checks on every request.
+	cors *cors.Cors
 }
 
 func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {

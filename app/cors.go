@@ -63,8 +63,22 @@ var errCORSCredentialsRequireExplicitOrigins = errors.New(
 //     will ever match -- and, because len(AllowedOrigins) is then 1 (not
 //     0), the sentinel substitution below would NOT kick in, so the
 //     misconfiguration would silently boot a permanently-broken setup.
-//     Origins per RFC 6454 are scheme://host[:port] and never contain
-//     commas, so this split is safe for explicit YAML lists too.
+//     Trade-off to be aware of: viper does not expose which source a
+//     given key came from, so the same comma-split runs on YAML lists
+//     too. For a properly-formed YAML list (one origin per entry) it is
+//     a no-op since RFC 6454 origins are scheme://host[:port] and never
+//     contain commas. For a typo where the operator collapses several
+//     origins into a single quoted entry --
+//     allowedOrigins: ["https://a.example, https://b.example"]
+//     -- the split silently expands the trusted set into two real
+//     origins instead of leaving one nonsensical glued string that
+//     would never match a browser request. Combined with
+//     allowCredentials=true, that converts a "loud failure on the first
+//     preflight" into a "silent acceptance of un-reviewed origins", so
+//     prefer the multi-line YAML list form (one "- https://..." per
+//     line) over a single quoted entry containing commas. The
+//     env-var-style escape hatch is intentionally preserved for
+//     deployments that rely on it.
 //
 //   - each piece is trimmed of surrounding whitespace and dropped if
 //     empty. This closes a second footgun: a YAML quirk like
@@ -89,10 +103,13 @@ var errCORSCredentialsRequireExplicitOrigins = errors.New(
 // TestCORSConfig_DefaultBlocksAllOrigins,
 // TestCORSConfig_RejectsWildcardWithCredentials,
 // TestCORSConfig_RejectsWildcardMixedWithExplicit,
+// TestCORSConfig_RejectsCommaSeparatedWildcardWithCredentials,
+// TestCORSConfig_RejectsWhitespacePaddedWildcardWithCredentials,
 // TestCORSConfig_RejectsEmptyOriginsWithCredentials,
 // TestCORSConfig_RejectsMissingOriginsWithCredentials,
 // TestCORSConfig_RejectsAllEmptyStringOriginsWithCredentials,
 // TestResolveAllowedOrigins_SplitsCommaSeparatedEntry,
+// TestResolveAllowedOrigins_SplitsCommaSeparatedEntryContainingWildcard,
 // TestResolveAllowedOrigins_TrimsWhitespaceAndDropsEmpty, and
 // TestResolveAllowedOrigins_OnlyEmptyStringsResolveToDisallowedSentinel,
 // which together lock in both halves of the policy.
@@ -112,10 +129,12 @@ func resolveAllowedOrigins(corsConf *viper.Viper) []string {
 	return origins
 }
 
-// containsString reports whether s is present in slice. Inlined instead of
-// using the stdlib "slices" package so this file builds against pre-1.21 Go
-// toolchains that some local environments still pin via GOROOT/GOTOOLCHAIN,
-// even when go.mod declares 1.21.
+// containsString reports whether s is present in slice. Intentionally
+// inlined rather than calling slices.Contains: the stdlib "slices"
+// package has caused build/toolchain trouble for this project in the
+// past, so this file deliberately stays free of that import. Do not
+// refactor to slices.Contains without coordinating that change at the
+// project level.
 func containsString(slice []string, s string) bool {
 	for _, v := range slice {
 		if v == s {
