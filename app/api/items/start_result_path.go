@@ -190,8 +190,9 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 			columns += comma
 			// Chain link: when the attempt is rooted at this item the chain steps into a child attempt
 			// (linked via parent_attempt_id); otherwise the same attempt id propagates from the previous rung.
-			// The "false" branch also covers the relaxation below, where an explicit-entry item is matched on
-			// a non-rooted attempt carrying a started result for it (e.g. attempt 0 propagating through the chain).
+			// The IF condition itself is unchanged by the relaxation below; the relaxation merely makes the
+			// "false" branch reachable for explicit-entry items too (so e.g. attempt 0 can carry through the
+			// chain when an explicit-entry item is matched on it via a started result).
 			previousAttemptCondition = fmt.Sprintf(` AND
 					IF(attempts%[1]d.root_item_id = items%[1]d.id, attempts%[1]d.parent_attempt_id, attempts%[1]d.id) = attempts%[2]d.id`,
 				idIndex, idIndex-1)
