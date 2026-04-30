@@ -46,6 +46,12 @@ event:
 #   by len(AllowedOrigins) == 0) and makes the default fail-closed for every
 #   cross-origin request -- credentialed or not. To expose endpoints
 #   cross-origin you MUST list the trusted origins explicitly here.
+#   Each entry is split on commas, trimmed of surrounding whitespace, and
+#   empty entries are dropped, so the operator-facing escape hatch
+#   "ALGOREA_CORS__ALLOWEDORIGINS=https://a.example,https://b.example"
+#   produces the same two-origin list as the YAML form below. Origins
+#   never contain commas (RFC 6454: scheme://host[:port]), so this
+#   normalization is safe for explicit YAML lists too.
 # - allowCredentials: whether to send "Access-Control-Allow-Credentials: true"
 #   so cookies / Authorization headers are usable cross-origin. Defaults to
 #   false.

@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/go-chi/cors"
 	"github.com/spf13/viper"
@@ -51,26 +52,60 @@ var errCORSCredentialsRequireExplicitOrigins = errors.New(
 		`while a bare "*" mixed with credentials is the canonical CSRF-via-CORS misconfiguration ` +
 		`where go-chi/cors echoes the caller's Origin back)`)
 
-// resolveAllowedOrigins returns the configured CORS allow-list, with one
-// transformation: an unset/empty list is rewritten to
-// []string{disallowedAllOriginsSentinel}. That keeps go-chi/cors out of its
-// "allow any origin" branch (triggered by len(AllowedOrigins) == 0), so the
-// out-of-the-box default is fail-closed for every request -- credentialed or
-// not. Per-host wildcards like "https://*.example.com" are forwarded
-// unchanged and remain matched normally by the library.
+// resolveAllowedOrigins returns the configured CORS allow-list, normalized
+// for the underlying go-chi/cors middleware:
 //
-// The bare "*" is still accepted here (and simply forwarded), because the
-// safety check in corsConfig is what enforces the rule that "*" cannot be
-// combined with allowCredentials=true. Do NOT remove that check or the
-// sentinel substitution without revisiting
+//   - each entry is split on commas, so a single env-var value like
+//     ALGOREA_CORS__ALLOWEDORIGINS=https://a.example,https://b.example
+//     yields the two origins an operator expects. Without this, viper's
+//     env-var path (cast.ToStringSliceE -> strings.Fields) leaves the raw
+//     comma-glued string as one nonsensical list element that no browser
+//     will ever match -- and, because len(AllowedOrigins) is then 1 (not
+//     0), the sentinel substitution below would NOT kick in, so the
+//     misconfiguration would silently boot a permanently-broken setup.
+//     Origins per RFC 6454 are scheme://host[:port] and never contain
+//     commas, so this split is safe for explicit YAML lists too.
+//
+//   - each piece is trimmed of surrounding whitespace and dropped if
+//     empty. This closes a second footgun: a YAML quirk like
+//     `allowedOrigins: [""]`, an env var of `","`, or a trailing comma in
+//     `https://a.example,` would otherwise produce a phantom "" entry
+//     that go-chi/cors happily stores as a literal allowed origin while
+//     keeping len(AllowedOrigins) > 0 -- again defeating the sentinel
+//     substitution.
+//
+//   - if nothing usable remains, the list is rewritten to
+//     []string{disallowedAllOriginsSentinel}. That keeps go-chi/cors out
+//     of its "allow any origin" branch (triggered by
+//     len(AllowedOrigins) == 0) so the out-of-the-box default is
+//     fail-closed for every request -- credentialed or not.
+//
+// Per-host wildcards like "https://*.example.com" are forwarded unchanged
+// and remain matched normally by the library. The bare "*" is still
+// accepted here (and simply forwarded), because the safety check in
+// corsConfig is what enforces the rule that "*" cannot be combined with
+// allowCredentials=true. Do NOT remove the comma-split, the empty-string
+// filter, or the sentinel substitution without revisiting
 // TestCORSConfig_DefaultBlocksAllOrigins,
 // TestCORSConfig_RejectsWildcardWithCredentials,
 // TestCORSConfig_RejectsWildcardMixedWithExplicit,
-// TestCORSConfig_RejectsEmptyOriginsWithCredentials, and
-// TestCORSConfig_RejectsMissingOriginsWithCredentials, which together lock
-// in both halves of the policy.
+// TestCORSConfig_RejectsEmptyOriginsWithCredentials,
+// TestCORSConfig_RejectsMissingOriginsWithCredentials,
+// TestCORSConfig_RejectsAllEmptyStringOriginsWithCredentials,
+// TestResolveAllowedOrigins_SplitsCommaSeparatedEntry,
+// TestResolveAllowedOrigins_TrimsWhitespaceAndDropsEmpty, and
+// TestResolveAllowedOrigins_OnlyEmptyStringsResolveToDisallowedSentinel,
+// which together lock in both halves of the policy.
 func resolveAllowedOrigins(corsConf *viper.Viper) []string {
-	origins := corsConf.GetStringSlice(allowedOriginsKey)
+	raw := corsConf.GetStringSlice(allowedOriginsKey)
+	origins := make([]string, 0, len(raw))
+	for _, entry := range raw {
+		for _, piece := range strings.Split(entry, ",") {
+			if piece = strings.TrimSpace(piece); piece != "" {
+				origins = append(origins, piece)
+			}
+		}
+	}
 	if len(origins) == 0 {
 		return []string{disallowedAllOriginsSentinel}
 	}

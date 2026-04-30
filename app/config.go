@@ -178,8 +178,11 @@ func EventConfig(globalConfig *viper.Viper) *viper.Viper {
 	return subconfig(globalConfig, eventConfigKey)
 }
 
-// CORSConfig returns a CORS dynamic config from the global config
-// (env var changes impacts values).
+// CORSConfig returns a CORS subconfig from the global config.
+// Note: although the returned *viper.Viper is dynamic, the *cors.Cors handler
+// is built once in loadAppConfigs and cached on appConfigs.cors, so values are
+// only read at Reset() time -- runtime env var changes do not propagate to
+// the live middleware.
 func CORSConfig(globalConfig *viper.Viper) *viper.Viper {
 	return subconfig(globalConfig, corsConfigKey)
 }

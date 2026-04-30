@@ -91,6 +91,57 @@ func TestResolveAllowedOrigins_WildcardEntryIsPassedThrough(t *testing.T) {
 	assert.Equal(t, []string{"*"}, got)
 }
 
+func TestResolveAllowedOrigins_SplitsCommaSeparatedEntry(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// Operator-facing escape hatch: a comma-separated env var (which viper
+	// hands us as a single comma-glued slice element on the v1.3.1 / cast
+	// v1.3.0 codepath) must be split into the two origins the operator
+	// intended. Without this, the resolved list would contain one
+	// nonsensical "https://a.example,https://b.example" entry that no
+	// browser ever matches AND -- because len > 0 -- would NOT trigger
+	// the disallowedAllOriginsSentinel substitution, silently bypassing
+	// the credentials-without-origins startup check too.
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{"https://a.example,https://b.example"})
+
+	got := resolveAllowedOrigins(corsConf)
+	assert.Equal(t, []string{"https://a.example", "https://b.example"}, got)
+}
+
+func TestResolveAllowedOrigins_TrimsWhitespaceAndDropsEmpty(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// Trailing commas, surrounding whitespace, and lone empty entries
+	// (e.g. from `allowedOrigins: ["", "https://a.example "]` in YAML or
+	// `https://a.example,` in an env var) must not survive into
+	// AllowedOrigins. A surviving "" entry would otherwise be a literal
+	// allowed origin in go-chi/cors while still keeping len > 0, which
+	// would defeat the sentinel substitution below.
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{"  ", " https://a.example , ", "https://b.example,"})
+
+	got := resolveAllowedOrigins(corsConf)
+	assert.Equal(t, []string{"https://a.example", "https://b.example"}, got)
+}
+
+func TestResolveAllowedOrigins_OnlyEmptyStringsResolveToDisallowedSentinel(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// `allowedOrigins: [""]` (or any list of exclusively empty / whitespace
+	// entries) must collapse to the same fail-closed default as an unset
+	// list. Pre-fix this slipped through as a `cors.Cors` whose only
+	// "explicit" origin was the empty string -- runtime never matched it,
+	// but the credentials-without-origins startup check did NOT fire
+	// because len(AllowedOrigins) was 1, so an operator could boot a
+	// credentialed setup with effectively no trusted origins.
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{""})
+
+	got := resolveAllowedOrigins(corsConf)
+	assert.Equal(t, []string{disallowedAllOriginsSentinel}, got)
+}
+
 func TestCORSConfig_ReturnsCORSHandler(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
@@ -232,6 +283,26 @@ func TestCORSConfig_RejectsEmptyOriginsWithCredentials(t *testing.T) {
 	// credentialed setup.
 	corsConf := viper.New()
 	corsConf.Set(allowedOriginsKey, []string{})
+	corsConf.Set(allowCredentialsKey, true)
+
+	corsHandler, err := corsConfig(corsConf)
+	require.ErrorIs(t, err, errCORSCredentialsRequireExplicitOrigins)
+	assert.Nil(t, corsHandler)
+}
+
+func TestCORSConfig_RejectsAllEmptyStringOriginsWithCredentials(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	// `allowedOrigins: [""]` + allowCredentials: true used to silently
+	// produce a *cors.Cors whose only "explicit" origin was "". Runtime
+	// would never match, but the startup safety check in corsConfig also
+	// would not fire (len(AllowedOrigins) was 1, not 0), so an operator
+	// could boot a credentialed setup with effectively no trusted
+	// origins. After the empty-string filter in resolveAllowedOrigins,
+	// the list collapses to the disallowedAllOriginsSentinel and the
+	// usual credentials-without-origins rejection kicks in.
+	corsConf := viper.New()
+	corsConf.Set(allowedOriginsKey, []string{""})
 	corsConf.Set(allowCredentialsKey, true)
 
 	corsHandler, err := corsConfig(corsConf)
