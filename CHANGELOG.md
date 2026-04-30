@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.42.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.41.1...v2.42.0) - 2026-04-30
+- new `cors` config block with `allowedOrigins` and `allowCredentials` to control the CORS allow-list applied to every API response
+- **breaking / action required**: previous releases hardcoded `AllowedOrigins: ["*"]` with `AllowCredentials: true`. The new default is fail-closed: every cross-origin request is denied until trusted origins are listed explicitly. Deployments MUST add a `cors` block to their config (see `conf/config.sample.yaml`) before upgrading or browser-based clients will stop working in production
+- the application now refuses to start when `allowCredentials: true` is combined with an unset/empty `allowedOrigins` or with a list containing the bare `"*"` (canonical CSRF-via-CORS misconfiguration)
+
 ## [v2.41.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.41.0...v2.41.1) - 2026-04-30
 - fix `start-result-path` to allow explicit-entry items when the resolved attempt already has a started result (prefer non-default attempt when breaking ties)
 
