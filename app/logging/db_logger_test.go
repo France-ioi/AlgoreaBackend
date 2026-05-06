@@ -17,7 +17,6 @@ func TestLogger_BooleanConfigFlags(t *testing.T) {
 		{"LogRawSQLQueries", (*Logger).IsRawSQLQueriesLoggingEnabled},
 		{"AnalyzeSQLQueries", (*Logger).IsSQLQueriesAnalyzingEnabled},
 	} {
-		test := test
 		t.Run(test.flagName, func(t *testing.T) {
 			t.Run("nil config", func(t *testing.T) {
 				logger := createLogger()

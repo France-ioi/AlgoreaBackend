@@ -68,7 +68,6 @@ func marshalAndSignTests() []marshalAndSignTest {
 
 func TestToken_MarshalJSON(t *testing.T) {
 	for _, test := range marshalAndSignTests() {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
 			defer monkey.UnpatchAll()
@@ -103,7 +102,6 @@ func TestToken_MarshalJSON(t *testing.T) {
 
 func TestToken_Sign(t *testing.T) {
 	for _, test := range marshalAndSignTests() {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
 			defer monkey.UnpatchAll()
@@ -137,7 +135,6 @@ func TestToken_Sign(t *testing.T) {
 
 func TestToken_MarshalString(t *testing.T) {
 	for _, test := range marshalAndSignTests() {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return test.currentTime })
 			defer monkey.UnpatchAll()

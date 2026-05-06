@@ -58,7 +58,6 @@ func RunGodogTests(t *testing.T, tags string) {
 	}
 
 	for _, featureFile := range featureFiles {
-		featureFile := featureFile
 		t.Run(featureFile, func(t *testing.T) {
 			var restoreFunc flowmingo.RestoreFunc
 			if !testing.Verbose() { // Do not suppress output in verbose mode

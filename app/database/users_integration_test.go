@@ -92,9 +92,7 @@ func TestDataStore_CheckIfTeamParticipationsConflictWithExistingUserMemberships(
 		`)
 	defer func() { _ = db.Close() }()
 	for _, tt := range tests {
-		tt := tt
 		for _, withLock := range []bool{true, false} {
-			withLock := withLock
 			t.Run(tt.name+fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
 				testoutput.SuppressIfPasses(t)
 

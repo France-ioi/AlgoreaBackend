@@ -587,7 +587,7 @@ func (ctx *TestContext) sortGodogTable(table *godog.Table) {
 	columnNumber := len(table.Rows[0].Cells)
 
 	sort.Slice(table.Rows[1:], func(leftRowIndex, rightRowIndex int) bool {
-		for columnIndex := 0; columnIndex < columnNumber; columnIndex++ {
+		for columnIndex := range columnNumber {
 			var leftCellValue, rightCellValue string
 			if table.Rows[leftRowIndex+1].Cells[columnIndex] != nil {
 				leftCellValue = table.Rows[leftRowIndex+1].Cells[columnIndex].Value

@@ -32,7 +32,6 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 		{methodToCall: "VisibleByID", args: []interface{}{int64(191)}, column: "id", expected: []int64{191}},
 	}
 	for _, testCase := range tests {
-		testCase := testCase
 		t.Run(testCase.methodToCall, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -91,7 +90,6 @@ func TestItemStore_CheckSubmissionRights(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -137,7 +135,6 @@ func TestItemStore_GetItemIDFromTextID(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -574,7 +571,6 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		testEachWriteLockMode(t, tt.name+": is valid", func(t *testing.T, writeLock bool) {
 			t.Helper()
 
@@ -1027,7 +1023,6 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		testEachWriteLockMode(t, tt.name, func(t *testing.T, writeLock bool) {
 			t.Helper()
 			testoutput.SuppressIfPasses(t)
@@ -1070,7 +1065,7 @@ func TestItemStore_BreadcrumbsHierarchy_AtMaxItemPathLength(t *testing.T) {
 		fmt.Fprintf(&fixture, "  - {id: %d, default_language_tag: fr}\n", id)
 	}
 	fixture.WriteString("items_items:\n")
-	for i := 0; i < len(ids)-1; i++ {
+	for i := range len(ids) - 1 {
 		fmt.Fprintf(&fixture, "  - {parent_item_id: %d, child_item_id: %d, child_order: 1}\n", ids[i], ids[i+1])
 	}
 	fmt.Fprintf(&fixture, "groups:\n  - {id: %d, root_activity_id: %d}\n", groupID, ids[0])
@@ -1130,7 +1125,6 @@ func testEachWriteLockMode(t *testing.T, testName string, testFunc func(t *testi
 	t.Helper()
 
 	for _, writeLock := range []bool{false, true} {
-		writeLock := writeLock
 		var lockName string
 		if writeLock {
 			lockName = "(with write lock)"
@@ -1157,7 +1151,6 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 		{name: "url doesn't match any regexp", url: golang.Ptr("34"), wantPlatformID: nil},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1213,7 +1206,6 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 		{name: "new url doesn't match any regexp", updateMap: map[string]interface{}{"url": golang.Ptr("34")}, wantPlatformID: nil},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1274,7 +1266,6 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1343,7 +1334,6 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

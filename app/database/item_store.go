@@ -134,7 +134,7 @@ func columnsListForBreadcrumbsHierarchy(ids []int64) string {
 	columnsList := "1"
 	if len(ids) > 0 {
 		var columnsBuilder strings.Builder
-		for idIndex := 0; idIndex < len(ids); idIndex++ {
+		for idIndex := range ids {
 			if idIndex != 0 {
 				_, _ = columnsBuilder.WriteString(", ")
 			}
@@ -161,7 +161,7 @@ func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
 ) {
 	attemptIDMap = make(map[int64]int64, len(ids))
 	attemptNumberMap = make(map[int64]int, len(ids))
-	for idIndex := 0; idIndex < len(ids); idIndex++ {
+	for idIndex := range ids {
 		//nolint:forcetypeassert // panic if the type of data["attempt%d"] is not int64
 		attemptIDMap[ids[idIndex]] = data[fmt.Sprintf("attempt%d", idIndex)].(int64)
 		numberKey := fmt.Sprintf("number%d", idIndex)

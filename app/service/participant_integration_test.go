@@ -64,7 +64,6 @@ func TestGetParticipantIDFromRequest(t *testing.T) {
 	for _, test := range tests {
 		testoutput.SuppressIfPasses(t)
 
-		test := test
 		participantID, err := service.GetParticipantIDFromRequest(
 			&http.Request{URL: &url.URL{RawQuery: test.query}}, &database.User{GroupID: 4}, store)
 		assert.Equal(t, test.expectedResult, participantID)

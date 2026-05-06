@@ -74,7 +74,7 @@ func TestDataStore_WithNamedLock_WorksOutsideOfTransaction(t *testing.T) {
 	s := database.NewDataStore(db)
 	resultCh := make(chan struct{}, 100)
 	defer close(resultCh)
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		go func() {
 			assert.NoError(t, s.WithNamedLock("test", 1*time.Second, func(_ *database.DataStore) error {
 				return nil
@@ -82,7 +82,7 @@ func TestDataStore_WithNamedLock_WorksOutsideOfTransaction(t *testing.T) {
 			resultCh <- struct{}{}
 		}()
 	}
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		<-resultCh
 	}
 

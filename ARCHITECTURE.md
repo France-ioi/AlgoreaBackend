@@ -45,7 +45,7 @@ The platform emphasizes:
 ## Technology Stack
 
 ### Core Technologies
-- **Language**: Go 1.20
+- **Language**: Go 1.25
 - **Database**: MySQL 8.0.34
 - **HTTP Router**: `go-chi/chi` v3
 - **ORM**: `jinzhu/gorm` v1 (wrapped with custom extensions)

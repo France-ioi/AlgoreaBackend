@@ -91,7 +91,6 @@ func TestMiddleware(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assertMiddleware(t, tt.domains, tt.domainOverride, tt.shouldEnterService,
 				tt.expectedStatusCode, tt.expectedBody, tt.expectedConfig, tt.expectedDomain)

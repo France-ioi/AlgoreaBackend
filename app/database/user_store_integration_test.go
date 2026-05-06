@@ -39,7 +39,6 @@ func TestUserStore_DeleteTemporaryWithTraps(t *testing.T) {
 			expectDeletedSessions: golang.NewSet[int64](),
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

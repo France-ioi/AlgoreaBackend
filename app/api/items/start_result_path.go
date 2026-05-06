@@ -175,7 +175,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		groupsManagedByParticipant.Select("groups.root_skill_id"))
 
 	query := store.Table("items as items0").WithSharedWriteLock()
-	for i := 0; i < len(ids); i++ {
+	for i := range ids {
 		query = query.Where(fmt.Sprintf("items%d.id = ?", i), ids[i])
 	}
 	query = query.Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
@@ -184,7 +184,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	var columns string
 	attemptIsActiveCondition := "1"
 	var columnsForOrder string
-	for idIndex := 0; idIndex < len(ids); idIndex++ {
+	for idIndex := range ids {
 		var previousAttemptCondition string
 		if idIndex > 0 {
 			score += " + "

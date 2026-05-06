@@ -94,7 +94,6 @@ func TestItemItemStore_TriggerAfterUpdate_MarksPermissionsForRecomputing(t *test
 		{column: "watch_propagation", newValue: 1},
 		{column: "edit_propagation", newValue: 1},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("%s=%v", test.column, test.newValue), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

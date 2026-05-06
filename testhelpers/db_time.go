@@ -55,7 +55,7 @@ func getNowReplacer(parsedTime time.Time) func(string) string {
 				panic(err)
 			}
 			layout += fmt.Sprintf(".%0*d", fsp, 0)
-			for i := 0; i < fsp; i++ {
+			for range fsp {
 				precision /= 10
 			}
 		}
@@ -172,7 +172,6 @@ func patchDatabaseDBMethodsWithStringQuery(nowReplacer func(string) string, patc
 	}
 	stringDBGuards := make(map[string]*monkey.PatchGuard, len(stringDBMethods))
 	for _, methodName := range stringDBMethods {
-		methodName := methodName
 		stringDBGuards[methodName] = monkey.PatchInstanceMethod(
 			reflect.TypeOf(&database.DB{}), methodName,
 			func(db *database.DB, query string) *database.DB {
@@ -195,7 +194,6 @@ func patchDatabaseDBMethodsWithStringQueryAndArgs(nowReplacer func(string) strin
 	}
 	stringAndArgsDBGuards := make(map[string]*monkey.PatchGuard, len(stringAndArgsDBMethods))
 	for _, methodName := range stringAndArgsDBMethods {
-		methodName := methodName
 		stringAndArgsDBGuards[methodName] = monkey.PatchInstanceMethod(
 			reflect.TypeOf(&database.DB{}), methodName,
 			func(db *database.DB, query string, args ...interface{}) *database.DB {
@@ -217,7 +215,6 @@ func constructReflArgsForQueryAndArgs(query interface{}, args []interface{}) []r
 	reflArgs = append(reflArgs, reflect.ValueOf(query))
 	nilReflValue := reflect.New(reflect.TypeOf((*string)(nil))).Elem()
 	for _, arg := range args {
-		arg := arg
 		var reflValue reflect.Value
 		if arg == nil {
 			reflValue = nilReflValue
@@ -235,7 +232,6 @@ func patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer func(string) string, 
 	}
 	standardDBGuards := make(map[string]*monkey.PatchGuard, len(standardDBMethods))
 	for _, methodName := range standardDBMethods {
-		methodName := methodName
 		standardDBGuards[methodName] = monkey.PatchInstanceMethod(
 			reflect.TypeOf(&database.DB{}), methodName,
 			func(db *database.DB, query interface{}, args ...interface{}) *database.DB {

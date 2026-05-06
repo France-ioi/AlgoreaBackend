@@ -164,7 +164,6 @@ func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			hook := stringToDatabaseTimeUTCHookFunc(time.RFC3339)
 			converted, err := mapstructure.DecodeHookExec(hook, tt.typeFrom, tt.typeTo, tt.data)

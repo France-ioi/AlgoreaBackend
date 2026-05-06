@@ -13,7 +13,7 @@ func GenerateKey() (string, error) {
 	const stringLength = 32
 
 	result := make([]byte, 0, stringLength)
-	for i := 0; i < stringLength; i++ {
+	for range stringLength {
 		index, err := crand.Int(crand.Reader, big.NewInt(int64(allowedCharactersLength)))
 		if err != nil {
 			return "", err

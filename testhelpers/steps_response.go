@@ -237,7 +237,7 @@ func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 		curResult := make(map[string]string)
 
 		wantRow := wants.Rows[rowIndex]
-		for cellIndex := 0; cellIndex < len(headerCells); cellIndex++ {
+		for cellIndex := range headerCells {
 			curHeader := headerCells[cellIndex].Value
 
 			curWant[curHeader] = ctx.replaceReferencesWithIDs(wantRow.Cells[cellIndex].Value)
@@ -269,7 +269,7 @@ func sortSliceForEasyComparison(
 	headerCells []*messages.PickleTableCell,
 ) []map[string]string {
 	sort.Slice(slice, func(i, j int) bool {
-		for curHeader := 0; curHeader < len(headerCells); curHeader++ {
+		for curHeader := range headerCells {
 			header := headerCells[curHeader].Value
 
 			curComparison := strings.Compare(slice[i][header], slice[j][header])
@@ -295,7 +295,7 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 
 	sortedResults := make([]string, len(wants.Rows))
 	sortedWants := make([]string, len(wants.Rows))
-	for i := 0; i < len(wants.Rows); i++ {
+	for i := range len(wants.Rows) {
 		sortedResults[i] = stringifyJSONPathResultValue(jsonPathResArr[i])
 		sortedWants[i] = ctx.replaceReferencesWithIDs(wants.Rows[i].Cells[0].Value)
 	}

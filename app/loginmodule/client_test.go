@@ -250,7 +250,6 @@ func TestClient_GetUserProfile(t *testing.T) {
 
 	const moduleURL = "http://login.url.com"
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			client := &Client{url: moduleURL}
 			httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
@@ -457,7 +456,6 @@ func Test_convertUserProfile(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := convertUserProfile(tt.source)
 			assert.Equal(t, tt.expectedError, err)
@@ -523,7 +521,6 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 			},
 		},
 	} {
-		testSuite := testSuite
 		t.Run(testSuite.endpoint, func(t *testing.T) {
 			tests := []struct {
 				name           string
@@ -576,7 +573,6 @@ func TestClient_AccountsManagerEndpoints(t *testing.T) {
 			}
 			const moduleURL = "http://login.url.com"
 			for _, tt := range tests {
-				tt := tt
 				t.Run(tt.name, func(t *testing.T) {
 					client := &Client{url: moduleURL}
 					httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
@@ -710,7 +706,6 @@ func TestClient_CreateUsers(t *testing.T) {
 
 	const moduleURL = "http://login.url.com"
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			client := &Client{url: moduleURL}
 			httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
@@ -801,7 +796,6 @@ func TestEncode(t *testing.T) {
 
 	const clientKey = "1234567890123456"
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := Encode(tt.data, clientKey)
 			got1 := Encode(tt.data, clientKey+"7")

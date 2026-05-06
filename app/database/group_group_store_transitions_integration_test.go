@@ -818,7 +818,6 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 	}
 	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1033,7 +1032,6 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoin
 	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
 	ctx := testhelpers.CreateTestContext()
 	for _, tt := range generateApprovalsTests(expectedTime) {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1107,7 +1105,6 @@ func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestIfJoinRequestExi
 		{"when a user joins the group by badge", database.UserJoinsGroupByBadge},
 		{"when a group owner creates an accepted join request", database.UserCreatesAcceptedJoinRequest},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1191,7 +1188,6 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 
 	ctx := testhelpers.CreateTestContext()
 	for _, tt := range generateApprovalsTests(expectedTime) {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

@@ -143,7 +143,6 @@ func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 			rootItemID:         golang.Ptr(int64(222)),
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

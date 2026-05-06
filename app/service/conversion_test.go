@@ -64,7 +64,6 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := ConvertSliceOfMapsFromDBToJSON(tt.dbMap)
 			assert.Equal(t, tt.want, got)

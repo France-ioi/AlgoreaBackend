@@ -83,7 +83,6 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("ids: %v", test.ids), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -152,7 +151,6 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 			},
 		},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("ids: %v, %s>=%s", test.ids, test.permissionKind, test.neededPermission), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

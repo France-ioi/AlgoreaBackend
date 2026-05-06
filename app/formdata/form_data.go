@@ -61,7 +61,7 @@ func NewFormData(definitionStructure interface{}) *FormData {
 		if name == "-" {
 			return ""
 		}
-		for i := 0; i < len(parts); i++ {
+		for i := range parts {
 			if parts[i] == squash {
 				return "<squash>"
 			}
@@ -377,7 +377,7 @@ func traverseStructure(funcToApply func(fieldValue reflect.Value, structField re
 	}
 	numberOfFields := reflValue.NumField()
 
-	for i := 0; i < numberOfFields; i++ {
+	for i := range numberOfFields {
 		field := reflValue.Field(i)
 		structField := reflValue.Type().Field(i)
 

@@ -1043,7 +1043,7 @@ func EscapeLikeString(v string, escapeCharacter byte) string {
 	pos := 0
 	buf := make([]byte, len(v)*2) //nolint:mnd // in the worst case, where every character is escaped, we need twice as many bytes
 
-	for i := 0; i < len(v); i++ {
+	for i := range len(v) {
 		character := v[i]
 		switch character {
 		case '%', '_', escapeCharacter:

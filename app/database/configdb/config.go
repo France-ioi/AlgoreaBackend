@@ -67,7 +67,6 @@ func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []dom
 	groupGroupStore := store.GroupGroups()
 	var relationsToCreate []map[string]interface{}
 	for _, domainConfig := range domainsConfig {
-		domainConfig := domainConfig
 		insertRootGroups(groupStore, &domainConfig)
 		for _, spec := range []map[string]interface{}{
 			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.NonTempUsersGroup},

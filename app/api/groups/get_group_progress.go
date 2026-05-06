@@ -314,7 +314,7 @@ func appendTableRowToResult(orderedItemIDListWithDuplicates []int64, reflResultR
 	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
 	// []*tableCellType
 	reflTableRow := reflect.MakeSlice(
-		reflect.SliceOf(reflect.PtrTo(reflTableCellType)), len(orderedItemIDListWithDuplicates), len(orderedItemIDListWithDuplicates))
+		reflect.SliceOf(reflect.PointerTo(reflTableCellType)), len(orderedItemIDListWithDuplicates), len(orderedItemIDListWithDuplicates))
 
 	// Here we fill the table row with cells. As an item can be a child of multiple parents, the row may contain duplicates.
 	for index, itemID := range orderedItemIDListWithDuplicates {
@@ -359,7 +359,7 @@ func scanAndBuildProgressResults(
 
 	// here we will store results for each item: map[int64]*tableCellType
 	reflResultRowMap := reflect.MakeMapWithSize(
-		reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PtrTo(reflTableCellType)), uniqueItemsCount)
+		reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PointerTo(reflTableCellType)), uniqueItemsCount)
 	previousGroupID := int64(-1)
 	service.MustNotBeError(query.ScanAndHandleMaps(func(cell map[string]interface{}) error {
 		// convert map[string]interface{} into tableCellType and store the result in reflDecodedTableCell
@@ -372,7 +372,8 @@ func scanAndBuildProgressResults(
 				// Moving to a next row of the results table, so we should insert cells from the map into the results slice
 				appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 				// and initialize a new map for cells
-				reflResultRowMap = reflect.MakeMapWithSize(reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PtrTo(reflTableCellType)), uniqueItemsCount)
+				reflResultRowMap = reflect.MakeMapWithSize(
+					reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PointerTo(reflTableCellType)), uniqueItemsCount)
 			}
 			previousGroupID = groupID
 		}

@@ -60,7 +60,6 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 		{"UserBatchPrefixes", func(store *DataStore) *DB { return store.UserBatchPrefixes().Where("") }, "`user_batch_prefixes`"},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -115,7 +114,6 @@ func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 		{"UserBatchPrefixes", func(store *DataStore) interface{} { return store.UserBatchPrefixes() }, &UserBatchPrefixStore{}},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db, _ := NewDBMock()
 			defer func() { _ = db.Close() }()

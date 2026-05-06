@@ -29,7 +29,6 @@ func Test_validateDuration(t *testing.T) {
 		{name: "nil", fl: &FieldLevel{FieldValue: (*string)(nil)}, want: false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := validateDuration(tt.fl); got != tt.want {
 				t.Errorf("validateDuration() = %v, want %v", got, tt.want)
@@ -56,7 +55,6 @@ func Test_validateDMYDate(t *testing.T) {
 		{name: "nil", fl: &FieldLevel{FieldValue: (*string)(nil)}, want: false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := validateDMYDate(tt.fl); got != tt.want {
 				t.Errorf("validateDuration() = %v, want %v", got, tt.want)
@@ -78,7 +76,6 @@ func Test_validateNull(t *testing.T) {
 		{name: "empty string", fl: &FieldLevel{FieldValue: ""}, want: false},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if got := validateNull(tt.fl); got != tt.want {
 				t.Errorf("validateNull() = %v, want %v", got, tt.want)

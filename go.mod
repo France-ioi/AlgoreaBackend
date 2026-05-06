@@ -1,6 +1,8 @@
 module github.com/France-ioi/AlgoreaBackend/v2
 
-go 1.21
+go 1.25.0
+
+toolchain go1.25.9
 
 exclude github.com/SermoDigital/jose v0.9.1
 

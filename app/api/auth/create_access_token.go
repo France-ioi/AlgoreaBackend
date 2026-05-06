@@ -352,7 +352,7 @@ func (srv *Service) resolveSessionCookieAttributesFromCookieParameters(httpReque
 func setParametersFromMap(requestParameters interface{}, requestData map[string]string) error {
 	reflRequestParameters := reflect.ValueOf(requestParameters).Elem()
 	reflRequestParametersType := reflRequestParameters.Type()
-	for i := 0; i < reflRequestParameters.NumField(); i++ {
+	for i := range reflRequestParameters.NumField() {
 		field := reflRequestParameters.Field(i)
 		fieldType := reflRequestParametersType.Field(i)
 		if fieldType.Type.Elem().Kind() == reflect.Struct {

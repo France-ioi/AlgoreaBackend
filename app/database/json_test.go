@@ -23,7 +23,6 @@ func TestJSON_Scan(t *testing.T) {
 		{name: "empty object", bytes: []byte("{}"), wantMap: map[string]interface{}{}},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			j := &JSON{}
 			if err := j.Scan(tt.bytes); (err != nil) != tt.wantErr {

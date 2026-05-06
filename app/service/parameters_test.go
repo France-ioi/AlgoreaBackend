@@ -74,7 +74,6 @@ func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetInt64SliceField(req, "ids")
@@ -133,7 +132,6 @@ func TestResolveURLQueryPathInt64Field(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			router := chi.NewRouter()
 			called := false
@@ -213,7 +211,6 @@ func TestResolveURLQueryPathInt64SliceField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			called := false
 			router := chi.NewRouter()
@@ -267,7 +264,6 @@ func TestResolveURLQueryGetStringField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringField(req, "name")
@@ -320,7 +316,6 @@ func TestResolveURLQueryGetBoolField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetBoolField(req, "flag")
@@ -393,7 +388,6 @@ func TestResolveURLQueryGetBoolFieldWithDefault(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetBoolFieldWithDefault(req, "flag", testCase.defaultValue)
@@ -438,7 +432,6 @@ func TestResolveURLQueryGetTimeField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			dateTime, err := ResolveURLQueryGetTimeField(req, "time")
@@ -497,7 +490,6 @@ func TestResolveURLQueryGetStringSliceField(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringSliceField(req, "values")
@@ -574,7 +566,6 @@ func TestResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(t *testi
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodGet, "/health-check?"+testCase.queryString, http.NoBody)
 			list, err := ResolveURLQueryGetStringSliceFieldFromIncludeExcludeParameters(req, "fruits",
@@ -625,7 +616,6 @@ func TestResolveURLQueryPathInt64SliceFieldWithLimit(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			patch := monkey.Patch(ResolveURLQueryPathInt64SliceField, func(r *http.Request, paramName string) ([]int64, error) {
 				assert.Equal(t, expectedRequest, r)
@@ -672,7 +662,6 @@ func TestResolveJSONBodyIntoMap(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			r, _ := http.NewRequest(http.MethodPut, "/", strings.NewReader(testCase.body))
 			list, err := ResolveJSONBodyIntoMap(r)

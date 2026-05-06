@@ -320,7 +320,6 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
@@ -502,7 +501,6 @@ func TestFormData_ParseMapData(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
 			err := f.ParseMapData(tt.sourceMap)
@@ -670,7 +668,6 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
@@ -730,7 +727,6 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			f := formdata.NewFormData(tt.definitionStructure)
 			req, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader(tt.json))
@@ -781,7 +777,6 @@ func Test_toAnythingHookFunc(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			hook := formdata.ToAnythingHookFunc()
 			converted, err := mapstructure.DecodeHookExec(hook, tt.typeFrom, tt.typeTo, tt.data)
@@ -813,7 +808,6 @@ func Test_stringToInt64HookFunc(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			hook := formdata.StringToInt64HookFunc()
 			converted, err := mapstructure.DecodeHookExec(hook, tt.typeFrom, tt.typeTo, tt.data)

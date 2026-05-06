@@ -400,7 +400,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Panic(t *testing.T) {
 			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < retriesLimit; i++ {
+			for range retriesLimit {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -434,7 +434,7 @@ func TestDB_inTransaction_RetriesAllowedUpToTheLimit_Error(t *testing.T) {
 			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < retriesLimit; i++ {
+			for range retriesLimit {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -471,7 +471,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Panic(t *testing.T) 
 			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < retriesLimit+1; i++ {
+			for range retriesLimit + 1 {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -512,7 +512,7 @@ func TestDB_inTransaction_RetriesAboveTheLimitAreDisallowed_Error(t *testing.T) 
 			monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
 			defer monkey.UnpatchAll()
 
-			for i := 0; i < retriesLimit+1; i++ {
+			for range retriesLimit + 1 {
 				mock.ExpectBegin()
 				mock.ExpectQuery("SELECT 1").
 					WillReturnError(&mysql.MySQLError{Number: errorNumber})
@@ -628,7 +628,6 @@ func TestDB_QueryConstructors(t *testing.T) {
 		},
 	}
 	for _, testCase := range tests {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1844,7 +1843,6 @@ func TestDB_withNamedLock_HandlesReleaseError(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -1979,7 +1977,6 @@ func TestDB_retryOnDuplicatePrimaryKeyError_ReturnsOtherErrors(t *testing.T) {
 		},
 	}
 	for _, testCase := range tests {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -2050,7 +2047,6 @@ func Test_EscapeLikeString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := EscapeLikeString(tt.args.s, tt.args.escapeCharacter)
 			assert.Equal(t, tt.want, got)
@@ -2333,8 +2329,6 @@ func TestDB_retryOnRetryableError_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *t
 					},
 				},
 			} {
-				test := test
-
 				t.Run(test.name, func(t *testing.T) {
 					testoutput.SuppressIfPasses(t)
 

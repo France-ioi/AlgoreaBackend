@@ -280,7 +280,7 @@ type UserProfile struct {
 func (up *UserProfile) ToMap() map[string]interface{} {
 	reflStruct := reflect.ValueOf(up).Elem()
 	userData := make(map[string]interface{}, reflStruct.NumField())
-	for fieldIndex := 0; fieldIndex < reflStruct.NumField(); fieldIndex++ {
+	for fieldIndex := range reflStruct.NumField() {
 		fieldType := reflStruct.Type().Field(fieldIndex)
 		fieldName := fieldType.Tag.Get("json")
 
@@ -393,7 +393,7 @@ func convertUserProfile(source map[string]interface{}) (*UserProfile, error) {
 func createUserProfileFromNormalizedMap(data map[string]interface{}) *UserProfile {
 	userProfile := &UserProfile{}
 	reflStruct := reflect.ValueOf(userProfile).Elem()
-	for i := 0; i < reflStruct.NumField(); i++ {
+	for i := range reflStruct.NumField() {
 		fieldType := reflStruct.Type().Field(i)
 		fieldName := fieldType.Tag.Get("json")
 		value := data[fieldName]

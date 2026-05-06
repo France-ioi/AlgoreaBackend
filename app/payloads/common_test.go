@@ -111,7 +111,6 @@ func TestPayloads_ParseMap(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			target := reflect.New(reflect.TypeOf(tt.want).Elem()).Interface()
 			err := ParseMap(tt.raw, target)

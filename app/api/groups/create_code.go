@@ -99,7 +99,7 @@ func GenerateGroupCode() (string, error) {
 	const codeLength = 10
 
 	result := make([]byte, 0, codeLength)
-	for i := 0; i < codeLength; i++ {
+	for range codeLength {
 		index, err := rand.Int(rand.Reader, big.NewInt(int64(allowedCharactersLength)))
 		if err != nil {
 			return "", err

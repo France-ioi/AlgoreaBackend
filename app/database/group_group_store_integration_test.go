@@ -171,7 +171,6 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 	}
 	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -355,7 +354,6 @@ func TestGroupGroupStore_TriggerBeforeInsert_SetsIsTeamMembership(t *testing.T) 
 		{parentGroupID: 2, childGroupID: 4, expectedIsTeamMembership: false},
 		{parentGroupID: 3, childGroupID: 4, expectedIsTeamMembership: true},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("parent %d child %d", test.parentGroupID, test.childGroupID), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -398,7 +396,6 @@ func TestGroupGroupStore_TriggerBeforeInsert_SetsChildGroupType(t *testing.T) {
 		{parentGroupID: 1, childGroupID: 4, expectedChildGroupType: "User"},
 		{parentGroupID: 3, childGroupID: 4, expectedChildGroupType: "User"},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("parent %d child %d", test.parentGroupID, test.childGroupID), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -471,7 +468,6 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 			expectedChanged: []resultPrimaryKeyAndState{},
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -562,7 +558,6 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			noChanges:       true,
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

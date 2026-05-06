@@ -87,7 +87,6 @@ func TestDB_WhereSearchStringMatches_Integration(t *testing.T) {
 			expectedIDs:  []int64{},
 		},
 	} {
-		test := test
 		t.Run(test.searchString, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
