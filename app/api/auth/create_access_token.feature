@@ -157,8 +157,8 @@ Feature: Create an access token
   Examples:
     | query                         | token_in_data                                  | expected_cookie                                                                                                                                                              |
     |                               | "access_token": "{{access_token_from_oauth}}", | [Header not defined]                                                                                                                                                         |
-    | &use_cookie=1&cookie_secure=1 |                                                | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
-    | &use_cookie=1                 |                                                | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
+    | &use_cookie=1                 |                                                | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+    | &use_cookie=1&cookie_secure=0 |                                                | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
 
   Scenario Outline: Log-in with an existing user
     Given the time now is "2019-07-16T22:02:28Z"
@@ -517,8 +517,8 @@ Feature: Create an access token
       | 5577006791947779410 | {{access_token_from_oauth}} |
     Examples:
       | query                                                  | expected_cookie                                                                                                                                                              |
-      | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=1 | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=Strict |
-      | ?code={{code_from_oauth}}&use_cookie=1                 | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; SameSite=Strict         |
+      | ?code={{code_from_oauth}}&use_cookie=1                 | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=Strict |
+      | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=0 | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; SameSite=Strict         |
 
   Scenario Outline: Accepts parameters from POST data and sets the cookie correctly
     Given the server time now is "2019-07-17T01:02:29+03:00"

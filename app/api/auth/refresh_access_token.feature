@@ -61,8 +61,8 @@ Feature: Create a new access token
     Examples:
       | query                         | current_cookie        | token_in_data                   | expected_cookie                                                                                                                                            |
       |                               | [Header not defined]  | "access_token":"tmp_new_token", | [Header not defined]                                                                                                                                       |
-      | ?use_cookie=1&cookie_secure=1 | [Header not defined]  |                                 | access_token=3!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
-      | ?use_cookie=1                 | [Header not defined]  |                                 | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
+      | ?use_cookie=1                 | [Header not defined]  |                                 | access_token=3!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
+      | ?use_cookie=1&cookie_secure=0 | [Header not defined]  |                                 | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
       | ?use_cookie=0                 | access_token=0!1234!! | "access_token":"tmp_new_token", | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; SameSite=None                                                                   |
 
   Scenario Outline: Request a new access token for a normal user
@@ -103,8 +103,8 @@ Feature: Create a new access token
     Examples:
       | query                         | token_in_data                     | expected_cookie                                                                                                                                                 |
       |                               | "access_token": "jane_new_token", | [Header not defined]                                                                                                                                            |
-      | ?use_cookie=1&cookie_secure=1 |                                   | access_token=3!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
-      | ?use_cookie=1                 |                                   | access_token=1!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
+      | ?use_cookie=1                 |                                   | access_token=3!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+      | ?use_cookie=1&cookie_secure=0 |                                   | access_token=1!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
 
   Scenario Outline: >
       Accepts access_token cookie and removes it if cookie attributes differ for a normal user,

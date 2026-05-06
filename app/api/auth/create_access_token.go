@@ -142,10 +142,12 @@ const maxNumberOfUserSessionsToKeep = 10
 //			default: 0
 //		- name: cookie_secure
 //			in: query
-//			description: If 1, set the cookie with the `Secure` attribute
+//			description: >
+//				Whether to set the cookie with the `Secure` attribute.
+//				Defaults to 1; set to 0 only when TLS is unavailable (e.g. local development over http://localhost).
 //			type: integer
 //			enum: [0,1]
-//			default: 0
+//			default: 1
 //		- name: create_temp_user_if_not_authorized
 //			description: Whether to create a temporary user if the token is not provided or expired.
 //			in: query
@@ -177,7 +179,10 @@ const maxNumberOfUserSessionsToKeep = 10
 //						description: If true, set a cookie instead of returning the OAuth2 code in the data
 //					cookie_secure:
 //						type: boolean
-//						description: If true, set the cookie with the `Secure` attribute
+//						description: >
+//							Whether to set the cookie with the `Secure` attribute.
+//							Defaults to true; set to false only when TLS is unavailable
+//							(e.g. local development over http://localhost).
 //	responses:
 //		"201":
 //			description: >
@@ -329,9 +334,10 @@ func (srv *Service) resolveSessionCookieAttributesFromCookieParameters(httpReque
 		// configurable from the frontend because browsers no longer support SameSite=None
 		// in the way it was previously used.
 		cookieAttributes.SameSite = true
-		if cookieParameters.CookieSecure != nil && *cookieParameters.CookieSecure {
-			cookieAttributes.Secure = true
-		}
+		// Secure defaults to true so that the access token is never sent over plain HTTP.
+		// Callers must explicitly opt out with cookie_secure=0 (e.g. local development over
+		// http://localhost where TLS is not available).
+		cookieAttributes.Secure = cookieParameters.CookieSecure == nil || *cookieParameters.CookieSecure
 	}
 	return cookieAttributes
 }

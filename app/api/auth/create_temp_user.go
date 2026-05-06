@@ -37,10 +37,12 @@ import (
 //			default: 0
 //		- name: cookie_secure
 //			in: query
-//			description: If 1, set the cookie with the `Secure` attribute
+//			description: >
+//				Whether to set the cookie with the `Secure` attribute.
+//				Defaults to 1; set to 0 only when TLS is unavailable (e.g. local development over http://localhost).
 //			type: integer
 //			enum: [0,1]
-//			default: 0
+//			default: 1
 //	responses:
 //		"201":
 //			description: "Created. Success response with the new access token"
