@@ -173,6 +173,12 @@ jobs:
   swagger-gen:
     docker:
       - image: quay.io/goswagger/swagger:v0.31.0
+    environment:
+      # The image ships Go 1.22.3 with GOTOOLCHAIN=local, which prevents `go`
+      # from honoring the `go 1.25.0` / `toolchain go1.25.9` directives in our
+      # go.mod. Override to `auto` so the pinned toolchain is auto-fetched on
+      # the steps that build the project.
+      GOTOOLCHAIN: auto
     steps:
       - run: go install github.com/France-ioi/go-swagger/cmd/swagger@00200fa
       - run: apk add npm
