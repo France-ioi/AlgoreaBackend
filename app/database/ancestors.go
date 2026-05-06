@@ -143,7 +143,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	}
 
 	recomputeAncestors := make([]*SQLStmtWrapper, len(recomputeQueries))
-	for i := 0; i < len(recomputeQueries); i++ {
+	for i := range recomputeQueries {
 		recomputeAncestors[i], err = s.Prepare(recomputeQueries[i])
 		mustNotBeError(err)
 
@@ -167,7 +167,7 @@ func (s *DataStore) createNewAncestors(objectName, singleObjectName string) { /*
 	for {
 		_, err = markAsProcessing.ExecContext(s.ctx())
 		mustNotBeError(err)
-		for i := 0; i < len(recomputeAncestors); i++ {
+		for i := range recomputeAncestors {
 			_, err = recomputeAncestors[i].ExecContext(s.ctx())
 			mustNotBeError(err)
 		}

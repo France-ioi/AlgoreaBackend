@@ -87,7 +87,6 @@ func Test_checkIfPossibleToModifyCanView(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, checkIfPossibleToModifyCanView(
 				tt.args.viewPermissionToSet, tt.args.currentPermissions, tt.args.managerPermissions, dataStore))
@@ -119,10 +118,8 @@ func testCheckerAllowsSettingLowerOrSameValue(
 	dataStore := database.NewDataStore(db)
 
 	for _, currentValue := range values {
-		currentValue := currentValue
 		want := true
 		for _, newValue := range values {
-			newValue := newValue
 			t.Run(fmt.Sprintf("%s -> %s", currentValue, newValue), func(t *testing.T) {
 				assert.Equal(t, want,
 					reflect.ValueOf(funcToCheck).Call([]reflect.Value{
@@ -148,14 +145,12 @@ func Test_checkIfPossibleToModifyCanGrantView_RequiresCanViewBeGreaterOrEqualToC
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
 	for currentCanGrantViewIndex, currentCanGrantView := range canGrantViewValues() {
-		currentCanGrantView := currentCanGrantView
 		for newCanGrantViewIndex := currentCanGrantViewIndex + 1; newCanGrantViewIndex < len(canGrantViewValues()); newCanGrantViewIndex++ {
 			newCanGrantViewValue := canGrantViewValues()[newCanGrantViewIndex]
 			if newCanGrantViewValue == solutionWithGrant {
 				break
 			}
 			for _, currentCanViewValue := range canViewValues() {
-				currentCanViewValue := currentCanViewValue
 				t.Run(fmt.Sprintf("%s -> %s, %s", currentCanGrantView, newCanGrantViewValue, currentCanViewValue),
 					func(t *testing.T) {
 						assert.Equal(t,
@@ -219,7 +214,6 @@ func Test_checkIfPossibleToModifyCanGrantView_SolutionWithGrant(t *testing.T) {
 		}, dataStore))
 
 	for _, canGrantView := range canGrantViewValues() {
-		canGrantView := canGrantView
 		t.Run(canGrantView, func(t *testing.T) {
 			assert.Equal(t, canGrantView == solutionWithGrant, checkIfPossibleToModifyCanGrantView(
 				solutionWithGrant,
@@ -265,9 +259,7 @@ func testCheckerRequiresManagerToHaveSpecificPermission(
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
 	for _, newValue := range values {
-		newValue := newValue
 		for _, managerValue := range values {
-			managerValue := managerValue
 			t.Run(fmt.Sprintf("=> %s, %s", newValue, managerValue), func(t *testing.T) {
 				assert.Equal(t, managerValue == requiredPermission,
 					funcToCheck(
@@ -323,14 +315,12 @@ func testCheckerRequiresCanViewBeGreaterOrEqualToContent(
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
 	for currentIndex, currentValue := range values {
-		currentValue := currentValue
 		for newIndex := currentIndex + 1; newIndex < len(values); newIndex++ {
 			newValue := values[newIndex]
 			if newValue == stopValue {
 				break
 			}
 			for _, currentCanViewValue := range canViewValues() {
-				currentCanViewValue := currentCanViewValue
 				t.Run(fmt.Sprintf("%s -> %s, %s",
 					currentValue, newValue, currentCanViewValue), func(t *testing.T) {
 					assert.Equal(t,
@@ -365,7 +355,6 @@ func Test_checkIfPossibleToModifyCanWatch_AnswerWithGrant(t *testing.T) {
 		{"info", true, false},
 		{"content", false, false},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("%s (can_view=%s, managerIsOwner=%v)", answerWithGrant, test.canView, test.isOwnerGenerated),
 			func(t *testing.T) {
 				assert.Equal(t, test.want, checkIfPossibleToModifyCanWatch(
@@ -379,7 +368,6 @@ func Test_checkIfPossibleToModifyCanWatch_AnswerWithGrant(t *testing.T) {
 	}
 
 	for _, canWatch := range canWatchValues() {
-		canWatch := canWatch
 		t.Run(canWatch, func(t *testing.T) {
 			assert.Equal(t, canWatch == answerWithGrant, checkIfPossibleToModifyCanWatch(
 				answerWithGrant,
@@ -464,7 +452,6 @@ func Test_checkIfPossibleToModifyCanEdit_AllWithGrant(t *testing.T) {
 		}, dataStore))
 
 	for _, canEdit := range canEditValues() {
-		canEdit := canEdit
 		t.Run(canEdit, func(t *testing.T) {
 			assert.Equal(t, canEdit == allWithGrant, checkIfPossibleToModifyCanEdit(
 				allWithGrant,
@@ -519,7 +506,6 @@ func Test_checkIfPossibleToModifyCanMakeSessionOfficial_RequiresCanViewBeGreater
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
 	for _, currentCanViewValue := range canViewValues() {
-		currentCanViewValue := currentCanViewValue
 		t.Run(currentCanViewValue, func(t *testing.T) {
 			assert.Equal(t,
 				permissionGrantedStore.ViewIndexByName(info) <= permissionGrantedStore.ViewIndexByName(currentCanViewValue),
@@ -595,7 +581,6 @@ func testCheckerRequiresManagerToHaveCanGrantViewGreaterOrEqualToEnter(
 	permissionGrantedStore := dataStore.PermissionsGranted()
 
 	for _, canGrantView := range canGrantViewValues() {
-		canGrantView := canGrantView
 		t.Run(canGrantView, func(t *testing.T) {
 			assert.Equal(t,
 				permissionGrantedStore.GrantViewIndexByName(enter) <= permissionGrantedStore.GrantViewIndexByName(canGrantView),
@@ -736,9 +721,9 @@ func testValidatorSetsModifiedFlagAndUpdatesCurrentPermissions(
 	defer pg.Unpatch()
 
 	reflValues := reflect.ValueOf(values)
-	for currentIndex := 0; currentIndex < reflValues.Len(); currentIndex++ {
+	for currentIndex := range reflValues.Len() {
 		currentValue := reflValues.Index(currentIndex).Interface()
-		for newIndex := 0; newIndex < reflValues.Len(); newIndex++ {
+		for newIndex := range reflValues.Len() {
 			newValue := reflValues.Index(newIndex).Interface()
 			t.Run(fmt.Sprintf("%s -> %s", currentValue, newValue), func(t *testing.T) {
 				currentPermissions := currentPermissionsGenerator(currentValue, permissionGrantedStore)
@@ -1045,10 +1030,8 @@ func Test_correctPermissionsDataMap(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.permission, func(t *testing.T) {
 			for _, testSpec := range test.tests {
-				testSpec := testSpec
 				t.Run(fmt.Sprintf("%s=%v, can_view=%s", test.permission, testSpec.value, testSpec.canView), func(t *testing.T) {
 					dataMap := make(map[string]interface{})
 					correctPermissionsDataMap(dataStore, dataMap, test.userPermissionsFunc(testSpec.value, testSpec.canView))

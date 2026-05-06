@@ -271,7 +271,6 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 		var currentResultRow *resultRow
 		currentSubgroupIndex := -1
 		for _, createdUser := range createdUsers {
-			createdUser := createdUser
 			if currentSubgroupIndex == -1 || usersInSubgroup == input.Subgroups[currentSubgroupIndex].Count {
 				currentSubgroupIndex++
 				currentResultRow = &resultRow{

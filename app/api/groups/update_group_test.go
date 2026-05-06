@@ -29,7 +29,6 @@ func Test_validateUpdateGroupInput(t *testing.T) {
 		{"code_lifetime=", map[string]interface{}{"code_lifetime": ""}, true},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			db, mock := database.NewDBMock()
 			defer func() { _ = db.Close() }()
@@ -183,7 +182,6 @@ func Test_isTryingToChangeOfficialSessionActivity(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, isTryingToChangeOfficialSessionActivity(tt.args.dbMap, tt.args.oldIsOfficialSession, tt.args.activityIDChanged))
 		})
@@ -207,7 +205,6 @@ func Test_int64PtrEqualValues(t *testing.T) {
 		{name: "both are not nils, equal", args: args{a: golang.Ptr(int64(1)), b: golang.Ptr(int64(1))}, want: true},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, int64PtrEqualValues(tt.args.a, tt.args.b))
 		})

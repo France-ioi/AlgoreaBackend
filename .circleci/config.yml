@@ -4,7 +4,7 @@ orbs:
 jobs:
   deps:
     docker:
-      - image: cimg/go:1.20.2
+      - image: cimg/go:1.25.9
     steps:
       - checkout
       - restore_cache: &CACHEKEYMOD
@@ -21,7 +21,7 @@ jobs:
           - ~/.cache/go-build/
   tests:
     docker:
-      - image: cimg/go:1.20.2
+      - image: cimg/go:1.25.9
       - image: mysql:8.0.34
         command: --default-authentication-plugin=caching_sha2_password --innodb_ft_min_token_size=1 --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:
@@ -77,7 +77,7 @@ jobs:
           path: log
   migration-tests:
     docker:
-      - image: cimg/go:1.20.2
+      - image: cimg/go:1.25.9
       - image: mysql:8.0.34
         command: --default-authentication-plugin=caching_sha2_password --innodb_ft_min_token_size=1 --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:
@@ -138,7 +138,7 @@ jobs:
           no_output_timeout: 1h
   lint:
     docker:
-      - image: cimg/go:1.20.2
+      - image: cimg/go:1.25.9
     steps:
       - attach_workspace:
           at: ./
@@ -148,7 +148,7 @@ jobs:
 
   build:
     docker:
-      - image: cimg/go:1.20.2
+      - image: cimg/go:1.25.9
     steps:
       - attach_workspace:
           at: ./
@@ -203,7 +203,7 @@ jobs:
           aws s3 cp ./index.html s3://franceioi-algorea/spec/index.html --acl public-read
   dbdoc-gen:
     docker:
-      - image: cimg/go:1.20.2
+      - image: cimg/go:1.25.9
       - image: mysql:8.0.34
         command: --default-authentication-plugin=caching_sha2_password --innodb_ft_min_token_size=1 --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:

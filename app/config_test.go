@@ -184,13 +184,13 @@ func TestLoadConfig_Concurrent(t *testing.T) {
 	assert.NotPanics(t, func() { LoadConfig() })
 	const numGoroutines = 1000
 	done := make(chan struct{}, numGoroutines)
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			assert.NotPanics(t, func() { LoadConfig() })
 			done <- struct{}{}
 		}()
 	}
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		<-done
 	}
 }

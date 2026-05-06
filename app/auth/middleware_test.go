@@ -205,7 +205,6 @@ func TestUserMiddleware(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assert := assertlib.New(t)
 			ctx, logger, logHook := logging.NewContextWithNewMockLogger()

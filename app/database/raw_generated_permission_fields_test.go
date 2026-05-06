@@ -58,7 +58,6 @@ func TestRawGeneratedPermissionFields_AsItemPermissions(t *testing.T) {
 	defer ClearAllDBEnums()
 	permissionGrantedStore := NewDataStore(db).PermissionsGranted()
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			assert.Equal(t, tt.want, tt.raw.AsItemPermissions(permissionGrantedStore))
 		})

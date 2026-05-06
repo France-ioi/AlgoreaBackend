@@ -185,7 +185,6 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesAccess(t *testing.T) 
 
 	ctx := testhelpers.CreateTestContext()
 	for _, access := range []string{"solution", "content_with_descendants"} {
-		access := access
 		t.Run(access, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -330,7 +329,6 @@ func TestPermissionGrantedStore_ComputeAllAccess_PropagatesCanView(t *testing.T)
 			upperViewLevelsPropagation: "as_is", expectedCanView: "solution",
 		},
 	} {
-		testcase := testcase
 		t.Run(testcase.canView+" as "+testcase.expectedCanView, func(t *testing.T) {
 			testGeneratedPermission(t, `
 				items: [{id: 1, default_language_tag: fr}, {id: 2, default_language_tag: fr}]
@@ -367,7 +365,6 @@ func testGeneratedPermission(t *testing.T, fixture string, testCase ...generated
 	}))
 	var result string
 	for _, test := range testCase {
-		test := test
 		t.Run(test.where, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 			require.NoError(t, permissionStore.Where(test.where).
@@ -697,10 +694,8 @@ func TestPermissionGrantedStore_ComputeAllAccess_Propagates(t *testing.T) {
 			},
 		},
 	} {
-		testsuite := testsuite
 		t.Run(testsuite.column, func(t *testing.T) {
 			for _, testcase := range testsuite.tests {
-				testcase := testcase
 				testPropagates(t, testsuite.column, testsuite.propagationColumn, testcase.parentValue,
 					testcase.propagationMode, testcase.expectedValue)
 			}
@@ -735,7 +730,7 @@ func assertPermissionsGeneratedResultRowsEqual[T any](t *testing.T, expected, go
 		return
 	}
 
-	for i := 0; i < len(expected); i++ {
+	for i := range expected {
 		assert.Equal(t, expected[i], got[i])
 	}
 }

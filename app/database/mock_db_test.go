@@ -28,7 +28,6 @@ func TestNewDBMock_ExitsOnGettingErrorFromSQLMockNew(t *testing.T) {
 			_, _ = NewDBMockWithLogConfig(ctx, LogConfig{}, false)
 		}},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -68,7 +67,6 @@ func TestNewDBMock_ExitsOnGettingErrorFromOpen(t *testing.T) {
 			_, _ = NewDBMockWithLogConfig(ctx, LogConfig{}, false)
 		}},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

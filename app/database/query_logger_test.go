@@ -55,7 +55,6 @@ func Test_getSQLExecutionPlanLoggingFunc_DoesNothingDependingOnParameters(t *tes
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -218,7 +217,6 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			assert.Equal(t, test.expected, fillSQLPlaceholders(test.args.query, test.args.values))
 		})

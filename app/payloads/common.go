@@ -50,7 +50,7 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 	sourceType := sourceValue.Type()
 	fieldsCount := sourceValue.NumField()
 	out := make(map[string]interface{}, fieldsCount)
-	for fieldNumber := 0; fieldNumber < fieldsCount; fieldNumber++ {
+	for fieldNumber := range fieldsCount {
 		field := sourceType.Field(fieldNumber)
 		jsonName, omitEmpty := getJSONFieldNameAndOmitEmpty(&field)
 		if jsonName == "-" {

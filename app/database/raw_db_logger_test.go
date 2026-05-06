@@ -71,7 +71,6 @@ func Test_prepareRawDBLoggerValuesMap(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got := prepareRawDBLoggerValuesMap(tt.keyvals)
 			assert.Equal(t, tt.want, got)
@@ -98,7 +97,6 @@ func Test_convertRawSQLArgValue(t *testing.T) {
 		{value: `some_value`, typeStr: "unknown type", want: `some_value`},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.typeStr, func(t *testing.T) {
 			got := convertRawSQLArgValue(tt.value, tt.typeStr)
 			assert.Equal(t, tt.want, got)

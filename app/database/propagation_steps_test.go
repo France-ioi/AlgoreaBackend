@@ -33,7 +33,6 @@ func TestPropagationStepSets(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			assert.Len(t, test.expectedContent, test.set.Size())
 			for _, step := range test.expectedContent {

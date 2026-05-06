@@ -945,7 +945,6 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperCommitOrRollbackFailin
 
 func Test_SQLQueryLogging(t *testing.T) {
 	for _, test := range sqlQueryLoggingTests() {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			for _, logSQLQueries := range []bool{false, true} {
 				for _, analyzeSQLQueries := range []bool{false, true} {

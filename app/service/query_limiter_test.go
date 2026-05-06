@@ -71,7 +71,6 @@ func TestQueryLimiter_Apply(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.desc, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

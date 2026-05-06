@@ -35,7 +35,6 @@ func TestGroupAncestorStore_ManagedByUser(t *testing.T) {
 			storeFunc: func(db *DB) *GroupAncestorStore { return NewDataStore(db).ActiveGroupAncestors() },
 		},
 	} {
-		test := test
 		t.Run(test.tableName, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

@@ -104,7 +104,6 @@ func TestParseAndValidate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
 			defer monkey.UnpatchAll()
@@ -142,7 +141,6 @@ func TestGenerate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
 			defer monkey.UnpatchAll()
@@ -170,7 +168,9 @@ func TestGenerate_PanicsOnError(t *testing.T) {
 	privateKey := &rsa.PrivateKey{D: &big.Int{}, PublicKey: rsa.PublicKey{N: &big.Int{}}}
 	defer func() {
 		e := recover()
-		assert.Equal(t, errors.New("crypto/rsa: message too long for RSA key size"), e)
+		// Go 1.24 added a minimum-key-size guard that fires before the message-length
+		// check used by older Go versions, so the panic value's message changed.
+		assert.Equal(t, errors.New("crypto/rsa: 0-bit keys are insecure (see https://go.dev/pkg/crypto/rsa#hdr-Minimum_key_size)"), e)
 	}()
 	Generate(map[string]interface{}{}, privateKey)
 }

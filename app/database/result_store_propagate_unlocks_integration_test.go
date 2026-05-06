@@ -153,7 +153,6 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 			canEnterUntil: "9999-12-31 23:59:58",
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

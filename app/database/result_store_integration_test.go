@@ -52,7 +52,6 @@ func TestResultStore_GetHintsInfoForActiveAttempt(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -162,7 +161,6 @@ func TestResultStore_Propagate(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

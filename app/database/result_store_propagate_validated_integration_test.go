@@ -70,7 +70,6 @@ func TestResultStore_Propagate_ValidatedStaysNonValidatedFor(t *testing.T) {
 
 	ctx := testhelpers.CreateTestContext()
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -269,7 +268,6 @@ func TestResultStore_Propagate_Validated(t *testing.T) {
 		},
 	}
 	for _, testCase := range tests {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 			testResultStorePropagateValidated(ctx, t,

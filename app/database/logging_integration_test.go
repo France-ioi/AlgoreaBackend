@@ -72,7 +72,6 @@ func Test_SQLQueryAnalyzing(t *testing.T) {
 			},
 		},
 	} {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			logger, loggerHook := logging.NewMockLogger()
 			ctx := testhelpers.CreateTestContextWithLogger(logger)

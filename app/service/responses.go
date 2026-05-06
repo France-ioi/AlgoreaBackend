@@ -93,7 +93,7 @@ func checkInt64JsonHasStringTag(val reflect.Value) {
 
 	switch {
 	case val.Kind() == reflect.Slice:
-		for j := 0; j < val.Len(); j++ {
+		for j := range val.Len() {
 			checkInt64JsonHasStringTag(val.Index(j))
 		}
 	case val.Kind() == reflect.Map:
@@ -111,7 +111,7 @@ func checkInt64JsonHasStringTagInFields(val reflect.Value) {
 	}
 
 	rt := val.Type()
-	for i := 0; i < val.NumField(); i++ {
+	for i := range val.NumField() {
 		fieldType := rt.Field(i)
 
 		panicIfInt64JsonHasStringTag(&fieldType)

@@ -27,7 +27,6 @@ func TestGroupStore_CreateNew(t *testing.T) {
 		{groupType: "Class", shouldCreateAttempts: false},
 		{groupType: "Team", shouldCreateAttempts: true},
 	} {
-		test := test
 		t.Run(test.groupType, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -358,14 +357,12 @@ func TestGroupStore_CheckIfEntryConditionsStillSatisfiedForAllActiveParticipatio
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			db := testhelpers.SetupDBWithFixtureString(ctx, mainFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			for _, withLock := range []bool{true, false} {
-				withLock := withLock
 				t.Run(fmt.Sprintf(" withLock = %v", withLock), func(t *testing.T) {
 					testoutput.SuppressIfPasses(t)
 
@@ -437,7 +434,6 @@ func TestGroupStore_DeleteGroup_RecomputesAccess(t *testing.T) {
 				permissions_generated: [{group_id: 1234, item_id: 10, can_view_generated: content}]`,
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -495,7 +491,6 @@ func TestGroupStore_TriggerBeforeUpdate_RefusesToModifyType(t *testing.T) {
 		{oldType: "User", newType: "User", expectError: false},
 		{oldType: "Other", newType: "Club", expectError: false},
 	} {
-		test := test
 		t.Run(fmt.Sprintf("%s to %s", test.oldType, test.newType), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

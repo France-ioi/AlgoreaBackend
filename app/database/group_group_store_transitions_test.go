@@ -55,7 +55,6 @@ func TestGroupApprovals_FromString(t *testing.T) {
 			expectedGroupApprovals: GroupApprovals{WatchApproval: true},
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			var approvals GroupApprovals
 			approvals.FromString(test.csv)
@@ -94,7 +93,6 @@ func TestGroupApprovals_ToArray(t *testing.T) {
 			expectedArray:  []string{"watch"},
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			assert.Equal(t, test.expectedArray, test.groupApprovals.ToArray())
 		})

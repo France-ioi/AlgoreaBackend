@@ -338,7 +338,6 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 
 func TestNew_DisableResultsPropagation(t *testing.T) {
 	for _, configSettingValue := range []bool{true, false} {
-		configSettingValue := configSettingValue
 		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

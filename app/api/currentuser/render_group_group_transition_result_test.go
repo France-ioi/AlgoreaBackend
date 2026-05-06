@@ -106,7 +106,6 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		if len(tt.actions) == 0 {
 			tt.actions = []userGroupRelationAction{
 				acceptInvitationAction, joinGroupByCodeAction, rejectInvitationAction,
@@ -114,7 +113,6 @@ func TestRenderGroupGroupTransitionResult(t *testing.T) {
 			}
 		}
 		for _, action := range tt.actions {
-			action := action
 			t.Run(tt.name+": "+string(action), func(t *testing.T) {
 				var fn service.AppHandler = func(respW http.ResponseWriter, req *http.Request) error {
 					return RenderGroupGroupTransitionResult(respW, req, tt.result, tt.approvalsToRequest, action)

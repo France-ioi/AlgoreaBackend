@@ -68,7 +68,20 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 				if withTimeout {
 					cancelFunc()
 					ctx := store.GetContext()
-					(*valueCtxInterface)(unsafe.Pointer(&ctx)).p.timerCtx.err = context.DeadlineExceeded //nolint:gosec // imitate a timeout
+					timerPtr := (*valueCtxInterface)(unsafe.Pointer(&ctx)).p.timerCtx //nolint:gosec // imitate a timeout
+					// cancelFunc above already Stored context.Canceled; atomic.Value rejects
+					// Store of a different concrete type, so we overwrite the underlying
+					// `any` directly. Layout-safe: atomic.Value is `struct{ v any }`.
+					// CAVEAT: a 16-byte interface write is not atomic, so a concurrent
+					// atomic.Value.Load() in another goroutine could observe a torn eface
+					// (mismatched type/data words). The test goroutine is the only writer
+					// at this point, but parent-context watchers via propagateCancel may
+					// race; an additional Store on this Value would also panic with
+					// "store of inconsistently typed value into Value" — none happens here.
+					*(*any)(unsafe.Pointer(&timerPtr.err)) = context.DeadlineExceeded //nolint:gosec // imitate a timeout
+					// Also clear cause so context.Cause(ctx) is consistent with ctx.Err()
+					// (mirrors the pattern in app/database/deadline_test.go).
+					timerPtr.cause = nil
 				}
 
 				patchGuard.Unpatch()
@@ -321,17 +334,26 @@ func createLoginModuleStubServer(expectedRefreshToken string) (*httptest.Server,
 	})), &loginModuleCalledCount
 }
 
+// cancelCtx, timerCtx, valueCtx mirror the unexported runtime structs in
+// "context" (Go 1.25 layout) so the test below can inject a synthetic
+// context.DeadlineExceeded mid-flight. Layout changes since this test was
+// written: cancelCtx.err became atomic.Value (was error), timerCtx
+// value-embeds cancelCtx (was a pointer embed).
 type cancelCtx struct {
-	context.Context //nolint:containedctx // it is not us who store the context in the structure
+	context.Context //nolint:containedctx // mirroring an unexported runtime struct
 
-	_   sync.Mutex
-	_   atomic.Value
-	_   map[interface{}]struct{}
-	err error
+	_     sync.Mutex
+	_     atomic.Value             // done
+	_     map[interface{}]struct{} // children
+	err   atomic.Value
+	cause error
 }
 
 type timerCtx struct {
-	*cancelCtx
+	cancelCtx // value-embedded as in stdlib
+
+	_ unsafe.Pointer    // *time.Timer
+	_ [3]unsafe.Pointer // time.Time (3 words)
 }
 
 type valueCtx struct {
@@ -341,6 +363,37 @@ type valueCtx struct {
 type valueCtxInterface struct {
 	t unsafe.Pointer
 	p *valueCtx
+}
+
+// TestCancelCtxMirrorLayout verifies that the unsafe layout mirrors of
+// context.cancelCtx / context.timerCtx / context.valueCtx above still match
+// the stdlib on the running Go toolchain. If a future Go upgrade changes the
+// offsets, this test fails fast with a clear message instead of silently
+// corrupting unrelated memory inside TestService_refreshAccessToken_NotAllowRefreshTokenRaces.
+// Compatible with Go 1.21+ (when err became atomic.Value); should be re-checked
+// on every Go major bump.
+func TestCancelCtxMirrorLayout(t *testing.T) {
+	parent, parentCancel := context.WithCancel(context.Background())
+	defer parentCancel()
+
+	timerRawCtx, cancel := context.WithDeadline(parent, time.Now().Add(time.Hour))
+	cancel() // stores context.Canceled into cancelCtx.err and cancelCtx.cause
+
+	// Wrap with WithValue to produce *valueCtx -> *timerCtx, matching the chain
+	// the production code observes when chi middleware adds request-scoped values.
+	type layoutTestKey struct{}
+	rawCtx := context.WithValue(timerRawCtx, layoutTestKey{}, struct{}{})
+
+	timerMirror := (*valueCtxInterface)(unsafe.Pointer(&rawCtx)).p.timerCtx //nolint:gosec // layout-mirror sanity check
+
+	require.Equal(t, context.Canceled, rawCtx.Err(),
+		"sanity: cancel() should make ctx.Err() == context.Canceled")
+	require.Equal(t, context.Canceled, timerMirror.err.Load(),
+		"cancelCtx.err offset is wrong (via valueCtx -> timerCtx). "+
+			"Re-check the layout against the current Go runtime's context structs.")
+	require.Equal(t, context.Canceled, timerMirror.cause,
+		"cancelCtx.cause offset is wrong (via valueCtx -> timerCtx). "+
+			"Re-check the layout against the current Go runtime's context structs.")
 }
 
 type Service struct {

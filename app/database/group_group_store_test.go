@@ -32,7 +32,6 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 			storeFunc: func(db *DB) *GroupGroupStore { return NewDataStore(db).ActiveGroupGroups() },
 		},
 	} {
-		test := test
 		t.Run(test.tableName, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

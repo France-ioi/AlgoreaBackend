@@ -31,7 +31,6 @@ func TestResultStore_Propagate_Aggregates(t *testing.T) {
 
 	ctx := testhelpers.CreateTestContext()
 	for _, markAllResultsAsToBePropagated := range []bool{false, true} {
-		markAllResultsAsToBePropagated := markAllResultsAsToBePropagated
 		t.Run(fmt.Sprintf("mark all as to_be_propagated=%v", markAllResultsAsToBePropagated), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
@@ -186,7 +185,6 @@ func TestResultStore_Propagate_Aggregates_EditScore(t *testing.T) {
 		{name: "diff big negative", editRule: "diff", editValue: -20, expectedComputedScore: 0},
 		{name: "diff big positive", editRule: "diff", editValue: 95, expectedComputedScore: 100},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 

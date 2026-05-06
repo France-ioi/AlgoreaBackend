@@ -63,7 +63,6 @@ func TestSessionCookieAttributes_SessionCookie(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			attributes := &SessionCookieAttributes{
 				UseCookie: tt.fields.UseCookie,
@@ -89,7 +88,6 @@ func Test_unmarshalSessionCookieValue_InvalidValue(t *testing.T) {
 		{name: "five parts", value: "!!!!"},
 	}
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			gotValue, gotAttributes := unmarshalSessionCookieValue(test.value)
 			assert.Empty(t, gotValue)

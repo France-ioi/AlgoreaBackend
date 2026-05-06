@@ -18,23 +18,55 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
+// cancelCtx mirrors the layout of the unexported context.cancelCtx so that the
+// tests below can inject a synthetic context.DeadlineExceeded error mid-operation.
+// Layout matches Go 1.25: `err` became atomic.Value (previously error) and
+// timerCtx value-embeds cancelCtx (previously a pointer embed).
 type cancelCtx struct {
-	context.Context //nolint:containedctx // it is not us who store the context in the structure
+	context.Context //nolint:containedctx // mirroring an unexported runtime struct
 
 	_     sync.Mutex
-	_     atomic.Value
-	_     map[interface{}]struct{}
-	err   error
+	_     atomic.Value             // done
+	_     map[interface{}]struct{} // children
+	err   atomic.Value             // mirrors context.cancelCtx.err
 	cause error
 }
 
 type timerCtx struct {
-	*cancelCtx
+	cancelCtx // value-embedded as in stdlib
+
+	_ unsafe.Pointer    // *time.Timer
+	_ [3]unsafe.Pointer // time.Time (3 words)
 }
 
 type cancelCtxInterface struct {
 	t unsafe.Pointer
 	p *timerCtx
+}
+
+// TestCancelCtxMirrorLayout verifies that the unsafe layout mirror of
+// context.cancelCtx / context.timerCtx above still matches the stdlib on the
+// running Go toolchain. If a future Go upgrade changes the offsets, this test
+// fails fast with a clear message instead of silently corrupting unrelated
+// memory inside Test_Deadline. Compatible with Go 1.21+ (when err became
+// atomic.Value); should be re-checked on every Go major bump.
+func TestCancelCtxMirrorLayout(t *testing.T) {
+	parent, parentCancel := context.WithCancel(context.Background())
+	defer parentCancel()
+
+	rawCtx, cancel := context.WithDeadline(parent, time.Now().Add(time.Hour))
+	cancel() // stores context.Canceled into cancelCtx.err and cancelCtx.cause
+
+	mirror := (*cancelCtxInterface)(unsafe.Pointer(&rawCtx)).p //nolint:gosec // layout-mirror sanity check
+
+	require.Equal(t, context.Canceled, rawCtx.Err(),
+		"sanity: cancel() should make ctx.Err() == context.Canceled")
+	require.Equal(t, context.Canceled, mirror.err.Load(),
+		"cancelCtx.err offset is wrong: mirror does not see the value the stdlib stored. "+
+			"Re-check the layout against the current Go runtime's context.cancelCtx.")
+	require.Equal(t, context.Canceled, mirror.cause,
+		"cancelCtx.cause offset is wrong: mirror does not see the value the stdlib stored. "+
+			"Re-check the layout against the current Go runtime's context.cancelCtx.")
 }
 
 func Test_Deadline(t *testing.T) {
@@ -251,7 +283,6 @@ func Test_Deadline(t *testing.T) {
 			},
 		},
 	} {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			ctx, _, logHook := logging.NewContextWithNewMockLogger()
 			db, mock := NewDBMock(ctx)
@@ -268,9 +299,12 @@ func Test_Deadline(t *testing.T) {
 			err := test.funcToCall(dataStore, func() {
 				cancel()
 				//nolint:gosec // access the context directly to set the error
-				(*cancelCtxInterface)(unsafe.Pointer(&ctx)).p.err = context.DeadlineExceeded
-				//nolint:gosec // access the context directly to set the cause to nil
-				(*cancelCtxInterface)(unsafe.Pointer(&ctx)).p.cause = nil
+				ctxPtr := (*cancelCtxInterface)(unsafe.Pointer(&ctx)).p
+				// cancel() above already Stored context.Canceled into err. atomic.Value rejects
+				// Store of a different concrete type, so we overwrite the underlying `any`
+				// directly. Layout-safe because atomic.Value is `struct{ v any }`.
+				*(*any)(unsafe.Pointer(&ctxPtr.err)) = context.DeadlineExceeded //nolint:gosec // imitate a deadline-exceeded
+				ctxPtr.cause = nil
 			})
 
 			require.EqualError(t, err, context.DeadlineExceeded.Error())
