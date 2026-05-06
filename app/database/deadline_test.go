@@ -44,6 +44,15 @@ type cancelCtxInterface struct {
 	p *timerCtx
 }
 
+// resetAtomicValue atomically clears the typ slot of an atomic.Value so that a
+// subsequent .Store() can succeed even with a different concrete type. Race-free
+// because (a) the write is atomic.StorePointer and (b) atomic.Value.Load checks
+// typ first and returns nil when typ==nil — readers never observe stale data.
+func resetAtomicValue(av *atomic.Value) {
+	// atomic.Value is `struct{ v any }`; its first word is the eface type pointer.
+	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(av)), nil) //nolint:gosec // see comment
+}
+
 // TestCancelCtxMirrorLayout verifies that the unsafe layout mirror of
 // context.cancelCtx / context.timerCtx above still matches the stdlib on the
 // running Go toolchain. If a future Go upgrade changes the offsets, this test
@@ -298,12 +307,15 @@ func Test_Deadline(t *testing.T) {
 
 			err := test.funcToCall(dataStore, func() {
 				cancel()
-				//nolint:gosec // access the context directly to set the error
-				ctxPtr := (*cancelCtxInterface)(unsafe.Pointer(&ctx)).p
-				// cancel() above already Stored context.Canceled into err. atomic.Value rejects
-				// Store of a different concrete type, so we overwrite the underlying `any`
-				// directly. Layout-safe because atomic.Value is `struct{ v any }`.
-				*(*any)(unsafe.Pointer(&ctxPtr.err)) = context.DeadlineExceeded //nolint:gosec // imitate a deadline-exceeded
+				ctxPtr := (*cancelCtxInterface)(unsafe.Pointer(&ctx)).p //nolint:gosec // imitate a deadline-exceeded
+				// cancel() above already Stored context.Canceled into err.
+				// atomic.Value.Store with a different concrete type panics, and a plain
+				// non-atomic interface assignment races with database/sql's awaitDone
+				// goroutine doing atomic.Value.Load via ctx.Err() (caught by `-race`).
+				// Reset the type slot atomically (concurrent Loaders see typ=nil and
+				// return nil — never a torn typ/data pair), then Store normally.
+				resetAtomicValue(&ctxPtr.err)
+				ctxPtr.err.Store(context.DeadlineExceeded)
 				ctxPtr.cause = nil
 			})
 

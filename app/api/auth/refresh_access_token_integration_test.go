@@ -69,16 +69,15 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 					cancelFunc()
 					ctx := store.GetContext()
 					timerPtr := (*valueCtxInterface)(unsafe.Pointer(&ctx)).p.timerCtx //nolint:gosec // imitate a timeout
-					// cancelFunc above already Stored context.Canceled; atomic.Value rejects
-					// Store of a different concrete type, so we overwrite the underlying
-					// `any` directly. Layout-safe: atomic.Value is `struct{ v any }`.
-					// CAVEAT: a 16-byte interface write is not atomic, so a concurrent
-					// atomic.Value.Load() in another goroutine could observe a torn eface
-					// (mismatched type/data words). The test goroutine is the only writer
-					// at this point, but parent-context watchers via propagateCancel may
-					// race; an additional Store on this Value would also panic with
-					// "store of inconsistently typed value into Value" — none happens here.
-					*(*any)(unsafe.Pointer(&timerPtr.err)) = context.DeadlineExceeded //nolint:gosec // imitate a timeout
+					// cancelFunc above already Stored context.Canceled.
+					// atomic.Value.Store with a different concrete type panics, and a
+					// plain non-atomic interface assignment races with database/sql's
+					// awaitDone goroutine doing atomic.Value.Load via ctx.Err() (caught
+					// by `-race`). Reset the type slot atomically (concurrent Loaders
+					// see typ=nil and return nil — never a torn typ/data pair), then
+					// Store normally.
+					resetAtomicValue(&timerPtr.err)
+					timerPtr.err.Store(context.DeadlineExceeded)
 					// Also clear cause so context.Cause(ctx) is consistent with ctx.Err()
 					// (mirrors the pattern in app/database/deadline_test.go).
 					timerPtr.cause = nil
@@ -363,6 +362,15 @@ type valueCtx struct {
 type valueCtxInterface struct {
 	t unsafe.Pointer
 	p *valueCtx
+}
+
+// resetAtomicValue atomically clears the typ slot of an atomic.Value so that a
+// subsequent .Store() can succeed even with a different concrete type. Race-free
+// because (a) the write is atomic.StorePointer and (b) atomic.Value.Load checks
+// typ first and returns nil when typ==nil — readers never observe stale data.
+func resetAtomicValue(av *atomic.Value) {
+	// atomic.Value is `struct{ v any }`; its first word is the eface type pointer.
+	atomic.StorePointer((*unsafe.Pointer)(unsafe.Pointer(av)), nil) //nolint:gosec // see comment
 }
 
 // TestCancelCtxMirrorLayout verifies that the unsafe layout mirrors of
