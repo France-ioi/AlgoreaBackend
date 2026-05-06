@@ -282,10 +282,14 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 		logging.LogEntrySetField(httpRequest, "user_id", userID)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile.Badges, userID, true))
 
-		sessionID := rand.Int63()
-		service.MustNotBeError(store.Exec(
-			"INSERT INTO sessions (session_id, user_id, refresh_token) VALUES (?, ?, ?)",
-			sessionID, userID, token.RefreshToken).Error())
+		var sessionID int64
+		service.MustNotBeError(store.RetryOnDuplicateKeyError("sessions", "PRIMARY", "session_id",
+			func(retryStore *database.DataStore) error {
+				sessionID = rand.Int63()
+				return retryStore.Exec(
+					"INSERT INTO sessions (session_id, user_id, refresh_token) VALUES (?, ?, ?)",
+					sessionID, userID, token.RefreshToken).Error()
+			}))
 		service.MustNotBeError(store.AccessTokens().InsertNewToken(sessionID, token.AccessToken, expiresIn))
 
 		// Delete the oldest sessions of the user keeping up to maxNumberOfUserSessionsToKeep sessions.
