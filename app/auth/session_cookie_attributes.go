@@ -44,6 +44,11 @@ func (attributes *SessionCookieAttributes) marshalCookieValue(token string) stri
 	// | 0      | 1         | 1    |
 	// | 1      | 0         | 2    |
 	// | 1      | 1         | 3    |
+	//
+	// Kinds 0 and 2 (SameSite=false) are accepted by unmarshalSessionCookieValue for backward
+	// compatibility with cookies set by older versions of the API, but the current API never
+	// emits them: the auth handlers always set SameSite=true on newly issued cookies, so only
+	// kinds 1 and 3 are produced here in practice. Do not reintroduce a SameSite=None code path.
 	securityKind := '0'
 	if attributes.Secure {
 		securityKind += 2

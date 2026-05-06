@@ -23,9 +23,11 @@ import (
 //		If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
 //		the old cookie gets deleted (otherwise, just overwritten).
 //
-//		* The "Authorization" header must not be given.
+//		The "Authorization" header must not be given.
 //
-//		* When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
+//		The cookie's `SameSite` attribute is always `Strict` and is no longer caller-controlled
+//		(the previously supported `cookie_same_site` parameter has been removed and is silently ignored).
+//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is also issued with the `Secure` attribute.
 //	parameters:
 //		- name: default_language
 //			in: query
@@ -39,16 +41,12 @@ import (
 //			default: 0
 //		- name: cookie_secure
 //			in: query
-//			description: If 1, set the cookie with the `Secure` attribute
+//			description: >
+//				Whether to set the cookie with the `Secure` attribute.
+//				Defaults to 1; set to 0 only when TLS is unavailable (e.g. local development over http://localhost).
 //			type: integer
 //			enum: [0,1]
-//			default: 0
-//		- name: cookie_same_site
-//			in: query
-//			description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
-//			type: integer
-//			enum: [0,1]
-//			default: 0
+//			default: 1
 //	responses:
 //		"201":
 //			description: "Created. Success response with the new access token"
@@ -153,17 +151,12 @@ func (srv *Service) resolveSessionCookieAttributesFromRequest(httpRequest *http.
 		return nil, err
 	}
 
-	cookieAttributes, err := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters)
-	if err != nil {
-		return nil, err
-	}
-
-	return cookieAttributes, nil
+	return srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters), nil
 }
 
 func parseCookieParametersForCreateTempUser(r *http.Request) (*CookieParameters, error) {
 	var requestParameters CookieParameters
-	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
+	allowedParameters := []string{"use_cookie", "cookie_secure"}
 	requestData := make(map[string]string, len(allowedParameters))
 	query := r.URL.Query()
 	for _, parameterName := range allowedParameters {

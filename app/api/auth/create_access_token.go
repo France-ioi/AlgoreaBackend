@@ -115,10 +115,11 @@ const maxNumberOfUserSessionsToKeep = 10
 //		If it is not provided, the `DEFAULT` definition of `default_language` in the `users` table is used.
 //
 //
-//		Validations
-//			* The "Authorization" header is not allowed when the `{code}` is given.
+//		The "Authorization" header is not allowed when the `{code}` is given.
 //
-//			* When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
+//		The cookie's `SameSite` attribute is always `Strict` and is no longer caller-controlled
+//		(the previously supported `cookie_same_site` parameter has been removed and is silently ignored).
+//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is also issued with the `Secure` attribute.
 //	security: []
 //	consumes:
 //		- application/json
@@ -144,16 +145,12 @@ const maxNumberOfUserSessionsToKeep = 10
 //			default: 0
 //		- name: cookie_secure
 //			in: query
-//			description: If 1, set the cookie with the `Secure` attribute
+//			description: >
+//				Whether to set the cookie with the `Secure` attribute.
+//				Defaults to 1; set to 0 only when TLS is unavailable (e.g. local development over http://localhost).
 //			type: integer
 //			enum: [0,1]
-//			default: 0
-//		- name: cookie_same_site
-//			in: query
-//			description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
-//			type: integer
-//			enum: [0,1]
-//			default: 0
+//			default: 1
 //		- name: create_temp_user_if_not_authorized
 //			description: Whether to create a temporary user if the token is not provided or expired.
 //			in: query
@@ -185,10 +182,10 @@ const maxNumberOfUserSessionsToKeep = 10
 //						description: If true, set a cookie instead of returning the OAuth2 code in the data
 //					cookie_secure:
 //						type: boolean
-//						description: If true, set the cookie with the `Secure` attribute
-//					cookie_same_site:
-//						type: boolean
-//						description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
+//						description: >
+//							Whether to set the cookie with the `Secure` attribute.
+//							Defaults to true; set to false only when TLS is unavailable
+//							(e.g. local development over http://localhost).
 //	responses:
 //		"201":
 //			description: >
@@ -209,8 +206,7 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 	requestParameters, err := parseRequestParametersForCreateAccessToken(httpRequest)
 	service.MustNotBeError(err)
 
-	cookieAttributes, err := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters.CookieParameters)
-	service.MustNotBeError(err)
+	cookieAttributes := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters.CookieParameters)
 
 	if requestParameters.Code != nil && len(httpRequest.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(
@@ -330,24 +326,23 @@ func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter
 }
 
 func (srv *Service) resolveSessionCookieAttributesFromCookieParameters(httpRequest *http.Request, cookieParameters *CookieParameters) (
-	cookieAttributes *auth.SessionCookieAttributes, err error,
+	cookieAttributes *auth.SessionCookieAttributes,
 ) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
 	if cookieParameters.UseCookie != nil && *cookieParameters.UseCookie {
 		cookieAttributes.UseCookie = true
 		cookieAttributes.Domain = domain.CurrentDomainFromContext(httpRequest.Context())
 		cookieAttributes.Path = srv.ServerConfig.GetString("rootPath")
-		if cookieParameters.CookieSecure != nil && *cookieParameters.CookieSecure {
-			cookieAttributes.Secure = true
-		}
-		if cookieParameters.CookieSameSite != nil && *cookieParameters.CookieSameSite {
-			cookieAttributes.SameSite = true
-		}
-		if !cookieAttributes.Secure && !cookieAttributes.SameSite {
-			return nil, service.ErrInvalidRequest(errors.New("one of cookie_secure and cookie_same_site must be true when use_cookie is true"))
-		}
+		// SameSite is always Strict for newly emitted cookies: the frontend never needs the
+		// session cookie to be sent on cross-site requests, and Strict both mitigates CSRF
+		// and aligns with the ongoing third-party cookie phase-out across browsers.
+		cookieAttributes.SameSite = true
+		// Secure defaults to true so that the access token is never sent over plain HTTP.
+		// Callers must explicitly opt out with cookie_secure=0 (e.g. local development over
+		// http://localhost where TLS is not available).
+		cookieAttributes.Secure = cookieParameters.CookieSecure == nil || *cookieParameters.CookieSecure
 	}
-	return cookieAttributes, nil
+	return cookieAttributes
 }
 
 func setParametersFromMap(requestParameters interface{}, requestData map[string]string) error {
@@ -387,7 +382,7 @@ func setParametersFromMap(requestParameters interface{}, requestData map[string]
 func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (*createAccessTokenRequestParameters, error) {
 	allowedParameters := []string{
 		"code", "code_verifier", "redirect_uri",
-		"use_cookie", "cookie_secure", "cookie_same_site",
+		"use_cookie", "cookie_secure",
 	}
 	var requestParameters createAccessTokenRequestParameters
 	requestData := make(map[string]string, len(allowedParameters))
@@ -425,9 +420,8 @@ func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (*cre
 
 // CookieParameters holds optional boolean parameters related to cookies.
 type CookieParameters struct {
-	UseCookie      *bool `json:"use_cookie"`
-	CookieSecure   *bool `json:"cookie_secure"`
-	CookieSameSite *bool `json:"cookie_same_site"`
+	UseCookie    *bool `json:"use_cookie"`
+	CookieSecure *bool `json:"cookie_secure"`
 }
 
 type createAccessTokenRequestParameters struct {

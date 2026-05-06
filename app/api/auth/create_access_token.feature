@@ -155,10 +155,10 @@ Feature: Create an access token
       | group_id            | manager_id          | can_manage  | can_grant_group_access | can_watch_members | can_edit_personal_info |
       | 4037200794235010051 | 5577006791947779410 | memberships | true                   | true              | false                  |
   Examples:
-    | query                            | token_in_data                                  | expected_cookie                                                                                                                                                            |
-    |                                  | "access_token": "{{access_token_from_oauth}}", | [Header not defined]                                                                                                                                                       |
-    | &use_cookie=1&cookie_secure=1    |                                                | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None |
-    | &use_cookie=1&cookie_same_site=1 |                                                | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
+    | query                         | token_in_data                                  | expected_cookie                                                                                                                                                              |
+    |                               | "access_token": "{{access_token_from_oauth}}", | [Header not defined]                                                                                                                                                         |
+    | &use_cookie=1                 |                                                | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+    | &use_cookie=1&cookie_secure=0 |                                                | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:28 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
 
   Scenario Outline: Log-in with an existing user
     Given the time now is "2019-07-16T22:02:28Z"
@@ -516,9 +516,9 @@ Feature: Create an access token
       | 2                   | previousaccesstoken2        |
       | 5577006791947779410 | {{access_token_from_oauth}} |
     Examples:
-      | query                                                     | expected_cookie                                                                                                                                                            |
-      | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=1    | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=None |
-      | ?code={{code_from_oauth}}&use_cookie=1&cookie_same_site=1 | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; SameSite=Strict       |
+      | query                                                  | expected_cookie                                                                                                                                                              |
+      | ?code={{code_from_oauth}}&use_cookie=1                 | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; Secure; SameSite=Strict |
+      | ?code={{code_from_oauth}}&use_cookie=1&cookie_secure=0 | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:49 GMT; Max-Age=31622420; HttpOnly; SameSite=Strict         |
 
   Scenario Outline: Accepts parameters from POST data and sets the cookie correctly
     Given the server time now is "2019-07-17T01:02:29+03:00"
@@ -583,13 +583,14 @@ Feature: Create an access token
       | session_id          | token                       |
       | 8674665223082153551 | {{access_token_from_oauth}} |
     Examples:
-      | content-type                      | data                                                                                                                                        | expected_cookie                                                                                                                                                              |
-      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1                                            | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   |
-      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1&cookie_same_site=1                         | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
-      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=0&cookie_same_site=1                         | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
-      | application/jsoN; charset=utf8    | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true}                          | access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None   |
-      | application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true,"cookie_same_site":true}  | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
-      | Application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":false,"cookie_same_site":true} | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
+      | content-type                      | data                                                                                                                                          | expected_cookie                                                                                                                                                              |
+      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1                                              | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=0                                              | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
+      | application/jsoN; charset=utf8    | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true}                            | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+      | Application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":false}                           | access_token=1!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
+      # Regression guard: cookie_same_site is silently ignored regardless of value or transport.
+      | Application/x-www-form-urlencoded | code=somecode&code_verifier=789012&redirect_uri=http%3A%2F%2Fmy.url&use_cookie=1&cookie_secure=1&cookie_same_site=0                           | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+      | application/json                  | {"code":"somecode","code_verifier":"789012","redirect_uri":"http://my.url","use_cookie":true,"cookie_secure":true,"cookie_same_site":false}   | access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
 
   Scenario: Ignores and deletes the cookie when both code and access_token cookie are present
     Given the "Cookie" request header is "access_token=1!1234567890!example.org!/api/"
@@ -642,7 +643,7 @@ Feature: Create an access token
     And the response headers "Set-Cookie" should be:
     """
       access_token=; Path=/api/; Domain=example.org; Expires=Tue, 16 Jul 2019 21:45:49 GMT; Max-Age=0; HttpOnly; SameSite=Strict
-      access_token=2!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None
+      access_token=3!{{access_token_from_oauth}}!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 22:02:29 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict
     """
     And an event "user_authenticated" should have been dispatched with:
       """
