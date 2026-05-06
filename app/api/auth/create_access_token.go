@@ -117,7 +117,9 @@ const maxNumberOfUserSessionsToKeep = 10
 //
 //		The "Authorization" header is not allowed when the `{code}` is given.
 //
-//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is issued with the `Secure` attribute.
+//		The cookie's `SameSite` attribute is always `Strict` and is no longer caller-controlled
+//		(the previously supported `cookie_same_site` parameter has been removed and is silently ignored).
+//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is also issued with the `Secure` attribute.
 //	security: []
 //	consumes:
 //		- application/json

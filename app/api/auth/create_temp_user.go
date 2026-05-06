@@ -25,7 +25,9 @@ import (
 //
 //		The "Authorization" header must not be given.
 //
-//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is issued with the `Secure` attribute.
+//		The cookie's `SameSite` attribute is always `Strict` and is no longer caller-controlled
+//		(the previously supported `cookie_same_site` parameter has been removed and is silently ignored).
+//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is also issued with the `Secure` attribute.
 //	parameters:
 //		- name: default_language
 //			in: query
