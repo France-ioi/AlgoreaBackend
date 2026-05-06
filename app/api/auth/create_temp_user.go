@@ -24,8 +24,6 @@ import (
 //		the old cookie gets deleted (otherwise, just overwritten).
 //
 //		* The "Authorization" header must not be given.
-//
-//		* When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
 //	parameters:
 //		- name: default_language
 //			in: query
@@ -40,12 +38,6 @@ import (
 //		- name: cookie_secure
 //			in: query
 //			description: If 1, set the cookie with the `Secure` attribute
-//			type: integer
-//			enum: [0,1]
-//			default: 0
-//		- name: cookie_same_site
-//			in: query
-//			description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //			type: integer
 //			enum: [0,1]
 //			default: 0
@@ -153,17 +145,12 @@ func (srv *Service) resolveSessionCookieAttributesFromRequest(httpRequest *http.
 		return nil, err
 	}
 
-	cookieAttributes, err := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters)
-	if err != nil {
-		return nil, err
-	}
-
-	return cookieAttributes, nil
+	return srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters), nil
 }
 
 func parseCookieParametersForCreateTempUser(r *http.Request) (*CookieParameters, error) {
 	var requestParameters CookieParameters
-	allowedParameters := []string{"use_cookie", "cookie_secure", "cookie_same_site"}
+	allowedParameters := []string{"use_cookie", "cookie_secure"}
 	requestData := make(map[string]string, len(allowedParameters))
 	query := r.URL.Query()
 	for _, parameterName := range allowedParameters {

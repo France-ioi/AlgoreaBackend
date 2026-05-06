@@ -220,12 +220,9 @@ Feature: Login callback - robustness
     And the table "sessions" should remain unchanged
     And the table "access_tokens" should remain unchanged
   Examples:
-    | query                                            | expected_error                                                                 |
-    | ?use_cookie=1                                    | One of cookie_secure and cookie_same_site must be true when use_cookie is true |
-    | ?use_cookie=1&cookie_same_site=0&cookie_secure=0 | One of cookie_secure and cookie_same_site must be true when use_cookie is true |
-    | ?use_cookie=abc                                  | Wrong value for use_cookie (should have a boolean value (0 or 1))              |
-    | ?cookie_same_site=abc                            | Wrong value for cookie_same_site (should have a boolean value (0 or 1))        |
-    | ?cookie_secure=abc                               | Wrong value for cookie_secure (should have a boolean value (0 or 1))           |
+    | query              | expected_error                                                       |
+    | ?use_cookie=abc    | Wrong value for use_cookie (should have a boolean value (0 or 1))    |
+    | ?cookie_secure=abc | Wrong value for cookie_secure (should have a boolean value (0 or 1)) |
 
   Scenario: Should be an error when the login module returns an expired access token
     Given the time now is "2019-07-16T22:02:28Z"

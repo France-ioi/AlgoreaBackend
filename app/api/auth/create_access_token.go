@@ -117,8 +117,6 @@ const maxNumberOfUserSessionsToKeep = 10
 //
 //		Validations
 //			* The "Authorization" header is not allowed when the `{code}` is given.
-//
-//			* When `{use_cookie}`=1, at least one of `{cookie_secure}` and `{cookie_same_site}` must be true.
 //	security: []
 //	consumes:
 //		- application/json
@@ -145,12 +143,6 @@ const maxNumberOfUserSessionsToKeep = 10
 //		- name: cookie_secure
 //			in: query
 //			description: If 1, set the cookie with the `Secure` attribute
-//			type: integer
-//			enum: [0,1]
-//			default: 0
-//		- name: cookie_same_site
-//			in: query
-//			description: If 1, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //			type: integer
 //			enum: [0,1]
 //			default: 0
@@ -186,9 +178,6 @@ const maxNumberOfUserSessionsToKeep = 10
 //					cookie_secure:
 //						type: boolean
 //						description: If true, set the cookie with the `Secure` attribute
-//					cookie_same_site:
-//						type: boolean
-//						description: If true, set the cookie with the `SameSite`='Strict' attribute value and with `SameSite`='None' otherwise
 //	responses:
 //		"201":
 //			description: >
@@ -209,8 +198,7 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 	requestParameters, err := parseRequestParametersForCreateAccessToken(httpRequest)
 	service.MustNotBeError(err)
 
-	cookieAttributes, err := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters.CookieParameters)
-	service.MustNotBeError(err)
+	cookieAttributes := srv.resolveSessionCookieAttributesFromCookieParameters(httpRequest, requestParameters.CookieParameters)
 
 	if requestParameters.Code != nil && len(httpRequest.Header["Authorization"]) != 0 {
 		return service.ErrInvalidRequest(
@@ -330,24 +318,22 @@ func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter
 }
 
 func (srv *Service) resolveSessionCookieAttributesFromCookieParameters(httpRequest *http.Request, cookieParameters *CookieParameters) (
-	cookieAttributes *auth.SessionCookieAttributes, err error,
+	cookieAttributes *auth.SessionCookieAttributes,
 ) {
 	cookieAttributes = &auth.SessionCookieAttributes{}
 	if cookieParameters.UseCookie != nil && *cookieParameters.UseCookie {
 		cookieAttributes.UseCookie = true
 		cookieAttributes.Domain = domain.CurrentDomainFromContext(httpRequest.Context())
 		cookieAttributes.Path = srv.ServerConfig.GetString("rootPath")
+		// SameSite is always Strict for newly emitted cookies; the attribute is no longer
+		// configurable from the frontend because browsers no longer support SameSite=None
+		// in the way it was previously used.
+		cookieAttributes.SameSite = true
 		if cookieParameters.CookieSecure != nil && *cookieParameters.CookieSecure {
 			cookieAttributes.Secure = true
 		}
-		if cookieParameters.CookieSameSite != nil && *cookieParameters.CookieSameSite {
-			cookieAttributes.SameSite = true
-		}
-		if !cookieAttributes.Secure && !cookieAttributes.SameSite {
-			return nil, service.ErrInvalidRequest(errors.New("one of cookie_secure and cookie_same_site must be true when use_cookie is true"))
-		}
 	}
-	return cookieAttributes, nil
+	return cookieAttributes
 }
 
 func setParametersFromMap(requestParameters interface{}, requestData map[string]string) error {
@@ -387,7 +373,7 @@ func setParametersFromMap(requestParameters interface{}, requestData map[string]
 func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (*createAccessTokenRequestParameters, error) {
 	allowedParameters := []string{
 		"code", "code_verifier", "redirect_uri",
-		"use_cookie", "cookie_secure", "cookie_same_site",
+		"use_cookie", "cookie_secure",
 	}
 	var requestParameters createAccessTokenRequestParameters
 	requestData := make(map[string]string, len(allowedParameters))
@@ -425,9 +411,8 @@ func parseRequestParametersForCreateAccessToken(httpRequest *http.Request) (*cre
 
 // CookieParameters holds optional boolean parameters related to cookies.
 type CookieParameters struct {
-	UseCookie      *bool `json:"use_cookie"`
-	CookieSecure   *bool `json:"cookie_secure"`
-	CookieSameSite *bool `json:"cookie_same_site"`
+	UseCookie    *bool `json:"use_cookie"`
+	CookieSecure *bool `json:"cookie_secure"`
 }
 
 type createAccessTokenRequestParameters struct {

@@ -59,11 +59,11 @@ Feature: Create a new access token
       | 2          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
       | 3          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |
     Examples:
-      | query                            | current_cookie        | token_in_data                   | expected_cookie                                                                                                                                          |
-    |                                  | [Header not defined]  | "access_token":"tmp_new_token", | [Header not defined]                                                                                                                                     |
-    | ?use_cookie=1&cookie_secure=1    | [Header not defined]  |                                 | access_token=2!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None |
-    | ?use_cookie=1&cookie_same_site=1 | [Header not defined]  |                                 | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict       |
-    | ?use_cookie=0                    | access_token=0!1234!! | "access_token":"tmp_new_token", | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; SameSite=None                                                                 |
+      | query                         | current_cookie        | token_in_data                   | expected_cookie                                                                                                                                            |
+      |                               | [Header not defined]  | "access_token":"tmp_new_token", | [Header not defined]                                                                                                                                       |
+      | ?use_cookie=1&cookie_secure=1 | [Header not defined]  |                                 | access_token=3!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
+      | ?use_cookie=1                 | [Header not defined]  |                                 | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
+      | ?use_cookie=0                 | access_token=0!1234!! | "access_token":"tmp_new_token", | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; SameSite=None                                                                   |
 
   Scenario Outline: Request a new access token for a normal user
     Given the login module "token" endpoint for refresh token "jane_current_refreshtoken" returns 200 with body:
@@ -101,10 +101,10 @@ Feature: Create a new access token
       | 2          | 2020-01-01 02:00:00 | 2021-01-01 02:00:00 | jane_new_token     | # the new token
       | 3          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |
     Examples:
-      | query                            | token_in_data                     | expected_cookie                                                                                                                                               |
-      |                                  | "access_token": "jane_new_token", | [Header not defined]                                                                                                                                          |
-      | ?use_cookie=1&cookie_secure=1    |                                   | access_token=2!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=None |
-      | ?use_cookie=1&cookie_same_site=1 |                                   | access_token=1!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict       |
+      | query                         | token_in_data                     | expected_cookie                                                                                                                                                 |
+      |                               | "access_token": "jane_new_token", | [Header not defined]                                                                                                                                            |
+      | ?use_cookie=1&cookie_secure=1 |                                   | access_token=3!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; Secure; SameSite=Strict |
+      | ?use_cookie=1                 |                                   | access_token=1!jane_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 01 Jan 2021 02:00:00 GMT; Max-Age=31622400; HttpOnly; SameSite=Strict         |
 
   Scenario Outline: >
       Accepts access_token cookie and removes it if cookie attributes differ for a normal user,
@@ -128,12 +128,13 @@ Feature: Create a new access token
     And the response headers "Set-Cookie" should be:
       """
         <cookie_removal>
-        access_token=2!jane_current_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 03:50:00 GMT; Max-Age=6600; HttpOnly; Secure; SameSite=None
+        access_token=3!jane_current_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 03:50:00 GMT; Max-Age=6600; HttpOnly; Secure; SameSite=Strict
       """
   Examples:
     | token_cookie                    | cookie_removal                                                                                                                 |
     | 1!jane_old_token!!              | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; SameSite=Strict                                     |
-    | 2!jane_old1_token!127.0.0.1!/   |                                                                                                                                |
+    | 2!jane_old1_token!127.0.0.1!/   | access_token=; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None     |
+    | 3!jane_old1_token!127.0.0.1!/   |                                                                                                                                |
     | 2!jane_old2_token!!             | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                               |
     | 3!jane_old3_token!a.127.0.0.1!/ | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict |
 
@@ -158,12 +159,13 @@ Feature: Create a new access token
     And the response headers "Set-Cookie" should be:
       """
         <cookie_removal>
-        access_token=2!tmp_current_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 03:00:12 GMT; Max-Age=3612; HttpOnly; Secure; SameSite=None
+        access_token=3!tmp_current_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 03:00:12 GMT; Max-Age=3612; HttpOnly; Secure; SameSite=Strict
       """
     Examples:
       | token_cookie                      | cookie_removal                                                                                                                   |
       | 2!tmp_old_token!a.127.0.0.1!/api/ | access_token=; Path=/api/; Domain=a.127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None |
-      | 2!tmp_old1_token!127.0.0.1!/      |                                                                                                                                  |
+      | 2!tmp_old1_token!127.0.0.1!/      | access_token=; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None       |
+      | 3!tmp_old1_token!127.0.0.1!/      |                                                                                                                                  |
       | 2!tmp_old2_token!!                | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                                 |
       | 3!tmp_old3_token!a.127.0.0.1!/    | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict   |
 
@@ -203,10 +205,8 @@ Feature: Create a new access token
       | 2          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | jane_current_token |
       | 3          | 2020-01-01 01:50:00 | 2020-01-01 03:50:00 | john_current_token |
     Examples:
-      | content-type                      | data                                                              | expected_cookie                                                                                                                                            |
-      | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1                                      | access_token=2!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None   |
-      | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1&cookie_same_site=1                   | access_token=3!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
-      | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=0&cookie_same_site=1                   | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
-      | application/jsoN; charset=utf8    | {"use_cookie":true,"cookie_secure":true}                          | access_token=2!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=None   |
-      | application/json                  | {"use_cookie":true,"cookie_secure":true,"cookie_same_site":true}  | access_token=3!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
-      | Application/json                  | {"use_cookie":true,"cookie_secure":false,"cookie_same_site":true} | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
+      | content-type                      | data                                      | expected_cookie                                                                                                                                            |
+      | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=1              | access_token=3!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
+      | Application/x-www-form-urlencoded | use_cookie=1&cookie_secure=0              | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
+      | application/jsoN; charset=utf8    | {"use_cookie":true,"cookie_secure":true}  | access_token=3!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict |
+      | Application/json                  | {"use_cookie":true,"cookie_secure":false} | access_token=1!tmp_new_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 04:00:00 GMT; Max-Age=7200; HttpOnly; SameSite=Strict         |
