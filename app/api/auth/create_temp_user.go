@@ -23,7 +23,9 @@ import (
 //		If attributes of the old and the new 'access_token' cookies are different (or the token is returned in the JSON),
 //		the old cookie gets deleted (otherwise, just overwritten).
 //
-//		* The "Authorization" header must not be given.
+//		The "Authorization" header must not be given.
+//
+//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is issued with the `Secure` attribute.
 //	parameters:
 //		- name: default_language
 //			in: query

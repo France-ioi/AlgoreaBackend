@@ -130,13 +130,13 @@ Feature: Create a new access token
         <cookie_removal>
         access_token=3!jane_current_token!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 03:50:00 GMT; Max-Age=6600; HttpOnly; Secure; SameSite=Strict
       """
-  Examples:
-    | token_cookie                    | cookie_removal                                                                                                                 |
-    | 1!jane_old_token!!              | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; SameSite=Strict                                     |
-    | 2!jane_old1_token!127.0.0.1!/   | access_token=; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None     |
-    | 3!jane_old1_token!127.0.0.1!/   |                                                                                                                                |
-    | 2!jane_old2_token!!             | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                               |
-    | 3!jane_old3_token!a.127.0.0.1!/ | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict |
+    Examples:
+      | token_cookie                    | cookie_removal                                                                                                                 |
+      | 1!jane_old_token!!              | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; SameSite=Strict                                     |
+      | 2!jane_old1_token!127.0.0.1!/   | access_token=; Path=/; Domain=127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None     |
+      | 3!jane_old1_token!127.0.0.1!/   |                                                                                                                                |
+      | 2!jane_old2_token!!             | access_token=; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None                               |
+      | 3!jane_old3_token!a.127.0.0.1!/ | access_token=; Path=/; Domain=a.127.0.0.1; Expires=Wed, 01 Jan 2020 01:43:20 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Strict |
 
   Scenario Outline: Accepts access_token cookie and removes it if cookie attributes differ for a temporary user
     Given the generated auth key is "tmp_new_token"

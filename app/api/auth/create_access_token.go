@@ -115,8 +115,9 @@ const maxNumberOfUserSessionsToKeep = 10
 //		If it is not provided, the `DEFAULT` definition of `default_language` in the `users` table is used.
 //
 //
-//		Validations
-//			* The "Authorization" header is not allowed when the `{code}` is given.
+//		The "Authorization" header is not allowed when the `{code}` is given.
+//
+//		If `{cookie_secure}` is not set explicitly to `0`, the cookie is issued with the `Secure` attribute.
 //	security: []
 //	consumes:
 //		- application/json
@@ -330,9 +331,9 @@ func (srv *Service) resolveSessionCookieAttributesFromCookieParameters(httpReque
 		cookieAttributes.UseCookie = true
 		cookieAttributes.Domain = domain.CurrentDomainFromContext(httpRequest.Context())
 		cookieAttributes.Path = srv.ServerConfig.GetString("rootPath")
-		// SameSite is always Strict for newly emitted cookies; the attribute is no longer
-		// configurable from the frontend because browsers no longer support SameSite=None
-		// in the way it was previously used.
+		// SameSite is always Strict for newly emitted cookies: the frontend never needs the
+		// session cookie to be sent on cross-site requests, and Strict both mitigates CSRF
+		// and aligns with the ongoing third-party cookie phase-out across browsers.
 		cookieAttributes.SameSite = true
 		// Secure defaults to true so that the access token is never sent over plain HTTP.
 		// Callers must explicitly opt out with cookie_secure=0 (e.g. local development over

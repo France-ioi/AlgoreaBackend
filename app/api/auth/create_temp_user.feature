@@ -75,3 +75,17 @@ Feature: Create a temporary user
     | ?use_cookie=0                 | [Header not defined]            | fr                        | [Header not defined]                                                                                                                                                                                                                                                                              | "access_token":"ny93zqri9a2adn4v1ut6izd76xb3pccw", |
     | ?use_cookie=1                 | [Header not defined]            | fr                        | access_token=3!ny93zqri9a2adn4v1ut6izd76xb3pccw!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict                                                                                                                     |                                                    |
     | ?use_cookie=1&cookie_secure=0 | access_token=2!abcd!127.0.0.1!/ | fr                        | access_token=; Path=/; Domain=127.0.0.1; Expires=Thu, 16 Jul 2020 21:45:48 GMT; Max-Age=0; HttpOnly; Secure; SameSite=None\naccess_token=1!ny93zqri9a2adn4v1ut6izd76xb3pccw!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; SameSite=Strict |                                                    |
+
+  # Regression guard for the removal of the cookie_same_site parameter:
+  # the parameter must be silently ignored regardless of how it is supplied,
+  # and the issued cookie must always carry SameSite=Strict.
+  Scenario Outline: The removed cookie_same_site parameter is silently ignored
+    Given the generated auth key is "ny93zqri9a2adn4v1ut6izd76xb3pccw"
+    When I send a POST request to "/auth/temp-user<query>"
+    Then the response code should be 201
+    And the response header "Set-Cookie" should be "access_token=3!ny93zqri9a2adn4v1ut6izd76xb3pccw!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Fri, 17 Jul 2020 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict"
+  Examples:
+    | query                                              |
+    | ?use_cookie=1&cookie_same_site=0                   |
+    | ?use_cookie=1&cookie_same_site=1                   |
+    | ?use_cookie=1&cookie_secure=1&cookie_same_site=0   |
