@@ -172,20 +172,39 @@ jobs:
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -b "`awk '/##.*/{n++;next};n==1;n==2{exit}' CHANGELOG.md`" -delete ${CIRCLE_TAG} ./bin/
   swagger-gen:
     docker:
-      - image: quay.io/goswagger/swagger:v0.31.0
-    environment:
-      # The image ships Go 1.22.3 with GOTOOLCHAIN=local, which prevents `go`
-      # from honoring the `go 1.25.0` / `toolchain go1.25.9` directives in our
-      # go.mod. Override to `auto` so the pinned toolchain is auto-fetched on
-      # the steps that build the project.
-      GOTOOLCHAIN: auto
+      - image: cimg/go:1.25.9
     steps:
-      - run: go install github.com/France-ioi/go-swagger/cmd/swagger@00200fa
-      - run: apk add npm
-      - run: npm install -g swagger2openapi
-      - run: npm install -g @redocly/cli@1.25.15
       - checkout
-      - run: go build -v # do not use 'make' as the image does not support '-race' arg
+      # Built from the tools/swagger sub-module (not `go install ...@<rev>`)
+      # so that we can pin a `golang.org/x/tools` version that compiles on
+      # Go 1.25; see tools/swagger/tools.go for the full rationale.
+      - run:
+          name: Install swagger generator
+          command: cd tools/swagger && go install github.com/France-ioi/go-swagger/cmd/swagger
+      - run:
+          name: Install Node.js and OpenAPI tooling
+          # cimg/go is built on cimg/base (Ubuntu) and does not ship Node.js,
+          # so install nodejs/npm from the distro before the global npm installs.
+          # The git-lfs source list workaround mirrors what `tests` and
+          # `migration-tests` do for the same image.
+          #
+          # IMPORTANT: swagger2openapi and @redocly/cli MUST be installed in
+          # SEPARATE `npm install -g` invocations. When installed together,
+          # npm dedupes shared transitive deps (notably `call-me-maybe` and
+          # `yaml`) into swagger2openapi's node_modules, leaving @redocly/cli's
+          # tree without them. The pre-bundled redoc/bundles/redoc.lib.js
+          # inside @redocly/cli@1.25.15 then crashes at runtime with
+          # `Cannot find module 'call-me-maybe'` because Node's parent-walk
+          # require cannot reach across into a sibling package's node_modules.
+          # Installing them one at a time keeps each package's dep tree
+          # self-contained.
+          command: |
+            sudo rm -f /etc/apt/sources.list.d/github_git-lfs.list
+            sudo apt-get --allow-releaseinfo-change update
+            sudo apt-get install -y --no-install-recommends nodejs npm
+            sudo npm install -g swagger2openapi
+            sudo npm install -g @redocly/cli@1.25.15
+      - run: go build -v
       - run: make swagger-generate
       - persist_to_workspace:
           root: ./
