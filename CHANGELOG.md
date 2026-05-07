@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.43.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.42.0...v2.43.0) - 2026-05-07
+- **breaking**: the `cookie_same_site` parameter of `auth/createAccessToken` and `auth/createTempUser` has been removed (it is now silently ignored). Newly issued session cookies are always set with `SameSite=Strict`; callers that relied on `SameSite=None` cookies must switch to same-site requests
+- **breaking**: the default of the `cookie_secure` parameter of `auth/createAccessToken` and `auth/createTempUser` is now `1` (was `0`). Pass `cookie_secure=0` only for non-TLS local development (e.g. `http://localhost`)
+- retry on `session_id` collision when creating a session in `auth/createAccessToken`, to avoid sporadic 500s on the rare random ID clash
+- **operator action**: upgrade Go toolchain to 1.25 (was 1.21); the Docker base image is now `golang:1.25.9` and `go.mod` pins `toolchain go1.25.9`
+- security: update `golang.org/x/oauth2` to `v0.36.0` (addresses CVE-2025-22868)
+
 ## [v2.42.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.41.1...v2.42.0) - 2026-04-30
 - new `cors` config block with `allowedOrigins` and `allowCredentials` to control the CORS allow-list applied to every API response
 - **breaking / action required**: previous releases hardcoded `AllowedOrigins: ["*"]` with `AllowCredentials: true`. The new default is fail-closed: every cross-origin request is denied until trusted origins are listed explicitly. Deployments MUST add a `cors` block to their config (see `conf/config.sample.yaml`) before upgrading or browser-based clients will stop working in production
