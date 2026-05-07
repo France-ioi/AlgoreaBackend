@@ -125,7 +125,7 @@ func TestConvertIntoMap(t *testing.T) {
 		Field string `json:"field"`
 	}
 	type testStruct struct {
-		notExported   string `json:"not_exported"` //nolint:govet // to test that unexported fields are ignored even if they have a tag
+		notExported   string // unexported field, must be skipped regardless of any tag
 		Normal        string `json:"normal"`
 		WithoutTag    string
 		Skipped       string        `json:"-"`
@@ -150,4 +150,24 @@ func TestConvertIntoMap(t *testing.T) {
 			"field": "Field value",
 		},
 	}, got)
+}
+
+// TestConvertIntoMap_SkipsUnexportedFieldsWithJSONTag specifically exercises the
+// `!fieldValue.CanInterface()` branch in ConvertIntoMap: a field that is unexported
+// but DOES carry a json tag (so the early `name == "-"` skip does not fire and we
+// reach the CanInterface() guard). The struct is built with reflect.StructOf at
+// runtime to avoid the `go vet` "struct field has json tag but is not exported"
+// diagnostic that fires on a statically-declared equivalent.
+func TestConvertIntoMap_SkipsUnexportedFieldsWithJSONTag(t *testing.T) {
+	pkgPath := reflect.TypeOf((*Binder)(nil)).Elem().PkgPath()
+	typ := reflect.StructOf([]reflect.StructField{
+		{
+			Name:    "notExported",
+			PkgPath: pkgPath,
+			Type:    reflect.TypeOf(""),
+			Tag:     `json:"not_exported"`,
+		},
+	})
+	got := ConvertIntoMap(reflect.New(typ).Interface())
+	assert.Equal(t, map[string]interface{}{}, got)
 }
