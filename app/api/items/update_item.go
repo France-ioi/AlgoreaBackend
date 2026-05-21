@@ -168,6 +168,7 @@ func (srv *Service) updateItem(responseWriter http.ResponseWriter, httpRequest *
 		formData.RegisterTranslation("duration_requires_explicit_entry", "requires_explicit_entry should be true when the duration is not null")
 		formData.RegisterValidation("options", constructItemOptionsValidator())
 		formData.RegisterTranslation("null|options", "options should be a valid JSON or null")
+		registerDisplaySettingsValidator(formData)
 
 		err = formData.ParseMapData(rawRequestData)
 		if err != nil {

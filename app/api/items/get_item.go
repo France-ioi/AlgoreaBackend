@@ -123,26 +123,40 @@ type itemResponse struct {
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// required: true
 	EntryMaxTeamSize int32 `json:"entry_max_team_size"`
+	// Deprecated: use `display_settings.prompt_to_join_group_by_code` instead.
+	// Resolved from `display_settings` with default `false`. Will be removed in phase 2.
 	// required: true
 	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
+	// Deprecated: not stored anymore; always `true`. Will be removed in phase 2.
 	// required: true
 	TitleBarVisible bool `json:"title_bar_visible"`
 	// required: true
 	TextID *string `json:"text_id"`
 	// required: true
 	ReadOnly bool `json:"read_only"`
+	// Deprecated: not stored anymore; always `"default"`. Will be removed in phase 2.
 	// required: true
 	// enum: forceYes,forceNo,default
 	FullScreen string `json:"full_screen"`
+	// Deprecated: use `display_settings.children_layout` instead.
+	// Resolved from `display_settings` with default `"List"`. Will be removed in phase 2.
 	// required: true
 	// enum: List,Grid,Hide
 	ChildrenLayout string `json:"children_layout"`
+	// Deprecated: not stored anymore; always `false`. Will be removed in phase 2.
 	// required: true
 	ShowUserInfos bool `json:"show_user_infos"`
 	// required: true
 	EnteringTimeMin time.Time `json:"entering_time_min"`
 	// required: true
 	EnteringTimeMax time.Time `json:"entering_time_max"`
+
+	// JSON object with display/UI settings interpreted by the frontend. Always
+	// present, never `null`; an item with no non-default settings has the value
+	// `{}`. See `ARCHITECTURE.md` §"Display settings (frontend pass-through)" for
+	// the storage convention and the list of keys.
+	// required: true
+	DisplaySettings database.JSON `json:"display_settings"`
 
 	// required: true
 	SupportedLanguageTags []string `json:"supported_language_tags"`
@@ -293,21 +307,19 @@ type rawItem struct {
 	*RawCommonItemFields
 
 	// items
-	TitleBarVisible              bool
 	ReadOnly                     bool
-	FullScreen                   string
-	ChildrenLayout               string
-	ShowUserInfos                bool
 	EntryMinAdmittedMembersRatio string
 	EntryFrozenTeams             bool
 	EntryMaxTeamSize             int32
-	PromptToJoinGroupByCode      bool
-	TextID                       *string
-	URL                          *string // only if not a chapter
-	Options                      *string // only if not a chapter
-	UsesAPI                      bool    // only if not a chapter
-	HintsAllowed                 bool    // only if not a chapter
-	BestScore                    float32
+	// `items.display_settings` is `NOT NULL` (defaults to `{}`), so we can read it
+	// into a non-pointer `database.JSON`; downstream code never needs a nil check.
+	DisplaySettings database.JSON
+	TextID          *string
+	URL             *string // only if not a chapter
+	Options         *string // only if not a chapter
+	UsesAPI         bool    // only if not a chapter
+	HintsAllowed    bool    // only if not a chapter
+	BestScore       float32
 
 	// items_strings
 	SupportedLanguageTags string
@@ -335,7 +347,6 @@ func getRawItemData(store *database.ItemStore, rootID, groupID int64, languageTa
 	columnsBuffer := bytes.NewBufferString(`
 		items.id AS id,
 		items.type,
-		items.display_details_in_parent,
 		items.validation_type,
 		items.entry_min_admitted_members_ratio,
 		items.entry_frozen_teams,
@@ -350,12 +361,8 @@ func getRawItemData(store *database.ItemStore, rootID, groupID int64, languageTa
 		items.default_language_tag,
 		IFNULL((SELECT GROUP_CONCAT(language_tag ORDER BY language_tag)
 		        FROM items_strings WHERE item_id = items.id), '') AS supported_language_tags,
-		items.prompt_to_join_group_by_code,
-		items.title_bar_visible,
+		items.display_settings,
 		items.read_only,
-		items.full_screen,
-		items.children_layout,
-		items.show_user_infos,
 		items.url,
 		items.options,
 		items.requires_explicit_entry,
@@ -492,17 +499,23 @@ func constructItemResponseFromDBData(
 		EntryMinAdmittedMembersRatio: rawData.EntryMinAdmittedMembersRatio,
 		EntryFrozenTeams:             rawData.EntryFrozenTeams,
 		EntryMaxTeamSize:             rawData.EntryMaxTeamSize,
-		PromptToJoinGroupByCode:      rawData.PromptToJoinGroupByCode,
-		TitleBarVisible:              rawData.TitleBarVisible,
-		TextID:                       rawData.TextID,
-		ReadOnly:                     rawData.ReadOnly,
-		FullScreen:                   rawData.FullScreen,
-		ChildrenLayout:               rawData.ChildrenLayout,
-		ShowUserInfos:                rawData.ShowUserInfos,
-		EnteringTimeMin:              time.Time(rawData.EnteringTimeMin),
-		EnteringTimeMax:              time.Time(rawData.EnteringTimeMax),
-		BestScore:                    rawData.BestScore,
-		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
+		// The five hardcoded constants below are wire-compat defaults for clients
+		// that still expect the legacy fields; their backing columns were dropped
+		// in phase 1. The two display_settings-backed fields (children_layout,
+		// prompt_to_join_group_by_code) keep returning the real value so existing
+		// frontends keep working until phase 2.
+		PromptToJoinGroupByCode: boolFromDisplaySettings(rawData.DisplaySettings, "prompt_to_join_group_by_code", false),
+		TitleBarVisible:         true,
+		TextID:                  rawData.TextID,
+		ReadOnly:                rawData.ReadOnly,
+		FullScreen:              "default",
+		ChildrenLayout:          stringFromDisplaySettings(rawData.DisplaySettings, "children_layout", "List"),
+		ShowUserInfos:           false,
+		EnteringTimeMin:         time.Time(rawData.EnteringTimeMin),
+		EnteringTimeMax:         time.Time(rawData.EnteringTimeMax),
+		DisplaySettings:         rawData.DisplaySettings,
+		BestScore:               rawData.BestScore,
+		SupportedLanguageTags:   strings.Split(rawData.SupportedLanguageTags, ","),
 	}
 
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {

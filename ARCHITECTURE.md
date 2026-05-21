@@ -931,10 +931,26 @@ Each command is defined in `cmd/<command>.go`:
 
 **Items (Educational Content)**:
 - `items`: Tasks, chapters, skills, courses
+  - `items.display_settings` (JSON, `NOT NULL`, default `{}`): opaque pass-through for frontend-only display settings; see "Display settings (frontend pass-through)" below
 - `items_strings`: Localized item content (title, description, etc.)
 - `items_items`: Parent-child item relationships
 - `items_ancestors`: Computed transitive closure of item relationships
 - `item_dependencies`: Unlock conditions between items
+
+#### Display settings (frontend pass-through)
+
+The `items.display_settings` column stores a JSON object that the backend treats as an opaque blob: it is stored verbatim and returned as-is on every `items` GET endpoint, and never inspected by backend business logic. Its purpose is to let frontends store UI-only settings against an item without requiring a backend schema change for every new setting.
+
+Currently known keys (this list is informational; the backend does not enforce it):
+
+| Key                            | Type                          | Default | Notes                                                                 |
+| ------------------------------ | ----------------------------- | ------- | --------------------------------------------------------------------- |
+| `children_layout`              | `"List" \| "Grid" \| "Hide"`  | `"List"`| How a chapter/skill renders its children list                         |
+| `prompt_to_join_group_by_code` | boolean                       | `false` | Whether the UI should display a "join group by code" form on the item |
+
+**"Omit defaults" convention**: a key is omitted from `display_settings` when its value equals the default, so `{}` is equivalent to `{"children_layout":"List","prompt_to_join_group_by_code":false}`. Frontends should follow this convention to keep payloads minimal, but the backend will faithfully store whatever object is sent (including a key explicitly set to its default value); the GET fallback logic returns the same value either way.
+
+**Phase-1 wire-compat fields**: the GET endpoints still expose `children_layout`, `prompt_to_join_group_by_code`, `title_bar_visible`, `display_details_in_parent`, `full_screen`, `show_user_infos`, and `fixed_ranks` at the top level for old clients. The first two are derived from `display_settings`; the other five always return their previous DB defaults (`true`, `false`, `"default"`, `false`, `false`). On POST/PUT, those seven legacy keys are accepted in the request body but silently ignored — frontends must move to `display_settings` to change `children_layout` / `prompt_to_join_group_by_code` and accept the hardcoded defaults for the others. These deprecated fields will be removed in a future phase.
 
 **Results & Attempts**:
 - `attempts`: User attempts on items

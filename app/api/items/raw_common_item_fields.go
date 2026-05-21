@@ -11,7 +11,6 @@ type RawCommonItemFields struct {
 	// items
 	ID                     int64
 	Type                   string
-	DisplayDetailsInParent bool
 	ValidationType         string
 	EntryParticipantType   string
 	EnteringTimeMin        database.Time
@@ -25,9 +24,12 @@ type RawCommonItemFields struct {
 
 func (raw *RawCommonItemFields) asItemCommonFields(permissionGrantedStore *database.PermissionGrantedStore) *commonItemFields {
 	return &commonItemFields{
-		ID:                     raw.ID,
-		Type:                   raw.Type,
-		DisplayDetailsInParent: raw.DisplayDetailsInParent,
+		ID:   raw.ID,
+		Type: raw.Type,
+		// Hardcoded default during phase 1: the legacy `items.display_details_in_parent`
+		// column was dropped; the value is now opaquely stored in `items.display_settings`
+		// for the frontend, but the backend keeps emitting `false` here for wire compat.
+		DisplayDetailsInParent: false,
 		ValidationType:         raw.ValidationType,
 		RequiresExplicitEntry:  raw.RequiresExplicitEntry,
 		AllowsMultipleAttempts: raw.AllowsMultipleAttempts,
