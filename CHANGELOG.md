@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.44.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.43.0...v2.44.0) - 2026-05-23
+
+- new `display_settings` JSON field on items GET/POST/PUT (`itemView`, `itemChildrenView`, `itemParentsView`, `itemPrerequisitesView`, `itemDependenciesView`, `itemCreate`, `itemUpdate`): opaque object for frontend UI settings (e.g. `children_layout`, `prompt_to_join_group_by_code`); always an object in responses, never `null`, defaults to `{}`
+- items GET responses still expose the legacy display fields for wire compatibility during phase 1: `children_layout` and `prompt_to_join_group_by_code` are derived from `display_settings` (default `"List"` and `false` when absent); `title_bar_visible`, `display_details_in_parent`, `full_screen`, `show_user_infos`, and `fixed_ranks` always return their former defaults (`true`, `false`, `"default"`, `false`, `false`)
+- items POST/PUT still accept the legacy display fields in the request body but silently ignore them on write — frontends must send `display_settings` to change UI settings
+- **operator action (DB migration)**: adds `items.display_settings` and drops `repository_path`, `title_bar_visible`, `display_details_in_parent`, `full_screen`, `fixed_ranks`, `show_user_infos`, `children_layout`, and `prompt_to_join_group_by_code`; existing `children_layout` / `prompt_to_join_group_by_code` values are migrated into JSON
+
 ## [v2.43.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.42.0...v2.43.0) - 2026-05-07
 - **breaking**: the `cookie_same_site` parameter of `auth/createAccessToken` and `auth/createTempUser` has been removed (it is now silently ignored). Newly issued session cookies are always set with `SameSite=Strict`; callers that relied on `SameSite=None` cookies must switch to same-site requests
 - **breaking**: the default of the `cookie_secure` parameter of `auth/createAccessToken` and `auth/createTempUser` is now `1` (was `0`). Pass `cookie_secure=0` only for non-TLS local development (e.g. `http://localhost`)
