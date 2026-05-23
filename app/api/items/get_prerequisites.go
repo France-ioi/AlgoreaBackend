@@ -133,7 +133,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 		constructItemListWithoutResultsQuery(
 			store, participantID, "info", watchedGroupIDIsSet, watchedGroupID,
 			`items.allows_multiple_attempts, items.id, items.type, items.default_language_tag,
-				validation_type, display_details_in_parent, duration, entry_participant_type, no_score,
+				validation_type, duration, entry_participant_type, no_score,
 				can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated,
 				score AS dependency_required_score, grant_content_view AS dependency_grant_content_view,
 				IFNULL(

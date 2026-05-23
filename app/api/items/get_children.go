@@ -259,7 +259,7 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
-				items.validation_type, items.display_details_in_parent, items.duration, items.entry_participant_type, items.no_score,
+				items.validation_type, items.duration, items.entry_participant_type, items.no_score,
 				IFNULL(can_view_generated_value, 1) AS can_view_generated_value,
 				IFNULL(can_grant_view_generated_value, 1) AS can_grant_view_generated_value,
 				IFNULL(can_watch_generated_value, 1) AS can_watch_generated_value,
@@ -349,10 +349,13 @@ func childItemsFromRawData(
 						Title:       rawData[index].StringTitle,
 						ImageURL:    rawData[index].StringImageURL,
 					}},
-					DefaultLanguageTag:     rawData[index].DefaultLanguageTag,
-					BestScore:              rawData[index].BestScore,
-					Results:                make([]structures.ItemResult, 0, 1),
-					DisplayDetailsInParent: rawData[index].DisplayDetailsInParent,
+					DefaultLanguageTag: rawData[index].DefaultLanguageTag,
+					BestScore:          rawData[index].BestScore,
+					Results:            make([]structures.ItemResult, 0, 1),
+					// Hardcoded default during phase 1: the legacy `display_details_in_parent`
+					// column was dropped; the value is opaquely stored in `items.display_settings`
+					// (read by the frontend) but the backend keeps emitting `false` for wire compat.
+					DisplayDetailsInParent: false,
 					ValidationType:         rawData[index].ValidationType,
 					RequiresExplicitEntry:  rawData[index].RequiresExplicitEntry,
 					AllowsMultipleAttempts: rawData[index].AllowsMultipleAttempts,

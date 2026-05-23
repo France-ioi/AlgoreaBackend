@@ -7,11 +7,11 @@ Background:
     | group_id | login |
     | 11       | jdoe  |
   And the database has the following table "items":
-    | id | type    | url                  | options   | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-    | 21 | Chapter | http://someurl1.com/ | {"opt":1} | en                   | 1        | Task1   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
-    | 50 | Chapter | http://someurl2.com/ | {"opt":2} | en                   | 1        | Task2   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
-    | 60 | Chapter | http://someurl2.com/ | {"opt":2} | en                   | 1        | Task3   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
-    | 70 | Skill   | http://someurl3.com/ | {"opt":3} | en                   | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
+    | id | type    | url                  | options   | default_language_tag | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | entering_time_min   | entering_time_max   | participants_group_id |
+    | 21 | Chapter | http://someurl1.com/ | {"opt":1} | en                   | 1        | Task1   | 0        | 1         | 1             | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
+    | 50 | Chapter | http://someurl2.com/ | {"opt":2} | en                   | 1        | Task2   | 0        | 1         | 1             | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
+    | 60 | Chapter | http://someurl2.com/ | {"opt":2} | en                   | 1        | Task3   | 0        | 1         | 1             | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
+    | 70 | Skill   | http://someurl3.com/ | {"opt":3} | en                   | 0        | null    | 0        | 1         | 1             | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1                       | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 1234                  |
   And the database has the following table "items_items":
     | parent_item_id | child_item_id | child_order |
     | 21             | 60            | 0           |
@@ -64,8 +64,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should remain unchanged, regardless of the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type    | url                  | options   | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 50 | Chapter | http://someurl3.com/ | {"opt":3} | en                   | 1        | Task2   | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
+      | id | type    | url                  | options   | display_settings | default_language_tag | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | entering_time_min   | entering_time_max   | participants_group_id |
+      | 50 | Chapter | http://someurl3.com/ | {"opt":3} | {}               | en                   | 1        | Task2   | 0        | 1         | 1             | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
     And the table "items_strings" should remain unchanged
     And the table "items_items" should remain unchanged
     And the table "items_ancestors" should remain unchanged
@@ -84,8 +84,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should remain unchanged, regardless of the row with id "50"
     And the table "items" at id "50" should be:
-      | id | type    | url  | options | default_language_tag | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | entering_time_min   | entering_time_max   | participants_group_id |
-      | 50 | Chapter | null | null    | en                   | 1        | null    | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | null     | 1               | 1                            | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
+      | id | type    | url  | options | display_settings | default_language_tag | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | entering_time_min   | entering_time_max   | participants_group_id |
+      | 50 | Chapter | null | null    | {}               | en                   | 1        | null    | 0        | 1         | 1             | One             | Half                             | 0                  | 10                  | 1                        | null     | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | null                  |
     And the table "items_strings" should remain unchanged
     And the table "items_items" should remain unchanged
     And the table "items_ancestors" should remain unchanged
@@ -147,9 +147,12 @@ Background:
       """
     Then the response should be "updated"
     And the table "items" should remain unchanged, regardless of the row with id "50"
+    # Phase 1 strategy A: the legacy display fields in the request body are
+    # silently ignored on write — the display_settings column keeps its previous
+    # value ({} for this row in the Background fixture).
     And the table "items" at id "50" should be:
-      | id | type    | url               | options      | default_language_tag | entry_frozen_teams | no_score | text_id     | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
-      | 50 | Chapter | http://myurl.com/ | {"opt":true} | sl                   | 1                  | 0        | Tasknumber1 | 1                 | 0                         | 1        | 0         | forceYes    | Grid            | 0             | 0           | AllButOne       | All                              | 1                  | 2345                | 0                        | 01:02:03 | 1                       | 0               | 0                            | 5577006791947779410   |
+      | id | type    | url               | options      | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id     | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | participants_group_id |
+      | 50 | Chapter | http://myurl.com/ | {"opt":true} | {}               | sl                   | 1                  | 0        | Tasknumber1 | 1        | 0         | 0             | AllButOne       | All                              | 1                  | 2345                | 0                        | 01:02:03 | 1                       | 5577006791947779410   |
     And the table "items_strings" should remain unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
@@ -233,8 +236,8 @@ Background:
     Then the response should be "updated"
     And the table "items" should remain unchanged, regardless of the row with id "70"
     And the table "items" at id "70" should be:
-      | id | type  | url                  | options   | default_language_tag | entry_frozen_teams | no_score | text_id | title_bar_visible | display_details_in_parent | uses_api | read_only | full_screen | children_layout | hints_allowed | fixed_ranks | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | show_user_infos | prompt_to_join_group_by_code | participants_group_id |
-      | 70 | Skill | http://someurl3.com/ | {"opt":3} | en                   | 0                  | 0        | null    | 0                 | 1                         | 0        | 1         | forceNo     | List            | 1             | 1           | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1               | 1                            | 1234                  |
+      | id | type  | url                  | options   | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | participants_group_id |
+      | 70 | Skill | http://someurl3.com/ | {"opt":3} | {}               | en                   | 0                  | 0        | null    | 0        | 1         | 1             | One             | Half                             | 0                  | 10                  | 1                        | 01:20:30 | 1234                  |
     And the table "items_strings" should remain unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
@@ -784,16 +787,72 @@ Background:
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
       | 21             | 112           | 1           | Challenge | 2            | as_content               | as_is                         | true                   | true              | true             |
 
-  Scenario: Valid (set children_layout to Hide)
+  Scenario: Valid (set display_settings.children_layout to Hide via the new JSON field)
     Given I am the user with id "11"
     When I send a PUT request to "/items/60" with the following body:
       """
       {
-        "children_layout": "Hide"
+        "display_settings": {"children_layout": "Hide"}
       }
       """
     Then the response should be "updated"
     And the table "items" should remain unchanged, regardless of the row with id "60"
-    And the table "items" at id "60" should be:
-      | id | type    | children_layout |
-      | 60 | Chapter | Hide            |
+    And the column "items.display_settings" at id "60" should be, in JSON:
+      """
+      {"children_layout": "Hide"}
+      """
+
+  Scenario: Valid (legacy children_layout in PUT body is silently ignored in phase 1; display_settings unchanged)
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/60" with the following body:
+      """
+      {
+        "children_layout": "Hide",
+        "prompt_to_join_group_by_code": true
+      }
+      """
+    Then the response should be "updated"
+    And the table "items" should remain unchanged
+
+  Scenario: Valid (set display_settings to a richer object; full replacement, no merge)
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id | type    | default_language_tag | display_settings              |
+      | 80 | Chapter | en                   | {"children_layout": "Grid"}   |
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated | can_edit_generated |
+      | 11       | 80      | solution           | all_with_grant     |
+    When I send a PUT request to "/items/80" with the following body:
+      """
+      {
+        "display_settings": {
+          "prompt_to_join_group_by_code": true,
+          "frontend_only_key": 42
+        }
+      }
+      """
+    Then the response should be "updated"
+    And the column "items.display_settings" at id "80" should be, in JSON:
+      """
+      {"prompt_to_join_group_by_code": true, "frontend_only_key": 42}
+      """
+
+  Scenario: Valid (set display_settings to {} clears the column to an empty object)
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id | type    | default_language_tag | display_settings              |
+      | 80 | Chapter | en                   | {"children_layout": "Grid"}   |
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated | can_edit_generated |
+      | 11       | 80      | solution           | all_with_grant     |
+    When I send a PUT request to "/items/80" with the following body:
+      """
+      {
+        "display_settings": {}
+      }
+      """
+    Then the response should be "updated"
+    And the column "items.display_settings" at id "80" should be, in JSON:
+      """
+      {}
+      """

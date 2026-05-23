@@ -376,8 +376,6 @@ Feature: Create item - robustness
     And the table "permissions_generated" should remain unchanged
     Examples:
       | field                            | value       | error                                                                     |
-      | full_screen                      | wrong value | full_screen must be one of [forceYes forceNo default]                     |
-      | full_screen                      |             | full_screen must be one of [forceYes forceNo default]                     |
       | type                             | Wrong       | type must be one of [Chapter Task Skill]                           |
       | type                             | Skill       | type can be equal to 'Skill' only if the parent item is a skill           |
       | validation_type                  | Wrong       | validation_type must be one of [None All AllButOne Categories One Manual] |
@@ -392,6 +390,45 @@ Feature: Create item - robustness
       | duration                         | 99:59:60    | invalid duration                                                          |
       | entry_participant_type           | Class       | entry_participant_type must be one of [User Team]                         |
       | options                          |             | options should be a valid JSON or null                                    |
+
+  Scenario Outline: Wrong optional field value (raw JSON value)
+    # Sibling of "Wrong optional field value" but without quoting `<value>`, so
+    # the table can carry non-string JSON literals (null, arrays, scalars).
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Task",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent": {"item_id": "21"},
+        "<field>": <value>
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "<field>": ["<error>"]
+        }
+      }
+      """
+    And the table "items" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "permissions_generated" should remain unchanged
+    Examples:
+      | field            | value   | error                                                       |
+      | display_settings | null    | display_settings should be a JSON object and cannot be null |
+      | display_settings | []      | expected a map, got 'slice'                                 |
+      | display_settings | "hello" | expected a map, got 'string'                                |
+      | display_settings | 42      | expected a map, got 'float64'                               |
 
   Scenario Outline: Wrong optional parent field value
     Given I am the user with id "11"

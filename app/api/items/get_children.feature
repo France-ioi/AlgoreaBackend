@@ -12,14 +12,14 @@ Feature: Get item children
       | 17       | fr         | fr               |
       | 22       | info       |                  |
     And the database has the following table "items":
-      | id  | type    | default_language_tag | no_score | display_details_in_parent | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | title_bar_visible | read_only | full_screen | show_user_infos | url                    | uses_api | hints_allowed |
-      | 200 | Task    | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://someurl         | true     | true          |
-      | 210 | Chapter | en                   | true     | true                      | All             | false                   | true                     | User                   | 10:20:31 | true              | true      | forceYes    | true            | null                   | true     | true          |
-      | 220 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null                   | true     | true          |
-      | 230 | Chapter | en                   | true     | true                      | All             | false                   | true                     | Team                   | 10:20:32 | true              | true      | forceYes    | true            | null                   | true     | true          |
-      | 300 | Skill   | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://example.com/300 | true     | true          |
-      | 301 | Skill   | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://example.com/301 | true     | true          |
-      | 302 | Task    | en                   | true     | true                      | All             | true                    | true                     | Team                   | 10:20:30 | true              | true      | forceYes    | true            | http://example.com/302 | true     | true          |
+      | id  | type    | default_language_tag | no_score | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | read_only | url                    | uses_api | hints_allowed |
+      | 200 | Task    | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://someurl         | true     | true          |
+      | 210 | Chapter | en                   | true     | All             | false                   | true                     | User                   | 10:20:31 | true      | null                   | true     | true          |
+      | 220 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          |
+      | 230 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          |
+      | 300 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/300 | true     | true          |
+      | 301 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/301 | true     | true          |
+      | 302 | Task    | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/302 | true     | true          |
     And the database has the following table "items_strings":
       | item_id | language_tag | title        | image_url                  | subtitle     | description     | edu_comment    |
       | 200     | en           | Category 1   | http://example.com/my0.jpg | Subtitle 0   | Description 0   | Some comment   |
@@ -131,7 +131,7 @@ Feature: Get item children
         "edit_propagation": false,
         "request_help_propagation": false,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
@@ -178,7 +178,7 @@ Feature: Get item children
         "edit_propagation": true,
         "request_help_propagation": true,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "User",
@@ -235,7 +235,7 @@ Feature: Get item children
         "edit_propagation": false,
         "request_help_propagation": false,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
@@ -272,7 +272,7 @@ Feature: Get item children
         "edit_propagation": true,
         "request_help_propagation": true,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "User",
@@ -329,7 +329,7 @@ Feature: Get item children
         "edit_propagation": false,
         "request_help_propagation": false,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
@@ -365,7 +365,7 @@ Feature: Get item children
         "edit_propagation": true,
         "request_help_propagation": true,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "User",
@@ -411,7 +411,7 @@ Feature: Get item children
         "edit_propagation": false,
         "request_help_propagation": false,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
@@ -458,7 +458,7 @@ Feature: Get item children
         "edit_propagation": true,
         "request_help_propagation": true,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "User",
@@ -515,7 +515,7 @@ Feature: Get item children
         "edit_propagation": false,
         "request_help_propagation": false,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
@@ -551,7 +551,7 @@ Feature: Get item children
         "edit_propagation": true,
         "request_help_propagation": true,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "User",
@@ -597,7 +597,7 @@ Feature: Get item children
         "edit_propagation": false,
         "request_help_propagation": false,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
@@ -636,7 +636,7 @@ Feature: Get item children
         "edit_propagation": true,
         "request_help_propagation": true,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "User",
@@ -687,7 +687,7 @@ Feature: Get item children
         "edit_propagation": false,
         "request_help_propagation": false,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "Team",
@@ -726,7 +726,7 @@ Feature: Get item children
         "edit_propagation": true,
         "request_help_propagation": true,
         "type": "Chapter",
-        "display_details_in_parent": true,
+        "display_details_in_parent": false,
         "validation_type": "All",
         "allows_multiple_attempts": true,
         "entry_participant_type": "User",

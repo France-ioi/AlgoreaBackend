@@ -84,8 +84,6 @@ Feature: Update item - robustness
     | default_language_tag             | ""            | default_language_tag must be at least 1 character in length                        |
     | default_language_tag             | "unknow"      | default language should exist and there should be item's strings in this language  |
     | default_language_tag             | "sl"          | default language should exist and there should be item's strings in this language  | # no strings for the tag
-    | full_screen                      | "wrong value" | full_screen must be one of [forceYes forceNo default]                              |
-    | full_screen                      | ""            | full_screen must be one of [forceYes forceNo default]                              |
     | validation_type                  | "Wrong"       | validation_type must be one of [None All AllButOne Categories One Manual]          |
     | entry_min_admitted_members_ratio | "Wrong"       | entry_min_admitted_members_ratio must be one of [All Half One None]                |
     | duration                         | ""            | invalid duration                                                                   |
@@ -98,6 +96,10 @@ Feature: Update item - robustness
     | duration                         | "99:59:60"    | invalid duration                                                                   |
     | duration                         | "00:00:01"    | requires_explicit_entry should be true when the duration is not null               |
     | options                          | ""            | options should be a valid JSON or null                                             |
+    | display_settings                 | null          | display_settings should be a JSON object and cannot be null                        |
+    | display_settings                 | []            | expected a map, got 'slice'                                                        |
+    | display_settings                 | "hello"       | expected a map, got 'string'                                                       |
+    | display_settings                 | 42            | expected a map, got 'float64'                                                      |
 
   Scenario: Invalid item_id
     And I am the user with id "11"

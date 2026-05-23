@@ -14,7 +14,15 @@ import (
 type JSON map[string]interface{}
 
 // Scan assigns a value from a database driver value (unmarshalls given bytes).
+// A NULL DB value (which the driver passes as `src == nil`) is decoded as a nil
+// map. Without this short-circuit the unconditional `src.([]byte)` assertion
+// would panic on NULL — defensive against e.g. a manual `UPDATE ... SET col = NULL`
+// on a column whose schema is non-NULL.
 func (j *JSON) Scan(src interface{}) (err error) {
+	if src == nil {
+		*j = nil
+		return nil
+	}
 	//nolint:forcetypeassert // panic if src is not []byte (this means that the database returned a value of unexpected type)
 	return json.Unmarshal(src.([]byte), j)
 }

@@ -12,20 +12,23 @@ import (
 func TestJSON_Scan(t *testing.T) {
 	tests := []struct {
 		name    string
-		bytes   []byte
+		src     interface{}
 		wantErr bool
 		wantMap map[string]interface{}
 	}{
 		{
-			name: "normal JSON", bytes: []byte(`{"key":"value","num":123}`),
+			name: "normal JSON", src: []byte(`{"key":"value","num":123}`),
 			wantMap: map[string]interface{}{"key": "value", "num": float64(123)},
 		},
-		{name: "empty object", bytes: []byte("{}"), wantMap: map[string]interface{}{}},
+		{name: "empty object", src: []byte("{}"), wantMap: map[string]interface{}{}},
+		// `src == nil` is the path the driver hits when the DB column holds NULL.
+		// It must decode to a nil map without touching the type assertion below.
+		{name: "nil src decodes to nil map", src: nil, wantMap: nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			j := &JSON{}
-			if err := j.Scan(tt.bytes); (err != nil) != tt.wantErr {
+			if err := j.Scan(tt.src); (err != nil) != tt.wantErr {
 				t.Errorf("Scan() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			assert.Equal(t, tt.wantMap, map[string]interface{}(*j))
