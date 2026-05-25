@@ -14,7 +14,7 @@ BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
 GOLANGCILINT_VERSION=2.5.0
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
-SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.0.0.jar
+SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.2.4.jar
 PWD=$(shell pwd)
 
 VERSION_FETCHING_CMD=git describe --always --dirty
@@ -119,7 +119,7 @@ dbdoc: $(MYSQL_CONNECTOR_JAVA) $(SCHEMASPY)
 	$(call check_defined, DBHOST)
 	$(call check_defined, DBUSER)
 	$(call check_defined, DBPASS)
-	java -jar $(SCHEMASPY) -t mysql -dp $(MYSQL_CONNECTOR_JAVA) -db $(DBNAME) -host $(DBHOST) -port 3306 -u $(DBUSER) -p $(DBPASS) -o db/doc -s $(DBNAME) -noimplied -nopages
+	java -jar $(SCHEMASPY) -t mysql -dp $(MYSQL_CONNECTOR_JAVA) -db $(DBNAME) -host $(DBHOST) -port 3306 -u $(DBUSER) -p $(DBPASS) -o db/doc -s $(DBNAME) -noimplied -nopages -vizjs
 clean:
 	$(GOCLEAN)
 	$(GOCLEAN) -testcache
@@ -143,7 +143,7 @@ $(MYSQL_CONNECTOR_JAVA):
 	mv mysql-connector-java-8.0.16/mysql-connector-java-8.0.16.jar $(MYSQL_CONNECTOR_JAVA)
 	rm -rf mysql-connector-java-8.0.16
 $(SCHEMASPY):
-	curl -sfL -o $(SCHEMASPY) https://github.com/schemaspy/schemaspy/releases/download/v6.0.0/schemaspy-6.0.0.jar
+	curl -sfL -o $(SCHEMASPY) https://github.com/schemaspy/schemaspy/releases/download/v6.2.4/schemaspy-6.2.4.jar
 
 .FORCE: # force the rule using it to always re-run
 .PHONY: all build gen-keys db-restore db-migrate db-migrate-undo db-recompute test test-unit test-bdd lint dbdoc clean linux-build version

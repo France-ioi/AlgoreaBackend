@@ -285,14 +285,9 @@ Feature: Create item
         "url": "http://myurl.com/",
         "options": "{\"opt1\":\"value\"}",
         "text_id": "Tasknumber1",
-        "title_bar_visible": true,
-        "display_details_in_parent": true,
         "uses_api": true,
         "read_only": true,
-        "full_screen": "forceYes",
-        "children_layout": "Grid",
         "hints_allowed": true,
-        "fixed_ranks": true,
         "validation_type": "AllButOne",
         "entry_min_admitted_members_ratio": "All",
         "entering_time_min": "2007-01-01T01:02:03Z",
@@ -303,9 +298,8 @@ Feature: Create item
         "entry_participant_type": "Team",
         "duration": "01:02:03",
         "requires_explicit_entry": true,
-        "show_user_infos": true,
         "no_score": true,
-        "prompt_to_join_group_by_code": true,
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "language_tag": "sl",
         "title": "my title",
         "image_url":"http://bit.ly/1234",
@@ -337,13 +331,9 @@ Feature: Create item
         "data": { "id": "5577006791947779410" }
       }
       """
-    # Phase 1 strategy A: the legacy display fields in the request body
-    # (title_bar_visible, display_details_in_parent, full_screen, children_layout,
-    # fixed_ranks, show_user_infos, prompt_to_join_group_by_code) are silently
-    # ignored on write — the resulting display_settings stays at the default `{}`.
     And the table "items" at id "5577006791947779410" should be:
-      | id                  | type    | url               | options          | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id     | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | requires_explicit_entry | no_score | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Chapter | http://myurl.com/ | {"opt1":"value"} | {}               | sl                   | 0                  | 1        | Tasknumber1 | 1        | 1         | 1             | AllButOne       | All                              | 2345                | 1                        | Team                   | 01:02:03 | 1                       | 1        | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 8674665223082153551   |
+      | id                  | type    | url               | options          | display_settings                                                  | default_language_tag | entry_frozen_teams | no_score | text_id     | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | requires_explicit_entry | no_score | entering_time_min   | entering_time_max   | participants_group_id |
+      | 5577006791947779410 | Chapter | http://myurl.com/ | {"opt1":"value"} | {"children_layout": "Grid", "prompt_to_join_group_by_code": true} | sl                   | 0                  | 1        | Tasknumber1 | 1        | 1         | 1             | AllButOne       | All                              | 2345                | 1                        | Team                   | 01:02:03 | 1                       | 1        | 2007-01-01 01:02:03 | 3007-01-01 01:02:03 | 8674665223082153551   |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -567,25 +557,6 @@ Feature: Create item
     And the column "items.display_settings" at id "5577006791947779410" should be, in JSON:
       """
       {"children_layout": "Hide"}
-      """
-
-  Scenario: Valid (legacy children_layout in POST body is silently ignored in phase 1)
-    Given I am the user with id "11"
-    When I send a POST request to "/items" with the following body:
-      """
-      {
-        "type": "Chapter",
-        "language_tag": "sl",
-        "title": "my chapter",
-        "children_layout": "Hide",
-        "prompt_to_join_group_by_code": true,
-        "parent": {"item_id": "21"}
-      }
-      """
-    Then the response code should be 201
-    And the column "items.display_settings" at id "5577006791947779410" should be, in JSON:
-      """
-      {}
       """
 
   Scenario: Valid (set display_settings to an arbitrary object, including unknown keys)

@@ -9,54 +9,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 )
 
-func TestStringFromDisplaySettings(t *testing.T) {
-	tests := []struct {
-		name string
-		ds   database.JSON
-		key  string
-		def  string
-		want string
-	}{
-		{name: "nil map returns default", ds: nil, key: "any", def: "fallback", want: "fallback"},
-		{name: "absent key returns default", ds: database.JSON{}, key: "missing", def: "fallback", want: "fallback"},
-		{name: "string value returned as-is", ds: database.JSON{"k": "value"}, key: "k", def: "fallback", want: "value"},
-		{name: "non-string value falls back", ds: database.JSON{"k": 42.0}, key: "k", def: "fallback", want: "fallback"},
-		{name: "nil JSON value falls back", ds: database.JSON{"k": nil}, key: "k", def: "fallback", want: "fallback"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, stringFromDisplaySettings(tt.ds, tt.key, tt.def))
-		})
-	}
-}
-
-func TestBoolFromDisplaySettings(t *testing.T) {
-	tests := []struct {
-		name string
-		ds   database.JSON
-		key  string
-		def  bool
-		want bool
-	}{
-		{name: "nil map returns default true", ds: nil, key: "any", def: true, want: true},
-		{name: "nil map returns default false", ds: nil, key: "any", def: false, want: false},
-		{name: "absent key returns default", ds: database.JSON{}, key: "missing", def: true, want: true},
-		{name: "bool true returned as-is", ds: database.JSON{"k": true}, key: "k", def: false, want: true},
-		{name: "bool false returned as-is", ds: database.JSON{"k": false}, key: "k", def: true, want: false},
-		// `encoding/json` decodes JSON numbers as float64; the helper has to treat
-		// non-zero numbers as `true` for legacy rows that store booleans numerically.
-		{name: "float64 non-zero treated as true", ds: database.JSON{"k": 1.0}, key: "k", def: false, want: true},
-		{name: "float64 zero treated as false", ds: database.JSON{"k": 0.0}, key: "k", def: true, want: false},
-		{name: "string value falls back", ds: database.JSON{"k": "true"}, key: "k", def: false, want: false},
-		{name: "nil JSON value falls back to default", ds: database.JSON{"k": nil}, key: "k", def: true, want: true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, boolFromDisplaySettings(tt.ds, tt.key, tt.def))
-		})
-	}
-}
-
 // displaySettingsTestForm is a minimal struct that mirrors the field type used
 // by the production Item struct so we can exercise the validator end-to-end
 // through the actual FormData parse path (the path that fires on every
