@@ -430,6 +430,50 @@ Feature: Create item - robustness
       | display_settings | "hello" | expected a map, got 'string'                                |
       | display_settings | 42      | expected a map, got 'float64'                               |
 
+  Scenario Outline: Legacy display fields are rejected as unexpected fields (phase 2 removed them from the input DTO)
+    # All seven fields used to be accepted-and-ignored in phase 1; phase 2 fully
+    # drops them from the request DTO so any client still sending them at top
+    # level now sees the standard "unexpected field" 400 error. Frontends must
+    # send these settings through `display_settings` instead.
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Task",
+        "language_tag": "sl",
+        "title": "my title",
+        "parent": {"item_id": "21"},
+        "<field>": <value>
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "<field>": ["unexpected field"]
+        }
+      }
+      """
+    And the table "items" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "permissions_generated" should remain unchanged
+    Examples:
+      | field                        | value      |
+      | title_bar_visible            | true       |
+      | display_details_in_parent    | true       |
+      | full_screen                  | "forceYes" |
+      | children_layout              | "Grid"     |
+      | fixed_ranks                  | true       |
+      | show_user_infos              | true       |
+      | prompt_to_join_group_by_code | true       |
+
   Scenario Outline: Wrong optional parent field value
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:

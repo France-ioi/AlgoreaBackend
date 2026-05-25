@@ -948,9 +948,7 @@ Currently known keys (this list is informational; the backend does not enforce i
 | `children_layout`              | `"List" \| "Grid" \| "Hide"`  | `"List"`| How a chapter/skill renders its children list                         |
 | `prompt_to_join_group_by_code` | boolean                       | `false` | Whether the UI should display a "join group by code" form on the item |
 
-**"Omit defaults" convention**: a key is omitted from `display_settings` when its value equals the default, so `{}` is equivalent to `{"children_layout":"List","prompt_to_join_group_by_code":false}`. Frontends should follow this convention to keep payloads minimal, but the backend will faithfully store whatever object is sent (including a key explicitly set to its default value); the GET fallback logic returns the same value either way.
-
-**Phase-1 wire-compat fields**: the GET endpoints still expose `children_layout`, `prompt_to_join_group_by_code`, `title_bar_visible`, `display_details_in_parent`, `full_screen`, `show_user_infos`, and `fixed_ranks` at the top level for old clients. The first two are derived from `display_settings`; the other five always return their previous DB defaults (`true`, `false`, `"default"`, `false`, `false`). On POST/PUT, those seven legacy keys are accepted in the request body but silently ignored — frontends must move to `display_settings` to change `children_layout` / `prompt_to_join_group_by_code` and accept the hardcoded defaults for the others. These deprecated fields will be removed in a future phase.
+**"Omit defaults" convention**: a key is omitted from `display_settings` when its value equals the default, so `{}` is equivalent to `{"children_layout":"List","prompt_to_join_group_by_code":false}`. Frontends should follow this convention to keep payloads minimal, but the backend will faithfully store whatever object is sent (including a key explicitly set to its default value); the response returns whatever the column stores either way.
 
 **Results & Attempts**:
 - `attempts`: User attempts on items

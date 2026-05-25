@@ -13,11 +13,10 @@ Feature: Get item view information
       | 14       | nosolution |                  |
       | 17       | fr         | fr               |
       | 22       | info       |                  |
-    # display_settings carries the legacy children_layout & prompt_to_join_group_by_code
-    # values (and may carry frontend-only keys). Per the "omit defaults" convention,
-    # children_layout=List would normally be omitted; we keep it here explicitly so
-    # the assertions below (which expect "List") exercise the JSON-extract path
-    # rather than the hardcoded default fallback.
+    # display_settings is opaque pass-through; the GET response returns it as-is.
+    # Per the "omit defaults" convention, `children_layout=List` would normally
+    # be omitted, but we keep it here explicitly so the response-body assertions
+    # below carry both keys and exercise the round-trip.
     And the database has the following table "items":
       | id  | type    | default_language_tag | no_score | text_id  | validation_type | requires_explicit_entry | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | entry_participant_type | duration | read_only | url            | options | uses_api | hints_allowed | display_settings                                                  |
       | 200 | Task    | en                   | true     | Task_30c | All             | true                    | All                              | false              | 10                  | true                     | Team                   | 10:20:30 | true      | http://someurl | {}      | true     | true          | {"children_layout":"List","prompt_to_join_group_by_code":true}    |
@@ -114,7 +113,6 @@ Feature: Get item view information
     {
       "id": "200",
       "type": "Task",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": true,
       "entry_min_admitted_members_ratio": "All",
@@ -129,14 +127,9 @@ Feature: Get item view information
       "text_id": "Task_30c",
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
       "url": "http://someurl",
       "options": "{}",
       "uses_api": true,
@@ -178,7 +171,6 @@ Feature: Get item view information
     {
       "id": "210",
       "type": "Chapter",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": false,
       "entry_min_admitted_members_ratio": "All",
@@ -193,14 +185,9 @@ Feature: Get item view information
       "text_id": null,
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
 
       "best_score": 10,
 
@@ -234,7 +221,6 @@ Feature: Get item view information
     {
       "id": "210",
       "type": "Chapter",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "entry_min_admitted_members_ratio": "All",
       "requires_explicit_entry": false,
@@ -249,14 +235,9 @@ Feature: Get item view information
       "text_id": null,
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
 
       "best_score": 0,
 
@@ -289,7 +270,6 @@ Feature: Get item view information
     {
       "id": "200",
       "type": "Task",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": true,
       "entry_min_admitted_members_ratio": "All",
@@ -304,14 +284,9 @@ Feature: Get item view information
       "text_id": "Task_30c",
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
       "url": "http://someurl",
       "options": "{}",
       "uses_api": true,
@@ -349,7 +324,6 @@ Feature: Get item view information
     {
       "id": "200",
       "type": "Task",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": true,
       "entry_min_admitted_members_ratio": "All",
@@ -364,14 +338,9 @@ Feature: Get item view information
       "text_id": "Task_30c",
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
       "url": "http://someurl",
       "options": "{}",
       "uses_api": true,
@@ -411,7 +380,6 @@ Feature: Get item view information
     {
       "id": "210",
       "type": "Chapter",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": false,
       "entry_min_admitted_members_ratio": "All",
@@ -426,14 +394,9 @@ Feature: Get item view information
       "text_id": null,
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
 
       "best_score": 0,
 
@@ -466,7 +429,6 @@ Feature: Get item view information
     {
       "id": "200",
       "type": "Task",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": true,
       "entry_min_admitted_members_ratio": "All",
@@ -481,14 +443,9 @@ Feature: Get item view information
       "text_id": "Task_30c",
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
       "url": "http://someurl",
       "options": "{}",
       "uses_api": true,
@@ -565,7 +522,6 @@ Feature: Get item view information
     {
       "id": "220",
       "type": "Chapter",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": false,
       "entry_min_admitted_members_ratio": "All",
@@ -580,14 +536,9 @@ Feature: Get item view information
       "text_id": "Task_30e",
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
 
       "best_score": 0,
 
@@ -671,7 +622,6 @@ Feature: Get item view information
     {
       "id": "220",
       "type": "Chapter",
-      "display_details_in_parent": false,
       "validation_type": "All",
       "requires_explicit_entry": false,
       "entry_min_admitted_members_ratio": "All",
@@ -686,14 +636,9 @@ Feature: Get item view information
       "text_id": "Task_30e",
       "default_language_tag": "en",
       "supported_language_tags": ["en", "fr"],
-      "prompt_to_join_group_by_code": true,
       "display_settings": {"children_layout": "List", "prompt_to_join_group_by_code": true},
 
-      "title_bar_visible": true,
       "read_only": true,
-      "full_screen": "default",
-      "children_layout": "List",
-      "show_user_infos": false,
 
       "best_score": 0,
 
@@ -727,7 +672,7 @@ Feature: Get item view information
     | none                | none                     | content                           | false                  | true                            | {{watched_group_permissions}}                   |
     | result              | none                     | none                              | false                  | false                           | {{watched_group_average_score_and_permissions}} |
 
-  Scenario: Chapter with display_settings.children_layout set to Hide (legacy children_layout field is derived from display_settings)
+  Scenario: Chapter with display_settings.children_layout set to Hide (display_settings is returned as-is)
     Given I am the user with id "11"
     And the database table "items" also has the following rows:
       | id  | type    | default_language_tag | display_settings              |
@@ -740,13 +685,12 @@ Feature: Get item view information
       | 11       | 230     | solution           | none                     | none               | none                | false              |
     When I send a GET request to "/items/230"
     Then the response code should be 200
-    And the response at $.children_layout should be "Hide"
     And the response at $.display_settings in JSON should be:
       """
       {"children_layout": "Hide"}
       """
 
-  Scenario: Empty display_settings returns default values for derived legacy fields
+  Scenario: Empty display_settings is returned as an empty JSON object
     Given I am the user with id "11"
     And the database table "items" also has the following rows:
       | id  | type    | default_language_tag | display_settings |
@@ -759,8 +703,6 @@ Feature: Get item view information
       | 11       | 231     | solution           | none                     | none               | none                | false              |
     When I send a GET request to "/items/231"
     Then the response code should be 200
-    And the response at $.children_layout should be "List"
-    And the response at $.prompt_to_join_group_by_code should be "false"
     And the response at $.display_settings in JSON should be:
       """
       {}
@@ -779,33 +721,7 @@ Feature: Get item view information
       | 11       | 232     | solution           | none                     | none               | none                | false              |
     When I send a GET request to "/items/232"
     Then the response code should be 200
-    And the response at $.children_layout should be "Grid"
     And the response at $.display_settings in JSON should be:
       """
       {"children_layout": "Grid", "frontend_only_key": 42, "flag": false}
       """
-
-  # Defense-in-depth: even if a row ends up with `prompt_to_join_group_by_code`
-  # stored as a JSON integer (e.g. produced by a buggy hand-written backfill or
-  # an off-spec frontend), the legacy `prompt_to_join_group_by_code` GET field
-  # must still resolve to the right boolean.
-  Scenario Outline: Legacy prompt_to_join_group_by_code is derived correctly even when stored as a JSON integer
-    Given I am the user with id "11"
-    And the database table "items" also has the following rows:
-      | id  | type    | default_language_tag | display_settings                              |
-      | 233 | Chapter | en                   | <display_settings>                            |
-    And the database table "items_strings" also has the following rows:
-      | item_id | language_tag | title      |
-      | 233     | en           | Chapter F  |
-    And the database table "permissions_generated" also has the following rows:
-      | group_id | item_id | can_view_generated | can_grant_view_generated | can_edit_generated | can_watch_generated | is_owner_generated |
-      | 11       | 233     | solution           | none                     | none               | none                | false              |
-    When I send a GET request to "/items/233"
-    Then the response code should be 200
-    And the response at $.prompt_to_join_group_by_code should be "<expected>"
-    Examples:
-      | display_settings                          | expected |
-      | {"prompt_to_join_group_by_code": 1}       | true     |
-      | {"prompt_to_join_group_by_code": 0}       | false    |
-      | {"prompt_to_join_group_by_code": true}    | true     |
-      | {"prompt_to_join_group_by_code": false}   | false    |

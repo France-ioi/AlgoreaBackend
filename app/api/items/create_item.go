@@ -17,14 +17,6 @@ import (
 )
 
 // Item represents input fields that are common to itemCreate & itemUpdate.
-//
-// The fields tagged `sql:"-"` (DisplayDetailsInParent, ChildrenLayout, FullScreen,
-// FixedRanks, TitleBarVisible, ShowUserInfos, PromptToJoinGroupByCode) are kept on
-// the struct only to remain accept-and-ignore-compatible with old frontends during
-// phase 1: their backing DB columns were dropped, so `sql:"-"` makes the form-data
-// builder skip them when constructing the UPDATE/INSERT map. The values that the
-// frontend cares about (children_layout, prompt_to_join_group_by_code) must now be
-// sent through the `display_settings` JSON field instead.
 type Item struct {
 	URL     *string `json:"url"`
 	Options *string `json:"options" validate:"null|options"`
@@ -35,22 +27,9 @@ type Item struct {
 	// Identifier to reference the task.
 	// Unique
 	TextID *string `json:"text_id"`
-	// Deprecated: silently ignored. Will be removed in phase 2.
-	DisplayDetailsInParent bool `json:"display_details_in_parent" sql:"-"`
-	ReadOnly               bool `json:"read_only"`
-	// Deprecated: send through `display_settings.children_layout` instead.
-	// Silently ignored on write in phase 1. Will be removed in phase 2.
-	// enum: List,Grid,Hide
-	ChildrenLayout string `json:"children_layout" sql:"-"`
-	// Deprecated: silently ignored on write. Will be removed in phase 2.
-	// No `oneof=` validator: like the other six legacy fields, garbage values are
-	// accepted-and-dropped (never written), keeping the deprecation behavior
-	// uniform across all of them.
-	// enum: forceYes,forceNo,default
-	FullScreen   string `json:"full_screen"   sql:"-"`
-	HintsAllowed bool   `json:"hints_allowed"`
-	// Deprecated: silently ignored. Will be removed in phase 2.
-	FixedRanks bool `json:"fixed_ranks" sql:"-"`
+
+	ReadOnly     bool `json:"read_only"`
+	HintsAllowed bool `json:"hints_allowed"`
 
 	// enum: None,All,AllButOne,Categories,One,Manual
 	// default: All
@@ -62,9 +41,7 @@ type Item struct {
 	EnteringTimeMin              time.Time `json:"entering_time_min"`
 	EnteringTimeMax              time.Time `json:"entering_time_max"`
 	EntryMaxTeamSize             int32     `json:"entry_max_team_size"`
-	// Deprecated: silently ignored. Will be removed in phase 2.
-	TitleBarVisible        bool `json:"title_bar_visible"        sql:"-"`
-	AllowsMultipleAttempts bool `json:"allows_multiple_attempts"`
+	AllowsMultipleAttempts       bool      `json:"allows_multiple_attempts"`
 	// enum: User,Team
 	EntryParticipantType string `json:"entry_participant_type" validate:"oneof=User Team"`
 	// MySQL time (max value is 838:59:59), cannot be set for skills
@@ -73,12 +50,7 @@ type Item struct {
 	Duration *string `json:"duration" validate:"omitempty,duration,cannot_be_set_for_skills,duration_requires_explicit_entry"`
 	// should be true when the duration is not null, cannot be set for skill items
 	RequiresExplicitEntry bool `json:"requires_explicit_entry" validate:"cannot_be_set_for_skills,duration_requires_explicit_entry"`
-	// Deprecated: silently ignored. Will be removed in phase 2.
-	ShowUserInfos bool `json:"show_user_infos" sql:"-"`
-	UsesAPI       bool `json:"uses_api"`
-	// Deprecated: send through `display_settings.prompt_to_join_group_by_code`.
-	// Silently ignored on write in phase 1. Will be removed in phase 2.
-	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code" sql:"-"`
+	UsesAPI               bool `json:"uses_api"`
 
 	// JSON object with display/UI settings interpreted by the frontend.
 	// See `ARCHITECTURE.md` §"Display settings (frontend pass-through)" for the

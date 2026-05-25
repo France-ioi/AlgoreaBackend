@@ -120,14 +120,9 @@ Background:
         "url": "http://myurl.com/",
         "options": "{\"opt\":true}",
         "text_id": "Tasknumber1",
-        "title_bar_visible": true,
-        "display_details_in_parent": false,
         "uses_api": true,
         "read_only": false,
-        "full_screen": "forceYes",
-        "children_layout": "Grid",
         "hints_allowed": false,
-        "fixed_ranks": false,
         "validation_type": "AllButOne",
         "entry_min_admitted_members_ratio": "All",
         "entry_frozen_teams": true,
@@ -135,9 +130,8 @@ Background:
         "allows_multiple_attempts": false,
         "duration": "01:02:03",
         "requires_explicit_entry": true,
-        "show_user_infos": false,
         "no_score": false,
-        "prompt_to_join_group_by_code": false,
+        "display_settings": {"children_layout": "Grid"},
         "default_language_tag": "sl",
         "children": [
           {"item_id": "112", "order": 0, "category": "Discovery", "score_weight": 1},
@@ -147,12 +141,9 @@ Background:
       """
     Then the response should be "updated"
     And the table "items" should remain unchanged, regardless of the row with id "50"
-    # Phase 1 strategy A: the legacy display fields in the request body are
-    # silently ignored on write — the display_settings column keeps its previous
-    # value ({} for this row in the Background fixture).
     And the table "items" at id "50" should be:
-      | id | type    | url               | options      | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id     | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | participants_group_id |
-      | 50 | Chapter | http://myurl.com/ | {"opt":true} | {}               | sl                   | 1                  | 0        | Tasknumber1 | 1        | 0         | 0             | AllButOne       | All                              | 1                  | 2345                | 0                        | 01:02:03 | 1                       | 5577006791947779410   |
+      | id | type    | url               | options      | display_settings            | default_language_tag | entry_frozen_teams | no_score | text_id     | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_frozen_teams | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | participants_group_id |
+      | 50 | Chapter | http://myurl.com/ | {"opt":true} | {"children_layout": "Grid"} | sl                   | 1                  | 0        | Tasknumber1 | 1        | 0         | 0             | AllButOne       | All                              | 1                  | 2345                | 0                        | 01:02:03 | 1                       | 5577006791947779410   |
     And the table "items_strings" should remain unchanged
     And the table "items_items" should be:
       | parent_item_id | child_item_id | category    | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation |
@@ -801,18 +792,6 @@ Background:
       """
       {"children_layout": "Hide"}
       """
-
-  Scenario: Valid (legacy children_layout in PUT body is silently ignored in phase 1; display_settings unchanged)
-    Given I am the user with id "11"
-    When I send a PUT request to "/items/60" with the following body:
-      """
-      {
-        "children_layout": "Hide",
-        "prompt_to_join_group_by_code": true
-      }
-      """
-    Then the response should be "updated"
-    And the table "items" should remain unchanged
 
   Scenario: Valid (set display_settings to a richer object; full replacement, no merge)
     Given I am the user with id "11"

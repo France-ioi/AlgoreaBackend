@@ -100,6 +100,13 @@ Feature: Update item - robustness
     | display_settings                 | []            | expected a map, got 'slice'                                                        |
     | display_settings                 | "hello"       | expected a map, got 'string'                                                       |
     | display_settings                 | 42            | expected a map, got 'float64'                                                      |
+    | title_bar_visible                | true          | unexpected field                                                                   |
+    | display_details_in_parent        | true          | unexpected field                                                                   |
+    | full_screen                      | "forceYes"    | unexpected field                                                                   |
+    | children_layout                  | "Grid"        | unexpected field                                                                   |
+    | fixed_ranks                      | true          | unexpected field                                                                   |
+    | show_user_infos                  | true          | unexpected field                                                                   |
+    | prompt_to_join_group_by_code     | true          | unexpected field                                                                   |
 
   Scenario: Invalid item_id
     And I am the user with id "11"

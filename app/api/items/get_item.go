@@ -46,8 +46,6 @@ type commonItemFields struct {
 	// enum: Chapter,Task,Skill
 	Type string `json:"type"`
 	// required: true
-	DisplayDetailsInParent bool `json:"display_details_in_parent"`
-	// required: true
 	// enum: None,All,AllButOne,Categories,One,Manual
 	ValidationType string `json:"validation_type"`
 	// required: true
@@ -123,29 +121,10 @@ type itemResponse struct {
 	EntryFrozenTeams bool `json:"entry_frozen_teams"`
 	// required: true
 	EntryMaxTeamSize int32 `json:"entry_max_team_size"`
-	// Deprecated: use `display_settings.prompt_to_join_group_by_code` instead.
-	// Resolved from `display_settings` with default `false`. Will be removed in phase 2.
-	// required: true
-	PromptToJoinGroupByCode bool `json:"prompt_to_join_group_by_code"`
-	// Deprecated: not stored anymore; always `true`. Will be removed in phase 2.
-	// required: true
-	TitleBarVisible bool `json:"title_bar_visible"`
 	// required: true
 	TextID *string `json:"text_id"`
 	// required: true
 	ReadOnly bool `json:"read_only"`
-	// Deprecated: not stored anymore; always `"default"`. Will be removed in phase 2.
-	// required: true
-	// enum: forceYes,forceNo,default
-	FullScreen string `json:"full_screen"`
-	// Deprecated: use `display_settings.children_layout` instead.
-	// Resolved from `display_settings` with default `"List"`. Will be removed in phase 2.
-	// required: true
-	// enum: List,Grid,Hide
-	ChildrenLayout string `json:"children_layout"`
-	// Deprecated: not stored anymore; always `false`. Will be removed in phase 2.
-	// required: true
-	ShowUserInfos bool `json:"show_user_infos"`
 	// required: true
 	EnteringTimeMin time.Time `json:"entering_time_min"`
 	// required: true
@@ -499,23 +478,13 @@ func constructItemResponseFromDBData(
 		EntryMinAdmittedMembersRatio: rawData.EntryMinAdmittedMembersRatio,
 		EntryFrozenTeams:             rawData.EntryFrozenTeams,
 		EntryMaxTeamSize:             rawData.EntryMaxTeamSize,
-		// The five hardcoded constants below are wire-compat defaults for clients
-		// that still expect the legacy fields; their backing columns were dropped
-		// in phase 1. The two display_settings-backed fields (children_layout,
-		// prompt_to_join_group_by_code) keep returning the real value so existing
-		// frontends keep working until phase 2.
-		PromptToJoinGroupByCode: boolFromDisplaySettings(rawData.DisplaySettings, "prompt_to_join_group_by_code", false),
-		TitleBarVisible:         true,
-		TextID:                  rawData.TextID,
-		ReadOnly:                rawData.ReadOnly,
-		FullScreen:              "default",
-		ChildrenLayout:          stringFromDisplaySettings(rawData.DisplaySettings, "children_layout", "List"),
-		ShowUserInfos:           false,
-		EnteringTimeMin:         time.Time(rawData.EnteringTimeMin),
-		EnteringTimeMax:         time.Time(rawData.EnteringTimeMax),
-		DisplaySettings:         rawData.DisplaySettings,
-		BestScore:               rawData.BestScore,
-		SupportedLanguageTags:   strings.Split(rawData.SupportedLanguageTags, ","),
+		TextID:                       rawData.TextID,
+		ReadOnly:                     rawData.ReadOnly,
+		EnteringTimeMin:              time.Time(rawData.EnteringTimeMin),
+		EnteringTimeMax:              time.Time(rawData.EnteringTimeMax),
+		DisplaySettings:              rawData.DisplaySettings,
+		BestScore:                    rawData.BestScore,
+		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
 	}
 
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {

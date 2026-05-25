@@ -45,8 +45,6 @@ type visibleChildItemFields struct {
 	// items
 
 	// only for visible items
-	DisplayDetailsInParent bool `json:"display_details_in_parent"`
-	// only for visible items
 	// enum: None,All,AllButOne,Categories,One,Manual
 	ValidationType string `json:"validation_type"`
 	// only for visible items
@@ -349,13 +347,9 @@ func childItemsFromRawData(
 						Title:       rawData[index].StringTitle,
 						ImageURL:    rawData[index].StringImageURL,
 					}},
-					DefaultLanguageTag: rawData[index].DefaultLanguageTag,
-					BestScore:          rawData[index].BestScore,
-					Results:            make([]structures.ItemResult, 0, 1),
-					// Hardcoded default during phase 1: the legacy `display_details_in_parent`
-					// column was dropped; the value is opaquely stored in `items.display_settings`
-					// (read by the frontend) but the backend keeps emitting `false` for wire compat.
-					DisplayDetailsInParent: false,
+					DefaultLanguageTag:     rawData[index].DefaultLanguageTag,
+					BestScore:              rawData[index].BestScore,
+					Results:                make([]structures.ItemResult, 0, 1),
 					ValidationType:         rawData[index].ValidationType,
 					RequiresExplicitEntry:  rawData[index].RequiresExplicitEntry,
 					AllowsMultipleAttempts: rawData[index].AllowsMultipleAttempts,
