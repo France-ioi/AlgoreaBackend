@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.45.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.44.0...v2.45.0) - 2026-05-25
+
+- **breaking**: drop the seven legacy frontend-only fields from the items REST API. The fields `title_bar_visible`, `display_details_in_parent`, `full_screen`, `fixed_ranks`, `show_user_infos`, `children_layout`, and `prompt_to_join_group_by_code` are no longer returned by GET endpoints (`itemView`, `itemChildrenView`, `itemParentsView`, `itemPrerequisitesView`, `itemDependenciesView`) and no longer accepted on POST `/items` / PUT `/items/{item_id}`. Clients still sending them at top level now receive an HTTP 400 "unexpected field" error — frontends must use `display_settings` for `children_layout` and `prompt_to_join_group_by_code` and drop the others entirely. No DB migration; this completes phase 2 of the `display_settings` rollout (phase 1 was v2.44.0)
+
 ## [v2.44.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.43.0...v2.44.0) - 2026-05-23
 
 - new `display_settings` JSON field on items GET/POST/PUT (`itemView`, `itemChildrenView`, `itemParentsView`, `itemPrerequisitesView`, `itemDependenciesView`, `itemCreate`, `itemUpdate`): opaque object for frontend UI settings (e.g. `children_layout`, `prompt_to_join_group_by_code`); always an object in responses, never `null`, defaults to `{}`
