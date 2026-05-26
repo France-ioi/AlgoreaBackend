@@ -61,3 +61,32 @@ func TestJSON_Value_Nil(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, value)
 }
+
+func TestJSON_OrEmpty(t *testing.T) {
+	populated := JSON{"children_layout": "Grid", "foo": "bar"}
+	nilMap := JSON(nil)
+	emptyMap := JSON{}
+	tests := []struct {
+		name string
+		in   *JSON
+		want JSON
+	}{
+		{name: "nil pointer receiver returns empty allocated map", in: nil, want: JSON{}},
+		{name: "non-nil pointer to nil map returns empty allocated map", in: &nilMap, want: JSON{}},
+		{name: "already-empty map is preserved", in: &emptyMap, want: JSON{}},
+		{
+			name: "populated map is preserved (same keys, same values)",
+			in:   &populated,
+			want: JSON{"children_layout": "Grid", "foo": "bar"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.in.OrEmpty()
+			assert.Equal(t, tt.want, got)
+			// Result must always be a non-nil map so encoding/json emits `{}`
+			// rather than `null` for the "never null" response contract.
+			assert.NotNil(t, got)
+		})
+	}
+}

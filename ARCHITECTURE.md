@@ -939,7 +939,16 @@ Each command is defined in `cmd/<command>.go`:
 
 #### Display settings (frontend pass-through)
 
-The `items.display_settings` column stores a JSON object that the backend treats as an opaque blob: it is stored verbatim and returned as-is on every `items` GET endpoint, and never inspected by backend business logic. Its purpose is to let frontends store UI-only settings against an item without requiring a backend schema change for every new setting.
+The `items.display_settings` column stores a JSON object that the backend treats as an opaque blob: it is stored verbatim and returned as-is on the GET endpoints listed below, and never inspected by backend business logic. Its purpose is to let frontends store UI-only settings against an item without requiring a backend schema change for every new setting.
+
+Endpoints that currently expose `display_settings`:
+
+| Endpoint                                    | Where the field appears               |
+| ------------------------------------------- | ------------------------------------- |
+| `GET /items/{item_id}` (`itemView`)         | top-level field on the item           |
+| `GET /items/{item_id}/children` (`itemChildrenView`) | per visible child            |
+
+Endpoints that **do not** expose `display_settings` (yet): `itemParentsView`, `itemPrerequisitesView`, `itemDependenciesView`, and `itemNavigationView`. They return items but omit this field; frontends that need display settings for the items returned by these endpoints must re-fetch via `itemView`. Rolling the field out to those endpoints would only require adding it to the shared `RawCommonItemFields` plumbing, but has been deliberately deferred until there is a concrete frontend need (the contract on the existing endpoints is unaffected).
 
 Currently known keys (this list is informational; the backend does not enforce it):
 

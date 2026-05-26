@@ -12,14 +12,14 @@ Feature: Get item children
       | 17       | fr         | fr               |
       | 22       | info       |                  |
     And the database has the following table "items":
-      | id  | type    | default_language_tag | no_score | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | read_only | url                    | uses_api | hints_allowed |
-      | 200 | Task    | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://someurl         | true     | true          |
-      | 210 | Chapter | en                   | true     | All             | false                   | true                     | User                   | 10:20:31 | true      | null                   | true     | true          |
-      | 220 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          |
-      | 230 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          |
-      | 300 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/300 | true     | true          |
-      | 301 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/301 | true     | true          |
-      | 302 | Task    | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/302 | true     | true          |
+      | id  | type    | default_language_tag | no_score | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | read_only | url                    | uses_api | hints_allowed | display_settings                                               |
+      | 200 | Task    | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://someurl         | true     | true          | {}                                                             |
+      | 210 | Chapter | en                   | true     | All             | false                   | true                     | User                   | 10:20:31 | true      | null                   | true     | true          | {"children_layout":"Grid"}                                     |
+      | 220 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          | {"prompt_to_join_group_by_code":true}                          |
+      | 230 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          | {"children_layout":"Hide","prompt_to_join_group_by_code":true} |
+      | 300 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/300 | true     | true          | {}                                                             |
+      | 301 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/301 | true     | true          | {}                                                             |
+      | 302 | Task    | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/302 | true     | true          | {}                                                             |
     And the database has the following table "items_strings":
       | item_id | language_tag | title        | image_url                  | subtitle     | description     | edu_comment    |
       | 200     | en           | Category 1   | http://example.com/my0.jpg | Subtitle 0   | Description 0   | Some comment   |
@@ -140,6 +140,7 @@ Feature: Get item children
         "requires_explicit_entry": false,
         "best_score": 13.3,
         "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
         "string": {
           "language_tag": "en",
           "title": "Chapter B",
@@ -186,6 +187,7 @@ Feature: Get item children
         "requires_explicit_entry": false,
         "best_score": 22.2,
         "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
         "string": {
           "language_tag": "en",
           "title": "Chapter A",
@@ -242,6 +244,7 @@ Feature: Get item children
         "requires_explicit_entry": false,
         "best_score": 0,
         "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
         "permissions": {
           "can_edit": "none",
           "can_grant_view": "none",
@@ -278,6 +281,7 @@ Feature: Get item children
         "requires_explicit_entry": false,
         "best_score": 20,
         "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
         "permissions": {
           "can_edit": "none",
           "can_grant_view": "none",
@@ -333,6 +337,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -368,6 +373,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -414,6 +420,7 @@ Feature: Get item children
         "requires_explicit_entry": false,
         "best_score": 15.5,
         "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
         "string": {
           "language_tag": "en",
           "title": "Chapter B",
@@ -460,6 +467,7 @@ Feature: Get item children
         "requires_explicit_entry": false,
         "best_score": 24.4,
         "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
         "string": {
           "language_tag": "en",
           "title": "Chapter A",
@@ -516,6 +524,7 @@ Feature: Get item children
         "requires_explicit_entry": false,
         "best_score": 0,
         "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
         "string": {
           "language_tag": "en",
           "title": "Chapter B",
@@ -550,6 +559,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
         "string": {
           "language_tag": "en",
           "title": "Chapter A",
@@ -595,6 +605,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -633,6 +644,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -683,6 +695,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -721,6 +734,7 @@ Feature: Get item children
         "default_language_tag": "en",
         "best_score": 0,
         "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
         "requires_explicit_entry": false,
         "results": [],
         "string": {
@@ -815,4 +829,61 @@ Feature: Get item children
     And the response at $[*].results in JSON should be:
     """
     [[]]
+    """
+
+  Scenario: display_settings is returned verbatim as a pass-through (including unknown keys)
+    Given I am the user with id "11"
+    # 400 has an empty object, 401 carries an unknown key alongside a known one
+    # (to prove the backend never whitelists or rewrites the payload), and 402
+    # exercises the multi-key shape with BOTH known keys set — the exact shape
+    # the phase-1 migration produces from rows that previously had
+    # `children_layout = 'Hide'` and `prompt_to_join_group_by_code = true`.
+    And the database table "items" also has the following rows:
+      | id  | type    | default_language_tag | display_settings                                               |
+      | 400 | Chapter | en                   | {}                                                             |
+      | 401 | Chapter | en                   | {"children_layout":"Grid","foo":"bar"}                         |
+      | 402 | Chapter | en                   | {"children_layout":"Hide","prompt_to_join_group_by_code":true} |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title        |
+      | 400     | en           | Empty        |
+      | 401     | en           | Pass-through |
+      | 402     | en           | Multi-key    |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order |
+      | 200            | 400           | 4           |
+      | 200            | 401           | 5           |
+      | 200            | 402           | 6           |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 400     | solution           |
+      | 11       | 401     | solution           |
+      | 11       | 402     | solution           |
+    When I send a GET request to "/items/200/children?attempt_id=1"
+    Then the response code should be 200
+    # Response is ordered by items_items.child_order: 220 (1), 210 (2), 400 (4),
+    # 401 (5), 402 (6); item 230 (3) is filtered out because user 11 has no
+    # permission on it.
+    And the response at $[2].id in JSON should be:
+    """
+    "400"
+    """
+    And the response at $[2].display_settings in JSON should be:
+    """
+    {}
+    """
+    And the response at $[3].id in JSON should be:
+    """
+    "401"
+    """
+    And the response at $[3].display_settings in JSON should be:
+    """
+    {"children_layout": "Grid", "foo": "bar"}
+    """
+    And the response at $[4].id in JSON should be:
+    """
+    "402"
+    """
+    And the response at $[4].display_settings in JSON should be:
+    """
+    {"children_layout": "Hide", "prompt_to_join_group_by_code": true}
     """

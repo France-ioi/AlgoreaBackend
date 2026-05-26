@@ -35,6 +35,26 @@ func (j *JSON) Value() (driver.Value, error) {
 	return json.Marshal(*j)
 }
 
+// OrEmpty returns a non-nil JSON map: the underlying map when the receiver
+// holds one, and an empty (allocated) JSON map otherwise (including when the
+// receiver pointer itself is nil). Use it on the response-construction path
+// for columns documented as "always a JSON object, never NULL" (e.g.
+// `items.display_settings`): the DB schema enforces NOT NULL, but `Scan`
+// defensively decodes a stray NULL into a nil map, which `encoding/json`
+// would then emit as `null` — silently violating the documented contract.
+// OrEmpty closes that gap at the call site without changing `Scan`'s
+// semantics (which other, legitimately nullable JSON columns like
+// `users.profile` rely on for `null` round-tripping).
+//
+// Pointer receiver keeps method-set parity with `Scan`/`Value` (the
+// `recvcheck` linter rejects a mixed receiver style on the same type).
+func (j *JSON) OrEmpty() JSON {
+	if j == nil || *j == nil {
+		return JSON{}
+	}
+	return *j
+}
+
 var (
 	_ = sql.Scanner(&JSON{})
 	_ = driver.Valuer(&JSON{})
