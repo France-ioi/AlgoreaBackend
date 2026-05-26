@@ -64,6 +64,12 @@ type visibleChildItemFields struct {
 	// whether solving this item grants access to some items (visible or not)
 	// (only for visible items)
 	GrantsAccessToItems bool `json:"grants_access_to_items"`
+
+	// JSON object with display/UI settings interpreted by the frontend.
+	// Absent for invisible children (like every other field on this struct);
+	// when present, it is always an object (possibly `{}`), never `null`.
+	// only for visible items
+	DisplaySettings database.JSON `json:"display_settings"`
 }
 
 // swagger:model childItem
@@ -144,6 +150,11 @@ type rawListChildItem struct {
 	WatchPropagation           bool
 	EditPropagation            bool
 	RequestHelpPropagation     bool
+
+	// items
+	// `items.display_settings` is `NOT NULL` (defaults to `{}`), so we can read it
+	// into a non-pointer `database.JSON`; downstream code never needs a nil check.
+	DisplaySettings database.JSON
 
 	// item_dependencies
 	GrantsAccessToItems bool
@@ -258,6 +269,7 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
 				items.validation_type, items.duration, items.entry_participant_type, items.no_score,
+				items.display_settings,
 				IFNULL(can_view_generated_value, 1) AS can_view_generated_value,
 				IFNULL(can_grant_view_generated_value, 1) AS can_grant_view_generated_value,
 				IFNULL(can_watch_generated_value, 1) AS can_watch_generated_value,
@@ -357,6 +369,10 @@ func childItemsFromRawData(
 					Duration:               rawData[index].Duration,
 					NoScore:                rawData[index].NoScore,
 					GrantsAccessToItems:    rawData[index].GrantsAccessToItems,
+					// OrEmpty() defends the documented "never null" contract against a
+					// stray DB NULL (the column is NOT NULL, but `JSON.Scan` decodes
+					// any NULL it sees into a nil map, which would marshal to `null`).
+					DisplaySettings: rawData[index].DisplaySettings.OrEmpty(),
 				}
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {

@@ -482,9 +482,12 @@ func constructItemResponseFromDBData(
 		ReadOnly:                     rawData.ReadOnly,
 		EnteringTimeMin:              time.Time(rawData.EnteringTimeMin),
 		EnteringTimeMax:              time.Time(rawData.EnteringTimeMax),
-		DisplaySettings:              rawData.DisplaySettings,
-		BestScore:                    rawData.BestScore,
-		SupportedLanguageTags:        strings.Split(rawData.SupportedLanguageTags, ","),
+		// OrEmpty() defends the documented "never null" contract against a stray
+		// DB NULL (the column is NOT NULL, but `JSON.Scan` decodes any NULL it
+		// sees into a nil map, which would marshal to `null`).
+		DisplaySettings:       rawData.DisplaySettings.OrEmpty(),
+		BestScore:             rawData.BestScore,
+		SupportedLanguageTags: strings.Split(rawData.SupportedLanguageTags, ","),
 	}
 
 	if rawData.CanViewGeneratedValue == permissionGrantedStore.ViewIndexByName("solution") {
