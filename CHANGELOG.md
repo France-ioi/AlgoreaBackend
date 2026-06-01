@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.47.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.46.0...v2.47.0) - 2026-06-01
+
+- add `display_settings` to `itemNavigationView` (`GET /items/{item_id}/navigation`): the root item and each visible child now include the same opaque JSON object as `itemView`
+- add `display_settings` to `activitiesView` and `skillsView` (`GET /current-user/group-memberships/activities` and `/skills`): each root activity or skill now includes the same opaque JSON object as `itemView`
+
 ## [v2.46.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.45.0...v2.46.0) - 2026-05-27
 
 - add `display_settings` to `itemChildrenView` (`GET /items/{item_id}/children`): each visible child now includes the same opaque JSON object as `itemView`; `itemParentsView`, `itemPrerequisitesView`, and `itemDependenciesView` still omit the field — re-fetch via `itemView` when needed
