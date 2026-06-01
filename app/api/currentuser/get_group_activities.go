@@ -28,6 +28,10 @@ type rawRootItem struct {
 	EntryParticipantType  string
 	NoScore               bool
 
+	// `items.display_settings` is `NOT NULL` (defaults to `{}`), so we can read it
+	// into a non-pointer `database.JSON`; downstream code never needs a nil check.
+	DisplaySettings database.JSON
+
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item
 	Title       *string
 	LanguageTag string
@@ -84,6 +88,12 @@ type rootItem struct {
 	BestScore float32 `json:"best_score"`
 	// required:true
 	Results []structures.ItemResult `json:"results"`
+
+	// JSON object with display/UI settings interpreted by the frontend. Always
+	// present, never `null`; an item with no non-default settings has the value
+	// `{}`.
+	// required: true
+	DisplaySettings database.JSON `json:"display_settings"`
 }
 
 // swagger:operation GET /current-user/group-memberships/activities group-memberships activitiesView
@@ -228,6 +238,10 @@ func generateRootItemInfoFromRawData(store *database.DataStore, rawData *rawRoot
 		HasVisibleChildren:    rawData.HasVisibleChildren,
 		BestScore:             rawData.BestScore,
 		Results:               make([]structures.ItemResult, 0, 1),
+		// OrEmpty() defends the documented "never null" contract against a stray
+		// DB NULL (the column is NOT NULL, but `JSON.Scan` decodes any NULL it
+		// sees into a nil map, which would marshal to `null`).
+		DisplaySettings: rawData.DisplaySettings.OrEmpty(),
 	}
 }
 
@@ -291,6 +305,7 @@ func getRootItemsFromDB(
 			groups.id AS group_id, groups.name AS group_name, groups.type AS group_type, groups.created_at,
 			items.id, items.type AS item_type,
 			items.requires_explicit_entry, items.entry_participant_type, items.no_score, items.default_language_tag,
+			items.display_settings,
 			IFNULL(
 				(SELECT MAX(results.score_computed) AS best_score
 				 FROM results

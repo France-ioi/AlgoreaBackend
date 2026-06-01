@@ -52,21 +52,21 @@ Feature: Get root activities for a participant group
       | 29         | 22       | true              |
       | 30         | 24       | true              |
     And the database has the following table "items":
-      | id  | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
-      | 200 | Task    | en                   | false    | false                   | User                   |
-      | 210 | Chapter | en                   | false    | false                   | User                   |
-      | 220 | Chapter | en                   | false    | false                   | User                   |
-      | 230 | Chapter | en                   | true     | true                    | Team                   |
-      | 211 | Task    | en                   | false    | false                   | User                   |
-      | 231 | Task    | en                   | false    | false                   | User                   |
-      | 232 | Task    | en                   | false    | false                   | User                   |
-      | 240 | Task    | en                   | false    | false                   | User                   |
-      | 250 | Task    | en                   | false    | false                   | User                   |
-      | 260 | Task    | en                   | false    | false                   | User                   |
-      | 270 | Task    | en                   | false    | false                   | User                   |
-      | 280 | Task    | en                   | false    | false                   | User                   |
-      | 290 | Task    | en                   | false    | false                   | User                   |
-      | 300 | Task    | en                   | false    | false                   | User                   |
+      | id  | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type | display_settings           |
+      | 200 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 210 | Chapter | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 220 | Chapter | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 230 | Chapter | en                   | true     | true                    | Team                   | {"children_layout":"Grid"} |
+      | 211 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 231 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 232 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 240 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 250 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 260 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 270 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 280 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 290 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 300 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 1        | 230     | none                     | none                     | result              | none               | false              |
@@ -196,6 +196,7 @@ Feature: Get root activities for a participant group
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
             "can_watch": "answer_with_grant", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -225,6 +226,7 @@ Feature: Get root activities for a participant group
           "permissions": {
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -248,6 +250,7 @@ Feature: Get root activities for a participant group
           "permissions": {
             "can_view": "solution", "can_grant_view": "solution_with_grant", "can_watch": "none", "can_edit": "none", "is_owner": true
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "entry_participant_type": "User",
           "no_score": false,
@@ -291,6 +294,7 @@ Feature: Get root activities for a participant group
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
             "can_watch": "answer_with_grant", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {"language_tag": "fr", "title": "Chapitre A"},
@@ -310,6 +314,7 @@ Feature: Get root activities for a participant group
           "permissions": {
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {"language_tag": "en", "title": "Chapter B"},
@@ -331,6 +336,7 @@ Feature: Get root activities for a participant group
           "entry_participant_type": "User",
           "has_visible_children": true,
           "no_score": false,
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -365,6 +371,7 @@ Feature: Get root activities for a participant group
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
             "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -394,6 +401,7 @@ Feature: Get root activities for a participant group
           "permissions": {
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {"language_tag": "en", "title": "Chapter B"},
@@ -413,6 +421,7 @@ Feature: Get root activities for a participant group
           "permissions": {
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {"language_tag": "en", "title": "Chapter B"},
@@ -442,6 +451,7 @@ Feature: Get root activities for a participant group
           },
           "best_score": 10,
           "entry_participant_type": "User",
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "has_visible_children": true,
           "no_score": false,
@@ -478,6 +488,7 @@ Feature: Get root activities for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {
@@ -504,6 +515,7 @@ Feature: Get root activities for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {
@@ -530,6 +542,7 @@ Feature: Get root activities for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {
@@ -556,6 +569,7 @@ Feature: Get root activities for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {

@@ -53,21 +53,21 @@ Feature: Get root skills for a participant group
       | 29         | 22       | true              |
       | 30         | 24       | true              |
     And the database has the following table "items":
-      | id  | type  | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
-      | 200 | Skill | en                   | false    | false                   | User                   |
-      | 210 | Skill | en                   | false    | false                   | User                   |
-      | 211 | Task  | en                   | false    | false                   | User                   |
-      | 220 | Skill | en                   | false    | false                   | User                   |
-      | 230 | Skill | en                   | true     | true                    | Team                   |
-      | 231 | Task  | en                   | false    | false                   | User                   |
-      | 232 | Task  | en                   | false    | false                   | User                   |
-      | 240 | Skill | en                   | false    | false                   | User                   |
-      | 250 | Skill | en                   | false    | false                   | User                   |
-      | 260 | Skill | en                   | false    | false                   | User                   |
-      | 270 | Skill | en                   | false    | false                   | User                   |
-      | 280 | Skill | en                   | false    | false                   | User                   |
-      | 290 | Skill | en                   | false    | false                   | User                   |
-      | 300 | Skill | en                   | false    | false                   | User                   |
+      | id  | type  | default_language_tag | no_score | requires_explicit_entry | entry_participant_type | display_settings           |
+      | 200 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 210 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 211 | Task  | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 220 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 230 | Skill | en                   | true     | true                    | Team                   | {"children_layout":"Grid"} |
+      | 231 | Task  | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 232 | Task  | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 240 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 250 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 260 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 270 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 280 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 290 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
+      | 300 | Skill | en                   | false    | false                   | User                   | {"children_layout":"Grid"} |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 1        | 230     | none                     | none                     | result              | none               | false              |
@@ -197,6 +197,7 @@ Feature: Get root skills for a participant group
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
             "can_watch": "answer_with_grant", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -226,6 +227,7 @@ Feature: Get root skills for a participant group
           "permissions": {
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -249,6 +251,7 @@ Feature: Get root skills for a participant group
           "permissions": {
             "can_view": "solution", "can_grant_view": "solution_with_grant", "can_watch": "none", "can_edit": "none", "is_owner": true
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "entry_participant_type": "User",
           "no_score": false,
@@ -292,6 +295,7 @@ Feature: Get root skills for a participant group
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
             "can_watch": "answer_with_grant", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {"language_tag": "fr", "title": "Compétence 2"},
@@ -311,6 +315,7 @@ Feature: Get root skills for a participant group
           "permissions": {
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {"language_tag": "en", "title": "Skill 3"},
@@ -332,6 +337,7 @@ Feature: Get root skills for a participant group
           "entry_participant_type": "User",
           "has_visible_children": true,
           "no_score": false,
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -366,6 +372,7 @@ Feature: Get root skills for a participant group
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants",
             "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [
             {
@@ -394,6 +401,7 @@ Feature: Get root skills for a participant group
             "can_view": "content_with_descendants", "can_grant_view": "none", "can_watch": "result", "can_edit": "none", "is_owner": false
           },
           "best_score": 78,
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": true,
           "entry_participant_type": "Team",
           "has_visible_children": true,
@@ -420,6 +428,7 @@ Feature: Get root skills for a participant group
           "permissions": {
             "can_edit": "none", "can_grant_view": "none", "can_view": "content_with_descendants", "can_watch": "none", "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {"language_tag": "en", "title": "Skill 3"},
@@ -449,6 +458,7 @@ Feature: Get root skills for a participant group
           },
           "best_score": 10,
           "entry_participant_type": "User",
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "has_visible_children": true,
           "no_score": false,
@@ -486,6 +496,7 @@ Feature: Get root skills for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {
@@ -512,6 +523,7 @@ Feature: Get root skills for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {
@@ -538,6 +550,7 @@ Feature: Get root skills for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {
@@ -564,6 +577,7 @@ Feature: Get root skills for a participant group
             "can_watch": "none",
             "is_owner": false
           },
+          "display_settings": {"children_layout": "Grid"},
           "requires_explicit_entry": false,
           "results": [],
           "string": {

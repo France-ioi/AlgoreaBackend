@@ -948,6 +948,8 @@ Endpoints that currently expose `display_settings`:
 | `GET /items/{item_id}` (`itemView`)         | top-level field on the item           |
 | `GET /items/{item_id}/children` (`itemChildrenView`) | per visible child            |
 | `GET /items/{item_id}/navigation` (`itemNavigationView`) | root item + per child |
+| `GET /current-user/group-memberships/activities` (`activitiesView`) | per root activity |
+| `GET /current-user/group-memberships/skills` (`skillsView`) | per root skill |
 
 Endpoints that **do not** expose `display_settings` (yet): `itemParentsView`, `itemPrerequisitesView`, and `itemDependenciesView`. They return items but omit this field; frontends that need display settings for the items returned by these endpoints must re-fetch via `itemView`. Rolling the field out to those endpoints would only require adding it to the shared `RawCommonItemFields` plumbing, but has been deliberately deferred until there is a concrete frontend need (the contract on the existing endpoints is unaffected).
 
