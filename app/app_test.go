@@ -198,6 +198,18 @@ func TestNew_DomainsConfigError(t *testing.T) {
 	assert.Contains(t, err.Error(), "unable to load the 'domain' configuration: 2 error(s) decoding")
 }
 
+func TestNew_CORSConfigError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	appenv.SetDefaultEnvToTest()
+	// allowCredentials=true with no allowedOrigins resolves to the
+	// fail-closed sentinel, which corsConfig rejects at startup.
+	t.Setenv("ALGOREA_CORS__ALLOWCREDENTIALS", "true")
+	_, err := New()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unable to load the 'cors' configuration:")
+}
+
 // The goal of the following `TestMiddlewares*` tests are not to test the middleware themselves
 // but their interaction (impacted by the order of definition)
 
