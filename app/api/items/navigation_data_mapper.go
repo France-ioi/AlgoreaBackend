@@ -20,6 +20,10 @@ type rawNavigationItem struct {
 	EntryParticipantType  string
 	NoScore               bool
 
+	// `items.display_settings` is `NOT NULL` (defaults to `{}`), so we can read it
+	// into a non-pointer `database.JSON`; downstream code never needs a nil check.
+	DisplaySettings database.JSON
+
 	// title (from items_strings) in the user’s default language or (if not available) default language of the item.
 	Title       *string
 	LanguageTag string
@@ -47,7 +51,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 	itemsQuery := items.ByID(rootID).JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info").
 		Select(
 			commonAttributes+`, 0 AS requires_explicit_entry, NULL AS parent_item_id, NULL AS entry_participant_type,
-				0 AS no_score, 0 AS has_visible_children, NULL AS child_order,
+				0 AS no_score, 0 AS has_visible_children, NULL AS child_order, items.display_settings,
 				NULL AS watched_group_can_view, 0 AS can_watch_for_group_results, 0 AS watched_group_avg_score, 0 AS watched_group_all_validated,
 				results.attempt_id, 1 AS has_attempt,
 				NULL AS score_computed, NULL AS validated, NULL AS started_at, NULL AS latest_activity_at,
@@ -85,7 +89,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		watchedGroupID,
 		commonAttributes+
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
-			 IFNULL(?, 0) AS has_visible_children, child_order`,
+			 IFNULL(?, 0) AS has_visible_children, child_order, items.display_settings`,
 		[]interface{}{hasVisibleChildrenQuery},
 		"",
 		func(db *database.DB) *database.DB {
@@ -112,6 +116,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 			items.can_watch_generated_value, items.can_edit_generated_value, items.is_owner_generated,
 			items.parent_item_id AS parent_item_id,
 			items.can_view_generated_value,
+			items.display_settings,
 			items.attempt_id,
 			items.has_attempt,
 			items.score_computed, items.validated, items.started_at, items.latest_activity_at,

@@ -16,6 +16,12 @@ import (
 type itemNavigationResponse struct {
 	*structures.ItemCommonFields
 
+	// JSON object with display/UI settings interpreted by the frontend. Always
+	// present, never `null`; an item with no non-default settings has the value
+	// `{}`.
+	// required: true
+	DisplaySettings database.JSON `json:"display_settings"`
+
 	// required: true
 	AttemptID int64 `json:"attempt_id,string"`
 	// required: true
@@ -41,6 +47,12 @@ type navigationItemChild struct {
 	BestScore float32 `json:"best_score"`
 	// required:true
 	Results []structures.ItemResult `json:"results"`
+
+	// JSON object with display/UI settings interpreted by the frontend. Always
+	// present, never `null`; an item with no non-default settings has the value
+	// `{}`.
+	// required: true
+	DisplaySettings database.JSON `json:"display_settings"`
 
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
 }
@@ -155,7 +167,11 @@ func (srv *Service) getItemNavigation(responseWriter http.ResponseWriter, httpRe
 
 	response := itemNavigationResponse{
 		ItemCommonFields: fillItemCommonFieldsWithDBData(store, &rawData[0]),
-		AttemptID:        *rawData[0].AttemptID,
+		// OrEmpty() defends the documented "never null" contract against a stray
+		// DB NULL (the column is NOT NULL, but `JSON.Scan` decodes any NULL it
+		// sees into a nil map, which would marshal to `null`).
+		DisplaySettings: rawData[0].DisplaySettings.OrEmpty(),
+		AttemptID:       *rawData[0].AttemptID,
 	}
 	idMap := map[int64]*rawNavigationItem{}
 	for index := range rawData {
@@ -232,6 +248,10 @@ func fillNavigationWithChildren(
 				HasVisibleChildren:    rawData[index].HasVisibleChildren,
 				BestScore:             rawData[index].BestScore,
 				Results:               make([]structures.ItemResult, 0, 1),
+				// OrEmpty() defends the documented "never null" contract against a
+				// stray DB NULL (the column is NOT NULL, but `JSON.Scan` decodes
+				// any NULL it sees into a nil map, which would marshal to `null`).
+				DisplaySettings: rawData[index].DisplaySettings.OrEmpty(),
 			}
 			if rawData[index].CanViewGeneratedValue < store.PermissionsGranted().ViewIndexByName("content") {
 				child.HasVisibleChildren = false

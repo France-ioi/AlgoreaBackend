@@ -947,8 +947,9 @@ Endpoints that currently expose `display_settings`:
 | ------------------------------------------- | ------------------------------------- |
 | `GET /items/{item_id}` (`itemView`)         | top-level field on the item           |
 | `GET /items/{item_id}/children` (`itemChildrenView`) | per visible child            |
+| `GET /items/{item_id}/navigation` (`itemNavigationView`) | root item + per child |
 
-Endpoints that **do not** expose `display_settings` (yet): `itemParentsView`, `itemPrerequisitesView`, `itemDependenciesView`, and `itemNavigationView`. They return items but omit this field; frontends that need display settings for the items returned by these endpoints must re-fetch via `itemView`. Rolling the field out to those endpoints would only require adding it to the shared `RawCommonItemFields` plumbing, but has been deliberately deferred until there is a concrete frontend need (the contract on the existing endpoints is unaffected).
+Endpoints that **do not** expose `display_settings` (yet): `itemParentsView`, `itemPrerequisitesView`, and `itemDependenciesView`. They return items but omit this field; frontends that need display settings for the items returned by these endpoints must re-fetch via `itemView`. Rolling the field out to those endpoints would only require adding it to the shared `RawCommonItemFields` plumbing, but has been deliberately deferred until there is a concrete frontend need (the contract on the existing endpoints is unaffected).
 
 Currently known keys (this list is informational; the backend does not enforce it):
 

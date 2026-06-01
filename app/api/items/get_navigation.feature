@@ -32,15 +32,15 @@ Feature: Get navigation for an item
       | 12         | 1        | true              |
       | 12         | 19       | true              |
     And the database has the following table "items":
-      | id  | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type |
-      | 200 | Task    | en                   | false    | false                   | User                   |
-      | 210 | Chapter | en                   | false    | false                   | User                   |
-      | 220 | Chapter | en                   | false    | false                   | User                   |
-      | 230 | Chapter | en                   | true     | true                    | Team                   |
-      | 211 | Task    | en                   | false    | false                   | User                   |
-      | 231 | Task    | en                   | false    | false                   | User                   |
-      | 232 | Task    | en                   | false    | false                   | User                   |
-      | 250 | Task    | en                   | false    | false                   | User                   |
+      | id  | type    | default_language_tag | no_score | requires_explicit_entry | entry_participant_type | display_settings                                               |
+      | 200 | Task    | en                   | false    | false                   | User                   | {"children_layout":"Grid","prompt_to_join_group_by_code":true} |
+      | 210 | Chapter | en                   | false    | false                   | User                   | {"prompt_to_join_group_by_code":true}                          |
+      | 220 | Chapter | en                   | false    | false                   | User                   | {}                                                             |
+      | 230 | Chapter | en                   | true     | true                    | Team                   | {"children_layout":"Grid"}                                     |
+      | 211 | Task    | en                   | false    | false                   | User                   | {}                                                             |
+      | 231 | Task    | en                   | false    | false                   | User                   | {}                                                             |
+      | 232 | Task    | en                   | false    | false                   | User                   | {}                                                             |
+      | 250 | Task    | en                   | false    | false                   | User                   | {}                                                             |
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       | can_grant_view_generated | can_watch_generated | can_edit_generated | is_owner_generated |
       | 1        | 230     | none                     | none                     | result              | none               | false              |
@@ -142,6 +142,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Category 1", "language_tag": "en"},
         "permissions": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_watch": "none", "can_edit": "none", "is_owner": true
@@ -151,6 +152,7 @@ Feature: Get navigation for an item
           {
             "id": "230",
             "type": "Chapter",
+            "display_settings": {"children_layout": "Grid"},
             "requires_explicit_entry": true,
             "entry_participant_type": "Team",
             "no_score": true,
@@ -176,6 +178,7 @@ Feature: Get navigation for an item
           {
             "id": "220",
             "type": "Chapter",
+            "display_settings": {},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -196,6 +199,7 @@ Feature: Get navigation for an item
           {
             "id": "210",
             "type": "Chapter",
+            "display_settings": {"prompt_to_join_group_by_code": true},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -299,6 +303,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Category 1", "language_tag": "en"},
         "attempt_id": "0",
         "permissions": {
@@ -308,6 +313,7 @@ Feature: Get navigation for an item
           {
             "id": "230",
             "type": "Chapter",
+            "display_settings": {"children_layout": "Grid"},
             "requires_explicit_entry": true,
             "entry_participant_type": "Team",
             "no_score": true,
@@ -333,6 +339,7 @@ Feature: Get navigation for an item
           {
             "id": "220",
             "type": "Chapter",
+            "display_settings": {},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -353,6 +360,7 @@ Feature: Get navigation for an item
           {
             "id": "210",
             "type": "Chapter",
+            "display_settings": {"prompt_to_join_group_by_code": true},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -387,6 +395,7 @@ Feature: Get navigation for an item
       {
         "id": "232",
         "type": "Task",
+        "display_settings": {},
         "string": {"title": "Task 3", "language_tag": "en"},
         "attempt_id": "0",
         "permissions": {
@@ -405,6 +414,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Category 1", "language_tag": "en"},
         "attempt_id": "0",
         "permissions": {
@@ -423,6 +433,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Catégorie 1", "language_tag": "fr"},
         "attempt_id": "0",
         "permissions": {
@@ -432,6 +443,7 @@ Feature: Get navigation for an item
           {
             "id": "230",
             "type": "Chapter",
+            "display_settings": {"children_layout": "Grid"},
             "requires_explicit_entry": true,
             "entry_participant_type": "Team",
             "no_score": true,
@@ -446,6 +458,7 @@ Feature: Get navigation for an item
           {
             "id": "220",
             "type": "Chapter",
+            "display_settings": {},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -464,6 +477,7 @@ Feature: Get navigation for an item
             "no_score": false,
             "has_visible_children": false,
             "type": "Chapter",
+            "display_settings": {"prompt_to_join_group_by_code": true},
             "string": {"title": "Chapitre A", "language_tag": "fr"},
             "best_score": 0,
             "permissions": {
@@ -484,6 +498,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Category 1", "language_tag": "en"},
         "attempt_id": "0",
         "permissions": {
@@ -493,6 +508,7 @@ Feature: Get navigation for an item
           {
             "id": "230",
             "type": "Chapter",
+            "display_settings": {"children_layout": "Grid"},
             "requires_explicit_entry": true,
             "entry_participant_type": "Team",
             "no_score": true,
@@ -513,6 +529,7 @@ Feature: Get navigation for an item
           {
             "id": "220",
             "type": "Chapter",
+            "display_settings": {},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -527,6 +544,7 @@ Feature: Get navigation for an item
           {
             "id": "210",
             "type": "Chapter",
+            "display_settings": {"prompt_to_join_group_by_code": true},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -557,6 +575,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Category 1", "language_tag": "en"},
         "attempt_id": "0",
         "permissions": {
@@ -566,6 +585,7 @@ Feature: Get navigation for an item
           {
             "id": "210",
             "type": "Chapter",
+            "display_settings": {"prompt_to_join_group_by_code": true},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -596,6 +616,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Category 1", "language_tag": "en"},
         "permissions": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_watch": "none", "can_edit": "none", "is_owner": true
@@ -605,6 +626,7 @@ Feature: Get navigation for an item
           {
             "id": "230",
             "type": "Chapter",
+            "display_settings": {"children_layout": "Grid"},
             "requires_explicit_entry": true,
             "entry_participant_type": "Team",
             "no_score": true,
@@ -631,6 +653,7 @@ Feature: Get navigation for an item
           {
             "id": "220",
             "type": "Chapter",
+            "display_settings": {},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -652,6 +675,7 @@ Feature: Get navigation for an item
           {
             "id": "210",
             "type": "Chapter",
+            "display_settings": {"prompt_to_join_group_by_code": true},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -683,6 +707,7 @@ Feature: Get navigation for an item
       {
         "id": "200",
         "type": "Task",
+        "display_settings": {"children_layout": "Grid", "prompt_to_join_group_by_code": true},
         "string": {"title": "Category 1", "language_tag": "en"},
         "permissions": {
           "can_view": "solution", "can_grant_view": "solution_with_grant", "can_watch": "none", "can_edit": "none", "is_owner": true
@@ -692,6 +717,7 @@ Feature: Get navigation for an item
           {
             "id": "230",
             "type": "Chapter",
+            "display_settings": {"children_layout": "Grid"},
             "requires_explicit_entry": true,
             "entry_participant_type": "Team",
             "no_score": true,
@@ -718,6 +744,7 @@ Feature: Get navigation for an item
           {
             "id": "220",
             "type": "Chapter",
+            "display_settings": {},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
@@ -739,6 +766,7 @@ Feature: Get navigation for an item
           {
             "id": "210",
             "type": "Chapter",
+            "display_settings": {"prompt_to_join_group_by_code": true},
             "requires_explicit_entry": false,
             "entry_participant_type": "User",
             "no_score": false,
