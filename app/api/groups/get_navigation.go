@@ -27,6 +27,9 @@ type groupNavigationViewResponseChild struct {
 	// required: true
 	// enum: none,direct,ancestor,descendant
 	CurrentUserManagership string `json:"current_user_managership"`
+	// whether the group has at least one direct non-user child group visible to the current user
+	// required: true
+	HasVisibleChildren bool `json:"has_visible_children"`
 }
 
 // swagger:model groupNavigationViewResponse
@@ -95,7 +98,8 @@ func (srv *Service) getNavigation(responseWriter http.ResponseWriter, httpReques
 	store := srv.GetStore(httpRequest)
 
 	var result groupNavigationViewResponse
-	err = store.Groups().PickVisibleGroups(store.Groups().ByID(groupID), user).
+	err = withVisibleGroupCTEs(store.Groups().ByID(groupID), store, user).
+		Where(visibleGroupsWhereSQL).
 		Where("groups.type != 'User'").
 		Select("id, name, type").Scan(&result).Error()
 	if gorm.IsRecordNotFoundError(err) {
@@ -103,12 +107,14 @@ func (srv *Service) getNavigation(responseWriter http.ResponseWriter, httpReques
 	}
 	service.MustNotBeError(err)
 
-	query := store.Groups().PickVisibleGroups(store.Groups().DB, user).
+	query := withVisibleGroupCTEs(store.Groups().DB, store, user).
 		With("user_ancestors", ancestorsOfUserQuery(store, user)).
+		Where(visibleGroupsWhereSQL).
 		Select(`
 			groups.id, groups.type, groups.name,
 			`+currentUserMembershipSQLColumn(user)+`,
-			`+currentUserManagershipSQLColumn).
+			`+currentUserManagershipSQLColumn+`,
+			`+hasVisibleChildrenSQLColumn).
 		Joins(`
 			JOIN groups_groups_active
 				ON groups_groups_active.child_group_id = groups.id AND groups_groups_active.parent_group_id = ?`, groupID).

@@ -1,42 +1,44 @@
 Feature: Get root groups (groupRootsView)
   Background:
     Given the database has the following table "groups":
-      | id | name                                     | type    |
-      | 1  | Joined Base                              | Base    |
-      | 2  | Managed Base                             | Base    |
-      | 3  | Base                                     | Base    |
-      | 4  | Joined Class                             | Class   |
-      | 5  | School                                   | Club    |
-      | 6  | Joined Team                              | Team    |
-      | 7  | Joined By Ancestor Team                  | Class   |
-      | 8  | Ancestor Team                            | Team    |
-      | 9  | Managed Class                            | Class   |
-      | 10 | Managed By Ancestor Team                 | Class   |
-      | 11 | Ancestor Team                            | Team    |
-      | 12 | Managed Ancestor                         | Base    |
-      | 13 | Root With Managed Ancestor               | Friends |
-      | 14 | Root With Managed Descendant             | Other   |
-      | 15 | Managed Descendant                       | Team    |
-      | 16 | Joined By Ancestor                       | Class   |
-      | 17 | Intermediate Group                       | Class   |
-      | 18 | Ancestor                                 | Class   |
-      | 19 | Managed By Ancestor                      | Class   |
-      | 20 | Intermediate Group                       | Base    |
-      | 21 | Ancestor                                 | Base    |
-      | 22 | Root With Descendant Managed By Ancestor | Other   |
-      | 23 | Descendant Managed By Ancestor           | Class   |
-      | 24 | Intermediate Group                       | Base    |
-      | 25 | Ancestor                                 | Base    |
-      | 26 | S1                                       | Club    |
-      | 27 | S2                                       | Club    |
-      | 28 | C1                                       | Class   |
-      | 29 | C2                                       | Class   |
-      | 30 | C3                                       | Class   |
-      | 31 | U1                                       | User    |
-      | 32 | U2                                       | User    |
-      | 33 | U3                                       | User    |
-      | 34 | U3                                       | User    |
-      | 52 | AllUsers                                 | Base    |
+      | id | name                                     | type    | is_public |
+      | 1  | Joined Base                              | Base    | false     |
+      | 2  | Managed Base                             | Base    | false     |
+      | 3  | Base                                     | Base    | false     |
+      | 4  | Joined Class                             | Class   | false     |
+      | 5  | School                                   | Club    | false     |
+      | 6  | Joined Team                              | Team    | false     |
+      | 7  | Joined By Ancestor Team                  | Class   | false     |
+      | 8  | Ancestor Team                            | Team    | false     |
+      | 9  | Managed Class                            | Class   | false     |
+      | 10 | Managed By Ancestor Team                 | Class   | false     |
+      | 11 | Ancestor Team                            | Team    | false     |
+      | 12 | Managed Ancestor                         | Base    | false     |
+      | 13 | Root With Managed Ancestor               | Friends | false     |
+      | 14 | Root With Managed Descendant             | Other   | false     |
+      | 15 | Managed Descendant                       | Team    | false     |
+      | 16 | Joined By Ancestor                       | Class   | false     |
+      | 17 | Intermediate Group                       | Class   | false     |
+      | 18 | Ancestor                                 | Class   | false     |
+      | 19 | Managed By Ancestor                      | Class   | false     |
+      | 20 | Intermediate Group                       | Base    | false     |
+      | 21 | Ancestor                                 | Base    | false     |
+      | 22 | Root With Descendant Managed By Ancestor | Other   | false     |
+      | 23 | Descendant Managed By Ancestor           | Class   | false     |
+      | 24 | Intermediate Group                       | Base    | false     |
+      | 25 | Ancestor                                 | Base    | false     |
+      | 26 | S1                                       | Club    | false     |
+      | 27 | S2                                       | Club    | false     |
+      | 28 | C1                                       | Class   | false     |
+      | 29 | C2                                       | Class   | false     |
+      | 30 | C3                                       | Class   | false     |
+      | 31 | U1                                       | User    | false     |
+      | 32 | U2                                       | User    | false     |
+      | 33 | U3                                       | User    | false     |
+      | 34 | U3                                       | User    | false     |
+      | 37 | Root With Only Public Child              | Team    | false     |
+      | 38 | Public Child                             | Class   | true      |
+      | 52 | AllUsers                                 | Base    | false     |
     And the database has the following users:
       | group_id | login | first_name  | last_name |
       | 41       | owner | Jean-Michel | Blanquer  |
@@ -106,6 +108,8 @@ Feature: Get root groups (groupRootsView)
       | 52              | 49             | 9999-12-31 23:59:59 |
       | 52              | 50             | 9999-12-31 23:59:59 |
       | 52              | 51             | 9999-12-31 23:59:59 |
+      | 37              | 38             | 9999-12-31 23:59:59 |
+      | 37              | 41             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
     And the database has the following table "groups_ancestors":
       | ancestor_group_id | child_group_id | expires_at          |
@@ -133,70 +137,110 @@ Feature: Get root groups (groupRootsView)
         "name": "Ancestor Team",
         "type": "Team",
         "current_user_membership": "direct",
-        "current_user_managership": "none"
+        "current_user_managership": "none",
+        "has_visible_children": false
       },
       {
         "id": "16",
         "name": "Joined By Ancestor",
         "type": "Class",
         "current_user_membership": "descendant",
-        "current_user_managership": "none"
+        "current_user_managership": "none",
+        "has_visible_children": true
       },
       {
         "id": "7",
         "name": "Joined By Ancestor Team",
         "type": "Class",
         "current_user_membership": "descendant",
-        "current_user_managership": "none"
+        "current_user_managership": "none",
+        "has_visible_children": true
       },
       {
         "id": "4",
         "name": "Joined Class",
         "type": "Class",
         "current_user_membership": "direct",
-        "current_user_managership": "direct"
+        "current_user_managership": "direct",
+        "has_visible_children": false
       },
       {
         "id": "19",
         "name": "Managed By Ancestor",
         "type": "Class",
         "current_user_membership": "none",
-        "current_user_managership": "direct"
+        "current_user_managership": "direct",
+        "has_visible_children": false
       },
       {
         "id": "9",
         "name": "Managed Class",
         "type": "Class",
         "current_user_membership": "none",
-        "current_user_managership": "direct"
+        "current_user_managership": "direct",
+        "has_visible_children": false
       },
       {
         "id": "22",
         "name": "Root With Descendant Managed By Ancestor",
         "type": "Other",
         "current_user_membership": "none",
-        "current_user_managership": "descendant"
+        "current_user_managership": "descendant",
+        "has_visible_children": true
       },
       {
         "id": "13",
         "name": "Root With Managed Ancestor",
         "type": "Friends",
         "current_user_membership": "none",
-        "current_user_managership": "ancestor"
+        "current_user_managership": "ancestor",
+        "has_visible_children": false
       },
       {
         "id": "14",
         "name": "Root With Managed Descendant",
         "type": "Other",
         "current_user_membership": "none",
-        "current_user_managership": "descendant"
+        "current_user_managership": "descendant",
+        "has_visible_children": true
+      },
+      {
+        "id": "37",
+        "name": "Root With Only Public Child",
+        "type": "Team",
+        "current_user_membership": "direct",
+        "current_user_managership": "none",
+        "has_visible_children": true
       },
       {
         "id": "5",
         "name": "School",
         "type": "Club",
         "current_user_membership": "descendant",
-        "current_user_managership": "none"
+        "current_user_managership": "none",
+        "has_visible_children": true
+      }
+    ]
+    """
+
+  Scenario: has_visible_children is true because of a public child only
+    Given the database has the following table "groups_groups":
+      | parent_group_id | child_group_id | expires_at          |
+      | 37              | 49             | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
+    And I am the user with id "49"
+    When I send a GET request to "/groups/roots"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "37",
+        "name": "Root With Only Public Child",
+        "type": "Team",
+        "current_user_membership": "direct",
+        "current_user_managership": "none",
+        "has_visible_children": true
       }
     ]
     """
@@ -223,14 +267,16 @@ Feature: Get root groups (groupRootsView)
         "current_user_membership": "none",
         "id": "26",
         "name": "S1",
-        "type": "Club"
+        "type": "Club",
+        "has_visible_children": true
       },
       {
         "current_user_managership": "descendant",
         "current_user_membership": "none",
         "id": "27",
         "name": "S2",
-        "type": "Club"
+        "type": "Club",
+        "has_visible_children": true
       }
     ]
     """
@@ -247,7 +293,8 @@ Feature: Get root groups (groupRootsView)
         "current_user_membership": "none",
         "id": "26",
         "name": "S1",
-        "type": "Club"
+        "type": "Club",
+        "has_visible_children": true
       }
     ]
     """
