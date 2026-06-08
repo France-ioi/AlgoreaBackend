@@ -28,6 +28,9 @@ type groupRootsViewResponseRow struct {
 	// required: true
 	// enum: none,direct,ancestor,descendant
 	CurrentUserManagership string `json:"current_user_managership"`
+	// whether the group has at least one direct non-user child group visible to the current user
+	// required: true
+	HasVisibleChildren bool `json:"has_visible_children"`
 }
 
 // swagger:operation GET /groups/roots group-memberships groupRootsView
@@ -78,6 +81,8 @@ func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *ht
 			SubQuery())
 
 	query := store.Raw(`
+		WITH visible_joined_ancestors AS (?),
+		     visible_managed_groups AS (?)
 		SELECT groups.id, groups.type, groups.name,
 		       IF(
 			       is_ancestor_of_joined,
@@ -92,7 +97,8 @@ func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *ht
 		           'direct',
 		           IF(is_managed_via_ancestor, 'ancestor', 'descendant')
 		         )
-		       ) AS 'current_user_managership'
+		       ) AS 'current_user_managership',
+		       `+hasVisibleChildrenSQLColumn+`
 		FROM ? AS `+"`groups`"+`
 		WHERE
 			type != 'Base' AND
@@ -103,7 +109,10 @@ func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *ht
 					   groups_groups_active.child_group_id = groups.id
 				WHERE parent_group.type != 'Base'
 			)
-		ORDER BY groups.name`, matchingGroupsQuery.SubQuery())
+		ORDER BY groups.name`,
+		visibleJoinedAncestorsQuery(store, user).SubQuery(),
+		visibleManagedGroupsQuery(store, user).SubQuery(),
+		matchingGroupsQuery.SubQuery())
 
 	var result []groupRootsViewResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())

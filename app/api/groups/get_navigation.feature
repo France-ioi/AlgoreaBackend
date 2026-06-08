@@ -38,6 +38,8 @@ Feature: Get navigation data (groupNavigationView)
       | 34 | U2                                       | User    | false     |
       | 35 | U3                                       | User    | false     |
       | 36 | U3                                       | User    | false     |
+      | 37 | Root With Only Public Child              | Team    | false     |
+      | 38 | Public Child                             | Class   | true      |
     And the database has the following users:
       | group_id | login | first_name  | last_name |
       | 41       | owner | Jean-Michel | Blanquer  |
@@ -90,6 +92,7 @@ Feature: Get navigation data (groupNavigationView)
       | 26              | 22             | 9999-12-31 23:59:59 |
       | 26              | 25             | 2010-01-01 00:00:00 |
       | 26              | 27             | 9999-12-31 23:59:59 |
+      | 26              | 37             | 9999-12-31 23:59:59 |
       | 28              | 30             | 9999-12-31 23:59:59 |
       | 28              | 31             | 9999-12-31 23:59:59 |
       | 29              | 31             | 9999-12-31 23:59:59 |
@@ -115,6 +118,8 @@ Feature: Get navigation data (groupNavigationView)
       | 22              | 41             | 2010-01-01 00:00:00 |
       | 23              | 41             | 2010-01-01 00:00:00 |
       | 25              | 41             | 2010-01-01 00:00:00 |
+      | 37              | 38             | 9999-12-31 23:59:59 |
+      | 37              | 41             | 9999-12-31 23:59:59 |
     And the groups ancestors are computed
     And the database has the following table "groups_ancestors":
       | ancestor_group_id | child_group_id | expires_at          |
@@ -146,77 +151,96 @@ Feature: Get navigation data (groupNavigationView)
           "name": "Ancestor Team",
           "type": "Team",
           "current_user_membership": "direct",
-          "current_user_managership": "none"
+          "current_user_managership": "none",
+          "has_visible_children": false
         },
         {
           "id": "16",
           "name": "Joined By Ancestor",
           "type": "Class",
           "current_user_membership": "descendant",
-          "current_user_managership": "none"
+          "current_user_managership": "none",
+          "has_visible_children": true
         },
         {
           "id": "7",
           "name": "Joined By Ancestor Team",
           "type": "Class",
           "current_user_membership": "descendant",
-          "current_user_managership": "none"
+          "current_user_managership": "none",
+          "has_visible_children": true
         },
         {
           "id": "4",
           "name": "Joined Class",
           "type": "Class",
           "current_user_membership": "direct",
-          "current_user_managership": "direct"
+          "current_user_managership": "direct",
+          "has_visible_children": false
         },
         {
           "id": "19",
           "name": "Managed By Ancestor",
           "type": "Class",
           "current_user_membership": "none",
-          "current_user_managership": "direct"
+          "current_user_managership": "direct",
+          "has_visible_children": false
         },
         {
           "id": "9",
           "name": "Managed Class",
           "type": "Class",
           "current_user_membership": "none",
-          "current_user_managership": "direct"
+          "current_user_managership": "direct",
+          "has_visible_children": false
         },
         {
           "id": "27",
           "name": "Public",
           "type": "Base",
           "current_user_managership": "none",
-          "current_user_membership": "none"
+          "current_user_membership": "none",
+          "has_visible_children": false
         },
         {
           "id": "22",
           "name": "Root With Descendant Managed By Ancestor",
           "type": "Other",
           "current_user_membership": "none",
-          "current_user_managership": "descendant"
+          "current_user_managership": "descendant",
+          "has_visible_children": true
         },
         {
           "id": "13",
           "name": "Root With Managed Ancestor",
           "type": "Friends",
           "current_user_membership": "none",
-          "current_user_managership": "ancestor"
+          "current_user_managership": "ancestor",
+          "has_visible_children": false
         },
         {
           "id": "14",
           "name": "Root With Managed Descendant",
           "type": "Other",
           "current_user_membership": "none",
-          "current_user_managership": "descendant"
+          "current_user_managership": "descendant",
+          "has_visible_children": true
+        },
+        {
+          "id": "37",
+          "name": "Root With Only Public Child",
+          "type": "Team",
+          "current_user_membership": "direct",
+          "current_user_managership": "none",
+          "has_visible_children": true
         },
         {
           "id": "5",
           "name": "School",
           "type": "Club",
           "current_user_membership": "descendant",
-          "current_user_managership": "none"
+          "current_user_managership": "none",
+          "has_visible_children": true
         }
       ]
     }
@@ -252,14 +276,39 @@ Feature: Get navigation data (groupNavigationView)
           "name": "Ancestor Team",
           "type": "Team",
           "current_user_membership": "direct",
-          "current_user_managership": "none"
+          "current_user_managership": "none",
+          "has_visible_children": false
         },
         {
           "id": "16",
           "name": "Joined By Ancestor",
           "type": "Class",
           "current_user_membership": "descendant",
-          "current_user_managership": "none"
+          "current_user_managership": "none",
+          "has_visible_children": true
+        }
+      ]
+    }
+    """
+
+  Scenario: has_visible_children is true because of a public child only
+    Given I am the user with id "41"
+    When I send a GET request to "/groups/37/navigation"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "id": "37",
+      "name": "Root With Only Public Child",
+      "type": "Team",
+      "children": [
+        {
+          "id": "38",
+          "name": "Public Child",
+          "type": "Class",
+          "current_user_membership": "none",
+          "current_user_managership": "none",
+          "has_visible_children": false
         }
       ]
     }
@@ -295,7 +344,8 @@ Feature: Get navigation data (groupNavigationView)
           "name": "Ancestor",
           "type": "Class",
           "current_user_managership": "none",
-          "current_user_membership": "descendant"
+          "current_user_membership": "descendant",
+          "has_visible_children": true
         }
       ]
     }
@@ -317,7 +367,8 @@ Feature: Get navigation data (groupNavigationView)
           "name": "Joined Team",
           "type": "Team",
           "current_user_managership": "none",
-          "current_user_membership": "direct"
+          "current_user_membership": "direct",
+          "has_visible_children": false
         }
       ]
     }
@@ -339,7 +390,8 @@ Feature: Get navigation data (groupNavigationView)
           "name": "Managed Descendant",
           "type": "Team",
           "current_user_managership": "direct",
-          "current_user_membership": "none"
+          "current_user_membership": "none",
+          "has_visible_children": false
         }
       ]
     }
@@ -375,7 +427,8 @@ Feature: Get navigation data (groupNavigationView)
           "current_user_membership": "none",
           "id": "31",
           "name": "C2",
-          "type": "Class"
+          "type": "Class",
+          "has_visible_children": false
         }
       ]
     }
@@ -397,7 +450,8 @@ Feature: Get navigation data (groupNavigationView)
           "current_user_membership": "none",
           "id": "31",
           "name": "C2",
-          "type": "Class"
+          "type": "Class",
+          "has_visible_children": false
         }
       ]
     }
