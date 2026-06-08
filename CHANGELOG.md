@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.48.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.47.0...v2.48.0) - 2026-06-08
+
+- add `has_visible_children` to `groupRootsView` (`GET /groups/roots`): each root group now indicates whether it has at least one direct non-user child group visible to the current user
+- add `has_visible_children` to `groupNavigationView` (`GET /groups/{group_id}/navigation`): each child group now includes the same boolean
+
 ## [v2.47.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.46.0...v2.47.0) - 2026-06-01
 
 - add `display_settings` to `itemNavigationView` (`GET /items/{item_id}/navigation`): the root item and each visible child now include the same opaque JSON object as `itemView`
