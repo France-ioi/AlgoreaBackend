@@ -70,7 +70,7 @@ func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *ht
 		       MAX(is_ancestor_of_managed) AS is_ancestor_of_managed,
 		       MAX(is_managed_directly) AS is_managed_directly,
 		       MAX(is_managed_via_ancestor) AS is_managed_via_ancestor
-		FROM ? AS matching_groups
+		FROM ? AS combined_groups
 		GROUP BY id`,
 		ancestorsOfJoinedGroupsQuery(store, user).
 			Select(columns+
@@ -80,9 +80,14 @@ func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *ht
 					", 0 AS is_ancestor_of_joined, 0 AS is_direct_parent, 1 AS is_ancestor_of_managed, is_managed_directly, is_managed_via_ancestor")).
 			SubQuery())
 
+	// We expose matching_groups as a CTE so it is materialized once and reused both as the source of
+	// root groups and inside the has_visible_children sub-select. matching_groups already contains exactly
+	// the set of groups visible to the user that are ancestors of joined or managed (non-user) groups, so a
+	// non-user child is visible iff it is public or belongs to matching_groups. Reusing it here avoids
+	// recomputing the (expensive) visibility of joined/managed ancestors a second time, which is what made
+	// this service slow.
 	query := store.Raw(`
-		WITH visible_joined_ancestors AS (?),
-		     visible_managed_groups AS (?)
+		WITH matching_groups AS (?)
 		SELECT groups.id, groups.type, groups.name,
 		       IF(
 			       is_ancestor_of_joined,
@@ -98,8 +103,16 @@ func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *ht
 		           IF(is_managed_via_ancestor, 'ancestor', 'descendant')
 		         )
 		       ) AS 'current_user_managership',
-		       `+hasVisibleChildrenSQLColumn+`
-		FROM ? AS `+"`groups`"+`
+		       EXISTS(
+			       SELECT 1
+			       FROM groups_groups_active AS child_links
+			       JOIN `+"`groups`"+` AS visible_child
+				       ON visible_child.id = child_links.child_group_id
+			       WHERE child_links.parent_group_id = groups.id
+				       AND visible_child.type != 'User'
+				       AND (visible_child.is_public OR visible_child.id IN (SELECT id FROM matching_groups))
+		       ) AS has_visible_children
+		FROM matching_groups AS `+"`groups`"+`
 		WHERE
 			type != 'Base' AND
 			NOT EXISTS(
@@ -110,8 +123,6 @@ func (srv *Service) getRoots(responseWriter http.ResponseWriter, httpRequest *ht
 				WHERE parent_group.type != 'Base'
 			)
 		ORDER BY groups.name`,
-		visibleJoinedAncestorsQuery(store, user).SubQuery(),
-		visibleManagedGroupsQuery(store, user).SubQuery(),
 		matchingGroupsQuery.SubQuery())
 
 	var result []groupRootsViewResponseRow
