@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.48.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.48.0...v2.48.1) - 2026-06-09
+
+- fix slow response on `GET /groups/roots` introduced in v2.48.0 when computing `has_visible_children`: reuse the existing visibility query instead of running it twice
+
 ## [v2.48.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.47.0...v2.48.0) - 2026-06-08
 
 - add `has_visible_children` to `groupRootsView` (`GET /groups/roots`): each root group now indicates whether it has at least one direct non-user child group visible to the current user
