@@ -386,6 +386,42 @@ Feature: Change item access rights for a group
     And the table "results_propagate" should be empty
     And the table "results_propagate_internal" should be empty
 
+  Scenario: Create a new permissions_granted row when the group has no path to the item
+    Given I am the user with id "21"
+    And the database table "items" also has the following row:
+      | id  | default_language_tag |
+      | 104 | fr                   |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
+      | 21       | 104     | none               | solution                 | true               |
+    And the database table "permissions_granted" also has the following rows:
+      | group_id | item_id | can_view | can_grant_view | is_owner | source_group_id | origin           | latest_update_at    |
+      | 21       | 104     | none     | solution       | true     | 23              | group_membership | 2019-05-30 11:00:00 |
+    When I send a PUT request to "/groups/25/permissions/23/104" with the following body:
+    """
+    {
+      "can_view": "solution"
+    }
+    """
+    Then the response should be "updated"
+    And the table "permissions_granted" should be:
+      | group_id | item_id | source_group_id | origin           | can_view | can_grant_view | can_watch | can_edit | is_owner | can_make_session_official | can_enter_from      | can_enter_until     | TIMESTAMPDIFF(SECOND, latest_update_at, NOW()) < 3 |
+      | 21       | 104     | 23              | group_membership | none     | solution       | none      | none     | true     | false                     | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 | 0                                                  |
+      | 23       | 100     | 23              | group_membership | content  | none           | none      | none     | false    | false                     | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 | 0                                                  |
+      | 23       | 104     | 25              | group_membership | solution | none           | none      | none     | false    | false                     | 9999-12-31 23:59:59 | 9999-12-31 23:59:59 | 1                                                  |
+    And the table "permissions_generated" should be:
+      | group_id | item_id | can_view_generated | can_grant_view_generated | is_owner_generated |
+      | 21       | 104     | solution           | solution_with_grant      | true               |
+      | 23       | 100     | content            | none                     | false              |
+      | 23       | 101     | info               | none                     | false              |
+      | 23       | 102     | none               | none                     | false              |
+      | 23       | 103     | none               | none                     | false              |
+      | 23       | 104     | solution           | none                     | false              |
+    And the table "attempts" should remain unchanged
+    And the table "results" should remain unchanged
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
+
   Scenario: Drops invalid permissions from an existing permissions_granted row
     Given I am the user with id "21"
     And the database table "permissions_generated" also has the following rows:

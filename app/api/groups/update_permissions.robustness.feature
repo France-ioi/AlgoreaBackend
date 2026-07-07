@@ -175,7 +175,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The item doesn't exist
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/25/permissions/23/404" with the following body:
+    When I send a PUT request to "/groups/26/permissions/23/404" with the following body:
     """
     {
       "can_view": "solution"
@@ -254,19 +254,6 @@ Feature: Change item access rights for a group - robustness
   Scenario: The group doesn't exist
     Given I am the user with id "21"
     When I send a PUT request to "/groups/25/permissions/404/102" with the following body:
-    """
-    {
-      "can_view": "solution"
-    }
-    """
-    Then the response code should be 403
-    And the response error message should contain "Insufficient access rights"
-    And the table "permissions_granted" should remain unchanged
-    And the table "permissions_generated" should remain unchanged
-
-  Scenario: There are no item's parents visible to the group
-    Given I am the user with id "31"
-    When I send a PUT request to "/groups/25/permissions/23/103" with the following body:
     """
     {
       "can_view": "solution"

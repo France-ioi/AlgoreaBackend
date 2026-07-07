@@ -37,6 +37,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 		service.AppHandler(srv.updatePermissions).ServeHTTP)
 	router.Get("/groups/{group_id}/permissions/{item_id}/explain",
 		service.AppHandler(srv.getPermissionExplanation).ServeHTTP)
+	router.Get("/groups/{group_id}/permissions/{item_id}/has-path",
+		service.AppHandler(srv.getPermissionsHasPath).ServeHTTP)
 
 	router.Post("/groups/{group_id}/code", service.AppHandler(srv.createCode).ServeHTTP)
 	router.Delete("/groups/{group_id}/code", service.AppHandler(srv.removeCode).ServeHTTP)

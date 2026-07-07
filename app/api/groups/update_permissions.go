@@ -91,9 +91,6 @@ type managerGeneratedPermissions struct {
 //
 //		* The user giving the access must have `permissions_generated.can_grant_view` >= given `can_view`
 //			for the item.
-//
-//		* The group must already have access to one of the parents of the item or the item itself. If it does not,
-//			the item must be a root activity/skill for an ancestor of the group.
 //	parameters:
 //		- name: group_id
 //			in: path
@@ -150,8 +147,14 @@ func (srv *Service) updatePermissions(responseWriter http.ResponseWriter, httpRe
 	service.MustNotBeError(err)
 
 	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
-		err = checkIfUserIsManagerAllowedToGrantPermissionsOnItem(store, user, sourceGroupID, groupID, itemID)
+		err = checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(store, user, sourceGroupID, groupID)
 		service.MustNotBeError(err)
+
+		found, err := store.Items().ByID(itemID).HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrAPIInsufficientAccessRights
+		}
 
 		// Even if we select a single row from permissions_granted,
 		// MAX() is used so that a row with the default values is returned even if no row exists.
@@ -518,15 +521,16 @@ const (
 	allWithGrant      = "all_with_grant"
 )
 
-func checkIfUserIsManagerAllowedToGrantPermissionsOnItem(store *database.DataStore, user *database.User,
-	sourceGroupID, groupID, itemID int64,
-) error {
-	err := checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(store, user, sourceGroupID, groupID)
-	if err != nil {
-		return err
-	}
-
-	return checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(store, groupID, itemID)
+// managerCanGrantGroupAccessScope matches group_managers rows where `user` manages a non-User
+// ancestor of `groupID` with `can_grant_group_access`. Callers may further constrain it (e.g. pin
+// the source group) before checking existence.
+func managerCanGrantGroupAccessScope(store *database.DataStore, user *database.User, groupID int64) *database.DB {
+	return store.ActiveGroupAncestors().ManagedByUser(user).
+		Where("groups_ancestors_active.child_group_type != 'User'").
+		Joins(`
+			JOIN groups_ancestors_active AS descendants
+				ON descendants.ancestor_group_id = groups_ancestors_active.child_group_id AND descendants.child_group_id = ?`, groupID).
+		Where("group_managers.can_grant_group_access")
 }
 
 func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
@@ -534,45 +538,12 @@ func checkIfUserIsManagerAllowedToGrantPermissionsToGroupID(
 ) error {
 	// the authorized user should be a manager of the sourceGroupID with `can_grant_group_access' permission and
 	// the 'sourceGroupID' should be an ancestor of 'groupID'
-	found, err := store.ActiveGroupAncestors().ManagedByUser(user).
+	found, err := managerCanGrantGroupAccessScope(store, user, groupID).
 		Where("groups_ancestors_active.child_group_id = ?", sourceGroupID).
-		Where("groups_ancestors_active.child_group_type != 'User'").
-		Joins(`
-				JOIN groups_ancestors_active AS descendants
-					ON descendants.ancestor_group_id = groups_ancestors_active.child_group_id AND descendants.child_group_id = ?`, groupID).
-		Where("group_managers.can_grant_group_access").
 		HasRows()
 	service.MustNotBeError(err)
 	if !found {
 		return service.ErrAPIInsufficientAccessRights
-	}
-	return nil
-}
-
-func checkIfItemOrOneOfItsParentsIsVisibleToGroupOrItemIsRoot(store *database.DataStore, groupID, itemID int64) error {
-	// at least one of the item's parents should be visible to the group
-	found, err := store.Permissions().MatchingGroupAncestors(groupID).
-		WherePermissionIsAtLeast("view", info).
-		Joins("JOIN items_items ON items_items.parent_item_id = permissions.item_id").
-		Where("items_items.child_item_id = ?", itemID).
-		HasRows()
-	service.MustNotBeError(err)
-	if !found {
-		// if not, the item itself should be visible to the group
-		found, err = store.Permissions().MatchingGroupAncestors(groupID).WherePermissionIsAtLeast("view", info).
-			Where("item_id = ?", itemID).HasRows()
-		service.MustNotBeError(err)
-		if !found {
-			// if not, the item should be a root item for one of the group's ancestors
-			found, err = store.Groups().
-				Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = groups.id").
-				Where("groups_ancestors_active.child_group_id = ?", groupID).
-				Where("root_activity_id = ? OR root_skill_id = ?", itemID, itemID).HasRows()
-			service.MustNotBeError(err)
-			if !found {
-				return service.ErrAPIInsufficientAccessRights
-			}
-		}
 	}
 	return nil
 }
