@@ -66,9 +66,9 @@ type groupRequestsViewResponseRow struct {
 //		with basic info on joining (invited/requesting) users and inviting users.
 //
 //
-//		When `old_rejections_weeks` is given, only those rejected invitations/requests
+//		When `rejections_within_weeks` is given, only those rejected invitations/requests
 //		(`group_membership_changes.action` is "invitation_refused" or "join_request_refused") are shown
-//		that are created in the last `old_rejections_weeks` weeks.
+//		that are created in the last `rejections_within_weeks` weeks.
 //		Otherwise, all rejected invitations/requests are shown.
 //
 //
@@ -88,7 +88,7 @@ type groupRequestsViewResponseRow struct {
 //			type: integer
 //			format: int64
 //			required: true
-//		- name: old_rejections_weeks
+//		- name: rejections_within_weeks
 //			in: query
 //			type: integer
 //		- name: sort
@@ -179,14 +179,14 @@ func (srv *Service) getRequests(responseWriter http.ResponseWriter, httpRequest 
 		Where("group_membership_changes.group_id = ?", groupID)
 
 	if len(httpRequest.URL.Query()["rejections_within_weeks"]) > 0 {
-		var oldRejectionsWeeks int64
-		oldRejectionsWeeks, err = service.ResolveURLQueryGetInt64Field(httpRequest, "rejections_within_weeks")
+		var rejectionsWithinWeeks int64
+		rejectionsWithinWeeks, err = service.ResolveURLQueryGetInt64Field(httpRequest, "rejections_within_weeks")
 		if err != nil {
 			return service.ErrInvalidRequest(err)
 		}
 		query = query.Where(`
 			group_membership_changes.action IN ('invitation_created', 'join_request_created') OR
-			NOW() - INTERVAL ? WEEK < group_membership_changes.at`, oldRejectionsWeeks)
+			NOW() - INTERVAL ? WEEK < group_membership_changes.at`, rejectionsWithinWeeks)
 	}
 
 	query = service.NewQueryLimiter().Apply(httpRequest, query)
