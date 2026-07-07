@@ -175,7 +175,7 @@ Feature: Change item access rights for a group - robustness
 
   Scenario: The item doesn't exist
     Given I am the user with id "21"
-    When I send a PUT request to "/groups/25/permissions/23/404" with the following body:
+    When I send a PUT request to "/groups/26/permissions/23/404" with the following body:
     """
     {
       "can_view": "solution"
