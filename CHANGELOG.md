@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.49.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.48.1...v2.49.0) - 2026-07-07
+
+- allow `updatePermissions` (`PUT /groups/{source_group_id}/permissions/{group_id}/{item_id}`) to grant permissions on an item even when the target group has no content path to that item (previously rejected)
+- new endpoint: `GET /groups/{group_id}/permissions/{item_id}/has-path` returns `{ "has_path": true/false }` indicating whether the group can reach the item from its content tree (visible parent, visible item, or root activity/skill of an ancestor)
+
 ## [v2.48.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.48.0...v2.48.1) - 2026-06-09
 
 - fix slow response on `GET /groups/roots` introduced in v2.48.0 when computing `has_visible_children`: reuse the existing visibility query instead of running it twice
