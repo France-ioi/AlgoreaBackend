@@ -421,6 +421,8 @@ Uses `go-chi/render` with custom responder (`service.AppResponder`):
 - Watch permissions: `none`, `result`, `answer`, `answer_with_grant`
 - Edit/grant permissions
 - Permissions computed and cached in `permissions_generated` table
+- Managers can grant permissions on any item (subject to their own grant rights), even when the target group has no navigational path to the item
+- `GET /groups/{group_id}/permissions/{item_id}/has-path` reports whether a group can reach an item from its content tree (visible parent, visible item, or root activity/skill of an ancestor)
 
 #### Permission Checking
 ```go
