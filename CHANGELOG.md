@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.50.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.50.0...v2.50.1) - 2026-07-09
+
+- fix binary ZIP download for `GET /groups/{group_id}/group-progress-with-answers-zip` when the API runs behind AWS Lambda/ALB
+
 ## [v2.50.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.49.0...v2.50.0) - 2026-07-09
 
 - new endpoint: `GET /groups/{group_id}/group-progress-with-answers-zip` exports group progress with submission answers as a ZIP file (`group_progress.csv` at the root, plus per-item directories with `data.json` and answer files); requires `parent_item_ids`, is limited to 100 users and 100 items in the visible subtree
