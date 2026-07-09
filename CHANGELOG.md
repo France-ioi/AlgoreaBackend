@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.50.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.50.1...v2.50.2) - 2026-07-09
+
+- fix `GET /groups/{group_id}/group-progress-with-answers-zip`: chapter items no longer include an empty `submissions/` directory in the exported ZIP (chapters are containers without submissions)
+
 ## [v2.50.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.50.0...v2.50.1) - 2026-07-09
 
 - fix binary ZIP download for `GET /groups/{group_id}/group-progress-with-answers-zip` when the API runs behind AWS Lambda/ALB
