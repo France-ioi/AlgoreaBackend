@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.50.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.49.0...v2.50.0) - 2026-07-09
+
+- new endpoint: `GET /groups/{group_id}/group-progress-with-answers-zip` exports group progress with submission answers as a ZIP file (`group_progress.csv` at the root, plus per-item directories with `data.json` and answer files); requires `parent_item_ids`, is limited to 100 users and 100 items in the visible subtree
+- fix swagger docs for `GET /groups/{group_id}/requests`: correct query parameter name to `rejections_within_weeks` (was documented as `old_rejections_weeks`; the live parameter was already `rejections_within_weeks`)
+
 ## [v2.49.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.48.1...v2.49.0) - 2026-07-07
 
 - allow `updatePermissions` (`PUT /groups/{source_group_id}/permissions/{group_id}/{item_id}`) to grant permissions on an item even when the target group has no content path to that item (previously rejected)
