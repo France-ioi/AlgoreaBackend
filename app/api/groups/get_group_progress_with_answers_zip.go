@@ -115,10 +115,6 @@ type progressZIPItemChild struct {
 //						type: string
 //						format: binary
 //		"400":
-//			description: >
-//				Invalid request. This includes exceeding export limits:
-//				"The number of items exceeds the limit (100)" or
-//				"The number of users exceeds the limit (100)".
 //			"$ref": "#/responses/badRequestResponse"
 //		"401":
 //			"$ref": "#/responses/unauthorizedResponse"
