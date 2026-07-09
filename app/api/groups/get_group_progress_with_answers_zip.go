@@ -21,11 +21,19 @@ import (
 const (
 	maxUsersInProgressZIP = 100
 	maxItemsInProgressZIP = 100
+	// Chapters are pure containers with no submissions, so they get no submissions/ directory.
+	itemTypeChapter = "Chapter"
 )
 
 type progressZIPSubtreeItem struct {
-	ItemID  int64
-	DirPath string
+	ItemID    int64
+	DirPath   string
+	IsChapter bool
+}
+
+type progressZIPItemInfo struct {
+	Title string
+	Type  string
 }
 
 type progressZIPUser struct {
@@ -73,7 +81,9 @@ type progressZIPItemChild struct {
 //		  `{child_order}-{title}-{id}/` where `title` is sanitized and root parent items use `child_order` 0.
 //		  Descendants are nested at arbitrary depth under their parent directory.
 //
-//		* each item directory contains a `submissions/` subdirectory with one directory per user login.
+//		* each non-chapter item directory contains a `submissions/` subdirectory with one directory per user login.
+//		  Chapters are containers without submissions, so they have no `submissions/` subdirectory
+//		  (they only appear as directories nesting their descendants).
 //		  Each user directory contains:
 //
 //		  - `data.json` with `hints_requested`, `latest_activity_at`, `score`, `submissions`, `time_spent`, `validated`
@@ -225,6 +235,11 @@ func writeProgressZIPContent(
 	submissionsByParticipantAndItem := getProgressZIPSubmissions(store, zipUsers, subtreeItemIDs)
 
 	for _, subtreeItem := range subtreeItems {
+		// Chapters are containers without submissions: they only exist as directories,
+		// created implicitly by their descendants' file paths.
+		if subtreeItem.IsChapter {
+			continue
+		}
 		for _, zipUser := range zipUsers {
 			writeProgressZIPUserItemFiles(
 				zipWriter, subtreeItem, zipUser, userProgressByGroupAndItem, submissionsByParticipantAndItem,
@@ -278,13 +293,13 @@ func buildProgressZIPVisibleSubtree(
 		return nil, itemCount
 	}
 
-	itemTitles := getProgressZIPItemTitles(store, user, itemParentIDs, childrenByParent)
+	itemInfoByID := getProgressZIPItemInfo(store, user, itemParentIDs, childrenByParent)
 
 	visited := make(map[int64]bool)
 	subtreeItems = make([]progressZIPSubtreeItem, 0, itemCount)
 	for _, parentItemID := range itemParentIDs {
 		appendProgressZIPSubtreeItem(
-			parentItemID, 0, "", itemTitles, childrenByParent, visited, &subtreeItems,
+			parentItemID, 0, "", itemInfoByID, childrenByParent, visited, &subtreeItems,
 		)
 	}
 
@@ -337,9 +352,9 @@ func loadProgressZIPChildrenByParent(
 	return childrenByParent, len(knownParents)
 }
 
-func getProgressZIPItemTitles(
+func getProgressZIPItemInfo(
 	store *database.DataStore, user *database.User, itemParentIDs []int64, childrenByParent map[int64][]progressZIPItemChild,
-) map[int64]string {
+) map[int64]progressZIPItemInfo {
 	itemIDSet := make(map[int64]bool, len(itemParentIDs))
 	for _, parentItemID := range itemParentIDs {
 		itemIDSet[parentItemID] = true
@@ -358,22 +373,23 @@ func getProgressZIPItemTitles(
 	var items []struct {
 		ID    int64
 		Title string
+		Type  string
 	}
 	service.MustNotBeError(store.Items().
 		JoinsUserAndDefaultItemStrings(user).
 		Where("items.id IN (?)", itemIDs).
-		Select("items.id, COALESCE(user_strings.title, default_strings.title) AS title").
+		Select("items.id, items.type, COALESCE(user_strings.title, default_strings.title) AS title").
 		Scan(&items).Error())
 
-	itemTitles := make(map[int64]string, len(items))
+	itemInfoByID := make(map[int64]progressZIPItemInfo, len(items))
 	for i := range items {
-		itemTitles[items[i].ID] = items[i].Title
+		itemInfoByID[items[i].ID] = progressZIPItemInfo{Title: items[i].Title, Type: items[i].Type}
 	}
-	return itemTitles
+	return itemInfoByID
 }
 
 func appendProgressZIPSubtreeItem(
-	itemID int64, childOrder int32, parentPath string, itemTitles map[int64]string,
+	itemID int64, childOrder int32, parentPath string, itemInfoByID map[int64]progressZIPItemInfo,
 	childrenByParent map[int64][]progressZIPItemChild, visited map[int64]bool, subtreeItems *[]progressZIPSubtreeItem,
 ) {
 	if visited[itemID] {
@@ -381,15 +397,17 @@ func appendProgressZIPSubtreeItem(
 	}
 	visited[itemID] = true
 
-	dirPath := parentPath + fmt.Sprintf("%d-%s-%d/", childOrder, sanitizeZIPPathSegment(itemTitles[itemID], "untitled"), itemID)
+	info := itemInfoByID[itemID]
+	dirPath := parentPath + fmt.Sprintf("%d-%s-%d/", childOrder, sanitizeZIPPathSegment(info.Title, "untitled"), itemID)
 	*subtreeItems = append(*subtreeItems, progressZIPSubtreeItem{
-		ItemID:  itemID,
-		DirPath: dirPath,
+		ItemID:    itemID,
+		DirPath:   dirPath,
+		IsChapter: info.Type == itemTypeChapter,
 	})
 
 	for _, child := range childrenByParent[itemID] {
 		appendProgressZIPSubtreeItem(
-			child.ChildItemID, child.ChildOrder, dirPath, itemTitles, childrenByParent, visited, subtreeItems,
+			child.ChildItemID, child.ChildOrder, dirPath, itemInfoByID, childrenByParent, visited, subtreeItems,
 		)
 	}
 }

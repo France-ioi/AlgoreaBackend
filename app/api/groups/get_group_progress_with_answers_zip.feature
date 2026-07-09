@@ -91,10 +91,6 @@ Feature: Export the current progress of a group with answers on a subset of item
             "content": "Group name;Chapitre 210;1. Item 211;2. Item 212\n"
           },
           {
-            "filename": "0-Chapitre 210-210/submissions/johnd/data.json",
-            "content": "{\"hints_requested\":0,\"latest_activity_at\":null,\"score\":0,\"submissions\":0,\"time_spent\":0,\"validated\":false}"
-          },
-          {
             "filename": "0-Chapitre 210-210/1-Item 211-211/submissions/johnd/data.json",
             "content": "{\"hints_requested\":0,\"latest_activity_at\":null,\"score\":0,\"submissions\":0,\"time_spent\":0,\"validated\":false}"
           },
@@ -112,10 +108,6 @@ Feature: Export the current progress of a group with answers on a subset of item
           },
           {
             "filename": "0-Chapitre 210-210/1-Item 212-212/submissions/johnd/data.json",
-            "content": "{\"hints_requested\":0,\"latest_activity_at\":null,\"score\":0,\"submissions\":0,\"time_spent\":0,\"validated\":false}"
-          },
-          {
-            "filename": "0-Chapter 220-220/submissions/johnd/data.json",
             "content": "{\"hints_requested\":0,\"latest_activity_at\":null,\"score\":0,\"submissions\":0,\"time_spent\":0,\"validated\":false}"
           }
         ]
@@ -177,10 +169,10 @@ Feature: Export the current progress of a group with answers on a subset of item
       | 11              | 57             | 0                  |
     And the groups ancestors are computed
     And the database has the following table "items":
-      | id  | type    | default_language_tag |
-      | 210 | Chapter | fr                   |
-      | 220 | Chapter | fr                   |
-      | 230 | Task    | fr                   |
+      | id  | type | default_language_tag |
+      | 210 | Task | fr                   |
+      | 220 | Task | fr                   |
+      | 230 | Task | fr                   |
     And the database has the following table "items_strings":
       | item_id | language_tag | title    |
       | 210     | fr           | Chap 210 |
