@@ -120,3 +120,101 @@ Feature: Export the current progress of a group with answers on a subset of item
           }
         ]
       """
+
+  Scenario: Should export only the CSV when the group has no users
+    Given I am the user with id "21"
+    And the database has the following table "groups":
+      | id | type  | name      |
+      | 1  | Base  | Root 1    |
+      | 11 | Class | Our Class |
+    And the database has the following users:
+      | group_id | login | default_language |
+      | 21       | owner | en               |
+    And the database has the following table "group_managers":
+      | group_id | manager_id | can_watch_members |
+      | 1        | 21         | true              |
+    And the database has the following table "groups_groups":
+      | parent_group_id | child_group_id | is_team_membership |
+      | 1               | 11             | 0                  |
+    And the groups ancestors are computed
+    And the database has the following table "items":
+      | id  | type    | default_language_tag |
+      | 210 | Chapter | fr                   |
+    And the database has the following table "items_strings":
+      | item_id | language_tag | title        |
+      | 210     | fr           | Chapitre 210 |
+    And the database has the following table "permissions_generated":
+      | group_id | item_id | can_view_generated | can_watch_generated |
+      | 21       | 210     | info               | answer              |
+    When I send a GET request to "/groups/11/group-progress-with-answers-zip?parent_item_ids=210"
+    Then the response code should be 200
+    And the response should be a ZIP file containing the following files:
+      """
+        [
+          {
+            "filename": "group_progress.csv",
+            "content": "Group name;Chapitre 210\n"
+          }
+        ]
+      """
+
+  Scenario: Should deduplicate items reachable from several parents and sanitize path separators
+    Given I am the user with id "21"
+    And the database has the following table "groups":
+      | id | type  | name      |
+      | 1  | Base  | Root 1    |
+      | 11 | Class | Our Class |
+    And the database has the following users:
+      | group_id | login | default_language |
+      | 21       | owner | en               |
+      | 57       | johnd | fr               |
+    And the database has the following table "group_managers":
+      | group_id | manager_id | can_watch_members |
+      | 1        | 21         | true              |
+    And the database has the following table "groups_groups":
+      | parent_group_id | child_group_id | is_team_membership |
+      | 1               | 11             | 0                  |
+      | 11              | 57             | 0                  |
+    And the groups ancestors are computed
+    And the database has the following table "items":
+      | id  | type    | default_language_tag |
+      | 210 | Chapter | fr                   |
+      | 220 | Chapter | fr                   |
+      | 230 | Task    | fr                   |
+    And the database has the following table "items_strings":
+      | item_id | language_tag | title    |
+      | 210     | fr           | Chap 210 |
+      | 220     | fr           | Chap 220 |
+      | 230     | fr           | a/b..c   |
+    And the database has the following table "items_items":
+      | parent_item_id | child_item_id | child_order |
+      | 210            | 230           | 1           |
+      | 220            | 230           | 1           |
+    And the database has the following table "permissions_generated":
+      | group_id | item_id | can_view_generated | can_watch_generated |
+      | 21       | 210     | info               | answer              |
+      | 21       | 220     | info               | answer              |
+      | 21       | 230     | info               | none                |
+    When I send a GET request to "/groups/11/group-progress-with-answers-zip?parent_item_ids=210,220"
+    Then the response code should be 200
+    And the response should be a ZIP file containing the following files:
+      """
+        [
+          {
+            "filename": "group_progress.csv",
+            "content": "Group name;Chap 210;1. a/b..c;Chap 220;1. a/b..c\n"
+          },
+          {
+            "filename": "0-Chap 210-210/submissions/johnd/data.json",
+            "content": "{\"hints_requested\":0,\"latest_activity_at\":null,\"score\":0,\"submissions\":0,\"time_spent\":0,\"validated\":false}"
+          },
+          {
+            "filename": "0-Chap 210-210/1-a-b-c-230/submissions/johnd/data.json",
+            "content": "{\"hints_requested\":0,\"latest_activity_at\":null,\"score\":0,\"submissions\":0,\"time_spent\":0,\"validated\":false}"
+          },
+          {
+            "filename": "0-Chap 220-220/submissions/johnd/data.json",
+            "content": "{\"hints_requested\":0,\"latest_activity_at\":null,\"score\":0,\"submissions\":0,\"time_spent\":0,\"validated\":false}"
+          }
+        ]
+      """

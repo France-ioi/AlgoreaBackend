@@ -170,13 +170,12 @@ func (srv *Service) getGroupProgressWithAnswersZIP(responseWriter http.ResponseW
 			groupID, strings.Join(itemParentIDsString, "-")),
 	)
 
-	// Buffer the ZIP in memory so a mid-generation failure returns an error response
+	// Buffer the ZIP in memory so a mid-generation failure (raised as a panic via
+	// service.MustNotBeError and recovered by AppHandler) yields a clean error response
 	// instead of a 200 with a truncated archive.
 	zipBuffer := &bytes.Buffer{}
 	zipWriter := zip.NewWriter(zipBuffer)
-	if err := writeProgressZIPArchive(zipWriter, store, user, itemParentIDs, groupID, subtreeItems, zipUsers); err != nil {
-		return err
-	}
+	writeProgressZIPArchive(zipWriter, store, user, itemParentIDs, groupID, subtreeItems, zipUsers)
 	service.MustNotBeError(zipWriter.Close())
 
 	_, err = io.Copy(responseWriter, zipBuffer)
@@ -187,40 +186,38 @@ func (srv *Service) getGroupProgressWithAnswersZIP(responseWriter http.ResponseW
 func writeProgressZIPArchive(
 	zipWriter *zip.Writer, store *database.DataStore, user *database.User,
 	itemParentIDs []int64, groupID int64, subtreeItems []progressZIPSubtreeItem, zipUsers []progressZIPUser,
-) error {
+) {
 	csvBuffer := &bytes.Buffer{}
 	csvWriter := csv.NewWriter(csvBuffer)
 	csvWriter.Comma = ';'
 	if len(itemParentIDs) == 0 {
-		if _, err := csvBuffer.WriteString("Group name\n"); err != nil {
-			return err
-		}
+		// No error check needed: WriteString on a bytes.Buffer never fails.
+		_, _ = csvBuffer.WriteString("Group name\n")
 	} else {
 		writeGroupProgressCSV(csvWriter, store, user, itemParentIDs, groupID)
 		csvWriter.Flush()
 	}
 
+	// The ZIP is written to an in-memory buffer, so these writes cannot fail in practice;
+	// MustNotBeError turns any unexpected failure into a recovered 500 rather than a partial 200.
 	groupProgressFile, err := zipWriter.Create("group_progress.csv")
-	if err != nil {
-		return err
-	}
-	if _, err = io.Copy(groupProgressFile, csvBuffer); err != nil {
-		return err
-	}
+	service.MustNotBeError(err)
+	_, err = io.Copy(groupProgressFile, csvBuffer)
+	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
-		return nil
+		return
 	}
 
-	return writeProgressZIPContent(zipWriter, store, subtreeItems, zipUsers)
+	writeProgressZIPContent(zipWriter, store, subtreeItems, zipUsers)
 }
 
 func writeProgressZIPContent(
 	zipWriter *zip.Writer, store *database.DataStore,
 	subtreeItems []progressZIPSubtreeItem, zipUsers []progressZIPUser,
-) error {
-	if len(subtreeItems) == 0 || len(zipUsers) == 0 {
-		return nil
+) {
+	if len(zipUsers) == 0 {
+		return
 	}
 
 	subtreeItemIDs := make([]int64, len(subtreeItems))
@@ -233,36 +230,29 @@ func writeProgressZIPContent(
 
 	for _, subtreeItem := range subtreeItems {
 		for _, zipUser := range zipUsers {
-			if err := writeProgressZIPUserItemFiles(
+			writeProgressZIPUserItemFiles(
 				zipWriter, subtreeItem, zipUser, userProgressByGroupAndItem, submissionsByParticipantAndItem,
-			); err != nil {
-				return err
-			}
+			)
 		}
 	}
-
-	return nil
 }
 
 func writeProgressZIPUserItemFiles(
 	zipWriter *zip.Writer, subtreeItem progressZIPSubtreeItem, zipUser progressZIPUser,
 	userProgressByGroupAndItem map[int64]map[int64]progressZIPUserItemData,
 	submissionsByParticipantAndItem map[int64]map[int64][]progressZIPSubmission,
-) error {
+) {
+	// The ZIP is written to an in-memory buffer, so these Create/Write/Marshal calls cannot
+	// fail in practice; MustNotBeError guards against unexpected failures without dead branches.
 	dataPath := subtreeItem.DirPath + "submissions/" + zipUser.SanitizedLogin + "/data.json"
 	dataFile, err := zipWriter.Create(dataPath)
-	if err != nil {
-		return err
-	}
+	service.MustNotBeError(err)
 
 	progressData := userProgressByGroupAndItem[zipUser.GroupID][subtreeItem.ItemID]
 	encodedData, err := json.Marshal(progressData)
-	if err != nil {
-		return err
-	}
-	if _, err = dataFile.Write(encodedData); err != nil {
-		return err
-	}
+	service.MustNotBeError(err)
+	_, err = dataFile.Write(encodedData)
+	service.MustNotBeError(err)
 
 	for _, submission := range submissionsByParticipantAndItem[zipUser.GroupID][subtreeItem.ItemID] {
 		scoreString := ""
@@ -273,14 +263,10 @@ func writeProgressZIPUserItemFiles(
 			subtreeItem.DirPath, zipUser.SanitizedLogin,
 			submission.Number, submission.AttemptID, scoreString, submission.AnswerID)
 		answerFile, err := zipWriter.Create(filePath)
-		if err != nil {
-			return err
-		}
-		if _, err = answerFile.Write([]byte(submission.Answer)); err != nil {
-			return err
-		}
+		service.MustNotBeError(err)
+		_, err = answerFile.Write([]byte(submission.Answer))
+		service.MustNotBeError(err)
 	}
-	return nil
 }
 
 func buildProgressZIPVisibleSubtree(
@@ -463,10 +449,6 @@ func getProgressZIPUserItemData(
 		}
 	}
 
-	if len(zipUsers) == 0 || len(subtreeItemIDs) == 0 {
-		return result
-	}
-
 	userIDs := make([]string, len(zipUsers))
 	for i := range zipUsers {
 		userIDs[i] = strconv.FormatInt(zipUsers[i].GroupID, 10)
@@ -571,10 +553,6 @@ func getProgressZIPSubmissions(
 	store *database.DataStore, zipUsers []progressZIPUser, subtreeItemIDs []int64,
 ) map[int64]map[int64][]progressZIPSubmission {
 	result := make(map[int64]map[int64][]progressZIPSubmission, len(zipUsers))
-	if len(zipUsers) == 0 || len(subtreeItemIDs) == 0 {
-		return result
-	}
-
 	participantIDs := make([]int64, len(zipUsers))
 	for i := range zipUsers {
 		participantIDs[i] = zipUsers[i].GroupID
