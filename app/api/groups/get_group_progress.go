@@ -141,7 +141,7 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user, "result")
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
@@ -396,7 +396,9 @@ func scanAndBuildProgressResults(
 	appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 }
 
-func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *database.User) ([]int64, error) {
+func resolveAndCheckParentIDs(
+	store *database.DataStore, r *http.Request, user *database.User, canWatchPermission string,
+) ([]int64, error) {
 	itemParentIDs, err := service.ResolveURLQueryGetInt64SliceField(r, "parent_item_ids")
 	if err != nil {
 		return nil, service.ErrInvalidRequest(err)
@@ -405,7 +407,7 @@ func resolveAndCheckParentIDs(store *database.DataStore, r *http.Request, user *
 	if len(itemParentIDs) > 0 {
 		var cnt int
 		service.MustNotBeError(store.Permissions().MatchingUserAncestors(user).
-			WherePermissionIsAtLeast("watch", "result").Where("item_id IN(?)", itemParentIDs).
+			WherePermissionIsAtLeast("watch", canWatchPermission).Where("item_id IN(?)", itemParentIDs).
 			PluckFirst("COUNT(DISTINCT item_id)", &cnt).Error())
 		if cnt != len(itemParentIDs) {
 			return nil, service.ErrAPIInsufficientAccessRights

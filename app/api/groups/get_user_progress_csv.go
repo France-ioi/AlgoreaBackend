@@ -90,7 +90,7 @@ func (srv *Service) getUserProgressCSV(responseWriter http.ResponseWriter, httpR
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user, "result")
 	service.MustNotBeError(err)
 
 	responseWriter.Header().Set("Content-Type", "text/csv")

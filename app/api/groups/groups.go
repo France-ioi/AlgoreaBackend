@@ -68,6 +68,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 	router.Get("/groups/{group_id}/team-progress-csv", service.AppHandler(srv.getTeamProgressCSV).ServeHTTP)
 	router.Get("/groups/{group_id}/user-progress", service.AppHandler(srv.getUserProgress).ServeHTTP)
 	router.Get("/groups/{group_id}/user-progress-csv", service.AppHandler(srv.getUserProgressCSV).ServeHTTP)
+	router.Get("/groups/{group_id}/group-progress-with-answers-zip",
+		service.AppHandler(srv.getGroupProgressWithAnswersZIP).ServeHTTP)
 	router.With(service.ParticipantMiddleware(srv.Base)).
 		Get("/items/{item_id}/participant-progress", service.AppHandler(srv.getParticipantProgress).ServeHTTP)
 	router.Post("/groups/{parent_group_id}/join-requests/accept", service.AppHandler(srv.acceptJoinRequests).ServeHTTP)

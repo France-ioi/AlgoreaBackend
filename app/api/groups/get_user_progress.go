@@ -128,7 +128,7 @@ func (srv *Service) getUserProgress(responseWriter http.ResponseWriter, httpRequ
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user, "result")
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
