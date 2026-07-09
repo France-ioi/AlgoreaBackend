@@ -104,6 +104,10 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 	scenarioContext.Step(`^the response error message should contain "(.*)"$`, ctx.TheResponseErrorMessageShouldContain)
 
 	scenarioContext.Step(`^the response should be a JSON array with (\d+) entr(?:ies|y)$`, ctx.ItShouldBeAJSONArrayWithEntries)
+	scenarioContext.Step(
+		`^the response should be a ZIP file containing the following files:$`,
+		ctx.ItShouldBeAZIPFileContainingTheFollowingFiles,
+	)
 	scenarioContext.Step(`^the response at ([^ ]+) should be "([^"]*)"$`, ctx.TheResponseAtShouldBeTheValue)
 	scenarioContext.Step("^the response at ([^ ]+) should be:$", ctx.TheResponseAtShouldBe)
 	scenarioContext.Step("^the response at ([^ ]+) in JSON should be:$", ctx.TheResponseAtInJSONShouldBe)

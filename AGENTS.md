@@ -51,6 +51,28 @@ Note: There may be a flaky timeout test in `app/database` that occasionally hang
 
 If you get DB connection errors, ensure docker-compose services are running with `docker-compose ps`.
 
+#### Test coverage (required)
+
+At the end of any task that adds or changes code, you MUST compute test coverage and ensure the code you touched is 100% covered.
+
+1. Run the suite with a coverage profile (the `test` target writes `test-results/coverage.txt`; `test-dev` does not produce coverage). To scope to the package you changed and keep it fast:
+```
+go test -gcflags=all=-l \
+  -coverpkg=<package-under-test> \
+  -coverprofile=/tmp/cov.txt -covermode=atomic \
+  ./path/to/package/ -p 1 -parallel 1
+```
+2. Inspect per-function coverage for the files you touched:
+```
+go tool cover -func=/tmp/cov.txt | grep <changed-file>.go
+```
+3. For a line-by-line view of what is still uncovered:
+```
+go tool cover -html=/tmp/cov.txt -o /tmp/cov.html
+```
+
+Every function and branch in code you added or modified must reach 100%. If a line is genuinely unreachable in tests, add the test that exercises it; only leave it uncovered if it is truly impossible to trigger, and document why.
+
 ## Comments
 - Do NOT add obvious, narrating comments (e.g., `// increment counter`, `// return result`).
 - DO add comments when a non-trivial choice has been made and the reasoning is not self-evident from the code. Examples:

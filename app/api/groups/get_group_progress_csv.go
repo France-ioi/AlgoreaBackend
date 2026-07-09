@@ -9,6 +9,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
@@ -88,7 +89,7 @@ func (srv *Service) getGroupProgressCSV(responseWriter http.ResponseWriter, http
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user)
+	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user, "result")
 	service.MustNotBeError(err)
 
 	responseWriter.Header().Set("Content-Type", "text/csv")
@@ -105,12 +106,19 @@ func (srv *Service) getGroupProgressCSV(responseWriter http.ResponseWriter, http
 		return nil
 	}
 
-	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
-	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
-
 	csvWriter := csv.NewWriter(responseWriter)
 	defer csvWriter.Flush()
 	csvWriter.Comma = ';'
+
+	writeGroupProgressCSV(csvWriter, store, user, itemParentIDs, groupID)
+	return nil
+}
+
+func writeGroupProgressCSV(
+	csvWriter *csv.Writer, store *database.DataStore, user *database.User, itemParentIDs []int64, groupID int64,
+) {
+	// Preselect item IDs since we need them to build the results table (there shouldn't be many)
+	orderedItemIDListWithDuplicates, uniqueItemIDs, itemOrder, itemsSubQuery := preselectIDsOfVisibleItems(store, itemParentIDs, user)
 
 	printTableHeader(store, user, uniqueItemIDs, orderedItemIDListWithDuplicates, itemOrder, csvWriter,
 		[]string{"Group name"})
@@ -127,7 +135,7 @@ func (srv *Service) getGroupProgressCSV(responseWriter http.ResponseWriter, http
 		Scan(&groups).Error())
 
 	if len(groups) == 0 {
-		return nil
+		return
 	}
 
 	ancestorGroupIDs := make([]string, len(groups))
@@ -179,8 +187,6 @@ func (srv *Service) getGroupProgressCSV(responseWriter http.ResponseWriter, http
 				csvWriter)).Error())
 		writeEmptyRowsForSkippedGroupsAtTheEnd(groupNumber, batchBoundary, groups, len(orderedItemIDListWithDuplicates), csvWriter)
 	}
-
-	return nil
 }
 
 func generateGroupNameAndWriteEmptyRowsForSkippedGroups(
