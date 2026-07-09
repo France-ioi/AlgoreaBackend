@@ -29,7 +29,12 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		lambdaHandler := algnhsa.New(application.HTTPHandler, nil)
+		// Lambda responses to ALB are JSON with a string body field. Text types (JSON, CSV)
+		// survive that fine; binary types must be base64-encoded with isBase64Encoded so ALB
+		// decodes them back to raw bytes for the client.
+		lambdaHandler := algnhsa.New(application.HTTPHandler, &algnhsa.Options{
+			BinaryContentTypes: []string{"application/zip"},
+		})
 		lambda.StartWithOptions(lambdaHandler, lambda.WithEnableSIGTERM(func() {
 			ctx := application.Database.GetContext()
 			logging.EntryFromContext(ctx).Info("Got SIGTERM, closing the DB connection")
