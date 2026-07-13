@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.51.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.50.2...v2.51.0) - 2026-07-13
+
+- new endpoint: `GET /items/{item_id}/owners` lists groups with `is_owner_generated` on the item; requires `can_edit` = 'all' on the item
+
 ## [v2.50.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.50.1...v2.50.2) - 2026-07-09
 
 - fix `GET /groups/{group_id}/group-progress-with-answers-zip`: chapter items no longer include an empty `submissions/` directory in the exported ZIP (chapters are containers without submissions)
