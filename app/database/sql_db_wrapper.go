@@ -14,8 +14,9 @@ type sqlDBWrapper struct {
 	sqlDB *sql.DB
 	//nolint:containedctx // We store the context here because Gorm v1 does not support contexts
 	//                    // as arguments for Exec, Query, and QueryRow methods.
-	ctx       context.Context
-	logConfig *LogConfig
+	ctx        context.Context
+	logConfig  *LogConfig
+	schemaName string
 }
 
 // Exec executes a query without returning any rows.
@@ -151,7 +152,7 @@ func (sqlDB *sqlDBWrapper) BeginTx(ctx context.Context, opts *sql.TxOptions) (*s
 		return nil, err
 	}
 	newLogConfig := *sqlDB.logConfig // clone logConfig to avoid changing the original one when setting LogRetryableErrorsAsInfo
-	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, logConfig: &newLogConfig}, nil
+	return &sqlTxWrapper{sqlTx: tx, ctx: ctx, logConfig: &newLogConfig, schemaName: sqlDB.schemaName}, nil
 }
 
 // We intentionally do not implement the 'sqlDb' interface to avoid Gorm from calling 'Begin' method.
@@ -184,7 +185,7 @@ type withContexter interface {
 }
 
 func (sqlDB *sqlDBWrapper) withContext(ctx context.Context) gorm.SQLCommon {
-	return &sqlDBWrapper{sqlDB: sqlDB.sqlDB, ctx: ctx, logConfig: sqlDB.logConfig}
+	return &sqlDBWrapper{sqlDB: sqlDB.sqlDB, ctx: ctx, logConfig: sqlDB.logConfig, schemaName: sqlDB.schemaName}
 }
 
 var _ withContexter = &sqlDBWrapper{}
@@ -209,11 +210,21 @@ func (sqlDB *sqlDBWrapper) getLogConfig() *LogConfig {
 
 var _ logConfigGetter = &sqlDBWrapper{}
 
+type schemaNameGetter interface {
+	getSchemaName() string
+}
+
+func (sqlDB *sqlDBWrapper) getSchemaName() string {
+	return sqlDB.schemaName
+}
+
+var _ schemaNameGetter = &sqlDBWrapper{}
+
 func (sqlDB *sqlDBWrapper) conn(ctx context.Context) (*sqlConnWrapper, error) {
 	conn, err := sqlDB.sqlDB.Conn(ctx)
 	if err != nil {
 		logDBError(sqlDB.ctx, err)
 		return nil, err
 	}
-	return &sqlConnWrapper{conn: conn, ctx: ctx, logConfig: sqlDB.logConfig}, nil
+	return &sqlConnWrapper{conn: conn, ctx: ctx, logConfig: sqlDB.logConfig, schemaName: sqlDB.schemaName}, nil
 }

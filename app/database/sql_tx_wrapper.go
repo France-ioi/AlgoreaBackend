@@ -33,8 +33,9 @@ type sqlTxWrapper struct {
 	//                    //
 	//                    // As we normally do not want to have different deadlines for the transaction and the queries,
 	//                    // it doesn't seem to be a good idea to set a new deadline in the sqlTxWrapper.ctx.
-	ctx       context.Context
-	logConfig *LogConfig
+	ctx        context.Context
+	logConfig  *LogConfig
+	schemaName string
 }
 
 // Exec executes a query that doesn't return rows.
@@ -181,7 +182,7 @@ func (sqlTX *sqlTxWrapper) queryRowWithoutLogging(query string, args ...interfac
 var _ queryRowWithoutLogging = &sqlTxWrapper{}
 
 func (sqlTX *sqlTxWrapper) withContext(ctx context.Context) gorm.SQLCommon {
-	return &sqlTxWrapper{sqlTx: sqlTX.sqlTx, ctx: ctx, logConfig: sqlTX.logConfig}
+	return &sqlTxWrapper{sqlTx: sqlTX.sqlTx, ctx: ctx, logConfig: sqlTX.logConfig, schemaName: sqlTX.schemaName}
 }
 
 var _ withContexter = &sqlTxWrapper{}
@@ -197,3 +198,9 @@ func (sqlTX *sqlTxWrapper) getLogConfig() *LogConfig {
 }
 
 var _ logConfigGetter = &sqlTxWrapper{}
+
+func (sqlTX *sqlTxWrapper) getSchemaName() string {
+	return sqlTX.schemaName
+}
+
+var _ schemaNameGetter = &sqlTxWrapper{}

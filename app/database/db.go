@@ -3,8 +3,10 @@ package database
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"database/sql/driver"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"reflect"
@@ -78,6 +80,8 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 	var dbConn *gorm.DB
 	driverName := "mysql"
 
+	schemaName := schemaNameFromSource(source)
+
 	var rawConnection gorm.SQLCommon
 	var ownSQLDBConnection bool
 	var dbWrapper *sqlDBWrapper
@@ -88,14 +92,14 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 		if err != nil {
 			return nil, err
 		}
-		dbWrapper = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &logConfig}
+		dbWrapper = &sqlDBWrapper{sqlDB: sqlDB, ctx: ctx, logConfig: &logConfig, schemaName: schemaName}
 		rawConnection = dbWrapper
 		ownSQLDBConnection = true
 	case *sql.DB:
-		dbWrapper = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &logConfig}
+		dbWrapper = &sqlDBWrapper{sqlDB: src, ctx: ctx, logConfig: &logConfig, schemaName: schemaName}
 		rawConnection = dbWrapper
 	case *sql.Tx:
-		rawConnection = &sqlTxWrapper{sqlTx: src, ctx: ctx, logConfig: &logConfig}
+		rawConnection = &sqlTxWrapper{sqlTx: src, ctx: ctx, logConfig: &logConfig, schemaName: schemaName}
 	default:
 		return nil, fmt.Errorf("unknown database source type: %T (%v)", src, src)
 	}
@@ -115,6 +119,46 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 	dbConn.LogMode(false)
 
 	return newDB(dbConn, nil), nil
+}
+
+// schemaNameFromSource extracts the MySQL schema (database) name from a connection source.
+// For DSN strings it returns the DBName; for *sql.DB/*sql.Tx the DSN is not recoverable so "" is returned
+// (namespacing then stays off — production opens via a DSN string).
+// The DSN is parsed here independently of OpenRawDBConnection, which parses it again; that double parse
+// is once-per-open and intentional to keep OpenRawDBConnection unchanged.
+func schemaNameFromSource(source interface{}) string {
+	switch src := source.(type) {
+	case string:
+		cfg, err := mysql.ParseDSN(src)
+		if err != nil {
+			return ""
+		}
+		return cfg.DBName
+	case *sql.DB, *sql.Tx:
+		return ""
+	default:
+		return ""
+	}
+}
+
+// mysqlNamedLockNameMaxLen is the maximum length of a named lock in MySQL 5.7.5+.
+const mysqlNamedLockNameMaxLen = 64
+
+// namespacedLockName prefixes lockName with schema so locks on different schemas of the same
+// MySQL server do not collide. Empty schema leaves lockName unchanged (e.g. sqlmock tests).
+// The plain form uses "schema/lockName" and assumes schema names contain no '/'.
+// Names longer than 64 bytes fall back to a deterministic 64-char hex SHA-256 digest
+// (len is byte-based intentionally: conservative vs MySQL's character limit).
+func namespacedLockName(schema, lockName string) string {
+	if schema == "" {
+		return lockName
+	}
+	namespaced := schema + "/" + lockName
+	if len(namespaced) <= mysqlNamedLockNameMaxLen {
+		return namespaced
+	}
+	sum := sha256.Sum256([]byte(schema + "\x00" + lockName))
+	return hex.EncodeToString(sum[:])
 }
 
 // OpenRawDBConnection creates a new DB connection.
@@ -634,7 +678,9 @@ func (conn *DB) GetContext() context.Context {
 // releases the connection afterward.
 func (conn *DB) WithFixedConnection(funcToCall func(*DB) error) (err error) {
 	sqlDB := conn.GetSQLDB()
-	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig()}
+	sqlDBWrapped := &sqlDBWrapper{
+		sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig(), schemaName: conn.schemaName(),
+	}
 
 	contextWithCancel, cancelFunc := context.WithCancel(sqlDBWrapped.ctx)
 	fixedConn, err := sqlDBWrapped.conn(contextWithCancel)
@@ -661,6 +707,11 @@ func (conn *DB) ctx() context.Context {
 func (conn *DB) logConfig() *LogConfig {
 	//nolint:forcetypeassert // panic if conn.db doesn't implement logConfigGetter: both sqlDBWrapper and sqlTxWrapper do
 	return conn.db.CommonDB().(logConfigGetter).getLogConfig()
+}
+
+func (conn *DB) schemaName() string {
+	//nolint:forcetypeassert // panic if conn.db doesn't implement schemaNameGetter: sqlDBWrapper, sqlConnWrapper and sqlTxWrapper do
+	return conn.db.CommonDB().(schemaNameGetter).getSchemaName()
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
@@ -801,8 +852,12 @@ func retryOnRetriableError(ctx context.Context, funcToCall func() error) error {
 func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall func(*DB) error) (err error) {
 	initGetLockTime := time.Now()
 
+	effectiveName := namespacedLockName(conn.schemaName(), lockName)
+
 	sqlDB := conn.GetSQLDB()
-	sqlDBWrapped := &sqlDBWrapper{sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig()}
+	sqlDBWrapped := &sqlDBWrapper{
+		sqlDB: sqlDB, ctx: conn.ctx(), logConfig: conn.logConfig(), schemaName: conn.schemaName(),
+	}
 
 	var shouldDiscardNamedLockDBConnection bool
 	namedLockDBConnection, err := sqlDBWrapped.conn(conn.ctx())
@@ -816,7 +871,9 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 	}()
 
 	var getLockResult *int64
-	err = namedLockDBConnection.QueryRowContext(conn.ctx(), "SELECT GET_LOCK(?, ?)", lockName, int64(timeout/time.Second)).Scan(&getLockResult)
+	err = namedLockDBConnection.QueryRowContext(
+		conn.ctx(), "SELECT GET_LOCK(?, ?)", effectiveName, int64(timeout/time.Second),
+	).Scan(&getLockResult)
 	if err != nil {
 		return err
 	}
@@ -829,18 +886,19 @@ func (conn *DB) withNamedLock(lockName string, timeout time.Duration, funcToCall
 		// call RELEASE_LOCK() even if the context is canceled or timed out
 		releaseErr := namedLockDBConnection.QueryRowContext(
 			log.ContextWithLogger(context.Background(), log.LoggerFromContext(conn.ctx())),
-			"SELECT RELEASE_LOCK(?)", lockName).Scan(&releaseLockResult)
+			"SELECT RELEASE_LOCK(?)", effectiveName).Scan(&releaseLockResult)
 		if releaseErr != nil || releaseLockResult == nil || *releaseLockResult != 1 {
 			// on error we just close the connection to release the lock
 			shouldDiscardNamedLockDBConnection = true
 			// do not return an error, it should not affect the result
 			logDBError(conn.ctx(),
-				fmt.Errorf("failed to release the lock %q, closing the DB connection to release the lock", lockName))
+				fmt.Errorf("failed to release the lock %q [effective=%s], closing the DB connection to release the lock",
+					lockName, effectiveName))
 		}
 	}()
 
 	log.EntryFromContext(conn.ctx()).WithField("type", "db").
-		Debugf("Duration for GET_LOCK(%s, %v): %v", lockName, timeout, time.Since(initGetLockTime))
+		Debugf("Duration for GET_LOCK(%s, %v) [effective=%s]: %v", lockName, timeout, effectiveName, time.Since(initGetLockTime))
 
 	return funcToCall(conn)
 }
