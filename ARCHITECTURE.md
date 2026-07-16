@@ -261,7 +261,7 @@ store.WithForeignKeyChecksDisabled(func(s *DataStore) error {
     // ...
 })
 
-// With named lock
+// With named lock (lock names are namespaced by the connected MySQL schema)
 store.WithNamedLock("lock_name", timeout, func(s *DataStore) error {
     // ...
 })
@@ -272,6 +272,7 @@ store.WithNamedLock("lock_name", timeout, func(s *DataStore) error {
 - Nested transaction support via EnsureTransaction
 - Context cancellation support
 - Row-level locking: `WithExclusiveWriteLock()`, `WithSharedWriteLock()`
+- Named locks (`GET_LOCK`/`RELEASE_LOCK`) are namespaced by schema so multiple instances sharing a MySQL server but using different schemas do not collide (requires opening the DB with a DSN string so the schema name is known; opening from `*sql.DB`/`*sql.Tx` leaves namespacing off)
 
 ### Common Table Expressions (CTEs)
 
@@ -554,7 +555,7 @@ store.SetPropagationsModeToSync()
 4. **Repeat** until no more results to propagate
 
 **Concurrency Control**:
-- Named lock: `results_propagation` (10s timeout)
+- Named lock: `results_propagation` (10s timeout), namespaced by the connected MySQL schema
 - Prevents parallel propagation
 - Ensures consistency
 

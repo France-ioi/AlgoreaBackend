@@ -27,7 +27,10 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
-const someName = "some name"
+const (
+	someName       = "some name"
+	testSchemaName = "algorea_prod"
+)
 
 func TestDB_inTransaction_NoErrors(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
@@ -1766,6 +1769,130 @@ func TestDB_withNamedLock_ReleasesLockOnSuccess(t *testing.T) {
 	assert.NoError(t, dbMock.ExpectationsWereMet())
 }
 
+func TestDB_withNamedLock_NamespacesLockNameBySchema(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dbWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+	require.True(t, ok)
+	dbWrapper.schemaName = testSchemaName
+
+	lockName := someName
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+	expectedLockName := testSchemaName + "/" + lockName
+
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(expectedLockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(expectedLockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
+
+	err := db.withNamedLock(lockName, timeout, func(*DB) error {
+		return nil
+	})
+	assert.NoError(t, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDB_schemaName_PropagatesToConnWrapper(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dbWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+	require.True(t, ok)
+	dbWrapper.schemaName = testSchemaName
+
+	require.NoError(t, db.WithFixedConnection(func(fixedDB *DB) error {
+		assert.Equal(t, testSchemaName, fixedDB.schemaName())
+		connWrapper, ok := fixedDB.db.CommonDB().(*sqlConnWrapper)
+		require.True(t, ok)
+		assert.Equal(t, testSchemaName, connWrapper.getSchemaName())
+		return nil
+	}))
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestDB_schemaName_PropagatesToTxWrapper(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, dbMock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dbWrapper, ok := db.db.CommonDB().(*sqlDBWrapper)
+	require.True(t, ok)
+	dbWrapper.schemaName = testSchemaName
+
+	lockName := someName
+	timeout := 1234 * time.Millisecond
+	expectedTimeout := int(timeout.Round(time.Second).Seconds())
+	expectedLockName := testSchemaName + "/" + lockName
+
+	dbMock.ExpectBegin()
+	dbMock.ExpectQuery("^"+regexp.QuoteMeta("SELECT GET_LOCK(?, ?)")+"$").
+		WithArgs(expectedLockName, expectedTimeout).
+		WillReturnRows(sqlmock.NewRows([]string{"GET_LOCK(?, ?)"}).AddRow(int64(1)))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT RELEASE_LOCK(?)") + "$").
+		WithArgs(expectedLockName).
+		WillReturnRows(sqlmock.NewRows([]string{"RELEASE_LOCK(?)"}).AddRow(int64(1)))
+	dbMock.ExpectCommit()
+
+	err := db.inTransaction(func(txDB *DB) error {
+		assert.Equal(t, testSchemaName, txDB.schemaName())
+		txWrapper, ok := txDB.db.CommonDB().(*sqlTxWrapper)
+		require.True(t, ok)
+		assert.Equal(t, testSchemaName, txWrapper.getSchemaName())
+
+		return txDB.withNamedLock(lockName, timeout, func(inner *DB) error {
+			assert.Equal(t, testSchemaName, inner.schemaName())
+			return nil
+		})
+	})
+	assert.NoError(t, err)
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func Test_namespacedLockName(t *testing.T) {
+	t.Run("empty schema leaves name unchanged", func(t *testing.T) {
+		assert.Equal(t, "results_propagation", namespacedLockName("", "results_propagation"))
+	})
+	t.Run("fits within 64 chars", func(t *testing.T) {
+		assert.Equal(t, "algorea/results_propagation", namespacedLockName("algorea", "results_propagation"))
+	})
+	t.Run("hash fallback when longer than 64", func(t *testing.T) {
+		schema := "very_long_schema_name_that_takes_space"
+		lockName := "also_a_quite_long_lock_name_for_hashing"
+		got := namespacedLockName(schema, lockName)
+		assert.Len(t, got, 64)
+		assert.NotEqual(t, schema+"/"+lockName, got)
+		assert.Equal(t, namespacedLockName(schema, lockName), got)
+		assert.NotEqual(t, namespacedLockName(schema+"x", lockName), got)
+	})
+}
+
+func Test_schemaNameFromSource(t *testing.T) {
+	t.Run("valid DSN", func(t *testing.T) {
+		assert.Equal(t, "algorea", schemaNameFromSource("user:pass@tcp(localhost:3306)/algorea?parseTime=true"))
+	})
+	t.Run("invalid DSN", func(t *testing.T) {
+		assert.Empty(t, schemaNameFromSource("://bad"))
+	})
+	t.Run("sql.DB", func(t *testing.T) {
+		assert.Empty(t, schemaNameFromSource((*sql.DB)(nil)))
+	})
+	t.Run("sql.Tx", func(t *testing.T) {
+		assert.Empty(t, schemaNameFromSource((*sql.Tx)(nil)))
+	})
+	t.Run("unknown type", func(t *testing.T) {
+		assert.Empty(t, schemaNameFromSource(42))
+	})
+}
+
 func TestDB_withNamedLock_ReleasesLockOnError(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
@@ -1878,7 +2005,7 @@ func TestDB_withNamedLock_HandlesReleaseError(t *testing.T) {
 			if test.logsShouldContain != "" {
 				assert.Contains(t, logs, test.logsShouldContain)
 			}
-			assert.Contains(t, logs, "failed to release the lock \"some name\", closing the DB connection to release the lock")
+			assert.Contains(t, logs, "failed to release the lock \"some name\" [effective=some name], closing the DB connection to release the lock")
 		})
 	}
 }
