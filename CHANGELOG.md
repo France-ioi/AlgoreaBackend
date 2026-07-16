@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v2.51.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.51.0...v2.51.1) - 2026-07-16
 
 - fix MySQL named locks colliding across schemas on the same server: lock names used by `WithNamedLock` are now namespaced by the connected schema (during a rolling deploy, old and new instances briefly use different lock names and will not mutually exclude; concurrent propagation in that window is considered tolerable)
 
