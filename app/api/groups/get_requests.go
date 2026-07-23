@@ -145,7 +145,15 @@ func (srv *Service) getRequests(responseWriter http.ResponseWriter, httpRequest 
 
 	service.MustNotBeError(checkThatUserCanManageTheGroupMemberships(store, user, groupID))
 
+	// Pre-aggregate latest invitation/join-request creation times for this group so the
+	// pending-request join is a hash/index match instead of a correlated MAX(at) per row.
 	query := store.GroupMembershipChanges().
+		With("latest_created_membership_changes",
+			store.GroupMembershipChanges().
+				Select("member_id, action, MAX(at) AS at").
+				Where("group_id = ?", groupID).
+				Where("action IN ('invitation_created', 'join_request_created')").
+				Group("member_id, action")).
 		Select(`
 			group_membership_changes.member_id,
 			group_membership_changes.at,
@@ -164,16 +172,19 @@ func (srv *Service) getRequests(responseWriter http.ResponseWriter, httpRequest 
 			LEFT JOIN users AS inviting_user
 				ON inviting_user.group_id = initiator_id AND group_membership_changes.action = 'invitation_created'`).
 		Joins(`JOIN users AS joining_user ON joining_user.group_id = member_id`).
+		// CTE is already scoped to {group_id}, so omitting group_id from the join ON is intentional.
+		Joins(`
+			LEFT JOIN latest_created_membership_changes
+				ON latest_created_membership_changes.member_id = group_membership_changes.member_id AND
+					latest_created_membership_changes.action = group_membership_changes.action AND
+					latest_created_membership_changes.at = group_membership_changes.at`).
 		Joins(`
 			LEFT JOIN group_pending_requests
 				ON group_pending_requests.group_id = group_membership_changes.group_id AND
 					group_pending_requests.member_id = group_membership_changes.member_id AND
 					IF(group_pending_requests.type = 'invitation', 'invitation_created', 'join_request_created') =
 						group_membership_changes.action AND
-					(SELECT MAX(latest_change.at) FROM group_membership_changes AS latest_change
-					 WHERE latest_change.group_id = group_pending_requests.group_id AND
-						latest_change.member_id = group_pending_requests.member_id AND
-						latest_change.action = group_membership_changes.action) = group_membership_changes.at`).
+					latest_created_membership_changes.member_id IS NOT NULL`).
 		Where("group_membership_changes.action IN ('join_request_refused', 'invitation_refused') OR group_pending_requests.group_id IS NOT NULL").
 		Where("group_membership_changes.action IN ('invitation_created', 'join_request_created', 'invitation_refused', 'join_request_refused')").
 		Where("group_membership_changes.group_id = ?", groupID)

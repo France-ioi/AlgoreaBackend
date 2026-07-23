@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Patch
+
+- fix slow response on `GET /groups/{group_id}/requests`: replace the correlated `MAX(at)` subquery with a group-scoped pre-aggregated join, and add index `group_id_member_id_action_at` on `group_membership_changes`
+
 ## [v2.51.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.51.0...v2.51.1) - 2026-07-16
 
 - fix MySQL named locks colliding across schemas on the same server: lock names used by `WithNamedLock` are now namespaced by the connected schema (during a rolling deploy, old and new instances briefly use different lock names and will not mutually exclude; concurrent propagation in that window is considered tolerable)

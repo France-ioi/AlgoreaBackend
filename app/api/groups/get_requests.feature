@@ -382,3 +382,79 @@ Feature: Get requests for group_id
       }
     ]
     """
+
+  Scenario: Only the latest invitation_created is returned when a member was re-invited
+    Given I am the user with id "21"
+    And the database has the following table "groups":
+      | id |
+      | 16 |
+    And the database has the following table "group_managers":
+      | group_id | manager_id | can_manage  |
+      | 16       | 21         | memberships |
+    And the database has the following table "group_pending_requests":
+      | group_id | member_id | type       | at                  |
+      | 16       | 51        | invitation | 2019-05-30 12:00:00 |
+    And the database has the following table "group_membership_changes":
+      | group_id | member_id | action             | at                  | initiator_id |
+      | 16       | 51        | invitation_created | 2019-05-28 06:00:00 | 21           |
+      | 16       | 51        | invitation_refused | 2019-05-29 06:00:00 | null         |
+      | 16       | 51        | invitation_created | 2019-05-30 12:00:00 | 21           |
+    When I send a GET request to "/groups/16/requests"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "member_id": "51",
+        "inviting_user": {"first_name": "Jean-Michel", "group_id": "21", "last_name": "Blanquer", "login": "owner"},
+        "joining_user": {"grade": 2, "group_id": "51", "login": "larry"},
+        "at": "2019-05-30T12:00:00Z",
+        "action": "invitation_created"
+      },
+      {
+        "member_id": "51",
+        "inviting_user": null,
+        "joining_user": {"grade": 2, "group_id": "51", "login": "larry"},
+        "at": "2019-05-29T06:00:00Z",
+        "action": "invitation_refused"
+      }
+    ]
+    """
+
+  Scenario: Only the latest join_request_created is returned when a member re-requested
+    Given I am the user with id "21"
+    And the database has the following table "groups":
+      | id |
+      | 16 |
+    And the database has the following table "group_managers":
+      | group_id | manager_id | can_manage  |
+      | 16       | 21         | memberships |
+    And the database has the following table "group_pending_requests":
+      | group_id | member_id | type         | at                  | personal_info_view_approved |
+      | 16       | 31        | join_request | 2019-05-30 12:00:00 | true                        |
+    And the database has the following table "group_membership_changes":
+      | group_id | member_id | action               | at                  | initiator_id |
+      | 16       | 31        | join_request_created | 2019-05-28 06:00:00 | 31           |
+      | 16       | 31        | join_request_refused | 2019-05-29 06:00:00 | 21           |
+      | 16       | 31        | join_request_created | 2019-05-30 12:00:00 | 31           |
+    When I send a GET request to "/groups/16/requests"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "member_id": "31",
+        "inviting_user": null,
+        "joining_user": {"first_name": "Jane", "grade": 2, "group_id": "31", "last_name": "Doe", "login": "jane"},
+        "at": "2019-05-30T12:00:00Z",
+        "action": "join_request_created"
+      },
+      {
+        "member_id": "31",
+        "inviting_user": null,
+        "joining_user": {"first_name": "Jane", "grade": 2, "group_id": "31", "last_name": "Doe", "login": "jane"},
+        "at": "2019-05-29T06:00:00Z",
+        "action": "join_request_refused"
+      }
+    ]
+    """
