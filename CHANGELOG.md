@@ -1,10 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.52.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.52.0...v2.52.1) - 2026-08-31
+
+- add `include_description` to `GET /items/{item_id}/children` (presence-only): when set, each direct child visible at `content` level also returns `string.description` (user language preferred, else the item's default; JSON `null` when NULL); nested `children` from `show_level2_children` never include it
+
 ## [v2.52.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.51.2...v2.52.0) - 2026-08-31
 
 - add `show_level2_children` to `GET /items/{item_id}/children` (presence-only): when set, each direct child with at least `content` view and a started result may include a nested `children` array of grandchildren (one level only; omitted when nesting does not apply)
-- add `include_description` to `GET /items/{item_id}/children` (presence-only): when set, each direct child visible at `content` level also returns `string.description` (user language preferred, else the item's default; JSON `null` when NULL); nested `children` from `show_level2_children` never include it
 
 ## [v2.51.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.51.1...v2.51.2) - 2026-07-23
 
