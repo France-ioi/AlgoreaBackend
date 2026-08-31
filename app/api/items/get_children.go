@@ -26,9 +26,16 @@ type listItemString struct {
 	ImageURL *string `json:"image_url"`
 }
 
+// childItemDescriptionFields is embedded only when `include_description` is given and `can_view` >= content.
+// A nil embed omits `description`; a non-nil embed always emits it (including JSON null when the DB value is NULL).
+type childItemDescriptionFields struct {
+	Description *string `json:"description"`
+}
+
 // only for visible items.
 type visibleChildItemString struct {
 	*listItemString
+	*childItemDescriptionFields
 }
 
 type visibleChildItemFields struct {
@@ -148,6 +155,9 @@ type RawListItem struct {
 type rawListChildItem struct {
 	*RawListItem
 
+	// from items_strings (children query only; not mapped onto parents/prerequisites)
+	StringDescription *string `sql:"column:description"`
+
 	// items_items
 	ScoreWeight                int8
 	ContentViewPropagation     string
@@ -186,6 +196,11 @@ type rawListChildItem struct {
 //						 also includes a `children` array with that child's own children (same format, without further
 //						 `children` nesting). Tasks and children with empty `results` (e.g. when the attempt’s `root_item_id`
 //						 is the child) do not nest.
+//						 If `{include_description}` is given (presence-only; any value enables it), each direct child that
+//						 exposes `string` and is visible at content level also includes `string.description`
+//						 (user language preferred, else the item’s default language; JSON `null` when the resolved
+//						 description is NULL). Nested level-2 `children` never include `description`.
+//						 The content-level gate is stricter than `itemView`, which returns `description` from `info` view.
 //
 //
 //						 * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on the specified item
@@ -221,6 +236,16 @@ type rawListChildItem struct {
 //				not a Task, is visible at content level, and has at least one started entry in its public `results`
 //				(`results[].started_at` not null) includes a `children` array with that child's own children (nested
 //				entries do not themselves include `children`). Tasks and children with empty `results` do not nest.
+//			type: string
+//			required: false
+//		- name: include_description
+//			in: query
+//			description: |
+//				Presence-only flag. When present (any value, including `0`), each direct child of `{item_id}` that
+//				exposes `string` and is visible at content level (`can_view` >= content) includes `string.description`
+//				from `items_strings` (user language preferred, else the item’s default; JSON `null` when NULL).
+//				Nested level-2 children never include `description`. Stricter than `itemView`, which returns
+//				`description` already at `info` view.
 //			type: string
 //			required: false
 //		- name: as_team_id
@@ -264,6 +289,7 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 		}
 	}
 	showLevel2Children := len(httpRequest.URL.Query()["show_level2_children"]) > 0
+	includeDescription := len(httpRequest.URL.Query()["include_description"]) > 0
 
 	store := srv.GetStore(httpRequest)
 	found, err := store.Permissions().
@@ -280,9 +306,9 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 	}
 
 	var rawData []rawListChildItem
-	scanItemChildren(store, []int64{params.itemID}, params, requiredViewPermissionOnItems, "", &rawData)
+	scanItemChildren(store, []int64{params.itemID}, params, requiredViewPermissionOnItems, "", includeDescription, &rawData)
 
-	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
+	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted(), includeDescription)
 	if showLevel2Children {
 		fillLevel2Children(response, rawData, store, params, requiredViewPermissionOnItems)
 	}
@@ -318,9 +344,17 @@ const itemChildrenExternalColumnList = `COALESCE(user_strings.language_tag, defa
 			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`
 
+// Appended to itemChildrenExternalColumnList only for the level-1 scan when include_description is set.
+const itemChildrenDescriptionColumn = `,
+			 IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description`
+
 func scanItemChildren(store *database.DataStore, parentItemIDs []int64, params *getParentsOrChildrenServiceParams,
-	requiredViewPermissionOnItems, additionalColumnList string, dest interface{},
+	requiredViewPermissionOnItems, additionalColumnList string, includeDescription bool, dest interface{},
 ) {
+	externalColumnList := itemChildrenExternalColumnList
+	if includeDescription {
+		externalColumnList += itemChildrenDescriptionColumn
+	}
 	service.MustNotBeError(
 		constructItemChildrenQuery(
 			store,
@@ -332,7 +366,7 @@ func scanItemChildren(store *database.DataStore, parentItemIDs []int64, params *
 			params.watchedGroupID,
 			itemChildrenColumnList+additionalColumnList,
 			[]interface{}{params.participantID},
-			itemChildrenExternalColumnList,
+			externalColumnList,
 			func(db *database.DB) *database.DB {
 				return db.Joins(
 					"JOIN items_items ON items_items.parent_item_id IN (?) AND items_items.child_item_id = items.id",
@@ -394,7 +428,8 @@ func fillLevel2Children(
 	}
 
 	var rawLevel2 []rawListChildItem
-	scanItemChildren(store, startedIDs, params, requiredViewPermissionOnItems, ", items_items.parent_item_id", &rawLevel2)
+	// Level-2 never selects or maps description (includeDescription=false).
+	scanItemChildren(store, startedIDs, params, requiredViewPermissionOnItems, ", items_items.parent_item_id", false, &rawLevel2)
 
 	rawByParent := make(map[int64][]rawListChildItem, len(startedIDs))
 	for index := range rawLevel2 {
@@ -410,7 +445,7 @@ func fillLevel2Children(
 		if _, ok := startedIDSet[response[index].ID]; !ok {
 			continue
 		}
-		children := childItemsFromRawData(rawByParent[response[index].ID], params.watchedGroupIDIsSet, permissionGrantedStore)
+		children := childItemsFromRawData(rawByParent[response[index].ID], params.watchedGroupIDIsSet, permissionGrantedStore, false)
 		response[index].Children = &children
 	}
 }
@@ -449,6 +484,7 @@ func constructItemChildrenQuery(
 
 func childItemsFromRawData(
 	rawData []rawListChildItem, watchedGroupIDIsSet bool, permissionGrantedStore *database.PermissionGrantedStore,
+	includeDescription bool,
 ) []childItem {
 	result := make([]childItem, 0, len(rawData))
 	var currentChild *childItem
@@ -470,11 +506,13 @@ func childItemsFromRawData(
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("info") {
 				child.visibleChildItemFields = &visibleChildItemFields{
-					String: visibleChildItemString{&listItemString{
-						LanguageTag: rawData[index].StringLanguageTag,
-						Title:       rawData[index].StringTitle,
-						ImageURL:    rawData[index].StringImageURL,
-					}},
+					String: visibleChildItemString{
+						listItemString: &listItemString{
+							LanguageTag: rawData[index].StringLanguageTag,
+							Title:       rawData[index].StringTitle,
+							ImageURL:    rawData[index].StringImageURL,
+						},
+					},
 					DefaultLanguageTag:     rawData[index].DefaultLanguageTag,
 					BestScore:              rawData[index].BestScore,
 					Results:                make([]structures.ItemResult, 0, 1),
@@ -493,6 +531,11 @@ func childItemsFromRawData(
 			}
 			if rawData[index].CanViewGeneratedValue >= permissionGrantedStore.ViewIndexByName("content") {
 				child.String.listItemStringNotInfo = &listItemStringNotInfo{Subtitle: rawData[index].StringSubtitle}
+				if includeDescription {
+					child.String.childItemDescriptionFields = &childItemDescriptionFields{
+						Description: rawData[index].StringDescription,
+					}
+				}
 			}
 			child.WatchedGroup = rawData[index].asItemWatchedGroupStat(watchedGroupIDIsSet, permissionGrantedStore)
 			result = append(result, child)

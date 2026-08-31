@@ -1298,3 +1298,207 @@ Feature: Get item children
     []
     """
     And the response at $[0].children should be "<undefined>"
+
+  Scenario: include_description returns descriptions on level-1 children
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?attempt_id=1&include_description=1"
+    Then the response code should be 200
+    And the response at $[0].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Chapter B",
+      "image_url": "http://example.com/my2.jpg",
+      "subtitle": "Subtitle 2",
+      "description": "Description 2"
+    }
+    """
+    And the response at $[1].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Chapter A",
+      "image_url": "http://example.com/my1.jpg",
+      "subtitle": "Subtitle 1",
+      "description": "Description 1"
+    }
+    """
+    And the response at $[0].children should be "<undefined>"
+    And the response at $[1].children should be "<undefined>"
+
+  Scenario: include_description=0 still enables the option (presence-only)
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?attempt_id=1&include_description=0"
+    Then the response code should be 200
+    And the response at $[0].string.description in JSON should be:
+    """
+    "Description 2"
+    """
+    And the response at $[1].string.description in JSON should be:
+    """
+    "Description 1"
+    """
+
+  Scenario: Without include_description, description keys are omitted
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?attempt_id=1"
+    Then the response code should be 200
+    And the response at $[0].string.description should be "<undefined>"
+    And the response at $[1].string.description should be "<undefined>"
+
+  Scenario: include_description with show_level2_children still omits description on nested children
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?attempt_id=1&include_description=1&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[0].string.description in JSON should be:
+    """
+    "Description 2"
+    """
+    And the response at $[0].children[0].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Chapter B1",
+      "image_url": "http://example.com/my21.jpg",
+      "subtitle": "Subtitle 21"
+    }
+    """
+    And the response at $[0].children[1].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Task B2",
+      "image_url": "http://example.com/my22.jpg",
+      "subtitle": "Subtitle 22"
+    }
+    """
+    And the response at $[0].children[0].string.description should be "<undefined>"
+    And the response at $[0].children[1].string.description should be "<undefined>"
+    And the response at $[1].string.description in JSON should be:
+    """
+    "Description 1"
+    """
+
+  Scenario: include_description omits description for info-only children
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?as_team_id=26&attempt_id=0&include_description=1"
+    Then the response code should be 200
+    And the response at $[0].permissions.can_view in JSON should be:
+    """
+    "info"
+    """
+    And the response at $[0].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Chapter B",
+      "image_url": "http://example.com/my2.jpg"
+    }
+    """
+    And the response at $[0].string.description should be "<undefined>"
+    And the response at $[1].string.description should be "<undefined>"
+
+  Scenario: include_description uses the user's preferred language
+    Given I am the user with id "17"
+    When I send a GET request to "/items/200/children?attempt_id=0&include_description=1"
+    Then the response code should be 200
+    And the response at $[0].string in JSON should be:
+    """
+    {
+      "language_tag": "fr",
+      "title": "Chapitre B",
+      "image_url": "http://example.com/mf2.jpg",
+      "subtitle": "Sous-titre 2",
+      "description": "texte 2"
+    }
+    """
+    And the response at $[1].string in JSON should be:
+    """
+    {
+      "language_tag": "fr",
+      "title": "Chapitre A",
+      "image_url": "http://example.com/mf1.jpg",
+      "subtitle": "Sous-titre 1",
+      "description": "texte 1"
+    }
+    """
+
+  Scenario: include_description emits null when the resolved description is NULL
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id  | type    | default_language_tag | display_settings |
+      | 270 | Chapter | en                   | {}               |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title            | image_url                    | subtitle       | description |
+      | 270     | en           | Null Description | http://example.com/my270.jpg | Subtitle 270   | null        |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 200            | 270           | 4           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 270     | solution           |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at |
+      | 1          | 11             | 270     | 2019-05-30 12:00:00 | 2019-05-30 12:00:01 | 0.0            | null         |
+    When I send a GET request to "/items/200/children?attempt_id=1&include_description=1"
+    Then the response code should be 200
+    And the response at $[2].id in JSON should be:
+    """
+    "270"
+    """
+    And the response at $[2].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Null Description",
+      "image_url": "http://example.com/my270.jpg",
+      "subtitle": "Subtitle 270",
+      "description": null
+    }
+    """
+
+  Scenario: include_description falls back to the item default language when user language is missing
+    Given I am the user with id "17"
+    And the database table "items" also has the following rows:
+      | id  | type    | default_language_tag | display_settings |
+      | 271 | Chapter | en                   | {}               |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title              | image_url                    | subtitle       | description        |
+      | 271     | en           | Default Lang Only  | http://example.com/my271.jpg | Subtitle 271   | Description 271    |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 200            | 271           | 4           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 17       | 271     | solution           |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at |
+      | 0          | 17             | 271     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null         |
+    When I send a GET request to "/items/200/children?attempt_id=0&include_description=1"
+    Then the response code should be 200
+    And the response at $[2].id in JSON should be:
+    """
+    "271"
+    """
+    And the response at $[2].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Default Lang Only",
+      "image_url": "http://example.com/my271.jpg",
+      "subtitle": "Subtitle 271",
+      "description": "Description 271"
+    }
+    """
+
+  Scenario: include_description with show_invisible_items does not add description on invisible children
+    Given I am the user with id "22"
+    When I send a GET request to "/items/200/children?attempt_id=0&show_invisible_items=1&include_description=1"
+    Then the response code should be 200
+    And the response at $[2].id in JSON should be:
+    """
+    "230"
+    """
+    And the response at $[2].string should be "<undefined>"
+    And the response at $[0].string.description should be "<undefined>"
+    And the response at $[1].string.description should be "<undefined>"
