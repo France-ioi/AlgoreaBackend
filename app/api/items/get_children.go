@@ -120,8 +120,8 @@ type childItem struct {
 
 	// The child's own children, same format (without further nesting of `children`).
 	// Only on direct children of `{item_id}`, and only if `show_level2_children` is given,
-	// the child is visible at content level, and its public `results` has at least one entry with
-	// `started_at` not null. A qualifying child with no visible children yields `[]`.
+	// the child is not a Task, is visible at content level, and its public `results` has at least
+	// one entry with `started_at` not null. A qualifying child with no visible children yields `[]`.
 	Children *[]childItem `json:"children,omitempty"`
 }
 
@@ -182,9 +182,10 @@ type rawListChildItem struct {
 //						 but with a limited set of fields.
 //						 If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
 //						 If `{show_level2_children}` is given (presence-only; any value enables it), each direct child that is
-//						 visible at content level and has at least one started entry in its public `results` also includes a
-//						 `children` array with that child's own children (same format, without further `children` nesting).
-//						 Children with empty `results` (e.g. when the attempt’s `root_item_id` is the child) do not nest.
+//						 not a Task, is visible at content level, and has at least one started entry in its public `results`
+//						 also includes a `children` array with that child's own children (same format, without further
+//						 `children` nesting). Tasks and children with empty `results` (e.g. when the attempt’s `root_item_id`
+//						 is the child) do not nest.
 //
 //
 //						 * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on the specified item
@@ -217,9 +218,9 @@ type rawListChildItem struct {
 //			in: query
 //			description: |
 //				Presence-only flag. When present (any value, including `0`), each direct child of `{item_id}` that is
-//				visible at content level and has at least one started entry in its public `results` (`results[].started_at`
-//				not null) includes a `children` array with that child's own children (nested entries do not themselves
-//				include `children`). Children with empty `results` do not nest.
+//				not a Task, is visible at content level, and has at least one started entry in its public `results`
+//				(`results[].started_at` not null) includes a `children` array with that child's own children (nested
+//				entries do not themselves include `children`). Tasks and children with empty `results` do not nest.
 //			type: string
 //			required: false
 //		- name: as_team_id
@@ -355,7 +356,7 @@ func childHasStartedResult(child *childItem) bool {
 }
 
 // level1IDsEligibleForChildren returns IDs of response children that nest under show_level2_children:
-// content view (from raw rows) and at least one started entry in the public results array.
+// not a Task, content view (from raw rows), and at least one started entry in the public results array.
 // Requiring a public started result (not a raw DB started row alone) means attempts whose
 // root_item_id is the child itself — which yield empty `results` via HasAttempt — do not nest.
 func level1IDsEligibleForChildren(
@@ -370,6 +371,9 @@ func level1IDsEligibleForChildren(
 
 	startedIDs := make([]int64, 0, len(response))
 	for index := range response {
+		if response[index].Type == "Task" {
+			continue
+		}
 		// Check public results first so invisible children (nil visible fields) exercise that branch.
 		if childHasStartedResult(&response[index]) && hasContentByItemID[response[index].ID] {
 			startedIDs = append(startedIDs, response[index].ID)

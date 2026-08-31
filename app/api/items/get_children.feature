@@ -1094,7 +1094,7 @@ Feature: Get item children
     """
     And the response at $[1].children should be "<undefined>"
 
-  Scenario: Started child with no visible children yields empty children array
+  Scenario: Started Task child never gets a children key
     Given I am the user with id "11"
     And the database table "items" also has the following rows:
       | id  | type | default_language_tag | display_settings |
@@ -1117,6 +1117,39 @@ Feature: Get item children
     """
     "240"
     """
+    And the response at $[2].type in JSON should be:
+    """
+    "Task"
+    """
+    And the response at $[2].children should be "<undefined>"
+
+  Scenario: Started Chapter with no visible children yields empty children array
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id  | type    | default_language_tag | display_settings |
+      | 241 | Chapter | en                   | {}               |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title             |
+      | 241     | en           | Childless Chapter |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 200            | 241           | 4           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 241     | solution           |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at |
+      | 1          | 11             | 241     | 2019-05-30 12:00:00 | 2019-05-30 12:00:01 | 0.0            | null         |
+    When I send a GET request to "/items/200/children?attempt_id=1&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[2].id in JSON should be:
+    """
+    "241"
+    """
+    And the response at $[2].type in JSON should be:
+    """
+    "Chapter"
+    """
     And the response at $[2].children in JSON should be:
     """
     []
@@ -1125,11 +1158,11 @@ Feature: Get item children
   Scenario: Child with a started result only on another attempt gets no children key
     Given I am the user with id "11"
     And the database table "items" also has the following rows:
-      | id  | type | default_language_tag | display_settings |
-      | 250 | Task | en                   | {}               |
+      | id  | type    | default_language_tag | display_settings |
+      | 250 | Chapter | en                   | {}               |
     And the database table "items_strings" also has the following rows:
-      | item_id | language_tag | title            |
-      | 250     | en           | Other Attempt Task |
+      | item_id | language_tag | title               |
+      | 250     | en           | Other Attempt Chapter |
     And the database table "items_items" also has the following rows:
       | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
       | 200            | 250           | 4           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
@@ -1144,6 +1177,10 @@ Feature: Get item children
     And the response at $[2].id in JSON should be:
     """
     "250"
+    """
+    And the response at $[2].type in JSON should be:
+    """
+    "Chapter"
     """
     And the response at $[2].children should be "<undefined>"
 
@@ -1225,9 +1262,9 @@ Feature: Get item children
   Scenario: Empty results (attempt rooted at the child) does not get children
     Given I am the user with id "11"
     And the database table "items" also has the following rows:
-      | id  | type | default_language_tag | display_settings |
-      | 260 | Task | en                   | {}               |
-      | 261 | Task | en                   | {}               |
+      | id  | type    | default_language_tag | display_settings |
+      | 260 | Chapter | en                   | {}               |
+      | 261 | Chapter | en                   | {}               |
     And the database table "items_strings" also has the following rows:
       | item_id | language_tag | title            |
       | 260     | en           | Rooted Parent    |
@@ -1251,6 +1288,10 @@ Feature: Get item children
     And the response at $[0].id in JSON should be:
     """
     "261"
+    """
+    And the response at $[0].type in JSON should be:
+    """
+    "Chapter"
     """
     And the response at $[0].results in JSON should be:
     """
