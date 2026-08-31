@@ -117,6 +117,12 @@ type childItem struct {
 	Permissions structures.ItemPermissions `json:"permissions"`
 
 	WatchedGroup *itemWatchedGroupStat `json:"watched_group,omitempty"`
+
+	// The child's own children, same format (without further nesting of `children`).
+	// Only on direct children of `{item_id}`, and only if `show_level2_children` is given,
+	// the child is visible at content level, and its public `results` has at least one entry with
+	// `started_at` not null. A qualifying child with no visible children yields `[]`.
+	Children *[]childItem `json:"children,omitempty"`
 }
 
 // RawListItem contains raw fields common for itemChildrenView & itemParentsView.
@@ -150,6 +156,9 @@ type rawListChildItem struct {
 	WatchPropagation           bool
 	EditPropagation            bool
 	RequestHelpPropagation     bool
+	// Populated only by the level-2 batch scan (selected via additionalColumnList).
+	// Left at zero and intentionally unread on level-1 scans — do not wire it up there.
+	ParentItemID int64
 
 	// items
 	// `items.display_settings` is `NOT NULL` (defaults to `{}`), so we can read it
@@ -172,6 +181,10 @@ type rawListChildItem struct {
 //						 If `{show_invisible_items}` = 1, items invisible to the current user (or to the `{as_team_id}` team) are shown too,
 //						 but with a limited set of fields.
 //						 If `{watched_group_id}` is given, some additional info about the given group's results on the items is shown.
+//						 If `{show_level2_children}` is given (presence-only; any value enables it), each direct child that is
+//						 visible at content level and has at least one started entry in its public `results` also includes a
+//						 `children` array with that child's own children (same format, without further `children` nesting).
+//						 Children with empty `results` (e.g. when the attempt’s `root_item_id` is the child) do not nest.
 //
 //
 //						 * The current user (or the team given in `as_team_id`) should have at least 'content' permissions on the specified item
@@ -200,6 +213,15 @@ type rawListChildItem struct {
 //			type: integer
 //			enum: [0,1]
 //			default: 0
+//		- name: show_level2_children
+//			in: query
+//			description: |
+//				Presence-only flag. When present (any value, including `0`), each direct child of `{item_id}` that is
+//				visible at content level and has at least one started entry in its public `results` (`results[].started_at`
+//				not null) includes a `children` array with that child's own children (nested entries do not themselves
+//				include `children`). Children with empty `results` do not nest.
+//			type: string
+//			required: false
 //		- name: as_team_id
 //			in: query
 //			type: integer
@@ -240,6 +262,7 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 			requiredViewPermissionOnItems = "none"
 		}
 	}
+	showLevel2Children := len(httpRequest.URL.Query()["show_level2_children"]) > 0
 
 	store := srv.GetStore(httpRequest)
 	found, err := store.Permissions().
@@ -256,16 +279,21 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 	}
 
 	var rawData []rawListChildItem
-	service.MustNotBeError(
-		constructItemChildrenQuery(
-			store,
-			params.itemID,
-			params.participantID,
-			requiredViewPermissionOnItems,
-			params.attemptID,
-			params.watchedGroupIDIsSet,
-			params.watchedGroupID,
-			`items.allows_multiple_attempts, category, score_weight, content_view_propagation,
+	scanItemChildren(store, []int64{params.itemID}, params, requiredViewPermissionOnItems, "", &rawData)
+
+	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
+	if showLevel2Children {
+		fillLevel2Children(response, rawData, store, params, requiredViewPermissionOnItems)
+	}
+
+	render.Respond(responseWriter, httpRequest, response)
+	return nil
+}
+
+// itemChildrenColumnList is the list of SQL columns selected for a child item, shared by both
+// the level-1 and the level-2 (`show_level2_children`) queries so that they yield the same format.
+// The `?` placeholder is the participant id used by the `best_score` sub-query.
+const itemChildrenColumnList = `items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
 				items.validation_type, items.duration, items.entry_participant_type, items.no_score,
@@ -280,28 +308,112 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 					FROM results
 					WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
 				child_order,
-				EXISTS(SELECT 1 FROM item_dependencies WHERE item_id = items.id AND grant_content_view) AS grants_access_to_items`,
-			[]interface{}{params.participantID},
-			`COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
+				EXISTS(SELECT 1 FROM item_dependencies WHERE item_id = items.id AND grant_content_view) AS grants_access_to_items`
+
+// itemChildrenExternalColumnList is the list of SQL columns resolved outside of the items sub-query,
+// on the strings joined by JoinsUserAndDefaultItemStrings.
+const itemChildrenExternalColumnList = `COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			 IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			 IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
-			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
+			 IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`
+
+func scanItemChildren(store *database.DataStore, parentItemIDs []int64, params *getParentsOrChildrenServiceParams,
+	requiredViewPermissionOnItems, additionalColumnList string, dest interface{},
+) {
+	service.MustNotBeError(
+		constructItemChildrenQuery(
+			store,
+			parentItemIDs,
+			params.participantID,
+			requiredViewPermissionOnItems,
+			params.attemptID,
+			params.watchedGroupIDIsSet,
+			params.watchedGroupID,
+			itemChildrenColumnList+additionalColumnList,
+			[]interface{}{params.participantID},
+			itemChildrenExternalColumnList,
 			func(db *database.DB) *database.DB {
-				return db.Joins("JOIN items_items ON items_items.parent_item_id = ? AND items_items.child_item_id = items.id", params.itemID)
+				return db.Joins(
+					"JOIN items_items ON items_items.parent_item_id IN (?) AND items_items.child_item_id = items.id",
+					parentItemIDs)
 			},
 		).
 			JoinsUserAndDefaultItemStrings(params.user).
-			Scan(&rawData).Error())
+			Scan(dest).Error())
+}
 
-	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted())
+func childHasStartedResult(child *childItem) bool {
+	if child.visibleChildItemFields == nil {
+		return false
+	}
+	for index := range child.Results {
+		if child.Results[index].StartedAt != nil {
+			return true
+		}
+	}
+	return false
+}
 
-	render.Respond(responseWriter, httpRequest, response)
-	return nil
+// level1IDsEligibleForChildren returns IDs of response children that nest under show_level2_children:
+// content view (from raw rows) and at least one started entry in the public results array.
+// Requiring a public started result (not a raw DB started row alone) means attempts whose
+// root_item_id is the child itself — which yield empty `results` via HasAttempt — do not nest.
+func level1IDsEligibleForChildren(
+	response []childItem, rawData []rawListChildItem, contentViewIndex int,
+) []int64 {
+	hasContentByItemID := make(map[int64]bool, len(response))
+	for index := range rawData {
+		if rawData[index].CanViewGeneratedValue >= contentViewIndex {
+			hasContentByItemID[rawData[index].ID] = true
+		}
+	}
+
+	startedIDs := make([]int64, 0, len(response))
+	for index := range response {
+		// Check public results first so invisible children (nil visible fields) exercise that branch.
+		if childHasStartedResult(&response[index]) && hasContentByItemID[response[index].ID] {
+			startedIDs = append(startedIDs, response[index].ID)
+		}
+	}
+	return startedIDs
+}
+
+func fillLevel2Children(
+	response []childItem, rawData []rawListChildItem, store *database.DataStore,
+	params *getParentsOrChildrenServiceParams, requiredViewPermissionOnItems string,
+) {
+	permissionGrantedStore := store.PermissionsGranted()
+	startedIDs := level1IDsEligibleForChildren(
+		response, rawData, permissionGrantedStore.ViewIndexByName("content"))
+	if len(startedIDs) == 0 {
+		return
+	}
+
+	var rawLevel2 []rawListChildItem
+	scanItemChildren(store, startedIDs, params, requiredViewPermissionOnItems, ", items_items.parent_item_id", &rawLevel2)
+
+	rawByParent := make(map[int64][]rawListChildItem, len(startedIDs))
+	for index := range rawLevel2 {
+		parentID := rawLevel2[index].ParentItemID
+		rawByParent[parentID] = append(rawByParent[parentID], rawLevel2[index])
+	}
+
+	startedIDSet := make(map[int64]struct{}, len(startedIDs))
+	for _, id := range startedIDs {
+		startedIDSet[id] = struct{}{}
+	}
+	for index := range response {
+		if _, ok := startedIDSet[response[index].ID]; !ok {
+			continue
+		}
+		children := childItemsFromRawData(rawByParent[response[index].ID], params.watchedGroupIDIsSet, permissionGrantedStore)
+		response[index].Children = &children
+	}
 }
 
 func constructItemChildrenQuery(
 	dataStore *database.DataStore,
-	parentItemID int64,
+	parentItemIDs []int64,
 	groupID int64,
 	requiredViewPermissionOnItems string,
 	attemptID int64,
@@ -324,7 +436,7 @@ func constructItemChildrenQuery(
 		joinItemRelationsToItemsFunc,
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items_items ON items_items.child_item_id = item_id").
-				Where("items_items.parent_item_id = ?", parentItemID)
+				Where("items_items.parent_item_id IN (?)", parentItemIDs)
 		},
 		func(db *database.DB) *database.DB {
 			return db.Where("IF(attempts.root_item_id <=> results.item_id, attempts.parent_attempt_id, attempts.id) = ?", attemptID)

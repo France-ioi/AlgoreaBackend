@@ -16,6 +16,8 @@ Feature: Get item children
       | 200 | Task    | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://someurl         | true     | true          | {}                                                             |
       | 210 | Chapter | en                   | true     | All             | false                   | true                     | User                   | 10:20:31 | true      | null                   | true     | true          | {"children_layout":"Grid"}                                     |
       | 220 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          | {"prompt_to_join_group_by_code":true}                          |
+      | 221 | Chapter | en                   | true     | All             | false                   | true                     | User                   | 10:20:33 | true      | null                   | true     | true          | {"children_layout":"Grid"}                                     |
+      | 222 | Task    | en                   | true     | All             | false                   | true                     | User                   | 10:20:34 | true      | http://example.com/222 | true     | true          | {}                                                             |
       | 230 | Chapter | en                   | true     | All             | false                   | true                     | Team                   | 10:20:32 | true      | null                   | true     | true          | {"children_layout":"Hide","prompt_to_join_group_by_code":true} |
       | 300 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/300 | true     | true          | {}                                                             |
       | 301 | Skill   | en                   | true     | All             | true                    | true                     | Team                   | 10:20:30 | true      | http://example.com/301 | true     | true          | {}                                                             |
@@ -25,6 +27,8 @@ Feature: Get item children
       | 200     | en           | Category 1   | http://example.com/my0.jpg | Subtitle 0   | Description 0   | Some comment   |
       | 210     | en           | Chapter A    | http://example.com/my1.jpg | Subtitle 1   | Description 1   | Some comment   |
       | 220     | en           | Chapter B    | http://example.com/my2.jpg | Subtitle 2   | Description 2   | Some comment   |
+      | 221     | en           | Chapter B1   | http://example.com/my21.jpg| Subtitle 21  | Description 21  | Some comment   |
+      | 222     | en           | Task B2      | http://example.com/my22.jpg| Subtitle 22  | Description 22  | Some comment   |
       | 230     | en           | Chapter C    | http://example.com/my2.jpg | Subtitle 2   | Description 2   | Some comment   |
       | 200     | fr           | Catégorie 1  | http://example.com/mf0.jpg | Sous-titre 0 | texte 0         | Un commentaire |
       | 210     | fr           | Chapitre A   | http://example.com/mf1.jpg | Sous-titre 1 | texte 1         | Un commentaire |
@@ -49,6 +53,8 @@ Feature: Get item children
       | 200            | 210           | 2           | Discovery | 1            | none                     | use_content_view_propagation  | true                   | false             | true             | true                     |
       | 200            | 220           | 1           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
       | 200            | 230           | 3           | Discovery | 2            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+      | 220            | 221           | 1           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+      | 220            | 222           | 2           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
       | 300            | 301           | 1           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
       | 300            | 302           | 2           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
     And the database has the following table "item_dependencies":
@@ -61,6 +67,8 @@ Feature: Get item children
       | 11       | 200     | solution                 | enter                    | children           | result              | true               |
       | 11       | 210     | solution                 | none                     | none               | none                | true               |
       | 11       | 220     | solution                 | none                     | none               | none                | false              |
+      | 11       | 221     | solution                 | none                     | none               | none                | false              |
+      | 11       | 222     | solution                 | none                     | none               | none                | false              |
       | 11       | 300     | solution                 | none                     | none               | none                | false              |
       | 11       | 301     | solution                 | none                     | none               | none                | false              |
       | 11       | 302     | solution                 | none                     | none               | none                | false              |
@@ -887,3 +895,365 @@ Feature: Get item children
     """
     {"children_layout": "Hide", "prompt_to_join_group_by_code": true}
     """
+
+  Scenario: show_level2_children returns nested children for children with a started result
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?attempt_id=1&show_level2_children=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "id": "220",
+        "order": 1,
+        "category": "Discovery",
+        "score_weight": 2,
+        "content_view_propagation": "as_info",
+        "upper_view_levels_propagation": "as_content_with_descendants",
+        "grant_view_propagation": false,
+        "watch_propagation": true,
+        "edit_propagation": false,
+        "request_help_propagation": false,
+        "type": "Chapter",
+        "validation_type": "All",
+        "allows_multiple_attempts": true,
+        "entry_participant_type": "Team",
+        "duration": "10:20:32",
+        "no_score": true,
+        "default_language_tag": "en",
+        "requires_explicit_entry": false,
+        "best_score": 13.3,
+        "grants_access_to_items": false,
+        "display_settings": {"prompt_to_join_group_by_code": true},
+        "string": {
+          "language_tag": "en",
+          "title": "Chapter B",
+          "image_url": "http://example.com/my2.jpg",
+          "subtitle": "Subtitle 2"
+        },
+        "permissions": {
+          "can_edit": "none",
+          "can_grant_view": "none",
+          "can_view": "solution",
+          "can_watch": "none",
+          "is_owner": false
+        },
+        "results": [
+          {
+            "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+            "attempt_id": "1",
+            "ended_at": null,
+            "latest_activity_at": "2019-05-30T12:00:02Z",
+            "score_computed": 3.3,
+            "started_at": "2019-05-30T12:00:00Z",
+            "validated": false
+          }
+        ],
+        "children": [
+          {
+            "id": "221",
+            "order": 1,
+            "category": "Discovery",
+            "score_weight": 1,
+            "content_view_propagation": "as_info",
+            "upper_view_levels_propagation": "as_content_with_descendants",
+            "grant_view_propagation": false,
+            "watch_propagation": true,
+            "edit_propagation": false,
+            "request_help_propagation": false,
+            "type": "Chapter",
+            "validation_type": "All",
+            "allows_multiple_attempts": true,
+            "entry_participant_type": "User",
+            "duration": "10:20:33",
+            "no_score": true,
+            "default_language_tag": "en",
+            "requires_explicit_entry": false,
+            "best_score": 0,
+            "grants_access_to_items": false,
+            "display_settings": {"children_layout": "Grid"},
+            "string": {
+              "language_tag": "en",
+              "title": "Chapter B1",
+              "image_url": "http://example.com/my21.jpg",
+              "subtitle": "Subtitle 21"
+            },
+            "permissions": {
+              "can_edit": "none",
+              "can_grant_view": "none",
+              "can_view": "solution",
+              "can_watch": "none",
+              "is_owner": false
+            },
+            "results": []
+          },
+          {
+            "id": "222",
+            "order": 2,
+            "category": "Discovery",
+            "score_weight": 1,
+            "content_view_propagation": "as_info",
+            "upper_view_levels_propagation": "as_content_with_descendants",
+            "grant_view_propagation": false,
+            "watch_propagation": true,
+            "edit_propagation": false,
+            "request_help_propagation": false,
+            "type": "Task",
+            "validation_type": "All",
+            "allows_multiple_attempts": true,
+            "entry_participant_type": "User",
+            "duration": "10:20:34",
+            "no_score": true,
+            "default_language_tag": "en",
+            "requires_explicit_entry": false,
+            "best_score": 0,
+            "grants_access_to_items": false,
+            "display_settings": {},
+            "string": {
+              "language_tag": "en",
+              "title": "Task B2",
+              "image_url": "http://example.com/my22.jpg",
+              "subtitle": "Subtitle 22"
+            },
+            "permissions": {
+              "can_edit": "none",
+              "can_grant_view": "none",
+              "can_view": "solution",
+              "can_watch": "none",
+              "is_owner": false
+            },
+            "results": []
+          }
+        ]
+      },
+      {
+        "id": "210",
+        "order": 2,
+        "category": "Discovery",
+        "score_weight": 1,
+        "content_view_propagation": "none",
+        "upper_view_levels_propagation": "use_content_view_propagation",
+        "grant_view_propagation": true,
+        "watch_propagation": false,
+        "edit_propagation": true,
+        "request_help_propagation": true,
+        "type": "Chapter",
+        "validation_type": "All",
+        "allows_multiple_attempts": true,
+        "entry_participant_type": "User",
+        "duration": "10:20:31",
+        "no_score": true,
+        "default_language_tag": "en",
+        "requires_explicit_entry": false,
+        "best_score": 22.2,
+        "grants_access_to_items": true,
+        "display_settings": {"children_layout": "Grid"},
+        "string": {
+          "language_tag": "en",
+          "title": "Chapter A",
+          "image_url": "http://example.com/my1.jpg",
+          "subtitle": "Subtitle 1"
+        },
+        "permissions": {
+          "can_edit": "none",
+          "can_grant_view": "none",
+          "can_view": "solution",
+          "can_watch": "none",
+          "is_owner": true
+        },
+        "results": [
+          {
+            "attempt_allows_submissions_until": "9999-12-31T23:59:59Z",
+            "attempt_id": "1",
+            "ended_at": null,
+            "latest_activity_at": "2018-05-30T12:00:01Z",
+            "score_computed": 22.2,
+            "started_at": null,
+            "validated": false
+          }
+        ]
+      }
+    ]
+    """
+
+  Scenario: show_level2_children=0 still enables the option (presence-only)
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?attempt_id=1&show_level2_children=0"
+    Then the response code should be 200
+    And the response at $[0].id in JSON should be:
+    """
+    "220"
+    """
+    And the response at $[0].children[*].id in JSON should be:
+    """
+    ["221", "222"]
+    """
+    And the response at $[1].id in JSON should be:
+    """
+    "210"
+    """
+    And the response at $[1].children should be "<undefined>"
+
+  Scenario: Started child with no visible children yields empty children array
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id  | type | default_language_tag | display_settings |
+      | 240 | Task | en                   | {}               |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title          |
+      | 240     | en           | Childless Task |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 200            | 240           | 4           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 240     | solution           |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at |
+      | 1          | 11             | 240     | 2019-05-30 12:00:00 | 2019-05-30 12:00:01 | 0.0            | null         |
+    When I send a GET request to "/items/200/children?attempt_id=1&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[2].id in JSON should be:
+    """
+    "240"
+    """
+    And the response at $[2].children in JSON should be:
+    """
+    []
+    """
+
+  Scenario: Child with a started result only on another attempt gets no children key
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id  | type | default_language_tag | display_settings |
+      | 250 | Task | en                   | {}               |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title            |
+      | 250     | en           | Other Attempt Task |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 200            | 250           | 4           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 250     | solution           |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at |
+      | 0          | 11             | 250     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null         |
+    When I send a GET request to "/items/200/children?attempt_id=1&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[2].id in JSON should be:
+    """
+    "250"
+    """
+    And the response at $[2].children should be "<undefined>"
+
+  Scenario: Info-only child with a started result gets no children key
+    Given I am the user with id "22"
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at |
+      | 0          | 22             | 210     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null         |
+      | 0          | 22             | 220     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null         |
+    When I send a GET request to "/items/200/children?attempt_id=0&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[0].results[0].started_at in JSON should be:
+    """
+    "2019-05-30T11:00:00Z"
+    """
+    And the response at $[0].children should be "<undefined>"
+    And the response at $[1].results[0].started_at in JSON should be:
+    """
+    "2019-05-30T11:00:00Z"
+    """
+    And the response at $[1].children should be "<undefined>"
+    When I send a GET request to "/items/210/children?attempt_id=0"
+    Then the response code should be 403
+
+  Scenario: Invisible child gets no children key even with a started result
+    Given I am the user with id "22"
+    When I send a GET request to "/items/200/children?attempt_id=0&show_invisible_items=1&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[2].id in JSON should be:
+    """
+    "230"
+    """
+    And the response at $[2].children should be "<undefined>"
+
+  Scenario: Without show_level2_children, children keys are omitted
+    Given I am the user with id "11"
+    When I send a GET request to "/items/200/children?attempt_id=1"
+    Then the response code should be 200
+    And the response at $[0].children should be "<undefined>"
+    And the response at $[1].children should be "<undefined>"
+
+  Scenario: Level-2 grandchild visible only at info has limited fields
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id  | type    | default_language_tag | no_score | validation_type | requires_explicit_entry | allows_multiple_attempts | entry_participant_type | duration | display_settings |
+      | 223 | Chapter | en                   | true     | All             | false                   | true                     | User                   | 10:20:35 | {}               |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title           | image_url                   | subtitle      |
+      | 223     | en           | Info Grandchild | http://example.com/my23.jpg | Subtitle 23   |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 220            | 223           | 3           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 223     | info               |
+    When I send a GET request to "/items/200/children?attempt_id=1&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[0].children[2].id in JSON should be:
+    """
+    "223"
+    """
+    And the response at $[0].children[2].permissions.can_view in JSON should be:
+    """
+    "info"
+    """
+    And the response at $[0].children[2].string in JSON should be:
+    """
+    {
+      "language_tag": "en",
+      "title": "Info Grandchild",
+      "image_url": "http://example.com/my23.jpg"
+    }
+    """
+    And the response at $[0].children[2].results in JSON should be:
+    """
+    []
+    """
+
+  Scenario: Empty results (attempt rooted at the child) does not get children
+    Given I am the user with id "11"
+    And the database table "items" also has the following rows:
+      | id  | type | default_language_tag | display_settings |
+      | 260 | Task | en                   | {}               |
+      | 261 | Task | en                   | {}               |
+    And the database table "items_strings" also has the following rows:
+      | item_id | language_tag | title            |
+      | 260     | en           | Rooted Parent    |
+      | 261     | en           | Rooted Child     |
+    And the database table "items_items" also has the following rows:
+      | parent_item_id | child_item_id | child_order | category  | score_weight | content_view_propagation | upper_view_levels_propagation | grant_view_propagation | watch_propagation | edit_propagation | request_help_propagation |
+      | 260            | 261           | 1           | Discovery | 1            | as_info                  | as_content_with_descendants   | false                  | true              | false            | false                    |
+    And the database table "attempts" also has the following rows:
+      | id  | participant_id | created_at          | creator_id | parent_attempt_id | root_item_id |
+      | 200 | 11             | 2019-05-30 11:00:00 | 11         | 0                 | 261          |
+    And the database table "results" also has the following rows:
+      | attempt_id | participant_id | item_id | started_at          | latest_activity_at  | score_computed | validated_at |
+      | 200        | 11             | 260     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null         |
+      | 200        | 11             | 261     | 2019-05-30 11:00:00 | 2019-05-30 11:00:01 | 0.0            | null         |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 11       | 260     | content            |
+      | 11       | 261     | content            |
+    When I send a GET request to "/items/260/children?attempt_id=200&show_level2_children=1"
+    Then the response code should be 200
+    And the response at $[0].id in JSON should be:
+    """
+    "261"
+    """
+    And the response at $[0].results in JSON should be:
+    """
+    []
+    """
+    And the response at $[0].children should be "<undefined>"

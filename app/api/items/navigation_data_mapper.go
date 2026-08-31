@@ -81,7 +81,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 
 	childrenQuery := constructItemChildrenQuery(
 		dataStore,
-		rootID,
+		[]int64{rootID},
 		groupID,
 		"info",
 		attemptID,
