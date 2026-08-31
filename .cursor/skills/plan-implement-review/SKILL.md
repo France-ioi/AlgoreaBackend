@@ -1,13 +1,13 @@
 ---
 name: plan-implement-review
-description: Orchestrates a plan-driven implementation loop with a built-in code review for the AlgoreaBackend (Go) project. Use after a plan has been approved (Plan mode) and the user wants the change implemented by a dev subagent, reviewed by an Opus subagent running the /code-review skill, fixed by the dev subagent, then summarized. Trigger when the user asks to "implement and review", "build then review", or run the implement → review → fix → summary workflow.
+description: Orchestrates a plan-driven implementation loop with a built-in code review for the AlgoreaBackend (Go) project. Use after a plan has been approved (Plan mode) and the user wants the change implemented by a dev subagent, reviewed by an Opus 5 subagent running the /code-review skill, fixed by the dev subagent, then summarized. Trigger when the user asks to "implement and review", "build then review", or run the implement → review → fix → summary workflow.
 ---
 
 # Plan, Implement, Review
 
 ## Overview
 
-This skill turns an approved plan into shipped code through a delegated loop: a dev subagent implements, an Opus review subagent runs `/code-review`, the same dev subagent fixes the findings, and the orchestrator reports what was and wasn't done.
+This skill turns an approved plan into shipped code through a delegated loop: a dev subagent implements, an Opus 5 review subagent runs `/code-review`, the same dev subagent fixes the findings, and the orchestrator reports what was and wasn't done.
 
 The orchestrator (the agent running this skill) stays lightweight: it coordinates subagents and writes the final summary. It does NOT implement or review the code itself.
 
@@ -25,7 +25,7 @@ Copy this and keep it updated as you go:
 ```
 - [ ] Step 0: Preconditions verified (approved plan + orchestrator on `auto`)
 - [ ] Step 1: Implement the plan in the dev subagent (auto model)
-- [ ] Step 2: Review the changes in an Opus subagent (/code-review)
+- [ ] Step 2: Review the changes in an Opus 5 subagent (/code-review)
 - [ ] Step 3: Fix review findings in the SAME dev subagent
 - [ ] Step 4: Write the final summary
 ```
@@ -41,12 +41,12 @@ Launch ONE dev subagent to do the implementation. Reuse this same subagent later
 
 Record the dev subagent's **agent ID** — you will `resume` it in Step 3.
 
-## Step 2: Review in an Opus subagent
+## Step 2: Review in an Opus 5 subagent
 
 Launch a separate review subagent over the code that was just written.
 
 - Tool: `Task` with `subagent_type: "generalPurpose"`, `readonly: true`.
-- Model: **`claude-opus-4-8-thinking-high`** (Opus). If that slug is unavailable, tell the user Opus is unavailable rather than silently substituting another model.
+- Model: **`claude-opus-5-thinking-high`** (Opus 5). If that slug is unavailable, tell the user Opus is unavailable rather than silently substituting another model.
 - Prompt the review subagent to:
   1. Read and follow the project's `/code-review` skill/command.
   2. Scope the review to the just-written changes: run `git diff` (and `git status`) to find modified/untracked files, then read them.
