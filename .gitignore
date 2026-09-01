@@ -19,7 +19,8 @@
 /test-results
 
 # Logs
-/log/*.log
+/log/*
+!/log/.gitkeep
 
 # Local config
 conf/config.yaml
@@ -41,3 +42,5 @@ openapi3.yaml
 /.cursor/rules/local.mdc
 # and plans
 /.cursor/plans/
+/plans/
+/reviews/
