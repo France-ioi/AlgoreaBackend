@@ -117,6 +117,9 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 		configs.db.Params = make(map[string]string, 1)
 	}
 	configs.db.Params["charset"] = "utf8mb4"
+	if err := applyDatabaseSessionParams(ctx, logger, config); err != nil {
+		return err
+	}
 	db, err := database.Open(ctx, configs.db.FormatDSN())
 	if err != nil {
 		logger.WithContext(ctx).WithField("module", "database").Error(err)
@@ -171,6 +174,23 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	}
 	app.Database = db
 	app.apiCtx = apiCtx
+	return nil
+}
+
+// applyDatabaseSessionParams validates and installs session params that must be re-applied after
+// every COM_RESET_CONNECTION (DSN params alone do not survive pool reuse).
+func applyDatabaseSessionParams(ctx context.Context, logger *logging.Logger, config *viper.Viper) error {
+	sessionParams := DatabaseSessionParams(config)
+	if err := database.SetSessionParams(sessionParams); err != nil {
+		return fmt.Errorf("unable to load the 'database.sessionParams' configuration: %w", err)
+	}
+	if len(sessionParams) > 0 {
+		logger.WithContext(ctx).WithField("module", "database").WithField("sessionParams", sessionParams).
+			Info("pinning MySQL session params after every connection reset")
+	} else {
+		logger.WithContext(ctx).WithField("module", "database").
+			Info("no MySQL session params configured; session variables follow server defaults after connection reset")
+	}
 	return nil
 }
 

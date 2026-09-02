@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -207,7 +208,13 @@ func TestDB_inTransaction_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *testing.T
 			require.NoError(t, mock.ExpectationsWereMet())
 
 			logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-			assert.Contains(t, logs, fmt.Sprintf("Retrying transaction (count: 1) after Error %d:", errorNumber))
+			retryMsg := fmt.Sprintf("Retrying transaction (count: 1) after Error %d:", errorNumber)
+			assert.Contains(t, logs, retryMsg)
+			if errorNumber == 1205 {
+				assertRetryLogLevel(t, logs, retryMsg, "warning")
+			} else {
+				assertRetryLogLevel(t, logs, retryMsg, "info")
+			}
 		})
 	}
 }
@@ -2474,7 +2481,13 @@ func TestDB_retryOnRetryableError_RetriesOnDeadlockAndLockWaitTimeoutErrors(t *t
 					require.NoError(t, mock.ExpectationsWereMet())
 
 					logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-					assert.Contains(t, logs, fmt.Sprintf("Retrying a query (count: 1) after Error %d:", errorNumber))
+					retryMsg := fmt.Sprintf("Retrying a query (count: 1) after Error %d:", errorNumber)
+					assert.Contains(t, logs, retryMsg)
+					if errorNumber == 1205 {
+						assertRetryLogLevel(t, logs, retryMsg, "warning")
+					} else {
+						assertRetryLogLevel(t, logs, retryMsg, "info")
+					}
 				})
 			}
 		})
@@ -2534,4 +2547,188 @@ func TestDB_retryOnRetryableError_RetriesAboveTheLimitAreDisallowed(t *testing.T
 				loggerHook.LastEntry().Message)
 		})
 	}
+}
+
+func TestSetRetriesTimeBudget(t *testing.T) {
+	defer resetRetriesTimeBudget()
+	assert.Equal(t, defaultRetriesTimeBudget, getRetriesTimeBudget())
+
+	setRetriesTimeBudget(3 * time.Second)
+	assert.Equal(t, 3*time.Second, getRetriesTimeBudget())
+
+	resetRetriesTimeBudget()
+	assert.Equal(t, defaultRetriesTimeBudget, getRetriesTimeBudget())
+}
+
+func assertRetryLogLevel(t *testing.T, logs, retryMsg, level string) {
+	t.Helper()
+	for _, line := range strings.Split(logs, "\n") {
+		if strings.Contains(line, retryMsg) {
+			assert.Contains(t, line, "level="+level)
+			return
+		}
+	}
+	t.Fatalf("retry log line not found for %q in:\n%s", retryMsg, logs)
+}
+
+func TestDB_inTransaction_StopsWhenRetryTimeBudgetExhausted(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	defer resetRetriesTimeBudget()
+	setRetriesTimeBudget(0)
+
+	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
+	conf := viper.New()
+	conf.Set("Level", "error")
+	logger.Configure(conf)
+	db, mock := NewDBMock(ctx)
+	defer func() { _ = db.Close() }()
+
+	var sleepCount int
+	monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+	defer monkey.UnpatchAll()
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").
+		WillReturnError(&mysql.MySQLError{Number: 1205})
+	mock.ExpectRollback()
+
+	err := db.inTransactionWithCount(func(db *DB) error {
+		var result []interface{}
+		return db.Raw("SELECT 1").Scan(&result).Error()
+	}, 0, time.Time{})
+	assert.Equal(t, errors.New("transaction retries time budget exceeded"), err)
+	assert.Zero(t, sleepCount)
+	require.NoError(t, mock.ExpectationsWereMet())
+
+	require.Len(t, loggerHook.AllEntries(), 1)
+	assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
+	assert.Contains(t, loggerHook.LastEntry().Message, "transaction retries time budget has been exceeded")
+}
+
+func TestDB_inTransaction_DeadlocksStillGetFullCountWithinBudget(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	var sleepCount int
+	monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+	defer monkey.UnpatchAll()
+
+	for range retriesLimit {
+		mock.ExpectBegin()
+		mock.ExpectQuery("SELECT 1").
+			WillReturnError(&mysql.MySQLError{Number: 1213})
+		mock.ExpectRollback()
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	require.NoError(t, db.inTransactionWithCount(func(db *DB) error {
+		var result []interface{}
+		mustNotBeError(db.Raw("SELECT 1").Scan(&result).Error())
+		return nil
+	}, 0, time.Time{}))
+	assert.Equal(t, retriesLimit, sleepCount)
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestDB_inTransaction_CountLimitStillAppliesWhenBudgetIsGenerous(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
+	conf := viper.New()
+	conf.Set("Level", "error")
+	logger.Configure(conf)
+	db, mock := NewDBMock(ctx)
+	defer func() { _ = db.Close() }()
+
+	var sleepCount int
+	monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+	defer monkey.UnpatchAll()
+
+	for range retriesLimit + 1 {
+		mock.ExpectBegin()
+		mock.ExpectQuery("SELECT 1").
+			WillReturnError(&mysql.MySQLError{Number: 1213})
+		mock.ExpectRollback()
+	}
+
+	assert.Equal(t, errors.New("transaction retries limit exceeded"),
+		db.inTransactionWithCount(func(db *DB) error {
+			var result []interface{}
+			return db.Raw("SELECT 1").Scan(&result).Error()
+		}, 0, time.Time{}))
+	assert.Equal(t, retriesLimit, sleepCount)
+	require.NoError(t, mock.ExpectationsWereMet())
+
+	require.Len(t, loggerHook.AllEntries(), 1)
+	assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
+	assert.Contains(t, loggerHook.LastEntry().Message, "transaction retries limit has been exceeded")
+}
+
+func TestDB_retryOnRetriableError_StopsWhenRetryTimeBudgetExhausted(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	defer resetRetriesTimeBudget()
+	setRetriesTimeBudget(0)
+
+	ctx, logger, loggerHook := logging.NewContextWithNewMockLogger()
+	conf := viper.New()
+	conf.Set("Level", "error")
+	logger.Configure(conf)
+
+	var sleepCount int
+	monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+	defer monkey.UnpatchAll()
+
+	assert.Equal(t, errors.New("retries time budget exceeded"),
+		retryOnRetriableError(ctx, func() error {
+			return &mysql.MySQLError{Number: 1205}
+		}))
+	assert.Zero(t, sleepCount)
+
+	require.Len(t, loggerHook.AllEntries(), 1)
+	assert.Equal(t, "error", loggerHook.LastEntry().Level.String())
+	assert.Contains(t, loggerHook.LastEntry().Message, "retries time budget has been exceeded")
+}
+
+func TestDB_inTransaction_SlowFirstAttemptDoesNotEatBudget(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	defer resetRetriesTimeBudget()
+	setRetriesTimeBudget(10 * time.Millisecond)
+
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	db, mock := NewDBMock(ctx)
+	defer func() { _ = db.Close() }()
+
+	var sleepCount int
+	var attempt int
+	monkey.Patch(sleepBeforeRetrying, func(_ context.Context) (bool, error) { sleepCount++; return true, nil })
+	defer monkey.UnpatchAll()
+
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT 1").
+		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
+	mock.ExpectCommit()
+
+	err := db.inTransaction(func(db *DB) error {
+		attempt++
+		if attempt == 1 {
+			time.Sleep(50 * time.Millisecond)
+			return &mysql.MySQLError{Number: 1213}
+		}
+		var result []interface{}
+		return db.Raw("SELECT 1").Scan(&result).Error()
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 2, attempt)
+	assert.Equal(t, 1, sleepCount)
+	require.NoError(t, mock.ExpectationsWereMet())
 }

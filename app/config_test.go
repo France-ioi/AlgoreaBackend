@@ -205,6 +205,19 @@ func TestDBConfig_Success(t *testing.T) {
 	assert.Equal(t, "v99", dbConfig.TLSConfig)
 }
 
+func TestDatabaseSessionParams(t *testing.T) {
+	t.Run("empty", func(t *testing.T) {
+		assert.Nil(t, DatabaseSessionParams(viper.New()))
+	})
+	t.Run("from config", func(t *testing.T) {
+		globalConfig := viper.New()
+		globalConfig.Set("database.sessionParams", map[string]string{
+			"innodb_lock_wait_timeout": "5",
+		})
+		assert.Equal(t, map[string]string{"innodb_lock_wait_timeout": "5"}, DatabaseSessionParams(globalConfig))
+	})
+}
+
 func TestDBConfig_UnmarshallingError(t *testing.T) {
 	// don't know if it is really possible to get this error
 	globalConfig := viper.New()

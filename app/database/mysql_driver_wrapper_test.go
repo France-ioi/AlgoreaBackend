@@ -26,12 +26,15 @@ var _ driver.Driver = &driverMock{}
 const expectedDriverName = "name"
 
 func Test_mysqlDriverWrapper_Open(t *testing.T) {
+	require.NoError(t, SetSessionParams(nil))
+	defer func() { require.NoError(t, SetSessionParams(nil)) }()
+
 	d := &mysqlDriverWrapper{
 		driver: &driverMock{},
 	}
 	got, err := d.Open(expectedDriverName)
 	require.NoError(t, err)
-	assert.Equal(t, &mysqlConnWrapper{&connMockWithName{&connMock{}, expectedDriverName}}, got)
+	assert.Equal(t, &mysqlConnWrapper{conn: &connMockWithName{&connMock{}, expectedDriverName}}, got)
 }
 
 type driverMockWithError struct{}

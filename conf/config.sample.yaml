@@ -24,6 +24,12 @@ database:
   net: tcp
   #dbname: algorea_db
   allownativepasswords: true
+  # Re-applied after every pool checkout (COM_RESET_CONNECTION). Do not put these in DSN params.
+  # Values are written raw into SET (like DSN params): numbers unquoted; string vars include quotes
+  # in the value, e.g. sql_mode: "'STRICT_TRANS_TABLES'".
+  sessionParams:
+    innodb_lock_wait_timeout: "5"
+    # sql_mode: "'STRICT_TRANS_TABLES'"
 logging:
   format: text # text, json, console (colorized multiline text, suitable for development)
   output: stdout # stdout, stderr, file

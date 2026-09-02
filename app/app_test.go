@@ -387,3 +387,47 @@ func mockDatabaseOpen() {
 		return db, nil
 	})
 }
+
+func TestApplyDatabaseSessionParams_InvalidSessionParams(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx, logger, _ := logging.NewContextWithNewMockLogger()
+	config := viper.New()
+	config.Set("database.sessionParams", map[string]string{
+		"bad name": "5",
+	})
+
+	err := applyDatabaseSessionParams(ctx, logger, config)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "database.sessionParams")
+}
+
+func TestApplyDatabaseSessionParams_NoSessionParams(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx, logger, hook := logging.NewContextWithNewMockLogger()
+	config := viper.New()
+
+	err := applyDatabaseSessionParams(ctx, logger, config)
+	require.NoError(t, err)
+	require.NotEmpty(t, hook.AllEntries())
+	assert.Equal(t, "info", hook.LastEntry().Level.String())
+	assert.Contains(t, hook.LastEntry().Message, "no MySQL session params configured")
+}
+
+func TestApplyDatabaseSessionParams_WithSessionParams(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx, logger, hook := logging.NewContextWithNewMockLogger()
+	config := viper.New()
+	config.Set("database.sessionParams", map[string]string{
+		"innodb_lock_wait_timeout": "5",
+	})
+	defer func() { require.NoError(t, database.SetSessionParams(nil)) }()
+
+	err := applyDatabaseSessionParams(ctx, logger, config)
+	require.NoError(t, err)
+	require.NotEmpty(t, hook.AllEntries())
+	assert.Equal(t, "info", hook.LastEntry().Level.String())
+	assert.Contains(t, hook.LastEntry().Message, "pinning MySQL session params")
+}

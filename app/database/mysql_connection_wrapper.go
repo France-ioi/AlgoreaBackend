@@ -3,11 +3,16 @@ package database
 import (
 	"context"
 	"database/sql/driver"
+	"errors"
+	"fmt"
 	"unsafe"
+
+	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
 type mysqlConnWrapper struct {
-	conn driver.Conn
+	conn          driver.Conn
+	sessionParams map[string]string
 }
 
 func (conn *mysqlConnWrapper) Begin() (driver.Tx, error) {
@@ -75,11 +80,38 @@ func (conn *mysqlConnWrapper) ResetSession(ctx context.Context) error {
 	//nolint:forcetypeassert // panic if conn.conn does not implement driver.SessionResetter
 	err := conn.conn.(driver.SessionResetter).ResetSession(ctx)
 	if err != nil {
-		return err
+		return discardConnectionAfterResetFailure(ctx, "driver reset session", err)
 	}
 
 	// really reset the session
-	return conn.Reset(ctx)
+	if err := conn.Reset(ctx); err != nil {
+		return discardConnectionAfterResetFailure(ctx, "resetting session", err)
+	}
+
+	// COM_RESET_CONNECTION restores session variables to their global values, so anything the
+	// application relies on must be re-applied here. DSN params are not an option: the driver
+	// sends them only at connect time (handleParams, called from connector.Connect) and never
+	// after a reset.
+	if err := conn.applySessionParams(ctx); err != nil {
+		return discardConnectionAfterResetFailure(ctx, "re-applying session params", err)
+	}
+	return nil
+}
+
+// discardConnectionAfterResetFailure wraps err as driver.ErrBadConn so database/sql discards the
+// connection. Any other error is ignored by the pool and the caller would silently get global session values.
+func discardConnectionAfterResetFailure(ctx context.Context, what string, err error) error {
+	entry := log.EntryFromContext(ctx).WithField("type", "db")
+	msg := fmt.Sprintf("discarding DB connection after failure %s: %s", what, err)
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		entry.Info(msg)
+	} else {
+		entry.Warn(msg)
+	}
+	if errors.Is(err, driver.ErrBadConn) {
+		return err
+	}
+	return fmt.Errorf("%w (%s: %s)", driver.ErrBadConn, what, err.Error())
 }
 
 func (conn *mysqlConnWrapper) Reset(ctx context.Context) error {

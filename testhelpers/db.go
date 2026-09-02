@@ -93,6 +93,9 @@ func OpenRawDBConnection(ctx context.Context) *sql.DB {
 		dbConfig.Params = make(map[string]string, 1)
 	}
 	dbConfig.Params["charset"] = utf8mb4
+	if err := database.SetSessionParams(app.DatabaseSessionParams(config)); err != nil {
+		panic(err)
+	}
 	logger := logging.LoggerFromContext(ctx)
 	rawDB, err := database.OpenRawDBConnection(dbConfig.FormatDSN(), logger.IsRawSQLQueriesLoggingEnabled())
 	if err != nil {
