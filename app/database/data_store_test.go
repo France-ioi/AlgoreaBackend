@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -662,6 +663,69 @@ func TestProhibitResultsPropagation(t *testing.T) {
 		return nil
 	}))
 	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestPropagationSoftDeadlineExceeded(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	dataStore := NewDataStore(db)
+	assert.False(t, dataStore.propagationSoftDeadlineExceeded())
+
+	SetPropagationSoftDeadline(db, time.Now().Add(-time.Second))
+	dataStore = NewDataStore(db)
+	assert.True(t, dataStore.propagationSoftDeadlineExceeded())
+
+	// Updating the shared holder must be visible through a store that captured an older context.
+	type ctxKey string
+	cloned := NewDataStoreWithContext(context.WithValue(dataStore.ctx(), ctxKey("k"), "v"), db)
+	SetPropagationSoftDeadline(db, time.Now().Add(time.Hour))
+	assert.False(t, cloned.propagationSoftDeadlineExceeded())
+	SetPropagationSoftDeadline(db, time.Now().Add(-time.Second))
+	assert.True(t, cloned.propagationSoftDeadlineExceeded())
+
+	// withPropagationSoftDeadline installs a separate holder and does not change the caller's.
+	assert.False(t, dataStore.withPropagationSoftDeadline(time.Now().Add(time.Hour)).propagationSoftDeadlineExceeded())
+	assert.True(t, dataStore.propagationSoftDeadlineExceeded())
+
+	dbMockSync, _ := NewDBMock()
+	defer func() { _ = dbMockSync.Close() }()
+	SetPropagationSoftDeadline(dbMockSync, time.Now().Add(-time.Second))
+	syncStore := NewDataStore(dbMockSync)
+	syncStore.DB = cloneDBWithNewContext(context.WithValue(syncStore.ctx(), propagationsAreSyncContextKey, true), syncStore.DB)
+	assert.False(t, syncStore.propagationSoftDeadlineExceeded())
+}
+
+func TestLogPropagationStoppedEarlyIfNeeded_CountError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	ctx, _, logHook := logging.NewContextWithNewMockLogger()
+	db, dbMock := NewDBMock(ctx)
+	defer func() { _ = db.Close() }()
+
+	SetPropagationSoftDeadline(db, time.Now().Add(-time.Second))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT count(*) FROM `results_propagate_internal`") + "$").
+		WillReturnError(errors.New("count failed"))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT count(*) FROM `results_recompute_for_items`") + "$").
+		WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(0))
+	dbMock.ExpectQuery("^" + regexp.QuoteMeta("SELECT count(*) FROM `permissions_propagate`") + "$").
+		WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(0))
+
+	logPropagationStoppedEarlyIfNeeded(NewDataStore(db))
+
+	logs := (&loggingtest.Hook{Hook: logHook}).GetAllLogs()
+	assert.Contains(t, logs, "propagation stopped early: soft deadline exceeded")
+	assert.Contains(t, logs, "results_propagate_internal=unknown")
+	assert.NoError(t, dbMock.ExpectationsWereMet())
+}
+
+func TestSoftDeadlineExceeded(t *testing.T) {
+	db, _ := NewDBMock()
+	defer func() { _ = db.Close() }()
+
+	assert.False(t, SoftDeadlineExceeded(db))
+	SetPropagationSoftDeadline(db, time.Now().Add(-time.Second))
+	assert.True(t, SoftDeadlineExceeded(db))
 }
 
 func TestDataStore_MergeContext(t *testing.T) {

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -40,6 +41,46 @@ func ProhibitResultsPropagation(conn *DB) {
 	prohibitedPropagations := getProhibitedPropagationsFromContext(conn.ctx())
 	prohibitedPropagations.Results = true
 	conn.db = cloneDBWithNewContext(context.WithValue(conn.ctx(), prohibitedPropagationsContextKey, prohibitedPropagations), conn).db
+}
+
+// SetPropagationSoftDeadline stores a soft deadline for propagations in the DB connection context.
+//
+// Deliberately not a context.WithDeadline: a real deadline aborts the query in flight and rolls
+// back the current chunk. Propagation loops check this value between chunks instead and stop after
+// a committed one, leaving the remaining work queued in results_propagate_internal.
+//
+// The value is a shared mutable holder so later SetPropagationSoftDeadline calls (including from
+// tests) update the same deadline seen by in-flight DataStore clones that inherited the context.
+func SetPropagationSoftDeadline(conn *DB, deadline time.Time) {
+	if existing, ok := conn.ctx().Value(propagationSoftDeadlineContextKey).(*propagationSoftDeadline); ok {
+		existing.set(deadline)
+		return
+	}
+	conn.db = cloneDBWithNewContext(
+		context.WithValue(conn.ctx(), propagationSoftDeadlineContextKey, newPropagationSoftDeadline(deadline)),
+		conn,
+	).db
+}
+
+type propagationSoftDeadline struct {
+	mu       sync.RWMutex
+	deadline time.Time
+}
+
+func newPropagationSoftDeadline(deadline time.Time) *propagationSoftDeadline {
+	return &propagationSoftDeadline{deadline: deadline}
+}
+
+func (d *propagationSoftDeadline) set(deadline time.Time) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.deadline = deadline
+}
+
+func (d *propagationSoftDeadline) get() time.Time {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	return d.deadline
 }
 
 // IsResultsPropagationProhibited returns true if the propagation of results is prohibited in the context of the current DB connection.
@@ -217,11 +258,12 @@ type propagationsBitField struct {
 type dbContextKey string
 
 const (
-	awaitingPropagationsContextKey   = dbContextKey("awaitingPropagations")
-	prohibitedPropagationsContextKey = dbContextKey("prohibitedPropagations")
-	retryEachTransactionContextKey   = dbContextKey("retryEachTransaction")
-	propagationsAreSyncContextKey    = dbContextKey("propagationsAreSync")
-	logErrorAsInfoFuncContextKey     = dbContextKey("logErrorAsInfoFunc")
+	awaitingPropagationsContextKey    = dbContextKey("awaitingPropagations")
+	prohibitedPropagationsContextKey  = dbContextKey("prohibitedPropagations")
+	retryEachTransactionContextKey    = dbContextKey("retryEachTransaction")
+	propagationsAreSyncContextKey     = dbContextKey("propagationsAreSync")
+	logErrorAsInfoFuncContextKey      = dbContextKey("logErrorAsInfoFunc")
+	propagationSoftDeadlineContextKey = dbContextKey("propagationSoftDeadline")
 )
 
 //nolint:gochecknoglobals // for testing purposes only
@@ -281,6 +323,7 @@ func (s *DataStore) InTransaction(txFunc func(*DataStore) error, txOptions ...*s
 		propagationsToRun.Results = false
 		err = s.Results().movePropagationMarksThenProcessResultsRecomputeForItemsAndPropagate()
 	}
+	logPropagationStoppedEarlyIfNeeded(s)
 
 	return err
 }
@@ -436,6 +479,32 @@ func (s *DataStore) InsertOrUpdateMaps(
 	dataMap []map[string]interface{}, updateColumns []string, customColumnUpdates map[string]string,
 ) error {
 	return s.DB.InsertOrUpdateMaps(s.tableName, dataMap, updateColumns, customColumnUpdates)
+}
+
+func (s *DataStore) propagationSoftDeadlineExceeded() bool {
+	holder, ok := s.ctx().Value(propagationSoftDeadlineContextKey).(*propagationSoftDeadline)
+	// Synchronous propagations run inside a request's transaction and must never be interrupted
+	// half-way; the deadline is only ever set on the CLI's connection, this is belt and braces.
+	return ok && !s.arePropagationsSync() && !time.Now().Before(holder.get())
+}
+
+// SoftDeadlineExceeded reports whether the connection's soft propagation deadline has passed.
+// Used by the CLI after a run to choose the user-facing completion message.
+func SoftDeadlineExceeded(conn *DB) bool {
+	return NewDataStore(conn).propagationSoftDeadlineExceeded()
+}
+
+// withPropagationSoftDeadline returns a DataStore with its own soft-deadline holder.
+// Used to give post-unlock permissions regeneration a bounded budget without extending the
+// caller's main deadline (so recursion still stops when the main budget is exhausted).
+func (s *DataStore) withPropagationSoftDeadline(deadline time.Time) *DataStore {
+	return NewDataStoreWithTable(
+		cloneDBWithNewContext(
+			context.WithValue(s.ctx(), propagationSoftDeadlineContextKey, newPropagationSoftDeadline(deadline)),
+			s.DB,
+		),
+		s.tableName,
+	)
 }
 
 // ContextWithTransactionRetrying wraps the given context with a flag to retry each transaction once.
