@@ -73,6 +73,8 @@ go tool cover -html=/tmp/cov.txt -o /tmp/cov.html
 
 Every function and branch in code you added or modified must reach 100%. If a line is genuinely unreachable in tests, add the test that exercises it; only leave it uncovered if it is truly impossible to trigger, and document why.
 
+Calling a new helper from a unit test does **not** cover the production call site. If you change a caller (e.g. add `if err := helper(...); err != nil { return err }`), that caller branch must be exercised too — typically through the public entrypoint (`New`, `Reset`, HTTP handler, etc.). Check **every** modified function in `go tool cover -func` (not only the new helper); Codecov patch coverage fails on uncovered caller lines even when the helper is at 100%.
+
 ## Comments
 - Do NOT add obvious, narrating comments (e.g., `// increment counter`, `// return result`).
 - DO add comments when a non-trivial choice has been made and the reasoning is not self-evident from the code. Examples:
