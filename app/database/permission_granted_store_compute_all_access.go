@@ -208,6 +208,7 @@ func (s *PermissionGrantedStore) computeAllAccessWithCustomTables(
 
 		mustNotBeError(ensureTransactionFunc(s.DataStore, func(store *DataStore) error {
 			initTransactionTime := time.Now()
+			before := beginPropagationChunkCounters(store)
 
 			mustNotBeError(store.Exec(queryCreateTemporaryTable).Error())
 			defer store.Exec(queryDropTemporaryTable)
@@ -238,7 +239,7 @@ func (s *PermissionGrantedStore) computeAllAccessWithCustomTables(
 			mustNotBeError(result.Error())
 			rowsAffected := result.RowsAffected()
 
-			logPropagationStepDurationf(store, time.Since(initTransactionTime),
+			logPropagationStepDurationf(store, time.Since(initTransactionTime), before,
 				"Duration of permissions propagation step: %d rows affected", rowsAffected)
 
 			hasChanges = rowsAffected > 0

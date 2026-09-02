@@ -130,6 +130,10 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 		database.ProhibitResultsPropagation(db)
 	}
 
+	propagationConfig := PropagationConfig(config)
+	propagationConfig.SetDefault("logChunkCounters", true)
+	database.SetPropagationLogChunkCounters(propagationConfig.GetBool("logChunkCounters"))
+
 	// Set up responder.
 	render.Respond = service.AppResponder
 

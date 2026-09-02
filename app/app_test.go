@@ -378,6 +378,43 @@ func TestNew_DisableResultsPropagation(t *testing.T) {
 	}
 }
 
+func TestNew_PropagationLogChunkCountersConfig(t *testing.T) {
+	for _, enabled := range []bool{true, false} {
+		t.Run(fmt.Sprintf("logChunkCounters=%t", enabled), func(t *testing.T) {
+			testoutput.SuppressIfPasses(t)
+
+			mockDatabaseOpen()
+			defer monkey.UnpatchAll()
+			defer database.SetPropagationLogChunkCounters(true)
+
+			appenv.SetDefaultEnvToTest()
+			// Subconfig env prefix is ALGOREA_PROPAGATION_; root AutomaticEnv also accepts __.
+			t.Setenv("ALGOREA_PROPAGATION_LOGCHUNKCOUNTERS", strconv.FormatBool(enabled))
+			t.Setenv("ALGOREA_PROPAGATION__LOGCHUNKCOUNTERS", strconv.FormatBool(enabled))
+			app, err := New()
+			require.NoError(t, err)
+			require.NotNil(t, app)
+			assert.Equal(t, enabled, database.PropagationLogChunkCountersEnabled())
+		})
+	}
+}
+
+func TestApplication_Reset_ClosesExistingDatabase(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	appenv.SetDefaultEnvToTest()
+	application, err := New()
+	require.NoError(t, err)
+	require.NotNil(t, application.Database)
+
+	mockDatabaseOpen()
+	require.NoError(t, application.Reset(LoadConfig()))
+	assert.NotNil(t, application.Database)
+}
+
 func mockDatabaseOpen() {
 	var openPatch *monkey.PatchGuard
 	openPatch = monkey.Patch(database.Open, func(ctx context.Context, _ interface{}) (*database.DB, error) {

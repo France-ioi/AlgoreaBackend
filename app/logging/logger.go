@@ -107,6 +107,27 @@ func (l *Logger) Configure(config *viper.Viper) {
 	log.SetOutput(l.logrusLogger.Writer())
 }
 
+// SetLevel sets the minimum log level for this logger (test helpers and rare overrides).
+func (l *Logger) SetLevel(level logrus.Level) {
+	l.logrusLogger.SetLevel(level)
+}
+
+// GetLevel returns the current minimum log level (test helpers and rare overrides).
+func (l *Logger) GetLevel() logrus.Level {
+	return l.logrusLogger.GetLevel()
+}
+
+// ForceDebugLevel sets the logger to Debug so Debugf lines are emitted.
+// Used by batch CLI commands that should not raise the API server's global level.
+func (l *Logger) ForceDebugLevel() {
+	l.logrusLogger.SetLevel(logrus.DebugLevel)
+}
+
+// IsDebugEnabled reports whether Debug-level logs are currently emitted.
+func (l *Logger) IsDebugEnabled() bool {
+	return l.logrusLogger.IsLevelEnabled(logrus.DebugLevel)
+}
+
 // WithContext returns a new entry with the given context.
 func (l *Logger) WithContext(ctx context.Context) *logrus.Entry {
 	entry := l.logrusLogger.WithContext(ctx)

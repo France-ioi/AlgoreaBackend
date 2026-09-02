@@ -223,12 +223,24 @@ func TestResultStore_Propagate_SlowChunkWarning(t *testing.T) {
 
 	restoreThreshold := database.SetResultsPropagationSlowChunkThresholdForTests(time.Nanosecond)
 	defer restoreThreshold()
+	restoreCounters := database.SetPropagationLogChunkCountersForTests(false)
+	defer restoreCounters()
 
 	err := runResultsPropagation(database.NewDataStore(db))
 	require.NoError(t, err)
 
 	logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
 	assertPropagationStepLoggedAtLevel(t, logs, "Duration of step of results propagation:", "warning")
+	// Observability uses the non-logging path; a missing PROCESS grant must not produce
+	// type=db Error spam (may Warn once that dumps are disabled).
+	for _, line := range strings.Split(logs, "\n") {
+		if strings.Contains(line, "type=db") && strings.Contains(line, "level=error") {
+			assert.NotContains(t, line, "INNODB_TRX",
+				"INNODB_TRX failure must not emit type=db Error lines")
+			assert.NotContains(t, line, "PROCESS privilege",
+				"PROCESS Access denied must not emit type=db Error lines")
+		}
+	}
 }
 
 func TestPermissionGrantedStore_ComputeAllAccess_SoftDeadlineStopsBetweenChunks(t *testing.T) {

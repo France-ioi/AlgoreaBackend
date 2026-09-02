@@ -43,6 +43,15 @@ event:
   sqs:
     queueURL: "" # SQS queue URL (required if dispatcher is "sqs")
     region: "" # AWS region (e.g., "eu-west-1"). If empty, uses default from AWS config.
+# Propagation batch-job settings (also applied when API requests schedule propagation).
+# Counter deltas attach to the existing per-chunk Debug/Warn duration logs only.
+# Snapshots use the non-logging SQL path (no extra Info SQL lines) and require a
+# transaction/fixed connection (same-session Handler_read_key). The after-snapshot
+# is skipped on fast chunks when Debug is off. Empty/NULL or permanent MySQL errors
+# degrade permanently; transient errors use a cooldown. Healthy fast chunks stay
+# silent under production info/warn levels.
+propagation:
+  logChunkCounters: true # performance_schema counters around each chunk (needs performance_schema=ON)
 # CORS allow-list applied to every API response.
 # - allowedOrigins: full origins (scheme + host + optional port). Supports the
 #   wildcard "*" to allow any origin and per-host wildcards like

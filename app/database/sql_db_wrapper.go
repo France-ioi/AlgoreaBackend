@@ -178,7 +178,14 @@ func (sqlDB *sqlDBWrapper) queryRowWithoutLogging(query string, args ...interfac
 	return sqlDB.sqlDB.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlDB.ctx)), query, args...)
 }
 
-var _ queryRowWithoutLogging = &sqlDBWrapper{}
+func (sqlDB *sqlDBWrapper) queryRowsWithoutLogging(query string, args ...interface{}) (*sql.Rows, error) {
+	return sqlDB.sqlDB.QueryContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlDB.ctx)), query, args...)
+}
+
+var (
+	_ queryRowWithoutLogging  = &sqlDBWrapper{}
+	_ queryRowsWithoutLogging = &sqlDBWrapper{}
+)
 
 type withContexter interface {
 	withContext(ctx context.Context) gorm.SQLCommon

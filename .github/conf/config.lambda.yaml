@@ -30,6 +30,10 @@ logging:
   level: debug # debug, info, warning, error, fatal, panic
   logSQLQueries: true
   logRawSQLQueries: false
+propagation:
+  # Override with ALGOREA_PROPAGATION__LOGCHUNKCOUNTERS. Needs performance_schema=ON for deltas;
+  # uses non-logging queries and degrades quietly when PS is off.
+  logChunkCounters: true
 domains:
   -
     domains: [default]
