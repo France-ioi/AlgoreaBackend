@@ -1,20 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v2.53.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.52.1...v2.53.0) - 2026-09-02
 
-### Major
-
-- **breaking / action required**: `server.propagation_endpoint` and `server.disableResultsPropagation` moved
-  to `propagation.endpoint` and `propagation.disableForResults`. There is no fallback: deployments setting
-  `ALGOREA_SERVER__PROPAGATION_ENDPOINT` / `ALGOREA_SERVER__DISABLERESULTSPROPAGATION` MUST rename them to
-  `ALGOREA_PROPAGATION__ENDPOINT` / `ALGOREA_PROPAGATION__DISABLEFORRESULTS` before upgrading, or commands
-  that load the full app (`serve`, `propagation`, …) refuse to start; `db-migrate` / `db-restore` still run.
-  Leaving the old env vars without this rename would otherwise make propagation silently become synchronous
-  inside API requests.
-
-### Patch
-
+- **breaking / action required**: `server.propagation_endpoint` and `server.disableResultsPropagation` moved to `propagation.endpoint` and `propagation.disableForResults`. There is no fallback: deployments setting `ALGOREA_SERVER__PROPAGATION_ENDPOINT` / `ALGOREA_SERVER__DISABLERESULTSPROPAGATION` MUST rename them to `ALGOREA_PROPAGATION__ENDPOINT` / `ALGOREA_PROPAGATION__DISABLEFORRESULTS` before upgrading, or commands that load the full app (`serve`, `propagation`, …) refuse to start; `db-migrate` / `db-restore` still run. Leaving the old env vars without this rename would otherwise make propagation silently become synchronous inside API requests
+- add `--max-duration` to the `propagation` CLI: soft time budget so runs stop between committed chunks instead of being killed mid-transaction; leftover work stays queued for the next trigger
+- add `propagation.logChunkCounters` (default true): attach `performance_schema` counter deltas to per-chunk propagation logs and dump `INNODB_TRX` on slow chunks (degrades quietly when unavailable)
+- raise the `propagation` CLI logger to Debug so per-chunk duration/counter lines are visible (API server logging level unchanged)
 - bound deadlock/lock-wait retries to a 30s wall-clock budget starting at the first retryable failure
 - pin `innodb_lock_wait_timeout` via `database.sessionParams` re-applied after every connection reset
 - discard pooled connections when session params cannot be re-applied after reset
