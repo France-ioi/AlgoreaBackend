@@ -78,13 +78,12 @@ import (
 //				 	                 (skipped for the final item if `parent_attempt_id` is used)
 //							type: string
 //							format: int64
-//						attempt_number:
+//						attempt_order:
 //							description: the order of this attempt result among the other results (within the parent attempt)
 //													 sorted by `started_at`
 //													 (only for items allowing multiple submissions;
 //													 skipped for the final item if `parent_attempt_id` is used)
-//							type: string
-//							format: int64
+//							type: integer
 //					required: [item_id, type, title, language_tag]
 //		"400":
 //			"$ref": "#/responses/badRequestResponse"
