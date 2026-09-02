@@ -228,6 +228,7 @@ func (s *ResultStore) propagate(collectUnlockedItemsForParticipant *int64) (
 func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBeRecomputed(store *DataStore, chunkSize int) {
 	mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
 		initTransactionTime := time.Now()
+		before := beginPropagationChunkCounters(store)
 
 		mustNotBeError(store.Exec("DROP TEMPORARY TABLE IF EXISTS results_to_mark").Error())
 		mustNotBeError(store.Exec(`
@@ -330,7 +331,7 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 		}
 
 		duration := time.Since(initTransactionTime)
-		logPropagationStepDurationf(store, duration,
+		logPropagationStepDurationf(store, duration, before,
 			"Duration of step of results propagation: %d rows affected",
 			result.RowsAffected)
 
@@ -350,6 +351,7 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(store *Da
 
 		mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
 			initTransactionTime := time.Now()
+			before := beginPropagationChunkCounters(store)
 
 			// We process only those objects that were marked as 'to_be_recomputed' and
 			// that have no children (within the attempt or child attempts) marked as 'to_be_recomputed'.
@@ -505,7 +507,7 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(store *Da
 			mustNotBeError(store.Exec(`DELETE FROM ` + resultsPropagateTableName + ` WHERE state = 'recomputing'`).Error())
 
 			duration := time.Since(initTransactionTime)
-			logPropagationStepDurationf(store, duration,
+			logPropagationStepDurationf(store, duration, before,
 				"Duration of step of results propagation: %d rows affected, %d rows modified",
 				rowsAffected, rowsModified)
 
@@ -514,22 +516,12 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(store *Da
 	}
 }
 
-func logPropagationStepDurationf(store *DataStore, duration time.Duration, format string, args ...interface{}) {
-	entry := logging.EntryFromContext(store.ctx())
-	args = append(append([]interface{}{}, args...), duration)
-	format += ", took %v"
-	if duration >= getResultsPropagationSlowChunkThreshold() {
-		entry.Warnf(format, args...)
-	} else {
-		entry.Debugf(format, args...)
-	}
-}
-
 func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(store *DataStore, collectUnlockedItemsForParticipant *int64) (
 	unlockedItemsCount int64, participantItemsUnlocked []int64,
 ) {
 	mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
 		initTransactionTime := time.Now()
+		before := beginPropagationChunkCounters(store)
 
 		participantItemsUnlocked = nil
 		resultsPropagateTableName := store.Results().resultsPropagateTableName()
@@ -606,7 +598,7 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(store *DataSt
 		mustNotBeError(store.Exec("DELETE FROM " + resultsPropagateTableName + " WHERE state = 'propagating'").Error())
 
 		duration := time.Since(initTransactionTime)
-		logPropagationStepDurationf(store, duration,
+		logPropagationStepDurationf(store, duration, before,
 			"Duration of final step of results propagation: %d rows affected",
 			result.RowsAffected)
 
@@ -631,8 +623,11 @@ func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagateInternal)
 
 		var rowsAffected int64
+		// Timing starts outside so the logged duration still covers BEGIN/COMMIT; snapshots stay
+		// inside the transaction so session-scoped Handler_read_key before/after share one session.
 		initTransactionTime := time.Now()
 		mustNotBeError(store.InTransaction(func(store *DataStore) error {
+			before := beginPropagationChunkCounters(store)
 			// Insert a chunk of results for items marked as processing in results_recompute_for_items into results_propagate.
 			result := store.Exec(`
 				INSERT INTO results_propagate_internal
@@ -659,11 +654,11 @@ func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 				mustNotBeError(store.Exec("DELETE FROM results_recompute_for_items WHERE is_being_processed").Error())
 			}
 
+			logPropagationStepDurationf(store, time.Since(initTransactionTime), before,
+				"Duration of step of results propagation insertion from results_recompute_for_items: %d rows affected",
+				rowsAffected)
 			return nil
 		}))
-		logPropagationStepDurationf(store, time.Since(initTransactionTime),
-			"Duration of step of results propagation insertion from results_recompute_for_items: %d rows affected",
-			rowsAffected)
 		if rowsAffected == 0 {
 			break
 		}

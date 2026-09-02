@@ -179,7 +179,14 @@ func (sqlTX *sqlTxWrapper) queryRowWithoutLogging(query string, args ...interfac
 	return sqlTX.sqlTx.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlTX.ctx)), query, args...)
 }
 
-var _ queryRowWithoutLogging = &sqlTxWrapper{}
+func (sqlTX *sqlTxWrapper) queryRowsWithoutLogging(query string, args ...interface{}) (*sql.Rows, error) {
+	return sqlTX.sqlTx.QueryContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlTX.ctx)), query, args...)
+}
+
+var (
+	_ queryRowWithoutLogging  = &sqlTxWrapper{}
+	_ queryRowsWithoutLogging = &sqlTxWrapper{}
+)
 
 func (sqlTX *sqlTxWrapper) withContext(ctx context.Context) gorm.SQLCommon {
 	return &sqlTxWrapper{sqlTx: sqlTX.sqlTx, ctx: ctx, logConfig: sqlTX.logConfig, schemaName: sqlTX.schemaName}

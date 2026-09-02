@@ -193,7 +193,14 @@ func (c *sqlConnWrapper) queryRowWithoutLogging(query string, args ...any) *sql.
 	return c.conn.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(c.ctx)), query, args...)
 }
 
-var _ queryRowWithoutLogging = &sqlConnWrapper{}
+func (c *sqlConnWrapper) queryRowsWithoutLogging(query string, args ...any) (*sql.Rows, error) {
+	return c.conn.QueryContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(c.ctx)), query, args...)
+}
+
+var (
+	_ queryRowWithoutLogging  = &sqlConnWrapper{}
+	_ queryRowsWithoutLogging = &sqlConnWrapper{}
+)
 
 var _ txBeginner = &sqlConnWrapper{}
 

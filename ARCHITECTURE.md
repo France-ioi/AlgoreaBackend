@@ -560,6 +560,13 @@ A run may **stop between committed chunks** when the `propagation` command is gi
 
 One intentional bounded overshoot: after results unlock items, `computeAllAccess()` runs with its own soft deadline of `postUnlockPermissionsBudget` (30s), so unlocked items get generated permissions without an unbounded overrun. That budget fits inside the CLI `--max-duration` shutdown margin (90s), which also covers one worst-case results chunk. Residual permissions stay in `permissions_propagate` and are picked up by the next trigger.
 
+**Observability**:
+- Per-chunk duration logs at Debug (fast) / Warn when duration ≥ 5s (`resultsPropagationSlowChunkThreshold`).
+- When `propagation.logChunkCounters` is true (default), each chunk snapshots status counters via the **non-logging** query path (no extra SQL Info lines) and attaches deltas to that same Debug/Warn line. Snapshots only run on a transaction or fixed connection (same MySQL session for session-scoped `Handler_read_key`). The after-snapshot is skipped when the chunk is fast and Debug logging is off (API production), so counters are not computed for a discarded Debug line. `Handler_read_key` is session-scoped; `Innodb_rows_read` / `Innodb_buffer_pool_read_requests` are **server-wide** (`performance_schema.global_status`) so concurrent API traffic can inflate them — treat "low rows + high duration → blocked" as a hint and prefer the `INNODB_TRX` dump on slow chunks. Requires MySQL `performance_schema=ON` (ops / parameter-group change + reboot; the app cannot flip this). Empty/NULL or permanent MySQL errors (e.g. no such table) degrade permanently; transient errors use a cooldown. Logging stays duration-only when degraded.
+- Slow chunks additionally dump the oldest long-running rows from `information_schema.INNODB_TRX` (started > 30s ago; `ORDER BY trx_started LIMIT 11`), capped/truncated, via the non-logging path. Requires `GRANT PROCESS ON *.*` for the application DB user (works regardless of `performance_schema`). On Access denied / other failure, dumps disable for the rest of the process after one Warn — no per-chunk Error spam. Failure never aborts the chunk.
+- Lock-wait timeout retries log at Warn (deadlocks stay Info) so production sees them when info is muted.
+- The `propagation` CLI process raises its own logger to Debug (and logs that fact once) so per-chunk Debug lines are visible; the HTTP API server logging level is unchanged.
+
 **Concurrency Control**:
 - Named lock: `results_propagation` (10s timeout), namespaced by the connected MySQL schema
 - Prevents parallel propagation
@@ -863,6 +870,14 @@ logging:
   logSQLQueries: true
 ```
 
+**Propagation** (`propagation`):
+```yaml
+propagation:
+  logChunkCounters: true  # non-logging performance_schema snapshots on per-chunk Debug/Warn lines
+```
+Ops prerequisites for full diagnostics: `performance_schema=ON` (parameter group + reboot) and
+`GRANT PROCESS ON *.*` for the application user (`INNODB_TRX` dumps).
+
 **Auth** (`auth`):
 - Client ID/secret for login module
 - Token lifetimes
@@ -919,7 +934,7 @@ domainConfig, _ := app.DomainsConfig(config)
 ./bin/AlgoreaBackend db-recompute
 ```
 
-**`propagation`**: Trigger propagation manually
+**`propagation`**: Trigger propagation manually. The CLI process sets its logger to Debug (API server level unchanged) so per-chunk duration/counter Debug lines are visible. Accepts `--max-duration` for a soft time budget.
 
 **`delete-temp-users`**: Delete expired temporary users
 
@@ -1134,7 +1149,7 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 
 ### Performance Considerations
 
-- **Propagation**: Can be slow for large changes; uses chunking. The `propagation` CLI accepts `--max-duration` so Lambda/cron runs stop between committed chunks of permissions and results work instead of being killed mid-transaction; leftover rows remain queued for the next trigger (a bare `propagation` run drains the queue itself). Chunks slower than 5s log a warning. Post-unlock `computeAllAccess` may use a bounded 30s soft-deadline extension (within the 90s shutdown margin) so unlocked items still get permissions.
+- **Propagation**: Can be slow for large changes; uses chunking. The `propagation` CLI accepts `--max-duration` so Lambda/cron runs stop between committed chunks of permissions and results work instead of being killed mid-transaction; leftover rows remain queued for the next trigger (a bare `propagation` run drains the queue itself). Chunks slower than 5s log a warning (with optional `performance_schema` counter deltas and an `INNODB_TRX` dump via non-logging queries). Post-unlock `computeAllAccess` may use a bounded 30s soft-deadline extension (within the 90s shutdown margin) so unlocked items still get permissions. Per-chunk counters need `performance_schema=ON`; `INNODB_TRX` dumps need `GRANT PROCESS ON *.*` — without either, diagnostics degrade without Error spam.
 - **Query optimization**: Add indexes carefully; monitor slow query log
 - **Transaction retries**: Automatic retry on deadlocks/lock-wait timeouts (up to 30 times or a 30s retry budget from the first retryable failure; worst case ≈ budget + `innodb_lock_wait_timeout`; per transaction / per autocommit statement)
 - **Connection pooling**: Managed by `database/sql`

@@ -27,6 +27,16 @@ func TestEntryFromContext(t *testing.T) {
 	assert.Equal(t, "Hello World", hook.LastEntry().Message)
 }
 
+func TestLogger_SetLevelAndGetLevel(t *testing.T) {
+	logger, _ := NewMockLogger()
+	logger.SetLevel(logrus.WarnLevel)
+	assert.Equal(t, logrus.WarnLevel, logger.GetLevel())
+	assert.False(t, logger.IsDebugEnabled())
+	logger.ForceDebugLevel()
+	assert.Equal(t, logrus.DebugLevel, logger.GetLevel())
+	assert.True(t, logger.IsDebugEnabled())
+}
+
 func TestLoggerFromContext(t *testing.T) {
 	ctx, logger, _ := NewContextWithNewMockLogger()
 	retrievedLogger := LoggerFromContext(ctx)

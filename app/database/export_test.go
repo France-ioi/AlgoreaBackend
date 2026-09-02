@@ -21,3 +21,17 @@ func SetResultsPropagationSlowChunkThresholdForTests(d time.Duration) (restore f
 	setResultsPropagationSlowChunkThreshold(d)
 	return func() { setResultsPropagationSlowChunkThreshold(old) }
 }
+
+func SetPropagationLogChunkCountersForTests(enabled bool) (restore func()) {
+	old := getPropagationLogChunkCounters()
+	SetPropagationLogChunkCounters(enabled)
+	resetPropagationObservabilityState()
+	return func() {
+		SetPropagationLogChunkCounters(old)
+		resetPropagationObservabilityState()
+	}
+}
+
+func ResetPropagationObservabilityStateForTests() {
+	resetPropagationObservabilityState()
+}

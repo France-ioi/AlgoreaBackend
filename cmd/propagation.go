@@ -84,6 +84,9 @@ func runPropagationCommand(propagationMaxDuration *time.Duration) func(cmd *cobr
 			return err
 		}
 
+		// Batch job only: surface per-chunk Debug duration/counter logs without raising the API server level.
+		enablePropagationCommandDebugLogging(application)
+
 		lockTimeout := configurePropagationSoftDeadline(application, startTime, *propagationMaxDuration)
 		stopSIGTERM := startPropagationSIGTERMHandler(application)
 		defer stopSIGTERM()
@@ -103,6 +106,13 @@ func runPropagationCommand(propagationMaxDuration *time.Duration) func(cmd *cobr
 		printPropagationCompletion(cmd, application.Database)
 		return nil
 	}
+}
+
+func enablePropagationCommandDebugLogging(application *app.Application) {
+	logger := logging.LoggerFromContext(application.Database.GetContext())
+	logger.ForceDebugLevel()
+	logger.WithContext(application.Database.GetContext()).
+		Info("propagation command: logging level raised to debug for this process only")
 }
 
 func configurePropagationSoftDeadline(

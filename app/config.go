@@ -23,14 +23,15 @@ const (
 
 // Configurations keys are sub configuration that can be fetched.
 const (
-	serverConfigKey   string = "server"
-	databaseConfigKey string = "database"
-	loggingConfigKey  string = "logging"
-	authConfigKey     string = "auth"
-	tokenConfigKey    string = "token"
-	domainsConfigKey  string = "domains"
-	eventConfigKey    string = "event"
-	corsConfigKey     string = "cors"
+	serverConfigKey      string = "server"
+	databaseConfigKey    string = "database"
+	loggingConfigKey     string = "logging"
+	authConfigKey        string = "auth"
+	tokenConfigKey       string = "token"
+	domainsConfigKey     string = "domains"
+	eventConfigKey       string = "event"
+	corsConfigKey        string = "cors"
+	propagationConfigKey string = "propagation"
 )
 
 // LoadConfig loads and return the global configuration from files, flags, env, ...
@@ -196,4 +197,10 @@ func EventConfig(globalConfig *viper.Viper) *viper.Viper {
 // the live middleware.
 func CORSConfig(globalConfig *viper.Viper) *viper.Viper {
 	return subconfig(globalConfig, corsConfigKey)
+}
+
+// PropagationConfig returns a propagation subconfig from the global config
+// (env var changes impact values).
+func PropagationConfig(globalConfig *viper.Viper) *viper.Viper {
+	return subconfig(globalConfig, propagationConfigKey)
 }
