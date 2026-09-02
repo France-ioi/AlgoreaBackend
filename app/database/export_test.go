@@ -35,3 +35,26 @@ func SetPropagationLogChunkCountersForTests(enabled bool) (restore func()) {
 func ResetPropagationObservabilityStateForTests() {
 	resetPropagationObservabilityState()
 }
+
+func SetResultsPropagateDrainChunkSizeForTests(size int64) (restore func()) {
+	old := getResultsPropagateDrainChunkSize()
+	setResultsPropagateDrainChunkSize(size)
+	return func() { setResultsPropagateDrainChunkSize(old) }
+}
+
+// ResultsPropagateDrainChunkPhase is the test-visible name for resultsPropagateDrainChunkPhase.
+type ResultsPropagateDrainChunkPhase = resultsPropagateDrainChunkPhase
+
+const (
+	ResultsPropagateDrainChunkAfterInsert = resultsPropagateDrainChunkAfterInsert
+	ResultsPropagateDrainChunkAfterDelete = resultsPropagateDrainChunkAfterDelete
+	ResultsPropagateDrainChunkSelectEmpty = resultsPropagateDrainChunkSelectEmpty
+)
+
+func SetResultsPropagateDrainInsideChunkHookForTests(
+	hook func(store *DataStore, fromID, toID int64, phase ResultsPropagateDrainChunkPhase),
+) (restore func()) {
+	old := getResultsPropagateDrainInsideChunkHook()
+	setResultsPropagateDrainInsideChunkHook(hook)
+	return func() { setResultsPropagateDrainInsideChunkHook(old) }
+}
