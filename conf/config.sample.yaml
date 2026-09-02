@@ -3,8 +3,6 @@ server:
   rootPath: "/" # the path at which the router is mounted
   compress: false # whether compression is enabled by default
   # domainOverride: dev.algorea.org # use this domain name for cookies and per-domain configuration choosing
-  propagation_endpoint: "" # Endpoint to schedule the propagation asynchronously. If empty, propagation is synchronous.
-  disableResultsPropagation: false # Disable the propagation of results.
 auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"
@@ -51,6 +49,8 @@ event:
 # degrade permanently; transient errors use a cooldown. Healthy fast chunks stay
 # silent under production info/warn levels.
 propagation:
+  endpoint: "" # Endpoint to schedule the propagation asynchronously. If empty, propagation is synchronous.
+  disableForResults: false # Disable the propagation of results.
   logChunkCounters: true # performance_schema counters around each chunk (needs performance_schema=ON)
 # CORS allow-list applied to every API response.
 # - allowedOrigins: full origins (scheme + host + optional port). Supports the

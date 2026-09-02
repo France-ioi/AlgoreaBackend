@@ -47,15 +47,16 @@ func New(loggerOptional ...*logging.Logger) (*Application, error) {
 }
 
 type appConfigs struct {
-	db      *mysql.Config
-	auth    *viper.Viper
-	logging *viper.Viper
-	domains []domain.ConfigItem
-	token   *token.Config
-	server  *viper.Viper
-	event   *viper.Viper
+	db          *mysql.Config
+	auth        *viper.Viper
+	logging     *viper.Viper
+	domains     []domain.ConfigItem
+	token       *token.Config
+	server      *viper.Viper
+	event       *viper.Viper
+	propagation *viper.Viper
 	// cors is intentionally a fully-built *cors.Cors rather than a *viper.Viper:
-	// unlike the sibling dynamic subconfigs above (auth/logging/server/event),
+	// unlike the sibling dynamic subconfigs above (auth/logging/server/event/propagation),
 	// CORS is resolved once in loadAppConfigs so runtime env-var changes do NOT
 	// propagate to the live middleware. See CORSConfig's doc comment for the
 	// rationale; do not refactor this to *viper.Viper without re-deriving the
@@ -63,7 +64,38 @@ type appConfigs struct {
 	cors *cors.Cors
 }
 
+// rejectLegacyServerPropagationKeys fails closed when renamed server.* keys are still present
+// (file or ALGOREA_SERVER__* env). Silent ignore would make async propagation sync inside API requests.
+// Remove after v2.55 once deployments no longer carry the legacy server.* keys / env vars.
+func rejectLegacyServerPropagationKeys(serverConfig *viper.Viper) error {
+	for _, legacy := range []struct {
+		key, replacement, legacyEnv, newEnv string
+	}{
+		{
+			"propagation_endpoint", "propagation.endpoint",
+			"ALGOREA_SERVER__PROPAGATION_ENDPOINT", "ALGOREA_PROPAGATION__ENDPOINT",
+		},
+		{
+			"disableResultsPropagation", "propagation.disableForResults",
+			"ALGOREA_SERVER__DISABLERESULTSPROPAGATION", "ALGOREA_PROPAGATION__DISABLEFORRESULTS",
+		},
+	} {
+		if serverConfig.IsSet(legacy.key) {
+			return fmt.Errorf(
+				"config key 'server.%s' (env %s) has been renamed to '%s' (env %s)",
+				legacy.key, legacy.legacyEnv, legacy.replacement, legacy.newEnv,
+			)
+		}
+	}
+	return nil
+}
+
 func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {
+	serverConfig := ServerConfig(config)
+	if err := rejectLegacyServerPropagationKeys(serverConfig); err != nil {
+		return nil, err
+	}
+
 	dbConfig, err := DBConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load the 'database' configuration: %w", err)
@@ -80,15 +112,19 @@ func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to load the 'cors' configuration: %w", err)
 	}
+	propagationConfig := PropagationConfig(config)
+	propagationConfig.SetDefault("logChunkCounters", true)
+
 	return &appConfigs{
-		db:      dbConfig,
-		auth:    AuthConfig(config),
-		logging: LoggingConfig(config),
-		domains: domainsConfig,
-		token:   tokenConfig,
-		server:  ServerConfig(config),
-		event:   EventConfig(config),
-		cors:    corsHandler,
+		db:          dbConfig,
+		auth:        AuthConfig(config),
+		logging:     LoggingConfig(config),
+		domains:     domainsConfig,
+		token:       tokenConfig,
+		server:      serverConfig,
+		event:       EventConfig(config),
+		propagation: propagationConfig,
+		cors:        corsHandler,
 	}, nil
 }
 
@@ -126,13 +162,11 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 		return err
 	}
 
-	if configs.server.GetBool("disableResultsPropagation") {
+	if configs.propagation.GetBool("disableForResults") {
 		database.ProhibitResultsPropagation(db)
 	}
 
-	propagationConfig := PropagationConfig(config)
-	propagationConfig.SetDefault("logChunkCounters", true)
-	database.SetPropagationLogChunkCounters(propagationConfig.GetBool("logChunkCounters"))
+	database.SetPropagationLogChunkCounters(configs.propagation.GetBool("logChunkCounters"))
 
 	// Set up responder.
 	render.Respond = service.AppResponder
@@ -168,7 +202,7 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	}
 
 	configs.server.SetDefault("rootPath", "/")
-	apiCtx, apiRouter := api.Router(db, configs.server, configs.auth, configs.domains, configs.token)
+	apiCtx, apiRouter := api.Router(db, configs.server, configs.auth, configs.propagation, configs.domains, configs.token)
 	router.Mount(configs.server.GetString("rootPath"), apiRouter)
 
 	app.HTTPHandler = router

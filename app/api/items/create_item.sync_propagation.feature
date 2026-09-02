@@ -39,8 +39,8 @@ Feature: Create item
     And the generated permissions are computed
     And the application config is:
     """
-    server:
-      propagation_endpoint: "/not_found" # set a non-empty propagation_endpoint pointing to nowhere to disable the async propagation
+    propagation:
+      endpoint: "/not_found" # set a non-empty endpoint pointing to nowhere to disable the async propagation
     """
 
   Scenario: Synchronously recomputes results of the current user linked to the parent item

@@ -3,8 +3,6 @@ server:
   rootPath: "/" # the path at which the router is mounted
   compress: false # whether compression is enabled by default
   # domainOverride: dev.algorea.org # use this domain name for cookies and per-domain configuration choosing
-  propagation_endpoint: "" # Endpoint to schedule the propagation asynchronously. If empty, propagation is synchronous.
-  disable_results_propagation: false # Disable the propagation of results.
 auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"
@@ -35,6 +33,9 @@ logging:
   logSQLQueries: true
   logRawSQLQueries: false # log low-level db operations, including row fetching and statement preparation (only needed for debugging during development)
   analyzeSQLQueries: false # run EXPLAIN ANALYZE on all SQL queries (works only if logSQLQueries is true)
+propagation:
+  endpoint: "" # Endpoint to schedule the propagation asynchronously. If empty, propagation is synchronous.
+  disableForResults: false # Disable the propagation of results.
 domains:
   -
     domains: [default] # of a list of domains

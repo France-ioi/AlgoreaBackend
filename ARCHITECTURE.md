@@ -462,11 +462,12 @@ All services embed `service.Base`:
 
 ```go
 type Base struct {
-    store        *database.DataStore  // Global store
-    ServerConfig *viper.Viper
-    AuthConfig   *viper.Viper
-    DomainConfig []domain.ConfigItem
-    TokenConfig  *token.Config
+    store             *database.DataStore  // Global store
+    ServerConfig      *viper.Viper
+    AuthConfig        *viper.Viper
+    PropagationConfig *viper.Viper
+    DomainConfig      []domain.ConfigItem
+    TokenConfig       *token.Config
 }
 ```
 
@@ -498,8 +499,8 @@ query = sorter.Apply(r, query, sortingFields)
 
 **Propagation** (`service/propagation.go`):
 ```go
-service.SchedulePropagation(store, r, "groups")  // Async propagation
-service.MustPropagateNow(r, store)               // Sync propagation
+// Empty endpoint (propagation.endpoint unset) runs sync after commit; non-empty schedules async HTTP.
+service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
 ```
 
 ---
@@ -858,7 +859,6 @@ database:
 server:
   rootPath: /
   compress: true
-  disableResultsPropagation: false
 ```
 
 **Logging** (`logging`):
@@ -873,8 +873,16 @@ logging:
 **Propagation** (`propagation`):
 ```yaml
 propagation:
-  logChunkCounters: true  # non-logging performance_schema snapshots on per-chunk Debug/Warn lines
+  endpoint: ""              # async schedule URL; empty = sync propagation
+  disableForResults: false  # when true, results propagation is prohibited
+  logChunkCounters: true    # non-logging performance_schema snapshots on per-chunk Debug/Warn lines
 ```
+Startup safety: legacy `server.propagation_endpoint` and `server.disableResultsPropagation` (YAML or
+`ALGOREA_SERVER__*` env) are rejected when loading app configs (`app.New` / `Reset`), with no fallback.
+A silently ignored key would empty `propagation.endpoint` and run async work synchronously inside API
+requests. Rename to `propagation.endpoint` / `propagation.disableForResults` (env
+`ALGOREA_PROPAGATION__ENDPOINT` / `ALGOREA_PROPAGATION__DISABLEFORRESULTS`). Commands that only call
+`LoadConfig`/`DBConfig` (e.g. `db-migrate`) do not run this check.
 Ops prerequisites for full diagnostics: `performance_schema=ON` (parameter group + reboot) and
 `GRANT PROCESS ON *.*` for the application user (`INNODB_TRX` dumps).
 
