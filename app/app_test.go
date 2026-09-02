@@ -402,6 +402,30 @@ func TestApplyDatabaseSessionParams_InvalidSessionParams(t *testing.T) {
 	assert.Contains(t, err.Error(), "database.sessionParams")
 }
 
+// Covers Application.Reset's error return when sessionParams are invalid (app.go:120-121).
+// The helper alone is covered above; Codecov still requires the caller path.
+func TestNew_InvalidSessionParams(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	appenv.SetDefaultEnvToTest()
+	var loadConfigPatch *monkey.PatchGuard
+	loadConfigPatch = monkey.Patch(LoadConfig, func() *viper.Viper {
+		loadConfigPatch.Unpatch()
+		config := LoadConfig()
+		loadConfigPatch.Restore()
+		config.Set("database.sessionParams", map[string]string{
+			"bad name": "5",
+		})
+		return config
+	})
+	defer monkey.UnpatchAll()
+
+	app, err := New()
+	assert.Nil(t, app)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unable to load the 'database.sessionParams' configuration")
+}
+
 func TestApplyDatabaseSessionParams_NoSessionParams(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
