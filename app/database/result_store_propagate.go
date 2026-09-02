@@ -1,6 +1,9 @@
 package database
 
 import (
+	"fmt"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
@@ -12,7 +15,35 @@ const (
 	resultsPropagationLockWaitTimeout        = 10 * time.Second
 	resultsPropagationPropagationChunkSize   = 200
 	resultsPropagationRecomputationChunkSize = 1000
+
+	// Bound for post-unlock computeAllAccess after the main soft deadline. Must stay well under
+	// cmd's propagationShutdownMargin (90s) so a budgeted run still has headroom for one worst-case
+	// results chunk overshoot plus this permissions budget before the Lambda hard timeout.
+	// Residual permissions stay queued in permissions_propagate and are resumable.
+	postUnlockPermissionsBudget = 30 * time.Second
 )
+
+// Chunks are expected to take well under a second. Anything above this is abnormal and worth a
+// warning, since the per-chunk Debugf below is not emitted at production log level.
+// Variable so that tests can lower it.
+//
+//nolint:gochecknoglobals // overridable in tests via export_test.go
+var (
+	resultsPropagationSlowChunkThresholdMu sync.RWMutex
+	resultsPropagationSlowChunkThreshold   = 5 * time.Second
+)
+
+func getResultsPropagationSlowChunkThreshold() time.Duration {
+	resultsPropagationSlowChunkThresholdMu.RLock()
+	defer resultsPropagationSlowChunkThresholdMu.RUnlock()
+	return resultsPropagationSlowChunkThreshold
+}
+
+func setResultsPropagationSlowChunkThreshold(d time.Duration) {
+	resultsPropagationSlowChunkThresholdMu.Lock()
+	defer resultsPropagationSlowChunkThresholdMu.Unlock()
+	resultsPropagationSlowChunkThreshold = d
+}
 
 func (s *ResultStore) movePropagationMarksThenProcessResultsRecomputeForItemsAndPropagate() (err error) {
 	defer recoverPanics(&err)
@@ -31,6 +62,45 @@ func (s *ResultStore) movePropagationMarksThenProcessResultsRecomputeForItemsAnd
 	}))
 
 	return nil
+}
+
+func logPropagationStoppedEarlyIfNeeded(store *DataStore) {
+	if !store.propagationSoftDeadlineExceeded() {
+		return
+	}
+
+	type queueCount struct {
+		name  string
+		count int64
+		err   error
+	}
+	queues := []queueCount{
+		{name: store.Results().resultsPropagateTableName()},
+		{name: "results_recompute_for_items"},
+		{name: store.PermissionsGranted().permissionsPropagateTableName()},
+	}
+	parts := make([]string, 0, len(queues))
+	anyRemaining := false
+	countFailed := false
+	for i := range queues {
+		queue := &queues[i]
+		queue.err = store.Table(queue.name).Count(&queue.count).Error()
+		if queue.err != nil {
+			countFailed = true
+			parts = append(parts, fmt.Sprintf("%s=unknown (count failed: %v)", queue.name, queue.err))
+			continue
+		}
+		if queue.count > 0 {
+			anyRemaining = true
+		}
+		parts = append(parts, fmt.Sprintf("%s=%d", queue.name, queue.count))
+	}
+	if !anyRemaining && !countFailed {
+		return
+	}
+	logging.EntryFromContext(store.ctx()).Warnf(
+		"propagation stopped early: soft deadline exceeded, queued work still pending (%s)",
+		strings.Join(parts, ", "))
 }
 
 // PropagateAndCollectUnlockedItemsForParticipant recomputes fields of results and propagates permissions for unlocked items.
@@ -101,7 +171,7 @@ func (s *ResultStore) propagate(collectUnlockedItemsForParticipant *int64) (
 	participantItemsUnlocked = golang.NewSet[int64]()
 
 	// Initially there can be results of any kind
-	for {
+	for !s.propagationSoftDeadlineExceeded() {
 		// First we take a chunk of results marked as 'to_be_propagated' and mark them as 'propagating'.
 		// Then we create missing results for their parents and mark those parent results as 'to_be_recomputed'.
 		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMarkAndInsertResults)
@@ -132,11 +202,20 @@ func (s *ResultStore) propagate(collectUnlockedItemsForParticipant *int64) (
 	if itemsUnlockedCount > 0 {
 		CallBeforePropagationStepHook(PropagationStepResultsPropagationScheduling)
 
-		// generate permissions_generated from permissions_granted
-		s.PermissionsGranted().computeAllAccess()
+		accessStore := s.DataStore
+		if _, ok := s.ctx().Value(propagationSoftDeadlineContextKey).(*propagationSoftDeadline); ok {
+			// Budgeted run: allow a bounded extension for unlocked-item permissions. Residual work
+			// stays in permissions_propagate. The main soft deadline is unchanged so recursion below
+			// still stops when the overall budget is exhausted.
+			accessStore = s.withPropagationSoftDeadline(time.Now().Add(postUnlockPermissionsBudget))
+		}
+		accessStore.PermissionsGranted().computeAllAccess()
 		// we should compute results again as new permissions were set and
 		// triggers on permissions_generated likely marked some results as 'to_be_propagated'
 		if s.arePropagationsSync() || moveFromResultsPropagateToResultsPropagateInternal(s.DataStore) {
+			if s.propagationSoftDeadlineExceeded() {
+				return participantItemsUnlocked, nil
+			}
 			participantItemsUnlocked2, err := s.Results().propagate(collectUnlockedItemsForParticipant)
 			mustNotBeError(err)
 			participantItemsUnlocked.Add(participantItemsUnlocked2.Values()...)
@@ -250,11 +329,10 @@ func markAsPropagatingSomeResultsMarkedAsToBePropagatedAndMarkTheirParentsAsToBe
 				ON DUPLICATE KEY UPDATE state = 'to_be_recomputed'`).Error())
 		}
 
-		logging.EntryFromContext(store.ctx()).Debugf(
-			"Duration of step of results propagation: %d rows affected, took %v",
-			result.RowsAffected,
-			time.Since(initTransactionTime),
-		)
+		duration := time.Since(initTransactionTime)
+		logPropagationStepDurationf(store, duration,
+			"Duration of step of results propagation: %d rows affected",
+			result.RowsAffected)
 
 		return nil
 	}))
@@ -264,6 +342,10 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(store *Da
 	hasChanges := true
 
 	for hasChanges {
+		if store.propagationSoftDeadlineExceeded() {
+			return
+		}
+
 		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockMain)
 
 		mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
@@ -422,12 +504,24 @@ func recomputeResultsMarkedAsToBeRecomputedAndMarkThemAsToBePropagated(store *Da
 			// Finally we unmark all unchanged results marked as 'recomputing'.
 			mustNotBeError(store.Exec(`DELETE FROM ` + resultsPropagateTableName + ` WHERE state = 'recomputing'`).Error())
 
-			logging.EntryFromContext(store.ctx()).
-				Debugf("Duration of step of results propagation: %d rows affected, %d rows modified, took %v",
-					rowsAffected, rowsModified, time.Since(initTransactionTime))
+			duration := time.Since(initTransactionTime)
+			logPropagationStepDurationf(store, duration,
+				"Duration of step of results propagation: %d rows affected, %d rows modified",
+				rowsAffected, rowsModified)
 
 			return nil
 		}))
+	}
+}
+
+func logPropagationStepDurationf(store *DataStore, duration time.Duration, format string, args ...interface{}) {
+	entry := logging.EntryFromContext(store.ctx())
+	args = append(append([]interface{}{}, args...), duration)
+	format += ", took %v"
+	if duration >= getResultsPropagationSlowChunkThreshold() {
+		entry.Warnf(format, args...)
+	} else {
+		entry.Debugf(format, args...)
 	}
 }
 
@@ -511,11 +605,10 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(store *DataSt
 
 		mustNotBeError(store.Exec("DELETE FROM " + resultsPropagateTableName + " WHERE state = 'propagating'").Error())
 
-		logging.EntryFromContext(store.ctx()).Debugf(
-			"Duration of final step of results propagation: %d rows affected, took %v",
-			result.RowsAffected,
-			time.Since(initTransactionTime),
-		)
+		duration := time.Since(initTransactionTime)
+		logPropagationStepDurationf(store, duration,
+			"Duration of final step of results propagation: %d rows affected",
+			result.RowsAffected)
 
 		return nil
 	}))
@@ -527,10 +620,16 @@ func unlockDependedItemsForResultsMarkedAsPropagatingAndUnmarkThem(store *DataSt
 func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 	const chunkSize = 20000
 
-	// Mark all rows from results_recompute_for_items as processing.
+	// Mark all rows from results_recompute_for_items as processing. Intentional before the soft-deadline
+	// gate: a later run re-marks the same rows and continues; stopping mid-drain is resumable.
 	mustNotBeError(store.Exec("UPDATE results_recompute_for_items SET is_being_processed = 1").Error())
 
 	for {
+		if store.propagationSoftDeadlineExceeded() {
+			return
+		}
+		CallBeforePropagationStepHook(PropagationStepResultsInsideNamedLockInsertIntoResultsPropagateInternal)
+
 		var rowsAffected int64
 		initTransactionTime := time.Now()
 		mustNotBeError(store.InTransaction(func(store *DataStore) error {
@@ -562,11 +661,9 @@ func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 
 			return nil
 		}))
-		logging.EntryFromContext(store.ctx()).Debugf(
-			"Duration of step of results propagation insertion from results_recompute_for_items: took %v with %d rows affected",
-			time.Since(initTransactionTime),
-			rowsAffected,
-		)
+		logPropagationStepDurationf(store, time.Since(initTransactionTime),
+			"Duration of step of results propagation insertion from results_recompute_for_items: %d rows affected",
+			rowsAffected)
 		if rowsAffected == 0 {
 			break
 		}

@@ -556,10 +556,15 @@ store.SetPropagationsModeToSync()
    - Mark changed results as 'to_be_propagated'
 4. **Repeat** until no more results to propagate
 
+A run may **stop between committed chunks** when the `propagation` command is given a soft time budget via `--max-duration`. The budget applies to both permissions propagation (`computeAllAccess`) and results propagation (including the `results_recompute_for_items` drain), checked between committed chunks. Remaining rows stay queued in `results_propagate_internal` / `permissions_propagate` / `results_recompute_for_items` as applicable. A bare `propagation` invocation drains the queue on its own because it always calls `ScheduleResultsPropagation()` (and `SchedulePermissionsPropagation()`); an API write that schedules propagation also continues the work. On a quiet system with no further triggers after a budget stop, queued work can stay stale until the next trigger — a conscious trade-off to avoid Lambda mid-transaction kills leaving abandoned locks.
+
+One intentional bounded overshoot: after results unlock items, `computeAllAccess()` runs with its own soft deadline of `postUnlockPermissionsBudget` (30s), so unlocked items get generated permissions without an unbounded overrun. That budget fits inside the CLI `--max-duration` shutdown margin (90s), which also covers one worst-case results chunk. Residual permissions stay in `permissions_propagate` and are picked up by the next trigger.
+
 **Concurrency Control**:
 - Named lock: `results_propagation` (10s timeout), namespaced by the connected MySQL schema
 - Prevents parallel propagation
 - Ensures consistency
+- The CLI `propagation` command additionally holds a `propagation_command` named lock, waiting up to 600 s for it, clamped to the remaining soft budget when `--max-duration` is set
 
 **Recomputed Fields**:
 - `latest_activity_at`
@@ -1129,7 +1134,7 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 
 ### Performance Considerations
 
-- **Propagation**: Can be slow for large changes; uses chunking
+- **Propagation**: Can be slow for large changes; uses chunking. The `propagation` CLI accepts `--max-duration` so Lambda/cron runs stop between committed chunks of permissions and results work instead of being killed mid-transaction; leftover rows remain queued for the next trigger (a bare `propagation` run drains the queue itself). Chunks slower than 5s log a warning. Post-unlock `computeAllAccess` may use a bounded 30s soft-deadline extension (within the 90s shutdown margin) so unlocked items still get permissions.
 - **Query optimization**: Add indexes carefully; monitor slow query log
 - **Transaction retries**: Automatic retry on deadlocks/lock-wait timeouts (up to 30 times or a 30s retry budget from the first retryable failure; worst case ≈ budget + `innodb_lock_wait_timeout`; per transaction / per autocommit statement)
 - **Connection pooling**: Managed by `database/sql`

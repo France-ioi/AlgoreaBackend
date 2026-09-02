@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
@@ -200,6 +199,11 @@ func (s *PermissionGrantedStore) computeAllAccessWithCustomTables(
 	// ------------------------------------------------------------------------------------
 	hasChanges := true
 	for hasChanges {
+		// skipTransactions is true only for ComputePermissionsExplanation; never interrupt that path.
+		if !skipTransactions && s.propagationSoftDeadlineExceeded() {
+			return
+		}
+
 		CallBeforePropagationStepHook(PropagationStepAccessMain)
 
 		mustNotBeError(ensureTransactionFunc(s.DataStore, func(store *DataStore) error {
@@ -234,8 +238,8 @@ func (s *PermissionGrantedStore) computeAllAccessWithCustomTables(
 			mustNotBeError(result.Error())
 			rowsAffected := result.RowsAffected()
 
-			logging.EntryFromContext(store.ctx()).
-				Debugf("Duration of permissions propagation step: %d rows affected, took %v", rowsAffected, time.Since(initTransactionTime))
+			logPropagationStepDurationf(store, time.Since(initTransactionTime),
+				"Duration of permissions propagation step: %d rows affected", rowsAffected)
 
 			hasChanges = rowsAffected > 0
 

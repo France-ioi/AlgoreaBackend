@@ -15,3 +15,9 @@ func ResetRetriesTimeBudgetForTests() {
 func GetSessionParamsForTests() map[string]string {
 	return getSessionParams()
 }
+
+func SetResultsPropagationSlowChunkThresholdForTests(d time.Duration) (restore func()) {
+	old := getResultsPropagationSlowChunkThreshold()
+	setResultsPropagationSlowChunkThreshold(d)
+	return func() { setResultsPropagationSlowChunkThreshold(old) }
+}
