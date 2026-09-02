@@ -547,8 +547,8 @@ store.SetPropagationsModeToSync()
 
 ### Results Propagation Algorithm
 
-1. **Mark for propagation**: Rows in `results_propagate` table
-2. **Move to internal**: `results_propagate` → `results_propagate_internal`
+1. **Mark for propagation**: Rows in `results_propagate` table (append-only inbox with an `AUTO_INCREMENT` `id` primary key; no uniqueness on `(participant_id, attempt_id, item_id)`, no FK, no `state` index — so API writers do not contend with the drain)
+2. **Move to internal**: `results_propagate` → `results_propagate_internal` via a chunked high-water-mark drain under `READ COMMITTED` (each id-range chunk in its own short transaction; rows appended above the mark are left for the next run)
 3. **Process in chunks**:
    - Mark chunk as 'propagating'
    - Mark parents as 'to_be_recomputed'
@@ -1018,7 +1018,7 @@ Currently known keys (this list is informational; the backend does not enforce i
 - `access_tokens`: API access tokens
 
 **Propagation**:
-- `results_propagate`: Results marked for propagation
+- `results_propagate`: Results marked for propagation (inbox; `AUTO_INCREMENT` `id` PK only)
 - `results_propagate_internal`: Internal propagation queue
 
 ### Key Views
@@ -1127,6 +1127,7 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 - Use `EnsureTransaction()` when transaction may already exist
 - Schedule propagations inside transactions
 - Retry logic is automatic
+- Exception: the `results_propagate` inbox drain uses `READ COMMITTED` (via `EnsureTransaction` + `TxOptions`) so `INSERT … SELECT` does not take shared next-key locks on the append-only inbox; do not change isolation inside an already-open transaction
 
 ### Testing
 
@@ -1157,7 +1158,7 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 
 ### Performance Considerations
 
-- **Propagation**: Can be slow for large changes; uses chunking. The `propagation` CLI accepts `--max-duration` so Lambda/cron runs stop between committed chunks of permissions and results work instead of being killed mid-transaction; leftover rows remain queued for the next trigger (a bare `propagation` run drains the queue itself). Chunks slower than 5s log a warning (with optional `performance_schema` counter deltas and an `INNODB_TRX` dump via non-logging queries). Post-unlock `computeAllAccess` may use a bounded 30s soft-deadline extension (within the 90s shutdown margin) so unlocked items still get permissions. Per-chunk counters need `performance_schema=ON`; `INNODB_TRX` dumps need `GRANT PROCESS ON *.*` — without either, diagnostics degrade without Error spam.
+- **Propagation**: Can be slow for large changes; uses chunking. The inbox drain (`results_propagate` → `results_propagate_internal`) walks rows by `id` under `READ COMMITTED` so API appends do not fight whole-table shared locks; deploy the `id` PK migration only when the inbox is empty. The `propagation` CLI accepts `--max-duration` so Lambda/cron runs stop between committed chunks of permissions and results work instead of being killed mid-transaction; leftover rows remain queued for the next trigger (a bare `propagation` run drains the queue itself). Chunks slower than 5s log a warning (with optional `performance_schema` counter deltas and an `INNODB_TRX` dump via non-logging queries). Post-unlock `computeAllAccess` may use a bounded 30s soft-deadline extension (within the 90s shutdown margin) so unlocked items still get permissions. Per-chunk counters need `performance_schema=ON`; `INNODB_TRX` dumps need `GRANT PROCESS ON *.*` — without either, diagnostics degrade without Error spam.
 - **Query optimization**: Add indexes carefully; monitor slow query log
 - **Transaction retries**: Automatic retry on deadlocks/lock-wait timeouts (up to 30 times or a 30s retry budget from the first retryable failure; worst case ≈ budget + `innodb_lock_wait_timeout`; per transaction / per autocommit statement)
 - **Connection pooling**: Managed by `database/sql`

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- drain `results_propagate` → `results_propagate_internal` under `READ COMMITTED` in id-bounded chunks (migration `2609021703` adds an `AUTO_INCREMENT` `id` PK; run only when `results_propagate` is empty — the `ALTER` blocks DML while rebuilding the table)
+
 ## [v2.53.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.52.1...v2.53.0) - 2026-09-02
 
 - **breaking / action required**: `server.propagation_endpoint` and `server.disableResultsPropagation` moved to `propagation.endpoint` and `propagation.disableForResults`. There is no fallback: deployments setting `ALGOREA_SERVER__PROPAGATION_ENDPOINT` / `ALGOREA_SERVER__DISABLERESULTSPROPAGATION` MUST rename them to `ALGOREA_PROPAGATION__ENDPOINT` / `ALGOREA_PROPAGATION__DISABLEFORRESULTS` before upgrading, or commands that load the full app (`serve`, `propagation`, …) refuse to start; `db-migrate` / `db-restore` still run. Leaving the old env vars without this rename would otherwise make propagation silently become synchronous inside API requests

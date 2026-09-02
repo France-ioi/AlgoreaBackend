@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"sync"
@@ -21,7 +22,70 @@ const (
 	// results chunk overshoot plus this permissions budget before the Lambda hard timeout.
 	// Residual permissions stay queued in permissions_propagate and are resumable.
 	postUnlockPermissionsBudget = 30 * time.Second
+
+	// Exactly this many inbox rows per chunk (not an id-span width). Each chunk holds FK shared
+	// locks on the referenced results rows until commit (INSERT + DELETE). 20000 stays within
+	// MySQL's 65535 prepared-statement parameter cap for the IN (?) lists.
+	defaultResultsPropagateDrainChunkSize = 20000
 )
+
+// resultsPropagateDrainChunkPhase identifies when the test hook runs inside a chunk transaction.
+type resultsPropagateDrainChunkPhase int
+
+const (
+	// After INSERT, before DELETE — for late-commit / mid-drain insert tests.
+	resultsPropagateDrainChunkAfterInsert resultsPropagateDrainChunkPhase = iota
+	// After DELETE — inbox record locks from the DELETE are still held until commit.
+	resultsPropagateDrainChunkAfterDelete
+	// SELECT returned no rows (including the intentional trailing empty pass).
+	resultsPropagateDrainChunkSelectEmpty
+)
+
+// results_propagate is an append-only inbox: after 2510272308 it had no indexes at all, and even
+// with the AUTO_INCREMENT id PK, API writers and the drain must not contend on whole-table shared
+// locks. Under the default REPEATABLE READ, INSERT ... SELECT takes shared next-key locks on every
+// source row it reads and collides with concurrent API inserts; under READ COMMITTED InnoDB reads
+// the source as a consistent read and takes no locks on it at all. Isolation cannot be changed
+// inside an existing transaction.
+//
+//nolint:gochecknoglobals // isolation options shared by every drain transaction
+var resultsPropagateDrainTxOptions = &sql.TxOptions{Isolation: sql.LevelReadCommitted}
+
+//nolint:gochecknoglobals // overridable in tests via export_test.go
+var (
+	resultsPropagateDrainChunkSizeMu sync.RWMutex
+	resultsPropagateDrainChunkSize   int64 = defaultResultsPropagateDrainChunkSize
+
+	resultsPropagateDrainInsideChunkHookMu sync.RWMutex
+	resultsPropagateDrainInsideChunkHook   func(store *DataStore, fromID, toID int64, phase resultsPropagateDrainChunkPhase)
+)
+
+func getResultsPropagateDrainChunkSize() int64 {
+	resultsPropagateDrainChunkSizeMu.RLock()
+	defer resultsPropagateDrainChunkSizeMu.RUnlock()
+	return resultsPropagateDrainChunkSize
+}
+
+func setResultsPropagateDrainChunkSize(size int64) {
+	if size < 1 {
+		panic("resultsPropagateDrainChunkSize must be >= 1")
+	}
+	resultsPropagateDrainChunkSizeMu.Lock()
+	defer resultsPropagateDrainChunkSizeMu.Unlock()
+	resultsPropagateDrainChunkSize = size
+}
+
+func getResultsPropagateDrainInsideChunkHook() func(store *DataStore, fromID, toID int64, phase resultsPropagateDrainChunkPhase) {
+	resultsPropagateDrainInsideChunkHookMu.RLock()
+	defer resultsPropagateDrainInsideChunkHookMu.RUnlock()
+	return resultsPropagateDrainInsideChunkHook
+}
+
+func setResultsPropagateDrainInsideChunkHook(hook func(store *DataStore, fromID, toID int64, phase resultsPropagateDrainChunkPhase)) {
+	resultsPropagateDrainInsideChunkHookMu.Lock()
+	defer resultsPropagateDrainInsideChunkHookMu.Unlock()
+	resultsPropagateDrainInsideChunkHook = hook
+}
 
 // Chunks are expected to take well under a second. Anything above this is abnormal and worth a
 // warning, since the per-chunk Debugf below is not emitted at production log level.
@@ -666,32 +730,94 @@ func setResultsPropagationFromTableResultsRecomputeForItems(store *DataStore) {
 }
 
 func moveFromResultsPropagateToResultsPropagateInternal(store *DataStore) bool {
-	insertResult := store.Exec(`
-		INSERT INTO results_propagate_internal (participant_id, attempt_id, item_id, state)
-		SELECT participant_id, attempt_id, item_id, state
-		FROM results_propagate
-		JOIN results USING(participant_id, attempt_id, item_id)
-		ON DUPLICATE KEY UPDATE state = IF(
-			VALUES(state)='to_be_recomputed',
-			'to_be_recomputed',
-			IF(results_propagate_internal.state='propagating', 'to_be_propagated', results_propagate_internal.state)
-		)`)
-	mustNotBeError(insertResult.Error())
+	// Isolation cannot be changed inside an existing transaction. Production async call sites
+	// (named-lock drain, and the post-unlock re-entry when !arePropagationsSync()) are outside
+	// one and take READ COMMITTED via EnsureTransaction below. Sync-mode callers never reach here;
+	// tests that call Propagate() inside a transaction fall through without changing isolation.
+	//
+	// High-water mark taken once. Rows the API appends while we drain get an id above it, so we
+	// never scan, lock or delete them; they wait for a later propagation run (often the next
+	// scheduled Lambda/cron pass if this run still holds the named lock). Same for rows that
+	// commit below the cursor mid-drain.
+	var maxIDRow struct {
+		MaxID int64
+	}
+	mustNotBeError(store.Raw("SELECT IFNULL(MAX(id), 0) AS max_id FROM results_propagate").Scan(&maxIDRow).Error())
+	maxID := maxIDRow.MaxID
+	if maxID == 0 {
+		return false
+	}
 
-	movedRows := insertResult.RowsAffected() > 0
+	// Read once so the IN (?) placeholder bound stays stable for the whole run (test hooks that
+	// change chunkSize mid-drain have no effect).
+	chunkSize := getResultsPropagateDrainChunkSize()
+	movedRows := false
+	for fromID := int64(0); ; {
+		var chunkLastID int64
+		var chunkHadRows bool
+		// EnsureTransaction ignores tx options when already in a transaction (in-tx test path).
+		// The chunk body must not schedule propagations: InTransaction would re-enter the drain.
+		mustNotBeError(store.EnsureTransaction(func(store *DataStore) error {
+			// One non-locking read defines the chunk. Both INSERT and DELETE use this same id
+			// list so, under READ COMMITTED's per-statement snapshots, we never delete a row the
+			// INSERT did not consider (a late-committed row simply stays for the next run).
+			var idRows []struct {
+				ID int64
+			}
+			mustNotBeError(store.Raw(`
+				SELECT id FROM results_propagate
+				WHERE id > ? AND id <= ?
+				ORDER BY id
+				LIMIT ?`, fromID, maxID, chunkSize).Scan(&idRows).Error())
+			if len(idRows) == 0 {
+				// Trailing empty pass (and any interior miss): can still pick up a row that
+				// committed into (fromID, maxID] since the previous chunk. Do not "optimize"
+				// away by stopping when a prior chunk returned fewer than chunkSize rows.
+				if hook := getResultsPropagateDrainInsideChunkHook(); hook != nil {
+					hook(store, fromID, maxID, resultsPropagateDrainChunkSelectEmpty)
+				}
+				return nil
+			}
+			chunkHadRows = true
+			ids := make([]int64, len(idRows))
+			for i := range idRows {
+				ids[i] = idRows[i].ID
+			}
+			chunkLastID = ids[len(ids)-1]
 
-	mustNotBeError(store.Exec(`
-		DELETE results_propagate
-		FROM results_propagate
-		JOIN results_propagate_internal USING(participant_id, attempt_id, item_id)
-		WHERE (results_propagate.state='to_be_recomputed') <= (results_propagate_internal.state='to_be_recomputed')`).Error())
+			insertResult := store.Exec(`
+				INSERT INTO results_propagate_internal (participant_id, attempt_id, item_id, state)
+				SELECT participant_id, attempt_id, item_id, state
+				FROM results_propagate
+				JOIN results USING(participant_id, attempt_id, item_id)
+				WHERE results_propagate.id IN (?)
+				ON DUPLICATE KEY UPDATE state = IF(
+					VALUES(state)='to_be_recomputed',
+					'to_be_recomputed',
+					IF(results_propagate_internal.state='propagating', 'to_be_propagated', results_propagate_internal.state)
+				)`, ids)
+			mustNotBeError(insertResult.Error())
+			movedRows = movedRows || insertResult.RowsAffected() > 0
 
-	// Delete rows pointing to non-existing results.
-	mustNotBeError(store.Exec(`
-		DELETE results_propagate
-		FROM results_propagate
-		LEFT JOIN results USING(participant_id, attempt_id, item_id)
-		WHERE results.participant_id IS NULL`).Error())
+			if hook := getResultsPropagateDrainInsideChunkHook(); hook != nil {
+				hook(store, fromID, chunkLastID, resultsPropagateDrainChunkAfterInsert)
+			}
+
+			// Same ids the INSERT considered: joined rows were merged; orphans (no results row)
+			// were skipped by the JOIN and are removed here.
+			mustNotBeError(store.Exec(`DELETE FROM results_propagate WHERE id IN (?)`, ids).Error())
+
+			if hook := getResultsPropagateDrainInsideChunkHook(); hook != nil {
+				hook(store, fromID, chunkLastID, resultsPropagateDrainChunkAfterDelete)
+			}
+			return nil
+		}, resultsPropagateDrainTxOptions))
+
+		if !chunkHadRows {
+			break
+		}
+		fromID = chunkLastID
+	}
 
 	return movedRows
 }

@@ -271,7 +271,7 @@ func updateChildrenAndRunListeners(
 	} else if formData.IsSet("no_score") || formData.IsSet("validation_type") {
 		// results data of the task will be zeroed
 		service.MustNotBeError(
-			store.Exec("INSERT INTO results_propagate ?",
+			store.Exec("INSERT INTO results_propagate (participant_id, attempt_id, item_id, state) ?",
 				store.Results().Where("item_id = ?", itemID).
 					Select("participant_id, attempt_id, item_id, 'to_be_recomputed' AS state").QueryExpr()).Error())
 
