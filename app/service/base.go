@@ -14,11 +14,12 @@ import (
 
 // Base is the common service context data.
 type Base struct {
-	store        *database.DataStore
-	ServerConfig *viper.Viper
-	AuthConfig   *viper.Viper
-	DomainConfig []domain.ConfigItem
-	TokenConfig  *token.Config
+	store             *database.DataStore
+	ServerConfig      *viper.Viper
+	AuthConfig        *viper.Viper
+	PropagationConfig *viper.Viper
+	DomainConfig      []domain.ConfigItem
+	TokenConfig       *token.Config
 }
 
 // SetGlobalStore sets the global store shared by all the request (should be called only once on start).
@@ -46,5 +47,9 @@ func (srv *Base) GetStore(r *http.Request) *database.DataStore {
 
 // GetPropagationEndpoint returns the propagation endpoint from the config.
 func (srv *Base) GetPropagationEndpoint() string {
-	return srv.ServerConfig.GetString("propagation_endpoint")
+	// Nil only for test-helper bare Base{} literals; production always has a non-nil sub-viper.
+	if srv.PropagationConfig == nil {
+		return ""
+	}
+	return srv.PropagationConfig.GetString("endpoint")
 }

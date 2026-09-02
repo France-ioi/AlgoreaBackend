@@ -350,13 +350,14 @@ func TestNew_DoesNotMountPprofInEnvironmentsOtherThanDev(t *testing.T) {
 
 func TestNew_DisableResultsPropagation(t *testing.T) {
 	for _, configSettingValue := range []bool{true, false} {
-		t.Run(fmt.Sprintf("disableResultsPropagation=%t", configSettingValue), func(t *testing.T) {
+		t.Run(fmt.Sprintf("disableForResults=%t", configSettingValue), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			mockDatabaseOpen()
 			defer monkey.UnpatchAll()
 
-			t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", strconv.FormatBool(configSettingValue))
+			appenv.SetDefaultEnvToTest()
+			t.Setenv("ALGOREA_PROPAGATION__DISABLEFORRESULTS", strconv.FormatBool(configSettingValue))
 			logger, _ := logging.NewMockLogger()
 			app, _ := New(logger)
 			assert.Equal(t, configSettingValue, database.NewDataStore(app.Database).IsResultsPropagationProhibited())
@@ -388,8 +389,7 @@ func TestNew_PropagationLogChunkCountersConfig(t *testing.T) {
 			defer database.SetPropagationLogChunkCounters(true)
 
 			appenv.SetDefaultEnvToTest()
-			// Subconfig env prefix is ALGOREA_PROPAGATION_; root AutomaticEnv also accepts __.
-			t.Setenv("ALGOREA_PROPAGATION_LOGCHUNKCOUNTERS", strconv.FormatBool(enabled))
+			// Subconfig env is ALGOREA_PROPAGATION__<KEY> (prefix ends with _; viper joins with _).
 			t.Setenv("ALGOREA_PROPAGATION__LOGCHUNKCOUNTERS", strconv.FormatBool(enabled))
 			app, err := New()
 			require.NoError(t, err)
@@ -397,6 +397,49 @@ func TestNew_PropagationLogChunkCountersConfig(t *testing.T) {
 			assert.Equal(t, enabled, database.PropagationLogChunkCountersEnabled())
 		})
 	}
+}
+
+func TestLoadAppConfigs_RejectsLegacyServerPropagationKeys(t *testing.T) {
+	appenv.SetDefaultEnvToTest()
+
+	const (
+		errPropagationEndpoint = "config key 'server.propagation_endpoint' " +
+			"(env ALGOREA_SERVER__PROPAGATION_ENDPOINT) has been renamed to " +
+			"'propagation.endpoint' (env ALGOREA_PROPAGATION__ENDPOINT)"
+		errDisableForResults = "config key 'server.disableResultsPropagation' " +
+			"(env ALGOREA_SERVER__DISABLERESULTSPROPAGATION) has been renamed to " +
+			"'propagation.disableForResults' (env ALGOREA_PROPAGATION__DISABLEFORRESULTS)"
+	)
+
+	t.Run("config file: propagation_endpoint", func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+		config := LoadConfig()
+		config.Set("server.propagation_endpoint", "/legacy")
+		_, err := loadAppConfigs(config)
+		require.EqualError(t, err, errPropagationEndpoint)
+	})
+
+	t.Run("config file: disableResultsPropagation", func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+		config := LoadConfig()
+		config.Set("server.disableResultsPropagation", true)
+		_, err := loadAppConfigs(config)
+		require.EqualError(t, err, errDisableForResults)
+	})
+
+	t.Run("env: ALGOREA_SERVER__PROPAGATION_ENDPOINT", func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+		t.Setenv("ALGOREA_SERVER__PROPAGATION_ENDPOINT", "/legacy-env")
+		_, err := New()
+		require.EqualError(t, err, errPropagationEndpoint)
+	})
+
+	t.Run("env: ALGOREA_SERVER__DISABLERESULTSPROPAGATION", func(t *testing.T) {
+		testoutput.SuppressIfPasses(t)
+		t.Setenv("ALGOREA_SERVER__DISABLERESULTSPROPAGATION", "true")
+		_, err := New()
+		require.EqualError(t, err, errDisableForResults)
+	})
 }
 
 func TestApplication_Reset_ClosesExistingDatabase(t *testing.T) {

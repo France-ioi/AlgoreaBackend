@@ -183,7 +183,7 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 		newConfig.Set(key, value)
 	}
 
-	// Only 'server', 'domain' and 'auth' changes are currently supported
+	// Only 'server', 'domains', 'auth' and 'propagation' changes are currently supported
 	if config.IsSet("auth") {
 		newConfig.Set("auth", config.Get("auth"))
 	}
@@ -194,6 +194,12 @@ func (ctx *TestContext) TheApplicationConfigIs(yamlConfig *godog.DocString) erro
 		newSettings := config.GetStringMap("server")
 		for settingName, settingValue := range newSettings {
 			newConfig.Set("server."+settingName, settingValue)
+		}
+	}
+	if config.IsSet("propagation") {
+		newSettings := config.GetStringMap("propagation")
+		for settingName, settingValue := range newSettings {
+			newConfig.Set("propagation."+settingName, settingValue)
 		}
 	}
 	return ctx.application.Reset(newConfig, ctx.logger)

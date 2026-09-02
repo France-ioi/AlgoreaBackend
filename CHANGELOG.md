@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Major
+
+- **breaking / action required**: `server.propagation_endpoint` and `server.disableResultsPropagation` moved
+  to `propagation.endpoint` and `propagation.disableForResults`. There is no fallback: deployments setting
+  `ALGOREA_SERVER__PROPAGATION_ENDPOINT` / `ALGOREA_SERVER__DISABLERESULTSPROPAGATION` MUST rename them to
+  `ALGOREA_PROPAGATION__ENDPOINT` / `ALGOREA_PROPAGATION__DISABLEFORRESULTS` before upgrading, or commands
+  that load the full app (`serve`, `propagation`, …) refuse to start; `db-migrate` / `db-restore` still run.
+  Leaving the old env vars without this rename would otherwise make propagation silently become synchronous
+  inside API requests.
+
 ### Patch
 
 - bound deadlock/lock-wait retries to a 30s wall-clock budget starting at the first retryable failure
