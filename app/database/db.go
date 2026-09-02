@@ -715,15 +715,51 @@ func (conn *DB) schemaName() string {
 }
 
 func (conn *DB) inTransaction(txFunc func(*DB) error, txOptions ...*sql.TxOptions) (err error) {
-	return conn.inTransactionWithCount(txFunc, 0, txOptions...)
+	// Zero deadline: the retry wall-clock budget starts at the first retryable failure, not at
+	// transaction begin, so long-running work is not charged against the retry budget.
+	return conn.inTransactionWithCount(txFunc, 0, time.Time{}, txOptions...)
 }
 
 const (
-	retriesLimit        = 30
-	delayBetweenRetries = 50 * time.Millisecond
+	retriesLimit             = 30
+	defaultRetriesTimeBudget = 30 * time.Second
+	delayBetweenRetries      = 50 * time.Millisecond
 )
 
-func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOptions ...*sql.TxOptions) (err error) {
+// retriesTimeBudget bounds how long deadlock/lock-wait *retries* may continue after the first
+// retryable failure (not including the failed attempt that starts the clock). A statement that
+// begins just before the deadline can still burn one full innodb_lock_wait_timeout, so the
+// practical worst case is about retriesTimeBudget + innodb_lock_wait_timeout.
+//
+//nolint:gochecknoglobals // overridable in integration tests via export_test.go
+var (
+	retriesTimeBudgetMu sync.RWMutex
+	retriesTimeBudget   = defaultRetriesTimeBudget
+)
+
+const (
+	transactionRetryKind = "transaction"
+	// queryRetryKind keeps the article so retry log lines stay backward-compatible.
+	queryRetryKind = "a query"
+)
+
+func getRetriesTimeBudget() time.Duration {
+	retriesTimeBudgetMu.RLock()
+	defer retriesTimeBudgetMu.RUnlock()
+	return retriesTimeBudget
+}
+
+func setRetriesTimeBudget(d time.Duration) {
+	retriesTimeBudgetMu.Lock()
+	defer retriesTimeBudgetMu.Unlock()
+	retriesTimeBudget = d
+}
+
+func resetRetriesTimeBudget() {
+	setRetriesTimeBudget(defaultRetriesTimeBudget)
+}
+
+func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, deadline time.Time, txOptions ...*sql.TxOptions) (err error) {
 	if count > 0 && conn.ctx().Value(retryEachTransactionContextKey) == nil {
 		_, _ = sleepBeforeRetrying(conn.ctx())
 	}
@@ -747,7 +783,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 			// In all cases, the DB library closes the connection on rollback failure and logs the error.
 			// But still, in both cases, we should not retry the transaction.
 			// If the panic was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
-			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, recoveredPanic, rollbackErr, &err, txOptions...) {
+			if conn.handleDeadlockAndLockWaitTimeout(txFunc, count, deadline, recoveredPanic, rollbackErr, &err, txOptions...) {
 				return
 			}
 			panic(recoveredPanic) // re-throw panic after rollback if it was not a deadlock/timeout error
@@ -758,7 +794,7 @@ func (conn *DB) inTransactionWithCount(txFunc func(*DB) error, count int64, txOp
 			// In all cases, the DB library closes the connection on rollback failure and logs the error.
 			// But still, in both cases, we should not retry the transaction.
 			// If the error was a deadlock/timeout error, we replace it with either the rollback error or the result of retrying.
-			conn.handleDeadlockAndLockWaitTimeout(txFunc, count, err, rollbackErr, &err, txOptions...)
+			conn.handleDeadlockAndLockWaitTimeout(txFunc, count, deadline, err, rollbackErr, &err, txOptions...)
 		default:
 			err = txDB.Commit().Error // if err is nil, returns the potential error from commit
 		}
@@ -782,32 +818,71 @@ func sleepBeforeRetrying(ctx context.Context) (bool, error) {
 	}
 }
 
-func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, errToHandle interface{}, rollbackErr error,
+func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, deadline time.Time, errToHandle interface{},
+	rollbackErr error,
 	returnErr *error, //nolint:gocritic // we need the pointer as we replace the value of returnErr in some cases
 	txOptions ...*sql.TxOptions,
 ) (shouldIgnoreInitialError bool) {
 	errToHandleError, _ := errToHandle.(error)
 
+	if errToHandle == nil || !isRetryableError(errToHandleError) {
+		return false
+	}
 	// Deadlock found / lock wait timeout exceeded
-	if errToHandle != nil && isRetryableError(errToHandleError) {
-		if rollbackErr != nil { // do not retry if rollback failed
-			// as the previous error was a retryable error, we should return the rollback error, as it is more important
-			*returnErr = rollbackErr
-			return true
-		}
-		// retry
-		if count == retriesLimit {
-			logDBError(conn.ctx(),
-				fmt.Errorf("transaction retries limit has been exceeded, cannot retry the error: %s", errToHandleError.Error()))
-			*returnErr = errors.New("transaction retries limit exceeded")
-			return true
-		}
-		log.EntryFromContext(conn.ctx()).WithField("type", "db").
-			Infof("Retrying transaction (count: %d) after %s", count+1, errToHandleError.Error())
-		*returnErr = conn.inTransactionWithCount(txFunc, count+1, txOptions...)
+	if rollbackErr != nil { // do not retry if rollback failed
+		// as the previous error was a retryable error, we should return the rollback error, as it is more important
+		*returnErr = rollbackErr
 		return true
 	}
-	return false
+	var dueToCount bool
+	var exhausted bool
+	exhausted, dueToCount, deadline = retriesExhausted(count, deadline)
+	if exhausted {
+		*returnErr = retriesExhaustedError(conn.ctx(), errToHandleError, dueToCount, true)
+		return true
+	}
+	logRetryableAttempt(conn.ctx(), transactionRetryKind, count+1, errToHandleError)
+	*returnErr = conn.inTransactionWithCount(txFunc, count+1, deadline, txOptions...)
+	return true
+}
+
+func retriesExhaustedError(ctx context.Context, err error, dueToCount, transactionLevel bool) error {
+	scope := ""
+	if transactionLevel {
+		scope = "transaction "
+	}
+	if dueToCount {
+		logDBError(ctx, fmt.Errorf("%sretries limit has been exceeded, cannot retry the error: %s", scope, err.Error()))
+		return errors.New(scope + "retries limit exceeded")
+	}
+	logDBError(ctx, fmt.Errorf("%sretries time budget has been exceeded, cannot retry the error: %s", scope, err.Error()))
+	return errors.New(scope + "retries time budget exceeded")
+}
+
+// retriesExhausted reports whether retry attempts should stop. When deadline is zero the budget
+// starts here (at the first retryable failure), not at transaction/statement begin.
+func retriesExhausted(count int64, deadline time.Time) (exhausted, dueToCount bool, deadlineOut time.Time) {
+	if count == retriesLimit {
+		return true, true, deadline
+	}
+	if deadline.IsZero() {
+		deadline = time.Now().Add(getRetriesTimeBudget())
+	}
+	if !time.Now().Before(deadline) {
+		return true, false, deadline
+	}
+	return false, false, deadline
+}
+
+func logRetryableAttempt(ctx context.Context, kind string, count int64, err error) {
+	entry := log.EntryFromContext(ctx).WithField("type", "db")
+	msg := fmt.Sprintf("Retrying %s (count: %d) after %s", kind, count, err.Error())
+	// Lock wait timeouts already burned innodb_lock_wait_timeout; escalate so production (info-muted) still sees them.
+	if IsLockWaitTimeoutExceededError(err) {
+		entry.Warn(msg)
+		return
+	}
+	entry.Info(msg)
 }
 
 func (conn *DB) isInTransaction() bool {
@@ -826,6 +901,7 @@ func (conn *DB) isFixed() bool {
 
 func retryOnRetriableError(ctx context.Context, funcToCall func() error) error {
 	count := 0
+	var deadline time.Time
 	for {
 		if count > 0 {
 			_, _ = sleepBeforeRetrying(ctx)
@@ -836,15 +912,14 @@ func retryOnRetriableError(ctx context.Context, funcToCall func() error) error {
 			return err
 		}
 
-		// retry
-		if count == retriesLimit {
-			logDBError(ctx,
-				fmt.Errorf("retries limit has been exceeded, cannot retry the error: %s", err.Error()))
-			return errors.New("retries limit exceeded")
+		var dueToCount bool
+		var exhausted bool
+		exhausted, dueToCount, deadline = retriesExhausted(int64(count), deadline)
+		if exhausted {
+			return retriesExhaustedError(ctx, err, dueToCount, false)
 		}
 
-		log.EntryFromContext(ctx).WithField("type", "db").
-			Infof("Retrying a query (count: %d) after %s", count+1, err.Error())
+		logRetryableAttempt(ctx, queryRetryKind, int64(count+1), err)
 		count++
 	}
 }

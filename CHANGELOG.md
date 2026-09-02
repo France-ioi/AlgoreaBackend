@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Patch
+
+- bound deadlock/lock-wait retries to a 30s wall-clock budget starting at the first retryable failure
+- pin `innodb_lock_wait_timeout` via `database.sessionParams` re-applied after every connection reset
+- discard pooled connections when session params cannot be re-applied after reset
+- log lock-wait retries at warning level
+
 ## [v2.52.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.52.0...v2.52.1) - 2026-08-31
 
 - add `include_description` to `GET /items/{item_id}/children` (presence-only): when set, each direct child visible at `content` level also returns `string.description` (user language preferred, else the item's default; JSON `null` when NULL); nested `children` from `show_level2_children` never include it

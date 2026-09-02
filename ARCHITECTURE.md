@@ -268,11 +268,13 @@ store.WithNamedLock("lock_name", timeout, func(s *DataStore) error {
 ```
 
 **Key Features**:
-- Automatic retry on deadlocks/timeouts (up to 30 retries)
+- Automatic retry on deadlocks/lock-wait timeouts (up to 30 retries or a 30s wall-clock *retry* budget starting at the first retryable failure, whichever comes first). Practical worst case is about `retriesTimeBudget + innodb_lock_wait_timeout` (~35s at production's 5s lock wait) because an attempt may start just before the deadline. The budget is per transaction / per autocommit statement, not per HTTP request.
+- Lock-wait timeout retries are logged at `warning` (deadlocks stay at `info`)
 - Nested transaction support via EnsureTransaction
 - Context cancellation support
 - Row-level locking: `WithExclusiveWriteLock()`, `WithSharedWriteLock()`
 - Named locks (`GET_LOCK`/`RELEASE_LOCK`) are namespaced by schema so multiple instances sharing a MySQL server but using different schemas do not collide (requires opening the DB with a DSN string so the schema name is known; opening from `*sql.DB`/`*sql.Tx` leaves namespacing off)
+- MySQL session variables from `database.sessionParams` are re-applied after every `COM_RESET_CONNECTION` (DSN params alone do not survive pool reuse). On re-apply failure the pool discards the connection (`driver.ErrBadConn`).
 
 ### Common Table Expressions (CTEs)
 
@@ -831,6 +833,12 @@ database:
   user: algorea
   passwd: a_db_password
   dbname: algorea_db
+  # Re-applied after every pool checkout (COM_RESET_CONNECTION). Do not put these in DSN params.
+  # Values are written raw into SET (like DSN params): numbers unquoted; string vars include quotes
+  # in the value, e.g. sql_mode: "'STRICT_TRANS_TABLES'".
+  sessionParams:
+    innodb_lock_wait_timeout: "5"
+    # sql_mode: "'STRICT_TRANS_TABLES'"
 ```
 
 **Server** (`server`):
@@ -993,7 +1001,7 @@ Currently known keys (this list is informational; the backend does not enforce i
 ### Database Constraints
 
 **InnoDB Settings**:
-- `innodb_lock_wait_timeout=5`
+- `innodb_lock_wait_timeout=5` (pinned via `database.sessionParams` and re-applied after each connection reset; also set at the instance parameter group as a safety net)
 - `innodb_ft_min_token_size=1`
 - `max-allowed-packet=10485760`
 - Memory: >= 2GB
@@ -1123,7 +1131,7 @@ go tool pprof http://127.0.0.1:8080/debug/pprof/profile?seconds=10
 
 - **Propagation**: Can be slow for large changes; uses chunking
 - **Query optimization**: Add indexes carefully; monitor slow query log
-- **Transaction retries**: Automatic retry on deadlocks (up to 30 times)
+- **Transaction retries**: Automatic retry on deadlocks/lock-wait timeouts (up to 30 times or a 30s retry budget from the first retryable failure; worst case ≈ budget + `innodb_lock_wait_timeout`; per transaction / per autocommit statement)
 - **Connection pooling**: Managed by `database/sql`
 
 ### Security

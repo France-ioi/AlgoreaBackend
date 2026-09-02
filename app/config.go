@@ -137,6 +137,17 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 	return config, nil
 }
 
+// DatabaseSessionParams returns MySQL session variables to re-apply after every connection reset.
+// These must not go into the DSN: COM_RESET_CONNECTION restores session vars to globals, and the
+// driver only sends DSN params at connect time.
+func DatabaseSessionParams(globalConfig *viper.Viper) map[string]string {
+	raw := globalConfig.GetStringMapString(databaseConfigKey + ".sessionParams")
+	if len(raw) == 0 {
+		return nil
+	}
+	return raw
+}
+
 // TokenConfig returns the token fixed config from the global config.
 func TokenConfig(globalConfig *viper.Viper) (*token.Config, error) {
 	sub := subconfig(globalConfig, tokenConfigKey)

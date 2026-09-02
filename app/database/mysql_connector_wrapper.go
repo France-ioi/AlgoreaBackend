@@ -15,7 +15,12 @@ func (c *mysqlConnectorWrapper) Connect(ctx context.Context) (driver.Conn, error
 	if err != nil {
 		return nil, err
 	}
-	return &mysqlConnWrapper{conn: conn}, nil
+	wrapped := &mysqlConnWrapper{conn: conn, sessionParams: getSessionParams()}
+	if err := wrapped.applySessionParams(ctx); err != nil {
+		_ = wrapped.Close()
+		return nil, err
+	}
+	return wrapped, nil
 }
 
 func (c *mysqlConnectorWrapper) Driver() driver.Driver {
