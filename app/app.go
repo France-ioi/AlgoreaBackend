@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -55,6 +56,8 @@ type appConfigs struct {
 	server      *viper.Viper
 	event       *viper.Viper
 	propagation *viper.Viper
+	// Resolved at load time from server.maxSelectExecutionTime (validated duration string; 0 = off).
+	maxSelectExecutionTime time.Duration
 	// cors is intentionally a fully-built *cors.Cors rather than a *viper.Viper:
 	// unlike the sibling dynamic subconfigs above (auth/logging/server/event/propagation),
 	// CORS is resolved once in loadAppConfigs so runtime env-var changes do NOT
@@ -115,16 +118,22 @@ func loadAppConfigs(config *viper.Viper) (*appConfigs, error) {
 	propagationConfig := PropagationConfig(config)
 	propagationConfig.SetDefault("logChunkCounters", true)
 
+	maxSelectExecutionTime, err := resolveMaxSelectExecutionTime(serverConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to load the 'server' configuration: %w", err)
+	}
+
 	return &appConfigs{
-		db:          dbConfig,
-		auth:        AuthConfig(config),
-		logging:     LoggingConfig(config),
-		domains:     domainsConfig,
-		token:       tokenConfig,
-		server:      serverConfig,
-		event:       EventConfig(config),
-		propagation: propagationConfig,
-		cors:        corsHandler,
+		db:                     dbConfig,
+		auth:                   AuthConfig(config),
+		logging:                LoggingConfig(config),
+		domains:                domainsConfig,
+		token:                  tokenConfig,
+		server:                 serverConfig,
+		event:                  EventConfig(config),
+		propagation:            propagationConfig,
+		maxSelectExecutionTime: maxSelectExecutionTime,
+		cors:                   corsHandler,
 	}, nil
 }
 
@@ -148,25 +157,12 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	}
 	eventInstance := event.GetInstance(configs.event)
 
-	// Init DB
-	if configs.db.Params == nil {
-		configs.db.Params = make(map[string]string, 1)
-	}
-	configs.db.Params["charset"] = "utf8mb4"
-	if err := applyDatabaseSessionParams(ctx, logger, config); err != nil {
-		return err
-	}
-	db, err := database.Open(ctx, configs.db.FormatDSN())
+	logMaxSelectExecutionTime(ctx, logger, configs.maxSelectExecutionTime)
+
+	db, err := openApplicationDatabase(ctx, logger, config, configs)
 	if err != nil {
-		logger.WithContext(ctx).WithField("module", "database").Error(err)
 		return err
 	}
-
-	if configs.propagation.GetBool("disableForResults") {
-		database.ProhibitResultsPropagation(db)
-	}
-
-	database.SetPropagationLogChunkCounters(configs.propagation.GetBool("logChunkCounters"))
 
 	// Set up responder.
 	render.Respond = service.AppResponder
@@ -176,13 +172,7 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 
 	router.Use(logging.ContextWithLoggerMiddleware(logger))
 	router.Use(event.ContextWithDispatcherMiddleware(eventDispatcher))
-	router.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := database.NewDataStore(app.Database).MergeContext(r.Context())
-			ctx = event.ContextWithConfig(ctx, eventInstance)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	})
+	router.Use(dataStoreContextMiddleware(app, configs.maxSelectExecutionTime, eventInstance))
 
 	router.Use(version.AddVersionHeader)
 
@@ -215,6 +205,28 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	return nil
 }
 
+func openApplicationDatabase(
+	ctx context.Context, logger *logging.Logger, config *viper.Viper, configs *appConfigs,
+) (*database.DB, error) {
+	if configs.db.Params == nil {
+		configs.db.Params = make(map[string]string, 1)
+	}
+	configs.db.Params["charset"] = "utf8mb4"
+	if err := applyDatabaseSessionParams(ctx, logger, config); err != nil {
+		return nil, err
+	}
+	db, err := database.Open(ctx, configs.db.FormatDSN())
+	if err != nil {
+		logger.WithContext(ctx).WithField("module", "database").Error(err)
+		return nil, err
+	}
+	if configs.propagation.GetBool("disableForResults") {
+		database.ProhibitResultsPropagation(db)
+	}
+	database.SetPropagationLogChunkCounters(configs.propagation.GetBool("logChunkCounters"))
+	return db, nil
+}
+
 // applyDatabaseSessionParams validates and installs session params that must be re-applied after
 // every COM_RESET_CONNECTION (DSN params alone do not survive pool reuse).
 func applyDatabaseSessionParams(ctx context.Context, logger *logging.Logger, config *viper.Viper) error {
@@ -230,6 +242,55 @@ func applyDatabaseSessionParams(ctx context.Context, logger *logging.Logger, con
 			Info("no MySQL session params configured; session variables follow server defaults after connection reset")
 	}
 	return nil
+}
+
+// resolveMaxSelectExecutionTime parses server.maxSelectExecutionTime from config.
+// Uses GetString + time.ParseDuration so malformed values fail at startup instead of silently disabling the cap.
+func resolveMaxSelectExecutionTime(serverConfig *viper.Viper) (time.Duration, error) {
+	raw := serverConfig.GetString("maxSelectExecutionTime")
+	if raw == "" || raw == "0" {
+		return 0, nil
+	}
+	selectCap, err := time.ParseDuration(raw)
+	if err != nil {
+		return 0, fmt.Errorf(
+			"server.maxSelectExecutionTime %q is not a valid duration (e.g. 15s, 500ms): %w",
+			raw, err,
+		)
+	}
+	if selectCap < 0 {
+		return 0, fmt.Errorf("server.maxSelectExecutionTime %q must be positive", raw)
+	}
+	if selectCap == 0 {
+		return 0, nil
+	}
+	return selectCap, nil
+}
+
+func logMaxSelectExecutionTime(ctx context.Context, logger *logging.Logger, maxSelectExecutionTime time.Duration) {
+	if maxSelectExecutionTime > 0 {
+		logger.WithContext(ctx).WithField("module", "server").WithField("maxSelectExecutionTime", maxSelectExecutionTime).
+			Info("capping read-only SELECTs on the non-transactional path")
+		return
+	}
+	logger.WithContext(ctx).WithField("module", "server").
+		Info("maxSelectExecutionTime not configured; read-only SELECTs uncapped")
+}
+
+func dataStoreContextMiddleware(
+	app *Application, maxSelectExecutionTime time.Duration, eventInstance string,
+) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(responseWriter http.ResponseWriter, req *http.Request) {
+			ctx := database.NewDataStore(app.Database).MergeContext(req.Context())
+			ctx = event.ContextWithConfig(ctx, eventInstance)
+			// default cap; a per-route middleware may override it later in the chain
+			if maxSelectExecutionTime > 0 {
+				ctx = database.ContextWithMaxSelectExecutionTime(ctx, maxSelectExecutionTime)
+			}
+			next.ServeHTTP(responseWriter, req.WithContext(ctx))
+		})
+	}
 }
 
 func resolveOrCreateLogger(loggingConfig *viper.Viper, loggerOptional []*logging.Logger) (logger *logging.Logger) {

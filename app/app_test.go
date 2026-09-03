@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"testing"
+	"time"
 
 	"bou.ke/monkey"
 	"github.com/go-sql-driver/mysql"
@@ -299,6 +300,32 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	assert.Equal(t, version.Get(), response.Header.Get("Backend-Version"))
 }
 
+func TestMiddlewares_AppliesMaxSelectExecutionTime(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	appenv.SetDefaultEnvToTest()
+	t.Setenv("ALGOREA_SERVER__MAXSELECTEXECUTIONTIME", "1500ms")
+	logger, _ := logging.NewMockLogger()
+	application, err := New(logger)
+	require.NoError(t, err)
+
+	gotCh := make(chan time.Duration, 1)
+	application.HTTPHandler.Get("/max-select-cap", func(_ http.ResponseWriter, r *http.Request) {
+		gotCh <- database.MaxSelectExecutionTimeFromContext(r.Context())
+	})
+	srv := httptest.NewServer(application.HTTPHandler)
+	defer srv.Close()
+
+	response, err := http.Get(srv.URL + "/max-select-cap")
+	require.NoError(t, err)
+	defer func() { _ = response.Body.Close() }()
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, 1500*time.Millisecond, <-gotCh)
+}
+
 func TestNew_MountsPprofInDev(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
@@ -397,6 +424,86 @@ func TestNew_PropagationLogChunkCountersConfig(t *testing.T) {
 			assert.Equal(t, enabled, database.PropagationLogChunkCountersEnabled())
 		})
 	}
+}
+
+func TestResolveMaxSelectExecutionTime(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     interface{}
+		want    time.Duration
+		wantErr string
+	}{
+		{name: "unset", want: 0},
+		{name: "zero string", raw: "0", want: 0},
+		{name: "zero duration", raw: "0s", want: 0},
+		{name: "valid duration", raw: "15s", want: 15 * time.Second},
+		{name: "valid milliseconds", raw: "500ms", want: 500 * time.Millisecond},
+		{
+			name:    "bare number",
+			raw:     15,
+			wantErr: `server.maxSelectExecutionTime "15" is not a valid duration (e.g. 15s, 500ms): time: missing unit in duration "15"`,
+		},
+		{
+			name:    "malformed with space",
+			raw:     "15 s",
+			wantErr: `server.maxSelectExecutionTime "15 s" is not a valid duration (e.g. 15s, 500ms): time: unknown unit " s" in duration "15 s"`,
+		},
+		{
+			name:    "malformed unit",
+			raw:     "15sec",
+			wantErr: `server.maxSelectExecutionTime "15sec" is not a valid duration (e.g. 15s, 500ms): time: unknown unit "sec" in duration "15sec"`,
+		},
+		{
+			name: "malformed spaced milliseconds",
+			raw:  "15000 ms",
+			wantErr: `server.maxSelectExecutionTime "15000 ms" is not a valid duration ` +
+				`(e.g. 15s, 500ms): time: unknown unit " ms" in duration "15000 ms"`,
+		},
+		{
+			name:    "negative duration",
+			raw:     "-5s",
+			wantErr: `server.maxSelectExecutionTime "-5s" must be positive`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			serverConfig := viper.New()
+			if tt.raw != nil {
+				serverConfig.Set("maxSelectExecutionTime", tt.raw)
+			}
+			got, err := resolveMaxSelectExecutionTime(serverConfig)
+			if tt.wantErr != "" {
+				require.EqualError(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestLoadAppConfigs_RejectsInvalidMaxSelectExecutionTime(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+	appenv.SetDefaultEnvToTest()
+
+	config := LoadConfig()
+	config.Set("server.maxSelectExecutionTime", "15 s")
+	_, err := loadAppConfigs(config)
+	require.EqualError(t, err,
+		`unable to load the 'server' configuration: server.maxSelectExecutionTime "15 s" `+
+			`is not a valid duration (e.g. 15s, 500ms): time: unknown unit " s" in duration "15 s"`)
+}
+
+func TestNew_RejectsInvalidMaxSelectExecutionTime(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	appenv.SetDefaultEnvToTest()
+	t.Setenv("ALGOREA_SERVER__MAXSELECTEXECUTIONTIME", "15")
+	_, err := New()
+	require.EqualError(t, err,
+		`unable to load the 'server' configuration: server.maxSelectExecutionTime "15" `+
+			`is not a valid duration (e.g. 15s, 500ms): time: missing unit in duration "15"`)
 }
 
 func TestLoadAppConfigs_RejectsLegacyServerPropagationKeys(t *testing.T) {
