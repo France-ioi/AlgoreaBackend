@@ -275,6 +275,7 @@ store.WithNamedLock("lock_name", timeout, func(s *DataStore) error {
 - Row-level locking: `WithExclusiveWriteLock()`, `WithSharedWriteLock()`
 - Named locks (`GET_LOCK`/`RELEASE_LOCK`) are namespaced by schema so multiple instances sharing a MySQL server but using different schemas do not collide (requires opening the DB with a DSN string so the schema name is known; opening from `*sql.DB`/`*sql.Tx` leaves namespacing off)
 - MySQL session variables from `database.sessionParams` are re-applied after every `COM_RESET_CONNECTION` (DSN params alone do not survive pool reuse). On re-apply failure the pool discards the connection (`driver.ErrBadConn`).
+- Optional API `maxSelectExecutionTime` (config / per-route middleware): injects `MAX_EXECUTION_TIME` on non-transactional `Query`/`QueryRow` only; MySQL error 3024 is not retried and surfaces as HTTP 408
 
 ### Common Table Expressions (CTEs)
 
@@ -859,7 +860,17 @@ database:
 server:
   rootPath: /
   compress: true
+  # Cap wall-clock runtime of read-only SELECTs on the non-transactional path only
+  # (MySQL MAX_EXECUTION_TIME optimizer hint). Writes, InTransaction, and CLI are uncapped.
+  # 0 / unset = off. Duration string, e.g. 15s, 500ms. Unparseable or non-positive values refuse to boot.
+  # Per-route override: service.MaxSelectExecutionTime(d) via router.With(...).
+  maxSelectExecutionTime: "0s"
 ```
+
+The `maxSelectExecutionTime` value is attached to the request context by the global DB-context
+middleware in `app.Reset`. Injection happens only in `sqlDBWrapper.Query` / `QueryRow` (not `Exec`,
+not `sqlTxWrapper`, not `sqlConnWrapper`). Hitting MySQL error 3024 maps to HTTP 408 via
+`service.AppHandler`. CLI commands never pass this middleware, so propagation stays uncapped.
 
 **Logging** (`logging`):
 ```yaml

@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
@@ -17,28 +18,27 @@ import (
 // and shows a JSON formatted error to the user.
 type AppHandler func(http.ResponseWriter, *http.Request) error
 
+func apiErrorFromPanic(p interface{}) (apiErr *APIError, shouldLogError bool, errorToLog string) {
+	switch err := p.(type) {
+	case *APIError:
+		return err, false, ""
+	case error:
+		if errors.Is(err, context.DeadlineExceeded) || database.IsQueryTimeoutError(err) {
+			return ErrRequestTimeout(), false, ""
+		}
+		return ErrUnexpected(errors.New("unknown error")), true, err.Error()
+	default:
+		return ErrUnexpected(errors.New("unknown error")), true, fmt.Sprintf("%+v", err)
+	}
+}
+
 func (fn AppHandler) ServeHTTP(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 	var apiErr *APIError
 	var shouldLogError bool
 	var errorToLog string
 	defer func() {
 		if p := recover(); p != nil {
-			switch err := p.(type) {
-			case *APIError:
-				apiErr = err
-			case error:
-				if errors.Is(err, context.DeadlineExceeded) {
-					apiErr = ErrRequestTimeout()
-				} else {
-					apiErr = ErrUnexpected(errors.New("unknown error"))
-					shouldLogError = true
-					errorToLog = err.Error()
-				}
-			default:
-				apiErr = ErrUnexpected(errors.New("unknown error"))
-				errorToLog = fmt.Sprintf("%+v", err)
-				shouldLogError = true
-			}
+			apiErr, shouldLogError, errorToLog = apiErrorFromPanic(p)
 		}
 		if shouldLogError {
 			logging.GetLogEntry(httpRequest).Errorf("unexpected error: %s, stack trace: %s", errorToLog, debug.Stack())

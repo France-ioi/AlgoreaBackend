@@ -264,6 +264,7 @@ const (
 	propagationsAreSyncContextKey     = dbContextKey("propagationsAreSync")
 	logErrorAsInfoFuncContextKey      = dbContextKey("logErrorAsInfoFunc")
 	propagationSoftDeadlineContextKey = dbContextKey("propagationSoftDeadline")
+	maxSelectExecutionTimeContextKey  = dbContextKey("maxSelectExecutionTime")
 )
 
 //nolint:gochecknoglobals // for testing purposes only

@@ -31,6 +31,9 @@ const (
 	// NoReferencedRow2 represents a mysql foreign constraint error
 	// of adding or updating a child row when the current DB user has table-level privileges for all parent tables.
 	NoReferencedRow2 MysqlErrorNumber = 1452
+	// QueryTimeoutError represents the mysql error "Query execution was interrupted,
+	// maximum statement execution time exceeded", raised when MAX_EXECUTION_TIME is hit.
+	QueryTimeoutError MysqlErrorNumber = 3024
 )
 
 // IsMysqlError checks whether an error is a Mysql error of a certain type.

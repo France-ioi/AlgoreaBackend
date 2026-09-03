@@ -39,3 +39,8 @@ func IsDeadlockError(err error) bool {
 func IsLockWaitTimeoutExceededError(err error) bool {
 	return mysqldb.IsMysqlError(err, mysqldb.LockWaitTimeoutExceededError)
 }
+
+// IsQueryTimeoutError checks whether an error corresponds to a MAX_EXECUTION_TIME statement timeout.
+func IsQueryTimeoutError(err error) bool {
+	return mysqldb.IsMysqlError(err, mysqldb.QueryTimeoutError)
+}

@@ -3,6 +3,10 @@ server:
   rootPath: "/" # the path at which the router is mounted
   compress: false # whether compression is enabled by default
   # domainOverride: dev.algorea.org # use this domain name for cookies and per-domain configuration choosing
+  # Cap wall-clock runtime of read-only SELECTs on the non-transactional path only (MySQL MAX_EXECUTION_TIME).
+  # Writes, transactions, and CLI commands are uncapped. 0 / unset = off. Duration string, e.g. 15s, 500ms.
+  # Unparseable or non-positive values refuse to start the server.
+  maxSelectExecutionTime: "0s"
 auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"

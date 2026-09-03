@@ -60,6 +60,9 @@ func (sqlDB *sqlDBWrapper) Prepare(_ string) (*sql.Stmt, error) {
 //
 // Query uses the context of [sqlDBWrapper] internally.
 func (sqlDB *sqlDBWrapper) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+	if d := maxSelectExecutionTimeFromContext(sqlDB.ctx); d > 0 {
+		query = injectMaxExecutionTimeHint(query, d)
+	}
 	err = retryOnRetriableError(sqlDB.ctx, func() error {
 		defer getSQLExecutionPlanLoggingFunc(sqlDB.ctx, sqlDB, sqlDB.logConfig, query, args...)()
 		defer getSQLQueryLoggingFunc(sqlDB.ctx, nil, &err, gorm.NowFunc(), query, args...)(sqlDB.logConfig)
@@ -83,6 +86,9 @@ func (sqlDB *sqlDBWrapper) Query(query string, args ...interface{}) (rows *sql.R
 //
 // QueryRow uses the context of [sqlDBWrapper] internally.
 func (sqlDB *sqlDBWrapper) QueryRow(query string, args ...interface{}) (row *sql.Row) {
+	if d := maxSelectExecutionTimeFromContext(sqlDB.ctx); d > 0 {
+		query = injectMaxExecutionTimeHint(query, d)
+	}
 	err := retryOnRetriableError(sqlDB.ctx, func() error {
 		defer getSQLExecutionPlanLoggingFunc(sqlDB.ctx, sqlDB, sqlDB.logConfig, query, args...)()
 		startTime := gorm.NowFunc()
