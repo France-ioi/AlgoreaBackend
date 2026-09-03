@@ -1,9 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v2.54.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.53.0...v2.54.0) - 2026-09-03
 
+- add `server.maxSelectExecutionTime` (default off): cap wall-clock runtime of read-only SELECTs on API requests via MySQL `MAX_EXECUTION_TIME`; exceeded reads return HTTP 408; writes, transactions, and CLI commands remain uncapped
 - drain `results_propagate` → `results_propagate_internal` under `READ COMMITTED` in id-bounded chunks (migration `2609021703` adds an `AUTO_INCREMENT` `id` PK; run only when `results_propagate` is empty — the `ALTER` blocks DML while rebuilding the table)
+- fix OpenAPI spec for `GET /items/{item_id}/breadcrumbs`: rename `attempt_number` to `attempt_order` and correct its type to integer (matches actual response)
 
 ## [v2.53.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.52.1...v2.53.0) - 2026-09-02
 
