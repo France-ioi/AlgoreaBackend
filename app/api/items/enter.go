@@ -2,6 +2,7 @@ package items
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/render"
@@ -81,6 +82,7 @@ func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.
 		Duration            *string
 		ParticipantsGroupID *int64
 	}
+	var attemptID int64
 	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		var ok bool
 		ok, err = store.Items().IsValidParticipationHierarchyForParentAttempt(ids, participantID, parentAttemptID, false, true)
@@ -121,7 +123,6 @@ func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.
 			"allows_submissions_until": gorm.Expr("IFNULL(DATE_ADD(?, INTERVAL (TIME_TO_SEC(?) + ?) SECOND), '9999-12-31 23:59:59')",
 				(*time.Time)(itemInfo.Now), itemInfo.Duration, totalAdditionalTime),
 		}))
-		var attemptID int64
 		service.MustNotBeError(store.Attempts().
 			Where("participant_id = ?", entryState.groupID).
 			Where("parent_attempt_id = ?", parentAttemptID).
@@ -153,6 +154,7 @@ func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.
 	service.MustNotBeError(err)
 
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+		"attempt_id": strconv.FormatInt(attemptID, 10),
 		"duration":   itemInfo.Duration,
 		"entered_at": itemInfo.Now,
 	})))
