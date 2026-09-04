@@ -232,6 +232,9 @@ type itemEnterResponse struct {
 		Success bool `json:"success"`
 		// required: true
 		Data struct {
+			// `id` of the attempt created by this entry; the participant's results for the item are attached to it
+			// required: true
+			AttemptID int64 `json:"attempt_id,string"`
 			// pattern: ^\d{1,3}:[0-5]?\d:[0-5]?\d$
 			// example: 838:59:59
 			// required: true

@@ -84,6 +84,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       "message": "created",
       "success": true,
       "data": {
+        "attempt_id": "1",
         "duration": "01:01:01",
         "entered_at": "3019-10-10T10:10:10Z"
       }
@@ -152,6 +153,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       "message": "created",
       "success": true,
       "data": {
+        "attempt_id": "1",
         "duration": "05:05:05",
         "entered_at": "3019-10-10T10:10:10Z"
       }
@@ -224,6 +226,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       "message": "created",
       "success": true,
       "data": {
+        "attempt_id": "2",
         "duration": "01:01:01",
         "entered_at": "3019-10-10T10:10:10Z"
       }
@@ -289,6 +292,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       "message": "created",
       "success": true,
       "data": {
+        "attempt_id": "1",
         "duration": "01:01:01",
         "entered_at": "3019-10-10T10:10:10Z"
       }
@@ -344,6 +348,7 @@ Feature: Enters an item as a group (user self or team) (itemEnter)
       "message": "created",
       "success": true,
       "data": {
+        "attempt_id": "1",
         "duration": null,
         "entered_at": "3019-10-10T10:10:10Z"
       }
