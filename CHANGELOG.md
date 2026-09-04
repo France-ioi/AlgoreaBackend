@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.55.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.54.0...v2.55.0) - 2026-09-04
+
+- add `attempt_id` to the success response of `POST /items/{ids}/enter` (stringified id of the attempt created for the participant)
+
 ## [v2.54.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.53.0...v2.54.0) - 2026-09-03
 
 - add `server.maxSelectExecutionTime` (default off): cap wall-clock runtime of read-only SELECTs on API requests via MySQL `MAX_EXECUTION_TIME`; exceeded reads return HTTP 408; writes, transactions, and CLI commands remain uncapped
