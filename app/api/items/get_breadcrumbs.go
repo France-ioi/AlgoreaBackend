@@ -79,9 +79,10 @@ import (
 //							type: string
 //							format: int64
 //						attempt_order:
-//							description: the order of this attempt result among the other results (within the parent attempt)
-//													 sorted by `started_at`
-//													 (only for items allowing multiple submissions;
+//							description: the 1-based order of this started result among other started results
+//													 for the same item and parent attempt, including the parent/default
+//													 attempt's own result on the item, sorted by `started_at` then `attempt_id`
+//													 (only for items allowing multiple attempts;
 //													 skipped for the final item if `parent_attempt_id` is used)
 //							type: integer
 //					required: [item_id, type, title, language_tag]

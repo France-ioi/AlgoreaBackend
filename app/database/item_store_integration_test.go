@@ -324,10 +324,11 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {participant_id: 117, id: 200, parent_attempt_id: 0}
 			- {participant_id: 118, id: 0}
 			- {participant_id: 118, id: 200, root_item_id: 6, parent_attempt_id: 0}
+			# Created attempts always have root_item_id (CreateNew / enter); only id=0 leaves it NULL.
 			- {participant_id: 119, id: 0}
-			- {participant_id: 119, id: 150, parent_attempt_id: 0}
+			- {participant_id: 119, id: 150, root_item_id: 3, parent_attempt_id: 0}
 			- {participant_id: 119, id: 200, root_item_id: 5, parent_attempt_id: 0}
-			- {participant_id: 119, id: 250, parent_attempt_id: 0}
+			- {participant_id: 119, id: 250, root_item_id: 5, parent_attempt_id: 0}
 			- {participant_id: 120, id: 200, root_item_id: 4}
 			- {participant_id: 120, id: 201, root_item_id: 9}
 			- {participant_id: 121, id: 200, root_item_id: 4}
@@ -376,7 +377,6 @@ func TestItemStore_IsValidParticipationHierarchyForParentAttempt_And_Breadcrumbs
 			- {participant_id: 118, attempt_id: 0, item_id: 4, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 118, attempt_id: 200, item_id: 6, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
-			- {participant_id: 119, attempt_id: 100, item_id: 1, started_at: 2019-05-29 11:00:00}
 			- {participant_id: 119, attempt_id: 0, item_id: 3, started_at: 2019-05-29 11:00:00}
 			- {participant_id: 119, attempt_id: 150, item_id: 3, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 200, item_id: 5, started_at: 2019-05-30 11:00:00}
@@ -780,8 +780,9 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {participant_id: 118, id: 0}
 			- {participant_id: 118, id: 200, root_item_id: 6, parent_attempt_id: 0}
 			- {participant_id: 118, id: 201, root_item_id: 8, parent_attempt_id: 200}
+			# Created attempts always have root_item_id (CreateNew / enter); only id=0 leaves it NULL.
 			- {participant_id: 119, id: 0}
-			- {participant_id: 119, id: 50}
+			- {participant_id: 119, id: 50, root_item_id: 1, parent_attempt_id: 0}
 			- {participant_id: 119, id: 200, root_item_id: 5, parent_attempt_id: 0}
 			- {participant_id: 119, id: 250, root_item_id: 5, parent_attempt_id: 0}
 			- {participant_id: 119, id: 201, root_item_id: 7, parent_attempt_id: 200}
@@ -852,7 +853,7 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			- {participant_id: 119, attempt_id: 0, item_id: 1, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 50, item_id: 1, started_at: 2019-05-29 11:00:00}
 			- {participant_id: 119, attempt_id: 0, item_id: 3, started_at: 2019-05-30 11:00:00}
-			- {participant_id: 119, attempt_id: 100, item_id: 3, started_at: 2019-05-29 11:00:00}
+			- {participant_id: 119, attempt_id: 0, item_id: 5, started_at: 2019-05-28 11:00:00}
 			- {participant_id: 119, attempt_id: 200, item_id: 5, started_at: 2019-05-29 11:00:00}
 			- {participant_id: 119, attempt_id: 250, item_id: 5, started_at: 2019-05-30 11:00:00}
 			- {participant_id: 119, attempt_id: 201, item_id: 7, started_at: 2019-05-30 11:00:00}
@@ -1019,7 +1020,15 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			name:                 "everything is okay (4 items allowing multiple attempts)",
 			args:                 args{ids: []int64{1, 3, 5, 7}, groupID: 119, attemptID: 201},
 			wantAttemptIDMap:     map[int64]int64{1: 0, 3: 0, 5: 200, 7: 201},
-			wantAttemptNumberMap: map[int64]int{1: 2, 3: 1, 5: 1, 7: 2},
+			wantAttemptNumberMap: map[int64]int{1: 2, 3: 1, 5: 2, 7: 2},
+		},
+		{
+			// Default attempt result on item 5 plus two created attempts: orders must be 1,2,3
+			// (not 1 for the default and 1,2 for the created ones).
+			name:                 "attempt order includes default attempt among created attempts",
+			args:                 args{ids: []int64{1, 3, 5}, groupID: 119, attemptID: 250},
+			wantAttemptIDMap:     map[int64]int64{1: 0, 3: 0, 5: 250},
+			wantAttemptNumberMap: map[int64]int{1: 2, 3: 1, 5: 3},
 		},
 	}
 	for _, tt := range tests {
@@ -1030,6 +1039,89 @@ func TestItemStore_BreadcrumbsHierarchyForAttempt(t *testing.T) {
 			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
 				gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
 					tt.args.ids, tt.args.groupID, tt.args.attemptID, writeLock)
+				assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
+				return nil
+			}))
+		})
+	}
+}
+
+func TestItemStore_BreadcrumbsHierarchy_AttemptOrderRanking(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContext(), `
+		items:
+			- {id: 1, default_language_tag: fr, allows_multiple_attempts: 1}
+		groups:
+			- {id: 201, root_activity_id: 1}
+			- {id: 202, root_activity_id: 1}
+			- {id: 203, root_activity_id: 1}
+		permissions_generated:
+			- {group_id: 201, item_id: 1, can_view_generated: content}
+			- {group_id: 202, item_id: 1, can_view_generated: content}
+			- {group_id: 203, item_id: 1, can_view_generated: content}
+		attempts:
+			- {participant_id: 201, id: 0}
+			- {participant_id: 201, id: 1, root_item_id: 1, parent_attempt_id: 0}
+			- {participant_id: 201, id: 2, root_item_id: 1, parent_attempt_id: 0}
+			- {participant_id: 202, id: 0}
+			- {participant_id: 202, id: 20, root_item_id: 1, parent_attempt_id: 0}
+			- {participant_id: 202, id: 21, root_item_id: 1, parent_attempt_id: 0}
+			- {participant_id: 203, id: 0}
+			- {participant_id: 203, id: 10, root_item_id: 1, parent_attempt_id: 0}
+			- {participant_id: 203, id: 11, root_item_id: 1, parent_attempt_id: 10}
+		results:
+			- {participant_id: 201, attempt_id: 0, item_id: 1, started_at: null}
+			- {participant_id: 201, attempt_id: 1, item_id: 1, started_at: 2019-05-29 11:00:00}
+			- {participant_id: 201, attempt_id: 2, item_id: 1, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 202, attempt_id: 0, item_id: 1, started_at: 2019-05-28 11:00:00}
+			- {participant_id: 202, attempt_id: 20, item_id: 1, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 202, attempt_id: 21, item_id: 1, started_at: 2019-05-30 11:00:00}
+			- {participant_id: 203, attempt_id: 10, item_id: 1, started_at: 2019-05-28 11:00:00}
+			- {participant_id: 203, attempt_id: 11, item_id: 1, started_at: 2019-05-29 11:00:00}
+	`)
+	defer func() { _ = db.Close() }()
+
+	require.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+		return store.GroupGroups().CreateNewAncestors()
+	}))
+
+	tests := []struct {
+		name                 string
+		groupID, attemptID   int64
+		wantAttemptIDMap     map[int64]int64
+		wantAttemptNumberMap map[int64]int
+	}{
+		{
+			name:                 "unstarted parent/default result is not ranked",
+			groupID:              201,
+			attemptID:            2,
+			wantAttemptIDMap:     map[int64]int64{1: 2},
+			wantAttemptNumberMap: map[int64]int{1: 2},
+		},
+		{
+			name:                 "equal started_at is ordered by attempt_id",
+			groupID:              202,
+			attemptID:            21,
+			wantAttemptIDMap:     map[int64]int64{1: 21},
+			wantAttemptNumberMap: map[int64]int{1: 3},
+		},
+		{
+			name:                 "parent attempt rooted at the same item is still a sibling",
+			groupID:              203,
+			attemptID:            11,
+			wantAttemptIDMap:     map[int64]int64{1: 11},
+			wantAttemptNumberMap: map[int64]int{1: 2},
+		},
+	}
+	for _, tt := range tests {
+		testEachWriteLockMode(t, tt.name, func(t *testing.T, writeLock bool) {
+			t.Helper()
+			testoutput.SuppressIfPasses(t)
+
+			assert.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
+				gotIDs, gotNumbers, err := store.Items().BreadcrumbsHierarchyForAttempt(
+					[]int64{1}, tt.groupID, tt.attemptID, writeLock)
 				assertBreadcrumbsHierarchy(t, tt.wantAttemptIDMap, gotIDs, tt.wantAttemptNumberMap, gotNumbers, err)
 				return nil
 			}))
