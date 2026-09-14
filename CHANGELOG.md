@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v2.55.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.55.0...v2.55.1) - 2026-09-14
 
 - fix `attempt_order` in `GET /items/{ids}/breadcrumbs`: include the default/parent-attempt result when ranking among created attempts for the same item (was `1,1,2` instead of `1,2,3`); rank only started results, with `attempt_id` as a tie-breaker
 
