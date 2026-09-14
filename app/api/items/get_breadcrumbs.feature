@@ -254,3 +254,75 @@ Scenario: Content access to all items except for last for which we have info acc
       { "item_id": "26", "type": "Chapter", "language_tag": "en", "title": "Trees" }
     ]
     """
+
+Scenario: attempt_order ranks the default attempt together with created attempts
+  Given the database has the following table "permissions_generated":
+    | group_id | item_id | can_view_generated |
+    | 13       | 22      | content            |
+  And the database has the following table "attempts":
+    | participant_id | id | parent_attempt_id | root_item_id |
+    | 11             | 0  | null              | null         |
+    | 11             | 1  | 0                 | 22           |
+    | 11             | 2  | 0                 | 22           |
+  And the database has the following table "results":
+    | participant_id | attempt_id | item_id | started_at          |
+    | 11             | 0          | 22      | 2019-05-28 11:00:00 |
+    | 11             | 1          | 22      | 2019-05-29 11:00:00 |
+    | 11             | 2          | 22      | 2019-05-30 11:00:00 |
+  And I am the user with id "11"
+  When I send a GET request to "/items/22/breadcrumbs?attempt_id=2"
+  Then the response code should be 200
+  And the response body should be, in JSON:
+  """
+  [
+    { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "2", "attempt_order": 3 }
+  ]
+  """
+
+Scenario: attempt_order of the default attempt includes later created attempts
+  Given the database has the following table "permissions_generated":
+    | group_id | item_id | can_view_generated |
+    | 13       | 22      | content            |
+  And the database has the following table "attempts":
+    | participant_id | id | parent_attempt_id | root_item_id |
+    | 11             | 0  | null              | null         |
+    | 11             | 1  | 0                 | 22           |
+    | 11             | 2  | 0                 | 22           |
+  And the database has the following table "results":
+    | participant_id | attempt_id | item_id | started_at          |
+    | 11             | 0          | 22      | 2019-05-28 11:00:00 |
+    | 11             | 1          | 22      | 2019-05-29 11:00:00 |
+    | 11             | 2          | 22      | 2019-05-30 11:00:00 |
+  And I am the user with id "11"
+  When I send a GET request to "/items/22/breadcrumbs?attempt_id=0"
+  Then the response code should be 200
+  And the response body should be, in JSON:
+  """
+  [
+    { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "0", "attempt_order": 1 }
+  ]
+  """
+
+Scenario: attempt_order ignores unstarted sibling results
+  Given the database has the following table "permissions_generated":
+    | group_id | item_id | can_view_generated |
+    | 13       | 22      | content            |
+  And the database has the following table "attempts":
+    | participant_id | id | parent_attempt_id | root_item_id |
+    | 11             | 0  | null              | null         |
+    | 11             | 1  | 0                 | 22           |
+    | 11             | 2  | 0                 | 22           |
+  And the database has the following table "results":
+    | participant_id | attempt_id | item_id | started_at          |
+    | 11             | 0          | 22      | null                |
+    | 11             | 1          | 22      | 2019-05-29 11:00:00 |
+    | 11             | 2          | 22      | 2019-05-30 11:00:00 |
+  And I am the user with id "11"
+  When I send a GET request to "/items/22/breadcrumbs?attempt_id=2"
+  Then the response code should be 200
+  And the response body should be, in JSON:
+  """
+  [
+    { "item_id": "22", "type": "Chapter", "language_tag": "en", "title": "DFS", "attempt_id": "2", "attempt_order": 2 }
+  ]
+  """

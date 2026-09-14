@@ -138,18 +138,34 @@ func columnsListForBreadcrumbsHierarchy(ids []int64) string {
 			if idIndex != 0 {
 				_, _ = columnsBuilder.WriteString(", ")
 			}
+			// Rank among started sibling results for attempt switching on this item.
+			// When the current attempt is rooted here, use the same sibling set as list_attempts:
+			// the parent attempt's own result (attempts.id = parent_attempt_id — including when that
+			// parent is itself rooted at this item) plus child attempts rooted at this item under
+			// that parent. Production only sets root_item_id on created attempts (CreateNew / enter);
+			// the default attempt has root_item_id NULL.
+			// Otherwise keep grouping by parent_attempt_id so child items under a multi-attempt
+			// chapter still rank among those chapter attempts, and also include attempts rooted
+			// at this item under the current attempt (e.g. default attempt viewing its created children).
 			_, _ = columnsBuilder.WriteString(fmt.Sprintf(`
-				IF(items%d.allows_multiple_attempts, (
+				IF(items%[1]d.allows_multiple_attempts, (
 					SELECT number FROM (
-						SELECT results.attempt_id, ROW_NUMBER() OVER (ORDER BY started_at) AS number
+						SELECT results.attempt_id, ROW_NUMBER() OVER (ORDER BY started_at, results.attempt_id) AS number
 						FROM results
-						JOIN attempts ON attempts.participant_id = results.participant_id and attempts.id = results.attempt_id
-						WHERE results.participant_id = attempts%d.participant_id AND
-							results.item_id = items%d.id AND
-							attempts.parent_attempt_id <=> attempts%d.parent_attempt_id
-					) AS numbers WHERE numbers.attempt_id = attempts%d.id
-				), NULL) AS number%d,
-				attempts%d.id AS attempt%d`, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex, idIndex))
+						JOIN attempts ON attempts.participant_id = results.participant_id AND attempts.id = results.attempt_id
+						WHERE results.participant_id = attempts%[1]d.participant_id AND
+							results.item_id = items%[1]d.id AND
+							results.started_at IS NOT NULL AND
+							IF(attempts%[1]d.root_item_id = items%[1]d.id,
+								attempts.id = attempts%[1]d.parent_attempt_id OR
+									(attempts.parent_attempt_id <=> attempts%[1]d.parent_attempt_id AND
+									 attempts.root_item_id = items%[1]d.id),
+								attempts.parent_attempt_id <=> attempts%[1]d.parent_attempt_id OR
+									(attempts.parent_attempt_id = attempts%[1]d.id AND attempts.root_item_id = items%[1]d.id)
+							)
+					) AS numbers WHERE numbers.attempt_id = attempts%[1]d.id
+				), NULL) AS number%[1]d,
+				attempts%[1]d.id AS attempt%[1]d`, idIndex))
 		}
 		columnsList = columnsBuilder.String()
 	}

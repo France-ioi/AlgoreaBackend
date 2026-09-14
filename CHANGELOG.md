@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- fix `attempt_order` in `GET /items/{ids}/breadcrumbs`: include the default/parent-attempt result when ranking among created attempts for the same item (was `1,1,2` instead of `1,2,3`); rank only started results, with `attempt_id` as a tie-breaker
+
 ## [v2.55.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.54.0...v2.55.0) - 2026-09-04
 
 - add `attempt_id` to the success response of `POST /items/{ids}/enter` (stringified id of the attempt created for the participant)
