@@ -45,11 +45,11 @@ func (srv *Base) GetStore(r *http.Request) *database.DataStore {
 	return database.NewDataStoreWithContext(r.Context(), srv.store.DB)
 }
 
-// GetPropagationEndpoint returns the propagation endpoint from the config.
-func (srv *Base) GetPropagationEndpoint() string {
+// IsPropagationAsync reports whether propagation should be scheduled asynchronously.
+func (srv *Base) IsPropagationAsync() bool {
 	// Nil only for test-helper bare Base{} literals; production always has a non-nil sub-viper.
 	if srv.PropagationConfig == nil {
-		return ""
+		return false
 	}
-	return srv.PropagationConfig.GetString("endpoint")
+	return srv.PropagationConfig.GetBool("async")
 }

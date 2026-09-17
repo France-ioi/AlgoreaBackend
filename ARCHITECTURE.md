@@ -500,8 +500,8 @@ query = sorter.Apply(r, query, sortingFields)
 
 **Propagation** (`service/propagation.go`):
 ```go
-// Empty endpoint (propagation.endpoint unset) runs sync after commit; non-empty schedules async HTTP.
-service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+// async=false runs sync after commit; async=true dispatches a propagation_requested event.
+service.SchedulePropagation(store, srv.IsPropagationAsync(), []string{"results"})
 ```
 
 ---
@@ -573,7 +573,7 @@ One intentional bounded overshoot: after results unlock items, `computeAllAccess
 - Named lock: `results_propagation` (10s timeout), namespaced by the connected MySQL schema
 - Prevents parallel propagation
 - Ensures consistency
-- The CLI `propagation` command additionally holds a `propagation_command` named lock, waiting up to 600 s for it, clamped to the remaining soft budget when `--max-duration` is set
+- The CLI `propagation` command additionally holds a `propagation_command` named lock, waiting up to 0.5 s for it, clamped to the remaining soft budget when `--max-duration` is set
 
 **Recomputed Fields**:
 - `latest_activity_at`
@@ -595,6 +595,8 @@ HTTP Handler → Transaction Commits → Dispatch Event
                                     Dispatcher (SQS or NoOp)
                                           ↓
                                     AWS SQS → EventBridge
+                                          ↓
+                              (propagation_requested) Worker Lambda
 ```
 
 ### Event Structure
@@ -618,6 +620,7 @@ type Event struct {
 - `item_unlocked`: Item was unlocked for a user
 - `thread_status_changed`: Help thread status changed
 - `user_authenticated`: User authenticated via login module (new login with code)
+- `propagation_requested`: Async permission/results propagation should run. Payload `{"types": [...]}` is informational/observability for now (the worker `propagation` command always runs both permissions and results). Consumed via SQS → EventBridge to invoke the worker Lambda.
 
 ### Configuration
 
@@ -884,17 +887,23 @@ logging:
 **Propagation** (`propagation`):
 ```yaml
 propagation:
-  endpoint: ""              # async schedule URL; empty = sync propagation
+  async: false              # true = dispatch propagation_requested (requires event.dispatcher=sqs)
   disableForResults: false  # when true, results propagation is prohibited
   logChunkCounters: true    # non-logging performance_schema snapshots on per-chunk Debug/Warn lines
 ```
+When `propagation.async` is true but no event dispatcher is configured (`event.dispatcher` unset /
+not `sqs`), scheduling logs an error and skips propagation (does not fall back to sync).
 Startup safety: legacy `server.propagation_endpoint` and `server.disableResultsPropagation` (YAML or
 `ALGOREA_SERVER__*` env) are rejected when loading app configs (`app.New` / `Reset`), with no fallback.
-A silently ignored key would empty `propagation.endpoint` and run async work synchronously inside API
-requests. Rename to `propagation.endpoint` / `propagation.disableForResults` (env
-`ALGOREA_PROPAGATION__ENDPOINT` / `ALGOREA_PROPAGATION__DISABLEFORRESULTS`). Commands that only call
-`LoadConfig`/`DBConfig` (e.g. `db-migrate`) do not run this check.
-Ops prerequisites for full diagnostics: `performance_schema=ON` (parameter group + reboot) and
+A silently ignored key would leave async unset (`false`) and run async work synchronously inside API
+requests. Replace `server.propagation_endpoint` with `propagation.async: true` plus
+`event.dispatcher: sqs` (env `ALGOREA_PROPAGATION__ASYNC` / `ALGOREA_EVENT__DISPATCHER`); rename
+`server.disableResultsPropagation` to `propagation.disableForResults` (env
+`ALGOREA_PROPAGATION__DISABLEFORRESULTS`). Commands that only call `LoadConfig`/`DBConfig`
+(e.g. `db-migrate`) do not run this check.
+Ops prerequisites: when `async: true`, run a periodic `propagation` command as a safety net (the
+0.5 s lock wait accepts a residual lost-wakeup window if a writer commits after the holder’s last
+drain pass). For full diagnostics: `performance_schema=ON` (parameter group + reboot) and
 `GRANT PROCESS ON *.*` for the application user (`INNODB_TRX` dumps).
 
 **Auth** (`auth`):

@@ -16,4 +16,7 @@ const (
 
 	// TypeUserAuthenticated is dispatched when a user authenticates via the login module.
 	TypeUserAuthenticated = "user_authenticated"
+
+	// TypePropagationRequested is dispatched when async permission/results propagation should run.
+	TypePropagationRequested = "propagation_requested"
 )

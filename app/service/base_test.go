@@ -51,39 +51,39 @@ func TestBase_GetStore_WithNilStore(t *testing.T) {
 	assert.Nil(t, (&Base{}).GetStore(req))
 }
 
-func TestBase_GetPropagationEndpoint(t *testing.T) {
+func TestBase_IsPropagationAsync(t *testing.T) {
 	tests := []struct {
 		name              string
 		PropagationConfig func() *viper.Viper
-		want              string
+		want              bool
 	}{
 		{
-			name:              "should be empty if PropagationConfig is nil",
+			name:              "should be false if PropagationConfig is nil",
 			PropagationConfig: func() *viper.Viper { return nil },
-			want:              "",
+			want:              false,
 		},
 		{
-			name:              "should be empty if no config",
+			name:              "should be false if no config",
 			PropagationConfig: viper.New,
-			want:              "",
+			want:              false,
 		},
 		{
-			name: "should be empty if the propagation endpoint is not set",
+			name: "should be false if async is not set",
 			PropagationConfig: func() *viper.Viper {
 				config := viper.New()
-				config.Set("endpoint", "")
+				config.Set("async", false)
 				return config
 			},
-			want: "",
+			want: false,
 		},
 		{
-			name: "should return the endpoint if it is set",
+			name: "should return true if async is set",
 			PropagationConfig: func() *viper.Viper {
 				config := viper.New()
-				config.Set("endpoint", "https://example.com")
+				config.Set("async", true)
 				return config
 			},
-			want: "https://example.com",
+			want: true,
 		},
 	}
 	for _, tt := range tests {
@@ -91,7 +91,7 @@ func TestBase_GetPropagationEndpoint(t *testing.T) {
 			srv := &Base{
 				PropagationConfig: tt.PropagationConfig(),
 			}
-			assert.Equalf(t, tt.want, srv.GetPropagationEndpoint(), "GetPropagationEndpoint()")
+			assert.Equalf(t, tt.want, srv.IsPropagationAsync(), "IsPropagationAsync()")
 		})
 	}
 }

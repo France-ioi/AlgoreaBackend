@@ -40,7 +40,7 @@ func TestService_startResult_concurrency(t *testing.T) {
 	appServer := httptest.NewServer(application.HTTPHandler)
 	defer appServer.Close()
 
-	monkey.Patch(service.SchedulePropagation, func(*database.DataStore, string, []string) {})
+	monkey.Patch(service.SchedulePropagation, func(*database.DataStore, bool, []string) {})
 	defer monkey.UnpatchAll()
 
 	onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {

@@ -3,6 +3,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -72,22 +73,22 @@ type appConfigs struct {
 // Remove after v2.55 once deployments no longer carry the legacy server.* keys / env vars.
 func rejectLegacyServerPropagationKeys(serverConfig *viper.Viper) error {
 	for _, legacy := range []struct {
-		key, replacement, legacyEnv, newEnv string
+		key, message string
 	}{
 		{
-			"propagation_endpoint", "propagation.endpoint",
-			"ALGOREA_SERVER__PROPAGATION_ENDPOINT", "ALGOREA_PROPAGATION__ENDPOINT",
+			"propagation_endpoint",
+			"config key 'server.propagation_endpoint' (env ALGOREA_SERVER__PROPAGATION_ENDPOINT) " +
+				"has been replaced by 'propagation.async: true' with 'event.dispatcher: sqs' " +
+				"(env ALGOREA_PROPAGATION__ASYNC / ALGOREA_EVENT__DISPATCHER)",
 		},
 		{
-			"disableResultsPropagation", "propagation.disableForResults",
-			"ALGOREA_SERVER__DISABLERESULTSPROPAGATION", "ALGOREA_PROPAGATION__DISABLEFORRESULTS",
+			"disableResultsPropagation",
+			"config key 'server.disableResultsPropagation' (env ALGOREA_SERVER__DISABLERESULTSPROPAGATION) " +
+				"has been renamed to 'propagation.disableForResults' (env ALGOREA_PROPAGATION__DISABLEFORRESULTS)",
 		},
 	} {
 		if serverConfig.IsSet(legacy.key) {
-			return fmt.Errorf(
-				"config key 'server.%s' (env %s) has been renamed to '%s' (env %s)",
-				legacy.key, legacy.legacyEnv, legacy.replacement, legacy.newEnv,
-			)
+			return errors.New(legacy.message)
 		}
 	}
 	return nil

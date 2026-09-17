@@ -291,20 +291,20 @@ func TestServerConfig(t *testing.T) {
 	assert.Equal(t, 999, config.GetInt("anykey"))
 }
 
-// Pins the lambda-config contract: an empty file value for propagation.endpoint must not
-// shadow ALGOREA_PROPAGATION__ENDPOINT (viper AutomaticEnv before the config map).
+// Pins the lambda-config contract: an empty file value for propagation.async must not
+// shadow ALGOREA_PROPAGATION__ASYNC (viper AutomaticEnv before the config map).
 func TestPropagationConfig_EnvOverridesEmptyFileValue(t *testing.T) {
 	globalConfig := viper.New()
-	globalConfig.Set("propagation.endpoint", "")
+	globalConfig.Set("propagation.async", false)
 	globalConfig.Set("propagation.disableForResults", false)
 	config := PropagationConfig(globalConfig)
 	require.NotNil(t, config)
-	assert.Empty(t, config.GetString("endpoint"))
+	assert.False(t, config.GetBool("async"))
 	assert.False(t, config.GetBool("disableForResults"))
 
-	t.Setenv("ALGOREA_PROPAGATION__ENDPOINT", "https://from-env.example.com")
+	t.Setenv("ALGOREA_PROPAGATION__ASYNC", "true")
 	t.Setenv("ALGOREA_PROPAGATION__DISABLEFORRESULTS", "true")
-	assert.Equal(t, "https://from-env.example.com", config.GetString("endpoint"))
+	assert.True(t, config.GetBool("async"))
 	assert.True(t, config.GetBool("disableForResults"))
 }
 

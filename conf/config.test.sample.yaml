@@ -34,7 +34,7 @@ logging:
   logRawSQLQueries: false # log low-level db operations, including row fetching and statement preparation (only needed for debugging during development)
   analyzeSQLQueries: false # run EXPLAIN ANALYZE on all SQL queries (works only if logSQLQueries is true)
 propagation:
-  endpoint: "" # Endpoint to schedule the propagation asynchronously. If empty, propagation is synchronous.
+  async: false # dispatch a propagation_requested event instead of propagating synchronously; requires event.dispatcher=sqs
   disableForResults: false # Disable the propagation of results.
 domains:
   -
