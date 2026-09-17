@@ -511,8 +511,9 @@ func TestLoadAppConfigs_RejectsLegacyServerPropagationKeys(t *testing.T) {
 
 	const (
 		errPropagationEndpoint = "config key 'server.propagation_endpoint' " +
-			"(env ALGOREA_SERVER__PROPAGATION_ENDPOINT) has been renamed to " +
-			"'propagation.endpoint' (env ALGOREA_PROPAGATION__ENDPOINT)"
+			"(env ALGOREA_SERVER__PROPAGATION_ENDPOINT) has been replaced by " +
+			"'propagation.async: true' with 'event.dispatcher: sqs' " +
+			"(env ALGOREA_PROPAGATION__ASYNC / ALGOREA_EVENT__DISPATCHER)"
 		errDisableForResults = "config key 'server.disableResultsPropagation' " +
 			"(env ALGOREA_SERVER__DISABLERESULTSPROPAGATION) has been renamed to " +
 			"'propagation.disableForResults' (env ALGOREA_PROPAGATION__DISABLEFORRESULTS)"

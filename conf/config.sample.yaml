@@ -53,7 +53,7 @@ event:
 # degrade permanently; transient errors use a cooldown. Healthy fast chunks stay
 # silent under production info/warn levels.
 propagation:
-  endpoint: "" # Endpoint to schedule the propagation asynchronously. If empty, propagation is synchronous.
+  async: false # dispatch a propagation_requested event instead of propagating synchronously; requires event.dispatcher=sqs
   disableForResults: false # Disable the propagation of results.
   logChunkCounters: true # performance_schema counters around each chunk (needs performance_schema=ON)
 # CORS allow-list applied to every API response.

@@ -16,6 +16,18 @@ func DispatcherFromContext(ctx context.Context) Dispatcher {
 	return d
 }
 
+// HasActiveDispatcher reports whether the context has a dispatcher that will
+// actually deliver events. Returns false for a missing dispatcher and for
+// *NoopDispatcher (the production default when event.dispatcher is unset).
+func HasActiveDispatcher(ctx context.Context) bool {
+	d := DispatcherFromContext(ctx)
+	if d == nil {
+		return false
+	}
+	_, isNoop := d.(*NoopDispatcher)
+	return !isNoop
+}
+
 // ContextWithDispatcher returns a copy of the given context with the dispatcher set.
 func ContextWithDispatcher(ctx context.Context, d Dispatcher) context.Context {
 	return context.WithValue(ctx, dispatcherContextKey, d)

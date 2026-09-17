@@ -203,7 +203,7 @@ func (srv *Service) updateItem(responseWriter http.ResponseWriter, httpRequest *
 
 	service.MustNotBeError(err)
 
-	service.SchedulePropagation(store, srv.GetPropagationEndpoint(), propagationsToRun)
+	service.SchedulePropagation(store, srv.IsPropagationAsync(), propagationsToRun)
 
 	// response
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess[*struct{}](nil)))

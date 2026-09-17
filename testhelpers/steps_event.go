@@ -104,6 +104,20 @@ func valuesEqual(actual, expected interface{}) bool {
 	if actualIsNum && expectedIsNum {
 		return actualNum == expectedNum
 	}
+	// JSON-decoded arrays are []interface{}; Go payloads often use typed slices (e.g. []string).
+	actualVal := reflect.ValueOf(actual)
+	expectedVal := reflect.ValueOf(expected)
+	if actualVal.Kind() == reflect.Slice && expectedVal.Kind() == reflect.Slice {
+		if actualVal.Len() != expectedVal.Len() {
+			return false
+		}
+		for i := range actualVal.Len() {
+			if !valuesEqual(actualVal.Index(i).Interface(), expectedVal.Index(i).Interface()) {
+				return false
+			}
+		}
+		return true
+	}
 	return reflect.DeepEqual(actual, expected)
 }
 

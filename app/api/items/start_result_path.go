@@ -135,7 +135,7 @@ func (srv *Service) startResultPath(responseWriter http.ResponseWriter, httpRequ
 	service.MustNotBeError(err)
 
 	if shouldSchedulePropagation {
-		service.SchedulePropagation(store, srv.GetPropagationEndpoint(), []string{"results"})
+		service.SchedulePropagation(store, srv.IsPropagationAsync(), []string{"results"})
 	}
 
 	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess(map[string]interface{}{

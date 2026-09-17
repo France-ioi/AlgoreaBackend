@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	propagationCommandLockName    = "propagation_command"
-	propagationCommandLockTimeout = 600 * time.Second
+	propagationCommandLockName = "propagation_command"
+	// EventBridge-driven invocations overlap, so failing the lock fast is correct:
+	// a later event re-triggers propagation and drains the rest.
+	propagationCommandLockTimeout = 500 * time.Millisecond
 
 	// Must exceed the worst-case single chunk duration plus the post-unlock permissions budget
 	// (app/database.postUnlockPermissionsBudget = 30s), otherwise a budgeted run can still be
@@ -100,7 +102,7 @@ func runPropagationCommand(propagationMaxDuration *time.Duration) func(cmd *cobr
 				})
 			})
 		if err != nil {
-			return handlePropagationLockError(cmd, application, *propagationMaxDuration, err)
+			return handlePropagationLockError(cmd, application, err)
 		}
 
 		printPropagationCompletion(cmd, application.Database)
@@ -160,12 +162,15 @@ func startPropagationSIGTERMHandler(application *app.Application) (stop func()) 
 }
 
 func handlePropagationLockError(
-	cmd *cobra.Command, application *app.Application, maxDuration time.Duration, err error,
+	cmd *cobra.Command, application *app.Application, err error,
 ) error {
-	if maxDuration > 0 && errors.Is(err, database.ErrNamedLockWaitTimeoutExceeded) {
+	// Overlapping EventBridge invocations are expected with the short lock wait; skip cleanly.
+	// Residual lost-wakeup (writer commits after the holder’s last drain pass) is accepted —
+	// a later event or periodic safety-net propagation run drains remaining rows.
+	if errors.Is(err, database.ErrNamedLockWaitTimeoutExceeded) {
 		logging.EntryFromContext(application.Database.GetContext()).Info(
-			"propagation skipped: named lock not acquired within remaining time budget")
-		cmd.Println("Propagation skipped: could not acquire lock within time budget.")
+			"propagation skipped: named lock not acquired (another invocation holds it)")
+		cmd.Println("Propagation skipped: could not acquire lock.")
 		return nil
 	}
 	return fmt.Errorf("error while doing propagation: %w", err)

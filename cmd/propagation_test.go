@@ -24,7 +24,7 @@ import (
 
 func TestPropagationLockTimeout(t *testing.T) {
 	assert.Equal(t, propagationCommandLockTimeout, propagationLockTimeout(time.Hour))
-	assert.Equal(t, 30*time.Second, propagationLockTimeout(30*time.Second))
+	assert.Equal(t, 100*time.Millisecond, propagationLockTimeout(100*time.Millisecond))
 	assert.Equal(t, time.Duration(0), propagationLockTimeout(-time.Second))
 	assert.Equal(t, time.Duration(0), propagationLockTimeout(0))
 }
@@ -147,7 +147,7 @@ func TestRunPropagationCommand_AppNewError(t *testing.T) {
 	assert.Equal(t, expected, runPropagationCommand(&maxDuration)(&cobra.Command{}, nil))
 }
 
-func TestRunPropagationCommand_NamedLockTimeoutWithinBudget(t *testing.T) {
+func TestRunPropagationCommand_NamedLockTimeout(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	logger, _ := logging.NewMockLogger()
@@ -165,7 +165,8 @@ func TestRunPropagationCommand_NamedLockTimeoutWithinBudget(t *testing.T) {
 		})
 	defer monkey.UnpatchAll()
 
-	maxDuration := propagationShutdownMargin + time.Minute
+	// Overlap without --max-duration must exit 0 (EventBridge-driven concurrent invocations).
+	maxDuration := time.Duration(0)
 	cmd := &cobra.Command{}
 	var out bytes.Buffer
 	cmd.SetOut(&out)
@@ -239,10 +240,10 @@ func TestHandlePropagationLockError(t *testing.T) {
 	var out bytes.Buffer
 	cmd.SetOut(&out)
 
-	require.NoError(t, handlePropagationLockError(cmd, application, time.Minute, database.ErrNamedLockWaitTimeoutExceeded))
+	require.NoError(t, handlePropagationLockError(cmd, application, database.ErrNamedLockWaitTimeoutExceeded))
 	assert.Contains(t, out.String(), "Propagation skipped")
 
-	err := handlePropagationLockError(cmd, application, 0, errors.New("other"))
+	err := handlePropagationLockError(cmd, application, errors.New("other"))
 	require.Error(t, err)
 	require.NoError(t, mock.ExpectationsWereMet())
 }

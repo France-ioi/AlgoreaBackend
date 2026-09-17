@@ -3,17 +3,14 @@
 package service_test
 
 import (
-	"errors"
-	"fmt"
-	"net/http"
 	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/thingful/httpmock"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
@@ -24,49 +21,33 @@ import (
 func TestSchedulePropagation(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	type args struct {
-		endpoint string
-	}
 	tests := []struct {
-		name                 string
-		args                 args
-		endpointCallErr      error
-		endpointResponseCode int
-		loggedError          string
-		propagated           bool
+		name           string
+		async          bool
+		withDispatcher bool
+		withNoop       bool
+		loggedError    string
+		propagated     bool
+		expectEvent    bool
 	}{
 		{
-			name: "should propagate sync when endpoint is undefined",
-			args: args{
-				endpoint: "",
-			},
+			name:       "async=false propagates rows and dispatches no events",
+			async:      false,
 			propagated: true,
 		},
 		{
-			name: "should not propagate sync when the endpoint is defined",
-			args: args{
-				endpoint: "https://example.com",
-			},
-			endpointResponseCode: http.StatusOK,
-			propagated:           false,
+			name:           "async=true with dispatcher dispatches propagation_requested and skips DB propagation",
+			async:          true,
+			withDispatcher: true,
+			propagated:     false,
+			expectEvent:    true,
 		},
 		{
-			name: "should not propagate sync when the endpoint is defined, but returns an error",
-			args: args{
-				endpoint: "https://example.com",
-			},
-			loggedError:     "Propagation endpoint error: Get \"https://example.com?types=permissions\": error",
-			endpointCallErr: errors.New("error"),
-			propagated:      false,
-		},
-		{
-			name: "should not propagate sync when the endpoint is defined, but the response code is not 200",
-			args: args{
-				endpoint: "https://example.com",
-			},
-			loggedError:          "Propagation endpoint error: status=500",
-			endpointResponseCode: http.StatusInternalServerError,
-			propagated:           false,
+			name:        "async=true with NoopDispatcher logs an error and skips DB propagation",
+			async:       true,
+			withNoop:    true,
+			propagated:  false,
+			loggedError: "propagation.async is enabled but no event dispatcher is configured: propagation not scheduled",
 		},
 	}
 
@@ -77,6 +58,16 @@ func TestSchedulePropagation(t *testing.T) {
 
 			logger, logHook := logging.NewMockLogger()
 			ctx := logging.ContextWithLogger(ctx, logger)
+
+			var mockDispatcher *event.MockDispatcher
+			switch {
+			case tt.withDispatcher:
+				mockDispatcher = event.NewMockDispatcher()
+				ctx = event.ContextWithDispatcher(ctx, mockDispatcher)
+			case tt.withNoop:
+				// Mirrors production: NewDispatcherFromConfig returns NoopDispatcher when unset.
+				ctx = event.ContextWithDispatcher(ctx, &event.NoopDispatcher{})
+			}
 
 			db := testhelpers.SetupDBWithFixtureString(ctx, `
 				groups:
@@ -89,46 +80,25 @@ func TestSchedulePropagation(t *testing.T) {
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
 
-			httpmock.Activate()
-			defer httpmock.DeactivateAndReset()
-
-			if tt.args.endpoint != "" {
-				if tt.endpointCallErr == nil {
-					httpmock.RegisterStubRequests(
-						httpmock.NewStubRequest(
-							"GET",
-							tt.args.endpoint+"?types=permissions",
-							httpmock.NewStringResponder(tt.endpointResponseCode, ""),
-						),
-					)
-				} else {
-					httpmock.RegisterStubRequests(
-						httpmock.NewStubRequest(
-							"GET",
-							tt.args.endpoint+"?types=permissions",
-							func(*http.Request) (*http.Response, error) {
-								return nil, tt.endpointCallErr
-							},
-						),
-					)
-				}
-			}
-
-			service.SchedulePropagation(store, tt.args.endpoint, []string{"permissions"})
+			service.SchedulePropagation(store, tt.async, []string{"permissions"})
 
 			exists, err := store.Permissions().Where("item_id = 1").HasRows()
 			require.NoError(t, err)
 			assert.Equal(t, tt.propagated, exists)
 
-			// Verify that all stubs were called.
-			if err := httpmock.AllStubsCalled(); err != nil {
-				t.Errorf("Not all stubs were called: %s", err)
+			if tt.expectEvent {
+				require.NotNil(t, mockDispatcher)
+				events := mockDispatcher.GetEvents()
+				require.Len(t, events, 1)
+				assert.Equal(t, event.TypePropagationRequested, events[0].Type)
+				assert.Equal(t, map[string]interface{}{"types": []string{"permissions"}}, events[0].Payload)
+			} else if mockDispatcher != nil {
+				assert.Empty(t, mockDispatcher.GetEvents())
 			}
 
-			// Verify logs.
 			if tt.loggedError != "" {
 				logs := (&loggingtest.Hook{Hook: logHook}).GetAllStructuredLogs()
-				assert.Regexp(t, "level=error .* "+regexp.QuoteMeta(fmt.Sprintf("msg=%q", tt.loggedError)), logs)
+				assert.Regexp(t, "level=error .* "+regexp.QuoteMeta("msg=\""+tt.loggedError+"\""), logs)
 			}
 		})
 	}

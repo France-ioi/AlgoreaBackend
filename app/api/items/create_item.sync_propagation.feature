@@ -40,7 +40,7 @@ Feature: Create item
     And the application config is:
     """
     propagation:
-      endpoint: "/not_found" # set a non-empty endpoint pointing to nowhere to disable the async propagation
+      async: true # post-commit SchedulePropagation dispatches an event instead of running inline
     """
 
   Scenario: Synchronously recomputes results of the current user linked to the parent item
@@ -78,6 +78,10 @@ Feature: Create item
       | 10             | 0          | 21      | to_be_recomputed |
       | 11             | 1          | 21      | to_be_recomputed |
     And the table "results_propagate_internal" should be empty
+    And an event "propagation_requested" should have been dispatched with:
+      """
+      {"types": ["permissions", "results"]}
+      """
 
   Scenario: Synchronously propagates newly created permissions for the current user on the new item (no parent, no children)
     Given I am the user with id "11"
@@ -110,6 +114,10 @@ Feature: Create item
       | 5577006791947779410 | solution           | solution_with_grant      | answer_with_grant   | all_with_grant     | 1                  |
     And the table "permissions_propagate" should be empty
     And the table "permissions_propagate_sync" should be empty
+    And an event "propagation_requested" should have been dispatched with:
+      """
+      {"types": ["permissions", "results"]}
+      """
 
   Scenario: Synchronously propagates results of the current user linked to child items
     Given I am the user with id "11"
@@ -165,3 +173,7 @@ Feature: Create item
       | 11             | 1          | 12      | to_be_propagated |
     And the table "results_propagate_sync" should be empty
     And the table "results_propagate_internal" should be empty
+    And an event "propagation_requested" should have been dispatched with:
+      """
+      {"types": ["permissions", "results"]}
+      """

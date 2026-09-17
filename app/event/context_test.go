@@ -16,6 +16,12 @@ func TestDispatcherFromContext_ReturnsNilWhenNotSet(t *testing.T) {
 	assert.Nil(t, dispatcher)
 }
 
+func TestHasActiveDispatcher(t *testing.T) {
+	assert.False(t, HasActiveDispatcher(context.Background()))
+	assert.False(t, HasActiveDispatcher(ContextWithDispatcher(context.Background(), &NoopDispatcher{})))
+	assert.True(t, HasActiveDispatcher(ContextWithDispatcher(context.Background(), NewMockDispatcher())))
+}
+
 func TestDispatcherFromContext_ReturnsDispatcher(t *testing.T) {
 	mockDispatcher := NewMockDispatcher()
 	ctx := ContextWithDispatcher(context.Background(), mockDispatcher)
