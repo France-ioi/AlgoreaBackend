@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [v2.56.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.55.1...v2.56.0) - Unreleased
+## [v2.56.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.55.1...v2.56.0) - 2026-09-17
 
 - **breaking / action required**: `propagation.endpoint` / `ALGOREA_PROPAGATION__ENDPOINT` removed, replaced by `propagation.async` / `ALGOREA_PROPAGATION__ASYNC`. Leftover `endpoint` keys are ignored (no fail-closed), so deployments that relied on async HTTP scheduling MUST set `async: true` and `event.dispatcher: sqs` or propagation becomes synchronous inside API requests
 - event schema version 1.4 adds `propagation_requested` (payload `{"types": [...]}`) for async propagation via the existing SQS → EventBridge path
