@@ -1,21 +1,32 @@
 ---
 name: plan-implement-review
-description: Orchestrates a plan-driven implementation loop with a built-in code review for the AlgoreaBackend (Go) project. Use after a plan has been approved (Plan mode) and the user wants the change implemented by a dev subagent, reviewed by an Opus 5 subagent running the /code-review skill, fixed by the dev subagent, then summarized. When the first review reports at least one Critical issue, run one extra review+fix round after those fixes. Trigger when the user asks to "implement and review", "build then review", or run the implement → review → fix → summary workflow.
+description: Orchestrates a plan-driven implementation loop with a built-in code review for the AlgoreaBackend (Go) project. Use after a plan has been approved (Plan mode with Fable 5.1 high) and the user wants the change implemented by a dev subagent, reviewed by a Grok 4.6 high fast subagent running the /code-review skill, fixed by the dev subagent, then summarized. When the first review reports at least one Critical issue, run one extra review+fix round after those fixes. Trigger when the user asks to "implement and review", "build then review", or run the implement → review → fix → summary workflow.
 ---
 
 # Plan, Implement, Review
 
 ## Overview
 
-This skill turns an approved plan into shipped code through a delegated loop: a dev subagent implements, an Opus 5 review subagent runs `/code-review`, the same dev subagent fixes the findings, and the orchestrator reports what was and wasn't done. If the first review reports at least one Critical issue, after the first fix pass there is exactly one more review+fix round before the final summary.
+This skill turns an approved plan into shipped code through a delegated loop: a dev subagent implements, a Grok 4.6 high fast review subagent runs `/code-review`, the same dev subagent fixes the findings, and the orchestrator reports what was and wasn't done. If the first review reports at least one Critical issue, after the first fix pass there is exactly one more review+fix round before the final summary.
 
 The orchestrator (the agent running this skill) stays lightweight: it coordinates subagents and writes the final summary. It does NOT implement or review the code itself.
+
+## Model choices
+
+| Role | Model | Slug |
+|------|-------|------|
+| Plan (Plan mode) | Fable 5.1 high | `claude-fable-5-1-thinking-high` |
+| Implement / fix (dev subagent) | inherit orchestrator `auto` | omit `model` |
+| Review | Grok 4.6 high fast | `cursor-grok-4.6-high-fast` |
+| Orchestrator | `auto` | — |
+
+If a listed slug is unavailable, tell the user that model is unavailable rather than silently substituting another model.
 
 ## Preconditions (verify before any work)
 
 Stop and ask the user if either is missing — do not start implementing.
 
-1. **An approved plan exists.** The plan must come from Cursor Plan mode / an approved plan in the current conversation. If there is no clear, approved plan, ask the user to provide or approve one first. Restate the plan as a numbered list of concrete deliverables so completion can be checked later.
+1. **An approved plan exists.** The plan must come from Cursor Plan mode / an approved plan in the current conversation. Plans should be authored with **Fable 5.1 high** (`claude-fable-5-1-thinking-high`). If there is no clear, approved plan, ask the user to provide or approve one first (and to use Fable 5.1 high in Plan mode if they still need to draft it). Restate the plan as a numbered list of concrete deliverables so completion can be checked later.
 2. **The orchestrator is running the `auto` model.** State which model you are currently on. If it is not `auto`, stop and ask the user to switch to the `auto` model before continuing — this workflow is cost-optimized: cheap `auto` orchestration delegates expensive work to subagents. Do not proceed until on `auto`.
 
 ## Workflow checklist
@@ -23,11 +34,11 @@ Stop and ask the user if either is missing — do not start implementing.
 Copy this and keep it updated as you go:
 
 ```
-- [ ] Step 0: Preconditions verified (approved plan + orchestrator on `auto`)
+- [ ] Step 0: Preconditions verified (approved plan from Fable 5.1 high Plan mode + orchestrator on `auto`)
 - [ ] Step 1: Implement the plan in the dev subagent (auto model)
-- [ ] Step 2: Review the changes in an Opus 5 subagent (/code-review)
+- [ ] Step 2: Review the changes in a Grok 4.6 high fast subagent (/code-review)
 - [ ] Step 3: Fix review findings in the SAME dev subagent
-- [ ] Step 3a: If Step 2 had ≥1 Critical → second review (Opus 5) + second fix (same dev) [skip if no Critical]
+- [ ] Step 3a: If Step 2 had ≥1 Critical → second review (Grok 4.6 high fast) + second fix (same dev) [skip if no Critical]
 - [ ] Step 3b: Orchestrator independently verifies coverage on all modified functions
 - [ ] Step 4: Write the final summary
 ```
@@ -44,12 +55,12 @@ Launch ONE dev subagent to do the implementation. Reuse this same subagent later
 
 Record the dev subagent's **agent ID** — you will `resume` it in Step 3.
 
-## Step 2: Review in an Opus 5 subagent
+## Step 2: Review in a Grok 4.6 high fast subagent
 
 Launch a separate review subagent over the code that was just written.
 
 - Tool: `Task` with `subagent_type: "generalPurpose"`, `readonly: true`.
-- Model: **`claude-opus-5-thinking-high`** (Opus 5). If that slug is unavailable, tell the user Opus is unavailable rather than silently substituting another model.
+- Model: **`cursor-grok-4.6-high-fast`** (Grok 4.6 high fast). If that slug is unavailable, tell the user Grok is unavailable rather than silently substituting another model.
 - Prompt the review subagent to:
   1. Read and follow the project's `/code-review` skill/command.
   2. Scope the review to the just-written changes: run `git diff` (and `git status`) to find modified/untracked files, then read them.
@@ -73,7 +84,7 @@ Launch a separate review subagent over the code that was just written.
 
 When triggered, run **exactly one** additional review+fix round — do not loop further even if the second review still finds Critical issues.
 
-1. **Second review:** Launch a new Opus 5 review subagent the same way as Step 2 (`generalPurpose`, `readonly: true`, model `claude-opus-5-thinking-high`, `/code-review`). Scope it to the post-fix diff. Ask it to note which Step 2 Critical items are resolved vs. still open, and to report any new Critical / Suggestions. Save under `reviews/` (e.g. `reviews/<short-feature-name>-review-round2.md`) and return the report.
+1. **Second review:** Launch a new Grok 4.6 high fast review subagent the same way as Step 2 (`generalPurpose`, `readonly: true`, model `cursor-grok-4.6-high-fast`, `/code-review`). Scope it to the post-fix diff. Ask it to note which Step 2 Critical items are resolved vs. still open, and to report any new Critical / Suggestions. Save under `reviews/` (e.g. `reviews/<short-feature-name>-review-round2.md`) and return the report.
 2. **Second fix:** `resume` the same Step 1 dev subagent with the round-2 report. Same fix rules as Step 3 (fix every Critical; address relevant Suggestions; re-lint/re-test as warranted; coverage paths if cited). Return what was fixed vs. skipped.
 
 If the second review still reports Critical issues after the second fix, do **not** start a third round — list those remaining Criticals under **Not fixed / deferred** in Step 4 with the reason that the workflow caps at one extra round.
