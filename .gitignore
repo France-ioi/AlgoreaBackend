@@ -15,6 +15,9 @@
 .vscode
 .idea
 
+# Python bytecode
+__pycache__/
+
 # Tests artefacts
 /test-results
 

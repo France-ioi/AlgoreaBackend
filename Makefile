@@ -13,6 +13,13 @@ LOCAL_BIN_DIR=./bin
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
 GOLANGCILINT_VERSION=2.5.0
+# golang.org/x/vuln@v1.8.0 needs Go >= 1.26; GOTOOLCHAIN=auto on the recipe lets `go run`
+# download a newer toolchain on cimg/go:1.25.9 (and under local GOTOOLCHAIN=local).
+GOVULNCHECK_VERSION=v1.8.0
+# chi v3 RedirectSlashes (GO-2026-4316) has no fixed v3 release; we do not use RedirectSlashes
+# and chi→v5 is deferred — ignore only this advisory so CI stays green for real new vulns.
+GOVULNCHECK_IGNORE=GO-2026-4316
+# Under -json, govulncheck exits 0 even with findings; tools/govulncheck_filter.py is the vuln gate.
 MYSQL_CONNECTOR_JAVA=$(LOCAL_BIN_DIR)/mysql-connector-java-8.jar
 SCHEMASPY=$(LOCAL_BIN_DIR)/schemaspy-6.2.4.jar
 PWD=$(shell pwd)
@@ -104,6 +111,24 @@ lint:
 	$(MAKE) $(GOLANGCILINT)
 	$(GOLANGCILINT) run -v --timeout 10m0s
 
+govulncheck:
+	@set -eu; \
+	tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	set +e; \
+	GOTOOLCHAIN=auto $(GOCMD) run golang.org/x/vuln/cmd/govulncheck@$(GOVULNCHECK_VERSION) -json ./... >"$$tmpdir/out.json" 2>"$$tmpdir/err.txt"; \
+	ec=$$?; \
+	set -e; \
+	if [ "$$ec" -ne 0 ] && [ "$$ec" -ne 3 ]; then \
+		cat "$$tmpdir/err.txt" >&2; \
+		exit "$$ec"; \
+	fi; \
+	GOVULNCHECK_IGNORE='$(GOVULNCHECK_IGNORE)' python3 tools/govulncheck_filter.py "$$tmpdir/out.json"
+
+# python3 -m unittest tools/govulncheck_filter_test.py
+govulncheck-filter-test:
+	python3 -m unittest tools/govulncheck_filter_test.py
+
 swagger-generate:
 	swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
 		swagger validate ./swagger.yaml && \
@@ -146,4 +171,4 @@ $(SCHEMASPY):
 	curl -sfL -o $(SCHEMASPY) https://github.com/schemaspy/schemaspy/releases/download/v6.2.4/schemaspy-6.2.4.jar
 
 .FORCE: # force the rule using it to always re-run
-.PHONY: all build gen-keys db-restore db-migrate db-migrate-undo db-recompute test test-unit test-bdd lint dbdoc clean linux-build version
+.PHONY: all build gen-keys db-restore db-migrate db-migrate-undo db-recompute test test-unit test-bdd lint govulncheck govulncheck-filter-test dbdoc clean linux-build version
