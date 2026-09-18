@@ -1,8 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [v2.56.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.55.1...v2.56.0) - 2026-09-17
+## Unreleased
+- security: bump indirect modules `golang.org/x/net` (v0.58.0), `golang.org/x/text` (v0.41.0), `golang.org/x/sys` (v0.47.0), `filippo.io/edwards25519` (v1.1.1); chi v3→v5 deferred (GO-2026-4316 / `RedirectSlashes` unused)
+- CI: add `make govulncheck` and a CircleCI `govulncheck` job (ignores only GO-2026-4316 until chi v5)
 
+## [v2.56.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.55.1...v2.56.0) - 2026-09-17
 - **breaking / action required**: `propagation.endpoint` / `ALGOREA_PROPAGATION__ENDPOINT` removed, replaced by `propagation.async` / `ALGOREA_PROPAGATION__ASYNC`. Leftover `endpoint` keys are ignored (no fail-closed), so deployments that relied on async HTTP scheduling MUST set `async: true` and `event.dispatcher: sqs` or propagation becomes synchronous inside API requests
 - event schema version 1.4 adds `propagation_requested` (payload `{"types": [...]}`) for async propagation via the existing SQS → EventBridge path
 - reduce the `propagation` CLI `propagation_command` lock wait from 600s to 0.5s; overlapping invocations that fail to acquire the lock exit 0 (benign skip). A later event re-triggers drain work; a residual lost-wakeup window remains if a writer commits after the holder’s last drain pass — run a periodic `propagation` safety net when using `async: true`

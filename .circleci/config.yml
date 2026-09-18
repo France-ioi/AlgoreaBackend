@@ -158,6 +158,15 @@ jobs:
       - restore_cache: *CACHEKEYMOD
       - run: # Fix go: command not found
           command: PATH=/usr/local/go/bin:/usr/bin:/bin make lint
+  govulncheck:
+    docker:
+      - image: cimg/go:1.25.9
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_cache: *CACHEKEYMOD
+      - run: # Fix go: command not found
+          command: PATH=/usr/local/go/bin:/usr/bin:/bin make govulncheck
 
   build:
     docker:
@@ -321,6 +330,9 @@ workflows:
           requires:
           - deps
       - lint:
+          requires:
+          - deps
+      - govulncheck:
           requires:
           - deps
       - swagger-gen
