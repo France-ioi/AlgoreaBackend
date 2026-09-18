@@ -36,7 +36,7 @@ type Item struct {
 	ValidationType string `json:"validation_type" validate:"oneof=None All AllButOne Categories One Manual"`
 
 	// enum: All,Half,One,None
-	// default: None
+	// default: All
 	EntryMinAdmittedMembersRatio string    `json:"entry_min_admitted_members_ratio" validate:"oneof=All Half One None"`
 	EnteringTimeMin              time.Time `json:"entering_time_min"`
 	EnteringTimeMax              time.Time `json:"entering_time_max"`

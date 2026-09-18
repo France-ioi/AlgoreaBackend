@@ -50,7 +50,7 @@ Feature: Create item
       """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type   | url  | options | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | no_score | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Task   | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | None                             | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | 5577006791947779410 | Task   | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | All                              | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title       | image_url          | subtitle     | description                     |
       | 5577006791947779410 | sl           | my title 🐱 | http://bit.ly/1234 | hard task 🐱 | the goal of this task is ... 🐱 |
@@ -76,6 +76,31 @@ Feature: Create item
     And the table "results_propagate" should be empty
     And the table "results_propagate_sync" should be empty
     And the table "results_propagate_internal" should be empty
+
+  Scenario: Valid (explicit entry_min_admitted_members_ratio None)
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Task",
+        "language_tag": "sl",
+        "title": "my title",
+        "entry_min_admitted_members_ratio": "None",
+        "parent": {"item_id": "21"}
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": { "id": "5577006791947779410" }
+      }
+      """
+    And the table "items" at id "5577006791947779410" should be:
+      | id                  | entry_min_admitted_members_ratio |
+      | 5577006791947779410 | None                             |
 
   Scenario: Valid when as_root_of_group_id is given, but parent_item_id is not given (not a skill)
     Given I am the user with id "11"
@@ -105,7 +130,7 @@ Feature: Create item
       """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type   | url  | options | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | no_score | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Task   | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | None                             | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | 5577006791947779410 | Task   | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | All                              | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -170,7 +195,7 @@ Feature: Create item
       """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type  | url  | options | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | no_score | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Skill | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | None                             | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | 5577006791947779410 | Skill | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | All                              | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url          | subtitle  | description                  |
       | 5577006791947779410 | sl           | my title | http://bit.ly/1234 | hard task | the goal of this task is ... |
@@ -432,7 +457,7 @@ Feature: Create item
     """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type  | url  | options | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | no_score | participants_group_id |
-      | 5577006791947779410 | Skill | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | None                             | 0                   | 0                        | null     | 0                       | 0        | null                  |
+      | 5577006791947779410 | Skill | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | All                              | 0                   | 0                        | null     | 0                       | 0        | null                  |
     And the table "items_strings" should be:
       | item_id             | language_tag | title    | image_url | subtitle | description |
       | 5577006791947779410 | sl           | my skill | null      | null     | null        |
@@ -518,7 +543,7 @@ Feature: Create item
     """
     And the table "items" at id "5577006791947779410" should be:
       | id                  | type   | url  | options | display_settings | default_language_tag | entry_frozen_teams | no_score | text_id | uses_api | read_only | hints_allowed | validation_type | entry_min_admitted_members_ratio | entry_max_team_size | allows_multiple_attempts | duration | requires_explicit_entry | no_score | entering_time_min   | entering_time_max   | participants_group_id |
-      | 5577006791947779410 | Task   | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | None                             | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
+      | 5577006791947779410 | Task   | null | null    | {}               | sl                   | 0                  | 0        | null    | 1        | 0         | 0             | All             | All                              | 0                   | 0                        | null     | 0                       | 0        | 1000-01-01 00:00:00 | 9999-12-31 23:59:59 | null                  |
     And the table "items_items" should be:
       | parent_item_id | child_item_id       | child_order |
       | 30             | 31                  | 1           |
