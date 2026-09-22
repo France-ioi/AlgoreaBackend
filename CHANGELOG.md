@@ -1,12 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v2.58.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.57.0...v2.58.0) - 2026-09-22
 
 - new endpoint: `POST /groups/{group_id}/group-results-token` issues a 1-hour JWS group-results token (same auth/limits as the sync ZIP export) for the async export flow
-- extract `groups.GenerateGroupProgressWithAnswersZIP` for shared sync/async ZIP generation
-- event schema version 1.5 adds `group_results_export_completed`
-- new CLI `handle-event`: read an EventBridge event from stdin and run workers (including `group_results_export_requested` via `app/groupresultsexport`); Application exposes the event dispatcher for CLI context
+- event schema version 1.5 adds `group_results_export_completed` (success or failure of an async group-results ZIP export)
+- new CLI `handle-event`: read an EventBridge event from stdin and run the matching worker (`group_results_export_requested` builds the ZIP, uploads it, and emits the completion event)
 
 ## [v2.57.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.56.0...v2.57.0) - 2026-09-18
 
