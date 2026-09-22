@@ -651,6 +651,7 @@ event.Dispatch(httpRequest.Context(), event.TypeSubmissionCreated, map[string]in
 
 - **Timing**: Events are dispatched synchronously after transaction commits (required for Lambda)
 - **Error Handling**: Dispatch errors are logged but don't fail the request (best-effort)
+- **RequestID**: `Dispatch` copies `request_id` from context (`middleware.GetReqID`) and never invents one. HTTP requests get it from chi `RequestID` middleware; `handle-event` propagates the inbound event envelope `request_id` onto the context (fail-fast if missing/empty for `group_results_export_requested`)
 - **Timeout**: SQS calls have a 1-second timeout
 - **Testing**: Mock dispatcher is injected via context for BDD tests
 
@@ -965,7 +966,7 @@ domainConfig, _ := app.DomainsConfig(config)
 
 **`propagation`**: Trigger propagation manually. The CLI process sets its logger to Debug (API server level unchanged) so per-chunk duration/counter Debug lines are visible. Accepts `--max-duration` for a soft time budget.
 
-**`handle-event`**: Process an EventBridge event from stdin (worker Lambda entry). Parses `detail-type` / `detail`, dispatches known types (e.g. `group_results_export_requested` → `app/groupresultsexport`), exits non-zero on unknown types. Uses `Application.ContextWithEventDispatcher` so completion events are emitted the same way as from HTTP handlers.
+**`handle-event`**: Process an EventBridge event from stdin (worker Lambda entry). Parses `detail-type` / `detail`, dispatches known types (e.g. `group_results_export_requested` → `app/groupresultsexport`), exits non-zero on unknown types or missing envelope `request_id`. Propagates inbound `request_id` onto the context for completion events. Uses `Application.ContextWithEventDispatcher` so completion events are emitted the same way as from HTTP handlers.
 
 **`delete-temp-users`**: Delete expired temporary users
 
