@@ -33,6 +33,11 @@ type Application struct {
 	Config      *viper.Viper
 	Database    *database.DB
 	apiCtx      *api.Ctx
+	// EventDispatcher is the configured domain-event dispatcher (may be a no-op).
+	// Stored so CLI commands can put it in context (HTTP middleware already does).
+	EventDispatcher event.Dispatcher
+	// EventInstance is the optional instance identifier for dispatched events.
+	EventInstance string
 }
 
 // New configures application resources and routes.
@@ -203,7 +208,16 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	}
 	app.Database = db
 	app.apiCtx = apiCtx
+	app.EventDispatcher = eventDispatcher
+	app.EventInstance = eventInstance
 	return nil
+}
+
+// ContextWithEventDispatcher returns ctx with the application's event dispatcher and instance config,
+// so event.Dispatch works from CLI commands the same way as from HTTP handlers.
+func (app *Application) ContextWithEventDispatcher(ctx context.Context) context.Context {
+	ctx = event.ContextWithDispatcher(ctx, app.EventDispatcher)
+	return event.ContextWithConfig(ctx, app.EventInstance)
 }
 
 func openApplicationDatabase(

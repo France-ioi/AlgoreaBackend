@@ -290,3 +290,26 @@ type permissionsTokenResponse struct {
 		} `json:"data"`
 	}
 }
+
+// Created. The group results token was generated successfully.
+// swagger:response groupResultsTokenResponse
+type groupResultsTokenResponse struct {
+	// in:body
+	Body struct {
+		// enum: created
+		// required: true
+		Message string `json:"message"`
+		// true
+		// required: true
+		Success bool `json:"success"`
+		// required: true
+		Data struct {
+			// The signed JWS group results token
+			// required: true
+			GroupResultsToken string `json:"group_results_token"`
+			// Token lifetime in seconds
+			// required: true
+			ExpiresIn int32 `json:"expires_in"`
+		} `json:"data"`
+	}
+}
