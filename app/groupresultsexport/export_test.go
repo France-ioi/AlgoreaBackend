@@ -422,10 +422,8 @@ func TestRun_FailurePaths(t *testing.T) {
 			name: "upload expired",
 			payload: RequestedPayload{
 				ExportID: "e", Token: validToken, UploadURL: "https://x.example/put",
-				UploadExpiresAt: 1,
-			},
-			setup: func() {
-				nowUnixMilliImpl = func() int64 { return 2 }
+				// Past expiry uses the real nowUnixMilliImpl (covers its default body).
+				UploadExpiresAt: time.Now().Add(-time.Minute).UnixMilli(),
 			},
 			expectedError: errorUploadFailed,
 		},
