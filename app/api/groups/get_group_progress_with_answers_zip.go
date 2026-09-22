@@ -25,6 +25,25 @@ const (
 	itemTypeChapter = "Chapter"
 )
 
+// ErrTooManyItemsInProgressZIP is returned when the visible item subtree exceeds maxItemsInProgressZIP.
+var ErrTooManyItemsInProgressZIP = errors.New("The number of items exceeds the limit (100)") //nolint:staticcheck // API-specified message
+
+// ErrTooManyUsersInProgressZIP is returned when the group has more than maxUsersInProgressZIP users.
+var ErrTooManyUsersInProgressZIP = errors.New("The number of users exceeds the limit (100)") //nolint:staticcheck // API-specified message
+
+// GroupProgressZIPItemMeta is display metadata for one parent item included in an export.
+type GroupProgressZIPItemMeta struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
+// GroupProgressZIPMeta is metadata about a generated progress-with-answers ZIP.
+type GroupProgressZIPMeta struct {
+	Filename  string
+	GroupName string
+	Items     []GroupProgressZIPItemMeta
+}
+
 type progressZIPSubtreeItem struct {
 	ItemID    int64
 	DirPath   string
@@ -150,43 +169,103 @@ func (srv *Service) getGroupProgressWithAnswersZIP(responseWriter http.ResponseW
 	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user, "answer")
 	service.MustNotBeError(err)
 
+	// Buffer the ZIP in memory so a mid-generation failure (raised as a panic via
+	// service.MustNotBeError and recovered by AppHandler) yields a clean error response
+	// instead of a 200 with a truncated archive.
+	zipBuffer := &bytes.Buffer{}
+	meta, err := GenerateGroupProgressWithAnswersZIP(zipBuffer, store, user, groupID, itemParentIDs)
+	if errors.Is(err, ErrTooManyItemsInProgressZIP) || errors.Is(err, ErrTooManyUsersInProgressZIP) {
+		return service.ErrInvalidRequest(err)
+	}
+	service.MustNotBeError(err)
+
+	responseWriter.Header().Set("Content-Type", "application/zip")
+	responseWriter.Header().Set("Content-Disposition", "attachment; filename="+meta.Filename)
+
+	_, err = io.Copy(responseWriter, zipBuffer)
+	service.MustNotBeError(err)
+	return nil
+}
+
+// GenerateGroupProgressWithAnswersZIP writes a progress-with-answers ZIP for the given group and parent items.
+// It enforces the 100-users / 100-items limits. Callers must already have checked authorization.
+// Internal DB failures are raised via service.MustNotBeError (panic); wrap with recover when needed.
+func GenerateGroupProgressWithAnswersZIP(
+	writer io.Writer, store *database.DataStore, user *database.User, groupID int64, itemParentIDs []int64,
+) (GroupProgressZIPMeta, error) {
+	itemParentIDsString := make([]string, len(itemParentIDs))
+	for i, id := range itemParentIDs {
+		itemParentIDsString[i] = strconv.FormatInt(id, 10)
+	}
+	filename := fmt.Sprintf(
+		"groups_progress_with_answers_for_group-%d-and_child_items_of-%s.zip",
+		groupID, strings.Join(itemParentIDsString, "-"),
+	)
+
+	var groupName string
+	service.MustNotBeError(store.Groups().ByID(groupID).PluckFirst("name", &groupName).Error())
+
+	itemsMeta := make([]GroupProgressZIPItemMeta, 0, len(itemParentIDs))
 	var subtreeItems []progressZIPSubtreeItem
 	var zipUsers []progressZIPUser
 	if len(itemParentIDs) > 0 {
 		var itemCount int
 		subtreeItems, itemCount = buildProgressZIPVisibleSubtree(store, user, itemParentIDs)
 		if itemCount > maxItemsInProgressZIP {
-			return service.ErrInvalidRequest(errors.New("The number of items exceeds the limit (100)")) //nolint:staticcheck // API-specified message
+			return GroupProgressZIPMeta{Filename: filename, GroupName: groupName}, ErrTooManyItemsInProgressZIP
 		}
 
 		zipUsers = getProgressZIPUsers(store, groupID)
 		if len(zipUsers) > maxUsersInProgressZIP {
-			return service.ErrInvalidRequest(errors.New("The number of users exceeds the limit (100)")) //nolint:staticcheck // API-specified message
+			return GroupProgressZIPMeta{Filename: filename, GroupName: groupName}, ErrTooManyUsersInProgressZIP
+		}
+
+		parentTitles := getProgressZIPParentItemTitles(store, user, itemParentIDs)
+		for _, id := range itemParentIDs {
+			itemsMeta = append(itemsMeta, GroupProgressZIPItemMeta{
+				ID:    strconv.FormatInt(id, 10),
+				Title: parentTitles[id],
+			})
 		}
 	}
 
-	responseWriter.Header().Set("Content-Type", "application/zip")
-	itemParentIDsString := make([]string, len(itemParentIDs))
-	for i, id := range itemParentIDs {
-		itemParentIDsString[i] = strconv.FormatInt(id, 10)
-	}
-	responseWriter.Header().Set(
-		"Content-Disposition",
-		fmt.Sprintf("attachment; filename=groups_progress_with_answers_for_group-%d-and_child_items_of-%s.zip",
-			groupID, strings.Join(itemParentIDsString, "-")),
-	)
-
-	// Buffer the ZIP in memory so a mid-generation failure (raised as a panic via
-	// service.MustNotBeError and recovered by AppHandler) yields a clean error response
-	// instead of a 200 with a truncated archive.
-	zipBuffer := &bytes.Buffer{}
-	zipWriter := zip.NewWriter(zipBuffer)
+	zipWriter := zip.NewWriter(writer)
 	writeProgressZIPArchive(zipWriter, store, user, itemParentIDs, groupID, subtreeItems, zipUsers)
 	service.MustNotBeError(zipWriter.Close())
 
-	_, err = io.Copy(responseWriter, zipBuffer)
-	service.MustNotBeError(err)
+	return GroupProgressZIPMeta{
+		Filename:  filename,
+		GroupName: groupName,
+		Items:     itemsMeta,
+	}, nil
+}
+
+// checkGroupProgressZIPLimits runs the 100-users / 100-items pre-checks without generating a ZIP.
+func checkGroupProgressZIPLimits(
+	store *database.DataStore, user *database.User, groupID int64, itemParentIDs []int64,
+) error {
+	if len(itemParentIDs) == 0 {
+		return nil
+	}
+	_, itemCount := buildProgressZIPVisibleSubtree(store, user, itemParentIDs)
+	if itemCount > maxItemsInProgressZIP {
+		return ErrTooManyItemsInProgressZIP
+	}
+	if len(getProgressZIPUsers(store, groupID)) > maxUsersInProgressZIP {
+		return ErrTooManyUsersInProgressZIP
+	}
 	return nil
+}
+
+func getProgressZIPParentItemTitles(
+	store *database.DataStore, user *database.User, itemParentIDs []int64,
+) map[int64]string {
+	itemInfoByID := getProgressZIPItemInfo(store, user, itemParentIDs, nil)
+	titles := make(map[int64]string, len(itemParentIDs))
+	for _, id := range itemParentIDs {
+		titles[id] = itemInfoByID[id].Title
+	}
+	return titles
 }
 
 func writeProgressZIPArchive(
@@ -204,8 +283,8 @@ func writeProgressZIPArchive(
 		csvWriter.Flush()
 	}
 
-	// The ZIP is written to an in-memory buffer, so these writes cannot fail in practice;
-	// MustNotBeError turns any unexpected failure into a recovered 500 rather than a partial 200.
+	// Unexpected Create/Copy failures (e.g. disk full when writing to a file) are turned into
+	// panics via MustNotBeError and recovered by the HTTP handler or async export worker.
 	groupProgressFile, err := zipWriter.Create("group_progress.csv")
 	service.MustNotBeError(err)
 	_, err = io.Copy(groupProgressFile, csvBuffer)
@@ -253,8 +332,8 @@ func writeProgressZIPUserItemFiles(
 	userProgressByGroupAndItem map[int64]map[int64]progressZIPUserItemData,
 	submissionsByParticipantAndItem map[int64]map[int64][]progressZIPSubmission,
 ) {
-	// The ZIP is written to an in-memory buffer, so these Create/Write/Marshal calls cannot
-	// fail in practice; MustNotBeError guards against unexpected failures without dead branches.
+	// Unexpected Create/Write/Marshal failures are turned into panics via MustNotBeError
+	// and recovered by the HTTP handler or async export worker.
 	dataPath := subtreeItem.DirPath + "submissions/" + zipUser.SanitizedLogin + "/data.json"
 	dataFile, err := zipWriter.Create(dataPath)
 	service.MustNotBeError(err)

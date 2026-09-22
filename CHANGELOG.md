@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- new endpoint: `POST /groups/{group_id}/group-results-token` issues a 1-hour JWS group-results token (same auth/limits as the sync ZIP export) for the async export flow
+- extract `groups.GenerateGroupProgressWithAnswersZIP` for shared sync/async ZIP generation
+- event schema version 1.5 adds `group_results_export_completed`
+- new CLI `handle-event`: read an EventBridge event from stdin and run workers (including `group_results_export_requested` via `app/groupresultsexport`); Application exposes the event dispatcher for CLI context
+
 ## [v2.57.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.56.0...v2.57.0) - 2026-09-18
 
 - change the default of `items.entry_min_admitted_members_ratio` from `None` to `All` for new items (API + column default); migration `2609171630` also sets every existing item to `All`

@@ -20,6 +20,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
@@ -642,4 +643,20 @@ func TestApplyDatabaseSessionParams_WithSessionParams(t *testing.T) {
 	require.NotEmpty(t, hook.AllEntries())
 	assert.Equal(t, "info", hook.LastEntry().Level.String())
 	assert.Contains(t, hook.LastEntry().Message, "pinning MySQL session params")
+}
+
+func TestApplication_ContextWithEventDispatcher(t *testing.T) {
+	mockDispatcher := event.NewMockDispatcher()
+	application := &Application{
+		EventDispatcher: mockDispatcher,
+		EventInstance:   "staging",
+	}
+	ctx := application.ContextWithEventDispatcher(context.Background())
+	assert.Equal(t, mockDispatcher, event.DispatcherFromContext(ctx))
+
+	event.Dispatch(ctx, event.TypeGroupResultsExportCompleted, map[string]interface{}{"export_id": "x"})
+	events := mockDispatcher.GetEvents()
+	require.Len(t, events, 1)
+	assert.Equal(t, "staging", events[0].Instance)
+	assert.Equal(t, event.TypeGroupResultsExportCompleted, events[0].Type)
 }

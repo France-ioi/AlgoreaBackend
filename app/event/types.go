@@ -19,4 +19,8 @@ const (
 
 	// TypePropagationRequested is dispatched when async permission/results propagation should run.
 	TypePropagationRequested = "propagation_requested"
+
+	// TypeGroupResultsExportCompleted is dispatched when an async group-results ZIP export finishes
+	// (success or failure).
+	TypeGroupResultsExportCompleted = "group_results_export_completed"
 )
