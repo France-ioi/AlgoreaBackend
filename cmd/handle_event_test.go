@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"bou.ke/monkey"
+	"github.com/go-chi/chi/middleware"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -55,12 +56,13 @@ func TestHandleEventJSON_DetailTypeFromDetail(t *testing.T) {
 func TestHandleEventJSON_GroupResultsExportRequested(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	ctx, _, hook := logging.NewContextWithNewMockLogger()
 	var ran bool
 	monkey.Patch(groupresultsexport.Run, func(
-		_ context.Context, _ *database.DataStore, _ *rsa.PublicKey, payload groupresultsexport.RequestedPayload,
+		ctx context.Context, _ *database.DataStore, _ *rsa.PublicKey, payload groupresultsexport.RequestedPayload,
 	) error {
 		ran = true
+		assert.Equal(t, "inbound-req-id", middleware.GetReqID(ctx))
 		assert.Equal(t, "export-1", payload.ExportID)
 		assert.Equal(t, "tok", payload.Token)
 		assert.Equal(t, "https://upload.example", payload.UploadURL)
@@ -77,7 +79,7 @@ func TestHandleEventJSON_GroupResultsExportRequested(t *testing.T) {
 
 	err := handleEventJSON(ctx, &app.Application{Database: db}, []byte(`{
 		"detail-type":"group_results_export_requested",
-		"detail":{"type":"group_results_export_requested","payload":{
+		"detail":{"type":"group_results_export_requested","request_id":"inbound-req-id","payload":{
 			"export_id":"export-1","token":"tok","upload_url":"https://upload.example",
 			"upload_expires_at":1758132000000
 		}}
@@ -85,28 +87,65 @@ func TestHandleEventJSON_GroupResultsExportRequested(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, ran)
 	require.NoError(t, mock.ExpectationsWereMet())
+
+	foundHandlingLog := false
+	for _, entry := range hook.AllEntries() {
+		if entry.Message == "handling event" {
+			foundHandlingLog = true
+			assert.Equal(t, "inbound-req-id", entry.Data["req_id"])
+			break
+		}
+	}
+	assert.True(t, foundHandlingLog)
 }
 
-func TestHandleEventJSON_EmptyDetail(t *testing.T) {
+func TestHandleEventJSON_MissingRequestID(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	ctx, _, _ := logging.NewContextWithNewMockLogger()
-	monkey.Patch(app.TokenConfig, func(*viper.Viper) (*token.Config, error) {
-		return &token.Config{PublicKey: tokentest.AlgoreaPlatformPublicKeyParsed()}, nil
-	})
+	ctx, mockDispatcher := testContextWithMockDispatcher(t)
+	var ran bool
 	monkey.Patch(groupresultsexport.Run, func(
-		_ context.Context, _ *database.DataStore, _ *rsa.PublicKey, payload groupresultsexport.RequestedPayload,
+		context.Context, *database.DataStore, *rsa.PublicKey, groupresultsexport.RequestedPayload,
 	) error {
-		assert.Empty(t, payload.ExportID)
+		ran = true
 		return nil
 	})
 	defer monkey.UnpatchAll()
 
-	db, mock := database.NewDBMock()
-	defer func() { _ = db.Close() }()
-	require.NoError(t, handleEventJSON(ctx, &app.Application{Database: db},
-		[]byte(`{"detail-type":"group_results_export_requested"}`)))
-	require.NoError(t, mock.ExpectationsWereMet())
+	err := handleEventJSON(ctx, &app.Application{}, []byte(`{
+		"detail-type":"group_results_export_requested",
+		"detail":{"type":"group_results_export_requested","payload":{
+			"export_id":"export-1","token":"tok","upload_url":"https://upload.example"
+		}}
+	}`))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "missing request_id in event envelope")
+	assert.False(t, ran)
+	assert.Empty(t, mockDispatcher.GetEvents())
+}
+
+func TestHandleEventJSON_PropagatesRequestIDToCompletionEvent(t *testing.T) {
+	ctx, mock := testContextWithMockDispatcher(t)
+	err := handleEventJSON(ctx, &app.Application{}, []byte(`{
+		"detail-type":"group_results_export_requested",
+		"detail":{"type":"group_results_export_requested","request_id":"envelope-req-id","payload":{
+			"export_id":"e1","token":"tok","upload_url":{"nested":true}
+		}}
+	}`))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid group_results_export_requested payload")
+	events := mock.GetEvents()
+	require.Len(t, events, 1)
+	assert.Equal(t, event.TypeGroupResultsExportCompleted, events[0].Type)
+	assert.Equal(t, "envelope-req-id", events[0].RequestID)
+}
+
+func TestHandleEventJSON_EmptyDetail(t *testing.T) {
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	err := handleEventJSON(ctx, &app.Application{},
+		[]byte(`{"detail-type":"group_results_export_requested"}`))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "missing request_id in event envelope")
 }
 
 func TestHandleGroupResultsExportRequested_InvalidPayload(t *testing.T) {
@@ -127,6 +166,7 @@ func TestHandleGroupResultsExportRequested_InvalidPayload_DispatchesWhenRecovera
 	events := mock.GetEvents()
 	require.Len(t, events, 1)
 	assert.Equal(t, event.TypeGroupResultsExportCompleted, events[0].Type)
+	assert.Equal(t, "test-req-id", events[0].RequestID)
 	assert.Equal(t, "failure", events[0].Payload["status"])
 	assert.Equal(t, "internal", events[0].Payload["error"])
 	assert.Equal(t, "e1", events[0].Payload["export_id"])
@@ -173,6 +213,7 @@ func TestHandleGroupResultsExportRequested_TokenConfigError(t *testing.T) {
 	assert.Contains(t, err.Error(), "unable to load token config")
 	events := mock.GetEvents()
 	require.Len(t, events, 1)
+	assert.Equal(t, "test-req-id", events[0].RequestID)
 	assert.Equal(t, "internal", events[0].Payload["error"])
 }
 
@@ -235,6 +276,7 @@ func TestRunHandleEventCommand_Success(t *testing.T) {
 	) error {
 		ran = true
 		assert.NotNil(t, event.DispatcherFromContext(ctx))
+		assert.Equal(t, "cli-req-id", middleware.GetReqID(ctx))
 		return nil
 	})
 	monkey.Patch(app.TokenConfig, func(*viper.Viper) (*token.Config, error) {
@@ -251,7 +293,7 @@ func TestRunHandleEventCommand_Success(t *testing.T) {
 	go func() {
 		_, _ = stdinWriter.WriteString(`{
 			"detail-type":"group_results_export_requested",
-			"detail":{"type":"group_results_export_requested","payload":{
+			"detail":{"type":"group_results_export_requested","request_id":"cli-req-id","payload":{
 				"export_id":"e","token":"t","upload_url":"https://x.example"
 			}}
 		}`)
@@ -293,5 +335,6 @@ func testContextWithMockDispatcher(t *testing.T) (context.Context, *event.MockDi
 	t.Helper()
 	ctx, _, _ := logging.NewContextWithNewMockLogger()
 	mock := event.NewMockDispatcher()
+	ctx = context.WithValue(ctx, middleware.RequestIDKey, "test-req-id")
 	return event.ContextWithDispatcher(ctx, mock), mock
 }

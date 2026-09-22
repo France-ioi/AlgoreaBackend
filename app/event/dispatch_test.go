@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -37,6 +38,20 @@ func TestDispatch_SendsEventToDispatcher(t *testing.T) {
 	assert.Equal(t, EventVersion, event.Version)
 	assert.Equal(t, payload, event.Payload)
 	assert.NotZero(t, event.Time)
+	assert.Empty(t, event.RequestID)
+}
+
+func TestDispatch_PreservesExistingRequestID(t *testing.T) {
+	mockDispatcher := NewMockDispatcher()
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+	ctx = ContextWithDispatcher(ctx, mockDispatcher)
+	ctx = context.WithValue(ctx, middleware.RequestIDKey, "http-req-id")
+
+	Dispatch(ctx, TypeSubmissionCreated, map[string]interface{}{})
+
+	events := mockDispatcher.GetEvents()
+	require.Len(t, events, 1)
+	assert.Equal(t, "http-req-id", events[0].RequestID)
 }
 
 func TestDispatch_IncludesInstanceFromConfig(t *testing.T) {

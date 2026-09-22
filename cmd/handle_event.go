@@ -3,10 +3,12 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/go-chi/chi/middleware"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
 	"github.com/spf13/cobra"
 
@@ -37,8 +39,9 @@ type eventBridgeEnvelope struct {
 }
 
 type eventDetailEnvelope struct {
-	Type    string          `json:"type"`
-	Payload json.RawMessage `json:"payload"`
+	Type      string          `json:"type"`
+	RequestID string          `json:"request_id"`
+	Payload   json.RawMessage `json:"payload"`
 }
 
 func runHandleEventCommand(_ *cobra.Command, args []string) error {
@@ -81,12 +84,18 @@ func handleEventJSON(ctx context.Context, application *app.Application, raw []by
 		if detailType == "" {
 			detailType = detail.Type
 		}
+		if detail.RequestID != "" {
+			ctx = context.WithValue(ctx, middleware.RequestIDKey, detail.RequestID)
+		}
 	}
 
 	logging.EntryFromContext(ctx).WithField("detail_type", detailType).Info("handling event")
 
 	switch detailType {
 	case "group_results_export_requested":
+		if detail.RequestID == "" {
+			return errors.New("missing request_id in event envelope")
+		}
 		return handleGroupResultsExportRequested(ctx, application, detail.Payload)
 	default:
 		logging.EntryFromContext(ctx).WithField("detail_type", detailType).Error("unknown event detail type")
