@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.58.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.0...v2.58.1) - 2026-09-22
+
+- fix `handle-event`: read `request_id` from the event envelope and require it for `group_results_export_requested` so export workers keep the originating request id
+
 ## [v2.58.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.57.0...v2.58.0) - 2026-09-22
 
 - new endpoint: `POST /groups/{group_id}/group-results-token` issues a 1-hour JWS group-results token (same auth/limits as the sync ZIP export) for the async export flow
