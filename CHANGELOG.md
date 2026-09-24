@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v2.58.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.1...v2.58.2) - 2026-09-24
 
 - raise group progress-with-answers ZIP / group-results-token limits: replace the 100-users and 100-items caps with a single `users × items ≤ 100000` entry limit (async worker error code `too_many_entries`)
 
