@@ -25,13 +25,12 @@ import (
 )
 
 const (
-	errorTokenInvalid = "token_invalid"
-	errorTooManyUsers = "too_many_users"
-	errorTooManyItems = "too_many_items"
-	errorUploadFailed = "upload_failed"
-	errorInternal     = "internal"
-	statusSuccess     = "success"
-	statusFailure     = "failure"
+	errorTokenInvalid   = "token_invalid"
+	errorTooManyEntries = "too_many_entries"
+	errorUploadFailed   = "upload_failed"
+	errorInternal       = "internal"
+	statusSuccess       = "success"
+	statusFailure       = "failure"
 	// Below the worker Lambda's 900s limit so defer can still dispatch completion.
 	exportMaxDuration = 14 * time.Minute
 	// Caps a single PUT; the request also observes ctx (export deadline / upload_expires_at).
@@ -308,10 +307,8 @@ func buildAndCloseZIP(
 	closeErr := tempFile.Close()
 	if genErr != nil {
 		switch {
-		case errors.Is(genErr, groups.ErrTooManyUsersInProgressZIP):
-			return meta, errorTooManyUsers
-		case errors.Is(genErr, groups.ErrTooManyItemsInProgressZIP):
-			return meta, errorTooManyItems
+		case errors.Is(genErr, groups.ErrTooManyProgressZIPEntries):
+			return meta, errorTooManyEntries
 		default:
 			return meta, errorInternal
 		}

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- raise group progress-with-answers ZIP / group-results-token limits: replace the 100-users and 100-items caps with a single `users × items ≤ 100000` entry limit (async worker error code `too_many_entries`)
+
 ## [v2.58.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.0...v2.58.1) - 2026-09-22
 
 - fix `handle-event`: read `request_id` from the event envelope and require it for `group_results_export_requested` so export workers keep the originating request id

@@ -621,7 +621,7 @@ type Event struct {
 - `thread_status_changed`: Help thread status changed
 - `user_authenticated`: User authenticated via login module (new login with code)
 - `propagation_requested`: Async permission/results propagation should run. Payload `{"types": [...]}` is informational/observability for now (the worker `propagation` command always runs both permissions and results). Consumed via SQS → EventBridge to invoke the worker Lambda.
-- `group_results_export_completed`: Async group-results ZIP export finished (success or failure). Produced by the `handle-event` worker after uploading (or failing to upload) the ZIP; payload includes `export_id`, `status`, `token`, display metadata, and a machine-readable `error` on failure (`too_many_users`, `too_many_items`, `token_invalid`, `upload_failed`, `internal`). The worker CLI puts the dispatcher in context via `Application.ContextWithEventDispatcher` (same as HTTP middleware), outside a request transaction.
+- `group_results_export_completed`: Async group-results ZIP export finished (success or failure). Produced by the `handle-event` worker after uploading (or failing to upload) the ZIP; payload includes `export_id`, `status`, `token`, display metadata, and a machine-readable `error` on failure (`too_many_entries`, `token_invalid`, `upload_failed`, `internal`). The worker CLI puts the dispatcher in context via `Application.ContextWithEventDispatcher` (same as HTTP middleware), outside a request transaction.
 
 ### Configuration
 

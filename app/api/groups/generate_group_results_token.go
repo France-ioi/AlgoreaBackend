@@ -30,8 +30,9 @@ const groupResultsTokenLifetime = time.Hour
 //
 //		* The current user should have `can_watch` >= 'answer' on each of `{parent_item_ids}` items,
 //
-//		* The export is limited to 100 users and 100 items in the visible descendant subtree.
-//		  If either limit is exceeded, a distinct 400 error is returned.
+//		* The export is limited to 100000 user-item entries
+//		  (`number of users × number of items` in the visible descendant subtree).
+//		  If the limit is exceeded, a 400 error is returned.
 //
 //		Otherwise the 'forbidden' error is returned.
 //	parameters:
@@ -74,7 +75,7 @@ func (srv *Service) generateGroupResultsToken(responseWriter http.ResponseWriter
 	itemParentIDs, err := resolveAndCheckParentIDs(store, httpRequest, user, "answer")
 	service.MustNotBeError(err)
 
-	// checkGroupProgressZIPLimits only returns ErrTooManyItems/UsersInProgressZIP (or nil);
+	// checkGroupProgressZIPLimits only returns ErrTooManyProgressZIPEntries (or nil);
 	// unexpected DB failures panic via MustNotBeError inside the helpers.
 	if err := checkGroupProgressZIPLimits(store, user, groupID, itemParentIDs); err != nil {
 		return service.ErrInvalidRequest(err)
