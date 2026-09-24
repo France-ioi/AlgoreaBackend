@@ -44,6 +44,6 @@ openapi3.yaml
 # Local cursor rules
 /.cursor/rules/local.mdc
 # and plans
-/.cursor/plans/
+/.cursor/*
 /plans/
 /reviews/
