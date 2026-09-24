@@ -428,7 +428,7 @@ func TestRun_FailurePaths(t *testing.T) {
 			expectedError: errorUploadFailed,
 		},
 		{
-			name: "too many users",
+			name: "too many entries",
 			payload: RequestedPayload{
 				ExportID: "e", Token: validToken, UploadURL: "https://x.example/put",
 			},
@@ -437,28 +437,11 @@ func TestRun_FailurePaths(t *testing.T) {
 					return &database.User{GroupID: 21}, nil
 				}
 				generateZIPImpl = stubZIPErrWithMeta(
-					groups.ErrTooManyUsersInProgressZIP,
+					groups.ErrTooManyProgressZIPEntries,
 					groups.GroupProgressZIPMeta{GroupName: "Classe 3B"},
 				)
 			},
-			expectedError:     errorTooManyUsers,
-			expectedGroupName: "Classe 3B",
-		},
-		{
-			name: "too many items",
-			payload: RequestedPayload{
-				ExportID: "e", Token: validToken, UploadURL: "https://x.example/put",
-			},
-			setup: func() {
-				loadUserByIDImpl = func(_ *database.DataStore, _ int64) (*database.User, error) {
-					return &database.User{GroupID: 21}, nil
-				}
-				generateZIPImpl = stubZIPErrWithMeta(
-					groups.ErrTooManyItemsInProgressZIP,
-					groups.GroupProgressZIPMeta{GroupName: "Classe 3B"},
-				)
-			},
-			expectedError:     errorTooManyItems,
+			expectedError:     errorTooManyEntries,
 			expectedGroupName: "Classe 3B",
 		},
 		{

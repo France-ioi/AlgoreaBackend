@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,17 +20,26 @@ import (
 )
 
 const (
-	maxUsersInProgressZIP = 100
-	maxItemsInProgressZIP = 100
 	// Chapters are pure containers with no submissions, so they get no submissions/ directory.
 	itemTypeChapter = "Chapter"
 )
 
-// ErrTooManyItemsInProgressZIP is returned when the visible item subtree exceeds maxItemsInProgressZIP.
-var ErrTooManyItemsInProgressZIP = errors.New("The number of items exceeds the limit (100)") //nolint:staticcheck // API-specified message
+// Overridable for unit tests (limit-check call sites without a full DB).
+var (
+	//nolint:gochecknoglobals // overridable in tests
+	maxProgressZIPEntries int64 = 100000
+	//nolint:gochecknoglobals // overridable in tests
+	getProgressZIPUsersImpl = getProgressZIPUsers
+	//nolint:gochecknoglobals // overridable in tests
+	buildProgressZIPVisibleSubtreeImpl = buildProgressZIPVisibleSubtree
+	//nolint:gochecknoglobals // overridable in tests
+	loadProgressZIPChildrenByParentImpl = loadProgressZIPChildrenByParent
+)
 
-// ErrTooManyUsersInProgressZIP is returned when the group has more than maxUsersInProgressZIP users.
-var ErrTooManyUsersInProgressZIP = errors.New("The number of users exceeds the limit (100)") //nolint:staticcheck // API-specified message
+// ErrTooManyProgressZIPEntries is returned when users × visible items exceeds maxProgressZIPEntries.
+var ErrTooManyProgressZIPEntries = errors.New( //nolint:staticcheck // API-specified message wording
+	"The number of user-item entries exceeds the limit (100000)",
+)
 
 // GroupProgressZIPItemMeta is display metadata for one parent item included in an export.
 type GroupProgressZIPItemMeta struct {
@@ -118,8 +128,9 @@ type progressZIPItemChild struct {
 //
 //		* The current user should have `can_watch` >= 'answer' on each of `{parent_item_ids}` items,
 //
-//		* The export is limited to 100 users and 100 items in the visible descendant subtree.
-//		  If either limit is exceeded, a distinct 400 error is returned.
+//		* The export is limited to 100000 user-item entries
+//		  (`number of users × number of items` in the visible descendant subtree).
+//		  If the limit is exceeded, a 400 error is returned.
 //
 //		Otherwise the 'forbidden' error is returned.
 //	parameters:
@@ -174,7 +185,7 @@ func (srv *Service) getGroupProgressWithAnswersZIP(responseWriter http.ResponseW
 	// instead of a 200 with a truncated archive.
 	zipBuffer := &bytes.Buffer{}
 	meta, err := GenerateGroupProgressWithAnswersZIP(zipBuffer, store, user, groupID, itemParentIDs)
-	if errors.Is(err, ErrTooManyItemsInProgressZIP) || errors.Is(err, ErrTooManyUsersInProgressZIP) {
+	if errors.Is(err, ErrTooManyProgressZIPEntries) {
 		return service.ErrInvalidRequest(err)
 	}
 	service.MustNotBeError(err)
@@ -188,7 +199,7 @@ func (srv *Service) getGroupProgressWithAnswersZIP(responseWriter http.ResponseW
 }
 
 // GenerateGroupProgressWithAnswersZIP writes a progress-with-answers ZIP for the given group and parent items.
-// It enforces the 100-users / 100-items limits. Callers must already have checked authorization.
+// It enforces the users×items entry limit. Callers must already have checked authorization.
 // Internal DB failures are raised via service.MustNotBeError (panic); wrap with recover when needed.
 func GenerateGroupProgressWithAnswersZIP(
 	writer io.Writer, store *database.DataStore, user *database.User, groupID int64, itemParentIDs []int64,
@@ -209,15 +220,12 @@ func GenerateGroupProgressWithAnswersZIP(
 	var subtreeItems []progressZIPSubtreeItem
 	var zipUsers []progressZIPUser
 	if len(itemParentIDs) > 0 {
+		zipUsers = getProgressZIPUsersImpl(store, groupID)
+		maxItems := maxVisibleItemsForProgressZIP(len(zipUsers))
 		var itemCount int
-		subtreeItems, itemCount = buildProgressZIPVisibleSubtree(store, user, itemParentIDs)
-		if itemCount > maxItemsInProgressZIP {
-			return GroupProgressZIPMeta{Filename: filename, GroupName: groupName}, ErrTooManyItemsInProgressZIP
-		}
-
-		zipUsers = getProgressZIPUsers(store, groupID)
-		if len(zipUsers) > maxUsersInProgressZIP {
-			return GroupProgressZIPMeta{Filename: filename, GroupName: groupName}, ErrTooManyUsersInProgressZIP
+		subtreeItems, itemCount = buildProgressZIPVisibleSubtreeImpl(store, user, itemParentIDs, maxItems)
+		if err := progressZIPLimitError(len(zipUsers), itemCount); err != nil {
+			return GroupProgressZIPMeta{Filename: filename, GroupName: groupName}, err
 		}
 
 		parentTitles := getProgressZIPParentItemTitles(store, user, itemParentIDs)
@@ -240,19 +248,35 @@ func GenerateGroupProgressWithAnswersZIP(
 	}, nil
 }
 
-// checkGroupProgressZIPLimits runs the 100-users / 100-items pre-checks without generating a ZIP.
+// checkGroupProgressZIPLimits runs the users×items pre-check without generating a ZIP.
 func checkGroupProgressZIPLimits(
 	store *database.DataStore, user *database.User, groupID int64, itemParentIDs []int64,
 ) error {
 	if len(itemParentIDs) == 0 {
 		return nil
 	}
-	_, itemCount := buildProgressZIPVisibleSubtree(store, user, itemParentIDs)
-	if itemCount > maxItemsInProgressZIP {
-		return ErrTooManyItemsInProgressZIP
+	userCount := len(getProgressZIPUsersImpl(store, groupID))
+	maxItems := maxVisibleItemsForProgressZIP(userCount)
+	_, itemCount := buildProgressZIPVisibleSubtreeImpl(store, user, itemParentIDs, maxItems)
+	return progressZIPLimitError(userCount, itemCount)
+}
+
+// maxVisibleItemsForProgressZIP is the BFS early-stop for the visible subtree under the
+// users×items entry limit. With zero users the product is always 0, so there is no limit-based stop.
+func maxVisibleItemsForProgressZIP(userCount int) int64 {
+	if userCount <= 0 {
+		return math.MaxInt64
 	}
-	if len(getProgressZIPUsers(store, groupID)) > maxUsersInProgressZIP {
-		return ErrTooManyUsersInProgressZIP
+	return maxProgressZIPEntries / int64(userCount)
+}
+
+func progressZIPLimitError(userCount, itemCount int) error {
+	return errIfProgressZIPEntriesExceedLimit(userCount, itemCount)
+}
+
+func errIfProgressZIPEntriesExceedLimit(userCount, itemCount int) error {
+	if int64(userCount)*int64(itemCount) > maxProgressZIPEntries {
+		return ErrTooManyProgressZIPEntries
 	}
 	return nil
 }
@@ -360,15 +384,17 @@ func writeProgressZIPUserItemFiles(
 }
 
 func buildProgressZIPVisibleSubtree(
-	store *database.DataStore, user *database.User, itemParentIDs []int64,
+	store *database.DataStore, user *database.User, itemParentIDs []int64, maxItems int64,
 ) (subtreeItems []progressZIPSubtreeItem, itemCount int) {
 	permissionsSubQuery := store.Permissions().MatchingUserAncestors(user).
 		Select("item_id").
 		WherePermissionIsAtLeast("view", "info").SubQuery()
 
 	var childrenByParent map[int64][]progressZIPItemChild
-	childrenByParent, itemCount = loadProgressZIPChildrenByParent(store, itemParentIDs, permissionsSubQuery)
-	if itemCount > maxItemsInProgressZIP {
+	childrenByParent, itemCount = loadProgressZIPChildrenByParentImpl(
+		store, itemParentIDs, permissionsSubQuery, maxItems,
+	)
+	if int64(itemCount) > maxItems {
 		return nil, itemCount
 	}
 
@@ -386,7 +412,7 @@ func buildProgressZIPVisibleSubtree(
 }
 
 func loadProgressZIPChildrenByParent(
-	store *database.DataStore, itemParentIDs []int64, permissionsSubQuery interface{},
+	store *database.DataStore, itemParentIDs []int64, permissionsSubQuery interface{}, maxItems int64,
 ) (childrenByParent map[int64][]progressZIPItemChild, itemCount int) {
 	childrenByParent = make(map[int64][]progressZIPItemChild)
 	parentFrontier := append([]int64(nil), itemParentIDs...)
@@ -419,7 +445,7 @@ func loadProgressZIPChildrenByParent(
 			if !knownParents[childID] {
 				knownParents[childID] = true
 				itemCount = len(knownParents)
-				if itemCount > maxItemsInProgressZIP {
+				if int64(itemCount) > maxItems {
 					return childrenByParent, itemCount
 				}
 				nextFrontier = append(nextFrontier, childID)
