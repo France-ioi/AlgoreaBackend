@@ -33,6 +33,9 @@ import (
 //			with `{parent_attempt_id}` (or its parent attempt each time we reach a root of an attempt) as the attempt,
 //		* if `{ids}` consists of only one item, the `{parent_attempt_id}` should be zero,
 //		* the final item in `{ids}` should be either 'Task', or 'Chapter',
+//		* if the final item in `{ids}` requires explicit entry, the participant should have at least 'content' access
+//			on it that does not come solely from the item's participants group (`items.participants_group_id`),
+//			i.e. access given by `/items/{ids}/enter` does not allow creating attempts,
 //
 //		otherwise the 'forbidden' error is returned.
 //
@@ -112,20 +115,41 @@ func (srv *Service) createAttempt(responseWriter http.ResponseWriter, httpReques
 	return nil
 }
 
-func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, groupID int64) error {
-	var allowsMultipleAttempts bool
+func checkIfAttemptCreationIsPossible(store *database.DataStore, itemID, participantID int64) error {
+	var itemInfo struct {
+		AllowsMultipleAttempts bool
+		RequiresExplicitEntry  bool
+		ParticipantsGroupID    *int64
+	}
 	err := store.Items().ByID(itemID).
 		Where("items.type IN('Task','Chapter')").
-		PluckFirst("items.allows_multiple_attempts", &allowsMultipleAttempts).WithExclusiveWriteLock().Error()
+		Select("items.allows_multiple_attempts, items.requires_explicit_entry, items.participants_group_id").
+		WithExclusiveWriteLock().Take(&itemInfo).Error()
 	if gorm.IsRecordNotFoundError(err) {
 		return service.ErrAPIInsufficientAccessRights
 	}
 	service.MustNotBeError(err)
 
-	if !allowsMultipleAttempts {
+	if itemInfo.RequiresExplicitEntry {
+		var found bool
+		found, err = store.Permissions().MatchingGroupAncestors(participantID).
+			Where("permissions.item_id = ?", itemID).
+			// Exclude access from the item's participants group: that membership is temporary
+			// (granted by /enter) and must not allow creating extra attempts that skip entry time limits.
+			Where("NOT (permissions.group_id <=> ?)", itemInfo.ParticipantsGroupID).
+			WherePermissionIsAtLeast("view", "content").
+			WithSharedWriteLock().
+			HasRows()
+		service.MustNotBeError(err)
+		if !found {
+			return service.ErrAPIInsufficientAccessRights
+		}
+	}
+
+	if !itemInfo.AllowsMultipleAttempts {
 		var found bool
 		found, err = store.Results().
-			Where("participant_id = ?", groupID).Where("item_id = ?", itemID).WithExclusiveWriteLock().HasRows()
+			Where("participant_id = ?", participantID).Where("item_id = ?", itemID).WithExclusiveWriteLock().HasRows()
 		service.MustNotBeError(err)
 		if found {
 			return service.ErrUnprocessableEntity(errors.New("the item doesn't allow multiple attempts"))

@@ -118,3 +118,98 @@ Feature: Create an attempt for an item - robustness
     Then the response code should be 403
     And the response error message should contain "Insufficient access rights"
     And the table "attempts" should remain unchanged
+
+  Scenario: Only temporary content via the item's participants group
+    Given I am the user with id "101"
+    And the database table "groups" also has the following rows:
+      | id  | type                | root_activity_id |
+      | 200 | ContestParticipants | null             |
+      | 105 | Class               | 70               |
+    And the database table "groups_groups" also has the following rows:
+      | parent_group_id | child_group_id | expires_at          |
+      | 200             | 101            | 9999-12-31 23:59:59 |
+      | 105             | 101            | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
+    And the database table "items" also has the following row:
+      | id | url                                                                     | type | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task | 1                        | 1                       | 200                   | fr                   |
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated |
+      | 200      | 70      | content            |
+    When I send a POST request to "/items/70/attempts?parent_attempt_id=0"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "attempts" should remain unchanged
+
+  Scenario: Only temporary content via the item's participants group (as a team)
+    Given I am the user with id "101"
+    And the database table "groups" also has the following rows:
+      | id  | type                | root_activity_id |
+      | 200 | ContestParticipants | null             |
+      | 106 | Team                | 70               |
+    And the database table "groups_groups" also has the following rows:
+      | parent_group_id | child_group_id | expires_at          |
+      | 200             | 106            | 9999-12-31 23:59:59 |
+      | 106             | 101            | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
+    And the database table "items" also has the following row:
+      | id | url                                                                     | type | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task | 1                        | 1                       | 200                   | fr                   |
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated |
+      | 200      | 70      | content            |
+    When I send a POST request to "/items/70/attempts?as_team_id=106&parent_attempt_id=0"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "attempts" should remain unchanged
+
+  Scenario: Content from participants group plus only info from elsewhere
+    Given I am the user with id "101"
+    And the database table "groups" also has the following rows:
+      | id  | type                | root_activity_id |
+      | 200 | ContestParticipants | null             |
+      | 105 | Class               | 70               |
+    And the database table "groups_groups" also has the following rows:
+      | parent_group_id | child_group_id | expires_at          |
+      | 200             | 101            | 9999-12-31 23:59:59 |
+      | 105             | 101            | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
+    And the database table "items" also has the following row:
+      | id | url                                                                     | type | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task | 1                        | 1                       | 200                   | fr                   |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 200      | 70      | content            |
+      | 101      | 70      | info               |
+    When I send a POST request to "/items/70/attempts?parent_attempt_id=0"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "attempts" should remain unchanged
+
+  Scenario: Explicit-entry without lasting content returns 403 before the multiple-attempts 422
+    Given I am the user with id "101"
+    And the database table "groups" also has the following rows:
+      | id  | type                | root_activity_id |
+      | 200 | ContestParticipants | null             |
+      | 105 | Class               | 70               |
+    And the database table "groups_groups" also has the following rows:
+      | parent_group_id | child_group_id | expires_at          |
+      | 200             | 101            | 9999-12-31 23:59:59 |
+      | 105             | 101            | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
+    And the database table "items" also has the following row:
+      | id | url                                                                     | type | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 70 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task | 0                        | 1                       | 200                   | fr                   |
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated |
+      | 200      | 70      | content            |
+    And the database has the following table "attempts":
+      | id | participant_id |
+      | 0  | 101            |
+    And the database has the following table "results":
+      | attempt_id | participant_id | item_id | started_at          |
+      | 0          | 101            | 70      | 2019-05-30 11:00:00 |
+    When I send a POST request to "/items/70/attempts?parent_attempt_id=0"
+    Then the response code should be 403
+    And the response error message should contain "Insufficient access rights"
+    And the table "attempts" should remain unchanged
