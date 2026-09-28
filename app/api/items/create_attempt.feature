@@ -146,3 +146,178 @@ Feature: Create an attempt for an item
       | 3          | 102            | 70      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
     And the table "results_propagate" should be empty
     And the table "results_propagate_internal" should be empty
+
+  Scenario Outline: Lasting content on an explicit-entry item allows creating an attempt
+    Given I am the user with id "111"
+    And the database table "groups" also has the following rows:
+      | id  | type                | root_activity_id |
+      | 200 | ContestParticipants | null             |
+      | 105 | Class               | 80               |
+    And the database table "groups_groups" also has the following row:
+      | parent_group_id | child_group_id |
+      | 105             | 111            |
+    And the groups ancestors are computed
+    And the database table "items" also has the following row:
+      | id | url                                                                     | type | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 80 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task | 1                        | 1                       | 200                   | fr                   |
+    And the database table "permissions_generated" also has the following row:
+      | group_id   | item_id | can_view_generated | is_owner_generated |
+      | <group_id> | 80      | <can_view>         | <is_owner>         |
+    When I send a POST request to "/items/80/attempts?parent_attempt_id=0"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {"id": "1"}
+      }
+      """
+    And the table "attempts" should be:
+      | id | participant_id | root_item_id | parent_attempt_id | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 0  | 101            | null         | null              | 0                                                 |
+      | 0  | 102            | null         | null              | 0                                                 |
+      | 0  | 111            | null         | null              | 0                                                 |
+      | 1  | 111            | 80           | 0                 | 1                                                 |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 1          | 111            | 80      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
+  Examples:
+    | group_id | can_view | is_owner |
+    | 111      | solution | 1        |
+    | 111      | content  | 0        |
+    | 105      | content  | 0        |
+
+  Scenario: Member of participants group with lasting content from another group can create an attempt
+    Given I am the user with id "111"
+    And the database table "groups" also has the following rows:
+      | id  | type                | root_activity_id |
+      | 200 | ContestParticipants | null             |
+      | 105 | Class               | 80               |
+    And the database table "groups_groups" also has the following rows:
+      | parent_group_id | child_group_id | expires_at          |
+      | 200             | 111            | 9999-12-31 23:59:59 |
+      | 105             | 111            | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
+    And the database table "items" also has the following row:
+      | id | url                                                                     | type | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 80 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task | 1                        | 1                       | 200                   | fr                   |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 200      | 80      | content            |
+      | 105      | 80      | content            |
+    When I send a POST request to "/items/80/attempts?parent_attempt_id=0"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {"id": "1"}
+      }
+      """
+    And the table "attempts" should be:
+      | id | participant_id | root_item_id | parent_attempt_id | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 0  | 101            | null         | null              | 0                                                 |
+      | 0  | 102            | null         | null              | 0                                                 |
+      | 0  | 111            | null         | null              | 0                                                 |
+      | 1  | 111            | 80           | 0                 | 1                                                 |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 1          | 111            | 80      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
+
+  Scenario: Explicit-entry item with null participants_group_id and lasting content allows creating an attempt
+    Given I am the user with id "111"
+    And the database table "groups" also has the following row:
+      | id  | type  | root_activity_id |
+      | 105 | Class | 80               |
+    And the database table "groups_groups" also has the following row:
+      | parent_group_id | child_group_id |
+      | 105             | 111            |
+    And the groups ancestors are computed
+    And the database table "items" also has the following row:
+      | id | url                                                                     | type | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 80 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task | 1                        | 1                       | null                  | fr                   |
+    And the database table "permissions_generated" also has the following row:
+      | group_id | item_id | can_view_generated |
+      | 105      | 80      | content            |
+    When I send a POST request to "/items/80/attempts?parent_attempt_id=0"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {"id": "1"}
+      }
+      """
+    And the table "attempts" should be:
+      | id | participant_id | root_item_id | parent_attempt_id | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 0  | 101            | null         | null              | 0                                                 |
+      | 0  | 102            | null         | null              | 0                                                 |
+      | 0  | 111            | null         | null              | 0                                                 |
+      | 1  | 111            | 80           | 0                 | 1                                                 |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 1          | 111            | 80      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
+
+  Scenario: After entering an explicit-entry chapter, a participant can create attempts on a multi-attempt child task
+    Given I am the user with id "111"
+    And the database table "groups" also has the following rows:
+      | id  | type                | root_activity_id |
+      | 200 | ContestParticipants | null             |
+      | 105 | Class               | 80               |
+    And the database table "groups_groups" also has the following rows:
+      | parent_group_id | child_group_id | expires_at          |
+      | 105             | 111            | 9999-12-31 23:59:59 |
+      | 200             | 111            | 9999-12-31 23:59:59 |
+    And the groups ancestors are computed
+    And the database table "items" also has the following rows:
+      | id | url                                                                     | type    | allows_multiple_attempts | requires_explicit_entry | participants_group_id | default_language_tag |
+      | 80 | null                                                                    | Chapter | 1                        | 1                       | 200                   | fr                   |
+      | 81 | http://taskplatform.mblockelet.info/task.html?taskId=403449543672183936 | Task    | 1                        | 0                       | null                  | fr                   |
+    And the database table "items_items" also has the following row:
+      | parent_item_id | child_item_id | child_order |
+      | 80             | 81            | 1           |
+    And the database table "items_ancestors" also has the following row:
+      | ancestor_item_id | child_item_id |
+      | 80               | 81            |
+    And the database table "permissions_generated" also has the following rows:
+      | group_id | item_id | can_view_generated |
+      | 200      | 80      | content            |
+      | 200      | 81      | content            |
+    And the database table "attempts" also has the following row:
+      | id | participant_id | parent_attempt_id | root_item_id | created_at          |
+      | 1  | 111            | 0                 | 80           | 2019-05-30 11:00:00 |
+    And the database has the following table "results":
+      | attempt_id | participant_id | item_id | started_at          |
+      | 1          | 111            | 80      | 2019-05-30 11:00:00 |
+    When I send a POST request to "/items/80/81/attempts?parent_attempt_id=1"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": {"id": "2"}
+      }
+      """
+    And the table "attempts" should be:
+      | id | participant_id | root_item_id | parent_attempt_id | ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 |
+      | 0  | 101            | null         | null              | 0                                                 |
+      | 0  | 102            | null         | null              | 0                                                 |
+      | 0  | 111            | null         | null              | 0                                                 |
+      | 1  | 111            | 80           | 0                 | 0                                                 |
+      | 2  | 111            | 81           | 1                 | 1                                                 |
+    And the table "results" should be:
+      | attempt_id | participant_id | item_id | score_computed | tasks_tried | ABS(TIMESTAMPDIFF(SECOND, latest_activity_at, NOW())) < 3 | latest_submission_at | score_obtained_at | validated_at | ABS(TIMESTAMPDIFF(SECOND, started_at, NOW())) < 3 |
+      | 1          | 111            | 80      | 0              | 0           | 1                                                         | null                 | null              | null         | 0                                                 |
+      | 2          | 111            | 81      | 0              | 0           | 1                                                         | null                 | null              | null         | 1                                                 |
+    And the table "results_propagate" should be empty
+    And the table "results_propagate_internal" should be empty
