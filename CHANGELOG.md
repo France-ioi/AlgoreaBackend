@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.58.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.2...v2.58.3) - 2026-09-28
+
+- fix `POST /items/{ids}/attempts`: on items requiring explicit entry, creating an attempt now requires 'content' access that does not come only from the item's participants group (access granted by `/items/{ids}/enter` is no longer enough), so extra attempts can no longer skip entry time limits
+
 ## [v2.58.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.1...v2.58.2) - 2026-09-24
 
 - raise group progress-with-answers ZIP / group-results-token limits: replace the 100-users and 100-items caps with a single `users × items ≤ 100000` entry limit (async worker error code `too_many_entries`)
