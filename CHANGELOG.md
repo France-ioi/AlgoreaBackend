@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.58.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.3...v2.58.4) - 2026-10-01
+
+- fix `requires_explicit_entry` in `GET /items/{ids}/children`, `GET /items/{ids}/parents`, and prerequisites/dependencies list responses: the field was always `false` because the column was never selected
+
 ## [v2.58.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.2...v2.58.3) - 2026-09-28
 
 - fix `POST /items/{ids}/attempts`: on items requiring explicit entry, creating an attempt now requires 'content' access that does not come only from the item's participants group (access granted by `/items/{ids}/enter` is no longer enough), so extra attempts can no longer skip entry time limits
