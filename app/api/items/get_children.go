@@ -323,7 +323,7 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 const itemChildrenColumnList = `items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
 				items.id, items.type, items.default_language_tag,
-				items.validation_type, items.duration, items.entry_participant_type, items.no_score,
+				items.validation_type, items.requires_explicit_entry, items.duration, items.entry_participant_type, items.no_score,
 				items.display_settings,
 				IFNULL(can_view_generated_value, 1) AS can_view_generated_value,
 				IFNULL(can_grant_view_generated_value, 1) AS can_grant_view_generated_value,
