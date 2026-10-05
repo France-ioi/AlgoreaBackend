@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- fix swagger doc of `POST /items/{ids}/start-result-path`: success status is 200, not 201
+
 ## [v2.58.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.3...v2.58.4) - 2026-10-01
 
 - fix `requires_explicit_entry` in `GET /items/{ids}/children`, `GET /items/{ids}/parents`, and prerequisites/dependencies list responses: the field was always `false` because the column was never selected

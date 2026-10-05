@@ -49,8 +49,8 @@ import (
 //			type: integer
 //			format: int64
 //	responses:
-//		"201":
-//			description: "Created. Success response with the attempt id for the final item in the path"
+//		"200":
+//			description: "OK. Success response with the attempt id for the final item in the path"
 //			schema:
 //					type: object
 //					required: [success, message, data]
