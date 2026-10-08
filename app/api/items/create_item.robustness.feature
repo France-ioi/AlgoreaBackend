@@ -130,6 +130,129 @@ Feature: Create item - robustness
     And the table "permissions_granted" should remain unchanged
     And the table "permissions_generated" should remain unchanged
 
+  Scenario: The title is too long
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Chapter",
+        "language_tag": "sl",
+        "title": "{{repeat("a", 201)}}",
+        "parent": {"item_id": "21"}
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "title": ["title must be a maximum of 200 characters in length"]
+        }
+      }
+      """
+    And the table "items" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "permissions_generated" should remain unchanged
+
+  Scenario: The image_url is too long
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Chapter",
+        "language_tag": "sl",
+        "title": "my title",
+        "image_url": "{{repeat("a", 2049)}}",
+        "parent": {"item_id": "21"}
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "image_url": ["image_url must be a maximum of 2,048 characters in length"]
+        }
+      }
+      """
+    And the table "items" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "permissions_generated" should remain unchanged
+
+  Scenario: The subtitle is too long
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Chapter",
+        "language_tag": "sl",
+        "title": "my title",
+        "subtitle": "{{repeat("a", 201)}}",
+        "parent": {"item_id": "21"}
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "subtitle": ["subtitle must be a maximum of 200 characters in length"]
+        }
+      }
+      """
+    And the table "items" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "permissions_generated" should remain unchanged
+
+  Scenario: The description is too long
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Chapter",
+        "language_tag": "sl",
+        "title": "my title",
+        "description": "{{repeat("a", 100001)}}",
+        "parent": {"item_id": "21"}
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "description": ["description must be a maximum of 100,000 characters in length"]
+        }
+      }
+      """
+    And the table "items" should remain unchanged
+    And the table "items_items" should remain unchanged
+    And the table "items_ancestors" should remain unchanged
+    And the table "items_strings" should remain unchanged
+    And the table "permissions_granted" should remain unchanged
+    And the table "permissions_generated" should remain unchanged
+
   Scenario: Both parent_item_id & as_root_of_group_id are missing
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:

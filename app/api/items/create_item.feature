@@ -77,6 +77,33 @@ Feature: Create item
     And the table "results_propagate_sync" should be empty
     And the table "results_propagate_internal" should be empty
 
+  Scenario: Valid with a multibyte description of exactly 100000 characters
+    Given I am the user with id "11"
+    When I send a POST request to "/items" with the following body:
+      """
+      {
+        "type": "Task",
+        "language_tag": "sl",
+        "title": "{{repeat("a", 200)}}",
+        "image_url": "{{repeat("b", 2048)}}",
+        "subtitle": "{{repeat("c", 200)}}",
+        "description": "{{repeat("é", 100000)}}",
+        "parent": {"item_id": "21"}
+      }
+      """
+    Then the response code should be 201
+    And the response body should be, in JSON:
+      """
+      {
+        "success": true,
+        "message": "created",
+        "data": { "id": "5577006791947779410" }
+      }
+      """
+    And the table "items_strings" should be:
+      | item_id             | language_tag | title                | image_url              | subtitle             | description             |
+      | 5577006791947779410 | sl           | {{repeat("a", 200)}} | {{repeat("b", 2048)}} | {{repeat("c", 200)}} | {{repeat("é", 100000)}} |
+
   Scenario: Valid (explicit entry_min_admitted_members_ratio None)
     Given I am the user with id "11"
     When I send a POST request to "/items" with the following body:

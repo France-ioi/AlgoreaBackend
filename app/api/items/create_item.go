@@ -77,10 +77,14 @@ type ItemWithRequiredType struct {
 // swagger:ignore
 type newItemString struct {
 	// required: true
-	Title       string  `json:"title"       validate:"set"`
-	ImageURL    *string `json:"image_url"`
-	Subtitle    *string `json:"subtitle"`
-	Description *string `json:"description"`
+	// maxLength: 200
+	Title string `json:"title" validate:"set,max=200"`
+	// maxLength: 2048
+	ImageURL *string `json:"image_url" validate:"omitempty,max=2048"`
+	// maxLength: 200
+	Subtitle *string `json:"subtitle" validate:"omitempty,max=200"`
+	// maxLength: 100000
+	Description *string `json:"description" validate:"omitempty,max=100000"`
 }
 
 type itemParent struct {

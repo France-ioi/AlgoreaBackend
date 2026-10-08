@@ -168,3 +168,17 @@ Feature: Update an item string entry
       """
     Then the response should be "updated"
     And the table "items_strings" should remain unchanged
+
+  Scenario: Update with a multibyte description of exactly 100000 characters
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50/strings/default" with the following body:
+      """
+      {
+        "description": "{{repeat("é", 100000)}}"
+      }
+      """
+    Then the response should be "updated"
+    And the table "items_strings" should remain unchanged, regardless of the row with language_tag "en"
+    And the table "items_strings" at language_tag "en" should be:
+      | item_id | language_tag | title  | image_url                  | subtitle        | description             |
+      | 50      | en           | Item 2 | http://myurl.com/item2.jpg | Item 2 Subtitle | {{repeat("é", 100000)}} |
