@@ -20,8 +20,9 @@ type itemStringUpdateRequest struct {
 	// maxLength: 2048
 	ImageURL *string `json:"image_url" validate:"omitempty,max=2048"`
 	// maxLength: 200
-	Subtitle    *string `json:"subtitle"    validate:"omitempty,max=200"`
-	Description *string `json:"description"`
+	Subtitle *string `json:"subtitle" validate:"omitempty,max=200"`
+	// maxLength: 100000
+	Description *string `json:"description" validate:"omitempty,max=100000"`
 }
 
 // swagger:operation PUT /items/{item_id}/strings/{language_tag} items itemStringUpdate

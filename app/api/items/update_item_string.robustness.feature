@@ -114,6 +114,28 @@ Feature: Update an item string entry - robustness
       """
     And the table "items_strings" should remain unchanged
 
+  Scenario: The description is too long
+    Given I am the user with id "11"
+    When I send a PUT request to "/items/50/strings/default" with the following body:
+      """
+      {
+        "description": "{{repeat("a", 100001)}}"
+      }
+      """
+    Then the response code should be 400
+    And the response body should be, in JSON:
+      """
+      {
+        "success": false,
+        "message": "Bad Request",
+        "error_text": "Invalid input data",
+        "errors":{
+          "description": ["description must be a maximum of 100,000 characters in length"]
+        }
+      }
+      """
+    And the table "items_strings" should remain unchanged
+
   Scenario: Wrong language
     Given I am the user with id "11"
     When I send a PUT request to "/items/50/strings/unknown" with the following body:
