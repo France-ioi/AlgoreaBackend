@@ -1,8 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [v2.59.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.4...v2.59.0) - 2026-10-08
 
+- allow longer item descriptions (`items_strings.description` → MEDIUMTEXT) and cap them at 100000 characters on `POST /items` and `PUT /items/{item_id}/strings/{language_tag}`
+- enforce max lengths on `POST /items` string fields: title/subtitle 200, `image_url` 2048 (aligned with string update)
 - fix swagger doc of `POST /items/{ids}/start-result-path`: success status is 200, not 201
 
 ## [v2.58.4](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.3...v2.58.4) - 2026-10-01
