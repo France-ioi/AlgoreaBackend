@@ -394,7 +394,7 @@ func TestCORSConfig_DefaultBlocksAllOrigins(t *testing.T) {
 
 	// Without any cors configuration the middleware must deny every
 	// cross-origin request -- even non-credentialed ones. This is the
-	// regression test for the "default safe" framing in ARCHITECTURE.md:
+	// regression test for the "default safe" framing in docs/architecture/cors.md:
 	// before the disallowedAllOriginsSentinel substitution, an unset
 	// allowedOrigins fell through to go-chi/cors's allowedOriginsAll
 	// branch and echoed any caller's Origin back, leaving every public

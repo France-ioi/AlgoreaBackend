@@ -1,121 +1,38 @@
-
 # Agent instructions
 
-You are an expert in Golang and backend development. You write functional, maintainable, performant, and accessible code following Golang best practices.
+You are an expert in Golang and backend development. Prefer functional, maintainable, performant Go that matches this repo's patterns.
 
-The architecture of the project is documented in `ARCHITECTURE.md`. Whenever changes are made to the architecture, this file must be updated accordingly.
+**Architecture map:** [`ARCHITECTURE.md`](ARCHITECTURE.md) — folders, request flow, conventions, deep-dive table. Update the map for global structure; update the matching `docs/architecture/*.md` deep-dive when only that branch changes.
 
-## Linting and testing
+## Gates
 
-All code must pass the linting rules and tests.
-
-### Linting
-
-You can run the linter with:
-```
-./bin/golangci-lint run -v --timeout 2m
-```
-
-Disabling existing linting rules is not allowed.
-
-### Testing
-
-#### Prerequisites
-
-1. Start the database services (both `db` and `db_test`):
-```
-docker-compose up -d db db_test
-```
-
-2. Ensure `conf/config.test.yaml` exists and points to the test database on port `3307` (not `3306`):
-```yaml
-database:
-  addr: localhost:3307  # Must use port 3307 for db_test
-```
-
-3. Initialize the test database (only needed once, or after database schema changes):
-```
-ALGOREA_ENV=test ./bin/AlgoreaBackend db-restore
-ALGOREA_ENV=test ./bin/AlgoreaBackend db-migrate
-ALGOREA_ENV=test ./bin/AlgoreaBackend install
-```
-
-#### Running Tests
-
-To run all tests:
-```
-make test-dev
-```
-
-Note: There may be a flaky timeout test in `app/database` that occasionally hangs. This is a known issue and doesn't indicate a real problem.
-
-If you get DB connection errors, ensure docker-compose services are running with `docker-compose ps`.
-
-#### Test coverage (required)
-
-At the end of any task that adds or changes code, you MUST compute test coverage and ensure the code you touched is 100% covered.
-
-1. Run the suite with a coverage profile (the `test` target writes `test-results/coverage.txt`; `test-dev` does not produce coverage). To scope to the package you changed and keep it fast:
-```
-go test -gcflags=all=-l \
-  -coverpkg=<package-under-test> \
-  -coverprofile=/tmp/cov.txt -covermode=atomic \
-  ./path/to/package/ -p 1 -parallel 1
-```
-2. Inspect per-function coverage for the files you touched:
-```
-go tool cover -func=/tmp/cov.txt | grep <changed-file>.go
-```
-3. For a line-by-line view of what is still uncovered:
-```
-go tool cover -html=/tmp/cov.txt -o /tmp/cov.html
-```
-
-Every function and branch in code you added or modified must reach 100%. If a line is genuinely unreachable in tests, add the test that exercises it; only leave it uncovered if it is truly impossible to trigger, and document why.
-
-Calling a new helper from a unit test does **not** cover the production call site. If you change a caller (e.g. add `if err := helper(...); err != nil { return err }`), that caller branch must be exercised too — typically through the public entrypoint (`New`, `Reset`, HTTP handler, etc.). Check **every** modified function in `go tool cover -func` (not only the new helper); Codecov patch coverage fails on uncovered caller lines even when the helper is at 100%.
+- Lint must pass (`make lint` / `./bin/golangci-lint run -v --timeout 2m`). Never disable linter rules.
+- Tests must pass (`make test-dev`). After code changes, touched functions/branches need **100%** coverage — recipe and DB setup in [`docs/architecture/testing.md`](docs/architecture/testing.md).
 
 ## Comments
-- Do NOT add obvious, narrating comments (e.g., `// increment counter`, `// return result`).
-- DO add comments when a non-trivial choice has been made and the reasoning is not self-evident from the code. Examples:
-  - Why a particular algorithm, data structure, or approach was chosen over alternatives
-  - Why a value is hardcoded or why a specific threshold/constant was picked
-  - Workarounds for library quirks, database engine behavior, or API limitations
-  - Non-obvious performance considerations or trade-offs
-  - Business logic constraints that aren't apparent from the code alone
-  - Why something is intentionally left out (e.g., `// No error check needed: Write() on bytes.Buffer never fails`)
-- When refactoring or rewriting code, **preserve all existing explanatory comments**. Move them to the appropriate new location if the code they describe has moved. Only remove a comment if the code change makes the comment factually obsolete.
 
-## Database Migrations
+Write **why-comments** only: non-obvious choice, hardcoded threshold, library/DB quirk, intentional omission. Skip narrating comments. On refactor, **preserve** existing explanatory comments (move with the code); drop only when factually obsolete.
 
-Migrations live in `db/migrations/` and use [goose](https://github.com/pressly/goose). They can be SQL (`.sql`) or Go (`.go`) files.
+## Branch docs (read when in scope)
 
-**Naming convention**: `YYMMDDHHMM_description.sql` (10-digit timestamp, e.g., `2602270000_add_hide_to_items_children_layout.sql`).
+| When | Doc |
+|------|-----|
+| Business rules / cross-service Algorea behavior | [domain.md](docs/agents/domain.md) (glossary, ADRs, knowledge base `docs/algorea/`) |
+| Migrations / `schema.sql` / `display_settings` | [schema.md](docs/architecture/schema.md) |
+| New or changed domain events | [events.md](docs/architecture/events.md) |
+| Propagation / permissions_generated / results queues | [propagation.md](docs/architecture/propagation.md) |
+| Config keys, async propagation, CORS | [configuration.md](docs/architecture/configuration.md), [cors.md](docs/architecture/cors.md) |
 
-**Important**: `db/schema/schema.sql` is the base schema snapshot loaded by `db-restore`. Migrations are applied on top of it by `db-migrate`. Do **not** manually edit `schema.sql` to reflect migration changes -- the migration file is the sole source of truth for schema evolution.
+## Agent skills
 
-## Event System
+### Issue tracker
 
-The project has an event dispatch system that sends domain events to external systems (e.g., AWS SQS).
+Markdown under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
 
-### Event Versioning Rules
+### Triage labels
 
-Events include a `version` field that follows semver-like rules. When modifying event schemas:
+`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
 
-- **Minor version bump** (1.0 → 1.1): Non-breaking changes only
-  - Adding new optional fields to the payload
-  - Adding new event types
-  
-- **Major version bump** (1.x → 2.0): Breaking changes
-  - Removing fields from the payload
-  - Changing field types or semantics
-  - Renaming fields
+### Domain docs
 
-The version constant is defined in `app/event/event.go` as `EventVersion`. Update it when making schema changes.
-
-### Adding New Events
-
-1. Add a new event type constant in `app/event/types.go`
-2. Call `event.Dispatch()` after the relevant transaction commits
-3. Add BDD tests to verify the event is dispatched with the correct payload
-4. Update `ARCHITECTURE.md` with the new event type
+Single-context: root `GLOSSARY.md` + `docs/adr/` (+ Algorea knowledge base). See `docs/agents/domain.md`.

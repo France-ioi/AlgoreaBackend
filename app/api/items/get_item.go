@@ -132,8 +132,8 @@ type itemResponse struct {
 
 	// JSON object with display/UI settings interpreted by the frontend. Always
 	// present, never `null`; an item with no non-default settings has the value
-	// `{}`. See `ARCHITECTURE.md` §"Display settings (frontend pass-through)" for
-	// the storage convention and the list of keys.
+	// `{}`. See `docs/architecture/schema.md` § Display settings for the storage
+	// convention and the list of keys.
 	// required: true
 	DisplaySettings database.JSON `json:"display_settings"`
 

@@ -53,8 +53,8 @@ type Item struct {
 	UsesAPI               bool `json:"uses_api"`
 
 	// JSON object with display/UI settings interpreted by the frontend.
-	// See `ARCHITECTURE.md` §"Display settings (frontend pass-through)" for the
-	// storage convention and the list of keys currently used by the frontend.
+	// See `docs/architecture/schema.md` § Display settings for the storage
+	// convention and the list of keys currently used by the frontend.
 	//
 	// Behavior on PUT/POST:
 	//   - omitted: the column is left untouched (or defaults to `{}` for new rows);
