@@ -47,3 +47,6 @@ openapi3.yaml
 /.cursor/*
 /plans/
 /reviews/
+
+# Local agent issue tracker (specs/tickets; not product source)
+.scratch/
