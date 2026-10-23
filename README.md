@@ -185,7 +185,9 @@ and open http://127.0.0.1:8080 in your favorite browser.
 
 ## Create a release
 
-In order to create a release:
+Ask an agent to run the `release` skill ([`.agents/skills/release/SKILL.md`](.agents/skills/release/SKILL.md)), optionally in auto mode. It drafts the `CHANGELOG.md` section from the merged PRs, proposes the version, then commits, tags and pushes once you reply "do it".
+
+To do it by hand:
 - decide of a new version number (using semver)
 - update the changelog (add a new section, with the date of today and listing the fix and new features)
 - commit this change as a commit "Release vx.y.z"
