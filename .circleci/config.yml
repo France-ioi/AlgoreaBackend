@@ -114,14 +114,23 @@ jobs:
           command: |
             # Compare against master tip for feature branches (whole PR), not pipeline.git.base_revision
             # (previous push on this branch — would skip migration tests on later non-migration pushes).
-            # Fetch master over HTTPS: cimg/go 1.26+ may lack github.com in SSH known_hosts, so an SSH
-            # fetch hangs on the interactive authenticity prompt until no_output_timeout.
+            # CircleCI's origin is often git@github.com; cimg/go 1.26+ may lack github.com in
+            # known_hosts, so any SSH (fetch or lazy object load during git diff) hangs on the
+            # interactive authenticity prompt until no_output_timeout. Force HTTPS for this step.
             if [ "<<pipeline.git.branch>>" = "master" ]; then
               BASE_REV="<<pipeline.git.base_revision>>"
             else
-              git fetch --depth=1 \
-                "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" \
-                "master:refs/remotes/origin/master"
+              mkdir -p ~/.ssh
+              chmod 700 ~/.ssh
+              # Belt-and-suspenders if insteadOf rewrites HTTPS→SSH or another step uses git@github.com.
+              ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+              chmod 600 ~/.ssh/known_hosts
+              git remote set-url origin \
+                "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
+              # Drop HTTPS→SSH rewrites that would undo set-url and re-trigger the prompt.
+              git config --global --unset-all "url.ssh://git@github.com/.insteadof" || true
+              git config --global --unset-all "url.git@github.com:.insteadof" || true
+              git fetch --depth=1 origin master:refs/remotes/origin/master
               BASE_REV="origin/master"
             fi
             EARLIEST_CHANGED_MIGRATION=$( \
