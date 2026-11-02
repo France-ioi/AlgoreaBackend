@@ -145,7 +145,7 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
-		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]any{})
 		return nil
 	}
 
@@ -156,7 +156,7 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 	// Preselect IDs of groups for that we will calculate the final stats.
 	// All the "end members" are descendants of these groups.
 	// There should not be too many of groups because we paginate on them.
-	var ancestorGroupIDs []interface{}
+	var ancestorGroupIDs []any
 	ancestorGroupIDQuery := store.ActiveGroupGroups().
 		Where("groups_groups_active.parent_group_id = ?", groupID).
 		Where("groups_groups_active.child_group_type NOT IN('Team', 'User')").
@@ -179,13 +179,13 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 	service.MustNotBeError(ancestorGroupIDQuery.
 		Pluck("group_child.id", &ancestorGroupIDs).Error())
 	if len(ancestorGroupIDs) == 0 {
-		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]any{})
 		return nil
 	}
 
 	endMembers := store.ActiveGroupAncestors().
 		Select("child_group_id AS id").
-		Where("ancestor_group_id IN(?)", ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
+		Where("ancestor_group_id IN(?)", ancestorGroupIDs).
 		Where("child_group_type = 'Team' OR child_group_type = 'User'").
 		Group("child_group_id")
 
@@ -232,7 +232,7 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 				AVG(member_stats.submissions) AS avg_submissions,
 				AVG(member_stats.time_spent) AS avg_time_spent`).
 			Joins("JOIN ? AS member_stats ON member_stats.id = groups_ancestors_active.child_group_id", endMembersStats.SubQuery()).
-			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs). //nolint:asasalint // ancestorGroupIDs is a single argument
+			Where("groups_ancestors_active.ancestor_group_id IN (?)", ancestorGroupIDs).
 			Group("groups_ancestors_active.ancestor_group_id, member_stats.item_id").
 			Order(gorm.Expr(
 				"FIELD(groups_ancestors_active.ancestor_group_id"+strings.Repeat(", ?", len(ancestorGroupIDs))+")",
@@ -245,9 +245,9 @@ func (srv *Service) getGroupProgress(responseWriter http.ResponseWriter, httpReq
 }
 
 func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64, user *database.User) (
-	orderedItemIDListWithDuplicates []int64, uniqueItemIDs []string, itemOrder []int, itemsSubQuery interface{},
+	orderedItemIDListWithDuplicates []int64, uniqueItemIDs []string, itemOrder []int, itemsSubQuery any,
 ) {
-	itemParentIDsAsIntSlice := make([]interface{}, len(itemParentIDs))
+	itemParentIDsAsIntSlice := make([]any, len(itemParentIDs))
 	for i, parentID := range itemParentIDs {
 		itemParentIDsAsIntSlice[i] = parentID
 	}
@@ -309,7 +309,7 @@ func preselectIDsOfVisibleItems(store *database.DataStore, itemParentIDs []int64
 	return orderedItemIDListWithDuplicates, itemIDs, itemOrder, itemsSubQuery
 }
 
-func appendTableRowToResult(orderedItemIDListWithDuplicates []int64, reflResultRowMap reflect.Value, resultPtr interface{}) {
+func appendTableRowToResult(orderedItemIDListWithDuplicates []int64, reflResultRowMap reflect.Value, resultPtr any) {
 	// resultPtr is *[]*tableCellType
 	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
 	// []*tableCellType
@@ -327,7 +327,7 @@ func appendTableRowToResult(orderedItemIDListWithDuplicates []int64, reflResultR
 
 // resultPtr should be a pointer to a slice of pointers to table cells.
 func scanAndBuildProgressResults(
-	query *database.DB, orderedItemIDListWithDuplicates []int64, uniqueItemsCount int, resultPtr interface{},
+	query *database.DB, orderedItemIDListWithDuplicates []int64, uniqueItemsCount int, resultPtr any,
 ) {
 	// resultPtr is *[]*tableCellType
 	reflTableCellType := reflect.TypeOf(resultPtr).Elem().Elem().Elem()
@@ -335,11 +335,11 @@ func scanAndBuildProgressResults(
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		// will convert strings with time in DB format to database.Time
 		DecodeHook: mapstructure.ComposeDecodeHookFunc(
-			func(f reflect.Type, t reflect.Type, data interface{}) (interface{}, error) {
+			func(f reflect.Type, t reflect.Type, data any) (any, error) {
 				if f.Kind() != reflect.String {
 					return data, nil
 				}
-				if t != reflect.TypeOf(database.Time{}) {
+				if t != reflect.TypeFor[database.Time]() {
 					return data, nil
 				}
 
@@ -359,9 +359,9 @@ func scanAndBuildProgressResults(
 
 	// here we will store results for each item: map[int64]*tableCellType
 	reflResultRowMap := reflect.MakeMapWithSize(
-		reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PointerTo(reflTableCellType)), uniqueItemsCount)
+		reflect.MapOf(reflect.TypeFor[int64](), reflect.PointerTo(reflTableCellType)), uniqueItemsCount)
 	previousGroupID := int64(-1)
-	service.MustNotBeError(query.ScanAndHandleMaps(func(cell map[string]interface{}) error {
+	service.MustNotBeError(query.ScanAndHandleMaps(func(cell map[string]any) error {
 		// convert map[string]interface{} into tableCellType and store the result in reflDecodedTableCell
 		service.MustNotBeError(decoder.Decode(cell))
 
@@ -373,7 +373,7 @@ func scanAndBuildProgressResults(
 				appendTableRowToResult(orderedItemIDListWithDuplicates, reflResultRowMap, resultPtr)
 				// and initialize a new map for cells
 				reflResultRowMap = reflect.MakeMapWithSize(
-					reflect.MapOf(reflect.TypeOf(int64(0)), reflect.PointerTo(reflTableCellType)), uniqueItemsCount)
+					reflect.MapOf(reflect.TypeFor[int64](), reflect.PointerTo(reflTableCellType)), uniqueItemsCount)
 			}
 			previousGroupID = groupID
 		}

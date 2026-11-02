@@ -12,9 +12,12 @@ LOCAL_BIN_DIR=./bin
 
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
-GOLANGCILINT_VERSION=2.5.0
+# 2.9.0 is the first release built with Go >= 1.26; newer 2.x (e.g. 2.15) enable
+# many new/stricter checks (modernize, goconst, exhaustruct_v5) that are out of
+# scope for a toolchain/security bump.
+GOLANGCILINT_VERSION=2.9.0
 # golang.org/x/vuln@v1.8.0 needs Go >= 1.26; GOTOOLCHAIN=auto on the recipe lets `go run`
-# download a newer toolchain on cimg/go:1.25.9 (and under local GOTOOLCHAIN=local).
+# download a matching toolchain if the local/CI image is older (and under GOTOOLCHAIN=local).
 GOVULNCHECK_VERSION=v1.8.0
 # chi v3 RedirectSlashes (GO-2026-4316) has no fixed v3 release; we do not use RedirectSlashes
 # and chi→v5 is deferred — ignore only this advisory so CI stays green for real new vulns.

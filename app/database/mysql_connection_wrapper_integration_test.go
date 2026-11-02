@@ -10,12 +10,12 @@ import (
 	"testing"
 	"unsafe"
 
-	"bou.ke/monkey"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestMysqlConnectionWrapper_ResetSession(t *testing.T) {
@@ -102,7 +102,7 @@ type resetter = interface {
 }
 
 func TestMysqlConnectionWrapper_Reset_FailsOnClosedConnection(t *testing.T) {
-	monkey.PatchInstanceMethod(reflect.TypeOf(&viper.Viper{}), "GetBool",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*viper.Viper](), "GetBool",
 		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
@@ -126,7 +126,7 @@ func TestMysqlConnectionWrapper_Reset_FailsOnClosedConnection(t *testing.T) {
 }
 
 func TestMysqlConnectionWrapper_Reset_FailsWhenContextIsCancelled(t *testing.T) {
-	monkey.PatchInstanceMethod(reflect.TypeOf(&viper.Viper{}), "GetBool",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*viper.Viper](), "GetBool",
 		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 
@@ -150,7 +150,7 @@ func TestMysqlConnectionWrapper_Reset_FailsWhenContextIsCancelled(t *testing.T) 
 }
 
 func TestMysqlConnectionWrapper_Reset_FailsWhenWriteCommandPacketFails(t *testing.T) {
-	monkey.PatchInstanceMethod(reflect.TypeOf(&viper.Viper{}), "GetBool",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*viper.Viper](), "GetBool",
 		func(_ *viper.Viper, _ string) bool { return false })
 	defer monkey.UnpatchAll()
 

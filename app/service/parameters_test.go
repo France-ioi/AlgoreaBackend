@@ -11,10 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestResolveURLQueryGetInt64SliceField(t *testing.T) {
@@ -635,7 +636,7 @@ func TestResolveJSONBodyIntoMap(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          string
-		expectedMap   map[string]interface{}
+		expectedMap   map[string]any
 		expectedError error
 	}{
 		{
@@ -647,12 +648,12 @@ func TestResolveJSONBodyIntoMap(t *testing.T) {
 		{
 			name:        "empty json",
 			body:        "{}",
-			expectedMap: map[string]interface{}{},
+			expectedMap: map[string]any{},
 		},
 		{
 			name:        "simple json",
 			body:        `{"key":"value"}`,
-			expectedMap: map[string]interface{}{"key": "value"},
+			expectedMap: map[string]any{"key": "value"},
 		},
 		{
 			name:          "invalid json",

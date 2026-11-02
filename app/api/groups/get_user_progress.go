@@ -132,7 +132,7 @@ func (srv *Service) getUserProgress(responseWriter http.ResponseWriter, httpRequ
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
-		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]any{})
 		return nil
 	}
 
@@ -164,7 +164,7 @@ func (srv *Service) getUserProgress(responseWriter http.ResponseWriter, httpRequ
 		Pluck("groups.id", &userIDs).Error())
 
 	if len(userIDs) == 0 {
-		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]any{})
 		return nil
 	}
 
@@ -204,7 +204,7 @@ const userProgressFields = `
 		), 0)
 	) AS time_spent`
 
-func joinUserProgressResults(db *database.DB, userID interface{}) *database.DB {
+func joinUserProgressResults(db *database.DB, userID any) *database.DB {
 	return db.
 		Joins(`
 			LEFT JOIN LATERAL (

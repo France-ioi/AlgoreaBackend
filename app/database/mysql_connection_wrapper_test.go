@@ -6,8 +6,9 @@ import (
 	"testing"
 	"unsafe"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func Test_mysqlConnWrapper_Begin_Panics(t *testing.T) {

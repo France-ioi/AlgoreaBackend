@@ -422,7 +422,7 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 	return nil
 }
 
-func constructFromValuesForActivityLog(pagingColumns []string, httpRequest *http.Request) (map[string]interface{}, error) {
+func constructFromValuesForActivityLog(pagingColumns []string, httpRequest *http.Request) (map[string]any, error) {
 	pagingParameters := make(service.SortingAndPagingTieBreakers, len(pagingColumns))
 	for _, column := range pagingColumns {
 		pagingParameters[column] = service.FieldTypeInt64
@@ -435,7 +435,7 @@ func constructFromValuesForActivityLog(pagingColumns []string, httpRequest *http
 }
 
 func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Request,
-	user *database.User, fromValues map[string]interface{},
+	user *database.User, fromValues map[string]any,
 	addWithTablesFunc,
 	answersQueryMandatoryConditionsFunc, answersQueryStraightJoinConditionsFunc,
 	startedResultsQueryConditionsFunc, validatedResultsQueryConditionsFunc,
@@ -519,6 +519,7 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 			StartFromRowQuery:   startFromRowQuery,
 		})
 
+	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
 	answersQuery = store.Raw("SELECT limited_answers.*, gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
 		Joins("LEFT JOIN gradings ON gradings.answer_id = limited_answers.answer_id")
 
@@ -627,7 +628,7 @@ func constructSortingAndPagingFieldsForActivityLog(tableName, rules string) serv
 
 func generateQueriesForActivityLogPagination(
 	store *database.DataStore, activityTypeIndex string, startedResultsQuery, validatedResultsQuery,
-	answersQuery *database.DB, fromValues map[string]interface{}) (
+	answersQuery *database.DB, fromValues map[string]any) (
 	startFromRowSubQuery, startFromRowCTESubQuery *database.DB,
 ) {
 	startFromRowSubQuery = store.Table("start_from_row")

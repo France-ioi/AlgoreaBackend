@@ -32,12 +32,12 @@ func (tt *HintToken) UnmarshalJSON(raw []byte) error {
 	if err := json.Unmarshal(raw, &preparsedHintToken); err != nil {
 		return err
 	}
-	parsedHintToken := make(map[string]interface{}, len(preparsedHintToken))
+	parsedHintToken := make(map[string]any, len(preparsedHintToken))
 	for key := range preparsedHintToken {
 		if key == "askedHint" {
 			parsedHintToken[key] = preparsedHintToken[key]
 		} else {
-			var value interface{}
+			var value any
 			_ = json.Unmarshal(preparsedHintToken[key].Bytes(), &value)
 			parsedHintToken[key] = value
 		}

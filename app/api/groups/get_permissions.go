@@ -207,7 +207,7 @@ func (srv *Service) getPermissions(responseWriter http.ResponseWriter, httpReque
 		return service.ErrAPIInsufficientAccessRights
 	}
 
-	var permissions []map[string]interface{}
+	var permissions []map[string]any
 
 	const canMakeSessionOfficialColumn = "IFNULL(MAX(can_make_session_official), 0) AS can_make_session_official"
 
@@ -433,7 +433,7 @@ func getCanRequestHelpToByOrigin(
 
 func permissionsStructForPrefix(
 	pgStore *database.PermissionGrantedStore,
-	permissionsRow map[string]interface{}, prefix string,
+	permissionsRow map[string]any, prefix string,
 ) permissionsStruct {
 	//nolint:forcetypeassert // we know all the columns are int64 (we want to panic if they are not)
 	return permissionsStruct{

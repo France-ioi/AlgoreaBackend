@@ -243,11 +243,23 @@ func (s *DataStore) UserBatchPrefixes() *UserBatchPrefixStore {
 	return &UserBatchPrefixStore{NewDataStoreWithTable(s.DB, "user_batch_prefixes")}
 }
 
+// newIDFunc generates ids for NewID. Tests replace it for deterministic ids.
+// Default: 63-bit positive int64 for unsigned storage in a signed DB column.
+//
+//nolint:gochecknoglobals // replaceable for unit/integration tests that need deterministic ids
+var newIDFunc = rand.Int63
+
 // NewID generates a positive random int64 to be used as id
 // !!! To be safe, the insertion should be retried if the id conflicts with an existing entry.
 func (s *DataStore) NewID() int64 {
-	// gen a 63-bits number as we want unsigned number stored in a 64-bits signed DB attribute
-	return rand.Int63()
+	return newIDFunc()
+}
+
+// SetNewIDFuncForTests replaces NewID generation; restore() puts the default back.
+func SetNewIDFuncForTests(f func() int64) (restore func()) {
+	old := newIDFunc
+	newIDFunc = f
+	return func() { newIDFunc = old }
 }
 
 type propagationsBitField struct {
@@ -274,8 +286,8 @@ var (
 )
 
 func init() { //nolint:gochecknoinits // this is an initialization function to store the default hooks
-	onStartOfTransactionToBeRetriedForcefullyHook.Store(golang.Ptr(func() {}))
-	onForcefulRetryOfTransactionHook.Store(golang.Ptr(func() {}))
+	onStartOfTransactionToBeRetriedForcefullyHook.Store(new(func() {}))
+	onForcefulRetryOfTransactionHook.Store(new(func() {}))
 }
 
 // InTransaction executes the given function in a transaction and commits.
@@ -454,22 +466,22 @@ func (s *DataStore) RetryOnDuplicateKeyError(tableName, keyName, nameInError str
 
 // InsertMap reads fields from the given map and inserts the values which have been set
 // into the store's table.
-func (s *DataStore) InsertMap(dataMap map[string]interface{}) error {
-	return s.insertMaps(s.tableName, []map[string]interface{}{dataMap})
+func (s *DataStore) InsertMap(dataMap map[string]any) error {
+	return s.insertMaps(s.tableName, []map[string]any{dataMap})
 }
 
 // InsertMaps reads fields from the given map and inserts the values set in the first row (so all the rows should have the same keys)
 // into the store's table.
-func (s *DataStore) InsertMaps(dataMaps []map[string]interface{}) error {
+func (s *DataStore) InsertMaps(dataMaps []map[string]any) error {
 	return s.insertMaps(s.tableName, dataMaps)
 }
 
 // InsertOrUpdateMap reads fields from the given map and inserts the values which have been set
 // into the store's table (like InsertMap does). If it is a duplicate, the listed columns will be updated.
 func (s *DataStore) InsertOrUpdateMap(
-	dataMap map[string]interface{}, updateColumns []string, customColumnUpdates map[string]string,
+	dataMap map[string]any, updateColumns []string, customColumnUpdates map[string]string,
 ) error {
-	return s.DB.InsertOrUpdateMaps(s.tableName, []map[string]interface{}{dataMap}, updateColumns, customColumnUpdates)
+	return s.DB.InsertOrUpdateMaps(s.tableName, []map[string]any{dataMap}, updateColumns, customColumnUpdates)
 }
 
 // InsertOrUpdateMaps reads fields from the given maps and inserts the values set in the first row
@@ -477,7 +489,7 @@ func (s *DataStore) InsertOrUpdateMap(
 // into the store's table (like InsertMaps does). If it is a duplicate, the listed columns will be updated.
 // If updateColumns is nil, all the columns in dataMaps will be updated.
 func (s *DataStore) InsertOrUpdateMaps(
-	dataMap []map[string]interface{}, updateColumns []string, customColumnUpdates map[string]string,
+	dataMap []map[string]any, updateColumns []string, customColumnUpdates map[string]string,
 ) error {
 	return s.DB.InsertOrUpdateMaps(s.tableName, dataMap, updateColumns, customColumnUpdates)
 }

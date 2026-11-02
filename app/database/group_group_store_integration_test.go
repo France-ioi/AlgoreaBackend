@@ -23,8 +23,8 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 		fixture                      string
 		shouldDeleteOrphans          bool
 		remainingGroupIDs            []int64
-		remainingGroupsGroups        []map[string]interface{}
-		remainingGroupsAncestors     []map[string]interface{}
+		remainingGroupsGroups        []map[string]any
+		remainingGroupsAncestors     []map[string]any
 		expectedGrantedPermissions   []grantedPermission
 		expectedGeneratedPermissions []permissionsGeneratedResultRow
 	}{
@@ -33,10 +33,10 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			fixture:             "orphan",
 			shouldDeleteOrphans: false,
 			remainingGroupIDs:   []int64{1, 2, 3, 4, 5},
-			remainingGroupsGroups: []map[string]interface{}{
+			remainingGroupsGroups: []map[string]any{
 				{"parent_group_id": int64(2), "child_group_id": int64(5)},
 			},
-			remainingGroupsAncestors: []map[string]interface{}{
+			remainingGroupsAncestors: []map[string]any{
 				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
 				{"ancestor_group_id": int64(2), "child_group_id": int64(2)},
 				{"ancestor_group_id": int64(2), "child_group_id": int64(5)},
@@ -65,10 +65,10 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			fixture:             "no_orphans",
 			shouldDeleteOrphans: false,
 			remainingGroupIDs:   []int64{1, 2, 3},
-			remainingGroupsGroups: []map[string]interface{}{
+			remainingGroupsGroups: []map[string]any{
 				{"parent_group_id": int64(3), "child_group_id": int64(2)},
 			},
-			remainingGroupsAncestors: []map[string]interface{}{
+			remainingGroupsAncestors: []map[string]any{
 				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
 				{"ancestor_group_id": int64(2), "child_group_id": int64(2)},
 				{"ancestor_group_id": int64(3), "child_group_id": int64(2)},
@@ -94,7 +94,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			shouldDeleteOrphans:   true,
 			remainingGroupIDs:     []int64{1, 3, 4},
 			remainingGroupsGroups: nil,
-			remainingGroupsAncestors: []map[string]interface{}{
+			remainingGroupsAncestors: []map[string]any{
 				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
 				{"ancestor_group_id": int64(3), "child_group_id": int64(3)},
 				{"ancestor_group_id": int64(4), "child_group_id": int64(4)},
@@ -116,11 +116,11 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			fixture:             "deletes_only_orphans",
 			shouldDeleteOrphans: true,
 			remainingGroupIDs:   []int64{1, 3, 5, 10},
-			remainingGroupsGroups: []map[string]interface{}{
+			remainingGroupsGroups: []map[string]any{
 				{"parent_group_id": int64(10), "child_group_id": int64(3)},
 				{"parent_group_id": int64(10), "child_group_id": int64(5)},
 			},
-			remainingGroupsAncestors: []map[string]interface{}{
+			remainingGroupsAncestors: []map[string]any{
 				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
 				{"ancestor_group_id": int64(3), "child_group_id": int64(3)},
 				{"ancestor_group_id": int64(5), "child_group_id": int64(5)},
@@ -148,7 +148,7 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 			shouldDeleteOrphans:   true,
 			remainingGroupIDs:     []int64{1, 8, 9, 11},
 			remainingGroupsGroups: nil,
-			remainingGroupsAncestors: []map[string]interface{}{
+			remainingGroupsAncestors: []map[string]any{
 				{"ancestor_group_id": int64(1), "child_group_id": int64(1)},
 				{"ancestor_group_id": int64(8), "child_group_id": int64(8)},
 				{"ancestor_group_id": int64(9), "child_group_id": int64(9)},
@@ -195,11 +195,11 @@ func TestGroupGroupStore_DeleteRelation(t *testing.T) {
 }
 
 func assertGroupRelations(t *testing.T, dataStore *database.DataStore,
-	remainingGroupIDs []int64, remainingGroupsGroups, remainingGroupsAncestors []map[string]interface{},
+	remainingGroupIDs []int64, remainingGroupsGroups, remainingGroupsAncestors []map[string]any,
 ) {
 	t.Helper()
 
-	var rows []map[string]interface{}
+	var rows []map[string]any
 	var ids []int64
 
 	totalRemainingGroupIDs := make([]int64, 0, len(remainingGroupIDs)+1)
@@ -358,7 +358,7 @@ func TestGroupGroupStore_TriggerBeforeInsert_SetsIsTeamMembership(t *testing.T) 
 			testoutput.SuppressIfPasses(t)
 
 			groupGroupStore := dataStore.GroupGroups()
-			require.NoError(t, groupGroupStore.InsertMap(map[string]interface{}{
+			require.NoError(t, groupGroupStore.InsertMap(map[string]any{
 				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID,
 			}))
 			assertGroupRelationColumn(t, groupGroupStore, test.parentGroupID, test.childGroupID,
@@ -400,7 +400,7 @@ func TestGroupGroupStore_TriggerBeforeInsert_SetsChildGroupType(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
 			groupGroupStore := dataStore.GroupGroups()
-			require.NoError(t, groupGroupStore.InsertMap(map[string]interface{}{
+			require.NoError(t, groupGroupStore.InsertMap(map[string]any{
 				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID,
 			}))
 			assertGroupRelationColumn(t, groupGroupStore, test.parentGroupID, test.childGroupID,
@@ -478,7 +478,7 @@ func TestGroupGroupStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) 
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
 				return store.GroupGroups().CreateNewAncestors()
 			}))
-			assert.NoError(t, dataStore.GroupGroups().InsertMap(map[string]interface{}{
+			assert.NoError(t, dataStore.GroupGroups().InsertMap(map[string]any{
 				"parent_group_id": test.parentGroupID, "child_group_id": test.childGroupID, "expires_at": test.expiresAt,
 			}))
 
@@ -578,7 +578,7 @@ func TestGroupGroupStore_TriggerAfterUpdate_MarksResultsAsChanged(t *testing.T) 
 			groupGroupStore := dataStore.GroupGroups()
 			result := groupGroupStore.Where("parent_group_id = ?", test.parentGroupID).
 				Where("child_group_id = ?", test.childGroupID).
-				UpdateColumn(map[string]interface{}{
+				UpdateColumn(map[string]any{
 					"expires_at": test.expiresAt,
 				})
 			require.NoError(t, result.Error())
@@ -655,7 +655,7 @@ func assertResultsMarkedAsChanged(
 }
 
 func queryResultsAndStatesForTests(
-	t *testing.T, resultStore *database.ResultStore, resultsPropagateTableName string, result interface{}, customColumns string,
+	t *testing.T, resultStore *database.ResultStore, resultsPropagateTableName string, result any, customColumns string,
 ) {
 	t.Helper()
 

@@ -144,7 +144,7 @@ func dispatchExportFailureCompletion(
 	if payload.ExportID == "" || payload.Token == "" {
 		return
 	}
-	event.Dispatch(ctx, event.TypeGroupResultsExportCompleted, map[string]interface{}{
+	event.Dispatch(ctx, event.TypeGroupResultsExportCompleted, map[string]any{
 		"export_id":  payload.ExportID,
 		"status":     "failure",
 		"token":      payload.Token,

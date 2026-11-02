@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
@@ -19,7 +19,7 @@ func TestService_getInfo_Returns403WhenUserNotFound(t *testing.T) {
 
 	srv := &Service{Base: &service.Base{}}
 	srv.SetGlobalStore(database.NewDataStore(db))
-	patch := monkey.PatchInstanceMethod(reflect.TypeOf(srv.Base), "GetUser", func(*service.Base, *http.Request) *database.User {
+	patch := monkey.PatchInstanceMethod(reflect.TypeFor[*service.Base](), "GetUser", func(*service.Base, *http.Request) *database.User {
 		return &database.User{GroupID: 123}
 	})
 	defer patch.Unpatch()

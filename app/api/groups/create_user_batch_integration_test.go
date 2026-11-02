@@ -3,17 +3,14 @@
 package groups_test
 
 import (
-	"reflect"
 	"testing"
 	"time"
 	_ "unsafe"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -30,11 +27,11 @@ func Test_createUserGroup_Duplicate(t *testing.T) {
 	defer testhelpers.RestoreDBTime(dbTimePatch)
 
 	var nextID int64
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(*database.DataStore) int64 {
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 {
 		nextID++
 		return nextID
 	})
-	defer monkey.UnpatchAll()
+	defer restoreNewID()
 
 	dataStore := database.NewDataStore(db)
 	expectedLogin := "login"
@@ -57,7 +54,7 @@ func Test_createUserGroup_Duplicate(t *testing.T) {
 		CreatedAt:   database.Time(expectedTime),
 		IsOpen:      false,
 		SendEmails:  false,
-		Description: golang.Ptr(expectedLogin),
+		Description: new(expectedLogin),
 	}, group)
 }
 

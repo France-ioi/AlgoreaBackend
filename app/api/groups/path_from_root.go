@@ -72,7 +72,7 @@ func (srv *Service) getPathFromRoot(responseWriter http.ResponseWriter, httpRequ
 	if ids == nil {
 		return service.ErrAPIInsufficientAccessRights
 	}
-	render.Respond(responseWriter, httpRequest, map[string]interface{}{"path": ids})
+	render.Respond(responseWriter, httpRequest, map[string]any{"path": ids})
 	return nil
 }
 

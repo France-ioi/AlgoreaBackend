@@ -257,6 +257,7 @@ func (srv *Service) getParticipantProgress(responseWriter http.ResponseWriter, h
 	}
 
 	var rows []rawParticipantProgressRaw
+	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
 	service.MustNotBeError(store.Raw(`
 		SELECT items.*,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,

@@ -115,7 +115,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 	logging.LogEntrySetField(httpRequest, "user_id", requestData.ScoreToken.Payload.Converted.UserID)
 
 	var validated, newGradingSaved, scoreImproved bool
-	unlockedItems := make([]map[string]interface{}, 0)
+	unlockedItems := make([]map[string]any, 0)
 	err = store.InTransaction(func(store *database.DataStore) error {
 		service.MustNotBeError(store.SetPropagationsModeToSync())
 		var unlockedItemIDs *golang.Set[int64]
@@ -149,7 +149,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 	}
 
 	// Dispatch grade_saved event after transaction commits
-	event.Dispatch(httpRequest.Context(), event.TypeGradeSaved, map[string]interface{}{
+	event.Dispatch(httpRequest.Context(), event.TypeGradeSaved, map[string]any{
 		"answer_id":      strconv.FormatInt(requestData.ScoreToken.Payload.Converted.UserAnswerID, 10),
 		"participant_id": strconv.FormatInt(requestData.ScoreToken.Payload.Converted.ParticipantID, 10),
 		"attempt_id":     strconv.FormatInt(requestData.ScoreToken.Payload.Converted.AttemptID, 10),
@@ -160,7 +160,7 @@ func (srv *Service) saveGrade(responseWriter http.ResponseWriter, httpRequest *h
 		"score_improved": scoreImproved,
 	})
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"validated":      validated,
 		"unlocked_items": service.ConvertSliceOfMapsFromDBToJSON(unlockedItems),
 	})))
@@ -192,7 +192,7 @@ func saveGradingResultsIntoDB(store *database.DataStore, requestData *saveGradeR
 					WHEN 'diff' THEN ? + score_edit_value
 					ELSE ?
 				END, score_computed, 0), 100)`, score, score)
-	values := []interface{}{
+	values := []any{
 		requestData.ScoreToken.Payload.Converted.UserAnswerID, // for join
 		1, // tasks_tried
 		// for score_computed we compare patched scores
@@ -245,7 +245,7 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 	answerID := requestData.ScoreToken.Payload.Converted.UserAnswerID
 	gradingStore := store.Gradings()
 
-	insertError := gradingStore.InsertMap(map[string]interface{}{
+	insertError := gradingStore.InsertMap(map[string]any{
 		"answer_id": answerID, "score": score, "graded_at": database.Now(),
 	})
 
@@ -262,7 +262,7 @@ func saveNewScoreIntoGradings(store *database.DataStore, requestData *saveGradeR
 		if oldScore != nil {
 			if *oldScore != score {
 				//nolint:errchkjson // no error: only strings and floats previously decoded from JSON
-				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]interface{}{
+				fieldsForLoggingMarshaled, _ := json.Marshal(map[string]any{
 					"idAttempt":    requestData.ScoreToken.Payload.AttemptID,
 					"idItem":       requestData.ScoreToken.Payload.LocalItemID,
 					"idUser":       requestData.ScoreToken.Payload.UserID,

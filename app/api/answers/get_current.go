@@ -74,7 +74,7 @@ func (srv *Service) getCurrentAnswer(responseWriter http.ResponseWriter, httpReq
 
 	answer, hasAnswer := store.Answers().GetCurrentAnswer(participantID, itemID, attemptID)
 	if !hasAnswer {
-		answer = map[string]interface{}{
+		answer = map[string]any{
 			"type": nil,
 		}
 	}

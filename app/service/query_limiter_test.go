@@ -85,7 +85,7 @@ func TestQueryLimiter_Apply(t *testing.T) {
 					fmt.Sprintf("SELECT * FROM `users` LIMIT %d", testCase.expectedValue))).
 					WillReturnRows(mock.NewRows([]string{"id"}))
 
-				var result []interface{}
+				var result []any
 				err := testCase.queryLimiter.Apply(httpRequest, db.Table("users")).Scan(&result).Error()
 				assert.NoError(t, err)
 				assert.NoError(t, mock.ExpectationsWereMet())

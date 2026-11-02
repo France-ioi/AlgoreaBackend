@@ -5,8 +5,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestAnything_MarshalJSON(t *testing.T) {
@@ -31,7 +29,7 @@ func TestAnything_MarshalJSON_NilPointer(t *testing.T) {
 }
 
 func TestAnything_MarshalJSON_EmptyValue(t *testing.T) {
-	anything := Anything{raw: golang.Ptr([]byte{})}
+	anything := Anything{raw: new([]byte{})}
 	result, err := anything.MarshalJSON()
 	require.NoError(t, err)
 	assert.Equal(t, []byte(`null`), result)

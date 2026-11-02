@@ -6,7 +6,7 @@
 
 Go REST API for Algorea (France IOI): users/groups, educational items, results, permissions, attempts, help threads. Emphasizes permission/results propagation through hierarchies, multi-domain config, and external auth. Governed business rules and cross-service behavior: [docs/agents/domain.md](docs/agents/domain.md) (knowledge base `docs/algorea/`).
 
-Stack: Go 1.25, MySQL 8, chi, GORM v1 (wrapped), godog BDD, viper, cobra, goose. Deploy: Docker and AWS Lambda (`algnhsa`). Details live in `go.mod` / `docker-compose.yml`.
+Stack: Go 1.26, MySQL 8, chi, GORM v1 (wrapped), godog BDD, viper, cobra, goose. Deploy: Docker and AWS Lambda (`algnhsa`). Details live in `go.mod` / `docker-compose.yml`.
 
 ## Deep-dives
 

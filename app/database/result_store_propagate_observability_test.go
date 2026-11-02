@@ -335,7 +335,7 @@ func TestLogPropagationStepDurationf_SlowChunkInnodbTrxErrorDisablesPermanently(
 	assert.Contains(t, logs, "disabling INNODB_TRX dumps")
 	assert.Equal(t, 1, strings.Count(logs, "disabling INNODB_TRX dumps"))
 	assert.NotContains(t, logs, "long-running transactions:")
-	for _, line := range strings.Split(logs, "\n") {
+	for line := range strings.SplitSeq(logs, "\n") {
 		if strings.Contains(line, "Access denied") {
 			assert.Regexp(t, `level=warning\b`, line)
 		}

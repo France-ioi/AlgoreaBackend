@@ -32,7 +32,7 @@ func TestPermissionGeneratedStore_AggregatedPermissionsForItemsVisibleToGroup(t 
 		WithArgs(3, NewDataStore(db).PermissionsGranted().ViewIndexByName("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := NewDataStore(db).Permissions().AggregatedPermissionsForItemsVisibleToGroup(3).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -60,7 +60,7 @@ func TestPermissionGeneratedStore_AggregatedPermissionsForItemsOnWhichGroupHasVi
 		WithArgs(2, NewDataStore(db).PermissionsGranted().ViewIndexByName("content")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := NewDataStore(db).Permissions().AggregatedPermissionsForItemsOnWhichGroupHasViewPermission(2, "content").Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

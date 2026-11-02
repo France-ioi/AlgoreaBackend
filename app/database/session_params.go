@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"maps"
 	"regexp"
 	"sort"
 	"strings"
@@ -44,9 +45,7 @@ func cloneStringMap(m map[string]string) map[string]string {
 		return nil
 	}
 	cloned := make(map[string]string, len(m))
-	for k, v := range m {
-		cloned[k] = v
-	}
+	maps.Copy(cloned, m)
 	return cloned
 }
 

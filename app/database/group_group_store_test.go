@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -43,7 +43,7 @@ func TestGroupGroupStore_WhereUserIsMember(t *testing.T) {
 				WithArgs(2).
 				WillReturnRows(mock.NewRows([]string{"id"}))
 
-			var result []interface{}
+			var result []any
 			err := test.storeFunc(db).WhereUserIsMember(mockUser).Scan(&result).Error()
 			assert.NoError(t, err)
 			assert.NoError(t, mock.ExpectationsWereMet())
@@ -58,7 +58,7 @@ func TestGroupGroupStore_CreateRelation(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	var resultsPropagationScheduled bool
-	monkey.PatchInstanceMethod(reflect.TypeOf(&DataStore{}), "ScheduleResultsPropagation",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*DataStore](), "ScheduleResultsPropagation",
 		func(_ *DataStore) { resultsPropagationScheduled = true })
 	defer monkey.UnpatchAll()
 
@@ -149,7 +149,7 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	relations := []map[string]interface{}{
+	relations := []map[string]any{
 		{"parent_group_id": int64(1), "child_group_id": int64(2)},
 		{"parent_group_id": int64(3), "child_group_id": int64(4)},
 	}
@@ -199,7 +199,7 @@ func TestGroupGroupStore_CreateRelationsWithoutChecking_MustBeRunInTransaction(t
 
 	groupGroupStore := NewDataStore(db).GroupGroups()
 	assert.PanicsWithValue(t, ErrNoTransaction, func() {
-		_ = groupGroupStore.CreateRelationsWithoutChecking([]map[string]interface{}{{"parent_group_id": 1, "child_group_id": 2}})
+		_ = groupGroupStore.CreateRelationsWithoutChecking([]map[string]any{{"parent_group_id": 1, "child_group_id": 2}})
 	})
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -295,7 +295,7 @@ func TestGroupGroupStore_TeamGroupForTeamItemAndUser(t *testing.T) {
 		WithArgs(1234, 2).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := NewDataStore(db).ActiveGroupGroups().TeamGroupForTeamItemAndUser(1234, mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

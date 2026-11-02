@@ -13,7 +13,7 @@ func Test_jsonFormatter_Format(t *testing.T) {
 	formatter := newJSONFormatter()
 
 	expectedTime := time.Date(2021, 1, 2, 3, 4, 5, 123456789, time.FixedZone("MyZone", 3*60*60))
-	entry := logrus.NewEntry(logrus.New()).WithTime(expectedTime).WithFields(map[string]interface{}{
+	entry := logrus.NewEntry(logrus.New()).WithTime(expectedTime).WithFields(map[string]any{
 		"key1": "line1\nline2",
 		"key2": "line3\nline4",
 	})

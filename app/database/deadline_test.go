@@ -20,15 +20,15 @@ import (
 
 // cancelCtx mirrors the layout of the unexported context.cancelCtx so that the
 // tests below can inject a synthetic context.DeadlineExceeded error mid-operation.
-// Layout matches Go 1.25: `err` became atomic.Value (previously error) and
-// timerCtx value-embeds cancelCtx (previously a pointer embed).
+// Layout matches Go 1.26 (unchanged since 1.25): `err` became atomic.Value
+// (previously error) and timerCtx value-embeds cancelCtx (previously a pointer embed).
 type cancelCtx struct {
 	context.Context //nolint:containedctx // mirroring an unexported runtime struct
 
 	_     sync.Mutex
-	_     atomic.Value             // done
-	_     map[interface{}]struct{} // children
-	err   atomic.Value             // mirrors context.cancelCtx.err
+	_     atomic.Value     // done
+	_     map[any]struct{} // children
+	err   atomic.Value     // mirrors context.cancelCtx.err
 	cause error
 }
 
@@ -60,8 +60,7 @@ func resetAtomicValue(av *atomic.Value) {
 // memory inside Test_Deadline. Compatible with Go 1.21+ (when err became
 // atomic.Value); should be re-checked on every Go major bump.
 func TestCancelCtxMirrorLayout(t *testing.T) {
-	parent, parentCancel := context.WithCancel(context.Background())
-	defer parentCancel()
+	parent := t.Context()
 
 	rawCtx, cancel := context.WithDeadline(parent, time.Now().Add(time.Hour))
 	cancel() // stores context.Canceled into cancelCtx.err and cancelCtx.cause

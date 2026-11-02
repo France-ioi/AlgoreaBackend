@@ -16,7 +16,6 @@ import (
 	"time"
 	"unsafe"
 
-	"bou.ke/monkey"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/spf13/viper"
@@ -30,6 +29,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -60,7 +60,7 @@ func TestService_refreshAccessToken_NotAllowRefreshTokenRaces(t *testing.T) {
 	doRequest := func(withTimeout bool) {
 		var cancelFunc context.CancelFunc
 		var patchGuard *monkey.PatchGuard
-		patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "WithNamedLock",
+		patchGuard = monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
 			func(store *database.DataStore, lockName string, timeout time.Duration, funcToCall func(store *database.DataStore) error) error {
 				lockCalledByTestedCodeChan <- struct{}{} // notify that the code under test called WithNamedLock()
 				assert.Equal(t, expectedLockName, lockName)
@@ -214,7 +214,7 @@ func TestService_refreshAccessToken_ConcurrentRequestsGetUpdatedAccessTokenAndSk
 	funcCalledChan := make(chan struct{})
 	concurrentRequestCalledChan := make(chan struct{})
 	var patchGuard *monkey.PatchGuard
-	patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "WithNamedLock",
+	patchGuard = monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
 		func(store *database.DataStore, lockName string, timeout time.Duration, funcToCall func(store *database.DataStore) error) error {
 			patchGuard.Unpatch()
 			defer patchGuard.Restore()
@@ -265,7 +265,7 @@ func TestService_refreshAccessToken_ConcurrentRequestsGetUpdatedAccessTokenAndSk
 	funcCalledChan := make(chan struct{})
 	concurrentRequestCalledChan := make(chan struct{})
 	var patchGuard *monkey.PatchGuard
-	patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "WithNamedLock",
+	patchGuard = monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
 		func(store *database.DataStore, lockName string, timeout time.Duration, funcToCall func(store *database.DataStore) error) error {
 			patchGuard.Unpatch()
 			defer patchGuard.Restore()
@@ -334,16 +334,16 @@ func createLoginModuleStubServer(expectedRefreshToken string) (*httptest.Server,
 }
 
 // cancelCtx, timerCtx, valueCtx mirror the unexported runtime structs in
-// "context" (Go 1.25 layout) so the test below can inject a synthetic
-// context.DeadlineExceeded mid-flight. Layout changes since this test was
-// written: cancelCtx.err became atomic.Value (was error), timerCtx
+// "context" (Go 1.26 layout, unchanged since 1.25) so the test below can inject
+// a synthetic context.DeadlineExceeded mid-flight. Layout changes since this
+// test was written: cancelCtx.err became atomic.Value (was error), timerCtx
 // value-embeds cancelCtx (was a pointer embed).
 type cancelCtx struct {
 	context.Context //nolint:containedctx // mirroring an unexported runtime struct
 
 	_     sync.Mutex
-	_     atomic.Value             // done
-	_     map[interface{}]struct{} // children
+	_     atomic.Value     // done
+	_     map[any]struct{} // children
 	err   atomic.Value
 	cause error
 }
@@ -381,8 +381,7 @@ func resetAtomicValue(av *atomic.Value) {
 // Compatible with Go 1.21+ (when err became atomic.Value); should be re-checked
 // on every Go major bump.
 func TestCancelCtxMirrorLayout(t *testing.T) {
-	parent, parentCancel := context.WithCancel(context.Background())
-	defer parentCancel()
+	parent := t.Context()
 
 	timerRawCtx, cancel := context.WithDeadline(parent, time.Now().Add(time.Hour))
 	cancel() // stores context.Canceled into cancelCtx.err and cancelCtx.cause

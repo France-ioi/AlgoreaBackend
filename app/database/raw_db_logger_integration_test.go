@@ -32,7 +32,7 @@ func Test_RawSQLQueryLogging_Duration(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 
-	var result []interface{}
+	var result []any
 	require.NoError(t, db.Raw("SELECT 1").Scan(&result).Error())
 
 	entries := loggerHook.AllEntries()
@@ -72,7 +72,7 @@ func Test_RawSQLQueryLogging_ResetSession(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 
-	var result []interface{}
+	var result []any
 	require.NoError(t, db.Raw("SELECT 1").Scan(&result).Error())
 	require.NoError(t, db.Raw("SELECT 1").Scan(&result).Error())
 

@@ -4,20 +4,20 @@ package database_test
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"sort"
 	"testing"
 	"time"
 	_ "unsafe"
 
-	"bou.ke/monkey"
 	"github.com/jinzhu/gorm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -230,7 +230,7 @@ func generatedPermissionsUnchanged() []permissionsGeneratedResultRow {
 	}
 }
 
-func currentTimePtr() *database.Time { return (*database.Time)(golang.Ptr(time.Now().UTC())) }
+func currentTimePtr() *database.Time { return (*database.Time)(new(time.Now().UTC())) }
 
 const (
 	userID      = int64(111)
@@ -278,11 +278,11 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequest(name string, action d
 		},
 		wantGroupAncestors: allPossibleGroupsAncestors(),
 		wantGroupMembershipChanges: []groupMembershipChange{
-			{GroupID: 20, MemberID: 1, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-			{GroupID: 20, MemberID: 2, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-			{GroupID: 20, MemberID: 3, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-			{GroupID: 20, MemberID: 6, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-			{GroupID: 20, MemberID: 7, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+			{GroupID: 20, MemberID: 1, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
+			{GroupID: 20, MemberID: 2, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
+			{GroupID: 20, MemberID: 3, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
+			{GroupID: 20, MemberID: 6, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
+			{GroupID: 20, MemberID: 7, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
 		},
 		wantGrantedPermissions: grantedPermissionsUnchanged(),
 		shouldRunListeners:     true,
@@ -300,7 +300,7 @@ func testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipan
 		name:              name,
 		action:            action,
 		relationsToChange: allTheIDs(),
-		maxParticipants:   golang.Ptr(8),
+		maxParticipants:   new(8),
 		wantResult: database.GroupGroupTransitionResults{
 			1: "full", 2: "full", 3: "full", 6: "full", 7: "full",
 
@@ -343,7 +343,7 @@ func testTransitionAcceptingPendingRequest(name string, action database.GroupGro
 			}),
 		wantGroupMembershipChanges: []groupMembershipChange{{
 			GroupID: 20, MemberID: acceptedID, Action: string(expectedGroupMembershipAction), At: currentTimePtr(),
-			InitiatorID: golang.Ptr(userID),
+			InitiatorID: new(userID),
 		}},
 		wantGrantedPermissions: grantedPermissionsUnchanged(),
 		shouldRunListeners:     true,
@@ -358,7 +358,7 @@ func testTransitionAcceptingPendingRequestEnforcingMaxParticipants(name string, 
 		action:                     action,
 		relationsToChange:          allTheIDs(),
 		createPendingCycleWithType: pendingType.PendingType(),
-		maxParticipants:            golang.Ptr(5),
+		maxParticipants:            new(5),
 		wantResult: buildExpectedGroupTransitionResults(database.GroupGroupTransitionResults{
 			acceptedID: "full", 30: "cycle",
 		}),
@@ -394,10 +394,10 @@ func testTransitionRemovingUserFromGroup(name string, action database.GroupGroup
 				"30_4": nil, "30_5": nil, "30_10": nil, "30_11": nil,
 			}, nil),
 		wantGroupMembershipChanges: []groupMembershipChange{
-			{GroupID: 20, MemberID: 4, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-			{GroupID: 20, MemberID: 5, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-			{GroupID: 20, MemberID: 10, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-			{GroupID: 20, MemberID: 11, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+			{GroupID: 20, MemberID: 4, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
+			{GroupID: 20, MemberID: 5, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
+			{GroupID: 20, MemberID: 10, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
+			{GroupID: 20, MemberID: 11, Action: string(expectedGroupMembershipAction), At: currentTimePtr(), InitiatorID: new(userID)},
 		},
 		wantGrantedPermissions: patchGrantedPermissions(grantedPermissionsUnchanged(), []string{
 			"4_1_20_group_membership", "5_2_20_group_membership", "10_1_20_group_membership", "11_2_20_group_membership",
@@ -439,10 +439,10 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					{AncestorGroupID: 30, ChildGroupID: 3},
 				}),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 1, Action: "invitation_created", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
-				{GroupID: 20, MemberID: 3, Action: "join_request_accepted", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
-				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
-				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 1, Action: "invitation_created", InitiatorID: new(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 3, Action: "join_request_accepted", InitiatorID: new(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: new(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: new(userID), At: currentTimePtr()},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     true,
@@ -452,7 +452,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action:                     database.AdminCreatesInvitation,
 			createPendingCycleWithType: "join_request",
 			relationsToChange:          allTheIDs(),
-			maxParticipants:            golang.Ptr(9),
+			maxParticipants:            new(9),
 			wantResult: database.GroupGroupTransitionResults{
 				1: "success", 3: "success", 6: "success", 7: "success",
 				2: "unchanged",
@@ -473,10 +473,10 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 					{AncestorGroupID: 30, ChildGroupID: 3},
 				}),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 1, Action: "invitation_created", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
-				{GroupID: 20, MemberID: 3, Action: "join_request_accepted", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
-				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
-				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: golang.Ptr(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 1, Action: "invitation_created", InitiatorID: new(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 3, Action: "join_request_accepted", InitiatorID: new(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 6, Action: "invitation_created", InitiatorID: new(userID), At: currentTimePtr()},
+				{GroupID: 20, MemberID: 7, Action: "invitation_created", InitiatorID: new(userID), At: currentTimePtr()},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     true,
@@ -486,7 +486,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			action:                     database.AdminCreatesInvitation,
 			createPendingCycleWithType: "join_request",
 			relationsToChange:          allTheIDs(),
-			maxParticipants:            golang.Ptr(8),
+			maxParticipants:            new(8),
 			wantResult: database.GroupGroupTransitionResults{
 				1: "full", 3: "full", 6: "full", 7: "full",
 				2: "unchanged",
@@ -533,9 +533,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				}),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 1, Action: "join_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-				{GroupID: 20, MemberID: 6, Action: "join_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-				{GroupID: 20, MemberID: 7, Action: "join_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 1, Action: "join_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
+				{GroupID: 20, MemberID: 6, Action: "join_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
+				{GroupID: 20, MemberID: 7, Action: "join_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     false,
@@ -544,7 +544,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 			name:              "UserCreatesJoinRequest (max participants limit is not exceeded)",
 			action:            database.UserCreatesJoinRequest,
 			relationsToChange: allTheIDs(),
-			maxParticipants:   golang.Ptr(6),
+			maxParticipants:   new(6),
 			approvals: map[int64]database.GroupApprovals{
 				1: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: true},
 				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
@@ -573,9 +573,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				}),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 1, Action: "join_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-				{GroupID: 20, MemberID: 6, Action: "join_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-				{GroupID: 20, MemberID: 7, Action: "join_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 1, Action: "join_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
+				{GroupID: 20, MemberID: 6, Action: "join_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
+				{GroupID: 20, MemberID: 7, Action: "join_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     false,
@@ -589,7 +589,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				6: {PersonalInfoViewApproval: true, LockMembershipApproval: true, WatchApproval: false},
 				7: {PersonalInfoViewApproval: false, LockMembershipApproval: false, WatchApproval: true},
 			},
-			maxParticipants: golang.Ptr(5),
+			maxParticipants: new(5),
 			wantResult: database.GroupGroupTransitionResults{
 				1: "full", 6: "full", 7: "full",
 				3: "unchanged",
@@ -620,7 +620,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		testTransitionAcceptingPendingRequest("AdminAcceptsJoinRequest",
 			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, true, nil),
 		testTransitionAcceptingPendingRequest("AdminAcceptsJoinRequest (max participants limit is not exceeded)",
-			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, false, golang.Ptr(7)),
+			database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated, database.JoinRequestAccepted, false, new(7)),
 		testTransitionAcceptingPendingRequestEnforcingMaxParticipants(
 			"AdminAcceptsJoinRequest", database.AdminAcceptsJoinRequest, 3, database.JoinRequestCreated),
 		{
@@ -635,7 +635,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupPendingRequest{"20_2": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 2, Action: "invitation_refused", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 2, Action: "invitation_refused", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     false,
@@ -652,7 +652,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupPendingRequest{"20_3": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 3, Action: "join_request_refused", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 3, Action: "join_request_refused", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     false,
@@ -670,7 +670,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupPendingRequest{"20_2": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 2, Action: "invitation_withdrawn", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 2, Action: "invitation_withdrawn", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     false,
@@ -688,7 +688,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupPendingRequest{"20_3": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 3, Action: "join_request_withdrawn", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 3, Action: "join_request_withdrawn", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     false,
@@ -709,9 +709,9 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				}),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 4, Action: "leave_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-				{GroupID: 20, MemberID: 10, Action: "leave_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
-				{GroupID: 20, MemberID: 11, Action: "leave_request_created", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 4, Action: "leave_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
+				{GroupID: 20, MemberID: 10, Action: "leave_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
+				{GroupID: 20, MemberID: 11, Action: "leave_request_created", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 		},
@@ -727,7 +727,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupPendingRequest{"20_5": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 5, Action: "leave_request_withdrawn", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 5, Action: "leave_request_withdrawn", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 		},
@@ -743,7 +743,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupPendingRequest{"20_5": nil}, nil),
 			wantGroupAncestors: patchGroupAncestors(groupAncestorsUnchanged(), map[string]*groupAncestor{"20_5": nil, "30_5": nil}, nil),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 5, Action: "leave_request_accepted", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 5, Action: "leave_request_accepted", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: patchGrantedPermissions(grantedPermissionsUnchanged(), []string{
 				"5_2_20_group_membership",
@@ -765,7 +765,7 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 				map[string]*groupPendingRequest{"20_5": nil}, nil),
 			wantGroupAncestors: groupAncestorsUnchanged(),
 			wantGroupMembershipChanges: []groupMembershipChange{
-				{GroupID: 20, MemberID: 5, Action: "leave_request_refused", At: currentTimePtr(), InitiatorID: golang.Ptr(userID)},
+				{GroupID: 20, MemberID: 5, Action: "leave_request_refused", At: currentTimePtr(), InitiatorID: new(userID)},
 			},
 			wantGrantedPermissions: grantedPermissionsUnchanged(),
 			shouldRunListeners:     false,
@@ -773,20 +773,20 @@ func TestGroupGroupStore_Transition(t *testing.T) {
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserCreatesAcceptedJoinRequest", database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, true, nil),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserCreatesAcceptedJoinRequest (max participants limit is not exceeded)",
-			database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false, golang.Ptr(9)),
+			database.UserCreatesAcceptedJoinRequest, database.JoinRequestAccepted, false, new(9)),
 		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
 			"UserCreatesAcceptedJoinRequest (enforce max participants)",
 			database.UserCreatesAcceptedJoinRequest, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByBadge", database.UserJoinsGroupByBadge, database.JoinedByBadge, true, nil),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserJoinsGroupByBadge (max participants limit is not exceeded)",
-			database.UserJoinsGroupByBadge, database.JoinedByBadge, false, golang.Ptr(9)),
+			database.UserJoinsGroupByBadge, database.JoinedByBadge, false, new(9)),
 		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
 			"UserJoinsGroupByBadge (enforce max participants)", database.UserJoinsGroupByBadge, false),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest(
 			"UserJoinsGroupByCode", database.UserJoinsGroupByCode, database.JoinedByCode, true, nil),
 		testTransitionAcceptingNoRelationAndAnyPendingRequest("UserJoinsGroupByCode (max participants limit is not exceeded)",
-			database.UserJoinsGroupByCode, database.JoinedByCode, false, golang.Ptr(9)),
+			database.UserJoinsGroupByCode, database.JoinedByCode, false, new(9)),
 		testTransitionAcceptingNoRelationAndAnyPendingRequestEnforcingMaxParticipants(
 			"UserJoinsGroupByCode (enforce max participants)", database.UserJoinsGroupByCode, false),
 		{
@@ -1029,7 +1029,7 @@ func generateApprovalsTests(expectedTime *database.Time) []approvalsTest {
 func TestGroupGroupStore_Transition_ChecksApprovalsInJoinRequestsOnAcceptingJoinRequests(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
-	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
+	expectedTime := (*database.Time)(new(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)))
 	ctx := testhelpers.CreateTestContext()
 	for _, tt := range generateApprovalsTests(expectedTime) {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1182,7 +1182,7 @@ func TestGroupGroupStore_Transition_ChecksApprovalsFromParametersOnAcceptingInvi
 	testoutput.SuppressIfPasses(t)
 
 	const success = "success"
-	expectedTime := (*database.Time)(golang.Ptr(time.Date(2019, 6, 1, 0, 0, 0, 0, time.UTC)))
+	expectedTime := (*database.Time)(new(time.Date(2019, 6, 1, 0, 0, 0, 0, time.UTC)))
 	oldNow := database.MockNow("2019-06-01 00:00:00")
 	defer database.RestoreNow(oldNow)
 
@@ -1351,9 +1351,7 @@ func buildExpectedGroupTransitionResults(nonInvalid database.GroupGroupTransitio
 	}
 	result[20] = invalid
 	result[30] = invalid
-	for key, value := range nonInvalid {
-		result[key] = value
-	}
+	maps.Copy(result, nonInvalid)
 	return result
 }
 
@@ -1487,7 +1485,7 @@ func Test_insertGroupMembershipChanges_Duplicate(t *testing.T) {
 	timeMs := 122
 	callsCount := 0
 	var patchGuard *monkey.PatchGuard
-	patchGuard = monkey.PatchInstanceMethod(reflect.TypeOf(&gorm.DB{}), "Exec", func(db *gorm.DB, sql string, values ...interface{}) *gorm.DB {
+	patchGuard = monkey.PatchInstanceMethod(reflect.TypeFor[*gorm.DB](), "Exec", func(db *gorm.DB, sql string, values ...any) *gorm.DB {
 		patchGuard.Unpatch()
 		defer patchGuard.Restore()
 		timeMs++

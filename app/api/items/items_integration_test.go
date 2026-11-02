@@ -3,11 +3,9 @@
 package items_test
 
 import (
-	"reflect"
 	"testing"
 	_ "unsafe"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -25,11 +23,11 @@ func Test_createParticipantsGroupForItemRequiringExplicitEntry_Duplicate(t *test
 	defer func() { _ = db.Close() }()
 
 	var nextID int64
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(*database.DataStore) int64 {
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 {
 		nextID++
 		return nextID
 	})
-	defer monkey.UnpatchAll()
+	defer restoreNewID()
 
 	dataStore := database.NewDataStore(db)
 	groupID := createParticipantsGroupForItemRequiringExplicitEntry(dataStore, 123)

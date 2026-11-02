@@ -76,7 +76,7 @@ func (srv *Service) createCode(responseWriter http.ResponseWriter, httpRequest *
 		newCode, err = GenerateGroupCode()
 		service.MustNotBeError(err)
 
-		err = store.Groups().Where("id = ?", groupID).UpdateColumn(map[string]interface{}{"code": newCode}).Error()
+		err = store.Groups().Where("id = ?", groupID).UpdateColumn(map[string]any{"code": newCode}).Error()
 		if err != nil && strings.Contains(err.Error(), "Duplicate entry") {
 			continue
 		}

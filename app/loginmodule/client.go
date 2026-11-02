@@ -52,7 +52,7 @@ func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (p
 			Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
 		return nil, fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode)
 	}
-	var decoded map[string]interface{}
+	var decoded map[string]any
 	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.UseNumber()
 	err = decoder.Decode(&decoded)
@@ -246,7 +246,7 @@ func Encode(data []byte, clientKey string) string {
 
 // UserProfile represents normalized user profile data returned by the login module.
 type UserProfile struct {
-	Profile *map[string]interface{} `json:"profile"`
+	Profile *map[string]any `json:"profile"`
 
 	LoginID         int64            `json:"login_id"`
 	Login           string           `json:"login"`
@@ -277,9 +277,9 @@ type UserProfile struct {
 }
 
 // ToMap converts UserProfile to a map[string]interface{}.
-func (up *UserProfile) ToMap() map[string]interface{} {
+func (up *UserProfile) ToMap() map[string]any {
 	reflStruct := reflect.ValueOf(up).Elem()
-	userData := make(map[string]interface{}, reflStruct.NumField())
+	userData := make(map[string]any, reflStruct.NumField())
 	for fieldIndex := range reflStruct.NumField() {
 		fieldType := reflStruct.Type().Field(fieldIndex)
 		fieldName := fieldType.Tag.Get("json")
@@ -306,9 +306,9 @@ func (up *UserProfile) ToMap() map[string]interface{} {
 	return userData
 }
 
-func convertUserProfile(source map[string]interface{}) (*UserProfile, error) {
+func convertUserProfile(source map[string]any) (*UserProfile, error) {
 	//nolint:mnd // we are going to add two fields: sex, public_first_name, public_last_name, and badges
-	dest := make(map[string]interface{}, len(source)+4)
+	dest := make(map[string]any, len(source)+4)
 	/*
 	 We ignore fields: birthday_year, client_id, created_at, creator_client_id,
 	 school_grade, graduation_grade_expire_at, ip, last_password_recovery_at, last_login,
@@ -390,7 +390,7 @@ func convertUserProfile(source map[string]interface{}) (*UserProfile, error) {
 	return userProfile, nil
 }
 
-func createUserProfileFromNormalizedMap(data map[string]interface{}) *UserProfile {
+func createUserProfileFromNormalizedMap(data map[string]any) *UserProfile {
 	userProfile := &UserProfile{}
 	reflStruct := reflect.ValueOf(userProfile).Elem()
 	for i := range reflStruct.NumField() {
@@ -411,13 +411,13 @@ func createUserProfileFromNormalizedMap(data map[string]interface{}) *UserProfil
 	return userProfile
 }
 
-func normalizeUserProfileBooleanFields(dest map[string]interface{}) {
+func normalizeUserProfileBooleanFields(dest map[string]any) {
 	for _, fieldName := range [...]string{"email_verified", "notify_news", "photo_autoload"} {
 		dest[fieldName] = (dest[fieldName] == true) || (dest[fieldName] == int64(1))
 	}
 }
 
-func convertUserGender(source, dest map[string]interface{}) {
+func convertUserGender(source, dest map[string]any) {
 	dest["sex"] = nil
 	switch source["gender"] {
 	case "m":
@@ -427,7 +427,7 @@ func convertUserGender(source, dest map[string]interface{}) {
 	}
 }
 
-func convertBadges(source, dest map[string]interface{}) error {
+func convertBadges(source, dest map[string]any) error {
 	if badges, ok := source["badges"]; !ok || badges == nil {
 		dest["badges"] = []database.Badge(nil)
 		return nil

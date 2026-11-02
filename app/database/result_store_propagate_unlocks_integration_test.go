@@ -3,7 +3,7 @@
 package database_test
 
 import (
-	"sort"
+	"slices"
 	"testing"
 	"time"
 
@@ -56,7 +56,7 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
-	grantedPermissions := []map[string]interface{}{
+	grantedPermissions := []map[string]any{
 		generateGrantedPermissionsRow(1001, "content", oldTS, "9999-12-31 23:59:58", oldTS),
 		generateGrantedPermissionsRow(1002, "content_with_descendants", oldTS, "9999-12-31 23:59:58", oldTS),
 		generateGrantedPermissionsRow(2001, "content", oldTS, "9999-12-31 23:59:58", oldTS),
@@ -81,7 +81,7 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	grantedPermissions[3]["updated"] = int64(1)
 	grantedPermissions[4]["updated"] = int64(1)
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	require.NoError(t, dataStore.PermissionsGranted().
 		Select(`
 			group_id, item_id, can_view, can_enter_from, can_enter_until, source_group_id, origin,
@@ -91,8 +91,8 @@ func TestResultStore_Propagate_Unlocks_KeepsOldGrants(t *testing.T) {
 	assert.Equal(t, grantedPermissions, result)
 }
 
-func generateGrantedPermissionsRow(itemID int64, canView, canEnterFrom, canEnterUntil, latestUpdateAt string) map[string]interface{} {
-	return map[string]interface{}{
+func generateGrantedPermissionsRow(itemID int64, canView, canEnterFrom, canEnterUntil, latestUpdateAt string) map[string]any {
+	return map[string]any{
 		"group_id": int64(101), "item_id": itemID, "can_view": canView, "can_enter_from": canEnterFrom,
 		"can_enter_until": canEnterUntil, "source_group_id": int64(101), "origin": "item_unlocking", "latest_update_at": latestUpdateAt,
 	}
@@ -115,7 +115,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 	defer func() { _ = db.Close() }()
 	require.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
 	oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
-	grantedPermissions := []map[string]interface{}{
+	grantedPermissions := []map[string]any{
 		generateGrantedPermissionsRow(1001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
 		generateGrantedPermissionsRow(1002, "content", oldTS, "9999-12-31 23:59:59", oldTS),
 		generateGrantedPermissionsRow(2001, "content", oldTS, "9999-12-31 23:59:59", oldTS),
@@ -129,7 +129,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_EverythingHas
 	dataStore := database.NewDataStore(db)
 	err := runResultsPropagation(dataStore)
 	assert.NoError(t, err)
-	var result []map[string]interface{}
+	var result []map[string]any
 	assert.NoError(t, dataStore.PermissionsGranted().
 		Select("group_id, item_id, can_view, can_enter_from, can_enter_until, source_group_id, origin, latest_update_at").
 		Order("group_id, item_id").
@@ -161,7 +161,7 @@ func TestResultStore_Propagate_Unlocks_ItemsRequiringExplicitEntry_CanEnterFromI
 			require.NoError(t, db.Exec("UPDATE items SET requires_explicit_entry=1").Error())
 			oldTS := time.Now().UTC().Add(-time.Minute).Format(time.DateTime)
 			futureTS := time.Now().UTC().Add(time.Minute).Format(time.DateTime)
-			grantedPermissions := []map[string]interface{}{
+			grantedPermissions := []map[string]any{
 				generateGrantedPermissionsRow(1001, "none", futureTS, test.canEnterUntil, oldTS),
 				generateGrantedPermissionsRow(1002, "none", futureTS, test.canEnterUntil, oldTS),
 				generateGrantedPermissionsRow(2001, "none", futureTS, test.canEnterUntil, oldTS),
@@ -196,7 +196,7 @@ func testRegularUnlocks(t *testing.T, db *database.DB) {
 	require.NoError(t, err)
 
 	unlockedItemsList := unlockedItems.Values()
-	sort.Slice(unlockedItemsList, func(i, j int) bool { return unlockedItemsList[i] < unlockedItemsList[j] })
+	slices.Sort(unlockedItemsList)
 
 	assert.Equal(t, []int64{1001, 1002, 2001, 2002, 4001, 4002}, unlockedItemsList)
 
@@ -261,7 +261,7 @@ func testExplicitEntryUnlocks(t *testing.T, db *database.DB) {
 	require.NoError(t, err)
 
 	unlockedItemsList := unlockedItems.Values()
-	sort.Slice(unlockedItemsList, func(i, j int) bool { return unlockedItemsList[i] < unlockedItemsList[j] })
+	slices.Sort(unlockedItemsList)
 
 	assert.Equal(t, []int64{1001, 1002, 2001, 2002, 4001, 4002}, unlockedItemsList)
 
@@ -315,15 +315,15 @@ func prepareDependencies(t *testing.T, db *database.DB) {
 	itemDependencyStore := database.NewDataStore(db).ItemDependencies()
 	for itemID, dependentItemIDs := range map[int64][]int64{1: {1001, 1002}, 3: {2001, 2002}, 4: {4001, 4002}} {
 		for _, dependentItemID := range dependentItemIDs {
-			require.NoError(t, itemDependencyStore.InsertMap(map[string]interface{}{
+			require.NoError(t, itemDependencyStore.InsertMap(map[string]any{
 				"item_id": itemID, "dependent_item_id": dependentItemID, "score": 100,
 			}))
 		}
 	}
-	assert.NoError(t, itemDependencyStore.InsertMap(map[string]interface{}{
+	assert.NoError(t, itemDependencyStore.InsertMap(map[string]any{
 		"item_id": 4, "dependent_item_id": 4003, "score": 101,
 	}))
-	assert.NoError(t, itemDependencyStore.InsertMap(map[string]interface{}{
+	assert.NoError(t, itemDependencyStore.InsertMap(map[string]any{
 		"item_id": 4, "dependent_item_id": 4004, "score": 1, "grant_content_view": false,
 	}))
 }

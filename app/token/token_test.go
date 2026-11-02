@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,13 +15,14 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 type marshalAndSignTest struct {
 	name        string
 	currentTime time.Time
 	structType  reflect.Type
-	payloadMap  map[string]interface{}
+	payloadMap  map[string]any
 	payloadType reflect.Type
 }
 
@@ -31,37 +31,37 @@ func marshalAndSignTests() []marshalAndSignTest {
 		{
 			name:        "task token",
 			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			structType:  reflect.TypeOf(Token[payloads.TaskToken]{}),
+			structType:  reflect.TypeFor[Token[payloads.TaskToken]](),
 			payloadMap:  payloadstest.TaskPayloadFromAlgoreaPlatform(),
-			payloadType: reflect.TypeOf(payloads.TaskToken{}),
+			payloadType: reflect.TypeFor[payloads.TaskToken](),
 		},
 		{
 			name:        "answer token",
 			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			structType:  reflect.TypeOf(Token[payloads.AnswerToken]{}),
+			structType:  reflect.TypeFor[Token[payloads.AnswerToken]](),
 			payloadMap:  payloadstest.AnswerPayloadFromAlgoreaPlatform(),
-			payloadType: reflect.TypeOf(payloads.AnswerToken{}),
+			payloadType: reflect.TypeFor[payloads.AnswerToken](),
 		},
 		{
 			name:        "hint token",
 			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			structType:  reflect.TypeOf(Token[payloads.HintToken]{}),
+			structType:  reflect.TypeFor[Token[payloads.HintToken]](),
 			payloadMap:  payloadstest.HintPayloadFromTaskPlatform(),
-			payloadType: reflect.TypeOf(payloads.HintToken{}),
+			payloadType: reflect.TypeFor[payloads.HintToken](),
 		},
 		{
 			name:        "score token",
 			currentTime: time.Date(2019, 5, 2, 12, 0, 0, 0, time.UTC),
-			structType:  reflect.TypeOf(Token[payloads.ScoreToken]{}),
+			structType:  reflect.TypeFor[Token[payloads.ScoreToken]](),
 			payloadMap:  payloadstest.ScorePayloadFromGrader(),
-			payloadType: reflect.TypeOf(payloads.ScoreToken{}),
+			payloadType: reflect.TypeFor[payloads.ScoreToken](),
 		},
 		{
 			name:        "thread token",
 			currentTime: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
-			structType:  reflect.TypeOf(Token[payloads.ThreadToken]{}),
+			structType:  reflect.TypeFor[Token[payloads.ThreadToken]](),
 			payloadMap:  payloadstest.ThreadPayloadFromAlgoreaBackend(),
-			payloadType: reflect.TypeOf(payloads.ThreadToken{}),
+			payloadType: reflect.TypeFor[payloads.ThreadToken](),
 		},
 	}
 }

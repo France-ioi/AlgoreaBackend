@@ -12,21 +12,20 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func Test_validateUpdateGroupInput(t *testing.T) {
 	tests := []struct {
 		name    string
-		jsonMap map[string]interface{}
+		jsonMap map[string]any
 		wantErr bool
 	}{
-		{"code_lifetime=2147483647", map[string]interface{}{"code_lifetime": 2147483647}, false},
-		{"code_lifetime=0", map[string]interface{}{"code_lifetime": 0}, false},
-		{"code_lifetime=null", map[string]interface{}{"code_lifetime": nil}, false},
+		{"code_lifetime=2147483647", map[string]any{"code_lifetime": 2147483647}, false},
+		{"code_lifetime=0", map[string]any{"code_lifetime": 0}, false},
+		{"code_lifetime=null", map[string]any{"code_lifetime": nil}, false},
 
-		{"code_lifetime=2147483648", map[string]interface{}{"code_lifetime": 2147483648}, true},
-		{"code_lifetime=", map[string]interface{}{"code_lifetime": ""}, true},
+		{"code_lifetime=2147483648", map[string]any{"code_lifetime": 2147483648}, true},
+		{"code_lifetime=", map[string]any{"code_lifetime": ""}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -126,7 +125,7 @@ func assertUpdateGroupFailsOnDBErrorInTransaction(t *testing.T, setMockExpectati
 
 func Test_isTryingToChangeOfficialSessionActivity(t *testing.T) {
 	type args struct {
-		dbMap                map[string]interface{}
+		dbMap                map[string]any
 		oldIsOfficialSession bool
 		activityIDChanged    bool
 	}
@@ -137,47 +136,47 @@ func Test_isTryingToChangeOfficialSessionActivity(t *testing.T) {
 	}{
 		{
 			name: "is not an official session, no changes, the field is not present",
-			args: args{dbMap: map[string]interface{}{}, oldIsOfficialSession: false, activityIDChanged: false},
+			args: args{dbMap: map[string]any{}, oldIsOfficialSession: false, activityIDChanged: false},
 			want: false,
 		},
 		{
 			name: "is an official session, no changes, the field is not present",
-			args: args{dbMap: map[string]interface{}{}, oldIsOfficialSession: true, activityIDChanged: false},
+			args: args{dbMap: map[string]any{}, oldIsOfficialSession: true, activityIDChanged: false},
 			want: false,
 		},
 		{
 			name: "is not an official session, no changes, the field is present",
-			args: args{dbMap: map[string]interface{}{"is_official_session": false}, oldIsOfficialSession: false, activityIDChanged: false},
+			args: args{dbMap: map[string]any{"is_official_session": false}, oldIsOfficialSession: false, activityIDChanged: false},
 			want: false,
 		},
 		{
 			name: "is an official session, no changes, the field is present",
-			args: args{dbMap: map[string]interface{}{"is_official_session": true}, oldIsOfficialSession: true, activityIDChanged: false},
+			args: args{dbMap: map[string]any{"is_official_session": true}, oldIsOfficialSession: true, activityIDChanged: false},
 			want: false,
 		},
 		{
 			name: "becomes an official session",
-			args: args{dbMap: map[string]interface{}{"is_official_session": true}, oldIsOfficialSession: false, activityIDChanged: false},
+			args: args{dbMap: map[string]any{"is_official_session": true}, oldIsOfficialSession: false, activityIDChanged: false},
 			want: true,
 		},
 		{
 			name: "becomes an unofficial session",
-			args: args{dbMap: map[string]interface{}{"is_official_session": false}, oldIsOfficialSession: true, activityIDChanged: false},
+			args: args{dbMap: map[string]any{"is_official_session": false}, oldIsOfficialSession: true, activityIDChanged: false},
 			want: false,
 		},
 		{
 			name: "becomes an unofficial session and the root_activity_id is changed",
-			args: args{dbMap: map[string]interface{}{"is_official_session": false}, oldIsOfficialSession: true, activityIDChanged: true},
+			args: args{dbMap: map[string]any{"is_official_session": false}, oldIsOfficialSession: true, activityIDChanged: true},
 			want: false,
 		},
 		{
 			name: "is an unofficial session and the root_activity_id is changed",
-			args: args{dbMap: map[string]interface{}{"is_official_session": false}, oldIsOfficialSession: false, activityIDChanged: true},
+			args: args{dbMap: map[string]any{"is_official_session": false}, oldIsOfficialSession: false, activityIDChanged: true},
 			want: false,
 		},
 		{
 			name: "is an official session and the root_activity_id is changed",
-			args: args{dbMap: map[string]interface{}{}, oldIsOfficialSession: true, activityIDChanged: true},
+			args: args{dbMap: map[string]any{}, oldIsOfficialSession: true, activityIDChanged: true},
 			want: true,
 		},
 	}
@@ -199,10 +198,10 @@ func Test_int64PtrEqualValues(t *testing.T) {
 		want bool
 	}{
 		{name: "both are nils", args: args{a: nil, b: nil}, want: true},
-		{name: "a is nil, b is not nil", args: args{a: nil, b: golang.Ptr(int64(1))}, want: false},
-		{name: "a is not nil, b is nil", args: args{a: golang.Ptr(int64(0)), b: nil}, want: false},
-		{name: "both are not nils, but not equal", args: args{a: golang.Ptr(int64(0)), b: golang.Ptr(int64(1))}, want: false},
-		{name: "both are not nils, equal", args: args{a: golang.Ptr(int64(1)), b: golang.Ptr(int64(1))}, want: true},
+		{name: "a is nil, b is not nil", args: args{a: nil, b: new(int64(1))}, want: false},
+		{name: "a is not nil, b is nil", args: args{a: new(int64(0)), b: nil}, want: false},
+		{name: "both are not nils, but not equal", args: args{a: new(int64(0)), b: new(int64(1))}, want: false},
+		{name: "both are not nils, equal", args: args{a: new(int64(1)), b: new(int64(1))}, want: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

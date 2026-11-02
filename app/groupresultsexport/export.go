@@ -137,7 +137,7 @@ func contextWithExportDeadline(ctx context.Context, uploadExpiresAtMs int64) (co
 
 func runExport(
 	ctx context.Context, store *database.DataStore, publicKey *rsa.PublicKey,
-	payload RequestedPayload, completion map[string]interface{},
+	payload RequestedPayload, completion map[string]any,
 ) (tempPath string) {
 	user, groupID, itemParentIDs, ok := prepareExport(ctx, store, publicKey, payload, completion)
 	if !ok {
@@ -169,7 +169,7 @@ func runExport(
 
 func prepareExport(
 	ctx context.Context, store *database.DataStore, publicKey *rsa.PublicKey,
-	payload RequestedPayload, completion map[string]interface{},
+	payload RequestedPayload, completion map[string]any,
 ) (user *database.User, groupID int64, itemParentIDs []int64, ok bool) {
 	if payload.ExportID == "" || payload.Token == "" || payload.UploadURL == "" {
 		setFailure(completion, errorInternal)
@@ -203,7 +203,7 @@ func prepareExport(
 
 func finishExportUpload(
 	ctx context.Context, uploadURL, tempPath string, meta groups.GroupProgressZIPMeta,
-	completion map[string]interface{},
+	completion map[string]any,
 ) {
 	fileInfo, statErr := os.Stat(tempPath)
 	if statErr != nil {
@@ -224,8 +224,8 @@ func finishExportUpload(
 	setSuccess(completion, meta, sizeBytes)
 }
 
-func newFailureCompletion(payload RequestedPayload) map[string]interface{} {
-	return map[string]interface{}{
+func newFailureCompletion(payload RequestedPayload) map[string]any {
+	return map[string]any{
 		"export_id":  payload.ExportID,
 		"status":     statusFailure,
 		"token":      payload.Token,
@@ -239,27 +239,27 @@ func newFailureCompletion(payload RequestedPayload) map[string]interface{} {
 	}
 }
 
-func setFailure(completion map[string]interface{}, code string) {
+func setFailure(completion map[string]any, code string) {
 	completion["status"] = statusFailure
 	completion["error"] = code
 	completion["filename"] = nil
 	completion["size_bytes"] = nil
 }
 
-func applyPartialMeta(completion map[string]interface{}, meta groups.GroupProgressZIPMeta) {
+func applyPartialMeta(completion map[string]any, meta groups.GroupProgressZIPMeta) {
 	if meta.GroupName != "" {
 		completion["group_name"] = meta.GroupName
 	}
 	if len(meta.Items) > 0 {
-		items := make([]map[string]interface{}, len(meta.Items))
+		items := make([]map[string]any, len(meta.Items))
 		for i, item := range meta.Items {
-			items[i] = map[string]interface{}{"id": item.ID, "title": item.Title}
+			items[i] = map[string]any{"id": item.ID, "title": item.Title}
 		}
 		completion["items"] = items
 	}
 }
 
-func setSuccess(completion map[string]interface{}, meta groups.GroupProgressZIPMeta, sizeBytes int64) {
+func setSuccess(completion map[string]any, meta groups.GroupProgressZIPMeta, sizeBytes int64) {
 	applyPartialMeta(completion, meta)
 	completion["status"] = statusSuccess
 	completion["error"] = nil
@@ -268,7 +268,7 @@ func setSuccess(completion map[string]interface{}, meta groups.GroupProgressZIPM
 }
 
 func resolveAuthorizedExport(
-	store *database.DataStore, publicKey *rsa.PublicKey, tokenStr string, completion map[string]interface{},
+	store *database.DataStore, publicKey *rsa.PublicKey, tokenStr string, completion map[string]any,
 ) (user *database.User, groupID int64, itemParentIDs []int64, failCode string) {
 	tokenPayload, parseErr := parseGroupResultsToken(tokenStr, publicKey)
 	if parseErr != nil {

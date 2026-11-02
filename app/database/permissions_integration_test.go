@@ -49,11 +49,11 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 
 	for _, test := range []struct {
 		ids            []int64
-		expectedResult []map[string]interface{}
+		expectedResult []map[string]any
 	}{
 		{
 			ids: []int64{1, 2, 3},
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
 					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0),
@@ -66,7 +66,7 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 		},
 		{
 			ids: []int64{1, 4, 5},
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"id": int64(4), "item_id": int64(4), "can_view_generated_value": int64(1), "can_grant_view_generated_value": int64(2),
 					"can_watch_generated_value": int64(1), "can_edit_generated_value": int64(2), "is_owner_generated": int64(1),
@@ -75,7 +75,7 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 		},
 		{
 			ids: []int64{6},
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"id": int64(6), "item_id": int64(6), "can_view_generated_value": int64(1), "can_grant_view_generated_value": int64(1),
 					"can_watch_generated_value": int64(1), "can_edit_generated_value": int64(1), "is_owner_generated": int64(0),
@@ -86,7 +86,7 @@ func TestDB_JoinsPermissionsForGroupToItems(t *testing.T) {
 		t.Run(fmt.Sprintf("ids: %v", test.ids), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			var result []map[string]interface{}
+			var result []map[string]any
 			require.NoError(t, itemStore.Select("items.id, permissions.*").
 				JoinsPermissionsForGroupToItems(5).
 				Where("items.id IN (?)", test.ids).Order("items.id").
@@ -108,11 +108,11 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 		ids              []int64
 		permissionKind   string
 		neededPermission string
-		expectedResult   []map[string]interface{}
+		expectedResult   []map[string]any
 	}{
 		{
 			ids: []int64{1, 2, 3}, permissionKind: "view", neededPermission: "info",
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
 					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0),
@@ -125,7 +125,7 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 		},
 		{
 			ids: []int64{1, 2, 3}, permissionKind: "view", neededPermission: "solution",
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
 					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0),
@@ -134,7 +134,7 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 		},
 		{
 			ids: []int64{1, 2, 3}, permissionKind: "edit", neededPermission: "all",
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"id": int64(2), "item_id": int64(2), "can_view_generated_value": int64(5), "can_grant_view_generated_value": int64(5),
 					"can_watch_generated_value": int64(3), "can_edit_generated_value": int64(3), "is_owner_generated": int64(0),
@@ -143,7 +143,7 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 		},
 		{
 			ids: []int64{1, 4, 5}, permissionKind: "edit", neededPermission: "children",
-			expectedResult: []map[string]interface{}{
+			expectedResult: []map[string]any{
 				{
 					"id": int64(4), "item_id": int64(4), "can_view_generated_value": int64(1), "can_grant_view_generated_value": int64(2),
 					"can_watch_generated_value": int64(1), "can_edit_generated_value": int64(2), "is_owner_generated": int64(1),
@@ -154,7 +154,7 @@ func TestDB_JoinsPermissionsForGroupToItemsWherePermissionAtLeast(t *testing.T) 
 		t.Run(fmt.Sprintf("ids: %v, %s>=%s", test.ids, test.permissionKind, test.neededPermission), func(t *testing.T) {
 			testoutput.SuppressIfPasses(t)
 
-			var result []map[string]interface{}
+			var result []map[string]any
 			require.NoError(t, itemStore.Select("items.id, permissions.*").
 				JoinsPermissionsForGroupToItemsWherePermissionAtLeast(5, test.permissionKind, test.neededPermission).
 				Where("items.id IN (?)", test.ids).Order("items.id").

@@ -349,7 +349,7 @@ const itemChildrenDescriptionColumn = `,
 			 IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description`
 
 func scanItemChildren(store *database.DataStore, parentItemIDs []int64, params *getParentsOrChildrenServiceParams,
-	requiredViewPermissionOnItems, additionalColumnList string, includeDescription bool, dest interface{},
+	requiredViewPermissionOnItems, additionalColumnList string, includeDescription bool, dest any,
 ) {
 	externalColumnList := itemChildrenExternalColumnList
 	if includeDescription {
@@ -365,7 +365,7 @@ func scanItemChildren(store *database.DataStore, parentItemIDs []int64, params *
 			params.watchedGroupIDIsSet,
 			params.watchedGroupID,
 			itemChildrenColumnList+additionalColumnList,
-			[]interface{}{params.participantID},
+			[]any{params.participantID},
 			externalColumnList,
 			func(db *database.DB) *database.DB {
 				return db.Joins(
@@ -459,7 +459,7 @@ func constructItemChildrenQuery(
 	watchedGroupIDIsSet bool,
 	watchedGroupID int64,
 	columnList string,
-	columnListValues []interface{},
+	columnListValues []any,
 	externalColumnList string,
 	joinItemRelationsToItemsFunc func(*database.DB) *database.DB,
 ) *database.DB {

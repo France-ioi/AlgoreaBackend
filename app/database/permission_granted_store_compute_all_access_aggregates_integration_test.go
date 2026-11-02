@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -100,7 +99,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccess(t *test
 		{GroupID: "2|11|1|other", ItemID: 11, CanViewGenerated: "none"},
 		{GroupID: "2|11|1|other", ItemID: 12, CanViewGenerated: "none"},
 	})
-	verifyPermissionExplanation(t, db, golang.Ptr(int64(3)), []permissionsExplanationResultRow{
+	verifyPermissionExplanation(t, db, new(int64(3)), []permissionsExplanationResultRow{
 		{GroupID: "1|1|1|group_membership", ItemID: 1, CanViewGenerated: "content"}, // inserted on the first iteration
 		{GroupID: "1|2|1|item_unlocking", ItemID: 2, CanViewGenerated: "content"},   // inserted on the first iteration
 		{GroupID: "1|3|1|self", ItemID: 3, CanViewGenerated: "content"},
@@ -130,7 +129,7 @@ func TestPermissionGrantedStore_ComputeAllAccess_AggregatesContentAccessAsInfo(t
 		UpdateColumn("can_view", "content").Error())
 	assert.NoError(t, permissionGrantedStore.Where("group_id=2 AND item_id=11 AND origin='group_membership'").
 		UpdateColumn("can_view", "content").Error())
-	assert.NoError(t, permissionGrantedStore.ItemItems().UpdateColumn(map[string]interface{}{
+	assert.NoError(t, permissionGrantedStore.ItemItems().UpdateColumn(map[string]any{
 		"content_view_propagation": "as_info",
 	}).Error())
 	require.NoError(t, permissionGrantedStore.InTransaction(func(ds *database.DataStore) error {

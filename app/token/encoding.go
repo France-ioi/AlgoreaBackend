@@ -17,7 +17,7 @@ import (
 )
 
 // GetUnsafeFromToken returns the value of the field without checking the token signature.
-func GetUnsafeFromToken(token []byte, field string) (interface{}, error) {
+func GetUnsafeFromToken(token []byte, field string) (any, error) {
 	token = []byte(strings.Trim(string(token), "\""))
 
 	jwt, err := jws.ParseJWT(token)
@@ -28,7 +28,7 @@ func GetUnsafeFromToken(token []byte, field string) (interface{}, error) {
 }
 
 // ParseAndValidate parses a token and validates its signature and date.
-func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interface{}, error) {
+func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]any, error) {
 	jwt, err := jws.ParseJWT(token)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func ParseAndValidate(token []byte, publicKey *rsa.PublicKey) (map[string]interf
 }
 
 // Generate generates a signed token for a payload.
-func Generate(payload map[string]interface{}, privateKey *rsa.PrivateKey) []byte {
+func Generate(payload map[string]any, privateKey *rsa.PrivateKey) []byte {
 	payload["date"] = time.Now().UTC().Format("02-01-2006")
 
 	token, err := jws.NewJWT(payload, crypto.SigningMethodRS512).Serialize(privateKey)

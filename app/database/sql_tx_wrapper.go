@@ -42,7 +42,7 @@ type sqlTxWrapper struct {
 // For example: an INSERT and UPDATE.
 //
 // Exec uses the context of [sqlTxWrapper] internally.
-func (sqlTX *sqlTxWrapper) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+func (sqlTX *sqlTxWrapper) Exec(query string, args ...any) (result sql.Result, err error) {
 	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
 	defer getSQLQueryLoggingFunc(sqlTX.ctx, func() *int64 {
 		affectedRows, _ := result.RowsAffected()
@@ -68,7 +68,7 @@ func (sqlTX *sqlTxWrapper) Prepare(_ string) (*sql.Stmt, error) {
 // Query executes a query that returns rows, typically a SELECT.
 //
 // Query uses the context of [sqlTxWrapper] internally.
-func (sqlTX *sqlTxWrapper) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+func (sqlTX *sqlTxWrapper) Query(query string, args ...any) (rows *sql.Rows, err error) {
 	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
 	defer getSQLQueryLoggingFunc(sqlTX.ctx, nil, &err, gorm.NowFunc(), query, args...)(sqlTX.logConfig)
 
@@ -90,7 +90,7 @@ func (sqlTX *sqlTxWrapper) Query(query string, args ...interface{}) (rows *sql.R
 // the rest.
 //
 // QueryRow uses the context of [sqlTxWrapper] internally.
-func (sqlTX *sqlTxWrapper) QueryRow(query string, args ...interface{}) (row *sql.Row) {
+func (sqlTX *sqlTxWrapper) QueryRow(query string, args ...any) (row *sql.Row) {
 	defer getSQLExecutionPlanLoggingFunc(sqlTX.ctx, sqlTX, sqlTX.logConfig, query, args...)()
 	startTime := gorm.NowFunc()
 	defer func() {
@@ -165,7 +165,7 @@ func (sqlTX *sqlTxWrapper) handleCommitOrRollbackError(err error) error {
 			errString += " (the transaction has been rolled back implicitly)"
 		}
 		log.EntryFromContext(sqlTX.ctx).WithFields(
-			map[string]interface{}{"type": "db", "fileline": fileWithLineNum()}).Error(errString)
+			map[string]any{"type": "db", "fileline": fileWithLineNum()}).Error(errString)
 	}
 	return err
 }
@@ -175,11 +175,11 @@ var (
 	_ driver.Tx      = &sqlTxWrapper{}
 )
 
-func (sqlTX *sqlTxWrapper) queryRowWithoutLogging(query string, args ...interface{}) *sql.Row {
+func (sqlTX *sqlTxWrapper) queryRowWithoutLogging(query string, args ...any) *sql.Row {
 	return sqlTX.sqlTx.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlTX.ctx)), query, args...)
 }
 
-func (sqlTX *sqlTxWrapper) queryRowsWithoutLogging(query string, args ...interface{}) (*sql.Rows, error) {
+func (sqlTX *sqlTxWrapper) queryRowsWithoutLogging(query string, args ...any) (*sql.Rows, error) {
 	return sqlTX.sqlTx.QueryContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlTX.ctx)), query, args...)
 }
 

@@ -27,7 +27,7 @@ func TestMaxSelectExecutionTime_CappedQueryReturns3024(t *testing.T) {
 	ctx := database.ContextWithMaxSelectExecutionTime(db.GetContext(), 500*time.Millisecond)
 	db = database.NewDataStoreWithContext(ctx, db).DB
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	err := db.Raw("SELECT * FROM (SELECT SLEEP(3) AS s) x").ScanIntoSliceOfMaps(&result).Error()
 	require.True(t, database.IsQueryTimeoutError(err), "got: %v", err)
 }
@@ -41,7 +41,7 @@ func TestMaxSelectExecutionTime_CTEQueryReturns3024(t *testing.T) {
 	ctx := database.ContextWithMaxSelectExecutionTime(db.GetContext(), 500*time.Millisecond)
 	db = database.NewDataStoreWithContext(ctx, db).DB
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	err := db.With("t", db.Raw("SELECT SLEEP(3) AS s")).Table("t").
 		Select("*").ScanIntoSliceOfMaps(&result).Error()
 	// A hint misplaced inside the CTE body is silently ignored and SLEEP(3) completes without error.
@@ -65,7 +65,7 @@ func TestMaxSelectExecutionTime_NoHintWithoutCap(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _ = db.Close() }()
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	require.NoError(t, db.Raw("SELECT 1 AS n").ScanIntoSliceOfMaps(&result).Error())
 
 	logs := (&loggingtest.Hook{Hook: loggerHook}).GetAllLogs()
@@ -93,7 +93,7 @@ func TestMaxSelectExecutionTime_NoHintInsideTransaction(t *testing.T) {
 		database.ContextWithMaxSelectExecutionTime(db.GetContext(), 100*time.Millisecond), db)
 
 	require.NoError(t, store.InTransaction(func(s *database.DataStore) error {
-		var result []map[string]interface{}
+		var result []map[string]any
 		// Would raise 3024 if the hint were injected inside the transaction.
 		return s.Raw("SELECT * FROM (SELECT SLEEP(1) AS s) x").ScanIntoSliceOfMaps(&result).Error()
 	}))

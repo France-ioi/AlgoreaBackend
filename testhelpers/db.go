@@ -147,7 +147,7 @@ func LoadFixture(ctx context.Context, db *sql.DB, fileName string) {
 		if strings.HasSuffix(name, ".chain") {
 			loadFixtureChainFromString(ctx, db, string(data))
 		} else {
-			var content []map[string]interface{}
+			var content []map[string]any
 			err = yaml.Unmarshal(data, &content)
 			if err != nil {
 				panic(err)
@@ -174,12 +174,12 @@ func loadFixtureChainFromString(ctx context.Context, db *sql.DB, fixture string)
 	}
 	for _, item := range content {
 		//nolint:forcetypeassert // panic if item.Value is not []interface{}
-		rows := item.Value.([]interface{})
-		data := make([]map[string]interface{}, 0, len(rows))
+		rows := item.Value.([]any)
+		data := make([]map[string]any, 0, len(rows))
 		for _, row := range rows {
 			//nolint:forcetypeassert // panic if the row is not yaml.MapSlice
 			rowSlice := row.(yaml.MapSlice)
-			rowData := make(map[string]interface{}, len(rowSlice))
+			rowData := make(map[string]any, len(rowSlice))
 			for _, column := range rowSlice {
 				//nolint:forcetypeassert // panic if column.Key is not a string
 				rowData[column.Key.(string)] = column.Value
@@ -194,7 +194,7 @@ func loadFixtureChainFromString(ctx context.Context, db *sql.DB, fixture string)
 // InsertBatch insert the data into the table with the name given.
 // Note that the context must have a logger (set by logging.ContextWithLogger),
 // otherwise InsertBatch will panic on logging.
-func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[string]interface{}) {
+func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[string]any) {
 	appenv.ForceTestEnv()
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -207,9 +207,9 @@ func InsertBatch(ctx context.Context, db *sql.DB, tableName string, data []map[s
 	}
 
 	for _, row := range data {
-		var attributes []string
-		var valueMarks []string
-		var values []interface{}
+		attributes := make([]string, 0, len(row))
+		valueMarks := make([]string, 0, len(row))
+		values := make([]any, 0, len(row))
 		for k, v := range row {
 			attributes = append(attributes, database.QuoteName(k))
 			valueMarks = append(valueMarks, "?")

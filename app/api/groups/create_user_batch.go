@@ -144,7 +144,7 @@ func (srv *Service) createUserBatch(responseWriter http.ResponseWriter, httpRequ
 	numberOfUsersToBeCreated, subgroupsApprovals, err := checkCreateUserBatchRequestParameters(store, user, input)
 	service.MustNotBeError(err)
 
-	err = store.UserBatches().InsertMap(map[string]interface{}{
+	err = store.UserBatches().InsertMap(map[string]any{
 		"group_prefix":  input.GroupPrefix,
 		"custom_prefix": input.CustomPrefix,
 		"size":          numberOfUsersToBeCreated,
@@ -202,7 +202,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 	}
 	service.MustNotBeError(err)
 
-	subgroupIDs := make([]interface{}, 0, len(input.Subgroups))
+	subgroupIDs := make([]any, 0, len(input.Subgroups))
 
 	for _, subgroup := range input.Subgroups {
 		subgroupIDs = append(subgroupIDs, subgroup.GroupID)
@@ -217,7 +217,7 @@ func checkCreateUserBatchRequestParameters(store *database.DataStore, user *data
 	service.MustNotBeError(store.Groups().
 		Joins("JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups.id").
 		Where("ancestor_group_id = ?", prefixInfo.GroupID).
-		Where("groups.id IN(?)", subgroupIDs). //nolint:asasalint // subgroupIDs is a single argument
+		Where("groups.id IN(?)", subgroupIDs).
 		Where("groups.type != 'User'").
 		Select(`
 			require_personal_info_access_approval != 'none' AS require_personal_info_access_approval,
@@ -264,9 +264,9 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 		domainConfig := domain.ConfigFromContext(httpRequest.Context())
 
 		result := make([]*resultRow, 0, len(subgroupsApprovals))
-		relationsToCreate := make([]map[string]interface{}, 0, 2*numberOfUsersToBeCreated) //nolint:mnd // 2 relations per user
-		usersToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
-		attemptsToCreate := make([]map[string]interface{}, 0, numberOfUsersToBeCreated)
+		relationsToCreate := make([]map[string]any, 0, 2*numberOfUsersToBeCreated) //nolint:mnd // 2 relations per user
+		usersToCreate := make([]map[string]any, 0, numberOfUsersToBeCreated)
+		attemptsToCreate := make([]map[string]any, 0, numberOfUsersToBeCreated)
 		usersInSubgroup := 0
 		var currentResultRow *resultRow
 		currentSubgroupIndex := -1
@@ -283,7 +283,7 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 
 			userGroupID := createUserGroup(store, createdUser.Login)
 
-			var personalInfoApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{}
+			var personalInfoApprovedAt, lockMembershipApprovedAt, watchApprovedAt any
 			if subgroupsApprovals[currentSubgroupIndex].RequirePersonalInfoAccessApproval {
 				personalInfoApprovedAt = database.Now()
 			}
@@ -294,12 +294,12 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 				watchApprovedAt = database.Now()
 			}
 			relationsToCreate = append(relationsToCreate,
-				map[string]interface{}{
+				map[string]any{
 					"parent_group_id":                domainConfig.NonTempUsersGroupID,
 					"child_group_id":                 userGroupID,
 					"personal_info_view_approved_at": nil, "lock_membership_approved_at": nil, "watch_approved_at": nil,
 				},
-				map[string]interface{}{
+				map[string]any{
 					"parent_group_id":                input.Subgroups[currentSubgroupIndex].GroupID,
 					"child_group_id":                 userGroupID,
 					"personal_info_view_approved_at": personalInfoApprovedAt,
@@ -308,7 +308,7 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 				},
 			)
 
-			usersToCreate = append(usersToCreate, map[string]interface{}{
+			usersToCreate = append(usersToCreate, map[string]any{
 				"temp_user":        0,
 				"registered_at":    database.Now(),
 				"group_id":         userGroupID,
@@ -318,7 +318,7 @@ func createBatchUsersInDB(store *database.DataStore, input createUserBatchReques
 				"creator_id":       user.GroupID,
 			})
 
-			attemptsToCreate = append(attemptsToCreate, map[string]interface{}{
+			attemptsToCreate = append(attemptsToCreate, map[string]any{
 				"participant_id": userGroupID,
 				"id":             0,
 				"creator_id":     userGroupID,
@@ -347,7 +347,7 @@ func createUserGroup(store *database.DataStore, login string) int64 {
 	var userGroupID int64
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *database.DataStore) error {
 		userGroupID = retryIDStore.NewID()
-		return retryIDStore.Groups().InsertMap(map[string]interface{}{
+		return retryIDStore.Groups().InsertMap(map[string]any{
 			"id":          userGroupID,
 			"name":        login,
 			"type":        groupTypeUser,

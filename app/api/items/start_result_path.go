@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/render"
 
@@ -91,7 +92,7 @@ func (srv *Service) startResultPath(responseWriter http.ResponseWriter, httpRequ
 
 	participantID := service.ParticipantIDFromContext(httpRequest.Context())
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	var attemptID int64
 	var shouldSchedulePropagation bool
 	store := srv.GetStore(httpRequest)
@@ -102,21 +103,21 @@ func (srv *Service) startResultPath(responseWriter http.ResponseWriter, httpRequ
 		}
 
 		data := result[0]
-		rowsToInsert := make([]map[string]interface{}, 0, len(data))
-		rowsToInsertPropagate := make([]map[string]interface{}, 0, len(data))
+		rowsToInsert := make([]map[string]any, 0, len(data))
+		rowsToInsertPropagate := make([]map[string]any, 0, len(data))
 		for index, itemID := range ids {
 			attemptID = data[fmt.Sprintf("attempt_id%d", index)].(int64)       //nolint:forcetypeassert // we know it is int64
 			if data[fmt.Sprintf("has_started_result%d", index)].(int64) == 1 { //nolint:forcetypeassert // we know it is int64
 				continue
 			}
-			rowsToInsert = append(rowsToInsert, map[string]interface{}{
+			rowsToInsert = append(rowsToInsert, map[string]any{
 				"item_id":            itemID,
 				"participant_id":     participantID,
 				"attempt_id":         attemptID,
 				"started_at":         database.Now(),
 				"latest_activity_at": database.Now(),
 			})
-			rowsToInsertPropagate = append(rowsToInsertPropagate, map[string]interface{}{
+			rowsToInsertPropagate = append(rowsToInsertPropagate, map[string]any{
 				"item_id":        itemID,
 				"participant_id": participantID,
 				"attempt_id":     attemptID,
@@ -138,7 +139,7 @@ func (srv *Service) startResultPath(responseWriter http.ResponseWriter, httpRequ
 		service.SchedulePropagation(store, srv.IsPropagationAsync(), []string{"results"})
 	}
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.UpdateSuccess(map[string]any{
 		"attempt_id": strconv.FormatInt(attemptID, 10),
 	})))
 	return nil
@@ -157,8 +158,8 @@ func hasAccessToItemPath(store *database.DataStore, participantID int64, ids []i
 	return count == int64(len(ids))
 }
 
-func getDataForResultPathStart(store *database.DataStore, participantID int64, ids []int64) []map[string]interface{} {
-	var result []map[string]interface{}
+func getDataForResultPathStart(store *database.DataStore, participantID int64, ids []int64) []map[string]any {
+	var result []map[string]any
 	if !hasAccessToItemPath(store, participantID, ids) {
 		return result
 	}
@@ -180,16 +181,15 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 	}
 	query = query.Where("items0.id IN ? OR items0.id IN ?", rootActivities.SubQuery(), rootSkills.SubQuery())
 
-	var score string
-	var columns string
+	var scoreBuilder strings.Builder
+	var columnsBuilder strings.Builder
 	attemptIsActiveCondition := "1"
-	var columnsForOrder string
+	var columnsForOrderBuilder strings.Builder
 	for idIndex := range ids {
 		var previousAttemptCondition string
 		if idIndex > 0 {
-			score += " + "
-			const comma = ", "
-			columns += comma
+			scoreBuilder.WriteString(" + ")
+			columnsBuilder.WriteString(", ")
 			// Chain link: when the attempt is rooted at this item the chain steps into a child attempt
 			// (linked via parent_attempt_id); otherwise the same attempt id propagates from the previous rung.
 			// The IF condition itself is unchanged by the relaxation below; the relaxation merely makes the
@@ -200,7 +200,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 				idIndex, idIndex-1)
 		}
 
-		columnsForOrder += fmt.Sprintf(", attempts%d.id DESC", idIndex)
+		_, _ = fmt.Fprintf(&columnsForOrderBuilder, ", attempts%d.id DESC", idIndex)
 		attemptIsActiveCondition = fmt.Sprintf(
 			"attempts%[1]d.ended_at IS NULL AND NOW() < attempts%[1]d.allows_submissions_until AND %[2]s",
 			idIndex, attemptIsActiveCondition)
@@ -214,7 +214,7 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 		// therefore acts only as a fallback when no rooted alternative is reachable in the chain.
 		// `<=>` is used for a NULL-safe equality so attempts with `root_item_id IS NULL` count as
 		// non-rooted rather than "unknown".
-		score += fmt.Sprintf(
+		_, _ = fmt.Fprintf(&scoreBuilder,
 			"((items%[1]d.requires_explicit_entry AND NOT (attempts%[1]d.root_item_id <=> items%[1]d.id)) << %[3]d)"+
 				" + ((results%[1]d.started_at IS NULL) << %[2]d)",
 			idIndex, len(ids)-idIndex-1, 2*len(ids)-idIndex-1)
@@ -249,11 +249,11 @@ func getDataForResultPathStart(store *database.DataStore, participantID int64, i
 				idIndex, idIndex+1), ids[idIndex+1]).
 				Joins(fmt.Sprintf("JOIN items AS items%[1]d ON items%[1]d.id = items_items%[1]d.child_item_id", idIndex+1))
 		}
-		columns += fmt.Sprintf(
+		_, _ = fmt.Fprintf(&columnsBuilder,
 			"attempts%[1]d.id AS attempt_id%[1]d, results%[1]d.started_at IS NOT NULL AS has_started_result%[1]d", idIndex)
 	}
-	query = query.Select(columns).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
-		Order(score + columnsForOrder).Limit(1)
+	query = query.Select(columnsBuilder.String()).Where("results0.attempt_id IS NOT NULL OR attempts0.id = 0").
+		Order(scoreBuilder.String() + columnsForOrderBuilder.String()).Limit(1)
 
 	service.MustNotBeError(
 		query.

@@ -1,6 +1,7 @@
 package groups
 
 import (
+	"maps"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -107,9 +108,7 @@ func (srv *Service) removeMembers(responseWriter http.ResponseWriter, httpReques
 	}
 
 	service.MustNotBeError(err)
-	for id, result := range groupResults {
-		results[id] = result
-	}
+	maps.Copy(results, groupResults)
 
 	response := service.Response[database.GroupGroupTransitionResults]{
 		Success: true,

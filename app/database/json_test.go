@@ -5,22 +5,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestJSON_Scan(t *testing.T) {
 	tests := []struct {
 		name    string
-		src     interface{}
+		src     any
 		wantErr bool
-		wantMap map[string]interface{}
+		wantMap map[string]any
 	}{
 		{
 			name: "normal JSON", src: []byte(`{"key":"value","num":123}`),
-			wantMap: map[string]interface{}{"key": "value", "num": float64(123)},
+			wantMap: map[string]any{"key": "value", "num": float64(123)},
 		},
-		{name: "empty object", src: []byte("{}"), wantMap: map[string]interface{}{}},
+		{name: "empty object", src: []byte("{}"), wantMap: map[string]any{}},
 		// `src == nil` is the path the driver hits when the DB column holds NULL.
 		// It must decode to a nil map without touching the type assertion below.
 		{name: "nil src decodes to nil map", src: nil, wantMap: nil},
@@ -31,23 +29,23 @@ func TestJSON_Scan(t *testing.T) {
 			if err := j.Scan(tt.src); (err != nil) != tt.wantErr {
 				t.Errorf("Scan() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			assert.Equal(t, tt.wantMap, map[string]interface{}(*j))
+			assert.Equal(t, tt.wantMap, map[string]any(*j))
 		})
 	}
 }
 
-func testJSONSampleMap() map[string]interface{} {
-	return map[string]interface{}{
+func testJSONSampleMap() map[string]any {
+	return map[string]any{
 		"a": 123,
 		"b": "test",
-		"c": map[string]interface{}{
+		"c": map[string]any{
 			"nested": true,
 		},
 	}
 }
 
 func TestJSON_Value(t *testing.T) {
-	j := golang.Ptr(JSON(testJSONSampleMap()))
+	j := new(JSON(testJSONSampleMap()))
 	value, err := j.Value()
 	require.NoError(t, err)
 	valueBytes, ok := value.([]byte)

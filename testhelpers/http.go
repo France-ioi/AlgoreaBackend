@@ -73,7 +73,7 @@ func ValidateJSONContentType(resp *http.Response) error {
 // Note, that the request is made with a 5-second timeout.
 func VerifyTestHTTPRequestWithToken(t *testing.T, hookedAppServer *httptest.Server,
 	token string, expectedStatusCode int,
-	method string, path string, headers map[string][]string, body interface{},
+	method string, path string, headers map[string][]string, body any,
 ) {
 	t.Helper()
 

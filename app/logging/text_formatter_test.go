@@ -12,7 +12,7 @@ import (
 func makeLogEntryForTextFormatterTests() *logrus.Entry {
 	entry := logrus.NewEntry(logrus.New()).
 		WithTime(time.Date(2021, 1, 2, 3, 4, 5, 123456789, time.FixedZone("MyZone", 3*60*60))).
-		WithFields(map[string]interface{}{
+		WithFields(map[string]any{
 			"key1":     "line1\nline2",
 			"key2":     "line3\nline4",
 			"fileline": "myfile.go:12",

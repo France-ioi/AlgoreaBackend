@@ -18,7 +18,7 @@ import (
 // and shows a JSON formatted error to the user.
 type AppHandler func(http.ResponseWriter, *http.Request) error
 
-func apiErrorFromPanic(p interface{}) (apiErr *APIError, shouldLogError bool, errorToLog string) {
+func apiErrorFromPanic(p any) (apiErr *APIError, shouldLogError bool, errorToLog string) {
 	switch err := p.(type) {
 	case *APIError:
 		return err, false, ""

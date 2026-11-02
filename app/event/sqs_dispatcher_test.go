@@ -57,7 +57,7 @@ func TestSQSDispatcher_Dispatch_Success(t *testing.T) {
 		Type:      TypeSubmissionCreated,
 		SourceApp: SourceApp,
 		Time:      time.Now(),
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"author_id": int64(123),
 			"item_id":   int64(456),
 		},
@@ -89,7 +89,7 @@ func TestSQSDispatcher_Dispatch_Error(t *testing.T) {
 
 	event := &Event{
 		Type:    TypeSubmissionCreated,
-		Payload: map[string]interface{}{},
+		Payload: map[string]any{},
 	}
 
 	err := dispatcher.Dispatch(context.Background(), event)
@@ -104,7 +104,7 @@ func TestSQSDispatcher_Dispatch_MarshalError(t *testing.T) {
 	// Create an event with a payload that cannot be marshaled (channel type)
 	event := &Event{
 		Type: TypeSubmissionCreated,
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"channel": make(chan int), // channels cannot be JSON marshaled
 		},
 	}
@@ -133,7 +133,7 @@ func TestSQSDispatcher_Dispatch_UsesTimeout(t *testing.T) {
 
 	event := &Event{
 		Type:    TypeSubmissionCreated,
-		Payload: map[string]interface{}{},
+		Payload: map[string]any{},
 	}
 
 	err := dispatcher.Dispatch(context.Background(), event)

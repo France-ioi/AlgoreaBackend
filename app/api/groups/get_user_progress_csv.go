@@ -148,10 +148,7 @@ func (srv *Service) getUserProgressCSV(responseWriter http.ResponseWriter, httpR
 	}
 
 	for startFromUser := 0; startFromUser < len(userIDs); startFromUser += csvExportBatchSize {
-		batchBoundary := startFromUser + csvExportBatchSize
-		if batchBoundary > len(userIDs) {
-			batchBoundary = len(userIDs)
-		}
+		batchBoundary := min(startFromUser+csvExportBatchSize, len(userIDs))
 		userIDsList := strings.Join(userIDs[startFromUser:batchBoundary], ", ")
 		userNumber := startFromUser
 		service.MustNotBeError(
@@ -213,11 +210,11 @@ func processCSVResultRow(
 	groupNumber *int,
 	generateGroupNamesFunc func(groupID int64) []string,
 	csvWriter *csv.Writer,
-) func(m map[string]interface{}) error {
+) func(m map[string]any) error {
 	var rowArray []string
 	var cellsMap map[int64]string
 	currentRowNumber := 0
-	return func(rowMap map[string]interface{}) error {
+	return func(rowMap map[string]any) error {
 		var score string
 		if rowMap["score"] != nil {
 			score = fmt.Sprintf("%v", rowMap["score"])
@@ -247,7 +244,7 @@ func processCSVResultRow(
 	}
 }
 
-func joinUserProgressResultsForCSV(db *database.DB, userID interface{}) *database.DB {
+func joinUserProgressResultsForCSV(db *database.DB, userID any) *database.DB {
 	return db.
 		Joins(`
 			LEFT JOIN LATERAL (

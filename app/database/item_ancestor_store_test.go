@@ -20,7 +20,7 @@ func TestItemAncestorStore_DescendantsOf(t *testing.T) {
 		WithArgs(ancestorItemID).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	store := NewDataStore(db).ItemAncestors()
 	newStore := store.DescendantsOf(ancestorItemID)
 

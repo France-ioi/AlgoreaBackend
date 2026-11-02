@@ -119,7 +119,7 @@ func ApplySortingAndPaging(httpRequest *http.Request, query *database.DB, parame
 
 	query = applyOrder(query, usedFields, parameters.Fields, fieldsSortingTypes)
 
-	var fromValues map[string]interface{}
+	var fromValues map[string]any
 	if parameters.StartFromRowQuery == nil {
 		fromValues, err = ParsePagingParameters(httpRequest, parameters.TieBreakers)
 		if err != nil {
@@ -249,10 +249,10 @@ func applyOrder(query *database.DB, usedFields []string, configuredFields map[st
 }
 
 // ParsePagingParameters returns a map with values provided for paging in a request URL (none or all should be present).
-func ParsePagingParameters(httpRequest *http.Request, expectedFromFields map[string]FieldType) (map[string]interface{}, error) {
+func ParsePagingParameters(httpRequest *http.Request, expectedFromFields map[string]FieldType) (map[string]any, error) {
 	fromValueIsMissing := false
 	fromValueAccepted := false
-	fromValues := make(map[string]interface{}, len(expectedFromFields))
+	fromValues := make(map[string]any, len(expectedFromFields))
 
 	const fromPrefix = "from."
 	urlQuery := httpRequest.URL.Query()
@@ -272,7 +272,7 @@ func ParsePagingParameters(httpRequest *http.Request, expectedFromFields map[str
 	expectedFromFieldNames := make([]string, 0, len(expectedFromFields))
 	for fieldName, fieldType := range expectedFromFields {
 		expectedFromFieldNames = append(expectedFromFieldNames, fieldName)
-		var value interface{}
+		var value any
 		fromFieldName := fromPrefix + fieldName
 		if len(urlQuery[fromFieldName]) > 0 {
 			var err error
@@ -298,7 +298,7 @@ func ParsePagingParameters(httpRequest *http.Request, expectedFromFields map[str
 
 // getFromValueForField returns a 'from' value (a paging parameter) for a given field.
 // The value is converted according to fieldType.
-func getFromValueForField(httpRequest *http.Request, fieldName string, fieldType FieldType) (result interface{}, err error) {
+func getFromValueForField(httpRequest *http.Request, fieldName string, fieldType FieldType) (result any, err error) {
 	fromFieldName := "from." + fieldName
 	switch fieldType {
 	case FieldTypeString:
@@ -322,7 +322,7 @@ var safeColumnNameRegexp = regexp.MustCompile("[^a-zA-Z_0-9]")
 
 // applyPagingConditions adds filtering on paging values into the query.
 func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortingTypes map[string]sortingType,
-	configuredFields map[string]*FieldSortingParams, fromValues map[string]interface{}, startFromRowQuery *database.DB,
+	configuredFields map[string]*FieldSortingParams, fromValues map[string]any, startFromRowQuery *database.DB,
 ) *database.DB {
 	if startFromRowQuery == nil && len(fromValues) == 0 || startFromRowQuery == fromFirstRow {
 		return query
@@ -347,15 +347,15 @@ func applyPagingConditions(query *database.DB, usedFields []string, fieldsSortin
 }
 
 func constructPagingConditions(usedFields []string, configuredFields map[string]*FieldSortingParams,
-	subQueryNeeded bool, fieldsSortingTypes map[string]sortingType, fromValues map[string]interface{}) (
-	conditions []string, queryValues []interface{}, safeColumnNames []string,
+	subQueryNeeded bool, fieldsSortingTypes map[string]sortingType, fromValues map[string]any) (
+	conditions []string, queryValues []any, safeColumnNames []string,
 ) {
 	usedFieldsNumber := len(usedFields)
 	safeColumnNames = make([]string, usedFieldsNumber)
 	conditions = make([]string, 0, usedFieldsNumber)
-	queryValuesPart := make([]interface{}, 0, usedFieldsNumber)
+	queryValuesPart := make([]any, 0, usedFieldsNumber)
 	//nolint:mnd // sum of 1..usedFieldsNumber = usedFieldsNumber*(usedFieldsNumber+1)/2
-	queryValues = make([]interface{}, 0, (usedFieldsNumber+1)*usedFieldsNumber/2)
+	queryValues = make([]any, 0, (usedFieldsNumber+1)*usedFieldsNumber/2)
 	var conditionPrefix string
 
 	// Here we're constructing an expression like this one:
@@ -394,7 +394,7 @@ func constructPagingConditions(usedFields []string, configuredFields map[string]
 }
 
 func joinQueryForPaging(query *database.DB, usedFields []string, configuredFields map[string]*FieldSortingParams,
-	startFromRowQuery *database.DB, safeColumnNames []string, fromValues map[string]interface{}, conditions []string,
+	startFromRowQuery *database.DB, safeColumnNames []string, fromValues map[string]any, conditions []string,
 ) *database.DB {
 	if startFromRowQuery == nil {
 		startFromRowQuery = query

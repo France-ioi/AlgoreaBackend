@@ -58,7 +58,7 @@ func (srv *Service) getAnswer(responseWriter http.ResponseWriter, httpRequest *h
 	}
 
 	user := srv.GetUser(httpRequest)
-	var result []map[string]interface{}
+	var result []map[string]any
 
 	store := srv.GetStore(httpRequest)
 

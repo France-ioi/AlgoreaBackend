@@ -198,7 +198,7 @@ func (srv *Service) updateThread(responseWriter http.ResponseWriter, httpRequest
 
 	// Dispatch thread_status_changed event after transaction commits
 	if statusChanged {
-		event.Dispatch(httpRequest.Context(), event.TypeThreadStatusChanged, map[string]interface{}{
+		event.Dispatch(httpRequest.Context(), event.TypeThreadStatusChanged, map[string]any{
 			"participant_id":  strconv.FormatInt(participantID, 10),
 			"item_id":         strconv.FormatInt(itemID, 10),
 			"new_status":      newStatus,
@@ -219,7 +219,7 @@ func computeNewThreadData(
 	input updateThreadRequest,
 	itemID int64,
 	participantID int64,
-) map[string]interface{} {
+) map[string]any {
 	threadData := formData.ConstructPartialMapForDB("threadUpdateFields")
 	if formData.IsSet("message_count_increment") && input.MessageCountIncrement != nil {
 		threadData["message_count"] = newMessageCountWithIncrement(oldMessageCount, *input.MessageCountIncrement)
@@ -267,10 +267,7 @@ func checkUpdateThreadPermissions(
 
 func newMessageCountWithIncrement(oldMessageCount, increment int) int {
 	// if the thread doesn't exist, oldThread.MessageCount = 0
-	newMessageCount := oldMessageCount + increment
-	if newMessageCount < 0 {
-		newMessageCount = 0
-	}
+	newMessageCount := max(oldMessageCount+increment, 0)
 
 	return newMessageCount
 }

@@ -318,6 +318,7 @@ func getRootItemsFromDB(
 			attempts.ended_at`, groupID, hasVisibleChildrenQuery).
 		Group("groups.id, results.participant_id, results.attempt_id")
 
+	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
 	query := store.Raw(`
 		SELECT items.*, items.id AS item_id, COALESCE(user_strings.title, default_strings.title) AS title,
 			IF(user_strings.title IS NOT NULL, user_strings.language_tag, default_strings.language_tag) AS language_tag

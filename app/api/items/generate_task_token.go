@@ -169,12 +169,12 @@ func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRe
 
 	taskToken := &token.Token[payloads.TaskToken]{Payload: payloads.TaskToken{
 		AccessSolutions:    &accessSolutions,
-		SubmissionPossible: golang.Ptr(true),
+		SubmissionPossible: new(true),
 		HintsAllowed:       &itemInfo.HintsAllowed,
 		HintsRequested:     resultInfo.HintsRequested,
-		HintsGivenCount:    golang.Ptr(strconv.Itoa(int(resultInfo.HintsCachedCount))),
-		IsAdmin:            golang.Ptr(false),
-		ReadAnswers:        golang.Ptr(true),
+		HintsGivenCount:    new(strconv.Itoa(int(resultInfo.HintsCachedCount))),
+		IsAdmin:            new(false),
+		ReadAnswers:        new(true),
 		UserID:             strconv.FormatInt(user.GroupID, 10),
 		LocalItemID:        strconv.FormatInt(itemID, 10),
 		ItemID:             itemInfo.TextID,
@@ -188,7 +188,7 @@ func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRe
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	render.Respond(responseWriter, httpRequest, service.UpdateSuccess(map[string]interface{}{
+	render.Respond(responseWriter, httpRequest, service.UpdateSuccess(map[string]any{
 		"task_token": signedTaskToken,
 	}))
 	return nil

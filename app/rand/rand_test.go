@@ -6,9 +6,9 @@ import (
 	"math"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -52,14 +52,14 @@ func TestGetSource_SetSource(t *testing.T) {
 	Int63()
 	Float64()
 	oldSource := GetSource()
-	values := make([]interface{}, 0, 4)
+	values := make([]any, 0, 4)
 	values = append(values, Float64(), Int63(), Float64(), Int63())
 	SetSource(oldSource)
-	newValues := make([]interface{}, 0, 4)
+	newValues := make([]any, 0, 4)
 	newValues = append(newValues, Float64(), Int63(), Float64(), Int63())
 	assert.Equal(t, values, newValues)
 	SetSource(oldSource)
-	newValues = []interface{}{Float64(), Int63(), Float64(), Int63()}
+	newValues = []any{Float64(), Int63(), Float64(), Int63()}
 	assert.Equal(t, values, newValues)
 }
 

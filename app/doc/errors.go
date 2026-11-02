@@ -31,7 +31,7 @@ type badRequest struct {
 	Message string `json:"message"`
 	// In case of input data validation error, this may contain a map with, as key, the field in error
 	// and, as value, an array of strings describing errors in English.
-	Errors interface{} `json:"errors,omitempty"`
+	Errors any `json:"errors,omitempty"`
 }
 
 type unauthorized struct {

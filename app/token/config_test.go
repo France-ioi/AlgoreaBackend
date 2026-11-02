@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestBuildConfig_LoadsKeysFromFile(t *testing.T) {

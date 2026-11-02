@@ -162,7 +162,7 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 				(SELECT MAX(results.score_computed) AS best_score
 				FROM results
 				WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score,
-			child_order, 1 AS has_attempt`, []interface{}{groupID},
+			child_order, 1 AS has_attempt`, []any{groupID},
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items_items ON items_items.child_item_id = ? AND items_items.parent_item_id = items.id", childItemID)
 		},
@@ -171,6 +171,7 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 				Where("items_items.child_item_id = ?", childItemID)
 		})
 
+	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
 	itemsQuery := dataStore.Raw(`
 		SELECT items.*,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,

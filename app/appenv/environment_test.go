@@ -5,8 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestEnv_Prod(t *testing.T) {

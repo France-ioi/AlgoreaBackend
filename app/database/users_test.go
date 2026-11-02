@@ -25,7 +25,7 @@ func TestDB_WhereUsersAreDescendantsOfGroup(t *testing.T) {
 		WithArgs(groupID).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := db.Table("users").WhereUsersAreDescendantsOfGroup(groupID).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

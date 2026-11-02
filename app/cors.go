@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"slices"
 	"strings"
 
 	"github.com/go-chi/cors"
@@ -117,7 +118,7 @@ func resolveAllowedOrigins(corsConf *viper.Viper) []string {
 	raw := corsConf.GetStringSlice(allowedOriginsKey)
 	origins := make([]string, 0, len(raw))
 	for _, entry := range raw {
-		for _, piece := range strings.Split(entry, ",") {
+		for piece := range strings.SplitSeq(entry, ",") {
 			if piece = strings.TrimSpace(piece); piece != "" {
 				origins = append(origins, piece)
 			}
@@ -136,12 +137,7 @@ func resolveAllowedOrigins(corsConf *viper.Viper) []string {
 // refactor to slices.Contains without coordinating that change at the
 // project level.
 func containsString(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, s)
 }
 
 // isOnlyDisallowedSentinel reports whether the resolved list is exactly the

@@ -24,7 +24,7 @@ func TestDB_JoinsUserAndDefaultItemStrings(t *testing.T) {
 		WithArgs("sl").
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := db.Table("items").JoinsUserAndDefaultItemStrings(mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -45,7 +45,7 @@ func TestDB_WhereUserHasViewPermissionOnItems(t *testing.T) {
 		WithArgs(123, NewDataStore(db).PermissionsGranted().ViewIndexByName("content")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := db.Table("items").WhereUserHasViewPermissionOnItems(&User{GroupID: 123}, "content").
 		Scan(&result).Error()
 	assert.NoError(t, err)
@@ -67,7 +67,7 @@ func TestDB_WhereItemsAreVisible(t *testing.T) {
 		WithArgs(2, NewDataStore(db).PermissionsGranted().ViewIndexByName("info")).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := db.Table("items").WhereItemsAreVisible(2).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -90,7 +90,7 @@ func TestDB_WhereUserHaveStartedResultOnItem(t *testing.T) {
 		WithArgs(user.GroupID).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := db.Table("items").WhereItemHasResultStartedByUser(&user).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/France-ioi/mapstructure"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -18,6 +17,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -221,8 +221,8 @@ func TestDatabaseSessionParams(t *testing.T) {
 func TestDBConfig_UnmarshallingError(t *testing.T) {
 	// don't know if it is really possible to get this error
 	globalConfig := viper.New()
-	monkey.PatchInstanceMethod(reflect.TypeOf(globalConfig), "Unmarshal",
-		func(_ *viper.Viper, _ interface{}, _ ...viper.DecoderConfigOption) error {
+	monkey.PatchInstanceMethod(reflect.TypeFor[*viper.Viper](), "Unmarshal",
+		func(_ *viper.Viper, _ any, _ ...viper.DecoderConfigOption) error {
 			return errors.New("unmarshalling error")
 		},
 	)
@@ -234,7 +234,7 @@ func TestDBConfig_UnmarshallingError(t *testing.T) {
 func TestDBConfig_StructToMapError(t *testing.T) {
 	// unexpected error, must monkey patch it
 	globalConfig := viper.New()
-	monkey.Patch(mapstructure.Decode, func(_ interface{}, _ interface{}) error {
+	monkey.Patch(mapstructure.Decode, func(_ any, _ any) error {
 		return errors.New("struct2map error")
 	})
 	defer monkey.UnpatchAll()

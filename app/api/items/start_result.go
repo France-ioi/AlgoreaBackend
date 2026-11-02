@@ -156,5 +156,5 @@ func (srv *Service) startResult(responseWriter http.ResponseWriter, httpRequest 
 var onBeforeInsertingResultInResultStartHook atomic.Pointer[func()]
 
 func init() { //nolint:gochecknoinits // this is an initialization function to store the default hook
-	onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {}))
+	onBeforeInsertingResultInResultStartHook.Store(new(func() {}))
 }

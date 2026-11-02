@@ -90,7 +90,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		commonAttributes+
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
 			 IFNULL(?, 0) AS has_visible_children, child_order, items.display_settings`,
-		[]interface{}{hasVisibleChildrenQuery},
+		[]any{hasVisibleChildrenQuery},
 		"",
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items AS parent_item ON parent_item.id = ?", rootID).
@@ -134,11 +134,11 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 }
 
 func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
-	watchedGroupIDIsSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+	watchedGroupIDIsSet bool, watchedGroupID int64, columnList string, columnListValues []any,
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc func(*database.DB) *database.DB,
 ) *database.DB {
-	watchedGroupCanViewQuery := interface{}(gorm.Expr("NULL"))
-	watchedGroupAvgScoreQuery := interface{}(gorm.Expr("(SELECT NULL AS avg_score, NULL AS all_validated)"))
+	watchedGroupCanViewQuery := any(gorm.Expr("NULL"))
+	watchedGroupAvgScoreQuery := any(gorm.Expr("(SELECT NULL AS avg_score, NULL AS all_validated)"))
 	if watchedGroupIDIsSet {
 		watchedGroupCanViewQuery = dataStore.Permissions().
 			Joins("JOIN groups_ancestors_active ON groups_ancestors_active.ancestor_group_id = permissions.group_id").
@@ -162,7 +162,7 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 	}
 
 	//nolint:mnd // in the end, we append 4 more values
-	values := make([]interface{}, len(columnListValues), len(columnListValues)+4)
+	values := make([]any, len(columnListValues), len(columnListValues)+4)
 	copy(values, columnListValues)
 	canWatchResultEnumIndex := dataStore.PermissionsGranted().WatchIndexByName("result")
 	values = append(values, watchedGroupCanViewQuery, canWatchResultEnumIndex, canWatchResultEnumIndex, canWatchResultEnumIndex)
@@ -186,7 +186,7 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 }
 
 func constructItemListQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
-	watchedGroupIDIsSet bool, watchedGroupID int64, columnList string, columnListValues []interface{},
+	watchedGroupIDIsSet bool, watchedGroupID int64, columnList string, columnListValues []any,
 	externalColumnList string,
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB,
 ) *database.DB {
@@ -202,6 +202,7 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64, requir
 		Where("attempts.id = results.attempt_id")
 	attemptsQuery = filterAttemptsFunc(attemptsQuery)
 
+	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
 	itemsQuery := dataStore.Raw(`
 			SELECT items.*, `+externalColumnList+`results.attempt_id, attempts.id IS NOT NULL AS has_attempt,
 				results.score_computed, results.validated, results.started_at, results.latest_activity_at,

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 	_ "unsafe"
 
 	"github.com/stretchr/testify/assert"
@@ -412,19 +413,35 @@ func assertDrainTransactionIsolationReadCommitted(t *testing.T, store *database.
 
 	// SET TRANSACTION (used by database/sql BeginTx) does not change @@transaction_isolation;
 	// the live transaction level is on innodb_trx (needs PROCESS).
+	// innodb_trx is filled from a cache refreshed at most ~every 100ms, so poll past one
+	// refresh under package-test load before failing hard.
 	var isoRow struct {
 		Isolation string `gorm:"column:trx_isolation_level"`
 	}
-	err := store.Raw(`
-		SELECT trx_isolation_level
-		FROM information_schema.innodb_trx
-		WHERE trx_mysql_thread_id = CONNECTION_ID()`).Scan(&isoRow).Error()
-	if err != nil {
+	deadline := time.Now().Add(500 * time.Millisecond)
+	var lastErr error
+	for {
+		err := store.Raw(`
+			SELECT trx_isolation_level
+			FROM information_schema.innodb_trx
+			WHERE trx_mysql_thread_id = CONNECTION_ID()`).Scan(&isoRow).Error()
+		if err == nil {
+			assert.Equal(t, "READ COMMITTED", isoRow.Isolation)
+			return
+		}
 		if strings.Contains(err.Error(), "Access denied") || strings.Contains(err.Error(), "1227") {
 			t.Logf("skipping READ COMMITTED assertion (need PROCESS for innodb_trx): %v", err)
 			return
 		}
-		require.NoError(t, err)
+		if !strings.Contains(err.Error(), "record not found") {
+			require.NoError(t, err)
+			return
+		}
+		lastErr = err
+		if time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
-	assert.Equal(t, "READ COMMITTED", isoRow.Isolation)
+	require.NoError(t, lastErr, "innodb_trx row missing for CONNECTION_ID after waiting for cache refresh")
 }

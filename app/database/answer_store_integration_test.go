@@ -3,15 +3,12 @@
 package database_test
 
 import (
-	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -85,7 +82,7 @@ func TestAnswerStore_CreateNewAnswer(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	answerStore := database.NewDataStore(db).Answers()
-	newID, err := answerStore.CreateNewAnswer(int64(122), int64(121), int64(56), int64(456), "Saved", "answer", golang.Ptr("State"))
+	newID, err := answerStore.CreateNewAnswer(int64(122), int64(121), int64(56), int64(456), "Saved", "answer", new("State"))
 	require.NoError(t, err)
 	require.NotZero(t, newID)
 
@@ -129,11 +126,11 @@ func TestAnswerStore_CreateNewAnswer_Duplicate(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	var nextID int64
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(_ *database.DataStore) int64 {
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 {
 		nextID++
 		return nextID
 	})
-	defer monkey.UnpatchAll()
+	defer restoreNewID()
 
 	answerStore := database.NewDataStore(db).Answers()
 	newID, err := answerStore.CreateNewAnswer(int64(121), int64(121), int64(56), int64(456), "Saved", "my answer", nil)

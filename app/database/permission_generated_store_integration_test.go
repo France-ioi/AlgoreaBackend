@@ -35,11 +35,11 @@ func TestPermissionGeneratedStore_MatchingUserAncestors(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	permissionsStore := database.NewDataStore(db).Permissions()
-	var result []map[string]interface{}
+	var result []map[string]any
 	require.NoError(t, permissionsStore.MatchingUserAncestors(&database.User{GroupID: 5}).
 		Select("item_id, can_view_generated").
 		ScanIntoSliceOfMaps(&result).Error())
-	assert.Equal(t, []map[string]interface{}{
+	assert.Equal(t, []map[string]any{
 		{"item_id": int64(2), "can_view_generated": "none"},
 		{"item_id": int64(3), "can_view_generated": "content"},
 		{"item_id": int64(2), "can_view_generated": "solution"},
@@ -111,7 +111,7 @@ func TestPermissionGeneratedStore_TriggerAfterInsert_MarksResultsAsChanged(t *te
 			assert.NoError(t, dataStore.InTransaction(func(store *database.DataStore) error {
 				return store.GroupGroups().CreateNewAncestors()
 			}))
-			assert.NoError(t, dataStore.InsertMap(map[string]interface{}{
+			assert.NoError(t, dataStore.InsertMap(map[string]any{
 				"group_id": test.groupID, "item_id": test.itemID, "can_view_generated": test.canView,
 			}))
 
@@ -217,7 +217,7 @@ func TestPermissionGeneratedStore_TriggerAfterUpdate_MarksResultsAsChanged(t *te
 				return store.GroupGroups().CreateNewAncestors()
 			}))
 			result := dataStore.Where("group_id = ?", test.groupID).
-				Where("item_id = ?", test.itemID).UpdateColumn(map[string]interface{}{
+				Where("item_id = ?", test.itemID).UpdateColumn(map[string]any{
 				"can_view_generated": test.canView,
 			})
 			require.NoError(t, result.Error())

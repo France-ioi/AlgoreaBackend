@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -25,12 +26,12 @@ import (
 
 // FormData can parse JSON, validate it and construct a map for updating DB.
 type FormData struct {
-	definitionStructure interface{}
+	definitionStructure any
 	fieldErrors         FieldErrorsError
 	metadata            mapstructure.Metadata
 	usedKeys            map[string]bool
 	decodeErrors        map[string]bool
-	oldValues           interface{}
+	oldValues           any
 	allowUnknownFields  bool
 
 	validate *validator.Validate
@@ -44,7 +45,7 @@ const (
 )
 
 // NewFormData creates a new FormData object for given definitions.
-func NewFormData(definitionStructure interface{}) *FormData {
+func NewFormData(definitionStructure any) *FormData {
 	// Initialize go-playground/validator
 	validate := validator.New()
 
@@ -61,10 +62,8 @@ func NewFormData(definitionStructure interface{}) *FormData {
 		if name == "-" {
 			return ""
 		}
-		for i := range parts {
-			if parts[i] == squash {
-				return "<squash>"
-			}
+		if slices.Contains(parts, squash) {
+			return "<squash>"
 		}
 		return name
 	})
@@ -117,7 +116,7 @@ func (f *FormData) RegisterTranslation(tag, text string) {
 }
 
 // SetOldValues sets the internal pointer to the structure containing old values for validation.
-func (f *FormData) SetOldValues(oldValues interface{}) {
+func (f *FormData) SetOldValues(oldValues any) {
 	f.oldValues = oldValues
 }
 
@@ -137,21 +136,21 @@ func (f *FormData) ParseJSONRequestData(r *http.Request) error {
 }
 
 // ParseMapData parses and validates map[string]interface{} according to the structure definition.
-func (f *FormData) ParseMapData(m map[string]interface{}) error {
+func (f *FormData) ParseMapData(m map[string]any) error {
 	f.decodeMapIntoStruct(m)
 	return f.checkAndValidate()
 }
 
 // ConstructMapForDB constructs a map for updating DB. It uses both the definition and the JSON input.
-func (f *FormData) ConstructMapForDB() map[string]interface{} {
-	result := map[string]interface{}{}
+func (f *FormData) ConstructMapForDB() map[string]any {
+	result := map[string]any{}
 	f.addDBFieldsIntoMap(result, reflect.ValueOf(f.definitionStructure), "")
 	return result
 }
 
 // ConstructPartialMapForDB constructs a map for updating DB. It uses both the definition and the JSON input.
-func (f *FormData) ConstructPartialMapForDB(part string) map[string]interface{} {
-	result := map[string]interface{}{}
+func (f *FormData) ConstructPartialMapForDB(part string) map[string]any {
+	result := map[string]any{}
 	partField := reflect.ValueOf(f.definitionStructure).Elem().FieldByName(part)
 	partFieldType, _ := reflect.TypeOf(f.definitionStructure).Elem().FieldByName(part)
 	prefix := getJSONFieldName(&partFieldType)
@@ -218,7 +217,7 @@ var (
 )
 
 func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
-	var rawData map[string]interface{}
+	var rawData map[string]any
 	defer func() { _, _ = io.Copy(io.Discard, r.Body) }()
 	err := json.NewDecoder(r.Body).Decode(&rawData)
 	if err != nil {
@@ -228,7 +227,7 @@ func (f *FormData) decodeRequestJSONDataIntoStruct(r *http.Request) error {
 	return nil
 }
 
-func (f *FormData) decodeMapIntoStruct(dataMap map[string]interface{}) {
+func (f *FormData) decodeMapIntoStruct(dataMap map[string]any) {
 	f.fieldErrors = make(FieldErrorsError)
 	f.usedKeys = make(map[string]bool)
 	f.decodeErrors = make(map[string]bool)
@@ -329,7 +328,7 @@ func (f *FormData) checkProvidedFields() {
 	}
 }
 
-func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValue reflect.Value, prefix string) {
+func (f *FormData) addDBFieldsIntoMap(resultMap map[string]any, reflValue reflect.Value, prefix string) {
 	traverseStructure(func(field reflect.Value, structField reflect.StructField, jsonName string) bool {
 		if _, ok := f.usedKeys[jsonName]; !ok {
 			return false
@@ -338,8 +337,8 @@ func (f *FormData) addDBFieldsIntoMap(resultMap map[string]interface{}, reflValu
 		dbName := gorm.ToColumnName(structField.Name)
 
 		for _, str := range []string{structField.Tag.Get("sql"), structField.Tag.Get("gorm")} {
-			keyValuePairs := strings.Split(str, ";")
-			for _, keyValuePair := range keyValuePairs {
+			keyValuePairs := strings.SplitSeq(str, ";")
+			for keyValuePair := range keyValuePairs {
 				keyValueSplit := strings.Split(keyValuePair, ":")
 				key := strings.TrimSpace(keyValueSplit[0])
 				if key == "-" {
@@ -421,7 +420,7 @@ func getJSONSquash(structField *reflect.StructField) bool {
 	return false
 }
 
-func getFieldValueByStructPath(value reflect.Value, structPath string) interface{} {
+func getFieldValueByStructPath(value reflect.Value, structPath string) any {
 	if !value.IsValid() {
 		return nil
 	}
@@ -455,8 +454,8 @@ func toAnythingHookFunc() mapstructure.DecodeHookFunc {
 	return func(
 		from reflect.Type,
 		to reflect.Type,
-		data interface{},
-	) (interface{}, error) {
+		data any,
+	) (any, error) {
 		if to.Name() != "Anything" || to.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/formdata" {
 			return data, nil
 		}
@@ -476,8 +475,8 @@ func stringToInt64HookFunc() mapstructure.DecodeHookFunc {
 	return func(
 		f reflect.Type,
 		t reflect.Type,
-		data interface{},
-	) (interface{}, error) {
+		data any,
+	) (any, error) {
 		if t.Kind() != reflect.Int64 || f.Kind() != reflect.String {
 			return data, nil
 		}
@@ -493,12 +492,12 @@ func stringToDatabaseTimeUTCHookFunc(layout string) mapstructure.DecodeHookFunc 
 	return func(
 		from reflect.Type,
 		to reflect.Type,
-		data interface{},
-	) (interface{}, error) {
+		data any,
+	) (any, error) {
 		if from.Kind() != reflect.String || to.Name() != "Time" || to.PkgPath() != "github.com/France-ioi/AlgoreaBackend/v2/app/database" {
 			return data, nil
 		}
-		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, from, reflect.TypeOf((*time.Time)(nil)).Elem(), data)
+		converted, err := mapstructure.DecodeHookExec(timeDecodeFunc, from, reflect.TypeFor[time.Time](), data)
 		if err != nil {
 			return nil, err
 		}

@@ -6,9 +6,9 @@ import (
 	"sync"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -28,7 +28,7 @@ func TestItemItemStore_ChildrenOf(t *testing.T) {
 	assert.NotEqual(t, store, newStore)
 	assert.Equal(t, "items_items", newStore.tableName)
 
-	var result []interface{}
+	var result []any
 	err := newStore.Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -70,7 +70,7 @@ func TestItemItemStore_PropagationEnums(t *testing.T) {
 
 			ClearAllDBEnums()
 			var oldLock *monkey.PatchGuard
-			oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
+			oldLock = monkey.PatchInstanceMethod(reflect.TypeFor[*sync.RWMutex](), "Lock", func(mutex *sync.RWMutex) {
 				oldLock.Unpatch()
 				fakeDBEnums(test.columnName, test.name2index, test.index2name)
 				mutex.Lock()

@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -92,7 +92,7 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 	shutdownCalledCh := make(chan struct{})
 
 	monkey.PatchInstanceMethod(
-		reflect.TypeOf(&http.Server{}), //nolint:gosec // the instance of http.Server will never be used
+		reflect.TypeFor[*http.Server](),
 		"ListenAndServe", func(_ *http.Server) error {
 			err = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 			assert.NoError(t, err)
@@ -105,7 +105,7 @@ func TestServer_Start_HandlesKillingAfterListenerError(t *testing.T) {
 		})
 	var shutdownGuard *monkey.PatchGuard
 	shutdownGuard = monkey.PatchInstanceMethod(
-		reflect.TypeOf(&http.Server{}), //nolint:gosec // the instance of http.Server will never be used
+		reflect.TypeFor[*http.Server](),
 		"Shutdown", func(srv *http.Server, ctx context.Context) error {
 			close(shutdownCalledCh)
 			shutdownGuard.Unpatch()
@@ -165,7 +165,7 @@ func TestServer_Start_HandlesShutdownError_OnKilling(t *testing.T) {
 	expectedError := errors.New("some error")
 	var patchGuard *monkey.PatchGuard
 	patchGuard = monkey.PatchInstanceMethod(
-		reflect.TypeOf(&http.Server{}), //nolint:gosec // the instance of http.Server will never be used
+		reflect.TypeFor[*http.Server](),
 		"Shutdown",
 		func(server *http.Server, ctx context.Context) error {
 			patchGuard.Unpatch()

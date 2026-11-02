@@ -23,7 +23,7 @@ type sqlConnWrapper struct {
 // The args are for any placeholder parameters in the query.
 //
 // Exec uses the context of [sqlConnWrapper] internally.
-func (c *sqlConnWrapper) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+func (c *sqlConnWrapper) Exec(query string, args ...any) (result sql.Result, err error) {
 	return execCallingExecContext(c.ctx, c.logConfig, c, c.conn, query, args...)
 }
 

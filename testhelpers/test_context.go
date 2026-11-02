@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"sort"
 
-	"bou.ke/monkey"
 	"github.com/CloudyKit/jet"
 	"github.com/cucumber/godog"
 	_ "github.com/go-sql-driver/mysql" // use to force database/sql to use mysql
@@ -19,6 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 // TestContext implements context for tests.

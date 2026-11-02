@@ -94,7 +94,7 @@ func TestCheckInt64JsonHasStringTag(t *testing.T) {
 
 	tests := []struct {
 		name                string
-		definitionStructure interface{}
+		definitionStructure any
 		shouldPanic         bool
 	}{
 		{
@@ -217,7 +217,7 @@ func TestCheckInt64JsonHasStringTag(t *testing.T) {
 		},
 		{
 			name: "should panic with top-level map containing invalid structures",
-			definitionStructure: map[string]interface{}{
+			definitionStructure: map[string]any{
 				"a": structTypeInvalid{
 					A:  false,
 					ID: 1,
@@ -231,7 +231,7 @@ func TestCheckInt64JsonHasStringTag(t *testing.T) {
 		},
 		{
 			name: "should pass with top-level map containing valid structures",
-			definitionStructure: map[string]interface{}{
+			definitionStructure: map[string]any{
 				"a": structTypeValid{
 					A:  false,
 					ID: 1,

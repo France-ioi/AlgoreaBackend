@@ -4,10 +4,8 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
-	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -159,11 +157,12 @@ func Test_mysqlConnWrapper_ResetSession_ReappliesSessionParams(t *testing.T) {
 	}
 
 	var resetCalled bool
-	monkey.PatchInstanceMethod(reflect.TypeOf(conn), "Reset", func(_ *mysqlConnWrapper, _ context.Context) error {
+	oldReset := mysqlConnReset
+	mysqlConnReset = func(_ *mysqlConnWrapper, _ context.Context) error {
 		resetCalled = true
 		return nil
-	})
-	defer monkey.UnpatchAll()
+	}
+	defer func() { mysqlConnReset = oldReset }()
 
 	require.NoError(t, conn.ResetSession(ctx))
 	assert.True(t, resetCalled)
@@ -181,10 +180,11 @@ func Test_mysqlConnWrapper_ResetSession_ReturnsErrBadConnOnResetError(t *testing
 	}
 
 	expected := errors.New("reset failed")
-	monkey.PatchInstanceMethod(reflect.TypeOf(conn), "Reset", func(_ *mysqlConnWrapper, _ context.Context) error {
+	oldReset := mysqlConnReset
+	mysqlConnReset = func(_ *mysqlConnWrapper, _ context.Context) error {
 		return expected
-	})
-	defer monkey.UnpatchAll()
+	}
+	defer func() { mysqlConnReset = oldReset }()
 
 	err := conn.ResetSession(ctx)
 	require.Error(t, err)
@@ -206,10 +206,11 @@ func Test_mysqlConnWrapper_ResetSession_ReturnsErrBadConnOnApplyError(t *testing
 		sessionParams: map[string]string{"innodb_lock_wait_timeout": "5"},
 	}
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(conn), "Reset", func(_ *mysqlConnWrapper, _ context.Context) error {
+	oldReset := mysqlConnReset
+	mysqlConnReset = func(_ *mysqlConnWrapper, _ context.Context) error {
 		return nil
-	})
-	defer monkey.UnpatchAll()
+	}
+	defer func() { mysqlConnReset = oldReset }()
 
 	err := conn.ResetSession(ctx)
 	require.Error(t, err)

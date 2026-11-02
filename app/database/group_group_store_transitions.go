@@ -320,8 +320,8 @@ type GroupApprovals struct {
 
 // FromString initializes GroupApprovals from the given comma-separated list of approvals.
 func (approvals *GroupApprovals) FromString(s string) {
-	approvalsList := strings.Split(s, ",")
-	for _, approval := range approvalsList {
+	approvalsList := strings.SplitSeq(s, ",")
+	for approval := range approvalsList {
 		switch approval {
 		case "personal_info_view":
 			approvals.PersonalInfoViewApproval = true
@@ -498,7 +498,7 @@ func insertRelations(dataStore *DataStore, idsToInsertRelation *golang.Set[int64
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertRelation)-1) +
 			valuesTemplate // #nosec
 		insertQuery += " ON DUPLICATE KEY UPDATE expires_at = '9999-12-31 23:59:59'"
-		values := make([]interface{}, 0, len(idsToInsertRelation)*5) //nolint:mnd // 5 values per row
+		values := make([]any, 0, len(idsToInsertRelation)*5) //nolint:mnd // 5 values per row
 		for _, id := range idsToInsertRelation {
 			personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt := resolveApprovalTimesForGroupsGroups(
 				oldStatesMap, id, approvals,
@@ -550,7 +550,7 @@ func enforceMaxSize(dataStore *DataStore, action GroupGroupTransitionAction, par
 }
 
 func resolveApprovalTimesForGroupsGroups(oldStatesMap map[int64]stateInfo, groupID int64, approvals map[int64]GroupApprovals) (
-	personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt interface{},
+	personalInfoViewApprovedAt, lockMembershipApprovedAt, watchApprovedAt any,
 ) {
 	personalInfoViewApprovedAt = gorm.Expr("NULL")
 	lockMembershipApprovedAt = gorm.Expr("NULL")
@@ -585,7 +585,7 @@ func insertGroupPendingRequests(dataStore *DataStore, idsToInsertPending map[int
 		insertQuery += " VALUES " +
 			strings.Repeat(valuesTemplate+", ", len(idsToInsertPending)-1) +
 			valuesTemplate // #nosec
-		values := make([]interface{}, 0, len(idsToInsertPending)*6) //nolint:mnd // 6 values per row
+		values := make([]any, 0, len(idsToInsertPending)*6) //nolint:mnd // 6 values per row
 		for id, groupMembershipAction := range idsToInsertPending {
 			values = append(values, parentGroupID, id, groupMembershipAction.PendingType(),
 				approvals[id].PersonalInfoViewApproval, approvals[id].LockMembershipApproval,
@@ -606,7 +606,7 @@ func insertGroupMembershipChanges(dataStore *DataStore, idsChanged map[int64]Gro
 			strings.Repeat(valuesTemplate+", ", len(idsChanged)-1) +
 			valuesTemplate // #nosec
 		mustNotBeError(dataStore.retryOnDuplicatePrimaryKeyError("group_membership_changes", func(db *DB) error {
-			values := make([]interface{}, 0, len(idsChanged)*paramsCount)
+			values := make([]any, 0, len(idsChanged)*paramsCount)
 			for id, toAction := range idsChanged {
 				values = append(values, parentGroupID, id, toAction[strings.LastIndex(string(toAction), ",")+1:], performedByUserID)
 			}

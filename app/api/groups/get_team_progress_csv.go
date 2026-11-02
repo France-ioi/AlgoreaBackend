@@ -131,10 +131,7 @@ func (srv *Service) getTeamProgressCSV(responseWriter http.ResponseWriter, httpR
 	}
 
 	for startFromTeam := 0; startFromTeam < len(teamIDs); startFromTeam += csvExportBatchSize {
-		batchBoundary := startFromTeam + csvExportBatchSize
-		if batchBoundary > len(teamIDs) {
-			batchBoundary = len(teamIDs)
-		}
+		batchBoundary := min(startFromTeam+csvExportBatchSize, len(teamIDs))
 		teamIDsList := strings.Join(teamIDs[startFromTeam:batchBoundary], ", ")
 		teamNumber := startFromTeam
 		service.MustNotBeError(store.Raw(`

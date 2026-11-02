@@ -32,8 +32,8 @@ func RenderGroupGroupTransitionResult(
 	case database.Full:
 		return service.ErrConflict(errors.New("the group is full"))
 	case database.ApprovalsMissing:
-		errorResponse := &service.ErrorResponse[map[string]interface{}]{
-			Response: service.Response[map[string]interface{}]{
+		errorResponse := &service.ErrorResponse[map[string]any]{
+			Response: service.Response[map[string]any]{
 				HTTPStatusCode: http.StatusUnprocessableEntity,
 				Success:        false,
 				Message:        "Unprocessable Entity",
@@ -42,7 +42,7 @@ func RenderGroupGroupTransitionResult(
 			Errors:    nil,
 		}
 		if approvalsToRequest != (database.GroupApprovals{}) {
-			errorResponse.Data = map[string]interface{}{"missing_approvals": approvalsToRequest.ToArray()}
+			errorResponse.Data = map[string]any{"missing_approvals": approvalsToRequest.ToArray()}
 		}
 		service.MustNotBeError(render.Render(responseWriter, httpRequest, errorResponse))
 		return nil

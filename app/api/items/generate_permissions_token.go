@@ -84,7 +84,7 @@ func (srv *Service) generatePermissionsToken(responseWriter http.ResponseWriter,
 	}}).Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"permissions_token": permissionsToken,
 		"expires_in":        expiresIn,
 	})))

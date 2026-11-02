@@ -4,6 +4,7 @@ package testhelpers
 
 import (
 	"bytes"
+	"maps"
 	"net/http"
 	"net/url"
 
@@ -40,9 +41,7 @@ func (ctx *TestContext) stubOAuth2RequestToLoginModule(requestParams url.Values,
 	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
 	responder := httpmock.NewStringResponder(statusCode, body)
 	params := make(url.Values, len(requestParams))
-	for key, values := range requestParams {
-		params[key] = values
-	}
+	maps.Copy(params, requestParams)
 	params.Set("client_id", ctx.appAuthConfig().GetString("ClientID"))
 	params.Set("client_secret", ctx.appAuthConfig().GetString("ClientSecret"))
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("POST",

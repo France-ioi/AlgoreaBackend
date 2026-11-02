@@ -109,7 +109,7 @@ func (srv *Service) createAttempt(responseWriter http.ResponseWriter, httpReques
 	})
 	service.MustNotBeError(err)
 
-	render.Respond(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	render.Respond(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"id": strconv.FormatInt(attemptID, 10),
 	}))
 	return nil

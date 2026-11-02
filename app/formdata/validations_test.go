@@ -71,8 +71,8 @@ func Test_validateNull(t *testing.T) {
 	}{
 		{name: "nil", fl: &FieldLevel{FieldValue: nil}, want: true},
 		{name: "nil pointer", fl: &FieldLevel{FieldValue: (*string)(nil)}, want: true},
-		{name: "nil interface", fl: &FieldLevel{FieldValue: interface{}(nil)}, want: true},
-		{name: "nil interface of pointer", fl: &FieldLevel{FieldValue: interface{}((*string)(nil))}, want: true},
+		{name: "nil interface", fl: &FieldLevel{FieldValue: any(nil)}, want: true},
+		{name: "nil interface of pointer", fl: &FieldLevel{FieldValue: any((*string)(nil))}, want: true},
 		{name: "empty string", fl: &FieldLevel{FieldValue: ""}, want: false},
 	}
 	for _, tt := range tests {
@@ -87,7 +87,7 @@ func Test_validateNull(t *testing.T) {
 // FieldLevel contains all the information and helper functions
 // to validate a field.
 type FieldLevel struct {
-	FieldValue interface{}
+	FieldValue any
 }
 
 func (fl *FieldLevel) Top() reflect.Value      { return reflect.ValueOf(nil) }

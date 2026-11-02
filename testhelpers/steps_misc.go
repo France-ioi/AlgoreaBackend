@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/cucumber/godog"
 	"github.com/go-chi/chi"
 	"github.com/spf13/viper"
@@ -23,6 +22,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 // TimeNow stubs time.Now and mocks the DB function NOW() with the provided time.
@@ -73,7 +73,7 @@ func (ctx *TestContext) TheGeneratedGroupCodeIs(generatedCode string) error {
 func (ctx *TestContext) TheGeneratedGroupCodesAre(generatedCodes string) error {
 	ctx.generatedGroupCodeIndex = -1
 	var parsedGeneratedCode []string
-	if err := json.Unmarshal([]byte(fmt.Sprintf("[%s]", generatedCodes)), &parsedGeneratedCode); err != nil {
+	if err := json.Unmarshal(fmt.Appendf(nil, "[%s]", generatedCodes), &parsedGeneratedCode); err != nil {
 		return err
 	}
 	monkey.Patch(groups.GenerateGroupCode, func() (string, error) {
@@ -131,7 +131,7 @@ func (ctx *TestContext) SignedTokenIsDistributed(
 
 	data := ctx.preprocessString(jsonPayload.Content)
 
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal([]byte(data), &payload); err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (ctx *TestContext) FalsifiedSignedTokenIsDistributed(
 
 	data := ctx.preprocessString(jsonPayload.Content)
 
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal([]byte(data), &payload); err != nil {
 		return err
 	}

@@ -9,42 +9,42 @@ import (
 func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 	tests := []struct {
 		name  string
-		dbMap []map[string]interface{}
-		want  []map[string]interface{}
+		dbMap []map[string]any
+		want  []map[string]any
 	}{
 		{
 			"nested structures",
-			[]map[string]interface{}{{
+			[]map[string]any{{
 				"User__ID":            int64(1),
 				"Item__String__Title": "Chapter 1",
 				"Item__String__ID":    "2",
 			}},
-			[]map[string]interface{}{
+			[]map[string]any{
 				{
-					"User": map[string]interface{}{"ID": "1"},
-					"Item": map[string]interface{}{"String": map[string]interface{}{"Title": "Chapter 1", "ID": "2"}},
+					"User": map[string]any{"ID": "1"},
+					"Item": map[string]any{"String": map[string]any{"Title": "Chapter 1", "ID": "2"}},
 				},
 			},
 		},
 		{
 			"keeps nil fields",
-			[]map[string]interface{}{{"TheGreatestUser": nil, "otherField": 1}},
-			[]map[string]interface{}{{"TheGreatestUser": nil, "otherField": 1}},
+			[]map[string]any{{"TheGreatestUser": nil, "otherField": 1}},
+			[]map[string]any{{"TheGreatestUser": nil, "otherField": 1}},
 		},
 		{
 			"replaces empty sub-maps with nils",
-			[]map[string]interface{}{{"the_greatest_user": nil, "empty_sub_map__field1": nil, "empty_sub_map__field2": nil}},
-			[]map[string]interface{}{{"the_greatest_user": nil, "empty_sub_map": nil}},
+			[]map[string]any{{"the_greatest_user": nil, "empty_sub_map__field1": nil, "empty_sub_map__field2": nil}},
+			[]map[string]any{{"the_greatest_user": nil, "empty_sub_map": nil}},
 		},
 		{
 			"converts int64 into string",
-			[]map[string]interface{}{{
+			[]map[string]any{{
 				"int64":             int64(123),
 				"int32":             int32(1234),
 				"nbCorrectionsRead": int64(12345),
 				"iGrade":            int64(-1),
 			}}, // gorm returns numbers as int64
-			[]map[string]interface{}{{
+			[]map[string]any{{
 				"int64":             "123",
 				"int32":             int32(1234),
 				"nbCorrectionsRead": "12345",
@@ -53,11 +53,11 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 		},
 		{
 			"handles datetime",
-			[]map[string]interface{}{{
+			[]map[string]any{{
 				"my_date":   "2019-05-30 11:00:00",
 				"null_date": nil,
 			}},
-			[]map[string]interface{}{{
+			[]map[string]any{{
 				"my_date":   "2019-05-30T11:00:00Z",
 				"null_date": nil,
 			}},
@@ -73,6 +73,6 @@ func TestConvertSliceOfMapsFromDBToJSON(t *testing.T) {
 
 func TestConvertSliceOfMapsFromDBToJSON_PanicsWhenDatetimeIsInvalid(t *testing.T) {
 	assert.Panics(t, func() {
-		ConvertSliceOfMapsFromDBToJSON([]map[string]interface{}{{"some_date": "1234:13:05 24:60:60"}})
+		ConvertSliceOfMapsFromDBToJSON([]map[string]any{{"some_date": "1234:13:05 24:60:60"}})
 	})
 }

@@ -123,7 +123,7 @@ func (srv *Service) updateItemString(responseWriter http.ResponseWriter, httpReq
 	return nil
 }
 
-func updateItemStringData(store *database.DataStore, itemID int64, languageTag string, dbMap map[string]interface{}) {
+func updateItemStringData(store *database.DataStore, itemID int64, languageTag string, dbMap map[string]any) {
 	if len(dbMap) == 0 {
 		return
 	}

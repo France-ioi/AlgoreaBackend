@@ -12,7 +12,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloads"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // swagger:operation POST /answers/{answer_id}/generate-task-token answers answerTaskTokenGenerate
@@ -175,12 +174,12 @@ func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRe
 
 	taskToken := token.Token[payloads.TaskToken]{Payload: payloads.TaskToken{
 		AccessSolutions:    &accessSolutions,
-		SubmissionPossible: golang.Ptr(false),
-		HintsAllowed:       golang.Ptr(false),
+		SubmissionPossible: new(false),
+		HintsAllowed:       new(false),
 		HintsRequested:     answerInfos.HintsRequested,
-		HintsGivenCount:    golang.Ptr(strconv.Itoa(int(answerInfos.HintsCachedCount))),
-		IsAdmin:            golang.Ptr(false),
-		ReadAnswers:        golang.Ptr(true),
+		HintsGivenCount:    new(strconv.Itoa(int(answerInfos.HintsCachedCount))),
+		IsAdmin:            new(false),
+		ReadAnswers:        new(true),
 		UserID:             strconv.FormatInt(answerInfos.AuthorID, 10),
 		LocalItemID:        strconv.FormatInt(answerInfos.ItemID, 10),
 		ItemID:             answerInfos.TextID,
@@ -194,7 +193,7 @@ func (srv *Service) generateTaskToken(responseWriter http.ResponseWriter, httpRe
 	signedTaskToken, err := taskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	render.Respond(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	render.Respond(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"task_token": signedTaskToken,
 	}))
 	return nil

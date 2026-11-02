@@ -4,6 +4,6 @@ package items
 
 import "github.com/France-ioi/AlgoreaBackend/v2/app/database"
 
-func GetDataForResultPathStart(store *database.DataStore, participantID int64, ids []int64) []map[string]interface{} {
+func GetDataForResultPathStart(store *database.DataStore, participantID int64, ids []int64) []map[string]any {
 	return getDataForResultPathStart(store, participantID, ids)
 }

@@ -72,7 +72,7 @@ func UnchangedSuccess(httpStatus int) render.Renderer {
 // AppResponder serializes the output of services.
 // Whenever in test env, it also checks that all int64/uint64 are serialized as strings,
 // otherwise, it breaks javascript that tries to convert them as floats.
-func AppResponder(w http.ResponseWriter, r *http.Request, v interface{}) {
+func AppResponder(w http.ResponseWriter, r *http.Request, v any) {
 	if appenv.IsEnvTest() {
 		CheckInt64JsonHasStringTag(v)
 	}
@@ -84,7 +84,7 @@ func AppResponder(w http.ResponseWriter, r *http.Request, v interface{}) {
 // which are int64/uint64, and are exported as JSON, also have the "string" tag.
 // Otherwise, it breaks javascript that tries to convert them as floats.
 // This function is only intended to be used in test env, and panics if the checks fail.
-func CheckInt64JsonHasStringTag(obj interface{}) {
+func CheckInt64JsonHasStringTag(obj any) {
 	checkInt64JsonHasStringTag(reflect.ValueOf(obj))
 }
 

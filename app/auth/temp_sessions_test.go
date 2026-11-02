@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestCreateNewTempSession_PanicsGeneratorError(t *testing.T) {
@@ -34,9 +34,9 @@ const expectedAccessToken = "tmp-04abcdefghijklmnopqrstuvwxyz"
 func TestCreateNewTempSession_HandlesDBError_WhenCreatingSessions(t *testing.T) {
 	expectedSessionID := int64(12345)
 	monkey.Patch(GenerateKey, func() (string, error) { return expectedAccessToken, nil })
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID",
-		func(_ *database.DataStore) int64 { return expectedSessionID })
 	defer monkey.UnpatchAll()
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 { return expectedSessionID })
+	defer restoreNewID()
 
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -45,9 +45,9 @@ func TestCreateNewTempSession_HandlesDBError_WhenCreatingSessions(t *testing.T) 
 	expectedError := errors.New("some error")
 	dataStore := database.NewDataStore(db)
 
-	patch := monkey.PatchInstanceMethod(reflect.TypeOf(dataStore), "InsertMap",
-		func(_ *database.DataStore, row map[string]interface{}) error {
-			require.Equal(t, map[string]interface{}{
+	patch := monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "InsertMap",
+		func(_ *database.DataStore, row map[string]any) error {
+			require.Equal(t, map[string]any{
 				"session_id": expectedSessionID,
 				"user_id":    expectedUserID,
 			}, row)
@@ -69,9 +69,9 @@ func TestCreateNewTempSession_HandlesDBError_WhenCreatingSessions(t *testing.T) 
 func TestCreateNewTempSession_HandlesDBError_WhenCreatingAccessTokens(t *testing.T) {
 	expectedSessionID := int64(12345)
 	monkey.Patch(GenerateKey, func() (string, error) { return expectedAccessToken, nil })
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID",
-		func(_ *database.DataStore) int64 { return expectedSessionID })
 	defer monkey.UnpatchAll()
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 { return expectedSessionID })
+	defer restoreNewID()
 
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
@@ -80,15 +80,15 @@ func TestCreateNewTempSession_HandlesDBError_WhenCreatingAccessTokens(t *testing
 	expectedError := errors.New("some error")
 	dataStore := database.NewDataStore(db)
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(dataStore), "InsertMap",
-		func(_ *database.DataStore, row map[string]interface{}) error {
-			require.Equal(t, map[string]interface{}{
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "InsertMap",
+		func(_ *database.DataStore, row map[string]any) error {
+			require.Equal(t, map[string]any{
 				"session_id": expectedSessionID,
 				"user_id":    expectedUserID,
 			}, row)
 			return nil
 		})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.AccessTokenStore{}), "InsertNewToken",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.AccessTokenStore](), "InsertNewToken",
 		func(_ *database.AccessTokenStore, sessionID int64, token string, secondsUntilExpiry int32) error {
 			require.Equal(t, expectedSessionID, sessionID)
 			require.Equal(t, expectedAccessToken, token)
@@ -120,7 +120,7 @@ func TestRefreshTempUserSession_HandlesDBError_WhenCreatingAccessTokens(t *testi
 	expectedError := errors.New("some error")
 	dataStore := database.NewDataStore(db)
 
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.AccessTokenStore{}), "InsertNewToken",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.AccessTokenStore](), "InsertNewToken",
 		func(_ *database.AccessTokenStore, sessionID int64, token string, secondsUntilExpiry int32) error {
 			require.Equal(t, expectedSessionID, sessionID)
 			require.Equal(t, expectedAccessToken, token)

@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -72,7 +72,7 @@ func TestNewDBMock_ExitsOnGettingErrorFromOpen(t *testing.T) {
 
 			someError := errors.New("some error")
 
-			monkey.Patch(OpenWithLogConfig, func(context.Context, interface{}, LogConfig, bool) (*DB, error) { return nil, someError })
+			monkey.Patch(OpenWithLogConfig, func(context.Context, any, LogConfig, bool) (*DB, error) { return nil, someError })
 			defer monkey.UnpatchAll()
 
 			assert.PanicsWithError(t, "unable to create the gorm connection to the mock: some error", func() {

@@ -573,7 +573,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	service.MustNotBeError(store.SetPropagationsModeToSync())
 	// We are going to propagate this permission synchronously
 	service.MustNotBeError(store.PermissionsGranted().InsertMap(
-		map[string]interface{}{
+		map[string]any{
 			"item_id":         itemID,
 			"group_id":        user.GroupID,
 			"source_group_id": user.GroupID,
@@ -645,7 +645,7 @@ func (srv *Service) insertItem(store *database.DataStore, user *database.User, f
 	return itemID, nil
 }
 
-func insertItemRow(store *database.DataStore, itemMap map[string]interface{}) (int64, error) {
+func insertItemRow(store *database.DataStore, itemMap map[string]any) (int64, error) {
 	var itemID int64
 	err := store.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
 		return store.RetryOnDuplicatePrimaryKeyError("items", func(store *database.DataStore) error {

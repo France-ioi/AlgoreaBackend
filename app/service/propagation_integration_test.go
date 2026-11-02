@@ -91,7 +91,7 @@ func TestSchedulePropagation(t *testing.T) {
 				events := mockDispatcher.GetEvents()
 				require.Len(t, events, 1)
 				assert.Equal(t, event.TypePropagationRequested, events[0].Type)
-				assert.Equal(t, map[string]interface{}{"types": []string{"permissions"}}, events[0].Payload)
+				assert.Equal(t, map[string]any{"types": []string{"permissions"}}, events[0].Payload)
 			} else if mockDispatcher != nil {
 				assert.Empty(t, mockDispatcher.GetEvents())
 			}

@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -81,8 +80,8 @@ func TestAttemptStore_CreateNew_CreatesNewAttempt(t *testing.T) {
 	assert.Equal(t, attemptType{
 		ParticipantID:   10,
 		ID:              1,
-		ParentAttemptID: golang.Ptr(int64(200)),
-		RootItemID:      golang.Ptr(int64(20)),
+		ParentAttemptID: new(int64(200)),
+		RootItemID:      new(int64(20)),
 		CreatorID:       100,
 		CreatedAt:       &expectedTime,
 	}, attempt)

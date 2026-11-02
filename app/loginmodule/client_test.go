@@ -22,7 +22,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestNewClient(t *testing.T) {
@@ -39,7 +38,7 @@ func Test_recoverPanics_RecoversError(t *testing.T) {
 }
 
 func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
-	panicValue := func() (panicValue interface{}) {
+	panicValue := func() (panicValue any) {
 		defer func() {
 			if p := recover(); p != nil {
 				panicValue = p
@@ -49,7 +48,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 		_ = func() (err error) {
 			defer recoverPanics(&err)
 			var a []int
-			a[0]++ // runtime error
+			a[0]++ //nolint:gosec // G602: intentional OOB to exercise recoverPanics
 			return nil
 		}()
 
@@ -64,7 +63,7 @@ func Test_recoverPanics_PanicsOnRuntimeError(t *testing.T) {
 
 func Test_recoverPanics_PanicsOnRecoveringValueOfNonErrorType(t *testing.T) {
 	expectedPanicValue := "some panic"
-	didPanic, panicValue := func() (didPanic bool, panicValue interface{}) {
+	didPanic, panicValue := func() (didPanic bool, panicValue any) {
 		defer func() {
 			if p := recover(); p != nil {
 				didPanic = true
@@ -90,7 +89,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 		responseCode       int
 		response           string
 		expectedProfile    *UserProfile
-		expectedProfileMap map[string]interface{}
+		expectedProfileMap map[string]any
 		expectedErr        error
 		expectedLog        string
 	}{
@@ -137,16 +136,16 @@ func TestClient_GetUserProfile(t *testing.T) {
 					"client_id":1, "verification":[], "subscription_news":true
 				}`,
 			expectedProfile: &UserProfile{
-				Profile: golang.Ptr(map[string]interface{}{
+				Profile: new(map[string]any{
 					"first_name": "Jane",
 					"last_name":  "Doe",
 				}),
-				LoginID: 100000001, Sex: golang.Ptr("Female"), DefaultLanguage: golang.Ptr("en"),
-				FreeText: golang.Ptr("I'm Jane Doe"), GraduationYear: 2021, CountryCode: "gb",
-				Email: golang.Ptr("janedoe@gmail.com"), StudentID: golang.Ptr("456789012"),
-				WebSite: golang.Ptr("http://jane.freepages.com"), Grade: golang.Ptr(int64(0)),
-				LastName: golang.Ptr("Doe"), BirthDate: golang.Ptr("2001-08-03"),
-				FirstName: golang.Ptr("Jane"), Login: "jane", EmailVerified: true, TimeZone: golang.Ptr("Europe/London"),
+				LoginID: 100000001, Sex: new("Female"), DefaultLanguage: new("en"),
+				FreeText: new("I'm Jane Doe"), GraduationYear: 2021, CountryCode: "gb",
+				Email: new("janedoe@gmail.com"), StudentID: new("456789012"),
+				WebSite: new("http://jane.freepages.com"), Grade: new(int64(0)),
+				LastName: new("Doe"), BirthDate: new("2001-08-03"),
+				FirstName: new("Jane"), Login: "jane", EmailVerified: true, TimeZone: new("Europe/London"),
 				NotifyNews: true, PhotoUpload: true, PublicFirstName: false, PublicLastName: false,
 				Badges: []database.Badge{
 					{
@@ -162,7 +161,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 					},
 				},
 			},
-			expectedProfileMap: map[string]interface{}{
+			expectedProfileMap: map[string]any{
 				"profile":  `{"first_name":"Jane","last_name":"Doe"}`,
 				"login_id": int64(100000001), "sex": "Female", "land_line_number": nil, "city": nil, "default_language": "en",
 				"free_text": "I'm Jane Doe", "graduation_year": int64(2021), "country_code": "gb", "email": "janedoe@gmail.com",
@@ -207,7 +206,7 @@ func TestClient_GetUserProfile(t *testing.T) {
 					"badges":null,"client_id":null,"verification":null,"subscription_news":null
 				}`,
 			expectedProfile: &UserProfile{LoginID: int64(100000001), Login: "jane", CountryCode: ""},
-			expectedProfileMap: map[string]interface{}{
+			expectedProfileMap: map[string]any{
 				"graduation_year": int64(0), "address": nil, "sex": nil, "web_site": nil, "last_name": nil,
 				"student_id": nil, "cell_phone_number": nil, "country_code": "", "default_language": nil,
 				"email_verified": false, "birth_date": nil, "grade": nil, "city": nil, "first_name": nil,
@@ -279,15 +278,15 @@ func TestClient_GetUserProfile(t *testing.T) {
 func Test_convertUserProfile(t *testing.T) {
 	tests := []struct {
 		name          string
-		source        map[string]interface{}
+		source        map[string]any
 		expected      *UserProfile
-		expectedMap   map[string]interface{}
+		expectedMap   map[string]any
 		expectedError error
 	}{
 		{
 			name: "all fields are set",
-			source: map[string]interface{}{
-				"profile": map[string]interface{}{
+			source: map[string]any{
+				"profile": map[string]any{
 					"first_name": "Jane",
 					"last_name":  "Doe",
 				},
@@ -304,36 +303,36 @@ func Test_convertUserProfile(t *testing.T) {
 				"origin_instance_id": nil, "creator_client_id": nil, "nationality": "GB",
 				"primary_email": "janedoe@gmail.com", "secondary_email": "jane.doe@gmail.com",
 				"primary_email_verified": int64(1), "secondary_email_verified": nil, "has_picture": true,
-				"badges": []interface{}{
-					map[string]interface{}{
+				"badges": []any{
+					map[string]any{
 						"id":             110501,
 						"url":            "https://badges.castor-informatique.fr/qualification_demi_finale/2020",
 						"code":           "t9556",
 						"do_not_possess": false,
-						"data":           map[string]interface{}{"category": "", "round": nil},
+						"data":           map[string]any{"category": "", "round": nil},
 						"manager":        false,
-						"badge_info": map[string]interface{}{
+						"badge_info": map[string]any{
 							"name": "Concours Castor 2020",
-							"group_path": []interface{}{
-								map[string]interface{}{"url": "https://badges.castor-informatique.fr/", "name": "Concours Castor", "manager": false},
+							"group_path": []any{
+								map[string]any{"url": "https://badges.castor-informatique.fr/", "name": "Concours Castor", "manager": false},
 							},
 						},
 						"last_update": "2022-07-11T12:54:37+0000",
 					},
 				},
-				"client_id": int64(1), "verification": []interface{}(nil),
+				"client_id": int64(1), "verification": []any(nil),
 			},
 			expected: &UserProfile{
-				Profile: golang.Ptr(map[string]interface{}{
+				Profile: new(map[string]any{
 					"first_name": "Jane",
 					"last_name":  "Doe",
 				}),
-				FreeText: golang.Ptr("I'm Jane Doe"), Email: golang.Ptr("janedoe@gmail.com"),
-				Grade: golang.Ptr(int64(-1)), WebSite: golang.Ptr("http://jane.freepages.com"),
-				EmailVerified: true, LastName: golang.Ptr("Doe"), Sex: golang.Ptr("Female"),
-				LoginID: 100000001, CountryCode: "gb", FirstName: golang.Ptr("Jane"),
-				Login: "jane", BirthDate: golang.Ptr("2001-08-03"), GraduationYear: 2021,
-				DefaultLanguage: golang.Ptr("en"), StudentID: golang.Ptr("456789012"), TimeZone: golang.Ptr("Europe/London"),
+				FreeText: new("I'm Jane Doe"), Email: new("janedoe@gmail.com"),
+				Grade: new(int64(-1)), WebSite: new("http://jane.freepages.com"),
+				EmailVerified: true, LastName: new("Doe"), Sex: new("Female"),
+				LoginID: 100000001, CountryCode: "gb", FirstName: new("Jane"),
+				Login: "jane", BirthDate: new("2001-08-03"), GraduationYear: 2021,
+				DefaultLanguage: new("en"), StudentID: new("456789012"), TimeZone: new("Europe/London"),
 				NotifyNews: false, PublicFirstName: true, PublicLastName: true, PhotoUpload: true,
 				Badges: []database.Badge{
 					{
@@ -348,7 +347,7 @@ func Test_convertUserProfile(t *testing.T) {
 					},
 				},
 			},
-			expectedMap: map[string]interface{}{
+			expectedMap: map[string]any{
 				"profile":   `{"first_name":"Jane","last_name":"Doe"}`,
 				"free_text": "I'm Jane Doe", "email": "janedoe@gmail.com", "grade": int64(-1),
 				"badges": []database.Badge{
@@ -372,10 +371,10 @@ func Test_convertUserProfile(t *testing.T) {
 		},
 		{
 			name: "null fields",
-			source: map[string]interface{}{
+			source: map[string]any{
 				"profile": nil,
 				"id":      int64(100000001), "login": "jane", "login_updated_at": nil, "login_fixed": int64(0),
-				"badges":                    []interface{}(nil),
+				"badges":                    []any(nil),
 				"login_revalidate_required": int64(0), "login_change_required": int64(0), "language": nil, "first_name": nil,
 				"last_name": nil, "real_name_visible": false, "timezone": nil, "country_code": nil,
 				"address": nil, "city": nil, "zipcode": nil, "primary_phone": nil, "secondary_phone": nil,
@@ -392,7 +391,7 @@ func Test_convertUserProfile(t *testing.T) {
 				"subscription_news": nil,
 			},
 			expected: &UserProfile{LoginID: 100000001, Login: "jane"},
-			expectedMap: map[string]interface{}{
+			expectedMap: map[string]any{
 				"land_line_number": nil, "login_id": int64(100000001), "login": "jane", "free_text": nil, "sex": nil,
 				"badges":     []database.Badge(nil),
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
@@ -404,9 +403,9 @@ func Test_convertUserProfile(t *testing.T) {
 		},
 		{
 			name:     "gender: male",
-			source:   map[string]interface{}{"id": int64(100000001), "login": "john", "gender": "m"},
-			expected: &UserProfile{LoginID: 100000001, Login: "john", Sex: golang.Ptr("Male")},
-			expectedMap: map[string]interface{}{
+			source:   map[string]any{"id": int64(100000001), "login": "john", "gender": "m"},
+			expected: &UserProfile{LoginID: 100000001, Login: "john", Sex: new("Male")},
+			expectedMap: map[string]any{
 				"land_line_number": nil, "login_id": int64(100000001), "login": "john",
 				"badges": []database.Badge(nil), "free_text": nil, "sex": "Male",
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
@@ -418,9 +417,9 @@ func Test_convertUserProfile(t *testing.T) {
 		},
 		{
 			name:     "primary email verified: true",
-			source:   map[string]interface{}{"id": int64(100000001), "login": "john", "primary_email_verified": true},
+			source:   map[string]any{"id": int64(100000001), "login": "john", "primary_email_verified": true},
 			expected: &UserProfile{LoginID: 100000001, Login: "john", EmailVerified: true},
-			expectedMap: map[string]interface{}{
+			expectedMap: map[string]any{
 				"land_line_number": nil, "login_id": int64(100000001),
 				"badges": []database.Badge(nil), "login": "john", "free_text": nil, "sex": nil,
 				"student_id": nil, "email_verified": true, "cell_phone_number": nil, "grade": nil, "address": nil,
@@ -432,9 +431,9 @@ func Test_convertUserProfile(t *testing.T) {
 		},
 		{
 			name:     "country code",
-			source:   map[string]interface{}{"id": int64(100000001), "login": "john", "country_code": "US"},
+			source:   map[string]any{"id": int64(100000001), "login": "john", "country_code": "US"},
 			expected: &UserProfile{LoginID: 100000001, Login: "john", CountryCode: "us"},
-			expectedMap: map[string]interface{}{
+			expectedMap: map[string]any{
 				"land_line_number": nil, "login_id": int64(100000001),
 				"badges": []database.Badge(nil), "login": "john", "free_text": nil, "sex": nil,
 				"student_id": nil, "email_verified": false, "cell_phone_number": nil, "grade": nil, "address": nil,
@@ -446,12 +445,12 @@ func Test_convertUserProfile(t *testing.T) {
 		},
 		{
 			name:          "no id",
-			source:        map[string]interface{}{"login": "john", "country_code": "US"},
+			source:        map[string]any{"login": "john", "country_code": "US"},
 			expectedError: errors.New("no id in user's profile"),
 		},
 		{
 			name:          "no login",
-			source:        map[string]interface{}{"id": int64(1234), "country_code": "US"},
+			source:        map[string]any{"id": int64(1234), "country_code": "US"},
 			expectedError: errors.New("no login in user's profile"),
 		},
 	}

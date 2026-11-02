@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -24,12 +23,12 @@ func TestItemStore_VisibleMethods(t *testing.T) {
 	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		methodToCall string
-		args         []interface{}
+		args         []any
 		column       string
 		expected     []int64
 	}{
 		{methodToCall: "Visible", column: "id", expected: []int64{190, 191, 192, 1900, 1901, 1902, 19000, 19001, 19002}},
-		{methodToCall: "VisibleByID", args: []interface{}{int64(191)}, column: "id", expected: []int64{191}},
+		{methodToCall: "VisibleByID", args: []any{int64(191)}, column: "id", expected: []int64{191}},
 	}
 	for _, testCase := range tests {
 		t.Run(testCase.methodToCall, func(t *testing.T) {
@@ -1239,8 +1238,8 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 		wantPlatformID *int64
 	}{
 		{name: "url is null", url: nil, wantPlatformID: nil},
-		{name: "chooses a platform with higher priority", url: golang.Ptr("1234"), wantPlatformID: golang.Ptr(int64(2))},
-		{name: "url doesn't match any regexp", url: golang.Ptr("34"), wantPlatformID: nil},
+		{name: "chooses a platform with higher priority", url: new("1234"), wantPlatformID: new(int64(2))},
+		{name: "url doesn't match any regexp", url: new("34"), wantPlatformID: nil},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1258,7 +1257,7 @@ func TestItemStore_TriggerBeforeInsert_SetsPlatformID(t *testing.T) {
 
 			itemStore := database.NewDataStore(db).Items()
 			assert.NoError(t, itemStore.WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
-				return store.Items().InsertMap(map[string]interface{}{
+				return store.Items().InsertMap(map[string]any{
 					"id":                   1,
 					"url":                  test.url,
 					"default_language_tag": "fr",
@@ -1286,16 +1285,16 @@ func TestItemStore_TriggerBeforeUpdate_SetsPlatformID(t *testing.T) {
 	ctx := testhelpers.CreateTestContext()
 	tests := []struct {
 		name           string
-		updateMap      map[string]interface{}
+		updateMap      map[string]any
 		wantPlatformID *int64
 	}{
-		{name: "url is unchanged", updateMap: map[string]interface{}{"type": "Chapter"}, wantPlatformID: golang.Ptr(int64(1))},
-		{name: "new url is null", updateMap: map[string]interface{}{"url": nil}, wantPlatformID: nil},
+		{name: "url is unchanged", updateMap: map[string]any{"type": "Chapter"}, wantPlatformID: new(int64(1))},
+		{name: "new url is null", updateMap: map[string]any{"url": nil}, wantPlatformID: nil},
 		{
-			name: "chooses a platform with higher priority", updateMap: map[string]interface{}{"url": golang.Ptr("12345")},
-			wantPlatformID: golang.Ptr(int64(2)),
+			name: "chooses a platform with higher priority", updateMap: map[string]any{"url": new("12345")},
+			wantPlatformID: new(int64(2)),
 		},
-		{name: "new url doesn't match any regexp", updateMap: map[string]interface{}{"url": golang.Ptr("34")}, wantPlatformID: nil},
+		{name: "new url doesn't match any regexp", updateMap: map[string]any{"url": new("34")}, wantPlatformID: nil},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1344,17 +1343,17 @@ func TestItemStore_PlatformsTriggerAfterInsert_SetsPlatformID(t *testing.T) {
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform",
 			regexp: "1", priority: 3,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), golang.Ptr(int64(2))},
+			wantPlatformIDs: []*int64{new(int64(2)), new(int64(1)), new(int64(2)), new(int64(2))},
 		},
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform (higher priority)",
 			regexp: "1", priority: 6,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(5)), golang.Ptr(int64(4)), golang.Ptr(int64(5)), nil},
+			wantPlatformIDs: []*int64{new(int64(5)), new(int64(4)), new(int64(5)), nil},
 		},
 		{
 			name:   "recalculates only item without a platform when the new platform has the lowest priority",
 			regexp: "1", priority: -1,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(4)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), golang.Ptr(int64(2))},
+			wantPlatformIDs: []*int64{new(int64(4)), new(int64(1)), new(int64(2)), new(int64(2))},
 		},
 	}
 	for _, test := range tests {
@@ -1402,27 +1401,27 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (only priority is changed)",
 			regexp: "^1.*", priority: 3,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), nil},
+			wantPlatformIDs: []*int64{new(int64(2)), new(int64(1)), new(int64(2)), nil},
 		},
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (only regexp is changed)",
 			regexp: "1", priority: 4,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(1)), golang.Ptr(int64(2)), nil},
+			wantPlatformIDs: []*int64{new(int64(2)), new(int64(1)), new(int64(2)), nil},
 		},
 		{
 			name:   "recalculates items linked to platforms with lower priority or no platform or the modified platform (higher priority)",
 			regexp: "1", priority: 6,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(2)), golang.Ptr(int64(4)), golang.Ptr(int64(2)), nil},
+			wantPlatformIDs: []*int64{new(int64(2)), new(int64(4)), new(int64(2)), nil},
 		},
 		{
 			name:   "recalculates only item without a platform when the new platform has the lowest priority",
 			regexp: "1", priority: -1,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(4)), golang.Ptr(int64(1)), golang.Ptr(int64(3)), nil},
+			wantPlatformIDs: []*int64{new(int64(4)), new(int64(1)), new(int64(3)), nil},
 		},
 		{
 			name:   "doesn't recalculate anything when regexp & priority stays unchanged",
 			regexp: "^1.*", priority: 4,
-			wantPlatformIDs: []*int64{golang.Ptr(int64(4)), golang.Ptr(int64(1)), nil, golang.Ptr(int64(2))},
+			wantPlatformIDs: []*int64{new(int64(4)), new(int64(1)), nil, new(int64(2))},
 		},
 	}
 	for _, test := range tests {
@@ -1449,7 +1448,7 @@ func TestItemStore_PlatformsTriggerAfterUpdate_SetsPlatformID(t *testing.T) {
 			assert.NoError(t, itemStore.ByID(3).UpdateColumn("platform_id", nil).Error())
 			assert.NoError(t, itemStore.ByID(4).UpdateColumn("platform_id", 2).Error())
 			assert.NoError(t, itemStore.Table("platforms").Where("id = ?", 2).
-				UpdateColumn(map[string]interface{}{"regexp": test.regexp, "priority": test.priority}).Error())
+				UpdateColumn(map[string]any{"regexp": test.regexp, "priority": test.priority}).Error())
 			var platformIDs []*int64
 			assert.NoError(t, itemStore.Order("id").Pluck("platform_id", &platformIDs).Error())
 			assert.Equal(t, test.wantPlatformIDs, platformIDs)

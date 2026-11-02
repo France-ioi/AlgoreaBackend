@@ -72,7 +72,7 @@ func TestContextWithDispatcherMiddleware_PreservesExistingContext(t *testing.T) 
 	mockDispatcher := NewMockDispatcher()
 	middleware := ContextWithDispatcherMiddleware(mockDispatcher)
 
-	var retrievedValue interface{}
+	var retrievedValue any
 
 	handler := middleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		retrievedValue = r.Context().Value(key)

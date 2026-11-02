@@ -96,7 +96,7 @@ func (mc *mysqlConn) Reset(ctx context.Context) (err error) {
 	if log.LoggerFromContext(ctx).IsRawSQLQueriesLoggingEnabled() {
 		startTime := time.Now()
 		defer func() {
-			log.EntryFromContext(ctx).WithFields(map[string]interface{}{
+			log.EntryFromContext(ctx).WithFields(map[string]any{
 				"type": "db", "err": err, "duration": time.Since(startTime).String(),
 			}).Info("sql-conn-reset")
 		}()

@@ -72,7 +72,7 @@ func (srv *Service) createGroup(responseWriter http.ResponseWriter, httpRequest 
 	err = srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
 		groupID, err = store.Groups().CreateNew(input.Name, input.Type)
 		service.MustNotBeError(err)
-		return store.GroupManagers().InsertMap(map[string]interface{}{
+		return store.GroupManagers().InsertMap(map[string]any{
 			"group_id":               groupID,
 			"manager_id":             user.GroupID,
 			"can_manage":             "memberships_and_group",

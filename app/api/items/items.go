@@ -442,9 +442,9 @@ func insertItemItems(store *database.DataStore, spec []*insertItemItemsSpec) {
 		return
 	}
 
-	values := make([]map[string]interface{}, 0, len(spec))
+	values := make([]map[string]any, 0, len(spec))
 	for index := range spec {
-		values = append(values, map[string]interface{}{
+		values = append(values, map[string]any{
 			"parent_item_id":                spec[index].ParentItemID,
 			"child_item_id":                 spec[index].ChildItemID,
 			"child_order":                   spec[index].Order,
@@ -474,12 +474,12 @@ func createParticipantsGroupForItemRequiringExplicitEntry(store *database.DataSt
 	var participantsGroupID int64
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(store *database.DataStore) error {
 		participantsGroupID = store.NewID()
-		return store.Groups().InsertMap(map[string]interface{}{
+		return store.Groups().InsertMap(map[string]any{
 			"id": participantsGroupID, "type": "ContestParticipants",
 			"name": fmt.Sprintf("%d-participants", itemID),
 		})
 	}))
-	service.MustNotBeError(store.PermissionsGranted().InsertMap(map[string]interface{}{
+	service.MustNotBeError(store.PermissionsGranted().InsertMap(map[string]any{
 		"group_id":        participantsGroupID,
 		"item_id":         itemID,
 		"source_group_id": participantsGroupID,

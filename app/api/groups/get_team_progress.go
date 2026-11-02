@@ -126,7 +126,7 @@ func (srv *Service) getTeamProgress(responseWriter http.ResponseWriter, httpRequ
 	service.MustNotBeError(err)
 
 	if len(itemParentIDs) == 0 {
-		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]any{})
 		return nil
 	}
 
@@ -135,7 +135,7 @@ func (srv *Service) getTeamProgress(responseWriter http.ResponseWriter, httpRequ
 
 	// Preselect IDs of end member for that we will calculate the stats.
 	// There should not be too many of end members on one page.
-	var teamIDs []interface{}
+	var teamIDs []any
 	teamIDQuery := store.ActiveGroupAncestors().
 		Joins("JOIN `groups` ON groups.id = groups_ancestors_active.child_group_id").
 		Where("groups_ancestors_active.ancestor_group_id = ?", groupID).
@@ -158,7 +158,7 @@ func (srv *Service) getTeamProgress(responseWriter http.ResponseWriter, httpRequ
 		Pluck("groups.id", &teamIDs).Error())
 
 	if len(teamIDs) == 0 {
-		render.Respond(responseWriter, httpRequest, []map[string]interface{}{})
+		render.Respond(responseWriter, httpRequest, []map[string]any{})
 		return nil
 	}
 
@@ -192,7 +192,7 @@ func (srv *Service) getTeamProgress(responseWriter http.ResponseWriter, httpRequ
 				ORDER BY participant_id, item_id, score_computed DESC, score_obtained_at
 				LIMIT 1
 			) AS result_with_best_score ON 1`).
-		Where("groups.id IN (?)", teamIDs). //nolint:asasalint // teamIDs is a single argument
+		Where("groups.id IN (?)", teamIDs).
 		Order(gorm.Expr(
 			"FIELD(groups.id"+strings.Repeat(", ?", len(teamIDs))+")",
 			teamIDs...)),

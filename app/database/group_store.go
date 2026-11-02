@@ -44,7 +44,7 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 	defer recoverPanics(&err)
 	mustNotBeError(s.RetryOnDuplicatePrimaryKeyError("groups", func(retryStore *DataStore) error {
 		groupID = retryStore.NewID()
-		return retryStore.Groups().InsertMap(map[string]interface{}{
+		return retryStore.Groups().InsertMap(map[string]any{
 			"id":         groupID,
 			"name":       name,
 			"type":       groupType,
@@ -52,7 +52,7 @@ func (s *GroupStore) CreateNew(name, groupType string) (groupID int64, err error
 		})
 	}))
 	if groupType == "Team" {
-		mustNotBeError(s.Attempts().InsertMap(map[string]interface{}{
+		mustNotBeError(s.Attempts().InsertMap(map[string]any{
 			"participant_id": groupID,
 			"id":             0,
 			"creator_id":     nil,

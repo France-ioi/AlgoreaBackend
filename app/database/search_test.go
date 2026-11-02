@@ -72,7 +72,7 @@ func TestDB_WhereSearchStringMatches(t *testing.T) {
 				WithArgs(tt.wantArgs...).
 				WillReturnRows(sqlMock.NewRows([]string{"id"}))
 
-			var result []map[string]interface{}
+			var result []map[string]any
 			require.NoError(t, db.Table("items").
 				WhereSearchStringMatches(tt.args.field, tt.args.fallbackField, tt.args.searchString).
 				ScanIntoSliceOfMaps(&result).Error())

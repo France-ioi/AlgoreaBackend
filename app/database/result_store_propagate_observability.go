@@ -336,7 +336,7 @@ func truncateUTF8(value string, maxBytes int) string {
 // Called while the chunk transaction may still be open: the dump is a small information_schema
 // read considered acceptable vs. adding a second post-commit observability call site.
 func logPropagationStepDurationf(
-	store *DataStore, duration time.Duration, before *propagationStatusSnapshot, format string, args ...interface{},
+	store *DataStore, duration time.Duration, before *propagationStatusSnapshot, format string, args ...any,
 ) {
 	entry := logging.EntryFromContext(store.ctx())
 	slow := duration >= getResultsPropagationSlowChunkThreshold()
@@ -358,7 +358,7 @@ func logPropagationStepDurationf(
 		}
 	}
 
-	args = append(append([]interface{}{}, args...), duration)
+	args = append(append([]any{}, args...), duration)
 	format += ", took %v"
 	msg := fmt.Sprintf(format, args...)
 
@@ -372,16 +372,16 @@ func logPropagationStepDurationf(
 	entry.Debug(msg)
 }
 
-func (conn *DB) queryRowWithoutLogging(query string, args ...interface{}) *sql.Row {
+func (conn *DB) queryRowWithoutLogging(query string, args ...any) *sql.Row {
 	//nolint:forcetypeassert // CommonDB is always one of our wrappers
 	return conn.db.CommonDB().(queryRowWithoutLogging).queryRowWithoutLogging(query, args...)
 }
 
-func (conn *DB) queryRowsWithoutLogging(query string, args ...interface{}) (*sql.Rows, error) {
+func (conn *DB) queryRowsWithoutLogging(query string, args ...any) (*sql.Rows, error) {
 	//nolint:forcetypeassert // CommonDB is always one of our wrappers
 	return conn.db.CommonDB().(queryRowsWithoutLogging).queryRowsWithoutLogging(query, args...)
 }
 
 type queryRowsWithoutLogging interface {
-	queryRowsWithoutLogging(query string, args ...interface{}) (*sql.Rows, error)
+	queryRowsWithoutLogging(query string, args ...any) (*sql.Rows, error)
 }

@@ -116,11 +116,11 @@ func (srv *Service) getBreadcrumbs(responseWriter http.ResponseWriter, httpReque
 	}
 	service.MustNotBeError(err)
 
-	idsInterface := make([]interface{}, 0, len(params.ids))
+	idsInterface := make([]any, 0, len(params.ids))
 	for _, id := range params.ids {
 		idsInterface = append(idsInterface, id)
 	}
-	var result []map[string]interface{}
+	var result []map[string]any
 	service.MustNotBeError(store.Items().Select(`
 			items.id AS item_id,
 			items.type,

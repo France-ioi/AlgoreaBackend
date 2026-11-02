@@ -112,7 +112,7 @@ func (srv *Service) searchForPossibleSubgroups(responseWriter http.ResponseWrite
 		})
 	service.MustNotBeError(err)
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 
