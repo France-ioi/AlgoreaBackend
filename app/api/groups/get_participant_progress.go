@@ -210,6 +210,7 @@ func (srv *Service) getParticipantProgress(responseWriter http.ResponseWriter, h
 		Group("items.id")
 
 	var participantProgressQuery *database.DB
+	// Keep in sync with participantProgressOuterColumns (default_language_tag is inner-only / unused by the scan).
 	fields := `
 		items.id, items.type, items.no_score, items.default_language_tag,
 		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value,
@@ -256,10 +257,17 @@ func (srv *Service) getParticipantProgress(responseWriter http.ResponseWriter, h
 			Order("items.is_parent DESC, items.child_order")
 	}
 
+	// Keep in sync with the inner `fields` + progress columns above (rawParticipantProgressRaw scan target).
+	const participantProgressOuterColumns = `
+		items.id, items.type, items.no_score,
+		items.can_view_generated_value, items.can_grant_view_generated_value, items.can_watch_generated_value,
+		items.can_edit_generated_value, items.is_owner_generated,
+		items.is_parent, items.score, items.validated, items.started_at, items.latest_activity_at,
+		items.hints_requested, items.submissions, items.time_spent`
+
 	var rows []rawParticipantProgressRaw
-	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
 	service.MustNotBeError(store.Raw(`
-		SELECT items.*,
+		SELECT `+participantProgressOuterColumns+`,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title
 		FROM ? AS items`, participantProgressQuery.SubQuery()).

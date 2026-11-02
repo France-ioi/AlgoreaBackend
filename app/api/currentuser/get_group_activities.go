@@ -297,6 +297,8 @@ func getRootItemsFromDB(
 	} else {
 		itemsWithResultsQuery = itemsWithResultsQuery.Joins("JOIN items ON items.id = groups.root_skill_id")
 	}
+	// Keep in sync with the outer SELECT below: scanned rawRootItem fields must appear in both lists
+	// (created_at / default_language_tag stay inner-only — ORDER BY / unused by the scan).
 	itemsWithResultsSubquery := itemsWithResultsQuery.
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(watcherID, "view", "info").
 		Joins("LEFT JOIN results ON results.participant_id = ? AND results.item_id = items.id", groupID).
@@ -318,9 +320,16 @@ func getRootItemsFromDB(
 			attempts.ended_at`, groupID, hasVisibleChildrenQuery).
 		Group("groups.id, results.participant_id, results.attempt_id")
 
-	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
+	// Keep in sync with the inner Select above (rawRootItem scan target).
 	query := store.Raw(`
-		SELECT items.*, items.id AS item_id, COALESCE(user_strings.title, default_strings.title) AS title,
+		SELECT items.group_id, items.group_name, items.group_type,
+			items.item_type, items.requires_explicit_entry, items.entry_participant_type, items.no_score,
+			items.display_settings, items.best_score,
+			items.can_grant_view_generated_value, items.can_watch_generated_value, items.can_edit_generated_value,
+			items.is_owner_generated, items.can_view_generated_value,
+			items.attempt_allows_submissions_until, items.has_visible_children, items.attempt_id,
+			items.score_computed, items.validated, items.started_at, items.latest_activity_at, items.ended_at,
+			items.id AS item_id, COALESCE(user_strings.title, default_strings.title) AS title,
 			IF(user_strings.title IS NOT NULL, user_strings.language_tag, default_strings.language_tag) AS language_tag
 		FROM ? AS items`, itemsWithResultsSubquery.SubQuery()).
 		JoinsUserAndDefaultItemStrings(user).

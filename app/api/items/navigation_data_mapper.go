@@ -45,6 +45,8 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 
 	// This query can be simplified if we add a column for relation degrees into `items_ancestors`
 
+	// Keep in sync with navigationChildrenOuterColumns (+ the helper's watched-group / result columns):
+	// outer column order must exactly match this root select so UNION ALL columns align.
 	commonAttributes := `
 		items.id, items.type, items.default_language_tag,
 		can_view_generated_value, can_grant_view_generated_value, can_watch_generated_value, can_edit_generated_value, is_owner_generated`
@@ -79,6 +81,13 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 		Limit(1).
 		SubQuery()
 
+	// Keep in sync with the root itemsQuery select order above (and the children's inner columnList).
+	const navigationChildrenOuterColumns = `
+		items.id, items.type, items.default_language_tag,
+		items.can_view_generated_value, items.can_grant_view_generated_value, items.can_watch_generated_value,
+		items.can_edit_generated_value, items.is_owner_generated,
+		items.requires_explicit_entry, items.parent_item_id, items.entry_participant_type, items.no_score,
+		items.has_visible_children, items.child_order, items.display_settings`
 	childrenQuery := constructItemChildrenQuery(
 		dataStore,
 		[]int64{rootID},
@@ -91,6 +100,7 @@ func getRawNavigationData(dataStore *database.DataStore, rootID, groupID, attemp
 			`, items.requires_explicit_entry, parent_item_id, items.entry_participant_type, items.no_score,
 			 IFNULL(?, 0) AS has_visible_children, child_order, items.display_settings`,
 		[]any{hasVisibleChildrenQuery},
+		navigationChildrenOuterColumns,
 		"",
 		func(db *database.DB) *database.DB {
 			return db.Joins("JOIN items AS parent_item ON parent_item.id = ?", rootID).
@@ -186,12 +196,13 @@ func constructItemListWithoutResultsQuery(dataStore *database.DataStore, groupID
 }
 
 func constructItemListQuery(dataStore *database.DataStore, groupID int64, requiredViewPermissionOnItems string,
-	watchedGroupIDIsSet bool, watchedGroupID int64, columnList string, columnListValues []any,
-	externalColumnList string,
+	watchedGroupIDIsSet bool, watchedGroupID int64, innerColumnList string, innerColumnListValues []any,
+	outerItemColumnList, externalColumnList string,
 	joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc, filterAttemptsFunc func(*database.DB) *database.DB,
 ) *database.DB {
 	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, requiredViewPermissionOnItems,
-		watchedGroupIDIsSet, watchedGroupID, columnList, columnListValues, joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
+		watchedGroupIDIsSet, watchedGroupID, innerColumnList, innerColumnListValues,
+		joinItemRelationsToItemsFunc, joinItemRelationsToPermissionsFunc)
 
 	if externalColumnList != "" {
 		externalColumnList += ", "
@@ -202,9 +213,11 @@ func constructItemListQuery(dataStore *database.DataStore, groupID int64, requir
 		Where("attempts.id = results.attempt_id")
 	attemptsQuery = filterAttemptsFunc(attemptsQuery)
 
-	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
 	itemsQuery := dataStore.Raw(`
-			SELECT items.*, `+externalColumnList+`results.attempt_id, attempts.id IS NOT NULL AS has_attempt,
+			SELECT `+outerItemColumnList+`,
+				items.watched_group_can_view, items.can_watch_for_group_results,
+				items.watched_group_avg_score, items.watched_group_all_validated,
+				`+externalColumnList+`results.attempt_id, attempts.id IS NOT NULL AS has_attempt,
 				results.score_computed, results.validated, results.started_at, results.latest_activity_at,
 				attempts.allows_submissions_until AS attempt_allows_submissions_until, attempts.ended_at
 			FROM ? AS items

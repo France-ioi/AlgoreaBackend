@@ -519,8 +519,14 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 			StartFromRowQuery:   startFromRowQuery,
 		})
 
-	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
-	answersQuery = store.Raw("SELECT limited_answers.*, gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
+	// Keep these two lists in the same order: union SELECT uses the unqualified names;
+	// the limited_answers projection must qualify every column (answer_id also exists on gradings).
+	const activityLogRowColumns = "activity_type_int, type, at, answer_id, attempt_id, participant_id, item_id, user_id"
+	const activityLogLimitedAnswersColumns = "limited_answers.activity_type_int, limited_answers.type, limited_answers.at, " +
+		"limited_answers.answer_id, limited_answers.attempt_id, limited_answers.participant_id, " +
+		"limited_answers.item_id, limited_answers.user_id"
+	answersQuery = store.Raw(
+		"SELECT "+activityLogLimitedAnswersColumns+", gradings.score FROM ? AS limited_answers", answersQuery.SubQuery()).
 		Joins("LEFT JOIN gradings ON gradings.answer_id = limited_answers.answer_id")
 
 	startedResultsQuery = service.NewQueryLimiter().Apply(httpRequest, startedResultsQuery)
@@ -553,8 +559,7 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 			StartFromRowQuery:   startFromRowQuery,
 		})
 
-	//nolint:unqueryvet // we select all columns from subqueries having explicitly listed columns
-	unionCTEQuery := store.Raw("SELECT * FROM (? UNION ALL ? UNION ALL ?) AS un",
+	unionCTEQuery := store.Raw("SELECT "+activityLogRowColumns+", score FROM (? UNION ALL ? UNION ALL ?) AS un",
 		answersQuery.SubQuery(), startedResultsQuery.SubQuery(), validatedResultsQuery.SubQuery())
 	unionQuery := store.Table("un")
 	unionQuery = service.NewQueryLimiter().Apply(httpRequest, unionQuery)

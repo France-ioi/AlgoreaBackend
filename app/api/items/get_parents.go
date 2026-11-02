@@ -154,6 +154,7 @@ func (srv *Service) resolveGetParentsOrChildrenServiceParams(httpReq *http.Reque
 func constructItemParentsQuery(dataStore *database.DataStore, childItemID, groupID, attemptID int64,
 	watchedGroupIDIsSet bool, watchedGroupID int64, user *database.User,
 ) *database.DB {
+	// Keep in sync with the outer SELECT below (RawListItem + watched-group columns produced here).
 	itemsWithoutResultsQuery := constructItemListWithoutResultsQuery(dataStore, groupID, "info",
 		watchedGroupIDIsSet, watchedGroupID, `items.allows_multiple_attempts, category, items.id, items.type, items.default_language_tag,
 			validation_type, requires_explicit_entry, duration, entry_participant_type, no_score,
@@ -171,9 +172,16 @@ func constructItemParentsQuery(dataStore *database.DataStore, childItemID, group
 				Where("items_items.child_item_id = ?", childItemID)
 		})
 
-	//nolint:unqueryvet // we select all columns from a subquery that already lists its columns explicitly
+	// Keep in sync with the inner column list passed to constructItemListWithoutResultsQuery above.
 	itemsQuery := dataStore.Raw(`
-		SELECT items.*,
+		SELECT items.allows_multiple_attempts, items.category, items.id, items.type, items.default_language_tag,
+			items.validation_type, items.requires_explicit_entry, items.duration, items.entry_participant_type, items.no_score,
+			items.can_view_generated_value, items.can_grant_view_generated_value, items.can_watch_generated_value,
+			items.can_edit_generated_value, items.is_owner_generated,
+			items.best_score, items.child_order,
+			items.watched_group_can_view, items.can_watch_for_group_results,
+			items.watched_group_avg_score, items.watched_group_all_validated,
+			items.has_attempt,
 			COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
 			IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 			IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
