@@ -155,7 +155,7 @@ We use `gofumpt` to format the code. It is stricter than `gofmt`.
 ## Generating the API documentation
 
 The API documentation is an OpenAPI spec file generated automatically by [Go-Swagger](https://github.com/go-swagger/go-swagger) and [swagger2openapi](https://www.npmjs.com/package/swagger2openapi).
-Each time the code is pushed in the "master" branch, the CI generates the spec file and deploys it to the documentation server.
+On each release tag matching `v*` (for example `v2.59.0`), the CI generates the OpenAPI YAML and deploys it plus a Redoc HTML page to `s3://franceioi-algorea/spec/`. Hosted HTML pages pin [Redoc v2](https://cdn.redoc.ly/redoc/v2.x/bundles/redoc.standalone.js) via `tools/redoc-spec-page.sh` (shared by CI and the backfill script). The version index (`spec/index.html`) lists only the latest 10 releases and is built by `tools/redoc-spec-index.sh`.
 
 To perform the spec generation locally, install our patched version of Go-Swagger from source (requires Go 1.21+):
 ```
@@ -167,7 +167,7 @@ and swagger2openapi:
 npm install -g swagger2openapi
 ```
 
-Also, you need to install [redocly-cli](https://redocly.com/redocly-cli) to serve the documentation locally:
+Also, you need to install [redocly-cli](https://redocly.com/redocly-cli) (pinned) to serve the documentation locally:
 ```
 npm install -g @redocly/cli@1.25.15
 ```
@@ -182,6 +182,15 @@ To view the documentation in a browser, start serving it:
 make swagger-serve
 ```
 and open http://127.0.0.1:8080 in your favorite browser.
+
+### Updating hosted Redoc HTML pages
+
+New releases upload their own HTML and refresh the index via CI. If you change `tools/redoc-spec-page.sh` or `tools/redoc-spec-index.sh` and need to refresh the already-hosted latest 10 pages (and `index.html`) without a new tag, run the backfill against `s3://franceioi-algorea` (region `eu-west-3`). It does not touch YAML specs or older version objects:
+
+```
+./tools/redoc-spec-backfill.sh --dry-run   # list what would be uploaded
+./tools/redoc-spec-backfill.sh             # upload latest-10 HTML + index
+```
 
 ## Create a release
 
