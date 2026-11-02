@@ -2,6 +2,7 @@ package monkey
 
 import (
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -104,4 +105,66 @@ func TestPatchInstanceMethod_PatchesMethod(t *testing.T) {
 	})
 	require.NotNil(t, guard)
 	assert.Equal(t, patchedValue, (&patchable{}).Value())
+}
+
+func TestPatchGuard_NilAndIdempotent(t *testing.T) {
+	var nilGuard *PatchGuard
+	nilGuard.Unpatch()
+	nilGuard.Restore()
+
+	defer UnpatchAll()
+	guard := Patch(longEnoughTarget, func() string { return patchedValue })
+	require.Equal(t, patchedValue, longEnoughTarget())
+
+	// Already active: Restore is a no-op.
+	guard.Restore()
+	assert.Equal(t, patchedValue, longEnoughTarget())
+
+	guard.Unpatch()
+	assert.Equal(t, "orig-suffix", longEnoughTarget())
+	// Already inactive: Unpatch is a no-op.
+	guard.Unpatch()
+	assert.Equal(t, "orig-suffix", longEnoughTarget())
+}
+
+func TestPatchGuard_ConcurrentUnpatchRestore(t *testing.T) {
+	defer UnpatchAll()
+
+	guard := Patch(longEnoughTarget, func() string { return patchedValue })
+	require.Equal(t, patchedValue, longEnoughTarget())
+
+	const goroutines = 8
+	const iterations = 200
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(goroutines)
+	for range goroutines {
+		go func() {
+			defer waitGroup.Done()
+			for range iterations {
+				// Do not call the patched target here: concurrent Unpatch/Restore
+				// rewrites its prologue; a torn fetch can SIGSEGV. This test only
+				// needs races on active bookkeeping.
+				guard.Unpatch()
+				guard.Restore()
+			}
+		}()
+	}
+	waitGroup.Wait()
+
+	assert.Equal(t, patchedValue, longEnoughTarget())
+}
+
+func TestPatchInstanceMethodWithOrigin_CallsRealMethod(t *testing.T) {
+	defer UnpatchAll()
+
+	var origin func(*patchable) string
+	guard := PatchInstanceMethodWithOrigin(reflect.TypeFor[*patchable](), "Value",
+		func(p *patchable) string {
+			return origin(p) + "-via-origin"
+		},
+		&origin,
+	)
+	require.NotNil(t, guard)
+	require.NotNil(t, origin)
+	assert.Equal(t, "orig-method-via-origin", (&patchable{}).Value())
 }

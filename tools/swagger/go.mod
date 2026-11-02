@@ -1,6 +1,7 @@
 // This module exists solely to build the France-ioi go-swagger CLI under
-// pinned dependency versions that compile cleanly on Go 1.25. See tools.go
-// for the rationale.
+// pinned dependency versions that compile cleanly on current Go toolchains
+// (module requires go 1.25.0). See tools.go for the rationale (including
+// temporary GODEBUG=gotypesalias=0 at generate time).
 module github.com/France-ioi/AlgoreaBackend/v2/tools/swagger
 
 go 1.25.0

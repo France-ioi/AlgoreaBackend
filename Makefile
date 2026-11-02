@@ -132,8 +132,12 @@ govulncheck:
 govulncheck-filter-test:
 	python3 -m unittest tools/govulncheck_filter_test.py
 
+# GODEBUG=gotypesalias=0: our go-swagger fork panics when `any` is a *types.Alias
+# (Go 1.23+ default); collapsing aliases keeps generate working without a fork patch.
+# Temporary: gotypesalias will be removed in a future Go — then patch the fork to
+# use types.Unalias (or equivalent) instead of relying on this GODEBUG.
 swagger-generate:
-	swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
+	GODEBUG=gotypesalias=0 swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
 		swagger validate ./swagger.yaml && \
 		swagger2openapi --refSiblings allOf --yaml swagger.yaml | sed 's/x-nullable:/nullable:/g' > openapi3.yaml && \
 		mv openapi3.yaml swagger.yaml && \

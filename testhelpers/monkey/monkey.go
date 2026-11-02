@@ -21,7 +21,12 @@ type PatchGuard struct {
 
 // Unpatch temporarily disables the patch (original is callable again).
 func (p *PatchGuard) Unpatch() {
-	if p == nil || p.mocker == nil || !p.active {
+	if p == nil {
+		return
+	}
+	guardsMutex.Lock()
+	defer guardsMutex.Unlock()
+	if p.mocker == nil || !p.active {
 		return
 	}
 	p.mocker.UnPatch()
@@ -31,7 +36,12 @@ func (p *PatchGuard) Unpatch() {
 // Restore re-enables a previously Unpatch()'d guard.
 // No-op if the guard was replaced by a later Patch of the same target.
 func (p *PatchGuard) Restore() {
-	if p == nil || p.mocker == nil || p.active {
+	if p == nil {
+		return
+	}
+	guardsMutex.Lock()
+	defer guardsMutex.Unlock()
+	if p.mocker == nil || p.active {
 		return
 	}
 	p.mocker.Patch()
@@ -73,7 +83,7 @@ func unpatchExistingLocked(key uintptr) {
 	guards = kept
 }
 
-func buildMock(target, replacement any) (mocker *mockey.Mocker) {
+func buildMock(target, replacement, originPtr any) (mocker *mockey.Mocker) {
 	// Prefer safe Mock; fall back to MockUnsafe only when mockey rejects a function
 	// as too short (one-line getters) — same cases bou.ke/monkey accepted.
 	defer func() {
@@ -85,32 +95,32 @@ func buildMock(target, replacement any) (mocker *mockey.Mocker) {
 		if !strings.Contains(msg, "too short") {
 			panic(recovered)
 		}
-		mocker = mockey.MockUnsafe(target).To(replacement).Build()
+		builder := mockey.MockUnsafe(target).To(replacement)
+		if originPtr != nil {
+			builder = builder.Origin(originPtr)
+		}
+		mocker = builder.Build()
 	}()
-	mocker = mockey.Mock(target).To(replacement).Build()
+	builder := mockey.Mock(target).To(replacement)
+	if originPtr != nil {
+		builder = builder.Origin(originPtr)
+	}
+	mocker = builder.Build()
 	return mocker
 }
 
-func register(key uintptr, target, replacement any) *PatchGuard {
+func register(key uintptr, target, replacement, originPtr any) *PatchGuard {
+	// Hold the lock across unpatch → buildMock → append so concurrent Patch of the
+	// same target can't both pass unpatchExisting and re-mock (mockey panics).
 	guardsMutex.Lock()
+	defer guardsMutex.Unlock()
 	unpatchExistingLocked(key)
-	guardsMutex.Unlock()
-
-	g := &PatchGuard{mocker: buildMock(target, replacement), targetKey: key, active: true}
-
-	guardsMutex.Lock()
+	g := &PatchGuard{mocker: buildMock(target, replacement, originPtr), targetKey: key, active: true}
 	guards = append(guards, g)
-	guardsMutex.Unlock()
 	return g
 }
 
-// Patch replaces a function with replacement (same signature as bou.ke/monkey.Patch).
-func Patch(target, replacement any) *PatchGuard {
-	return register(targetKeyOf(target), target, replacement)
-}
-
-// PatchInstanceMethod replaces an instance method (same signature as bou.ke/monkey.PatchInstanceMethod).
-func PatchInstanceMethod(target reflect.Type, methodName string, replacement any) *PatchGuard {
+func methodOf(target reflect.Type, methodName string) any {
 	var instance any
 	switch target.Kind() {
 	case reflect.Ptr:
@@ -118,16 +128,42 @@ func PatchInstanceMethod(target reflect.Type, methodName string, replacement any
 	default:
 		instance = reflect.New(target).Elem().Interface()
 	}
-	method := mockey.GetMethod(instance, methodName)
-	return register(targetKeyOf(method), method, replacement)
+	return mockey.GetMethod(instance, methodName)
+}
+
+// Patch replaces a function with replacement (same signature as bou.ke/monkey.Patch).
+func Patch(target, replacement any) *PatchGuard {
+	return register(targetKeyOf(target), target, replacement, nil)
+}
+
+// PatchWithOrigin is like Patch but wires mockey's Origin so the replacement can
+// call the real function via *originPtr without Unpatch/Restore (which rewrites the
+// prologue). Origin is not safe for concurrent entry into the same patched target
+// (shared extraArgsGetter in MakeFunc); for concurrent callers prefer Unpatch/Restore
+// serialized with a per-target mutex (see MockDBTime).
+func PatchWithOrigin(target, replacement, originPtr any) *PatchGuard {
+	return register(targetKeyOf(target), target, replacement, originPtr)
+}
+
+// PatchInstanceMethod replaces an instance method (same signature as bou.ke/monkey.PatchInstanceMethod).
+func PatchInstanceMethod(target reflect.Type, methodName string, replacement any) *PatchGuard {
+	method := methodOf(target, methodName)
+	return register(targetKeyOf(method), method, replacement, nil)
+}
+
+// PatchInstanceMethodWithOrigin is like PatchInstanceMethod but wires mockey's Origin
+// (see PatchWithOrigin).
+func PatchInstanceMethodWithOrigin(target reflect.Type, methodName string, replacement, originPtr any) *PatchGuard {
+	method := methodOf(target, methodName)
+	return register(targetKeyOf(method), method, replacement, originPtr)
 }
 
 // UnpatchAll permanently disables every patch created through this package.
 func UnpatchAll() {
 	guardsMutex.Lock()
+	defer guardsMutex.Unlock()
 	current := guards
 	guards = nil
-	guardsMutex.Unlock()
 	for i := len(current) - 1; i >= 0; i-- {
 		guard := current[i]
 		if guard != nil && guard.mocker != nil && guard.active {

@@ -213,21 +213,11 @@ func TestService_refreshAccessToken_ConcurrentRequestsGetUpdatedAccessTokenAndSk
 
 	funcCalledChan := make(chan struct{})
 	concurrentRequestCalledChan := make(chan struct{})
-	var patchGuard *monkey.PatchGuard
-	patchGuard = monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
-		func(store *database.DataStore, lockName string, timeout time.Duration, funcToCall func(store *database.DataStore) error) error {
-			patchGuard.Unpatch()
-			defer patchGuard.Restore()
-			newFuncToCall := func(store *database.DataStore) error {
-				funcCalledChan <- struct{}{} // notify that the code under test called the func inside WithNamedLock()
-				return funcToCall(store)
-			}
-			return store.WithNamedLock(lockName, timeout, newFuncToCall)
-		})
+	patchGuard := patchSignalWhenInsideSessionLock(funcCalledChan)
 	defer patchGuard.Unpatch()
 
 	go func() {
-		<-funcCalledChan // wait until the first request calls the function inside WithNamedLock()
+		<-funcCalledChan // wait until the first request holds the named lock
 		recorder, _, loginModuleCallCount, err := callRefreshAccessTokenServiceWithLoginModuleStub(false, db, false, nil)
 		assert.NoError(t, err)
 		if err != nil {
@@ -264,17 +254,7 @@ func TestService_refreshAccessToken_ConcurrentRequestsGetUpdatedAccessTokenAndSk
 
 	funcCalledChan := make(chan struct{})
 	concurrentRequestCalledChan := make(chan struct{})
-	var patchGuard *monkey.PatchGuard
-	patchGuard = monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
-		func(store *database.DataStore, lockName string, timeout time.Duration, funcToCall func(store *database.DataStore) error) error {
-			patchGuard.Unpatch()
-			defer patchGuard.Restore()
-			newFuncToCall := func(store *database.DataStore) error {
-				funcCalledChan <- struct{}{} // notify that the code under test called the func inside WithNamedLock()
-				return funcToCall(store)
-			}
-			return store.WithNamedLock(lockName, timeout, newFuncToCall)
-		})
+	_ = patchSignalWhenInsideSessionLock(funcCalledChan)
 	var cnt atomic.Uint32
 	monkey.Patch(auth.GenerateKey, func() (string, error) {
 		newValue := cnt.Add(1)
@@ -288,7 +268,7 @@ func TestService_refreshAccessToken_ConcurrentRequestsGetUpdatedAccessTokenAndSk
 	const expectedBody = `{"success":true,"message":"created","data":{"access_token":"newaccesstoken","expires_in":7200}}`
 
 	go func() {
-		<-funcCalledChan // wait until the first request calls the function inside WithNamedLock()
+		<-funcCalledChan // wait until the first request holds the named lock
 		recorder, _, loginModuleCallCount, err := callRefreshAccessTokenServiceWithLoginModuleStub(false, db, true, nil)
 		assert.NoError(t, err)
 		if err != nil {
@@ -312,6 +292,25 @@ func TestService_refreshAccessToken_ConcurrentRequestsGetUpdatedAccessTokenAndSk
 	body := recorder.Body.String()
 	assert.JSONEq(t, expectedBody, body)
 	assert.Equal(t, 0, loginModuleCallCount)
+}
+
+// patchSignalWhenInsideSessionLock signals on the first GetMostRecentValidTokenForSession call,
+// which only runs while the session named lock is held. We intentionally do not patch
+// WithNamedLock: mockey's MakeFunc/Origin trampoline is not safe for concurrent entry, and the
+// second request must call the real WithNamedLock so it can block on the MySQL lock. The unbuffered
+// send blocks the first request until the second goroutine is scheduled (same timing as the
+// historical Unpatch-based helper). MySQL serialization also ensures the two requests never enter
+// this patched method concurrently.
+func patchSignalWhenInsideSessionLock(funcCalledChan chan<- struct{}) *monkey.PatchGuard {
+	var signaledFirstInsideLock sync.Once
+	var getMostRecentOrigin func(*database.AccessTokenStore, int64) (database.MostRecentToken, error)
+	return monkey.PatchInstanceMethodWithOrigin(reflect.TypeFor[*database.AccessTokenStore](), "GetMostRecentValidTokenForSession",
+		func(store *database.AccessTokenStore, sessionID int64) (database.MostRecentToken, error) {
+			signaledFirstInsideLock.Do(func() { funcCalledChan <- struct{}{} })
+			return getMostRecentOrigin(store, sessionID)
+		},
+		&getMostRecentOrigin,
+	)
 }
 
 func createLoginModuleStubServer(expectedRefreshToken string) (*httptest.Server, *atomic.Uint32) {

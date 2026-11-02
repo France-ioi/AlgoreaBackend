@@ -211,7 +211,8 @@ jobs:
       - checkout
       # Built from the tools/swagger sub-module (not `go install ...@<rev>`)
       # so that we can pin a `golang.org/x/tools` version that compiles on
-      # Go 1.25; see tools/swagger/tools.go for the full rationale.
+      # Go 1.23+. `make swagger-generate` also sets GODEBUG=gotypesalias=0
+      # for the fork's alias handling; see tools/swagger/tools.go.
       - run:
           name: Install swagger generator
           command: cd tools/swagger && go install github.com/France-ioi/go-swagger/cmd/swagger

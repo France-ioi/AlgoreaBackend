@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -63,42 +64,63 @@ func getNowReplacer(parsedTime time.Time) func(string) string {
 	}
 }
 
+// mockey Origin is not safe under concurrent entry (shared extraArgsGetter written in the
+// MakeFunc trampoline before the replacement runs). MockDBTime therefore uses Unpatch/Restore
+// like bou.ke/monkey. Per-method mutexes serialize Unpatch → real call → Restore so two
+// goroutines cannot rewrite the same prologue at once; nested calls across methods are fine
+// because each method has its own mutex and patch guard.
 func patchDBMethods(nowReplacer func(string) string, patch *DBTimePatch) {
-	var prepareContextGuard, queryContextGuard *monkey.PatchGuard
+	var prepareContextMu sync.Mutex
+	var prepareContextGuard *monkey.PatchGuard
 	prepareContextGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*sql.DB](), "PrepareContext",
-		func(db *sql.DB, c context.Context, query string) (*sql.Stmt, error) {
+		func(db *sql.DB, ctx context.Context, query string) (*sql.Stmt, error) {
+			prepareContextMu.Lock()
+			defer prepareContextMu.Unlock()
 			prepareContextGuard.Unpatch()
 			defer prepareContextGuard.Restore()
-			nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
-			return db.PrepareContext(c, query) //nolint:sqlclosecheck // the caller is responsible for closing the statement
+			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
+			return db.PrepareContext(ctx, query) //nolint:sqlclosecheck // the caller is responsible for closing the statement
 		})
 	patch.patchedMethods = append(patch.patchedMethods, prepareContextGuard)
+
+	var queryContextMu sync.Mutex
+	var queryContextGuard *monkey.PatchGuard
 	queryContextGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*sql.DB](), "QueryContext",
-		func(db *sql.DB, c context.Context, query string, args ...any) (*sql.Rows, error) {
+		func(db *sql.DB, ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+			queryContextMu.Lock()
+			defer queryContextMu.Unlock()
 			queryContextGuard.Unpatch()
 			defer queryContextGuard.Restore()
 			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
-			return db.QueryContext(c, query, args...) //nolint:sqlclosecheck // the caller is responsible for closing the rows
+			return db.QueryContext(ctx, query, args...) //nolint:sqlclosecheck // the caller is responsible for closing the rows
 		})
 	patch.patchedMethods = append(patch.patchedMethods, queryContextGuard)
 }
 
 func patchGormMethods(nowReplacer func(string) string, patch *DBTimePatch) {
-	var execGuard, rawGuard *monkey.PatchGuard
+	var execMu sync.Mutex
+	var execGuard *monkey.PatchGuard
 	execGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*gorm.DB](), "Exec",
 		func(db *gorm.DB, query string, args ...any) *gorm.DB {
+			execMu.Lock()
+			defer execMu.Unlock()
 			execGuard.Unpatch()
 			defer execGuard.Restore()
 			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
 			return db.Exec(query, args...)
 		})
 	patch.patchedMethods = append(patch.patchedMethods, execGuard)
+
+	var rawMu sync.Mutex
+	var rawGuard *monkey.PatchGuard
 	rawGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*gorm.DB](), "Raw",
 		func(db *gorm.DB, query string, args ...any) *gorm.DB {
+			rawMu.Lock()
+			defer rawMu.Unlock()
 			rawGuard.Unpatch()
 			defer rawGuard.Restore()
 			query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
@@ -111,10 +133,14 @@ func patchDatabaseDBMethods(nowReplacer func(string) string, patch *DBTimePatch)
 	patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer, patch)
 	patchDatabaseDBMethodsWithStringQueryAndArgs(nowReplacer, patch)
 	patchDatabaseDBMethodsWithStringQuery(nowReplacer, patch)
+
+	var orderMu sync.Mutex
 	var orderGuard *monkey.PatchGuard
 	orderGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*database.DB](), "Order",
 		func(db *database.DB, value any, reorder ...bool) *database.DB {
+			orderMu.Lock()
+			defer orderMu.Unlock()
 			orderGuard.Unpatch()
 			defer orderGuard.Restore()
 			if valueStr, ok := value.(string); ok {
@@ -124,10 +150,13 @@ func patchDatabaseDBMethods(nowReplacer func(string) string, patch *DBTimePatch)
 		})
 	patch.patchedMethods = append(patch.patchedMethods, orderGuard)
 
+	var pluckMu sync.Mutex
 	var pluckGuard *monkey.PatchGuard
 	pluckGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*database.DB](), "Pluck",
 		func(db *database.DB, column string, values any) *database.DB {
+			pluckMu.Lock()
+			defer pluckMu.Unlock()
 			pluckGuard.Unpatch()
 			defer pluckGuard.Restore()
 			column = nowRegexp.ReplaceAllStringFunc(column, nowReplacer)
@@ -135,10 +164,13 @@ func patchDatabaseDBMethods(nowReplacer func(string) string, patch *DBTimePatch)
 		})
 	patch.patchedMethods = append(patch.patchedMethods, pluckGuard)
 
+	var takeMu sync.Mutex
 	var takeGuard *monkey.PatchGuard
 	takeGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*database.DB](), "Take",
 		func(db *database.DB, out any, where ...any) *database.DB {
+			takeMu.Lock()
+			defer takeMu.Unlock()
 			takeGuard.Unpatch()
 			defer takeGuard.Restore()
 			if len(where) > 0 {
@@ -150,10 +182,13 @@ func patchDatabaseDBMethods(nowReplacer func(string) string, patch *DBTimePatch)
 		})
 	patch.patchedMethods = append(patch.patchedMethods, takeGuard)
 
+	var deleteMu sync.Mutex
 	var deleteGuard *monkey.PatchGuard
 	deleteGuard = monkey.PatchInstanceMethod(
 		reflect.TypeFor[*database.DB](), "Delete",
 		func(db *database.DB, where ...any) *database.DB {
+			deleteMu.Lock()
+			defer deleteMu.Unlock()
 			deleteGuard.Unpatch()
 			defer deleteGuard.Restore()
 			if len(where) > 0 {
@@ -170,21 +205,23 @@ func patchDatabaseDBMethodsWithStringQuery(nowReplacer func(string) string, patc
 	stringDBMethods := [...]string{
 		"Table", "Group",
 	}
-	stringDBGuards := make(map[string]*monkey.PatchGuard, len(stringDBMethods))
 	for _, methodName := range stringDBMethods {
-		stringDBGuards[methodName] = monkey.PatchInstanceMethod(
+		var methodMu sync.Mutex
+		var guard *monkey.PatchGuard
+		guard = monkey.PatchInstanceMethod(
 			reflect.TypeFor[*database.DB](), methodName,
 			func(db *database.DB, query string) *database.DB {
-				stringDBGuards[methodName].Unpatch()
-				defer stringDBGuards[methodName].Restore()
+				methodMu.Lock()
+				defer methodMu.Unlock()
+				guard.Unpatch()
+				defer guard.Restore()
 				query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
-				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
-				reflArgs := []reflect.Value{reflect.ValueOf(query)}
-
 				//nolint:forcetypeassert // both methods always return *database.DB
-				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
+				return reflect.ValueOf(db).MethodByName(methodName).
+					Call([]reflect.Value{reflect.ValueOf(query)})[0].
+					Interface().(*database.DB)
 			})
-		patch.patchedMethods = append(patch.patchedMethods, stringDBGuards[methodName])
+		patch.patchedMethods = append(patch.patchedMethods, guard)
 	}
 }
 
@@ -192,27 +229,30 @@ func patchDatabaseDBMethodsWithStringQueryAndArgs(nowReplacer func(string) strin
 	stringAndArgsDBMethods := [...]string{
 		"Joins", "Raw", "Exec",
 	}
-	stringAndArgsDBGuards := make(map[string]*monkey.PatchGuard, len(stringAndArgsDBMethods))
 	for _, methodName := range stringAndArgsDBMethods {
-		stringAndArgsDBGuards[methodName] = monkey.PatchInstanceMethod(
+		var methodMu sync.Mutex
+		var guard *monkey.PatchGuard
+		guard = monkey.PatchInstanceMethod(
 			reflect.TypeFor[*database.DB](), methodName,
 			func(db *database.DB, query string, args ...any) *database.DB {
-				stringAndArgsDBGuards[methodName].Unpatch()
-				defer stringAndArgsDBGuards[methodName].Restore()
+				methodMu.Lock()
+				defer methodMu.Unlock()
+				guard.Unpatch()
+				defer guard.Restore()
 				query = nowRegexp.ReplaceAllStringFunc(query, nowReplacer)
-				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
-				reflArgs := constructReflArgsForQueryAndArgs(query, args)
-
 				//nolint:forcetypeassert // all the methods always return *database.DB
-				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
+				return reflect.ValueOf(db).MethodByName(methodName).
+					Call(constructReflArgsForQueryAndArgs(query, args))[0].
+					Interface().(*database.DB)
 			})
-		patch.patchedMethods = append(patch.patchedMethods, stringAndArgsDBGuards[methodName])
+		patch.patchedMethods = append(patch.patchedMethods, guard)
 	}
 }
 
 func constructReflArgsForQueryAndArgs(query any, args []any) []reflect.Value {
-	reflArgs := make([]reflect.Value, 0, len(args))
+	reflArgs := make([]reflect.Value, 0, len(args)+1)
 	reflArgs = append(reflArgs, reflect.ValueOf(query))
+	// Untyped nil becomes the zero reflect.Value, which panics in Call; use a typed *string nil instead.
 	nilReflValue := reflect.New(reflect.TypeFor[*string]()).Elem()
 	for _, arg := range args {
 		var reflValue reflect.Value
@@ -230,23 +270,25 @@ func patchDatabaseDBMethodsWithIntQueryAndArgs(nowReplacer func(string) string, 
 	standardDBMethods := [...]string{
 		"Where", "Select", "Having",
 	}
-	standardDBGuards := make(map[string]*monkey.PatchGuard, len(standardDBMethods))
 	for _, methodName := range standardDBMethods {
-		standardDBGuards[methodName] = monkey.PatchInstanceMethod(
+		var methodMu sync.Mutex
+		var guard *monkey.PatchGuard
+		guard = monkey.PatchInstanceMethod(
 			reflect.TypeFor[*database.DB](), methodName,
 			func(db *database.DB, query any, args ...any) *database.DB {
-				standardDBGuards[methodName].Unpatch()
-				defer standardDBGuards[methodName].Restore()
+				methodMu.Lock()
+				defer methodMu.Unlock()
+				guard.Unpatch()
+				defer guard.Restore()
 				if queryStr, ok := query.(string); ok {
 					query = nowRegexp.ReplaceAllStringFunc(queryStr, nowReplacer)
 				}
-				reflMethod := reflect.ValueOf(db).MethodByName(methodName)
-				reflArgs := constructReflArgsForQueryAndArgs(query, args)
-
 				//nolint:forcetypeassert // all the methods always return *database.DB
-				return reflMethod.Call(reflArgs)[0].Interface().(*database.DB)
+				return reflect.ValueOf(db).MethodByName(methodName).
+					Call(constructReflArgsForQueryAndArgs(query, args))[0].
+					Interface().(*database.DB)
 			})
-		patch.patchedMethods = append(patch.patchedMethods, standardDBGuards[methodName])
+		patch.patchedMethods = append(patch.patchedMethods, guard)
 	}
 }
 
