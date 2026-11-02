@@ -112,8 +112,20 @@ jobs:
       - run:
           name: Skip if no new migrations added
           command: |
+            # Compare against master tip for feature branches (whole PR), not pipeline.git.base_revision
+            # (previous push on this branch — would skip migration tests on later non-migration pushes).
+            # Fetch master over HTTPS: cimg/go 1.26+ may lack github.com in SSH known_hosts, so an SSH
+            # fetch hangs on the interactive authenticity prompt until no_output_timeout.
+            if [ "<<pipeline.git.branch>>" = "master" ]; then
+              BASE_REV="<<pipeline.git.base_revision>>"
+            else
+              git fetch --depth=1 \
+                "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git" \
+                "master:refs/remotes/origin/master"
+              BASE_REV="origin/master"
+            fi
             EARLIEST_CHANGED_MIGRATION=$( \
-              git diff --name-only `if [ "<<pipeline.git.branch>>" = "master" ]; then echo "<<pipeline.git.base_revision>>"; else echo "origin/master"; fi`..<<pipeline.git.revision>> | \
+              git diff --name-only "${BASE_REV}"..<<pipeline.git.revision>> | \
                 (grep "db/migrations/" || true) | sort | head -n 1 | sed "s/db\/migrations\///" || true \
             )
             [ -z "$EARLIEST_CHANGED_MIGRATION" ] && circleci-agent step halt && exit 0
