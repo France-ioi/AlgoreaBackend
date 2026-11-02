@@ -250,16 +250,17 @@ jobs:
     environment:
       AWS_REGION: eu-west-3
     steps:
+      # checkout for tools/redoc-spec-page.sh; attach_workspace then overlays swagger.yaml
+      - checkout
       - attach_workspace:
           at: ./
-      - run: echo "<html><body><redoc spec-url='//franceioi-algorea.s3.eu-west-3.amazonaws.com/spec/swagger-${CIRCLE_TAG}.yaml'></redoc><script src="//cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script></body></html>" > "spec.html"
+      - run: ./tools/redoc-spec-page.sh "${CIRCLE_TAG}" > spec.html
       - aws-cli/setup
       - run: |
           aws s3 cp ./swagger.yaml s3://franceioi-algorea/spec/swagger-${CIRCLE_TAG}.yaml --acl public-read
-          aws s3 cp ./spec.html s3://franceioi-algorea/spec/${CIRCLE_TAG}.html --acl public-read
-          for f in $(aws s3 ls s3://franceioi-algorea/spec/ | awk '{print $4}' | grep '.html' | grep -v 'index'); do echo "<li><a href=\"./$f\">${f::-5}</a></li>" >> list.html; done;
-          echo "<html><body><ul>`tac list.html`</ul></body></html>" > index.html
-          aws s3 cp ./index.html s3://franceioi-algorea/spec/index.html --acl public-read
+          aws s3 cp ./spec.html s3://franceioi-algorea/spec/${CIRCLE_TAG}.html --acl public-read --content-type text/html
+          aws s3 ls s3://franceioi-algorea/spec/ | awk '{print $4}' | ./tools/redoc-spec-index.sh > index.html
+          aws s3 cp ./index.html s3://franceioi-algorea/spec/index.html --acl public-read --content-type text/html
   dbdoc-gen:
     docker:
       - image: cimg/go:1.25.9
