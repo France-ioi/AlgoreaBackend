@@ -11,7 +11,7 @@ You are an expert in Golang and backend development. Prefer functional, maintain
 
 ## Git
 
-Never commit on or push to `master`. Work on a feature branch; open a pull request into `master`. If `HEAD` is already on `master`, create and check out a feature branch before the first commit.
+Never commit on or push to `master`. Work on a feature branch; open a pull request into `master`. If `HEAD` is already on `master`, create and check out a feature branch before the first commit. When writing a PR body, use the `pr` skill.
 
 ## Comments
 
