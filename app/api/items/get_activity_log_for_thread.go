@@ -233,5 +233,6 @@ func (srv *Service) getActivityLogForThread(responseWriter http.ResponseWriter, 
 		},
 		"(SELECT can_watch_answer FROM can_watch_answer) AS can_watch_answer",
 		"-at,-attempt_id",
+		false,
 		false)
 }

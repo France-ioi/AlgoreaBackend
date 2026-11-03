@@ -15,7 +15,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
-const itemActivityLogStraightJoinBoundary = 10000
+const (
+	itemActivityLogStraightJoinBoundary = 10000
+	// Temporary until answers gains (participant_id, item_id, created_at DESC, …); used by FORCE and IGNORE hints.
+	answersCreatedAtActivityLogIndex = "created_at_d_item_id_participant_id_attempt_id_d_atype_d_id_a_t"
+)
 
 // swagger:model itemActivityLogResponseRow
 type itemActivityLogResponseRow struct {
@@ -292,8 +296,6 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 	}
 
 	// Prefer equalities / joins so MySQL can use index condition pushdown on participant/item indexes.
-	// A dedicated answers index on (participant_id, item_id, created_at DESC, …) remains optional follow-up
-	// for multi-item ordered limits; this change intentionally does not add a migration.
 	var singletonItemID *int64
 	if !watchedGroupIDIsSet && ancestorItemID != nil {
 		var itemHasDescendants bool
@@ -326,7 +328,8 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 			},
 			func() string { return "NULL AS can_watch_answer" }),
 		"-at,item_id,participant_id,-attempt_id",
-		true)
+		true,
+		!watchedGroupIDIsSet)
 }
 
 type itemActivityLogFilters struct {
@@ -441,7 +444,8 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 	startedResultsQueryConditionsFunc, validatedResultsQueryConditionsFunc,
 	unCanWatchAnswersConditionsFunc func(*database.DB) *database.DB,
 	canWatchAnswerColumnString, resultsSortRules string,
-	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded bool,
+	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded,
+	ignoreCreatedAtIndexOnAnswersWhenNotForced bool,
 ) error {
 	user := srv.GetUser(httpRequest)
 
@@ -486,7 +490,8 @@ func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpReque
 		startedResultsQueryConditionsFunc, validatedResultsQueryConditionsFunc,
 		unCanWatchAnswersConditionsFunc, canWatchAnswerColumnString,
 		resultsSortRules,
-		doStraightJoinAndForceIndexInAnswersQueryWhenNeeded)
+		doStraightJoinAndForceIndexInAnswersQueryWhenNeeded,
+		ignoreCreatedAtIndexOnAnswersWhenNotForced)
 
 	var result []itemActivityLogResponseRow
 	service.MustNotBeError(query.Scan(&result).Error())
@@ -534,7 +539,8 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 	startedResultsQueryConditionsFunc, validatedResultsQueryConditionsFunc,
 	unCanWatchAnswersConditionsFunc func(*database.DB) *database.DB,
 	canWatchAnswerColumnString, resultsSortRules string,
-	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded bool,
+	doStraightJoinAndForceIndexInAnswersQueryWhenNeeded,
+	ignoreCreatedAtIndexOnAnswersWhenNotForced bool,
 ) *database.DB {
 	const answersQueryDefaultSelect = `
 			answers.activity_type_int,
@@ -547,6 +553,7 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 	answersQuerySelect := answersQueryDefaultSelect
 
 	answersQuery := store.Answers().DB
+	forcedCreatedAtIndex := false
 
 	if doStraightJoinAndForceIndexInAnswersQueryWhenNeeded {
 		var cnt struct {
@@ -561,9 +568,17 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 			// it will be faster to go through all the answers table with limit in this case because sorting is too expensive
 			answersQuerySelect = "STRAIGHT_JOIN /* tell the optimizer we don't want to convert IN(...) into JOIN */\n" + answersQueryDefaultSelect
 			// also, we need to FORCE INDEX to do the sorted index scan
-			answersQuery = store.Table("answers FORCE INDEX (created_at_d_item_id_participant_id_attempt_id_d_atype_d_id_a_t)")
+			answersQuery = store.Table("answers FORCE INDEX (" + answersCreatedAtActivityLogIndex + ")")
 			answersQuery = answersQueryStraightJoinConditionsFunc(answersQuery)
+			forcedCreatedAtIndex = true
 		}
+	}
+
+	// Equalities + ORDER BY created_at DESC LIMIT otherwise pick the created_at-leading covering index
+	// and scan far past the matching rows; IGNORE steers to the participant FK index (+ ICP).
+	// A (participant_id, item_id, created_at DESC, …) index can replace this hint later (no migration here).
+	if !forcedCreatedAtIndex && ignoreCreatedAtIndexOnAnswersWhenNotForced {
+		answersQuery = store.Table("answers IGNORE INDEX (" + answersCreatedAtActivityLogIndex + ")")
 	}
 
 	answersQuery = answersQueryMandatoryConditionsFunc(answersQuery.Select(answersQuerySelect))

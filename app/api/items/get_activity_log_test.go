@@ -21,13 +21,14 @@ func Test_constructActivityLogQuery_ForcesIndexConditionsSatisfied(t *testing.T)
 
 	db, mock := constructDBMockCheckingAnswersCountQueryInActivityLog(t, itemActivityLogStraightJoinBoundary+1)
 	defer func() { _ = db.Close() }()
-	sjcFuncCalled, sql := callConstructActivityLogQueryForTestsOfIndexForcing(t, db, true)
+	sjcFuncCalled, sql := callConstructActivityLogQueryForTestsOfIndexForcing(t, db, true, true)
 
 	require.True(t, sjcFuncCalled)
 	require.NoError(t, mock.ExpectationsWereMet())
 
 	assert.Contains(t, sql, "MYTESTCONDITION")
-	assert.Contains(t, sql, "FORCE INDEX ")
+	assert.Contains(t, sql, "FORCE INDEX ("+answersCreatedAtActivityLogIndex+")")
+	assert.NotContains(t, sql, "IGNORE INDEX ("+answersCreatedAtActivityLogIndex+")")
 }
 
 func Test_constructActivityLogQuery_DoesNotForceIndexWhenConditionsSatisfiedButTheFlagIsFalse(t *testing.T) {
@@ -36,26 +37,43 @@ func Test_constructActivityLogQuery_DoesNotForceIndexWhenConditionsSatisfiedButT
 	db, mock := database.NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	sjcFuncCalled, sql := callConstructActivityLogQueryForTestsOfIndexForcing(t, db, false)
+	sjcFuncCalled, sql := callConstructActivityLogQueryForTestsOfIndexForcing(t, db, false, false)
 
 	require.False(t, sjcFuncCalled)
 	require.NoError(t, mock.ExpectationsWereMet())
 	assert.NotContains(t, sql, "MYTESTCONDITION")
 	assert.NotContains(t, sql, "FORCE INDEX ")
+	assert.NotContains(t, sql, "IGNORE INDEX ")
 }
 
-func Test_constructActivityLogQuery_DoesNotForceIndexWhenConditionsNotSatisfied(t *testing.T) {
+func Test_constructActivityLogQuery_IgnoresCreatedAtIndexOnParticipantOnlySmallPath(t *testing.T) {
 	testoutput.SuppressIfPasses(t)
 
 	db, mock := constructDBMockCheckingAnswersCountQueryInActivityLog(t, itemActivityLogStraightJoinBoundary)
 	defer func() { _ = db.Close() }()
 
-	sjcFuncCalled, sql := callConstructActivityLogQueryForTestsOfIndexForcing(t, db, true)
+	sjcFuncCalled, sql := callConstructActivityLogQueryForTestsOfIndexForcing(t, db, true, true)
+
+	require.False(t, sjcFuncCalled)
+	require.NoError(t, mock.ExpectationsWereMet())
+	assert.NotContains(t, sql, "MYTESTCONDITION")
+	assert.NotContains(t, sql, "FORCE INDEX ("+answersCreatedAtActivityLogIndex+")")
+	assert.Contains(t, sql, "IGNORE INDEX ("+answersCreatedAtActivityLogIndex+")")
+}
+
+func Test_constructActivityLogQuery_DoesNotIgnoreCreatedAtIndexOnWatchedGroupSmallPath(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := constructDBMockCheckingAnswersCountQueryInActivityLog(t, itemActivityLogStraightJoinBoundary)
+	defer func() { _ = db.Close() }()
+
+	sjcFuncCalled, sql := callConstructActivityLogQueryForTestsOfIndexForcing(t, db, true, false)
 
 	require.False(t, sjcFuncCalled)
 	require.NoError(t, mock.ExpectationsWereMet())
 	assert.NotContains(t, sql, "MYTESTCONDITION")
 	assert.NotContains(t, sql, "FORCE INDEX ")
+	assert.NotContains(t, sql, "IGNORE INDEX ")
 }
 
 func constructDBMockCheckingAnswersCountQueryInActivityLog(t *testing.T, expectedCount int) (*database.DB, sqlmock.Sqlmock) {
@@ -69,7 +87,7 @@ func constructDBMockCheckingAnswersCountQueryInActivityLog(t *testing.T, expecte
 }
 
 func callConstructActivityLogQueryForTestsOfIndexForcing(
-	t *testing.T, db *database.DB, doForceIndex bool,
+	t *testing.T, db *database.DB, doForceIndex, ignoreCreatedAtIndexOnSmallPath bool,
 ) (sjcFuncCalled bool, sql string) {
 	t.Helper()
 
@@ -78,7 +96,7 @@ func callConstructActivityLogQueryForTestsOfIndexForcing(
 		func(q *database.DB) *database.DB { sjcFuncCalled = true; return q.Where("MYTESTCONDITION") },
 		func(q *database.DB) *database.DB { return q }, func(q *database.DB) *database.DB { return q },
 		func(q *database.DB) *database.DB { return q },
-		"NULL AS can_watch_answer", "-at", doForceIndex)
+		"NULL AS can_watch_answer", "-at", doForceIndex, ignoreCreatedAtIndexOnSmallPath)
 	sql = sqlFromQueryExpr(t, query)
 
 	return sjcFuncCalled, sql
