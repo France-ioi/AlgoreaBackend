@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.59.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.2...v2.59.3) - 2026-11-03
+
+- speed up participant-only `GET /items/{ids}/log` by ignoring the answers `created_at` index when the matching set is not large; the watched-group path is unchanged
+
 ## [v2.59.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.1...v2.59.2) - 2026-11-03
 
 - speed up participant-only `GET /items/{ids}/log` by filtering on participant and item equalities (or a join) instead of CTE `IN` scans; the watched-group path is unchanged
