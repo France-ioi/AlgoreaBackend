@@ -87,7 +87,7 @@ func constructDBMockCheckingAnswersCountQueryInActivityLog(t *testing.T, expecte
 }
 
 func callConstructActivityLogQueryForTestsOfIndexForcing(
-	t *testing.T, db *database.DB, doForceIndex, ignoreCreatedAtIndexOnSmallPath bool,
+	t *testing.T, db *database.DB, doForceIndex, ignoreCreatedAtIndexOnAnswersWhenNotForced bool,
 ) (sjcFuncCalled bool, sql string) {
 	t.Helper()
 
@@ -96,7 +96,7 @@ func callConstructActivityLogQueryForTestsOfIndexForcing(
 		func(q *database.DB) *database.DB { sjcFuncCalled = true; return q.Where("MYTESTCONDITION") },
 		func(q *database.DB) *database.DB { return q }, func(q *database.DB) *database.DB { return q },
 		func(q *database.DB) *database.DB { return q },
-		"NULL AS can_watch_answer", "-at", doForceIndex, ignoreCreatedAtIndexOnSmallPath)
+		"NULL AS can_watch_answer", "-at", doForceIndex, ignoreCreatedAtIndexOnAnswersWhenNotForced)
 	sql = sqlFromQueryExpr(t, query)
 
 	return sjcFuncCalled, sql

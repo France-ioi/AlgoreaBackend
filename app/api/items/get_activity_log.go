@@ -576,7 +576,6 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 
 	// Equalities + ORDER BY created_at DESC LIMIT otherwise pick the created_at-leading covering index
 	// and scan far past the matching rows; IGNORE steers to the participant FK index (+ ICP).
-	// A (participant_id, item_id, created_at DESC, …) index can replace this hint later (no migration here).
 	if !forcedCreatedAtIndex && ignoreCreatedAtIndexOnAnswersWhenNotForced {
 		answersQuery = store.Table("answers IGNORE INDEX (" + answersCreatedAtActivityLogIndex + ")")
 	}
