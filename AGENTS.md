@@ -9,6 +9,10 @@ You are an expert in Golang and backend development. Prefer functional, maintain
 - Lint must pass (`make lint` / `./bin/golangci-lint run -v --timeout 2m`). Never disable linter rules.
 - Tests must pass (`make test-dev`). After code changes, touched functions/branches need **100%** coverage — recipe and DB setup in [`docs/architecture/testing.md`](docs/architecture/testing.md).
 
+## Git
+
+Never commit on or push to `master`. Work on a feature branch; open a pull request into `master`. If `HEAD` is already on `master`, create and check out a feature branch before the first commit. When writing a PR body, use the `pr` skill.
+
 ## Comments
 
 Write **why-comments** only: non-obvious choice, hardcoded threshold, library/DB quirk, intentional omission. Skip narrating comments. On refactor, **preserve** existing explanatory comments (move with the code); drop only when factually obsolete.
