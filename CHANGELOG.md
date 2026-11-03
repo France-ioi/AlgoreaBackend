@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.59.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.0...v2.59.1) - 2026-11-03
+
+- security: bump indirect modules `golang.org/x/net` (v0.62.0), `golang.org/x/sys` (v0.49.0), `golang.org/x/text` (v0.43.0); building now requires Go 1.26; chi v3→v5 still deferred (GO-2026-4316)
+
 ## [v2.59.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.58.4...v2.59.0) - 2026-10-08
 
 - allow longer item descriptions (`items_strings.description` → MEDIUMTEXT) and cap them at 100000 characters on `POST /items` and `PUT /items/{item_id}/strings/{language_tag}`
