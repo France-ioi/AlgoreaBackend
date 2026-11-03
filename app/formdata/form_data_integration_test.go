@@ -22,7 +22,7 @@ type NamedStruct struct {
 func TestFormData_ParseJSONRequestData(t *testing.T) {
 	tests := []struct {
 		name                string
-		definitionStructure interface{}
+		definitionStructure any
 		json                string
 		wantErr             string
 		wantFieldErrors     formdata.FieldErrorsError
@@ -340,8 +340,8 @@ func TestFormData_ParseJSONRequestData(t *testing.T) {
 func TestFormData_ParseMapData(t *testing.T) {
 	tests := []struct {
 		name                string
-		definitionStructure interface{}
-		sourceMap           map[string]interface{}
+		definitionStructure any
+		sourceMap           map[string]any
 		wantErr             string
 		wantFieldErrors     formdata.FieldErrorsError
 	}{
@@ -351,7 +351,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 				ID   int64  `json:"id"`
 				Name string `json:"name"`
 			}{},
-			map[string]interface{}{"id": 123, "name": "John"},
+			map[string]any{"id": 123, "name": "John"},
 			"",
 			nil,
 		},
@@ -360,7 +360,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			&struct {
 				ID int32 `json:"id"`
 			}{},
-			map[string]interface{}{"id": "123"},
+			map[string]any{"id": "123"},
 			"invalid input data",
 			formdata.FieldErrorsError{"id": {"expected type 'int32', got unconvertible type 'string'"}},
 		},
@@ -370,7 +370,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 				ID   int64  `json:"id"`
 				Name string `json:"name"`
 			}{},
-			map[string]interface{}{"id": nil, "name": nil},
+			map[string]any{"id": nil, "name": nil},
 			"invalid input data",
 			formdata.FieldErrorsError{
 				"id":   {"should not be null (expected type: int64)"},
@@ -382,7 +382,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			&struct {
 				ID int64 `json:"id"`
 			}{},
-			map[string]interface{}{"my_id": "123"},
+			map[string]any{"my_id": "123"},
 			"invalid input data",
 			formdata.FieldErrorsError{"my_id": {"unexpected field"}},
 		},
@@ -391,7 +391,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			&struct {
 				Name string `gorm:"column:sName" json:"-"`
 			}{},
-			map[string]interface{}{"Name": "test"},
+			map[string]any{"Name": "test"},
 			"invalid input data",
 			formdata.FieldErrorsError{"Name": {"unexpected field"}},
 		},
@@ -400,7 +400,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			&struct {
 				Time time.Time `json:"time"`
 			}{},
-			map[string]interface{}{"time": "123"},
+			map[string]any{"time": "123"},
 			"invalid input data",
 			formdata.FieldErrorsError{
 				"time": {"decoding error: parsing time \"123\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \"123\" as \"2006\""},
@@ -411,7 +411,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			&struct {
 				ID *int64 `json:"id" validate:"set"`
 			}{},
-			map[string]interface{}{"my_id": 1, "id": nil},
+			map[string]any{"my_id": 1, "id": nil},
 			"invalid input data",
 			formdata.FieldErrorsError{
 				"my_id": {"unexpected field"},
@@ -430,7 +430,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 					} `json:"other_struct2" validate:"set"`
 				} `json:"struct" validate:"set"`
 			}{},
-			map[string]interface{}{"id": nil, "struct": map[string]interface{}{"other_struct": nil, "other_struct2": nil}},
+			map[string]any{"id": nil, "struct": map[string]any{"other_struct": nil, "other_struct2": nil}},
 			"invalid input data",
 			formdata.FieldErrorsError{
 				"id":          {"unexpected field"},
@@ -450,14 +450,14 @@ func TestFormData_ParseMapData(t *testing.T) {
 					} `json:"other_struct2" validate:"set"`
 				} `json:"struct" validate:"set"`
 			}{},
-			map[string]interface{}{
+			map[string]any{
 				"id": nil,
-				"struct": map[string]interface{}{
+				"struct": map[string]any{
 					"name": nil,
-					"other_struct": map[string]interface{}{
+					"other_struct": map[string]any{
 						"name": nil,
 					},
-					"other_struct2": map[string]interface{}{
+					"other_struct2": map[string]any{
 						"name": nil,
 					},
 				},
@@ -473,7 +473,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 				ID   *int64  `json:"id"   validate:"min=1"`
 				Name *string `json:"name" validate:"min=1"` // length >= 1
 			}{},
-			map[string]interface{}{},
+			map[string]any{},
 			"",
 			nil,
 		},
@@ -483,7 +483,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 				ID   *int64  `json:"id"   validate:"min=1"`
 				Name *string `json:"name" validate:"min=1"` // length >= 1
 			}{},
-			map[string]interface{}{"id": 0, "name": ""},
+			map[string]any{"id": 0, "name": ""},
 			"invalid input data",
 			formdata.FieldErrorsError{
 				"id":   []string{"id must be 1 or greater"},
@@ -495,7 +495,7 @@ func TestFormData_ParseMapData(t *testing.T) {
 			&struct {
 				Field chan bool `json:"field"`
 			}{},
-			map[string]interface{}{"field": "value"},
+			map[string]any{"field": "value"},
 			"invalid input data",
 			formdata.FieldErrorsError{"": {"field: unsupported type: chan"}},
 		},
@@ -522,9 +522,9 @@ func TestFormData_ParseMapData(t *testing.T) {
 func TestFormData_ConstructMapForDB(t *testing.T) {
 	tests := []struct {
 		name                string
-		definitionStructure interface{}
+		definitionStructure any
 		json                string
-		want                map[string]interface{}
+		want                map[string]any
 	}{
 		{
 			"simple",
@@ -534,7 +534,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				NullableName *string `json:"nullable_name"`
 			}{},
 			`{"id2": 123, "name": "John", "nullable_name": "Paul"}`,
-			map[string]interface{}{
+			map[string]any{
 				"id": int64(123), "name": "John", "nullable_name": func() *string { s := "Paul"; return &s }(),
 			},
 		},
@@ -547,7 +547,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Skip2 string `json:"skip2"        sql:"-"`
 			}{},
 			`{"id":123, "name":"John", "skip1":"skip", "skip2":"skip"}`,
-			map[string]interface{}{"id": int64(123), "sName": "John"},
+			map[string]any{"id": int64(123), "sName": "John"},
 		},
 		{
 			"skips missing fields",
@@ -556,7 +556,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Description string `gorm:"column:sDescription" json:"description"`
 			}{},
 			`{}`,
-			map[string]interface{}{},
+			map[string]any{},
 		},
 		{
 			"skips fields without json tag",
@@ -564,7 +564,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Name string
 			}{},
 			`{"Name":"Test"}`,
-			map[string]interface{}{},
+			map[string]any{},
 		},
 		{
 			"skips unexported attributes",
@@ -572,7 +572,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				name string `gorm:"column:name"` // unexported, must be skipped regardless of any tag
 			}{},
 			`{"name":"Test"}`,
-			map[string]interface{}{},
+			map[string]any{},
 		},
 		{
 			"skips fields ignored by json",
@@ -581,7 +581,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Description string `sql:"column:sDescription"`
 			}{},
 			`{}`,
-			map[string]interface{}{},
+			map[string]any{},
 		},
 		{
 			"keeps nulls",
@@ -592,7 +592,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Number3     *int64  `gorm:"column:iNumber3"     json:"number3"`
 			}{},
 			`{"description": null, "text": "", "number2": null, "number3": 0}`,
-			map[string]interface{}{
+			map[string]any{
 				"sDescription": (*string)(nil), "sText": func() *string { s := ""; return &s }(),
 				"iNumber2": (*int64)(nil), "iNumber3": func() *int64 { n := int64(0); return &n }(),
 			},
@@ -608,7 +608,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				} `json:"struct" validate:"set"`
 			}{},
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
-			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
+			map[string]any{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 		{
 			"timestamp",
@@ -616,7 +616,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Time time.Time `json:"time"`
 			}{},
 			`{"time": "2019-05-30T11:00:00Z"}`,
-			map[string]interface{}{
+			map[string]any{
 				"time": time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC),
 			},
 		},
@@ -631,7 +631,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				} `json:"struct,squash"`
 			}{},
 			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
-			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
+			map[string]any{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 		{
 			"sql vs gorm: the last gorm column name wins",
@@ -639,7 +639,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Name string `gorm:"column:name_gorm1;column:name_gorm2" json:"name" sql:"column:name_sql1;column:name_sql2"`
 			}{},
 			`{"name":"John"}`,
-			map[string]interface{}{"name_gorm2": "John"},
+			map[string]any{"name_gorm2": "John"},
 		},
 		{
 			"sql vs gorm: gorm '-' skips the field",
@@ -647,7 +647,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Name string `gorm:"-" json:"name" sql:"column:name_sql"`
 			}{},
 			`{"name":"John"}`,
-			map[string]interface{}{},
+			map[string]any{},
 		},
 		{
 			"sql vs gorm: sql '-' skips the field",
@@ -655,7 +655,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Name string `gorm:"column:name_gorm" json:"name" sql:"-"`
 			}{},
 			`{"name":"John"}`,
-			map[string]interface{}{},
+			map[string]any{},
 		},
 		{
 			"several fields with the same column name: the last one wins",
@@ -664,7 +664,7 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 				Name2 string `json:"name2" sql:"column:name"`
 			}{},
 			`{"name1":"John", "name2":"Paul"}`,
-			map[string]interface{}{"name": "Paul"},
+			map[string]any{"name": "Paul"},
 		},
 	}
 	for _, tt := range tests {
@@ -682,9 +682,9 @@ func TestFormData_ConstructMapForDB(t *testing.T) {
 func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 	tests := []struct {
 		name                string
-		definitionStructure interface{}
+		definitionStructure any
 		json                string
-		want                map[string]interface{}
+		want                map[string]any
 	}{
 		{
 			"structure",
@@ -697,7 +697,7 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 				} `json:"struct" validate:"set"`
 			}{},
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
-			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
+			map[string]any{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 		{
 			"pointer to structure",
@@ -710,7 +710,7 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 				} `json:"struct" validate:"set"`
 			}{},
 			`{"struct":{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}}`,
-			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
+			map[string]any{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 		{
 			"structure with squash",
@@ -723,7 +723,7 @@ func TestFormData_ConstructPartialMapForDB(t *testing.T) {
 				} `json:"struct,squash"`
 			}{},
 			`{"name":"John Doe", "other_struct": {"name": "Still John Doe"}}`,
-			map[string]interface{}{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
+			map[string]any{"structs.sName": "John Doe", "structs.otherStructs.sName": "Still John Doe"},
 		},
 	}
 	for _, tt := range tests {
@@ -743,35 +743,35 @@ func Test_toAnythingHookFunc(t *testing.T) {
 		name     string
 		typeFrom reflect.Type
 		typeTo   reflect.Type
-		data     interface{}
-		want     interface{}
+		data     any
+		want     any
 		wantErr  error
 	}{
 		{
 			name:     "string to anything (serialize)",
-			typeFrom: reflect.TypeOf("string"),
-			typeTo:   reflect.TypeOf(formdata.Anything{}),
+			typeFrom: reflect.TypeFor[string](),
+			typeTo:   reflect.TypeFor[formdata.Anything](),
 			data:     "string",
 			want:     *formdata.AnythingFromBytes([]byte(`"string"`)),
 		},
 		{
 			name:     "[]byte to anything (just copy)",
-			typeFrom: reflect.TypeOf([]byte("null")),
-			typeTo:   reflect.TypeOf(formdata.Anything{}),
+			typeFrom: reflect.TypeFor[[]byte](),
+			typeTo:   reflect.TypeFor[formdata.Anything](),
 			data:     []byte("null"),
 			want:     *formdata.AnythingFromBytes([]byte(`null`)),
 		},
 		{
 			name:     "int to anything (serialize)",
-			typeFrom: reflect.TypeOf(int(1)),
-			typeTo:   reflect.TypeOf(formdata.Anything{}),
+			typeFrom: reflect.TypeFor[int](),
+			typeTo:   reflect.TypeFor[formdata.Anything](),
 			data:     int(1),
 			want:     *formdata.AnythingFromBytes([]byte("1")),
 		},
 		{
 			name:     "int to string (does nothing)",
-			typeFrom: reflect.TypeOf(int(1)),
-			typeTo:   reflect.TypeOf("1"),
+			typeFrom: reflect.TypeFor[int](),
+			typeTo:   reflect.TypeFor[string](),
 			data:     int(1),
 			want:     int(1),
 		},
@@ -795,14 +795,14 @@ func Test_stringToInt64HookFunc(t *testing.T) {
 		name     string
 		typeFrom reflect.Type
 		typeTo   reflect.Type
-		data     interface{}
-		want     interface{}
+		data     any
+		want     any
 		wantErr  error
 	}{
 		{
 			name:     "string to int64 (parse)",
-			typeFrom: reflect.TypeOf("string"),
-			typeTo:   reflect.TypeOf(int64(0)),
+			typeFrom: reflect.TypeFor[string](),
+			typeTo:   reflect.TypeFor[int64](),
 			data:     "1234",
 			want:     int64(1234),
 		},

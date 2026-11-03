@@ -3,19 +3,17 @@
 package auth_test
 
 import (
-	"reflect"
 	"testing"
 	"time"
 	_ "unsafe"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/rand"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -28,11 +26,11 @@ func Test_createTempUserGroup_Duplicate(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	var nextID int64
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(*database.DataStore) int64 {
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 {
 		nextID++
 		return nextID
 	})
-	defer monkey.UnpatchAll()
+	defer restoreNewID()
 
 	expectedTime, _ := time.Parse(time.DateTime, expectedTimestamp)
 	dbTimePatch := testhelpers.MockDBTime(expectedTimestamp)
@@ -75,7 +73,8 @@ func Test_createTempUser_Duplicate(t *testing.T) {
 	})
 	defer monkey.UnpatchAll()
 
-	expectedTime, _ := time.Parse(time.DateTime, expectedTimestamp)
+	expectedTime, err := time.Parse(time.DateTime, expectedTimestamp)
+	require.NoError(t, err)
 	dbTimePatch := testhelpers.MockDBTime(expectedTimestamp)
 	defer testhelpers.RestoreDBTime(dbTimePatch)
 
@@ -96,19 +95,20 @@ func Test_createTempUser_Duplicate(t *testing.T) {
 	}
 	var user userData
 	require.NoError(t, dataStore.Users().Take(&user, "login = ?", login).Error())
+	registeredAt := database.Time(expectedTime)
 	assert.Equal(t, userData{
-		LoginID:         golang.Ptr(int64(0)),
+		LoginID:         new(int64(0)),
 		Login:           login,
 		TempUser:        true,
-		RegisteredAt:    golang.Ptr(database.Time(expectedTime)),
+		RegisteredAt:    &registeredAt,
 		GroupID:         2,
 		DefaultLanguage: expectedDefaultLanguage,
-		LastIP:          golang.Ptr(expectedIP),
+		LastIP:          new(expectedIP),
 	}, user)
 }
 
 //go:linkname createTempUser github.com/France-ioi/AlgoreaBackend/v2/app/api/auth.createTempUser
-func createTempUser(*database.DataStore, int64, interface{}, string) string
+func createTempUser(*database.DataStore, int64, any, string) string
 
 //go:linkname createTempUserGroup github.com/France-ioi/AlgoreaBackend/v2/app/api/auth.createTempUserGroup
 func createTempUserGroup(*database.DataStore) int64

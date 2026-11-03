@@ -115,7 +115,7 @@ func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.
 			Error())
 
 		user := srv.GetUser(httpRequest)
-		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
+		service.MustNotBeError(store.Attempts().InsertMap(map[string]any{
 			"id": gorm.Expr("(SELECT next_id FROM ? AS max_attempt)", store.Attempts().Select("IFNULL(MAX(id)+1, 0) AS next_id").
 				Where("participant_id = ?", entryState.groupID).WithExclusiveWriteLock().SubQuery()),
 			"participant_id": entryState.groupID, "created_at": itemInfo.Now,
@@ -128,7 +128,7 @@ func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.
 			Where("parent_attempt_id = ?", parentAttemptID).
 			PluckFirst("MAX(id)", &attemptID).Error())
 
-		service.MustNotBeError(store.Results().InsertMap(map[string]interface{}{
+		service.MustNotBeError(store.Results().InsertMap(map[string]any{
 			"attempt_id": attemptID, "participant_id": entryState.groupID,
 			"item_id": entryState.itemID, "started_at": itemInfo.Now,
 		}))
@@ -153,7 +153,7 @@ func (srv *Service) enter(responseWriter http.ResponseWriter, httpRequest *http.
 
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"attempt_id": strconv.FormatInt(attemptID, 10),
 		"duration":   itemInfo.Duration,
 		"entered_at": itemInfo.Now,

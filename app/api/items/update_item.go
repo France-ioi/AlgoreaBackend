@@ -3,6 +3,7 @@ package items
 import (
 	"errors"
 	"net/http"
+	"slices"
 
 	"github.com/France-ioi/validator"
 	"github.com/go-chi/render"
@@ -50,10 +51,8 @@ func (in *updateItemRequest) checkItemsRelationsCycles(store *database.DataStore
 		return true
 	}
 	ids := in.childrenIDs()
-	for _, id := range ids {
-		if id == itemID {
-			return false
-		}
+	if slices.Contains(ids, itemID) {
+		return false
 	}
 	var count int64
 	service.MustNotBeError(store.ItemAncestors().WithExclusiveWriteLock().
@@ -211,7 +210,7 @@ func (srv *Service) updateItem(responseWriter http.ResponseWriter, httpRequest *
 }
 
 func updateItemInDB(
-	itemData map[string]interface{}, participantsGroupID *int64, store *database.DataStore, itemID int64,
+	itemData map[string]any, participantsGroupID *int64, store *database.DataStore, itemID int64,
 ) error {
 	if itemData["requires_explicit_entry"] == true && participantsGroupID == nil {
 		createdParticipantsGroupID := createParticipantsGroupForItemRequiringExplicitEntry(store, itemID)

@@ -150,15 +150,15 @@ func (resp *threadGetResponse) UnmarshalJSON(raw []byte) error {
 
 //nolint:gochecknoglobals // knownTypes is a map of type names to their reflect.Type.
 var knownTypes = map[string]reflect.Type{
-	"AnswersSubmitRequest":      reflect.TypeOf(&answers.SubmitRequest{}).Elem(),
-	"AnswersSubmitResponse":     reflect.TypeOf(&answersSubmitResponse{}).Elem(),
-	"AskHintResponse":           reflect.TypeOf(&responseWithTaskToken{}).Elem(),
-	"SaveGradeResponse":         reflect.TypeOf(&saveGradeResponse{}).Elem(),
-	"GenerateTaskTokenResponse": reflect.TypeOf(&responseWithTaskToken{}).Elem(),
-	"ThreadTokenResponse":       reflect.TypeOf(&threadGetResponse{}).Elem(),
+	"AnswersSubmitRequest":      reflect.TypeFor[answers.SubmitRequest](),
+	"AnswersSubmitResponse":     reflect.TypeFor[answersSubmitResponse](),
+	"AskHintResponse":           reflect.TypeFor[responseWithTaskToken](),
+	"SaveGradeResponse":         reflect.TypeFor[saveGradeResponse](),
+	"GenerateTaskTokenResponse": reflect.TypeFor[responseWithTaskToken](),
+	"ThreadTokenResponse":       reflect.TypeFor[threadGetResponse](),
 }
 
-func getZeroStructPtr(typeName string) (interface{}, error) {
+func getZeroStructPtr(typeName string) (any, error) {
 	reflType, ok := knownTypes[typeName]
 	if !ok {
 		return nil, fmt.Errorf("unknown type: %q", typeName)

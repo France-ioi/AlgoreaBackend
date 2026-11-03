@@ -7,11 +7,11 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,6 +19,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -46,11 +47,11 @@ func TestEnablePropagationCommandDebugLogging(t *testing.T) {
 
 	enablePropagationCommandDebugLogging(&app.Application{Database: db})
 	assert.True(t, logger.IsDebugEnabled())
-	logs := ""
+	var logsBuilder strings.Builder
 	for _, entry := range logHook.AllEntries() {
-		logs += entry.Message
+		logsBuilder.WriteString(entry.Message)
 	}
-	assert.Contains(t, logs, "logging level raised to debug")
+	assert.Contains(t, logsBuilder.String(), "logging level raised to debug")
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -67,17 +68,17 @@ func TestRunPropagationCommand_SuccessEnablesDebug(t *testing.T) {
 	monkey.Patch(app.New, func(...*logging.Logger) (*app.Application, error) {
 		return application, nil
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "WithNamedLock",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
 		func(s *database.DataStore, _ string, _ time.Duration, fn func(*database.DataStore) error) error {
 			return fn(s)
 		})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "InTransaction",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "InTransaction",
 		func(s *database.DataStore, fn func(*database.DataStore) error, _ ...*sql.TxOptions) error {
 			return fn(s)
 		})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "SchedulePermissionsPropagation",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "SchedulePermissionsPropagation",
 		func(*database.DataStore) {})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "ScheduleResultsPropagation",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "ScheduleResultsPropagation",
 		func(*database.DataStore) {})
 	defer monkey.UnpatchAll()
 
@@ -104,17 +105,17 @@ func TestRunPropagationCommand_WithMaxDuration(t *testing.T) {
 	monkey.Patch(app.New, func(...*logging.Logger) (*app.Application, error) {
 		return application, nil
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "WithNamedLock",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
 		func(s *database.DataStore, _ string, _ time.Duration, fn func(*database.DataStore) error) error {
 			return fn(s)
 		})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "InTransaction",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "InTransaction",
 		func(s *database.DataStore, fn func(*database.DataStore) error, _ ...*sql.TxOptions) error {
 			return fn(s)
 		})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "SchedulePermissionsPropagation",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "SchedulePermissionsPropagation",
 		func(*database.DataStore) {})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "ScheduleResultsPropagation",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "ScheduleResultsPropagation",
 		func(*database.DataStore) {})
 	defer monkey.UnpatchAll()
 
@@ -159,7 +160,7 @@ func TestRunPropagationCommand_NamedLockTimeout(t *testing.T) {
 	monkey.Patch(app.New, func(...*logging.Logger) (*app.Application, error) {
 		return application, nil
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "WithNamedLock",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
 		func(_ *database.DataStore, _ string, _ time.Duration, _ func(*database.DataStore) error) error {
 			return database.ErrNamedLockWaitTimeoutExceeded
 		})
@@ -188,7 +189,7 @@ func TestRunPropagationCommand_OtherLockError(t *testing.T) {
 	monkey.Patch(app.New, func(...*logging.Logger) (*app.Application, error) {
 		return application, nil
 	})
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "WithNamedLock",
+	monkey.PatchInstanceMethod(reflect.TypeFor[*database.DataStore](), "WithNamedLock",
 		func(_ *database.DataStore, _ string, _ time.Duration, _ func(*database.DataStore) error) error {
 			return errors.New("lock exploded")
 		})
@@ -214,11 +215,11 @@ func TestConfigurePropagationSoftDeadline(t *testing.T) {
 	assert.Positive(t, lockTimeout)
 
 	_ = configurePropagationSoftDeadline(application, time.Now().Add(-time.Hour), propagationShutdownMargin+time.Second)
-	logs := ""
+	var logsBuilder strings.Builder
 	for _, e := range logHook.AllEntries() {
-		logs += e.Message
+		logsBuilder.WriteString(e.Message)
 	}
-	assert.Contains(t, logs, "soft deadline")
+	assert.Contains(t, logsBuilder.String(), "soft deadline")
 	require.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -286,10 +287,10 @@ func TestStartPropagationSIGTERMHandler(t *testing.T) {
 		return database.SoftDeadlineExceeded(db)
 	}, time.Second, 10*time.Millisecond)
 
-	logs := ""
+	var logsBuilder strings.Builder
 	for _, entry := range logHook.AllEntries() {
-		logs += entry.Message
+		logsBuilder.WriteString(entry.Message)
 	}
-	assert.Contains(t, logs, "Got SIGTERM")
+	assert.Contains(t, logsBuilder.String(), "Got SIGTERM")
 	require.NoError(t, mock.ExpectationsWereMet())
 }

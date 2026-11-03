@@ -42,7 +42,7 @@ func (srv *Service) generateIdentityToken(responseWriter http.ResponseWriter, ht
 	}}).Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"identity_token": identityToken,
 		"expires_in":     expiresIn,
 	})))

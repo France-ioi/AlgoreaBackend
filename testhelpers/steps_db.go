@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,7 +17,6 @@ import (
 	messages "github.com/cucumber/messages/go/v21"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 type rowTransformation int
@@ -47,7 +47,7 @@ func (ctx *TestContext) DBHasTable(tableName string, data *godog.Table) error {
 		}
 		query := "INSERT INTO " + database.QuoteName(tableName) +
 			" (" + strings.Join(fields, ", ") + ") VALUES " + finalMarksString
-		vals := make([]interface{}, 0, (len(data.Rows)-1)*len(head))
+		vals := make([]any, 0, (len(data.Rows)-1)*len(head))
 		for i := 1; i < len(data.Rows); i++ {
 			for _, cell := range data.Rows[i].Cells {
 				cell.Value = ctx.preprocessString(cell.Value)
@@ -120,7 +120,7 @@ func (ctx *TestContext) setDBTableRowColumnValues(tableName string, primaryKey, 
 }
 
 func (ctx *TestContext) executeOrQueueDBDataRowUpdate(tableName string, primaryKey map[string]string, columns, values []string) {
-	queryValues := make([]interface{}, 0, len(values)+len(primaryKey))
+	queryValues := make([]any, 0, len(values)+len(primaryKey))
 	quotedColumns := make([]string, 0, len(columns))
 	for i, column := range columns {
 		quotedColumns = append(quotedColumns, database.QuoteName(column)+" = ?")
@@ -208,7 +208,7 @@ func constructGodogTableFromData(data []stringKeyValuePair) *godog.Table {
 	return table
 }
 
-func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []interface{}) error {
+func (ctx *TestContext) executeOrQueueDBDataInsertionQuery(query string, vals []any) error {
 	return database.NewDataStore(ctx.application.Database).WithForeignKeyChecksDisabled(func(store *database.DataStore) error {
 		return store.Exec(query, vals...).Error()
 	})
@@ -281,7 +281,7 @@ func (ctx *TestContext) loadColumnsFromDBTable(dbTableName string, dbColumnNames
 		},
 	}
 
-	var rows []map[string]interface{}
+	var rows []map[string]any
 	err := ctx.application.Database.Table(dbTableName).Select(strings.Join(dbColumnNames, ",")).
 		Order(strings.Join(dbColumnNames, ",")).ScanIntoSliceOfMaps(&rows).Error()
 	if err != nil {
@@ -798,7 +798,7 @@ func (ctx *TestContext) dataRowMatchesDBRow(dataRow *messages.PickleTableRow,
 
 		columnValue := columnValues[colIndex]
 		if columnValue == nil {
-			columnValue = golang.Ptr(tableValueNull)
+			columnValue = new(tableValueNull)
 		}
 
 		if (dataValue == tableValueTrue && *columnValue == "1") || (dataValue == tableValueFalse && *columnValue == "0") {
@@ -834,7 +834,7 @@ func getDBColumnNamesFromDataTable(data *godog.Table) (dbColumnNames []string) {
 func scanDBRow(dbResult *sql.Rows, length int) ([]*string, error) {
 	// Create a slice of values and a second slice with pointers to each item.
 	rowValues := make([]*string, length)
-	rowValPtr := make([]interface{}, length)
+	rowValPtr := make([]any, length)
 	for i := range rowValues {
 		rowValPtr[i] = &rowValues[i]
 	}
@@ -915,10 +915,8 @@ func shouldSkipRow(data *godog.Table, rowIndex int, columnIndexes []int,
 func rowMatchesColumnValues(row *messages.PickleTableRow, columnIndexes []int, columnValues []string) bool {
 	// Both loops should contain 1 or 2 elements only
 	for _, columnIndex := range columnIndexes {
-		for _, value := range columnValues {
-			if row.Cells[columnIndex].Value == value {
-				return true
-			}
+		if slices.Contains(columnValues, row.Cells[columnIndex].Value) {
+			return true
 		}
 	}
 
@@ -928,30 +926,32 @@ func rowMatchesColumnValues(row *messages.PickleTableRow, columnIndexes []int, c
 // constructWhereForColumnValues construct the WHERE part of a query matching column with values
 // note: the same values are checked for every column
 func constructWhereForColumnValues(columnNames, columnValues []string, whereIn bool) (
-	where string, parameters []interface{},
+	where string, parameters []any,
 ) {
 	if len(columnValues) > 0 {
 		questionMarks := "?" + strings.Repeat(", ?", len(columnValues)-1)
 
+		var whereBuilder strings.Builder
 		isFirstCondition := true
 		for _, columnName := range columnNames {
 			if isFirstCondition {
-				where += " WHERE "
+				whereBuilder.WriteString(" WHERE ")
 			} else {
-				where += " OR "
+				whereBuilder.WriteString(" OR ")
 			}
 			isFirstCondition = false
 
 			if whereIn {
-				where += fmt.Sprintf(" %s IN (%s) ", columnName, questionMarks) // #nosec
+				_, _ = fmt.Fprintf(&whereBuilder, " %s IN (%s) ", columnName, questionMarks) // #nosec
 			} else {
-				where += fmt.Sprintf(" %s NOT IN (%s) ", columnName, questionMarks) // #nosec
+				_, _ = fmt.Fprintf(&whereBuilder, " %s NOT IN (%s) ", columnName, questionMarks) // #nosec
 			}
 
 			for _, columnValue := range columnValues {
 				parameters = append(parameters, columnValue)
 			}
 		}
+		where = whereBuilder.String()
 	}
 
 	return where, parameters
@@ -972,7 +972,7 @@ const (
 
 // dbDataTableValue converts a string value that we can find the db seeding table to a valid type for the db
 // e.g., the string "null" means the SQL `NULL`.
-func dbDataTableValue(input string) interface{} {
+func dbDataTableValue(input string) any {
 	switch input {
 	case tableValueFalse:
 		return false

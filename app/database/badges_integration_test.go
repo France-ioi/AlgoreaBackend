@@ -4,11 +4,9 @@ package database_test
 
 import (
 	"math"
-	"reflect"
 	"testing"
 	_ "unsafe"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -447,11 +445,11 @@ func TestGroupStore_createBadgeGroup_Duplicate(t *testing.T) {
 	groupStore := database.NewDataStore(db).Groups()
 
 	var nextID int64
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(_ *database.DataStore) int64 {
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 {
 		nextID++
 		return nextID
 	})
-	defer monkey.UnpatchAll()
+	defer restoreNewID()
 
 	newID := groupStoreCreateBadgeGroup(groupStore, "url", "name")
 	assert.Equal(t, int64(2), newID)

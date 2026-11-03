@@ -16,8 +16,8 @@ import (
 	log "github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 )
 
-func logSQLQuery(ctx context.Context, duration time.Duration, sql string, args []interface{}, rowsAffected *int64) {
-	fields := map[string]interface{}{
+func logSQLQuery(ctx context.Context, duration time.Duration, sql string, args []any, rowsAffected *int64) {
+	fields := map[string]any{
 		"duration": duration.String(),
 		"fileline": fileWithLineNum(),
 		"type":     "db",
@@ -30,7 +30,7 @@ func logSQLQuery(ctx context.Context, duration time.Duration, sql string, args [
 
 func logDBError(ctx context.Context, err error) {
 	entry := log.EntryFromContext(ctx).WithFields(
-		map[string]interface{}{"type": "db", "fileline": fileWithLineNum()})
+		map[string]any{"type": "db", "fileline": fileWithLineNum()})
 	if isRetryableError(err) {
 		entry.Info(err)
 	} else if f, ok := ctx.Value(logErrorAsInfoFuncContextKey).(func(error) bool); ok && f(err) {
@@ -48,7 +48,7 @@ var explainableStatementRegexp = regexp.MustCompile(`(?i)^\s*(WITH|SELECT|DELETE
 var emptyFunc = func() {}
 
 func getSQLExecutionPlanLoggingFunc(
-	ctx context.Context, db queryRowWithoutLogging, logConfig *LogConfig, query string, args ...interface{},
+	ctx context.Context, db queryRowWithoutLogging, logConfig *LogConfig, query string, args ...any,
 ) func() {
 	if !logConfig.LogSQLQueries || !logConfig.AnalyzeSQLQueries || !explainableStatementRegexp.MatchString(query) {
 		return emptyFunc
@@ -59,7 +59,7 @@ func getSQLExecutionPlanLoggingFunc(
 	if err := db.queryRowWithoutLogging("EXPLAIN ANALYZE "+query, args...).Scan(&plan); err != nil {
 		return func() {
 			log.EntryFromContext(ctx).WithFields(
-				map[string]interface{}{"type": "db", "fileline": fileWithLineNum()}).
+				map[string]any{"type": "db", "fileline": fileWithLineNum()}).
 				Errorf("Failed to get an execution plan for a SQL query: %v", err)
 		}
 	}
@@ -67,7 +67,7 @@ func getSQLExecutionPlanLoggingFunc(
 	planDuration := gorm.NowFunc().Sub(planStartTime)
 	return func() {
 		log.EntryFromContext(ctx).WithFields(
-			map[string]interface{}{
+			map[string]any{
 				"type":     "db",
 				"fileline": fileWithLineNum(),
 				"duration": planDuration.String(),
@@ -79,7 +79,7 @@ func getSQLExecutionPlanLoggingFunc(
 func getSQLQueryLoggingFunc(
 	ctx context.Context, rowsAffectedFunc func() *int64,
 	err *error, //nolint:gocritic // we need the pointer as the constructor is called before the error is set
-	startTime time.Time, query string, args ...interface{},
+	startTime time.Time, query string, args ...any,
 ) func(logConfig *LogConfig) {
 	return func(logConfig *LogConfig) {
 		if *err != nil {
@@ -133,7 +133,7 @@ var (
 	numericPlaceHolderRegexp = regexp.MustCompile(`\$\d+`)
 )
 
-func formatValue(value interface{}) string {
+func formatValue(value any) string {
 	reflValue := reflect.ValueOf(value)
 	if !reflValue.IsValid() {
 		return nullString
@@ -191,7 +191,7 @@ func formatTime(value time.Time) string {
 	return fmt.Sprintf("'%v'", value.Format("2006-01-02 15:04:05.999999999"))
 }
 
-func fillSQLPlaceholders(query string, values []interface{}) string {
+func fillSQLPlaceholders(query string, values []any) string {
 	var sql string
 	formattedValues := make([]string, 0, len(values))
 
@@ -207,13 +207,15 @@ func fillSQLPlaceholders(query string, values []interface{}) string {
 			sql = regexp.MustCompile(placeholder).ReplaceAllString(sql, value+"$1")
 		}
 	} else {
+		var sqlBuilder strings.Builder
 		formattedValuesLength := len(formattedValues)
 		for index, value := range sqlRegexp.Split(query, -1) {
-			sql += value
+			sqlBuilder.WriteString(value)
 			if index < formattedValuesLength {
-				sql += formattedValues[index]
+				sqlBuilder.WriteString(formattedValues[index])
 			}
 		}
+		sql = sqlBuilder.String()
 	}
 	return sql
 }

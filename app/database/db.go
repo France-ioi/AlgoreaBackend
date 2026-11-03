@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -34,7 +35,7 @@ type LogConfig struct {
 
 type cte struct {
 	name     string
-	subQuery interface{}
+	subQuery any
 }
 
 // DB contains information for current db connection (wraps *gorm.DB).
@@ -62,7 +63,7 @@ func cloneDBWithNewContext(ctx context.Context, conn *DB) *DB {
 
 // Open connects to the database and tests the connection.
 // The context must contain a logger (set by logging.ContextWithLogger), otherwise Open will panic.
-func Open(ctx context.Context, source interface{}) (*DB, error) {
+func Open(ctx context.Context, source any) (*DB, error) {
 	logger := log.LoggerFromContext(ctx)
 	logConfig := LogConfig{
 		LogSQLQueries:     logger.IsSQLQueriesLoggingEnabled(),
@@ -75,7 +76,7 @@ func Open(ctx context.Context, source interface{}) (*DB, error) {
 
 // OpenWithLogConfig connects to the database and tests the connection. It uses the given logging settings.
 // The context must contain a logger (set by logging.ContextWithLogger), otherwise OpenWithLogConfig will panic.
-func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, error) {
+func OpenWithLogConfig(ctx context.Context, source any, logConfig LogConfig, rawSQLQueriesLoggingEnabled bool) (*DB, error) {
 	var err error
 	var dbConn *gorm.DB
 	driverName := "mysql"
@@ -126,7 +127,7 @@ func OpenWithLogConfig(ctx context.Context, source interface{}, logConfig LogCon
 // (namespacing then stays off — production opens via a DSN string).
 // The DSN is parsed here independently of OpenRawDBConnection, which parses it again; that double parse
 // is once-per-open and intentional to keep OpenRawDBConnection unchanged.
-func schemaNameFromSource(source interface{}) string {
+func schemaNameFromSource(source any) string {
 	switch src := source.(type) {
 	case string:
 		cfg, err := mysql.ParseDSN(src)
@@ -163,24 +164,16 @@ func namespacedLockName(schema, lockName string) string {
 
 // OpenRawDBConnection creates a new DB connection.
 func OpenRawDBConnection(sourceDSN string, enableRawLevelLogging bool) (*sql.DB, error) {
-	registerWrappedDriver := true
-	for _, driverName := range sql.Drivers() {
-		if driverName == "wrapped-mysql" {
-			registerWrappedDriver = false
-			break
-		}
-	}
+	registerWrappedDriver := !slices.Contains(sql.Drivers(), "wrapped-mysql")
+
 	if registerWrappedDriver {
 		sql.Register("wrapped-mysql", newMySQLDriverWrapper(&mysql.MySQLDriver{}))
 	}
 
 	if enableRawLevelLogging {
 		registerInstrumentedDriver := true
-		for _, driverName := range sql.Drivers() {
-			if driverName == "instrumented-mysql" {
-				registerInstrumentedDriver = false
-				break
-			}
+		if slices.Contains(sql.Drivers(), "instrumented-mysql") {
+			registerInstrumentedDriver = false
 		}
 
 		if registerInstrumentedDriver {
@@ -204,7 +197,7 @@ func cloneGormDB(db *gorm.DB) *gorm.DB {
 type gormDBAccessor struct {
 	sync.RWMutex
 
-	Value        interface{}
+	Value        any
 	Error        error
 	RowsAffected int64
 
@@ -256,31 +249,31 @@ func (conn *DB) Close() error {
 }
 
 // Limit specifies the number of records to be retrieved.
-func (conn *DB) Limit(limit interface{}) *DB {
+func (conn *DB) Limit(limit any) *DB {
 	return newDB(conn.db.Limit(limit), conn.ctes)
 }
 
 // Offset specifies the offset of the records to be retrieved.
-func (conn *DB) Offset(offset interface{}) *DB {
+func (conn *DB) Offset(offset any) *DB {
 	return newDB(conn.db.Offset(offset), conn.ctes)
 }
 
 // Where returns a new relation, filters records with given conditions, accepts `map`,
 // `struct` or `string` as conditions, refer http://jinzhu.github.io/gorm/crud.html#query
-func (conn *DB) Where(query interface{}, args ...interface{}) *DB {
+func (conn *DB) Where(query any, args ...any) *DB {
 	return newDB(conn.db.Where(query, args...), conn.ctes)
 }
 
 // Joins specifies Joins conditions
 //
 //	db.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org").Find(&user)
-func (conn *DB) Joins(query string, args ...interface{}) *DB {
+func (conn *DB) Joins(query string, args ...any) *DB {
 	return newDB(conn.db.Joins(query, args...), conn.ctes)
 }
 
 // Select specifies fields that you want to retrieve from database when querying, by default, will select all fields;
 // When creating/updating, specify fields that you want to save to database.
-func (conn *DB) Select(query interface{}, args ...interface{}) *DB {
+func (conn *DB) Select(query any, args ...any) *DB {
 	return newDB(conn.db.Select(query, args...), conn.ctes)
 }
 
@@ -299,12 +292,12 @@ func (conn *DB) Group(query string) *DB {
 //	db.Order("name DESC")
 //	db.Order("name DESC", true) // reorder
 //	db.Order(gorm.SqlExpr("name = ? DESC", "first")) // sql expression
-func (conn *DB) Order(value interface{}, reorder ...bool) *DB {
+func (conn *DB) Order(value any, reorder ...bool) *DB {
 	return newDB(conn.db.Order(value, reorder...), conn.ctes)
 }
 
 // Having specifies HAVING conditions for GROUP BY.
-func (conn *DB) Having(query interface{}, args ...interface{}) *DB {
+func (conn *DB) Having(query any, args ...any) *DB {
 	return newDB(conn.db.Having(query, args...), conn.ctes)
 }
 
@@ -337,7 +330,7 @@ func (conn *DB) With(name string, query *DB) *DB {
 // Raw uses raw sql as conditions
 //
 //	db.Raw("SELECT name, age FROM users WHERE name = ?", 3).Scan(&result)
-func (conn *DB) Raw(query string, args ...interface{}) *DB {
+func (conn *DB) Raw(query string, args ...any) *DB {
 	// db.Raw("").Joins(...) is a hack for making db.Raw("...").Joins(...) work better
 	return newDB(
 		conn.db.New().Set("gorm:query_option", "").
@@ -345,39 +338,39 @@ func (conn *DB) Raw(query string, args ...interface{}) *DB {
 }
 
 // UpdateColumns is a synonym for UpdateColumn.
-func (conn *DB) UpdateColumns(attrs ...interface{}) *DB {
+func (conn *DB) UpdateColumns(attrs ...any) *DB {
 	return conn.UpdateColumn(attrs...)
 }
 
 // UpdateColumn updates attributes without callbacks, refer: https://jinzhu.github.io/gorm/crud.html#update
-func (conn *DB) UpdateColumn(attrs ...interface{}) *DB {
+func (conn *DB) UpdateColumn(attrs ...any) *DB {
 	return newDB(conn.toQuery().UpdateColumn(attrs...), nil)
 }
 
 // SubQuery returns the query as sub query.
-func (conn *DB) SubQuery() interface{} {
+func (conn *DB) SubQuery() any {
 	mustNotBeError(conn.Error())
 	return conn.toQuery().SubQuery()
 }
 
 // QueryExpr returns the query as expr object.
-func (conn *DB) QueryExpr() interface{} {
+func (conn *DB) QueryExpr() any {
 	mustNotBeError(conn.Error())
 	return conn.toQuery().QueryExpr()
 }
 
 // Scan scans value to a struct.
-func (conn *DB) Scan(dest interface{}) *DB {
+func (conn *DB) Scan(dest any) *DB {
 	return newDB(conn.toQuery().Scan(dest), nil)
 }
 
 // ScanIntoSlices scans multiple columns into slices.
-func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
+func (conn *DB) ScanIntoSlices(pointersToSlices ...any) *DB {
 	if conn.db.Error != nil {
 		return conn
 	}
 
-	valuesPointers := make([]interface{}, len(pointersToSlices))
+	valuesPointers := make([]any, len(pointersToSlices))
 	for index := range pointersToSlices {
 		reflSlice := reflect.ValueOf(pointersToSlices[index]).Elem()
 		if reflSlice.Len() > 0 {
@@ -410,17 +403,17 @@ func (conn *DB) ScanIntoSlices(pointersToSlices ...interface{}) *DB {
 }
 
 // ScanIntoSliceOfMaps scans value into a slice of maps.
-func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]interface{}) *DB {
-	*dest = []map[string]interface{}(nil)
+func (conn *DB) ScanIntoSliceOfMaps(dest *[]map[string]any) *DB {
+	*dest = []map[string]any(nil)
 
-	return conn.ScanAndHandleMaps(func(rowMap map[string]interface{}) error {
+	return conn.ScanAndHandleMaps(func(rowMap map[string]any) error {
 		*dest = append(*dest, rowMap)
 		return nil
 	})
 }
 
 // ScanAndHandleMaps scans values into maps and calls the given handler for each row.
-func (conn *DB) ScanAndHandleMaps(handler func(map[string]interface{}) error) *DB {
+func (conn *DB) ScanAndHandleMaps(handler func(map[string]any) error) *DB {
 	if conn.db.Error != nil {
 		return conn
 	}
@@ -454,7 +447,7 @@ func (conn *DB) ScanAndHandleMaps(handler func(map[string]interface{}) error) *D
 }
 
 // Count gets how many records for a model.
-func (conn *DB) Count(dest interface{}) *DB {
+func (conn *DB) Count(dest any) *DB {
 	if conn.Error() != nil {
 		return conn
 	}
@@ -467,7 +460,7 @@ func (conn *DB) Count(dest interface{}) *DB {
 //	db.Table("users").Pluck("id", &ids)
 //
 // The 'values' parameter should be a pointer to a slice.
-func (conn *DB) Pluck(column string, values interface{}) *DB {
+func (conn *DB) Pluck(column string, values any) *DB {
 	if conn.db.Error != nil {
 		return conn
 	}
@@ -490,7 +483,7 @@ func (conn *DB) Pluck(column string, values interface{}) *DB {
 //	db.Table("users").PluckFirst("id", &id)
 //
 // The 'values' parameter should be a pointer to a value.
-func (conn *DB) PluckFirst(column string, value interface{}) *DB {
+func (conn *DB) PluckFirst(column string, value any) *DB {
 	valuesReflValue := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(value).Elem()), 0, 1)
 	valuesPtrReflValue := reflect.New(reflect.SliceOf(reflect.TypeOf(value).Elem()))
 	valuesPtrReflValue.Elem().Set(valuesReflValue)
@@ -509,7 +502,7 @@ func (conn *DB) PluckFirst(column string, value interface{}) *DB {
 }
 
 // Take returns a record that match given conditions, the order will depend on the database implementation.
-func (conn *DB) Take(out interface{}, where ...interface{}) *DB {
+func (conn *DB) Take(out any, where ...any) *DB {
 	return newDB(conn.toQuery().Take(out, where...), nil)
 }
 
@@ -524,7 +517,7 @@ func (conn *DB) HasRows() (bool, error) {
 }
 
 // Delete deletes value matching given conditions, if the value has primary key, then will including the primary key as condition.
-func (conn *DB) Delete(where ...interface{}) *DB {
+func (conn *DB) Delete(where ...any) *DB {
 	return newDB(conn.toQuery().Delete(nil, where...), nil)
 }
 
@@ -539,13 +532,13 @@ func (conn *DB) Error() error {
 }
 
 // Exec executes raw sql.
-func (conn *DB) Exec(sqlQuery string, values ...interface{}) *DB {
+func (conn *DB) Exec(sqlQuery string, values ...any) *DB {
 	return newDB(conn.db.Exec(sqlQuery, values...), nil)
 }
 
 // InsertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
 // into the given table.
-func (conn *DB) InsertMaps(tableName string, dataMaps []map[string]interface{}) error {
+func (conn *DB) InsertMaps(tableName string, dataMaps []map[string]any) error {
 	if len(dataMaps) == 0 {
 		return nil
 	}
@@ -558,7 +551,7 @@ func (conn *DB) InsertMaps(tableName string, dataMaps []map[string]interface{}) 
 // into the given table (like insertMaps does). If it is a duplicate, the listed columns will be updated.
 // If updateColumns is nil, all the columns in dataMaps will be updated.
 func (conn *DB) InsertOrUpdateMaps(
-	tableName string, dataMaps []map[string]interface{}, updateColumns []string, customColumnUpdates map[string]string,
+	tableName string, dataMaps []map[string]any, updateColumns []string, customColumnUpdates map[string]string,
 ) error {
 	if len(dataMaps) == 0 {
 		return nil
@@ -595,7 +588,7 @@ func (conn *DB) InsertOrUpdateMaps(
 }
 
 // Set sets setting by name, which could be used in callbacks, will clone a new db, and update its setting.
-func (conn *DB) Set(name string, value interface{}) *DB {
+func (conn *DB) Set(name string, value any) *DB {
 	return newDB(conn.db.Set(name, value), conn.ctes)
 }
 
@@ -818,7 +811,7 @@ func sleepBeforeRetrying(ctx context.Context) (bool, error) {
 	}
 }
 
-func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, deadline time.Time, errToHandle interface{},
+func (conn *DB) handleDeadlockAndLockWaitTimeout(txFunc func(*DB) error, count int64, deadline time.Time, errToHandle any,
 	rollbackErr error,
 	returnErr *error, //nolint:gocritic // we need the pointer as we replace the value of returnErr in some cases
 	txOptions ...*sql.TxOptions,
@@ -886,14 +879,14 @@ func logRetryableAttempt(ctx context.Context, kind string, count int64, err erro
 }
 
 func (conn *DB) isInTransaction() bool {
-	if _, ok := interface{}(conn.db.CommonDB()).(driver.Tx); ok {
+	if _, ok := any(conn.db.CommonDB()).(driver.Tx); ok {
 		return true
 	}
 	return false
 }
 
 func (conn *DB) isFixed() bool {
-	if _, ok := interface{}(conn.db.CommonDB()).(*sqlConnWrapper); ok || conn.isInTransaction() {
+	if _, ok := any(conn.db.CommonDB()).(*sqlConnWrapper); ok || conn.isInTransaction() {
 		return true
 	}
 	return false
@@ -984,7 +977,7 @@ func (conn *DB) toQuery() *gorm.DB {
 	}
 	strBuilder := new(strings.Builder)
 	strBuilder.WriteString("WITH ")
-	cteSubQueries := make([]interface{}, 0, len(conn.ctes)+1)
+	cteSubQueries := make([]any, 0, len(conn.ctes)+1)
 	isFirstCTE := true
 	for _, cte := range conn.ctes {
 		if !isFirstCTE {
@@ -1000,9 +993,9 @@ func (conn *DB) toQuery() *gorm.DB {
 	return conn.Raw(strBuilder.String(), cteSubQueries...).db
 }
 
-func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interface{} {
-	columns := make([]interface{}, len(cols))
-	columnPointers := make([]interface{}, len(cols))
+func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]any {
+	columns := make([]any, len(cols))
+	columnPointers := make([]any, len(cols))
 	for i := range columns {
 		columnPointers[i] = &columns[i]
 	}
@@ -1011,7 +1004,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interfa
 		return nil
 	}
 
-	rowMap := make(map[string]interface{})
+	rowMap := make(map[string]any)
 	for i, columnName := range cols {
 		if value, ok := columns[i].([]byte); ok {
 			columns[i] = *(*string)(unsafe.Pointer(&value)) //nolint:gosec // convert []byte to string without copying
@@ -1023,7 +1016,7 @@ func (conn *DB) readRowIntoMap(cols []string, rows *sql.Rows) map[string]interfa
 
 // insertMaps reads fields from the given maps and inserts the values set in the first row (so keys in all maps should be same)
 // into the given table.
-func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) error {
+func (conn *DB) insertMaps(tableName string, dataMaps []map[string]any) error {
 	if len(dataMaps) == 0 {
 		return nil
 	}
@@ -1032,11 +1025,11 @@ func (conn *DB) insertMaps(tableName string, dataMaps []map[string]interface{}) 
 }
 
 func (conn *DB) constructInsertMapsStatement(
-	dataMaps []map[string]interface{}, tableName string,
-) (query string, values []interface{}) {
+	dataMaps []map[string]any, tableName string,
+) (query string, values []any) {
 	// data for the building the SQL request
 	// "INSERT INTO tablename (keys... ) VALUES (?, ?, NULL, ?, ...), ...", values...
-	values = make([]interface{}, 0, len(dataMaps)*len(dataMaps[0]))
+	values = make([]any, 0, len(dataMaps)*len(dataMaps[0]))
 	keys := make([]string, 0, len(dataMaps[0]))
 	for key := range dataMaps[0] {
 		keys = append(keys, key)
@@ -1165,7 +1158,7 @@ func QuoteName(name string) string {
 }
 
 // Default returns gorm.Expr("DEFAULT").
-func Default() interface{} {
+func Default() any {
 	return gorm.Expr("DEFAULT")
 }
 

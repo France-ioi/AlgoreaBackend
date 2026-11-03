@@ -118,7 +118,7 @@ func deleteOneBatchOfUsers(db *DB, userIDs []int64, isTemporary bool) {
 	executeDeleteQuery(db, "groups", "WHERE id IN (?)", userIDs)
 }
 
-func executeDeleteQuery(s *DB, table, condition string, args ...interface{}) int64 {
+func executeDeleteQuery(s *DB, table, condition string, args ...any) int64 {
 	result := s.Exec(fmt.Sprintf("DELETE %[1]s FROM %[1]s ", QuoteName(table))+condition, args...)
 	mustNotBeError(result.Error())
 	return result.RowsAffected()

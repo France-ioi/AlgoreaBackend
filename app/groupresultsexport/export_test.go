@@ -314,7 +314,7 @@ func TestRun_Success(t *testing.T) {
 	assert.Equal(t, "11", payload["group_id"])
 	assert.Equal(t, filename, payload["filename"])
 	assert.Equal(t, int64(len("PK\x03\x04fake-zip")), payload["size_bytes"])
-	items, ok := payload["items"].([]map[string]interface{})
+	items, ok := payload["items"].([]map[string]any)
 	require.True(t, ok)
 	require.Len(t, items, 1)
 	assert.Equal(t, "210", items[0]["id"])
@@ -335,7 +335,7 @@ func TestRun_FailurePaths(t *testing.T) {
 		payload           RequestedPayload
 		setup             func()
 		expectedError     string
-		expectedGroupName interface{}
+		expectedGroupName any
 	}{
 		{
 			name:          "missing fields",
@@ -685,7 +685,7 @@ type roundTripFunc func(*http.Request) (*http.Response, error)
 func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) { return f(req) }
 
 func TestParseGroupResultsToken_InvalidPayloadMap(t *testing.T) {
-	raw := token.Generate(map[string]interface{}{
+	raw := token.Generate(map[string]any{
 		"user_id":  "1",
 		"group_id": "1",
 		"item_ids": "not-an-array",

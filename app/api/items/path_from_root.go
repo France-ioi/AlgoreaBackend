@@ -105,7 +105,7 @@ func (srv *Service) getPathFromRoot(responseWriter http.ResponseWriter, httpRequ
 	if itemPaths == nil {
 		return service.ErrAPIInsufficientAccessRights
 	}
-	render.Respond(responseWriter, httpRequest, map[string]interface{}{"path": itemPaths[0].Path})
+	render.Respond(responseWriter, httpRequest, map[string]any{"path": itemPaths[0].Path})
 	return nil
 }
 

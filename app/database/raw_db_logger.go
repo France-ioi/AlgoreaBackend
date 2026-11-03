@@ -17,7 +17,7 @@ var rawArgsRegexp = regexp.MustCompile(`^\[(<nil>|[\w.]+) (.+?)\](?:(?:, \[(?:<n
 
 // NewRawDBLogger returns a logger for raw database actions.
 func NewRawDBLogger() instrumentedsql.Logger {
-	return instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...interface{}) {
+	return instrumentedsql.LoggerFunc(func(ctx context.Context, msg string, keyvals ...any) {
 		valuesMap := prepareRawDBLoggerValuesMap(keyvals)
 		if err, ok := valuesMap["err"].(error); ok && errors.Is(err, driver.ErrSkip) { // duplicated message
 			return
@@ -34,8 +34,8 @@ func NewRawDBLogger() instrumentedsql.Logger {
 	})
 }
 
-func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
-	valuesMap := make(map[string]interface{}, len(keyvals)/2) //nolint:mnd // keyvals are key-value pairs
+func prepareRawDBLoggerValuesMap(keyvals []any) map[string]any {
+	valuesMap := make(map[string]any, len(keyvals)/2) //nolint:mnd // keyvals are key-value pairs
 	for index := 0; index < len(keyvals); index += 2 {
 		//nolint:forcetypeassert // panic if keyvals[index] is not a string (instrumentedsql guarantees that)
 		valuesMap[keyvals[index].(string)] = keyvals[index+1]
@@ -44,7 +44,7 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 		//nolint:forcetypeassert // panic if valuesMap["args"] is not a string (instrumentedsql guarantees that)
 		argsString := valuesMap["args"].(string)
 		argsString = argsString[1 : len(argsString)-1]
-		var argsValues []interface{}
+		var argsValues []any
 		for argsString != "" {
 			indices := rawArgsRegexp.FindStringSubmatchIndex(argsString)
 			typeStr := argsString[indices[2]:indices[3]]
@@ -65,8 +65,8 @@ func prepareRawDBLoggerValuesMap(keyvals []interface{}) map[string]interface{} {
 	return valuesMap
 }
 
-func convertRawSQLArgValue(value, typeStr string) interface{} {
-	var convertedValue interface{} = value
+func convertRawSQLArgValue(value, typeStr string) any {
+	var convertedValue any = value
 	switch typeStr {
 	case "string":
 		if unquoted, err := strconv.Unquote(value); err == nil {

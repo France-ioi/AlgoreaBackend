@@ -354,7 +354,7 @@ func getRawItemData(store *database.ItemStore, rootID, groupID int64, languageTa
 			 FROM results
 			 WHERE results.item_id = items.id AND results.participant_id = ?), 0) AS best_score`)
 
-	columnValues := []interface{}{groupID}
+	columnValues := []any{groupID}
 	query := store.ByID(rootID).
 		JoinsPermissionsForGroupToItemsWherePermissionAtLeast(groupID, "view", "info")
 

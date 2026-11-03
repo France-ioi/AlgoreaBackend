@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func Test_groupHasPathToItemOrItemIsRoot_HasRowsErrors(t *testing.T) {
@@ -32,7 +32,7 @@ func Test_groupHasPathToItemOrItemIsRoot_HasRowsErrors(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			callCount := 0
-			patch := monkey.PatchInstanceMethod(reflect.TypeOf(&database.DB{}), "HasRows",
+			patch := monkey.PatchInstanceMethod(reflect.TypeFor[*database.DB](), "HasRows",
 				func(_ *database.DB) (bool, error) {
 					callCount++
 					if callCount == test.failingCall {

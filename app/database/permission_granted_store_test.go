@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -20,7 +20,7 @@ func TestPermissionGrantedStore_ViewIndexByName(t *testing.T) {
 
 	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
-	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
+	oldLock = monkey.PatchInstanceMethod(reflect.TypeFor[*sync.RWMutex](), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
 		fakeDBEnums("permissions_granted.can_view",
 			map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5},
@@ -44,7 +44,7 @@ func TestPermissionGrantedStore_ViewNameByIndex(t *testing.T) {
 
 	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
-	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
+	oldLock = monkey.PatchInstanceMethod(reflect.TypeFor[*sync.RWMutex](), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
 		fakeDBEnums("permissions_granted.can_view",
 			map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5},
@@ -84,7 +84,7 @@ func TestPermissionGrantedStore_GrantViewEnum(t *testing.T) {
 
 	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
-	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
+	oldLock = monkey.PatchInstanceMethod(reflect.TypeFor[*sync.RWMutex](), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
 		fakeDBEnums("permissions_granted.can_grant_view",
 			map[string]int{"none": 1, "content": 2, "content_with_descendants": 3, "solution": 4, "solution_with_grant": 5},
@@ -130,7 +130,7 @@ func TestPermissionGrantedStore_EditEnum(t *testing.T) {
 
 	ClearAllDBEnums()
 	var oldLock *monkey.PatchGuard
-	oldLock = monkey.PatchInstanceMethod(reflect.TypeOf(&sync.RWMutex{}), "Lock", func(mutex *sync.RWMutex) {
+	oldLock = monkey.PatchInstanceMethod(reflect.TypeFor[*sync.RWMutex](), "Lock", func(mutex *sync.RWMutex) {
 		oldLock.Unpatch()
 		fakeDBEnums("permissions_granted.can_view",
 			map[string]int{"none": 1, "info": 2, "content": 3, "content_with_descendants": 4, "solution": 5},

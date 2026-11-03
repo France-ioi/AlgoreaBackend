@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/go-chi/chi/middleware"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,6 +21,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 

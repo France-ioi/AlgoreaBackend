@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"sync/atomic"
 	"unsafe"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // Anything represents a value of any type serialized as JSON.
@@ -15,12 +13,12 @@ type Anything struct {
 
 // AnythingFromString creates an instance of Anything with data from the given string.
 func AnythingFromString(s string) *Anything {
-	return &Anything{raw: golang.Ptr([]byte(s))}
+	return &Anything{raw: new([]byte(s))}
 }
 
 // AnythingFromBytes creates an instance of Anything with data from the given bytes slice.
 func AnythingFromBytes(bytes []byte) *Anything {
-	return &Anything{raw: golang.Ptr(bytes)}
+	return &Anything{raw: new(bytes)}
 }
 
 // Bytes returns stored bytes.

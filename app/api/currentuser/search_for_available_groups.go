@@ -112,7 +112,7 @@ func (srv *Service) searchForAvailableGroups(responseWriter http.ResponseWriter,
 		})
 	service.MustNotBeError(err)
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	service.MustNotBeError(query.ScanIntoSliceOfMaps(&result).Error())
 	convertedResult := service.ConvertSliceOfMapsFromDBToJSON(result)
 

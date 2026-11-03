@@ -48,7 +48,7 @@ func TestAnswerStore_WithMethods(t *testing.T) {
 			assert.NotEqual(t, store, newStore)
 			assert.Equal(t, "answers", newStore.tableName)
 
-			var result []interface{}
+			var result []any
 			err := newStore.Scan(&result).Error()
 			assert.NoError(t, err)
 			assert.NoError(t, mock.ExpectationsWereMet())

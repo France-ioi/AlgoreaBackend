@@ -49,8 +49,8 @@ func (s *AnswerStore) WithItems() *AnswerStore {
 }
 
 // GetCurrentAnswer returns the current answer of a participant-item-attempt triplet.
-func (s *AnswerStore) GetCurrentAnswer(participantID, itemID, attemptID int64) (map[string]interface{}, bool) {
-	var result []map[string]interface{}
+func (s *AnswerStore) GetCurrentAnswer(participantID, itemID, attemptID int64) (map[string]any, bool) {
+	var result []map[string]any
 	err := s.
 		WithGradings().
 		Where("participant_id = ?", participantID).
@@ -64,7 +64,7 @@ func (s *AnswerStore) GetCurrentAnswer(participantID, itemID, attemptID int64) (
 	mustNotBeError(err)
 
 	if len(result) == 0 {
-		return map[string]interface{}{}, false
+		return map[string]any{}, false
 	}
 
 	return result[0], true

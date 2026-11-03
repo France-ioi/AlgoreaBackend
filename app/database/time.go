@@ -15,7 +15,7 @@ import (
 type Time time.Time
 
 // Scan assigns a value from a database driver value ([]byte).
-func (t *Time) Scan(src interface{}) (err error) {
+func (t *Time) Scan(src any) (err error) {
 	//nolint:forcetypeassert // panic if src is not []byte (this means that the database returned a value of unexpected type)
 	return t.ScanString(string(src.([]byte)))
 }

@@ -18,7 +18,7 @@ func (ctx *TestContext) databaseCountRows(table string, datamap map[string]strin
 		case tableValueTrue:
 			query = query.Where(columnName + " = 1")
 		default:
-			var processedValue interface{} = value
+			var processedValue any = value
 			if value[0] == referencePrefix {
 				processedValue = ctx.getIDByReference(value)
 			}

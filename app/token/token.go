@@ -49,13 +49,13 @@ func (t *Token[P]) UnmarshalString(raw string) error {
 	return payloads.ParseMap(tokenPayload, &t.Payload)
 }
 
-var _ json.Unmarshaler = (*Token[interface{}])(nil)
+var _ json.Unmarshaler = (*Token[any])(nil)
 
 // MarshalJSON marshals the token into JSON.
 // It generates a signed token from the Payload field using the private key,
 // and returns it as a JSON string.
 func (t *Token[P]) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", Generate(payloads.ConvertIntoMap(t.Payload), t.PrivateKey))), nil
+	return fmt.Appendf(nil, "%q", Generate(payloads.ConvertIntoMap(t.Payload), t.PrivateKey)), nil
 }
 
 // MarshalString marshals the token into a string.
@@ -65,7 +65,7 @@ func (t *Token[P]) MarshalString() (string, error) {
 	return string(Generate(payloads.ConvertIntoMap(t.Payload), t.PrivateKey)), nil
 }
 
-var _ json.Marshaler = (*Token[interface{}])(nil)
+var _ json.Marshaler = (*Token[any])(nil)
 
 // UnmarshalStringer is the interface implemented by types
 // that can unmarshal a string description of themselves.
@@ -95,16 +95,16 @@ func (t *Token[P]) Sign(privateKey *rsa.PrivateKey) (string, error) {
 	return t.MarshalString()
 }
 
-var _ Signer = (*Token[interface{}])(nil)
+var _ Signer = (*Token[any])(nil)
 
 var (
-	_ UnmarshalStringer = (*Token[interface{}])(nil)
-	_ MarshalStringer   = (*Token[interface{}])(nil)
+	_ UnmarshalStringer = (*Token[any])(nil)
+	_ MarshalStringer   = (*Token[any])(nil)
 )
 
 // ConvertIntoMap converts the token's payload into a map.
-func (t *Token[P]) ConvertIntoMap() map[string]interface{} {
+func (t *Token[P]) ConvertIntoMap() map[string]any {
 	return payloads.ConvertIntoMap(t.Payload)
 }
 
-var _ payloads.ConverterIntoMap = (*Token[interface{}])(nil)
+var _ payloads.ConverterIntoMap = (*Token[any])(nil)

@@ -15,7 +15,6 @@ import (
 	"github.com/zenovich/flowmingo"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func defaultGodogOptions() godog.Options {
@@ -32,7 +31,7 @@ func init() { //nolint:gochecknoinits // bind Godog flags only once before runni
 
 // bindGodogCmdFlags binds the command arguments into the Godog options.
 func bindGodogCmdFlags() {
-	godog.BindFlags("godog.", flag.CommandLine, golang.Ptr(defaultGodogOptions()))
+	godog.BindFlags("godog.", flag.CommandLine, new(defaultGodogOptions()))
 }
 
 type contextKey int

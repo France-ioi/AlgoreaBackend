@@ -11,8 +11,8 @@ import (
 func TestMockDispatcher_RecordsEvents(t *testing.T) {
 	mock := NewMockDispatcher()
 
-	event1 := &Event{Type: "event1", Payload: map[string]interface{}{"key1": "value1"}}
-	event2 := &Event{Type: "event2", Payload: map[string]interface{}{"key2": "value2"}}
+	event1 := &Event{Type: "event1", Payload: map[string]any{"key1": "value1"}}
+	event2 := &Event{Type: "event2", Payload: map[string]any{"key2": "value2"}}
 
 	err := mock.Dispatch(context.Background(), event1)
 	require.NoError(t, err)

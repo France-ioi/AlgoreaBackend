@@ -33,7 +33,7 @@ func TestGetFromEnumUnderLock_WipesOutAllMapsOnError(t *testing.T) {
 		WillReturnError(expectedError)
 
 	assert.PanicsWithValue(t, expectedError, func() {
-		getFromEnumUnderLock(db, func() interface{} { return nil })
+		getFromEnumUnderLock(db, func() any { return nil })
 	})
 	assert.Nil(t, enumValueIndex2Name)
 	assert.Nil(t, enumValueName2Index)

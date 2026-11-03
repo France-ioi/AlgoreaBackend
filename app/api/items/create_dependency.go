@@ -110,10 +110,10 @@ func (srv *Service) createDependency(responseWriter http.ResponseWriter, httpReq
 			return service.ErrAPIInsufficientAccessRights // rollback
 		}
 
-		err = store.ItemDependencies().InsertMap(map[string]interface{}{
+		err = store.ItemDependencies().InsertMap(map[string]any{
 			"item_id":            prerequisiteItemID,
 			"dependent_item_id":  dependentItemID,
-			"score":              valueOrDefault[interface{}](formData, "score", input.Score, database.Default()),
+			"score":              valueOrDefault[any](formData, "score", input.Score, database.Default()),
 			"grant_content_view": input.GrantContentView,
 		})
 		if err != nil && database.IsDuplicateEntryError(err) {

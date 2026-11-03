@@ -15,7 +15,14 @@
 //
 //	Building swagger from inside this module instead lets us pin
 //	golang.org/x/tools >= v0.26.0 (the first release that no longer trips on
-//	Go 1.25's token.FileSet layout) via this directory's go.mod.
+//	Go 1.23+'s token.FileSet layout) via this directory's go.mod.
+//
+//	At generate time, `make swagger-generate` sets GODEBUG=gotypesalias=0
+//	because this fork still assumes `any` is a plain *types.Named; under
+//	Go 1.23+ defaults it is a *types.Alias and swagger panics. Collapsing
+//	aliases avoids patching the fork in-tree. This GODEBUG is temporary and
+//	will be removed in a future Go release — upgraders must then teach the
+//	fork to use types.Unalias (or equivalent) instead.
 //
 // Usage (from the repo root):
 //

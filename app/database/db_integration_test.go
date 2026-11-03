@@ -32,7 +32,7 @@ func Test_ConnectionOfWrappedDriverImplementsDriverSessionResetter(t *testing.T)
 	require.NoError(t, err)
 	defer func() { assert.NoError(t, connection.Close()) }()
 
-	assert.NoError(t, connection.Raw(func(driverConn interface{}) error {
+	assert.NoError(t, connection.Raw(func(driverConn any) error {
 		assert.Implements(t, (*driver.SessionResetter)(nil), driverConn)
 		return nil
 	}))

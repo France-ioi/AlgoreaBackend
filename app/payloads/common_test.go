@@ -9,14 +9,13 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestPayloads_ParseMap(t *testing.T) {
 	tests := []struct {
 		name      string
-		raw       map[string]interface{}
-		want      interface{}
+		raw       map[string]any
+		want      any
 		wantError error
 	}{
 		{
@@ -30,15 +29,15 @@ func TestPayloads_ParseMap(t *testing.T) {
 				LocalItemID:        "901756573345831409",
 				PlatformName:       "test_dmitry",
 				RandomSeed:         "556371821693219925",
-				HintsGivenCount:    golang.Ptr("0"),
-				HintsAllowed:       golang.Ptr(false),
-				HintPossible:       golang.Ptr(true),
-				AccessSolutions:    golang.Ptr(true),
-				ReadAnswers:        golang.Ptr(true),
-				Login:              golang.Ptr("test"),
-				SubmissionPossible: golang.Ptr(true),
-				SupportedLangProg:  golang.Ptr("*"),
-				IsAdmin:            golang.Ptr(false),
+				HintsGivenCount:    new("0"),
+				HintsAllowed:       new(false),
+				HintPossible:       new(true),
+				AccessSolutions:    new(true),
+				ReadAnswers:        new(true),
+				Login:              new("test"),
+				SubmissionPossible: new(true),
+				SupportedLangProg:  new("*"),
+				IsAdmin:            new(false),
 				Converted: TaskTokenConverted{
 					UserID:        556371821693219925,
 					LocalItemID:   901756573345831409,
@@ -86,7 +85,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 		},
 		{
 			name: "hint token with a complex askedHint",
-			raw: map[string]interface{}{
+			raw: map[string]any{
 				"itemUrl":   "http://taskplatform.mblockelet.info/task.html?taskId=212873689338185696",
 				"idUser":    "556371821693219925",
 				"askedHint": formdata.AnythingFromString(`{"rotorIndex":0,"cellRank":1}`),
@@ -104,7 +103,7 @@ func TestPayloads_ParseMap(t *testing.T) {
 		},
 		{
 			name: "invalid task token",
-			raw:  map[string]interface{}{"date": "abcdef"},
+			raw:  map[string]any{"date": "abcdef"},
 			want: &TaskToken{Date: "abcdef"},
 			wantError: errors.New(
 				"invalid TaskToken: invalid input data"),
@@ -143,10 +142,10 @@ func TestConvertIntoMap(t *testing.T) {
 			Field: "Field value",
 		},
 	})
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"normal":         "Normal value",
 		"another_normal": "AnotherNormal value",
-		"struct": map[string]interface{}{
+		"struct": map[string]any{
 			"field": "Field value",
 		},
 	}, got)
@@ -159,15 +158,15 @@ func TestConvertIntoMap(t *testing.T) {
 // runtime to avoid the `go vet` "struct field has json tag but is not exported"
 // diagnostic that fires on a statically-declared equivalent.
 func TestConvertIntoMap_SkipsUnexportedFieldsWithJSONTag(t *testing.T) {
-	pkgPath := reflect.TypeOf((*Binder)(nil)).Elem().PkgPath()
+	pkgPath := reflect.TypeFor[Binder]().PkgPath()
 	typ := reflect.StructOf([]reflect.StructField{
 		{
 			Name:    "notExported",
 			PkgPath: pkgPath,
-			Type:    reflect.TypeOf(""),
+			Type:    reflect.TypeFor[string](),
 			Tag:     `json:"not_exported"`,
 		},
 	})
 	got := ConvertIntoMap(reflect.New(typ).Interface())
-	assert.Equal(t, map[string]interface{}{}, got)
+	assert.Equal(t, map[string]any{}, got)
 }

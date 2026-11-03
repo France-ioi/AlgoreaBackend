@@ -20,24 +20,24 @@ type displaySettingsTestForm struct {
 func TestRegisterDisplaySettingsValidator(t *testing.T) {
 	tests := []struct {
 		name     string
-		input    map[string]interface{}
+		input    map[string]any
 		wantErrs formdata.FieldErrorsError
 	}{
 		{
 			name:  "field omitted passes (validator only runs on set fields with non-nil pointer)",
-			input: map[string]interface{}{},
+			input: map[string]any{},
 		},
 		{
 			name:  "empty object passes",
-			input: map[string]interface{}{"display_settings": map[string]interface{}{}},
+			input: map[string]any{"display_settings": map[string]any{}},
 		},
 		{
 			name:  "populated object passes",
-			input: map[string]interface{}{"display_settings": map[string]interface{}{"children_layout": "Grid"}},
+			input: map[string]any{"display_settings": map[string]any{"children_layout": "Grid"}},
 		},
 		{
 			name:     "explicit null is rejected",
-			input:    map[string]interface{}{"display_settings": nil},
+			input:    map[string]any{"display_settings": nil},
 			wantErrs: formdata.FieldErrorsError{"display_settings": []string{"display_settings should be a JSON object and cannot be null"}},
 		},
 	}
@@ -71,7 +71,7 @@ func TestConstructDisplaySettingsValidator_RejectsNonPtrNonMapField(t *testing.T
 	fd := formdata.NewFormData(form)
 	registerDisplaySettingsValidator(fd)
 
-	err := fd.ParseMapData(map[string]interface{}{"display_settings": "not-a-map"})
+	err := fd.ParseMapData(map[string]any{"display_settings": "not-a-map"})
 	assert.Equal(t, formdata.FieldErrorsError{
 		"display_settings": []string{"display_settings should be a JSON object and cannot be null"},
 	}, err)

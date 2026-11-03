@@ -13,13 +13,13 @@ import (
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	assertlib "github.com/stretchr/testify/assert"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestUserMiddleware(t *testing.T) {

@@ -85,12 +85,12 @@ func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpReque
 		login := createTempUser(store, userID, defaultLanguage,
 			strings.SplitN(httpRequest.RemoteAddr, ":", 2)[0]) //nolint:mnd // cut off the port
 
-		service.MustNotBeError(store.Groups().ByID(userID).UpdateColumn(map[string]interface{}{
+		service.MustNotBeError(store.Groups().ByID(userID).UpdateColumn(map[string]any{
 			"name":        login,
 			"description": login,
 		}).Error())
 
-		service.MustNotBeError(store.Attempts().InsertMap(map[string]interface{}{
+		service.MustNotBeError(store.Attempts().InsertMap(map[string]any{
 			"participant_id": userID,
 			"id":             0,
 			"creator_id":     userID,
@@ -99,7 +99,7 @@ func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpReque
 
 		domainConfig := domain.ConfigFromContext(httpRequest.Context())
 		service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking(
-			[]map[string]interface{}{{"parent_group_id": domainConfig.TempUsersGroupID, "child_group_id": userID}}))
+			[]map[string]any{{"parent_group_id": domainConfig.TempUsersGroupID, "child_group_id": userID}}))
 
 		var err error
 		token, expiresIn, err = auth.CreateNewTempSession(store, userID)
@@ -107,17 +107,17 @@ func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpReque
 	}))
 
 	srv.respondWithNewAccessToken(
-		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token, expiresIn, cookieAttributes)
+		responseWriter, httpRequest, service.CreationSuccess[map[string]any], token, expiresIn, cookieAttributes)
 	return nil
 }
 
-func createTempUser(store *database.DataStore, userID int64, defaultLanguage interface{}, lastIP string) string {
+func createTempUser(store *database.DataStore, userID int64, defaultLanguage any, lastIP string) string {
 	var login string
 	service.MustNotBeError(store.RetryOnDuplicateKeyError("users", "login", "login", func(retryLoginStore *database.DataStore) error {
 		const minLogin = int32(10000000)
 		const maxLogin = int32(99999999)
 		login = fmt.Sprintf("tmp-%d", rand.Int31n(maxLogin-minLogin+1)+minLogin)
-		return retryLoginStore.Users().InsertMap(map[string]interface{}{
+		return retryLoginStore.Users().InsertMap(map[string]any{
 			"login_id":         0,
 			"login":            login,
 			"temp_user":        true,
@@ -134,7 +134,7 @@ func createTempUserGroup(store *database.DataStore) int64 {
 	var userID int64
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *database.DataStore) error {
 		userID = retryIDStore.NewID()
-		return retryIDStore.Groups().InsertMap(map[string]interface{}{
+		return retryIDStore.Groups().InsertMap(map[string]any{
 			"id":          userID,
 			"type":        "User",
 			"created_at":  database.Now(),

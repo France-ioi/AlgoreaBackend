@@ -55,7 +55,7 @@ func TestResultStore_Propagate_SoftDeadlineTripsMidLoopThenResumes(t *testing.T)
 	dataStore := database.NewDataStore(db)
 	require.NoError(t, dataStore.Results().
 		Where("participant_id = 101 AND attempt_id = 1 AND item_id = 1").
-		UpdateColumns(map[string]interface{}{
+		UpdateColumns(map[string]any{
 			"tasks_tried":    1,
 			"score_computed": 10,
 		}).Error())
@@ -233,7 +233,7 @@ func TestResultStore_Propagate_SlowChunkWarning(t *testing.T) {
 	assertPropagationStepLoggedAtLevel(t, logs, "Duration of step of results propagation:", "warning")
 	// Observability uses the non-logging path; a missing PROCESS grant must not produce
 	// type=db Error spam (may Warn once that dumps are disabled).
-	for _, line := range strings.Split(logs, "\n") {
+	for line := range strings.SplitSeq(logs, "\n") {
 		if strings.Contains(line, "type=db") && strings.Contains(line, "level=error") {
 			assert.NotContains(t, line, "INNODB_TRX",
 				"INNODB_TRX failure must not emit type=db Error lines")
@@ -328,7 +328,7 @@ func TestResultStore_ScheduledPropagation_SoftDeadlineStopsResultsRecomputeForIt
 
 func assertPropagationStepLoggedAtLevel(t *testing.T, logs, msg, level string) {
 	t.Helper()
-	for _, line := range strings.Split(logs, "\n") {
+	for line := range strings.SplitSeq(logs, "\n") {
 		if strings.Contains(line, msg) {
 			assert.Regexp(t, `level=`+level+`\b`, line)
 			return

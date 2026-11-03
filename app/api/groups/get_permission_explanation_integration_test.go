@@ -20,7 +20,7 @@ func Test_insertGrantedPermissionsToBeExplained(t *testing.T) {
 		dbFixture string
 		itemID    int64
 		groupID   int64
-		expected  []map[string]interface{}
+		expected  []map[string]any
 	}{
 		{
 			name:    "inserts non-empty permissions with different source groups and different origins",
@@ -47,7 +47,7 @@ func Test_insertGrantedPermissionsToBeExplained(t *testing.T) {
 					- {group_id: 1, item_id: 2, source_group_id: 7, origin: self, can_edit: all_with_grant}
 					- {group_id: 1, item_id: 2, source_group_id: 7, origin: other, is_owner: true}
 			`,
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"group_id": "1|2|3|group_membership", "item_id": int64(2), "source_group_id": int64(3), "origin": "group_membership",
 					"can_view": "info", "can_grant_view": "none", "can_watch": "none", "can_edit": "none", "is_owner": int64(0),
@@ -130,7 +130,7 @@ func Test_insertGrantedPermissionsToBeExplained(t *testing.T) {
 					- {group_id: 6, item_id: 2, source_group_id: 4, origin: group_membership, can_view: content}
 					- {group_id: 7, item_id: 2, source_group_id: 4, origin: item_unlocking, can_view: content_with_descendants}
 			`,
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"group_id": "6|2|4|group_membership", "item_id": int64(2), "source_group_id": int64(4), "origin": "group_membership",
 					"can_view": "content", "can_grant_view": "none", "can_watch": "none", "can_edit": "none", "is_owner": int64(0),
@@ -155,7 +155,7 @@ func Test_insertGrantedPermissionsToBeExplained(t *testing.T) {
 					- {group_id: 1, item_id: 3, source_group_id: 3, origin: group_membership, can_view: info}
 					- {group_id: 1, item_id: 4, source_group_id: 4, origin: group_membership, can_view: content}
 			`,
-			expected: []map[string]interface{}{
+			expected: []map[string]any{
 				{
 					"group_id": "1|3|3|group_membership", "item_id": int64(3), "source_group_id": int64(3), "origin": "group_membership",
 					"can_view": "info", "can_grant_view": "none", "can_watch": "none", "can_edit": "none", "is_owner": int64(0),
@@ -208,7 +208,7 @@ func Test_insertGrantedPermissionsToBeExplained(t *testing.T) {
 
 				insertGrantedPermissionsToBeExplained(db, tt.itemID, tt.groupID)
 
-				var result []map[string]interface{}
+				var result []map[string]any
 				require.NoError(t, db.Table("permissions_granted_exp").Select(`
 					group_id, item_id, source_group_id, origin, can_view, can_grant_view, can_watch, can_edit, is_owner
 				`).Order("CAST(SUBSTRING_INDEX(group_id, '|', 1) AS SIGNED), item_id, source_group_id, origin").ScanIntoSliceOfMaps(&result).Error())

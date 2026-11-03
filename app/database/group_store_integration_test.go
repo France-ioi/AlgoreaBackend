@@ -4,10 +4,8 @@ package database_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -62,15 +60,15 @@ func TestGroupStore_CreateNew(t *testing.T) {
 			require.NoError(t, err)
 			assert.True(t, found)
 
-			var attempts []map[string]interface{}
+			var attempts []map[string]any
 			require.NoError(t, dataStore.Attempts().
 				Select(`
 					participant_id, id, creator_id, parent_attempt_id, root_item_id,
 					ABS(TIMESTAMPDIFF(SECOND, created_at, NOW())) < 3 AS created_at_set`).
 				ScanIntoSliceOfMaps(&attempts).Error())
-			var expectedAttempts []map[string]interface{}
+			var expectedAttempts []map[string]any
 			if test.shouldCreateAttempts {
-				expectedAttempts = []map[string]interface{}{
+				expectedAttempts = []map[string]any{
 					{
 						"participant_id": newID, "id": int64(0), "creator_id": nil, "parent_attempt_id": nil,
 						"root_item_id": nil, "created_at_set": int64(1),
@@ -88,11 +86,11 @@ func TestGroupStore_CreateNew_Duplicate(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	var nextID int64
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID", func(*database.DataStore) int64 {
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 {
 		nextID++
 		return nextID
 	})
-	defer monkey.UnpatchAll()
+	defer restoreNewID()
 
 	var newID int64
 	require.NoError(t, database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
@@ -460,10 +458,10 @@ func TestGroupStore_TriggetAfterInsert_CreatesGroupAncestor(t *testing.T) {
 	defer func() { _ = db.Close() }()
 
 	groupAncestorStore := database.NewDataStore(db).GroupAncestors()
-	var result []map[string]interface{}
+	var result []map[string]any
 	require.NoError(t, groupAncestorStore.Select("ancestor_group_id, child_group_id, child_group_type").
 		ScanIntoSliceOfMaps(&result).Error())
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"ancestor_group_id": int64(1),
 		"child_group_id":    int64(1),
 		"child_group_type":  "Other",

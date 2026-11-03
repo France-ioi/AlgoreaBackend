@@ -302,15 +302,15 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 		userAuthenticatedEventPayload(userID, userProfile, userIP))
 
 	srv.respondWithNewAccessToken(
-		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], token.AccessToken, expiresIn, cookieAttributes)
+		responseWriter, httpRequest, service.CreationSuccess[map[string]any], token.AccessToken, expiresIn, cookieAttributes)
 	return nil
 }
 
 func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request,
-	rendererGenerator func(map[string]interface{}) render.Renderer, token string, expiresIn int32,
+	rendererGenerator func(map[string]any) render.Renderer, token string, expiresIn int32,
 	cookieAttributes *auth.SessionCookieAttributes,
 ) {
-	response := map[string]interface{}{
+	response := map[string]any{
 		"expires_in": expiresIn,
 	}
 	oldCookieAttributes := auth.SessionCookieAttributesFromContext(httpRequest.Context())
@@ -349,7 +349,7 @@ func (srv *Service) resolveSessionCookieAttributesFromCookieParameters(httpReque
 	return cookieAttributes
 }
 
-func setParametersFromMap(requestParameters interface{}, requestData map[string]string) error {
+func setParametersFromMap(requestParameters any, requestData map[string]string) error {
 	reflRequestParameters := reflect.ValueOf(requestParameters).Elem()
 	reflRequestParametersType := reflRequestParameters.Type()
 	for i := range reflRequestParameters.NumField() {
@@ -480,7 +480,7 @@ func createOrUpdateUser(
 		userData["group_id"] = selfGroupID
 
 		service.MustNotBeError(userStore.InsertMap(userData))
-		service.MustNotBeError(userStore.Attempts().InsertMap(map[string]interface{}{
+		service.MustNotBeError(userStore.Attempts().InsertMap(map[string]any{
 			"participant_id": selfGroupID,
 			"id":             0,
 			"creator_id":     selfGroupID,
@@ -494,10 +494,10 @@ func createOrUpdateUser(
 	found, err := userStore.GroupGroups().WithExclusiveWriteLock().Where("parent_group_id = ?", domainConfig.NonTempUsersGroupID).
 		Where("child_group_id = ?", groupID).HasRows()
 	service.MustNotBeError(err)
-	groupsGroupsToCreate := make([]map[string]interface{}, 0, 1)
+	groupsGroupsToCreate := make([]map[string]any, 0, 1)
 	if !found {
 		groupsGroupsToCreate = append(groupsGroupsToCreate,
-			map[string]interface{}{"parent_group_id": domainConfig.NonTempUsersGroupID, "child_group_id": groupID})
+			map[string]any{"parent_group_id": domainConfig.NonTempUsersGroupID, "child_group_id": groupID})
 	}
 
 	service.MustNotBeError(userStore.GroupGroups().CreateRelationsWithoutChecking(groupsGroupsToCreate))
@@ -509,7 +509,7 @@ func createOrUpdateUser(
 func createGroupFromLogin(store *database.GroupStore, login string, domainConfig *domain.CtxConfig) (selfGroupID int64) {
 	service.MustNotBeError(store.RetryOnDuplicatePrimaryKeyError("groups", func(retryIDStore *database.DataStore) error {
 		selfGroupID = retryIDStore.NewID()
-		return retryIDStore.Groups().InsertMap(map[string]interface{}{
+		return retryIDStore.Groups().InsertMap(map[string]any{
 			"id":          selfGroupID,
 			"name":        login,
 			"type":        "User",
@@ -520,7 +520,7 @@ func createGroupFromLogin(store *database.GroupStore, login string, domainConfig
 		})
 	}))
 
-	service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking([]map[string]interface{}{
+	service.MustNotBeError(store.GroupGroups().CreateRelationsWithoutChecking([]map[string]any{
 		{"parent_group_id": domainConfig.NonTempUsersGroupID, "child_group_id": selfGroupID},
 	}))
 
@@ -531,13 +531,13 @@ func contextWithParsedCookieParameters(ctx context.Context, cookieParameters *Co
 	return context.WithValue(ctx, ctxKeyParsedCookieParameters, cookieParameters)
 }
 
-func userAuthenticatedEventPayload(userID int64, userProfile *loginmodule.UserProfile, userIP string) map[string]interface{} {
-	var profile interface{}
+func userAuthenticatedEventPayload(userID int64, userProfile *loginmodule.UserProfile, userIP string) map[string]any {
+	var profile any
 	if userProfile.Profile != nil {
 		profile = *userProfile.Profile
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"user_id":  strconv.FormatInt(userID, 10),
 		"login_id": strconv.FormatInt(userProfile.LoginID, 10),
 		"login":    userProfile.Login,

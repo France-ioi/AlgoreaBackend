@@ -14,7 +14,7 @@ import (
 func TestDispatch_NoopWhenNoDispatcher(_ *testing.T) {
 	ctx, _, _ := logging.NewContextWithNewMockLogger()
 	// Should not panic even without a dispatcher
-	Dispatch(ctx, TypeSubmissionCreated, map[string]interface{}{"test": "value"})
+	Dispatch(ctx, TypeSubmissionCreated, map[string]any{"test": "value"})
 }
 
 func TestDispatch_SendsEventToDispatcher(t *testing.T) {
@@ -22,7 +22,7 @@ func TestDispatch_SendsEventToDispatcher(t *testing.T) {
 	ctx, _, _ := logging.NewContextWithNewMockLogger()
 	ctx = ContextWithDispatcher(ctx, mockDispatcher)
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"author_id": int64(123),
 		"item_id":   int64(456),
 	}
@@ -47,7 +47,7 @@ func TestDispatch_PreservesExistingRequestID(t *testing.T) {
 	ctx = ContextWithDispatcher(ctx, mockDispatcher)
 	ctx = context.WithValue(ctx, middleware.RequestIDKey, "http-req-id")
 
-	Dispatch(ctx, TypeSubmissionCreated, map[string]interface{}{})
+	Dispatch(ctx, TypeSubmissionCreated, map[string]any{})
 
 	events := mockDispatcher.GetEvents()
 	require.Len(t, events, 1)
@@ -60,7 +60,7 @@ func TestDispatch_IncludesInstanceFromConfig(t *testing.T) {
 	ctx = ContextWithDispatcher(ctx, mockDispatcher)
 	ctx = ContextWithConfig(ctx, "prod")
 
-	Dispatch(ctx, TypeSubmissionCreated, map[string]interface{}{})
+	Dispatch(ctx, TypeSubmissionCreated, map[string]any{})
 
 	events := mockDispatcher.GetEvents()
 	require.Len(t, events, 1)
@@ -72,7 +72,7 @@ func TestDispatch_LogsErrorOnFailure(t *testing.T) {
 	failingDispatcher := &failingDispatcher{}
 	ctx = ContextWithDispatcher(ctx, failingDispatcher)
 
-	Dispatch(ctx, TypeSubmissionCreated, map[string]interface{}{})
+	Dispatch(ctx, TypeSubmissionCreated, map[string]any{})
 
 	// Check that an error was logged
 	require.NotNil(t, hook.LastEntry())

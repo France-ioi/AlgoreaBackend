@@ -12,9 +12,12 @@ LOCAL_BIN_DIR=./bin
 
 BIN_PATH=$(LOCAL_BIN_DIR)/$(BIN_NAME)
 GOLANGCILINT=$(LOCAL_BIN_DIR)/golangci-lint
-GOLANGCILINT_VERSION=2.5.0
+# 2.9.0 is the first release built with Go >= 1.26; newer 2.x (e.g. 2.15) enable
+# many new/stricter checks (modernize, goconst, exhaustruct_v5) that are out of
+# scope for a toolchain/security bump.
+GOLANGCILINT_VERSION=2.9.0
 # golang.org/x/vuln@v1.8.0 needs Go >= 1.26; GOTOOLCHAIN=auto on the recipe lets `go run`
-# download a newer toolchain on cimg/go:1.25.9 (and under local GOTOOLCHAIN=local).
+# download a matching toolchain if the local/CI image is older (and under GOTOOLCHAIN=local).
 GOVULNCHECK_VERSION=v1.8.0
 # chi v3 RedirectSlashes (GO-2026-4316) has no fixed v3 release; we do not use RedirectSlashes
 # and chi→v5 is deferred — ignore only this advisory so CI stays green for real new vulns.
@@ -129,8 +132,12 @@ govulncheck:
 govulncheck-filter-test:
 	python3 -m unittest tools/govulncheck_filter_test.py
 
+# GODEBUG=gotypesalias=0: our go-swagger fork panics when `any` is a *types.Alias
+# (Go 1.23+ default); collapsing aliases keeps generate working without a fork patch.
+# Temporary: gotypesalias will be removed in a future Go — then patch the fork to
+# use types.Unalias (or equivalent) instead of relying on this GODEBUG.
 swagger-generate:
-	swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
+	GODEBUG=gotypesalias=0 swagger generate spec --nullable-pointers --scan-models -o ./swagger.yaml && \
 		swagger validate ./swagger.yaml && \
 		swagger2openapi --refSiblings allOf --yaml swagger.yaml | sed 's/x-nullable:/nullable:/g' > openapi3.yaml && \
 		mv openapi3.yaml swagger.yaml && \

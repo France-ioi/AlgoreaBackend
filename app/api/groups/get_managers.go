@@ -7,7 +7,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 // GroupManagersViewResponseRowUser contains names of a manager.
@@ -197,7 +196,7 @@ func prepareGetManagersResult(result []groupManagersViewResponseRow, groupManage
 ) {
 	for index := range result {
 		if result[index].CanManageValue != nil {
-			result[index].CanManage = golang.Ptr(groupManagerStore.CanManageNameByIndex(*result[index].CanManageValue))
+			result[index].CanManage = new(groupManagerStore.CanManageNameByIndex(*result[index].CanManageValue))
 		}
 		if result[index].Type != groupTypeUser {
 			result[index].GroupManagersViewResponseRowUser = nil

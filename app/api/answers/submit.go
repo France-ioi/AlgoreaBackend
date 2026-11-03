@@ -133,7 +133,7 @@ func (srv *Service) submit(responseWriter http.ResponseWriter, httpRequest *http
 		service.MustNotBeError(resultStore.
 			ByID(requestData.TaskToken.Payload.Converted.ParticipantID, requestData.TaskToken.Payload.Converted.AttemptID,
 				requestData.TaskToken.Payload.Converted.LocalItemID).
-			UpdateColumn(map[string]interface{}{
+			UpdateColumn(map[string]any{
 				"submissions":          gorm.Expr("submissions + 1"),
 				"latest_submission_at": database.Now(),
 				"latest_activity_at":   database.Now(),
@@ -147,7 +147,7 @@ func (srv *Service) submit(responseWriter http.ResponseWriter, httpRequest *http
 	service.MustNotBeError(err)
 
 	// Dispatch event after transaction commits
-	event.Dispatch(httpRequest.Context(), event.TypeSubmissionCreated, map[string]interface{}{
+	event.Dispatch(httpRequest.Context(), event.TypeSubmissionCreated, map[string]any{
 		"author_id":      strconv.FormatInt(requestData.TaskToken.Payload.Converted.UserID, 10),
 		"participant_id": strconv.FormatInt(requestData.TaskToken.Payload.Converted.ParticipantID, 10),
 		"item_id":        strconv.FormatInt(requestData.TaskToken.Payload.Converted.LocalItemID, 10),
@@ -170,7 +170,7 @@ func (srv *Service) submit(responseWriter http.ResponseWriter, httpRequest *http
 	}}).Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"answer_token": answerToken,
 	})))
 	return nil

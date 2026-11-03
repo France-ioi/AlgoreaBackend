@@ -7,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 )
 
 func TestTaskToken_Bind(t *testing.T) {
@@ -61,7 +59,7 @@ func TestTaskToken_MarshalJSON(t *testing.T) {
 	tt := &TaskToken{
 		UserID:          "10",
 		AttemptID:       "200",
-		AccessSolutions: golang.Ptr(true),
+		AccessSolutions: new(true),
 	}
 	result, err := json.Marshal(ConvertIntoMap(tt))
 	require.NoError(t, err)

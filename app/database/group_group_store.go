@@ -63,7 +63,7 @@ func (s *GroupGroupStore) CreateRelation(parentGroupID, childGroupID int64) (err
 // without checking for possible cycles in the graph and without deletion of old relations.
 // This method is only suitable to create relations with new groups.
 // Callers must check that parent groups are not users.
-func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]interface{}) (err error) {
+func (s *GroupGroupStore) CreateRelationsWithoutChecking(relations []map[string]any) (err error) {
 	s.mustBeInTransaction()
 	defer recoverPanics(&err)
 
@@ -153,7 +153,7 @@ func (s *GroupGroupStore) deleteGroupAndOrphanedDescendants(groupID int64) {
 		s.GroupGroups().createNewAncestors()
 	}
 
-	var idsToDelete []int64
+	idsToDelete := make([]int64, 0, 1)
 	// besides the group with id = groupID, we also want to delete its descendants
 	// whose ancestors list consists only of groupID descendants
 	// (since they became orphans)
@@ -198,7 +198,7 @@ func (s *GroupGroupStore) createNewAncestors() {
 }
 
 func (s *GroupGroupStore) createRelation(parentGroupID, childGroupID int64) {
-	relationMap := map[string]interface{}{
+	relationMap := map[string]any{
 		"parent_group_id": parentGroupID,
 		"child_group_id":  childGroupID,
 	}

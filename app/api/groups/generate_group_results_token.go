@@ -97,7 +97,7 @@ func (srv *Service) generateGroupResultsToken(responseWriter http.ResponseWriter
 	}}).Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"group_results_token": groupResultsToken,
 		"expires_in":          expiresIn,
 	})))

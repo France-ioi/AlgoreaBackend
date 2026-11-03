@@ -2,12 +2,10 @@ package auth_test
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -16,6 +14,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 const expectedAccessToken = "tmp-01abcdefghijklmnopqrstuvwxyz"
@@ -25,9 +24,9 @@ func TestCreateNewTempSession(t *testing.T) {
 	expectedSessionID := int64(12345)
 
 	monkey.Patch(auth.GenerateKey, func() (string, error) { return expectedAccessToken, nil })
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID",
-		func(_ *database.DataStore) int64 { return expectedSessionID })
 	defer monkey.UnpatchAll()
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 { return expectedSessionID })
+	defer restoreNewID()
 
 	logger, logHook := logging.NewMockLogger()
 	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContextWithLogger(logger), "users: [{group_id: 67890}]")
@@ -44,18 +43,18 @@ func TestCreateNewTempSession(t *testing.T) {
 	assert.Equal(t, expectedAccessToken, accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
 
-	var sessions []map[string]interface{}
+	var sessions []map[string]any
 	require.NoError(t, accessTokenStore.Sessions().Select("session_id, user_id").
 		ScanIntoSliceOfMaps(&sessions).Error())
-	assert.Equal(t, []map[string]interface{}{{
+	assert.Equal(t, []map[string]any{{
 		"session_id": expectedSessionID,
 		"user_id":    expectedUserID,
 	}}, sessions)
 
-	var accessTokens []map[string]interface{}
+	var accessTokens []map[string]any
 	require.NoError(t, accessTokenStore.Select("session_id, token, expires_at, issued_at").
 		ScanIntoSliceOfMaps(&accessTokens).Error())
-	assert.Equal(t, []map[string]interface{}{{
+	assert.Equal(t, []map[string]any{{
 		"session_id": expectedSessionID,
 		"token":      expectedAccessToken,
 		"expires_at": expectedTime.Add(time.Duration(expireIn) * time.Second).Format(time.DateTime),
@@ -73,9 +72,12 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 	sessionIDsIndex := -1
 	expectedUserID := int64(67890)
 	monkey.Patch(auth.GenerateKey, func() (string, error) { return expectedAccessToken, nil })
-	monkey.PatchInstanceMethod(reflect.TypeOf(&database.DataStore{}), "NewID",
-		func(_ *database.DataStore) int64 { sessionIDsIndex++; return expectedSessionIDs[sessionIDsIndex] })
 	defer monkey.UnpatchAll()
+	restoreNewID := database.SetNewIDFuncForTests(func() int64 {
+		sessionIDsIndex++
+		return expectedSessionIDs[sessionIDsIndex]
+	})
+	defer restoreNewID()
 
 	logger, logHook := logging.NewMockLogger()
 	db := testhelpers.SetupDBWithFixtureString(testhelpers.CreateTestContextWithLogger(logger), `
@@ -90,10 +92,10 @@ func TestCreateNewTempSession_Retries(t *testing.T) {
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
 	assert.Equal(t, 1, sessionIDsIndex)
 
-	var sessions []map[string]interface{}
+	var sessions []map[string]any
 	require.NoError(t, dataStore.Sessions().Select("session_id, user_id").Order("session_id").
 		ScanIntoSliceOfMaps(&sessions).Error())
-	assert.Equal(t, []map[string]interface{}{
+	assert.Equal(t, []map[string]any{
 		{
 			"session_id": expectedSessionIDs[0],
 			"user_id":    int64(67891),
@@ -137,18 +139,18 @@ func TestRefreshTempUserSession(t *testing.T) {
 	assert.Equal(t, expectedAccessToken, accessToken)
 	assert.Equal(t, int32(2*60*60), expireIn) // 2 hours
 
-	var sessions []map[string]interface{}
+	var sessions []map[string]any
 	require.NoError(t, accessTokenStore.Sessions().Select("session_id, user_id").
 		ScanIntoSliceOfMaps(&sessions).Error())
-	assert.Equal(t, []map[string]interface{}{{
+	assert.Equal(t, []map[string]any{{
 		"session_id": expectedSessionID,
 		"user_id":    expectedUserID,
 	}}, sessions)
 
-	var accessTokens []map[string]interface{}
+	var accessTokens []map[string]any
 	require.NoError(t, accessTokenStore.Select("session_id, token, expires_at, issued_at").
 		ScanIntoSliceOfMaps(&accessTokens).Error())
-	assert.Equal(t, []map[string]interface{}{{
+	assert.Equal(t, []map[string]any{{
 		"session_id": expectedSessionID,
 		"token":      expectedAccessToken,
 		"expires_at": expectedTime.Add(time.Duration(expireIn) * time.Second).Format(time.DateTime),

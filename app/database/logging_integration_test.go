@@ -36,7 +36,7 @@ func Test_SQLQueryAnalyzing(t *testing.T) {
 			name: "fixed conn Query",
 			funcToCall: func(db *database.DB) error {
 				return db.WithFixedConnection(func(db *database.DB) error {
-					var result []map[string]interface{}
+					var result []map[string]any
 					return db.Raw("SELECT 1").ScanIntoSliceOfMaps(&result).Error()
 				})
 			},
@@ -50,7 +50,7 @@ func Test_SQLQueryAnalyzing(t *testing.T) {
 		{
 			name: "usual conn Query",
 			funcToCall: func(db *database.DB) error {
-				var result []map[string]interface{}
+				var result []map[string]any
 				return db.Raw("SELECT 1").ScanIntoSliceOfMaps(&result).Error()
 			},
 		},
@@ -66,7 +66,7 @@ func Test_SQLQueryAnalyzing(t *testing.T) {
 			name: "tx Query",
 			funcToCall: func(db *database.DB) error {
 				return database.NewDataStore(db).InTransaction(func(store *database.DataStore) error {
-					var result []map[string]interface{}
+					var result []map[string]any
 					return store.Raw("SELECT 1").ScanIntoSliceOfMaps(&result).Error()
 				})
 			},

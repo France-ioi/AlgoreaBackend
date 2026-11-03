@@ -191,7 +191,7 @@ func TestUserStore_DeleteWithTrapsByScope_RecomputesAccessWhenPermissionIsRemove
 	assert.Equal(t, "info", newPermission)
 }
 
-func assertTableColumn(t *testing.T, db *database.DB, table, column string, expectedValues interface{}) {
+func assertTableColumn(t *testing.T, db *database.DB, table, column string, expectedValues any) {
 	t.Helper()
 
 	reflValues := reflect.New(reflect.TypeOf(expectedValues))
@@ -264,12 +264,12 @@ func TestUserStore_profileFields(t *testing.T) {
 			- {group_id: 4, login: "user4", profile: '{"first_name": null, "last_name": "Doe"}'}`)
 	defer func() { _ = db.Close() }()
 
-	var result []map[string]interface{}
+	var result []map[string]any
 	require.NoError(t, database.NewDataStore(db).Users().Order("group_id").
 		Select("profile_first_name, profile_last_name").
 		ScanIntoSliceOfMaps(&result).Error())
 
-	assert.Equal(t, []map[string]interface{}{
+	assert.Equal(t, []map[string]any{
 		{"profile_first_name": "John", "profile_last_name": "Doe"},
 		{"profile_first_name": "null", "profile_last_name": "null"},
 		{"profile_first_name": "John", "profile_last_name": nil},

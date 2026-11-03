@@ -19,7 +19,7 @@ func SchedulePropagation(store *database.DataStore, async bool, types []string) 
 				"propagation.async is enabled but no event dispatcher is configured: propagation not scheduled")
 			return
 		}
-		event.Dispatch(ctx, event.TypePropagationRequested, map[string]interface{}{"types": types})
+		event.Dispatch(ctx, event.TypePropagationRequested, map[string]any{"types": types})
 		return
 	}
 

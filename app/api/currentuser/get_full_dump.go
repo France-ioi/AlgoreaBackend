@@ -74,7 +74,7 @@ func (srv *Service) getDumpCommon(responseWriter http.ResponseWriter, httpReques
 
 	writeJSONObjectElement("current_user", responseWriter, func(_ io.Writer) {
 		columns := getColumnsList(store, "users", []string{"profile_first_name", "profile_last_name"})
-		var userData []map[string]interface{}
+		var userData []map[string]any
 		service.MustNotBeError(store.Users().ByID(user.GroupID).Select(columns).
 			ScanIntoSliceOfMaps(&userData).Error())
 		writeValue(responseWriter, userData[0])
@@ -209,9 +209,9 @@ func getColumnsList(store *database.DataStore, tableName string, excludeColumns 
 	return strings.Join(columns, ", ")
 }
 
-func streamerFunc(writer io.Writer) func(map[string]interface{}) error {
+func streamerFunc(writer io.Writer) func(map[string]any) error {
 	firstRow := true
-	return func(row map[string]interface{}) error {
+	return func(row map[string]any) error {
 		if !firstRow {
 			_, err := writer.Write([]byte(","))
 			service.MustNotBeError(err)
@@ -244,8 +244,8 @@ func writeComma(w io.Writer) {
 	service.MustNotBeError(err)
 }
 
-func writeValue(writer io.Writer, value interface{}) {
-	if valueMap, ok := value.(map[string]interface{}); ok {
+func writeValue(writer io.Writer, value any) {
+	if valueMap, ok := value.(map[string]any); ok {
 		for key := range valueMap {
 			if int64Number, isInt64 := valueMap[key].(int64); isInt64 &&
 				((len(key) > 3 && key[len(key)-3:] == "_id") || key == "id") {

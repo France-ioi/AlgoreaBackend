@@ -8,13 +8,13 @@ import (
 	"reflect"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -39,7 +39,7 @@ func TestBase_ResolveWatchedGroupID(t *testing.T) {
 
 	srv := &service.Base{}
 	srv.SetGlobalStore(store)
-	patch := monkey.PatchInstanceMethod(reflect.TypeOf(srv), "GetUser",
+	patch := monkey.PatchInstanceMethod(reflect.TypeFor[*service.Base](), "GetUser",
 		func(*service.Base, *http.Request) *database.User { return &database.User{GroupID: 4} })
 	defer patch.Unpatch()
 

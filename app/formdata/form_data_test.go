@@ -32,7 +32,7 @@ func TestFormData_AllowUnknownFields(t *testing.T) {
 		ID int64 `json:"id"`
 	}{})
 	formData.AllowUnknownFields()
-	assert.NoError(t, formData.ParseMapData(map[string]interface{}{"my_id": "123"}))
+	assert.NoError(t, formData.ParseMapData(map[string]any{"my_id": "123"}))
 }
 
 func TestFormData_decodeMapIntoStruct_PanicsWhenMapstructureNewDecoderFails(t *testing.T) {
@@ -42,7 +42,7 @@ func TestFormData_decodeMapIntoStruct_PanicsWhenMapstructureNewDecoderFails(t *t
 		assert.NotNil(t, p)
 		assert.Equal(t, errors.New("result must be a pointer"), p)
 	}()
-	formData.decodeMapIntoStruct(map[string]interface{}{})
+	formData.decodeMapIntoStruct(map[string]any{})
 }
 
 func TestFormData_RegisterTranslation_OverridesConflictingTranslationsSilently(t *testing.T) {
@@ -71,7 +71,7 @@ func TestFormData_RegisterTranslation_SetsArgumentsForErrorMessages(t *testing.T
 		return false
 	})
 	formData.RegisterTranslation("test", "failed for field %[2]s with parameter %[3]s (tag=%[1]s)")
-	err := formData.ParseMapData(map[string]interface{}{"id": int64(1)})
+	err := formData.ParseMapData(map[string]any{"id": int64(1)})
 	assert.Equal(t, FieldErrorsError{
 		"ID": []string{"failed for field ID with parameter value (tag=test)"},
 	}, err)
@@ -88,11 +88,11 @@ func TestFormData_ValidatorSkippingUnsetFields(t *testing.T) {
 		return false
 	}))
 	formData.RegisterTranslation("test", "failed")
-	err := formData.ParseMapData(map[string]interface{}{})
+	err := formData.ParseMapData(map[string]any{})
 	require.NoError(t, err)
-	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": nil})
+	err = formData.ParseMapData(map[string]any{"id": nil, "nested": nil})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}}, err)
-	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
+	err = formData.ParseMapData(map[string]any{"id": nil, "nested": map[string]any{"id": 1}})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 }
 
@@ -111,24 +111,24 @@ func TestFormData_ValidatorSkippingUnchangedFields(t *testing.T) {
 	}))
 	formData.RegisterTranslation("test", "failed")
 
-	err := formData.ParseMapData(map[string]interface{}{})
+	err := formData.ParseMapData(map[string]any{})
 	require.NoError(t, err)
 	formData.SetOldValues(&testStruct{})
-	err = formData.ParseMapData(map[string]interface{}{})
+	err = formData.ParseMapData(map[string]any{})
 	require.NoError(t, err)
-	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": 1}})
+	err = formData.ParseMapData(map[string]any{"id": nil, "nested": map[string]any{"id": 1}})
 	assert.Equal(t, FieldErrorsError{"Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 	i := int64(10)
 	j := int64(20)
 	formData.SetOldValues(&testStruct{ID: &i, Nested: &nestedStruct{ID: &j}})
-	err = formData.ParseMapData(map[string]interface{}{})
+	err = formData.ParseMapData(map[string]any{})
 	require.NoError(t, err)
-	err = formData.ParseMapData(map[string]interface{}{"id": nil, "nested": map[string]interface{}{"id": nil}})
+	err = formData.ParseMapData(map[string]any{"id": nil, "nested": map[string]any{"id": nil}})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
-	err = formData.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
+	err = formData.ParseMapData(map[string]any{"id": 10, "nested": map[string]any{"id": 20}})
 	assert.Equal(t, FieldErrorsError{"Nested": []string{"failed"}}, err)
 	formData.SetOldValues(nil)
-	err = formData.ParseMapData(map[string]interface{}{"id": 10, "nested": map[string]interface{}{"id": 20}})
+	err = formData.ParseMapData(map[string]any{"id": 10, "nested": map[string]any{"id": 20}})
 	assert.Equal(t, FieldErrorsError{"ID": []string{"failed"}, "Nested": []string{"failed"}, "Nested.ID": []string{"failed"}}, err)
 }
 
@@ -137,21 +137,21 @@ func Test_stringToDatabaseTimeUTCHookFunc(t *testing.T) {
 		name     string
 		typeFrom reflect.Type
 		typeTo   reflect.Type
-		data     interface{}
-		want     interface{}
+		data     any
+		want     any
 		wantErr  error
 	}{
 		{
 			name:     "string to database.Time (parse)",
-			typeFrom: reflect.TypeOf("string"),
-			typeTo:   reflect.TypeOf((*database.Time)(nil)).Elem(),
+			typeFrom: reflect.TypeFor[string](),
+			typeTo:   reflect.TypeFor[database.Time](),
 			data:     "2019-05-30T14:00:00+03:00",
 			want:     database.Time(time.Date(2019, 5, 30, 11, 0, 0, 0, time.UTC)),
 		},
 		{
 			name:     "invalid string to database.Time (error)",
-			typeFrom: reflect.TypeOf("string"),
-			typeTo:   reflect.TypeOf((*database.Time)(nil)).Elem(),
+			typeFrom: reflect.TypeFor[string](),
+			typeTo:   reflect.TypeFor[database.Time](),
 			data:     "2019-05-30T14:00:00ZZ",
 			want:     database.Time(time.Time{}),
 			wantErr: &time.ParseError{
@@ -204,7 +204,7 @@ func TestFormData_fieldPathInValidator(t *testing.T) {
 		isSet1 = formData.IsSet(usedKeysPath)
 		return true
 	})
-	_ = formData.ParseMapData(map[string]interface{}{"field": ""})
+	_ = formData.ParseMapData(map[string]any{"field": ""})
 	assert.Equal(t, "testStruct.<squash>.<squash>.field", path)
 	assert.Equal(t, "field", usedKeysPath)
 	assert.True(t, isSet)

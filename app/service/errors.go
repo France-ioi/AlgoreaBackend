@@ -14,8 +14,8 @@ import (
 type ErrorResponse[T any] struct {
 	Response[T]
 
-	ErrorText string      `json:"error_text,omitempty"` // application-level error message, for debugging
-	Errors    interface{} `json:"errors,omitempty"`     // form errors
+	ErrorText string `json:"error_text,omitempty"` // application-level error message, for debugging
+	Errors    any    `json:"errors,omitempty"`     // form errors
 }
 
 // APIError represents an error as returned by this application. It works in

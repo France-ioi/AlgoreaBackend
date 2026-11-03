@@ -27,7 +27,7 @@ func TestGroupStore_ManagedBy(t *testing.T) {
 		WithArgs(2).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := NewDataStore(db).Groups().ManagedBy(mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -48,7 +48,7 @@ func TestGroupStore_TeamGroupForUser(t *testing.T) {
 		WithArgs(int64(2), int64(4)).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := NewDataStore(db).Groups().TeamGroupForUser(4, mockUser).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

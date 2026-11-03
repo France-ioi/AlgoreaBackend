@@ -29,7 +29,7 @@ func (ctx *TestContext) AnEventShouldHaveBeenDispatchedWith(eventType string, js
 
 	data := ctx.preprocessString(jsonPayload.Content)
 
-	expectedPayload := make(map[string]interface{})
+	expectedPayload := make(map[string]any)
 	if err := json.Unmarshal([]byte(data), &expectedPayload); err != nil {
 		return fmt.Errorf("failed to parse expected payload JSON: %w", err)
 	}
@@ -74,8 +74,8 @@ func eventTypes(events []event.Event) []string {
 	return types
 }
 
-func eventsOfType(events []event.Event, eventType string) []map[string]interface{} {
-	var result []map[string]interface{}
+func eventsOfType(events []event.Event, eventType string) []map[string]any {
+	var result []map[string]any
 	for _, e := range events {
 		if e.Type == eventType {
 			result = append(result, e.Payload)
@@ -84,7 +84,7 @@ func eventsOfType(events []event.Event, eventType string) []map[string]interface
 	return result
 }
 
-func matchesPayload(actual, expected map[string]interface{}) bool {
+func matchesPayload(actual, expected map[string]any) bool {
 	for key, expectedValue := range expected {
 		actualValue, ok := actual[key]
 		if !ok {
@@ -97,7 +97,7 @@ func matchesPayload(actual, expected map[string]interface{}) bool {
 	return true
 }
 
-func valuesEqual(actual, expected interface{}) bool {
+func valuesEqual(actual, expected any) bool {
 	// Handle numeric comparisons (int64 vs float64 etc.)
 	actualNum, actualIsNum := toFloat64(actual)
 	expectedNum, expectedIsNum := toFloat64(expected)
@@ -121,7 +121,7 @@ func valuesEqual(actual, expected interface{}) bool {
 	return reflect.DeepEqual(actual, expected)
 }
 
-func toFloat64(value interface{}) (float64, bool) {
+func toFloat64(value any) (float64, bool) {
 	switch numValue := value.(type) {
 	case int:
 		return float64(numValue), true

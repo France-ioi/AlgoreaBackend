@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -140,7 +139,7 @@ func TestResultStore_Propagate_CreatesNew(t *testing.T) {
 			name:               "should not create new results for items above the root_item_id",
 			fixtures:           []string{`permissions_generated: [{group_id: 3, item_id: 111, can_view_generated: info}]`},
 			expectedNewResults: []existingResultsRow{{ParticipantID: 3, AttemptID: 1, ItemID: 222}},
-			rootItemID:         golang.Ptr(int64(222)),
+			rootItemID:         new(int64(222)),
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {

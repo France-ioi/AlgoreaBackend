@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,6 +18,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestGetParticipantIDFromRequest_NoAsTeamID(t *testing.T) {
@@ -47,7 +47,7 @@ func TestParticipantMiddleware(t *testing.T) {
 		asTeamID                 int64
 		userID                   int64
 		returnedError            error
-		panicWith                interface{}
+		panicWith                any
 		expectedServiceWasCalled bool
 		expectedStatusCode       int
 		expectedBody             string
@@ -117,7 +117,7 @@ type callThroughParticipantMiddlewareResult struct {
 	logsHook            *loggingtest.Hook
 }
 
-func callThroughParticipantMiddleware(userID, asTeamID int64, returnedError error, panicWith interface{}) (
+func callThroughParticipantMiddleware(userID, asTeamID int64, returnedError error, panicWith any) (
 	result callThroughParticipantMiddlewareResult,
 ) {
 	dbmock, mock := database.NewDBMock()

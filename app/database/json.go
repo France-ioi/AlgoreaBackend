@@ -11,14 +11,14 @@ import (
 // As JSON implements driver.Valuer interface, it is automatically converted to JSON on data save.
 //
 // swagger:type object
-type JSON map[string]interface{}
+type JSON map[string]any
 
 // Scan assigns a value from a database driver value (unmarshalls given bytes).
 // A NULL DB value (which the driver passes as `src == nil`) is decoded as a nil
 // map. Without this short-circuit the unconditional `src.([]byte)` assertion
 // would panic on NULL — defensive against e.g. a manual `UPDATE ... SET col = NULL`
 // on a column whose schema is non-NULL.
-func (j *JSON) Scan(src interface{}) (err error) {
+func (j *JSON) Scan(src any) (err error) {
 	if src == nil {
 		*j = nil
 		return nil

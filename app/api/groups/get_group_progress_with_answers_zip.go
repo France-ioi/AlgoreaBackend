@@ -412,7 +412,7 @@ func buildProgressZIPVisibleSubtree(
 }
 
 func loadProgressZIPChildrenByParent(
-	store *database.DataStore, itemParentIDs []int64, permissionsSubQuery interface{}, maxItems int64,
+	store *database.DataStore, itemParentIDs []int64, permissionsSubQuery any, maxItems int64,
 ) (childrenByParent map[int64][]progressZIPItemChild, itemCount int) {
 	childrenByParent = make(map[int64][]progressZIPItemChild)
 	parentFrontier := append([]int64(nil), itemParentIDs...)
@@ -616,7 +616,7 @@ func getProgressZIPUserItemData(
 	return result
 }
 
-func joinUserOnlyProgressResults(db *database.DB, userID interface{}) *database.DB {
+func joinUserOnlyProgressResults(db *database.DB, userID any) *database.DB {
 	// Deliberately omits team-result merging from joinUserProgressResults: this export
 	// scopes participants to user self-groups only (no teams), per product decision.
 	return db.

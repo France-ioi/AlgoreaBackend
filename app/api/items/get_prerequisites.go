@@ -144,7 +144,7 @@ func (srv *Service) getItemPrerequisitesOrDependencies(
 				IF(user_strings.language_tag IS NULL, default_strings.title, user_strings.title) AS title,
 				IF(user_strings.image_url IS NULL, default_strings.image_url, user_strings.image_url) AS image_url,
 				IF(user_strings.language_tag IS NULL, default_strings.subtitle, user_strings.subtitle) AS subtitle`,
-			[]interface{}{participantID},
+			[]any{participantID},
 			func(db *database.DB) *database.DB {
 				return db.Joins(
 					"JOIN item_dependencies ON item_dependencies."+givenColumn+" = ? AND item_dependencies."+joinToColumn+" = items.id", itemID).

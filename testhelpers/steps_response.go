@@ -50,14 +50,14 @@ func (ctx *TestContext) ItShouldBeAZIPFileContainingTheFollowingFiles(body *godo
 		return err
 	}
 
-	actualResult := make([]interface{}, 0, len(zipReader.File))
+	actualResult := make([]any, 0, len(zipReader.File))
 	for _, zipFile := range zipReader.File {
 		unzippedFileBytes, err := readZipFile(zipFile)
 		if err != nil {
 			return err
 		}
 
-		actualResult = append(actualResult, map[string]interface{}{
+		actualResult = append(actualResult, map[string]any{
 			"filename": zipFile.Name,
 			"content":  string(unzippedFileBytes),
 		})
@@ -65,7 +65,7 @@ func (ctx *TestContext) ItShouldBeAZIPFileContainingTheFollowingFiles(body *godo
 
 	expectedContent := ctx.preprocessString(body.Content)
 
-	var expectedResult interface{}
+	var expectedResult any
 	err = json.Unmarshal([]byte(expectedContent), &expectedResult)
 	if err != nil {
 		return err
@@ -94,8 +94,8 @@ func readZipFile(zipFile *zip.File) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (interface{}, error) {
-	var JSONResponse interface{}
+func (ctx *TestContext) getJSONPathOnResponse(jsonPath string) (any, error) {
+	var JSONResponse any
 	err := json.Unmarshal([]byte(ctx.lastResponseBody), &JSONResponse)
 	if err != nil {
 		return nil, fmt.Errorf("getJSONPathOnResponse: Unmarshal response: %w", err)
@@ -130,8 +130,8 @@ func (ctx *TestContext) TheResponseAtShouldBeTheValue(jsonPath, value string) er
 	)
 }
 
-func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
-	var expected interface{} = value
+func jsonPathResultMatchesValue(jsonPathRes any, value string) bool {
+	var expected any = value
 
 	switch jsonPathResultTyped := jsonPathRes.(type) {
 	case bool:
@@ -139,12 +139,12 @@ func jsonPathResultMatchesValue(jsonPathRes interface{}, value string) bool {
 	case string:
 	case float64:
 		expected, _ = strconv.ParseFloat(value, 64)
-	case []interface{}:
+	case []any:
 		// When the result is an empty array, matches if we're looking for "[]".
 		if len(jsonPathResultTyped) == 0 && value == "[]" {
 			return true
 		}
-	case interface{}:
+	case any:
 	}
 
 	if jsonPathRes == nil && jsonPathValueConsideredNil(value) {
@@ -166,7 +166,7 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *godog.Tabl
 	}
 
 	switch typedJSONRes := jsonPathRes.(type) {
-	case []interface{}:
+	case []any:
 		wantsHasHeader := len(wants.Rows[0].Cells) > 1
 
 		wantLength := len(wants.Rows)
@@ -176,7 +176,7 @@ func (ctx *TestContext) TheResponseAtShouldBe(jsonPath string, wants *godog.Tabl
 
 		// The result is an array (eg. "element": [...])
 		if len(typedJSONRes) != wantLength {
-			expectedJSONRows := make([]interface{}, len(typedJSONRes))
+			expectedJSONRows := make([]any, len(typedJSONRes))
 			for index, row := range typedJSONRes {
 				if strValue, ok := row.(string); ok {
 					expectedJSONRows[index] = ctx.readableValue(strValue)
@@ -261,7 +261,7 @@ func (ctx *TestContext) TheResponseAtShouldBeTheBase64OfAnAES256GCMEncryptedJSON
 // indentJSON indents the JSON string.
 // Works by re-encoding the JSON string with indentation.
 func indentJSON(preprocessedWants string) ([]byte, error) {
-	var exp interface{}
+	var exp any
 	err := json.Unmarshal([]byte(preprocessedWants), &exp)
 	if err != nil {
 		return nil, err
@@ -277,7 +277,7 @@ func indentJSON(preprocessedWants string) ([]byte, error) {
 
 func (ctx *TestContext) wantRowsMatchesJSONPathResultArr(
 	wants *godog.Table,
-	jsonPathResArr []interface{},
+	jsonPathResArr []any,
 ) error {
 	// The jsonPathResult and want rows are put in a slice of maps with the fields that are wanted.
 	// Those slices are then sorted, so they can be easily compared element by element.
@@ -343,7 +343,7 @@ func sortSliceForEasyComparison(
 
 func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 	wants *godog.Table,
-	jsonPathResArr []interface{},
+	jsonPathResArr []any,
 ) error {
 	// Sort the jsonPath and wants values so that we can check them sequentially.
 	// This also makes sure that the values are checked one to one, and are not just present in the "wants".
@@ -365,7 +365,7 @@ func (ctx *TestContext) wantValuesMatchesJSONPathResultArr(
 	return nil
 }
 
-func stringifyJSONPathResultValue(value interface{}) string {
+func stringifyJSONPathResultValue(value any) string {
 	switch typedValue := value.(type) {
 	case bool:
 		// Convert boolean results to strings because the values we check are coming from Gherkin as strings.
@@ -407,9 +407,9 @@ func (ctx *TestContext) TheResponseDecodedBodyShouldBeJSON(responseType string, 
 		return err
 	}
 
-	var act interface{}
+	var act any
 	if responseType == "" {
-		var value interface{}
+		var value any
 		act = &value
 	} else {
 		act, err = getZeroStructPtr(responseType)
@@ -520,7 +520,7 @@ func (ctx *TestContext) TheResponseHeadersShouldBe(
 
 // TheResponseErrorMessageShouldContain checks that the response contains the provided string.
 func (ctx *TestContext) TheResponseErrorMessageShouldContain(needle string) (err error) {
-	errorResp := service.ErrorResponse[interface{}]{}
+	errorResp := service.ErrorResponse[any]{}
 	// decode response
 	if err = json.Unmarshal([]byte(ctx.lastResponseBody), &errorResp); err != nil {
 		return fmt.Errorf("unable to decode the response as JSON: %w -- Data: %v", err, ctx.lastResponseBody)

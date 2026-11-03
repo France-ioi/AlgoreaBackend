@@ -193,7 +193,7 @@ func (srv *Service) updatePermissions(responseWriter http.ResponseWriter, httpRe
 			Scan(&managerPermissions).Error()
 		service.MustNotBeError(err)
 
-		var dataMap map[string]interface{}
+		var dataMap map[string]any
 		var modified bool
 		dataMap, modified, err = parsePermissionsInputData(store, &managerPermissions, &currentPermissions, user, groupID, rawRequestData)
 		service.MustNotBeError(err)
@@ -231,9 +231,9 @@ func parsePermissionsInputData(
 	currentPermissions *userPermissions,
 	user *database.User,
 	groupID int64,
-	rawRequestData map[string]interface{},
+	rawRequestData map[string]any,
 ) (
-	dataMap map[string]interface{}, modified bool, err error,
+	dataMap map[string]any, modified bool, err error,
 ) {
 	data := formdata.NewFormData(&updatePermissionsInput{})
 	modifiedPtr := registerPermissionsValidators(store, managerPermissions, currentPermissions, user, groupID, data)
@@ -665,7 +665,7 @@ func checkIfPossibleToModifyCanEnterUntil(canEnterUntilToSet time.Time, currentP
 	return store.PermissionsGranted().GrantViewIndexByName(enter) <= managerPermissions.CanGrantViewGeneratedValue
 }
 
-func correctPermissionsDataMap(store *database.DataStore, dataMap map[string]interface{}, currentPermissions *userPermissions) {
+func correctPermissionsDataMap(store *database.DataStore, dataMap map[string]any, currentPermissions *userPermissions) {
 	permissionGrantedStore := store.PermissionsGranted()
 
 	currentCanViewValue := currentPermissions.CanViewValue
@@ -688,7 +688,7 @@ func correctPermissionsDataMap(store *database.DataStore, dataMap map[string]int
 	}
 }
 
-func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]interface{}, store *database.DataStore) {
+func savePermissionsIntoDB(groupID, itemID, sourceGroupID int64, dbMap map[string]any, store *database.DataStore) {
 	dbMap["latest_update_at"] = database.Now()
 
 	columnsToUpdate := make([]string, 0, len(dbMap))

@@ -86,7 +86,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForParentAttempt(ids []int64, groupID, p
 	columnsList := columnsListForBreadcrumbsHierarchy(ids[:len(ids)-1])
 	query := s.participationHierarchyForParentAttempt(
 		ids, groupID, parentAttemptID, false, false, columnsList, withWriteLock)
-	var data []map[string]interface{}
+	var data []map[string]any
 	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
 	if len(data) == 0 {
 		return nil, nil, ErrHierarchyNotFound
@@ -120,7 +120,7 @@ func (s *ItemStore) BreadcrumbsHierarchyForAttempt(ids []int64, groupID, attempt
 	columnsList := columnsListForBreadcrumbsHierarchy(ids)
 	query := s.breadcrumbsHierarchyForAttempt(
 		ids, groupID, attemptID, false, columnsList, withWriteLock)
-	var data []map[string]interface{}
+	var data []map[string]any
 	mustNotBeError(query.Limit(1).ScanIntoSliceOfMaps(&data).Error())
 	if len(data) == 0 {
 		return nil, nil, ErrHierarchyNotFound
@@ -172,7 +172,7 @@ func columnsListForBreadcrumbsHierarchy(ids []int64) string {
 	return columnsList
 }
 
-func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]interface{}) (
+func resultsForBreadcrumbsHierarchy(ids []int64, data map[string]any) (
 	attemptIDMap map[int64]int64, attemptNumberMap map[int64]int,
 ) {
 	attemptIDMap = make(map[int64]int64, len(ids))

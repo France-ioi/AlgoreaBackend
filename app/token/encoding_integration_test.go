@@ -14,7 +14,6 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/token"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
@@ -54,7 +53,7 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  nil,
 			tokenFieldName:         "hint_requested",
-			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
+			target:                 new((*token.Token[payloads.HintToken])(nil)),
 			expected:               nil,
 			expectedHasPlatformKey: true,
 			expectedErr:            errors.New("missing hint_requested"),
@@ -70,7 +69,7 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  []byte(""),
 			tokenFieldName:         "hint_requested",
-			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
+			target:                 new((*token.Token[payloads.HintToken])(nil)),
 			expected:               nil,
 			expectedHasPlatformKey: true,
 			expectedErr:            errors.New("invalid hint_requested: unexpected end of JSON input"),
@@ -86,7 +85,7 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  []byte("dsafafd"),
 			tokenFieldName:         "score_token",
-			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
+			target:                 new((*token.Token[payloads.HintToken])(nil)),
 			expected:               nil,
 			expectedHasPlatformKey: true,
 			expectedErr:            errors.New("invalid score_token: wrong platform's key"),
@@ -100,10 +99,10 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 				`items: [{id: 50, platform_id: 10, url: "http://taskplatform4.mblockelet.info/task.html?taskId=403449543672183936",
 				          default_language_tag: fr}]`,
 			},
-			token: []byte(fmt.Sprintf("%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform(),
-				tokentest.TaskPlatformPrivateKeyParsed()))),
+			token: fmt.Appendf(nil, "%q", token.Generate(payloadstest.HintPayloadFromTaskPlatform(),
+				tokentest.TaskPlatformPrivateKeyParsed())),
 			tokenFieldName:         "hint_requested",
-			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
+			target:                 new((*token.Token[payloads.HintToken])(nil)),
 			expected:               expectedToken,
 			expectedHasPlatformKey: true,
 			expectedErr:            nil,
@@ -118,7 +117,7 @@ func TestUnmarshalDependingOnItemPlatform(t *testing.T) {
 			},
 			token:                  []byte(`{}`),
 			tokenFieldName:         "hint_requested",
-			target:                 golang.Ptr((*token.Token[payloads.HintToken])(nil)),
+			target:                 new((*token.Token[payloads.HintToken])(nil)),
 			expected:               (*token.Token[payloads.HintToken])(nil),
 			expectedHasPlatformKey: false,
 			expectedErr:            nil,

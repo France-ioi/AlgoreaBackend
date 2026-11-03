@@ -100,9 +100,9 @@ func (ctx *TestContext) ThereAreTheFollowingGroups(groups *godog.Table) error {
 		}
 
 		if _, ok := group["members"]; ok {
-			members := strings.Split(group["members"], ",")
+			members := strings.SplitSeq(group["members"], ",")
 
-			for _, member := range members {
+			for member := range members {
 				err = ctx.ThereIsAUser(member)
 				mustNotBeError(err)
 

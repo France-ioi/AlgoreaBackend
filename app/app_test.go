@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus" //nolint:depguard // allow to use logrus here as an exception to reference logrus.ErrorLevel in tests
 	"github.com/spf13/viper"
@@ -23,6 +22,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -130,7 +130,7 @@ func TestNew_DBErr(t *testing.T) {
 
 	logger, hook := logging.NewMockLogger()
 	expectedError := errors.New("db opening error")
-	monkey.Patch(database.Open, func(context.Context, interface{}) (*database.DB, error) {
+	monkey.Patch(database.Open, func(context.Context, any) (*database.DB, error) {
 		return nil, expectedError
 	})
 	defer monkey.UnpatchAll()
@@ -430,7 +430,7 @@ func TestNew_PropagationLogChunkCountersConfig(t *testing.T) {
 func TestResolveMaxSelectExecutionTime(t *testing.T) {
 	tests := []struct {
 		name    string
-		raw     interface{}
+		raw     any
 		want    time.Duration
 		wantErr string
 	}{
@@ -569,7 +569,7 @@ func TestApplication_Reset_ClosesExistingDatabase(t *testing.T) {
 
 func mockDatabaseOpen() {
 	var openPatch *monkey.PatchGuard
-	openPatch = monkey.Patch(database.Open, func(ctx context.Context, _ interface{}) (*database.DB, error) {
+	openPatch = monkey.Patch(database.Open, func(ctx context.Context, _ any) (*database.DB, error) {
 		defer openPatch.Restore()
 		openPatch.Unpatch()
 		db, _ := database.NewDBMock(ctx)
@@ -654,7 +654,7 @@ func TestApplication_ContextWithEventDispatcher(t *testing.T) {
 	ctx := application.ContextWithEventDispatcher(context.Background())
 	assert.Equal(t, mockDispatcher, event.DispatcherFromContext(ctx))
 
-	event.Dispatch(ctx, event.TypeGroupResultsExportCompleted, map[string]interface{}{"export_id": "x"})
+	event.Dispatch(ctx, event.TypeGroupResultsExportCompleted, map[string]any{"export_id": "x"})
 	events := mockDispatcher.GetEvents()
 	require.Len(t, events, 1)
 	assert.Equal(t, "staging", events[0].Instance)

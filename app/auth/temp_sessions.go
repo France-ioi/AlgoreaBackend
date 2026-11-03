@@ -24,7 +24,7 @@ func CreateNewTempSession(store *database.DataStore, userID int64) (
 		err = store.RetryOnDuplicateKeyError("sessions", "PRIMARY", "session_id", func(s *database.DataStore) error {
 			sessionID = s.NewID()
 			// No refresh tokens specified for temporary users.
-			return s.Sessions().InsertMap(map[string]interface{}{
+			return s.Sessions().InsertMap(map[string]any{
 				"session_id": sessionID,
 				"user_id":    userID,
 			})

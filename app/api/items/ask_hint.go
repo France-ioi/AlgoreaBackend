@@ -138,7 +138,7 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 			Where("participant_id = ?", requestData.TaskToken.Payload.Converted.ParticipantID).
 			Where("attempt_id = ?", requestData.TaskToken.Payload.Converted.AttemptID).
 			Where("item_id = ?", requestData.TaskToken.Payload.Converted.LocalItemID).
-			UpdateColumn(map[string]interface{}{
+			UpdateColumn(map[string]any{
 				"tasks_with_help":    1,
 				"latest_activity_at": database.Now(),
 				"latest_hint_at":     database.Now(),
@@ -157,7 +157,7 @@ func (srv *Service) askHint(responseWriter http.ResponseWriter, httpRequest *htt
 	newTaskToken, err := requestData.TaskToken.Sign(srv.TokenConfig.PrivateKey)
 	service.MustNotBeError(err)
 
-	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]interface{}{
+	service.MustNotBeError(render.Render(responseWriter, httpRequest, service.CreationSuccess(map[string]any{
 		"task_token": newTaskToken,
 	})))
 	return nil

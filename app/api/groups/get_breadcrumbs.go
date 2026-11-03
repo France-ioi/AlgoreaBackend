@@ -69,7 +69,7 @@ func (srv *Service) getBreadcrumbs(responseWriter http.ResponseWriter, httpReque
 	if err != nil {
 		return service.ErrInvalidRequest(err)
 	}
-	idsInterface := make([]interface{}, 0, len(ids))
+	idsInterface := make([]any, 0, len(ids))
 	for _, id := range ids {
 		idsInterface = append(idsInterface, id)
 	}

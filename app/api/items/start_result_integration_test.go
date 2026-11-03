@@ -8,13 +8,11 @@ import (
 	"testing"
 	_ "unsafe"
 
-	"bou.ke/monkey"
-
 	"github.com/France-ioi/AlgoreaBackend/v2/app"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -43,12 +41,12 @@ func TestService_startResult_concurrency(t *testing.T) {
 	monkey.Patch(service.SchedulePropagation, func(*database.DataStore, bool, []string) {})
 	defer monkey.UnpatchAll()
 
-	onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {
-		onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {}))
+	onBeforeInsertingResultInResultStartHook.Store(new(func() {
+		onBeforeInsertingResultInResultStartHook.Store(new(func() {}))
 		testhelpers.VerifyTestHTTPRequestWithToken(t, appServer, "token_john", 200,
 			"POST", "/items/1/start-result?attempt_id=0", nil, nil)
 	}))
-	defer onBeforeInsertingResultInResultStartHook.Store(golang.Ptr(func() {}))
+	defer onBeforeInsertingResultInResultStartHook.Store(new(func() {}))
 
 	testhelpers.VerifyTestHTTPRequestWithToken(t, appServer, "token_john", 200,
 		"POST", "/items/1/start-result?attempt_id=0", nil, nil)

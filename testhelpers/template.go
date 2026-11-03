@@ -114,7 +114,7 @@ func (ctx *TestContext) constructTemplateSet() *jet.Set {
 		}
 		return reflect.ValueOf(
 			//nolint:forcetypeassert // panic if the first argument is not map[string]interface{}
-			fmt.Sprintf("%q", token.Generate(arguments.Get(0).Interface().(map[string]interface{}),
+			fmt.Sprintf("%q", token.Generate(arguments.Get(0).Interface().(map[string]any),
 				privateKey)))
 	})
 

@@ -20,7 +20,7 @@ func TestLanguageStore_ByTag(t *testing.T) {
 		WithArgs(tag).
 		WillReturnRows(mock.NewRows([]string{"tag"}))
 
-	var result []interface{}
+	var result []any
 	err := NewDataStore(db).Languages().ByTag(tag).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())

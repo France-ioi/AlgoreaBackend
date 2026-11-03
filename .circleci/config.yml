@@ -17,7 +17,7 @@ commands:
 jobs:
   deps:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
     steps:
       - checkout
       - restore_cache: &CACHEKEYMOD
@@ -34,7 +34,7 @@ jobs:
           - ~/.cache/go-build/
   tests:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
       - image: mysql:8.0.34
         command: --default-authentication-plugin=caching_sha2_password --innodb_ft_min_token_size=1 --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:
@@ -90,7 +90,7 @@ jobs:
           path: log
   migration-tests:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
       - image: mysql:8.0.34
         command: --default-authentication-plugin=caching_sha2_password --innodb_ft_min_token_size=1 --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:
@@ -112,8 +112,29 @@ jobs:
       - run:
           name: Skip if no new migrations added
           command: |
+            # Compare against master tip for feature branches (whole PR), not pipeline.git.base_revision
+            # (previous push on this branch — would skip migration tests on later non-migration pushes).
+            # CircleCI's origin is often git@github.com; cimg/go 1.26+ may lack github.com in
+            # known_hosts, so any SSH (fetch or lazy object load during git diff) hangs on the
+            # interactive authenticity prompt until no_output_timeout. Force HTTPS for this step.
+            if [ "<<pipeline.git.branch>>" = "master" ]; then
+              BASE_REV="<<pipeline.git.base_revision>>"
+            else
+              mkdir -p ~/.ssh
+              chmod 700 ~/.ssh
+              # Belt-and-suspenders if insteadOf rewrites HTTPS→SSH or another step uses git@github.com.
+              ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+              chmod 600 ~/.ssh/known_hosts
+              git remote set-url origin \
+                "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git"
+              # Drop HTTPS→SSH rewrites that would undo set-url and re-trigger the prompt.
+              git config --global --unset-all "url.ssh://git@github.com/.insteadof" || true
+              git config --global --unset-all "url.git@github.com:.insteadof" || true
+              git fetch --depth=1 origin master:refs/remotes/origin/master
+              BASE_REV="origin/master"
+            fi
             EARLIEST_CHANGED_MIGRATION=$( \
-              git diff --name-only `if [ "<<pipeline.git.branch>>" = "master" ]; then echo "<<pipeline.git.base_revision>>"; else echo "origin/master"; fi`..<<pipeline.git.revision>> | \
+              git diff --name-only "${BASE_REV}"..<<pipeline.git.revision>> | \
                 (grep "db/migrations/" || true) | sort | head -n 1 | sed "s/db\/migrations\///" || true \
             )
             [ -z "$EARLIEST_CHANGED_MIGRATION" ] && circleci-agent step halt && exit 0
@@ -151,7 +172,7 @@ jobs:
           no_output_timeout: 1h
   lint:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
     steps:
       - attach_workspace:
           at: ./
@@ -160,7 +181,7 @@ jobs:
           command: PATH=/usr/local/go/bin:/usr/bin:/bin make lint
   govulncheck:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
     steps:
       - attach_workspace:
           at: ./
@@ -170,7 +191,7 @@ jobs:
 
   build:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
     steps:
       - attach_workspace:
           at: ./
@@ -206,12 +227,13 @@ jobs:
           status: ready
   swagger-gen:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
     steps:
       - checkout
       # Built from the tools/swagger sub-module (not `go install ...@<rev>`)
       # so that we can pin a `golang.org/x/tools` version that compiles on
-      # Go 1.25; see tools/swagger/tools.go for the full rationale.
+      # Go 1.23+. `make swagger-generate` also sets GODEBUG=gotypesalias=0
+      # for the fork's alias handling; see tools/swagger/tools.go.
       - run:
           name: Install swagger generator
           command: cd tools/swagger && go install github.com/France-ioi/go-swagger/cmd/swagger
@@ -263,7 +285,7 @@ jobs:
           aws s3 cp ./index.html s3://franceioi-algorea/spec/index.html --acl public-read --content-type text/html
   dbdoc-gen:
     docker:
-      - image: cimg/go:1.25.9
+      - image: cimg/go:1.26.10
       - image: mysql:8.0.34
         command: --default-authentication-plugin=caching_sha2_password --innodb_ft_min_token_size=1 --max-allowed-packet=10485760 --collation-server=utf8mb4_0900_ai_ci --character-set-server=utf8mb4
         environment:

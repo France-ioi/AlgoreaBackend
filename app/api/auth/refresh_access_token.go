@@ -60,7 +60,7 @@ func (srv *Service) refreshAccessToken(responseWriter http.ResponseWriter, httpR
 	}
 
 	srv.respondWithNewAccessToken(
-		responseWriter, httpRequest, service.CreationSuccess[map[string]interface{}], newToken, expiresIn, cookieAttributes)
+		responseWriter, httpRequest, service.CreationSuccess[map[string]any], newToken, expiresIn, cookieAttributes)
 	return nil
 }
 

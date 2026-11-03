@@ -25,7 +25,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 		name    string
 		fixture string
 		args    args
-		want    []map[string]interface{}
+		want    []map[string]any
 	}{
 		{
 			name: "fails if not enough permissions for the first item",
@@ -71,7 +71,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {group_id: 200, item_id: 2, can_view_generated: content}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 2}},
-			want: []map[string]interface{}{{
+			want: []map[string]any{{
 				"attempt_id0": int64(0), "attempt_id1": int64(0),
 				"has_started_result0": int64(0), "has_started_result1": int64(0),
 			}},
@@ -84,7 +84,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {group_id: 200, item_id: 4, can_view_generated: content}
 			`,
 			args: args{participantID: 101, ids: []int64{3, 4}},
-			want: []map[string]interface{}{{
+			want: []map[string]any{{
 				"attempt_id0": int64(0), "attempt_id1": int64(0),
 				"has_started_result0": int64(0), "has_started_result1": int64(0),
 			}},
@@ -106,7 +106,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 105, id: 0}
 			`,
 			args: args{participantID: 105, ids: []int64{5, 6}},
-			want: []map[string]interface{}{{
+			want: []map[string]any{{
 				"attempt_id0": int64(0), "attempt_id1": int64(0),
 				"has_started_result0": int64(0), "has_started_result1": int64(0),
 			}},
@@ -128,7 +128,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 105, id: 0}
 			`,
 			args: args{participantID: 105, ids: []int64{5, 6}},
-			want: []map[string]interface{}{{
+			want: []map[string]any{{
 				"attempt_id0": int64(0), "attempt_id1": int64(0),
 				"has_started_result0": int64(0), "has_started_result1": int64(0),
 			}},
@@ -144,7 +144,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 0, item_id: 2, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)},
 			},
 		},
@@ -156,7 +156,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {group_id: 100, item_id: 2, can_view_generated: content}
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)},
 			},
 		},
@@ -180,7 +180,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 4, item_id: 22}
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2, 22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(0), "attempt_id1": int64(0), "attempt_id2": int64(1),
 					"has_started_result0": int64(0), "has_started_result1": int64(1), "has_started_result2": int64(0),
@@ -200,7 +200,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 103, attempt_id: 1, item_id: 22}
 			`,
 			args: args{participantID: 103, ids: []int64{22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{"attempt_id0": int64(1), "has_started_result0": int64(0)},
 			},
 		},
@@ -216,7 +216,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 1, item_id: 2}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 2}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{"attempt_id0": int64(0), "has_started_result0": int64(0), "attempt_id1": int64(0), "has_started_result1": int64(0)},
 			},
 		},
@@ -246,7 +246,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 2, 22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(1), "has_started_result0": int64(1),
 					"attempt_id1": int64(1), "has_started_result1": int64(1),
@@ -279,7 +279,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 2, 22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(0),
@@ -312,7 +312,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 5, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 2, 22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(1), "has_started_result0": int64(1),
 					"attempt_id1": int64(1), "has_started_result1": int64(0),
@@ -385,7 +385,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 2, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 2, 22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(1), "has_started_result0": int64(1),
 					"attempt_id1": int64(1), "has_started_result1": int64(1),
@@ -431,7 +431,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 100, ids: []int64{22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{"attempt_id0": int64(0), "has_started_result0": int64(1)},
 			},
 		},
@@ -452,7 +452,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 100, attempt_id: 0, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 100, ids: []int64{22, 30}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(0),
@@ -477,7 +477,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 0, item_id: 21, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 21, 30}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(1),
@@ -512,7 +512,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 100, attempt_id: 2, item_id: 22}
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2, 22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(1),
@@ -541,7 +541,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 100, attempt_id: 1, item_id: 22, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 100, ids: []int64{1, 2, 22}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(1),
@@ -583,7 +583,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 					- {participant_id: 101, attempt_id: 5, item_id: 30, started_at: 2019-05-30 11:00:00}
 			`,
 			args: args{participantID: 101, ids: []int64{1, 21, 30}},
-			want: []map[string]interface{}{
+			want: []map[string]any{
 				{
 					"attempt_id0": int64(0), "has_started_result0": int64(1),
 					"attempt_id1": int64(0), "has_started_result1": int64(1),
@@ -695,7 +695,7 @@ func Test_getDataForResultPathStart(t *testing.T) {
 			db := testhelpers.SetupDBWithFixtureString(ctx, globalFixture, tt.fixture)
 			defer func() { _ = db.Close() }()
 			store := database.NewDataStore(db)
-			var got []map[string]interface{}
+			var got []map[string]any
 			require.NoError(t, store.InTransaction(func(s *database.DataStore) error {
 				require.NoError(t, s.GroupGroups().CreateNewAncestors())
 				got = items.GetDataForResultPathStart(s, tt.args.participantID, tt.args.ids)

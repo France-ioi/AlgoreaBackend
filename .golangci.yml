@@ -124,6 +124,15 @@ linters:
       - linters:
           - dupword
         text: Duplicate words \(.*[:,].*\) found
+      # Established package names; renaming would break the public import path.
+      - linters:
+          - revive
+        path: ^app/api/
+        text: "var-naming: avoid meaningless package names"
+      - linters:
+          - revive
+        path: ^app/(rand|token|version)/
+        text: "var-naming: avoid package names that conflict with Go standard library package names"
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

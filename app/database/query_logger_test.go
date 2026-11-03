@@ -151,7 +151,7 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 
 	type testArgs struct {
 		query  string
-		values []interface{}
+		values []any
 	}
 
 	tests := []struct {
@@ -164,7 +164,7 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 			args: testArgs{
 				query: "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`, `c7`, `c8`, `c9`, `c10`, `c11`, `c12`, `c13`) VALUES " +
 					"(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-				values: []interface{}{
+				values: []any{
 					1, int8(2), int16(3), int32(4), int64(5), uint(6), uint8(7), uint16(8), uint32(9), uint64(10),
 					float32(0.11), float64(0.12), true,
 				},
@@ -176,7 +176,7 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 			name: "time values",
 			args: testArgs{
 				query:  "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`) VALUES (?, ?, ?, ?, ?, ?)",
-				values: []interface{}{timeValue, timeValuePtr, timeTypeValue, timeTypeValuePtr, (*timeType)(nil), time.Time{}},
+				values: []any{timeValue, timeValuePtr, timeTypeValue, timeTypeValuePtr, (*timeType)(nil), time.Time{}},
 			},
 			expected: "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`, `c5`, `c6`) VALUES " +
 				"('2022-08-02 15:04:05.123456789', '2022-08-02 15:04:05.123456789', " +
@@ -186,7 +186,7 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 			name: "$n placeholders",
 			args: testArgs{
 				query:  "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`) VALUES ($1, $2, $3, $3)",
-				values: []interface{}{int64(123451234512345), "testsessiontestsessiontestsessio", int64(1), int64(2)},
+				values: []any{int64(123451234512345), "testsessiontestsessiontestsessio", int64(1), int64(2)},
 			},
 			expected: "INSERT INTO `t` (`c1`, `c2`, `c3`, `c4`) VALUES (123451234512345, 'testsessiontestsessiontestsessio', 1, 1)",
 		},
@@ -194,7 +194,7 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 			name: "bytes values",
 			args: testArgs{
 				query:  "INSERT INTO `t` (`c1`, `c2`) VALUES ($1, $2)",
-				values: []interface{}{[]byte("test"), []byte{0x01, 0x02, 0x03}},
+				values: []any{[]byte("test"), []byte{0x01, 0x02, 0x03}},
 			},
 			expected: "INSERT INTO `t` (`c1`, `c2`) VALUES ('test', '<binary>')",
 		},
@@ -202,7 +202,7 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 			name: "pointer values",
 			args: testArgs{
 				query:  "INSERT INTO `t` (`c1`, `c2`) VALUES (?, ?)",
-				values: []interface{}{int64Ptr, nilValuePtr},
+				values: []any{int64Ptr, nilValuePtr},
 			},
 			expected: "INSERT INTO `t` (`c1`, `c2`) VALUES (12345, NULL)",
 		},
@@ -210,7 +210,7 @@ func Test_fillSQLPlaceholders(t *testing.T) {
 			name: "nil value",
 			args: testArgs{
 				query:  "INSERT INTO `t` (`c1`) VALUES (?)",
-				values: []interface{}{nil},
+				values: []any{nil},
 			},
 			expected: "INSERT INTO `t` (`c1`) VALUES (NULL)",
 		},

@@ -107,7 +107,7 @@ func configDirectory() string {
 // config file) for the env values to be read by viper
 
 func subconfig(globalConfig *viper.Viper, subconfigKey string) *viper.Viper {
-	globalConfig.SetDefault(subconfigKey, map[string]interface{}{})
+	globalConfig.SetDefault(subconfigKey, map[string]any{})
 	subConfig := globalConfig.Sub(subconfigKey)
 	subConfig.SetEnvPrefix(fmt.Sprintf("%s_%s_", envPrefix, subconfigKey))
 	subConfig.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
@@ -121,7 +121,7 @@ func DBConfig(globalConfig *viper.Viper) (config *mysql.Config, err error) {
 	// To fix this issue, instead of loading config files and overriding with env vars,
 	// we load all possible keys (with their default value), override with config files,
 	// and then environmenent variables.
-	emptyConfig := &map[string]interface{}{}
+	emptyConfig := &map[string]any{}
 	if err := mapstructure.Decode(mysql.NewConfig(), &emptyConfig); err != nil {
 		return nil, err // unexpected
 	}
@@ -176,7 +176,7 @@ func ServerConfig(globalConfig *viper.Viper) *viper.Viper {
 // DomainsConfig returns the domains fixed config from the global config
 // Panic in case of marshaling error.
 func DomainsConfig(globalConfig *viper.Viper) (config []domain.ConfigItem, err error) {
-	globalConfig.SetDefault(domainsConfigKey, []interface{}{})
+	globalConfig.SetDefault(domainsConfigKey, []any{})
 	// note that `.Sub` cannot be used to get a slice
 	if err := globalConfig.UnmarshalKey(domainsConfigKey, &config); err != nil {
 		return nil, err

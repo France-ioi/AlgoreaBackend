@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"testing"
 
-	"bou.ke/monkey"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
@@ -16,6 +15,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/servicetest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestErrIfProgressZIPEntriesExceedLimit(t *testing.T) {
@@ -111,7 +111,7 @@ func TestBuildProgressZIPVisibleSubtree_StopsWhenOverMaxItems(t *testing.T) {
 	oldLoad := loadProgressZIPChildrenByParentImpl
 	t.Cleanup(func() { loadProgressZIPChildrenByParentImpl = oldLoad })
 	loadProgressZIPChildrenByParentImpl = func(
-		*database.DataStore, []int64, interface{}, int64,
+		*database.DataStore, []int64, any, int64,
 	) (map[int64][]progressZIPItemChild, int) {
 		return map[int64][]progressZIPItemChild{}, 3
 	}

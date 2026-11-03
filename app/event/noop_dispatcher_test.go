@@ -9,7 +9,7 @@ import (
 
 func TestNoopDispatcher_ReturnsNil(t *testing.T) {
 	dispatcher := &NoopDispatcher{}
-	event := &Event{Type: "test", Payload: map[string]interface{}{"key": "value"}}
+	event := &Event{Type: "test", Payload: map[string]any{"key": "value"}}
 
 	err := dispatcher.Dispatch(context.Background(), event)
 

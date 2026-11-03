@@ -244,7 +244,7 @@ func (srv *Service) updateGroup(responseWriter http.ResponseWriter, httpRequest 
 
 func validateRootActivityIDAndIsOfficial(
 	store *database.DataStore, user *database.User, oldRootActivityID *int64, oldIsOfficialSession bool,
-	dbMap map[string]interface{},
+	dbMap map[string]any,
 ) error {
 	rootActivityIDToCheck := oldRootActivityID
 	rootActivityID, rootActivityIDSet := dbMap["root_activity_id"]
@@ -293,7 +293,7 @@ func validateRootActivityID(store *database.DataStore, user *database.User, root
 }
 
 func validateRootSkillID(store *database.DataStore, user *database.User, oldRootSkillID *int64,
-	dbMap map[string]interface{},
+	dbMap map[string]any,
 ) error {
 	newRootSkillIDInterface, newRootSkillIDSet := dbMap["root_skill_id"]
 	if newRootSkillIDSet && newRootSkillIDInterface != nil {
@@ -322,7 +322,7 @@ func validateRootSkillID(store *database.DataStore, user *database.User, oldRoot
 // (removes them from group_pending_requests and inserts appropriate group_membership_changes
 // with `action` = 'join_request_refused') if is_public is changed from true to false.
 func refuseSentGroupRequestsIfNeeded(
-	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]interface{},
+	store *database.GroupStore, groupID, initiatorID int64, dbMap map[string]any,
 	currentGroupData *groupUpdateInput, approvalChangeAction string,
 ) error {
 	if shouldRefuseGroupPendingRequests(dbMap, currentGroupData, approvalChangeAction) {
@@ -351,7 +351,7 @@ func refuseSentGroupRequestsIfNeeded(
 }
 
 func getGroupPendingRequestTypesToRefuse(
-	dbMap map[string]interface{},
+	dbMap map[string]any,
 	currentGroupData *groupUpdateInput,
 	approvalChangeAction string,
 ) []string {
@@ -382,7 +382,7 @@ func getGroupPendingRequestTypesToRefuse(
 }
 
 func shouldRefuseGroupPendingRequests(
-	dbMap map[string]interface{},
+	dbMap map[string]any,
 	currentGroupData *groupUpdateInput,
 	approvalChangeAction string,
 ) bool {
@@ -403,7 +403,7 @@ func shouldRefuseGroupPendingRequests(
 }
 
 func validateUpdateGroupInput(
-	rawRequestData map[string]interface{}, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
+	rawRequestData map[string]any, groupHasParticipants bool, currentGroupData *groupUpdateInput, store *database.DataStore,
 ) (*formdata.FormData, error) {
 	input := &groupUpdateInput{}
 	formData := formdata.NewFormData(input)
@@ -447,7 +447,7 @@ func int64PtrEqualValues(a, b *int64) bool {
 	return a == nil && b == nil || a != nil && b != nil && *a == *b
 }
 
-func isTryingToChangeOfficialSessionActivity(dbMap map[string]interface{}, oldIsOfficialSession, rootActivityIDChanged bool) bool {
+func isTryingToChangeOfficialSessionActivity(dbMap map[string]any, oldIsOfficialSession, rootActivityIDChanged bool) bool {
 	isOfficialSession, isOfficialSessionSet := dbMap["is_official_session"]
 	//nolint:forcetypeassert // we know that isOfficialSession is bool if it is set
 	isOfficialSessionChanged := isOfficialSessionSet && oldIsOfficialSession != isOfficialSession.(bool)

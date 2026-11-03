@@ -10,11 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 func TestEntryFromContext(t *testing.T) {

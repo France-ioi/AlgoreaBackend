@@ -94,7 +94,7 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 		store.Exec("SET FOREIGN_KEY_CHECKS=0")
 		defer store.Exec("SET FOREIGN_KEY_CHECKS=1")
 
-		err := store.Sessions().InsertMap(map[string]interface{}{
+		err := store.Sessions().InsertMap(map[string]any{
 			"session_id": testSessionID,
 			"user_id":    ctx.userID,
 		})
@@ -102,7 +102,7 @@ func (ctx *TestContext) IAmUserWithID(userID int64) error {
 			return err
 		}
 
-		return store.AccessTokens().InsertMap(map[string]interface{}{
+		return store.AccessTokens().InsertMap(map[string]any{
 			"session_id": testSessionID,
 			"token":      testAccessToken,
 			"issued_at":  database.Now(),

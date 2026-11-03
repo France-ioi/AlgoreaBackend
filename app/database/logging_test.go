@@ -17,7 +17,6 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/loggingtest"
-	"github.com/France-ioi/AlgoreaBackend/v2/golang"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
 )
 
@@ -57,7 +56,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
 					mock.ExpectExec(expectedSQL).WillReturnError(expectedError)
 				},
-				func(db *sqlDBWrapper, expectedQuery string) (interface{}, error) {
+				func(db *sqlDBWrapper, expectedQuery string) (any, error) {
 					return db.Exec(expectedQuery)
 				}),
 		},
@@ -69,7 +68,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				t.Helper()
 
 				expectedQuery = updateQueryForTesting
-				expectedAffectedRows = golang.Ptr(int64(1))
+				expectedAffectedRows = new(int64(1))
 				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 				mock.ExpectExec("^" + regexp.QuoteMeta(expectedQuery) + "$").
 					WillReturnResult(sqlmock.NewResult(-1, *expectedAffectedRows))
@@ -87,7 +86,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
 					mock.ExpectQuery(expectedSQL).WillReturnError(expectedError)
 				},
-				func(db *sqlDBWrapper, expectedQuery string) (interface{}, error) {
+				func(db *sqlDBWrapper, expectedQuery string) (any, error) {
 					return db.Query(expectedQuery) //nolint:rowserrcheck // the caller is responsible for checking
 				}),
 		},
@@ -192,7 +191,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
 					mock.ExpectExec(expectedSQL).WillReturnError(expectedError)
 				},
-				func(conn *sqlConnWrapper, expectedQuery string) (interface{}, error) {
+				func(conn *sqlConnWrapper, expectedQuery string) (any, error) {
 					return conn.Exec(expectedQuery)
 				}),
 		},
@@ -204,7 +203,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				t.Helper()
 
 				expectedQuery = updateQueryForTesting
-				expectedAffectedRows = golang.Ptr(int64(1))
+				expectedAffectedRows = new(int64(1))
 				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 				mock.ExpectExec("^" + regexp.QuoteMeta(expectedQuery) + "$").
 					WillReturnResult(sqlmock.NewResult(-1, *expectedAffectedRows))
@@ -228,7 +227,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
 					mock.ExpectQuery(expectedSQL).WillReturnError(expectedError)
 				},
-				func(conn *sqlConnWrapper, expectedQuery string) (interface{}, error) {
+				func(conn *sqlConnWrapper, expectedQuery string) (any, error) {
 					return conn.Query(expectedQuery) //nolint:rowserrcheck // the caller is responsible for checking
 				}),
 		},
@@ -394,7 +393,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(prepareExpectation *sqlmock.ExpectedPrepare, expectedError error) {
 					prepareExpectation.ExpectExec().WillReturnError(expectedError)
 				},
-				func(stmtWrapper *SQLStmtWrapper) (interface{}, error) {
+				func(stmtWrapper *SQLStmtWrapper) (any, error) {
 					txWrapper, ok := stmtWrapper.db.(*sqlTxWrapper)
 					if !ok {
 						return nil, errors.New("the db of the statement is not an sqlTxWrapper")
@@ -410,7 +409,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				t.Helper()
 
 				expectedQuery = updateQueryForTesting
-				expectedAffectedRows = golang.Ptr(int64(1))
+				expectedAffectedRows = new(int64(1))
 
 				mock.ExpectBegin()
 				prepareExpectation := mock.ExpectPrepare("^" + regexp.QuoteMeta(expectedQuery) + "$")
@@ -439,7 +438,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(prepareExpectation *sqlmock.ExpectedPrepare, expectedError error) {
 					prepareExpectation.ExpectQuery().WillReturnError(expectedError)
 				},
-				func(stmtWrapper *SQLStmtWrapper) (interface{}, error) {
+				func(stmtWrapper *SQLStmtWrapper) (any, error) {
 					txWrapper, ok := stmtWrapper.db.(*sqlTxWrapper)
 					if !ok {
 						return nil, errors.New("the db of the statement is not an sqlTxWrapper")
@@ -547,7 +546,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
 					mock.ExpectExec(expectedSQL).WillReturnError(expectedError)
 				},
-				func(txWrapper *sqlTxWrapper, expectedQuery string) (interface{}, error) {
+				func(txWrapper *sqlTxWrapper, expectedQuery string) (any, error) {
 					return txWrapper.Exec(expectedQuery)
 				},
 			),
@@ -560,7 +559,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				t.Helper()
 
 				expectedQuery = updateQueryForTesting
-				expectedAffectedRows = golang.Ptr(int64(1))
+				expectedAffectedRows = new(int64(1))
 
 				mock.ExpectBegin()
 				expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
@@ -586,7 +585,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 				func(mock sqlmock.Sqlmock, expectedSQL string, expectedError error) {
 					mock.ExpectQuery(expectedSQL).WillReturnError(expectedError)
 				},
-				func(txWrapper *sqlTxWrapper, expectedQuery string) (interface{}, error) {
+				func(txWrapper *sqlTxWrapper, expectedQuery string) (any, error) {
 					return txWrapper.Query(expectedQuery) //nolint:rowserrcheck // the caller is responsible for checking
 				}),
 		},
@@ -745,7 +744,7 @@ func sqlQueryLoggingTests() []sqlQueryLoggingTest {
 
 func generateTestFuncToCheckSQLConnWrapperQueryOrExecWithError(
 	mockCallOnDBFunc func(sqlmock.Sqlmock, string, error),
-	callOnConnFunc func(*sqlConnWrapper, string) (interface{}, error),
+	callOnConnFunc func(*sqlConnWrapper, string) (any, error),
 ) funcToRunInSQLQueryLoggingTests {
 	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 		expectedQuery string, expectedAffectedRows *int64, expectedError error,
@@ -756,7 +755,7 @@ func generateTestFuncToCheckSQLConnWrapperQueryOrExecWithError(
 		expectedQuery = updateQueryForTesting
 		expectAnalyzeForQuery(mock, expectedQuery, expectedError, withSQLAnalyze)
 		mockCallOnDBFunc(mock, "^"+regexp.QuoteMeta(expectedQuery)+"$", expectedError)
-		var resultOrRows interface{}
+		var resultOrRows any
 		var err error
 		err = db.WithFixedConnection(func(db *DB) error {
 			connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
@@ -773,7 +772,7 @@ func generateTestFuncToCheckSQLConnWrapperQueryOrExecWithError(
 
 func generateTestFuncToCheckSQLDBWrapperQueryOrExecWithError(
 	mockCallOnDBFunc func(sqlmock.Sqlmock, string, error),
-	callOnDBFunc func(*sqlDBWrapper, string) (interface{}, error),
+	callOnDBFunc func(*sqlDBWrapper, string) (any, error),
 ) funcToRunInSQLQueryLoggingTests {
 	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 		expectedQuery string, expectedAffectedRows *int64, expectedError error,
@@ -795,7 +794,7 @@ func generateTestFuncToCheckSQLDBWrapperQueryOrExecWithError(
 
 func generateTestFuncToCheckSQLQueryLoggingForSQLStmtWrapperQueryContextOrExecContextWithError(
 	mockCallOnPreparedStmtFunc func(*sqlmock.ExpectedPrepare, error),
-	callOnPreparedStmtFunc func(*SQLStmtWrapper) (interface{}, error),
+	callOnPreparedStmtFunc func(*SQLStmtWrapper) (any, error),
 ) funcToRunInSQLQueryLoggingTests {
 	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 		expectedQuery string, expectedAffectedRows *int64, expectedError error,
@@ -829,7 +828,7 @@ func generateTestFuncToCheckSQLQueryLoggingForSQLStmtWrapperQueryContextOrExecCo
 
 func generateTestFuncToCheckSQLQueryLoggingForSQLTxWrapperExecOrQueryWithError(
 	mockCallOnTxFunc func(sqlmock.Sqlmock, string, error),
-	callOnTxFunc func(*sqlTxWrapper, string) (interface{}, error),
+	callOnTxFunc func(*sqlTxWrapper, string) (any, error),
 ) funcToRunInSQLQueryLoggingTests {
 	return func(t *testing.T, db *DB, mock sqlmock.Sqlmock, withSQLAnalyze bool) (
 		expectedQuery string, expectedAffectedRows *int64, expectedError error,
@@ -1054,7 +1053,7 @@ func Test_SQLQueryLogging_Select(t *testing.T) {
 		WithArgs(1, timeParam, "foo", []byte("bar"), nil).
 		WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
-	var result []interface{}
+	var result []any
 	db.Raw("SELECT $1, $2, $3, $4, $5", 1, timeParam, "foo", []byte("bar"), nil).Scan(&result)
 	require.NotNil(t, loggerHook.LastEntry())
 	assert.Equal(t, `SELECT 1, '2009-11-10 23:00:00', 'foo', 'bar', NULL`, loggerHook.LastEntry().Message)
@@ -1106,7 +1105,7 @@ func Test_SQLQueryLogging_SQLWithInterrogationMark(t *testing.T) {
 
 	mock.ExpectQuery(`^SELECT \?$`).WithArgs(1).WillReturnRows(mock.NewRows([]string{"1"}).AddRow(1))
 
-	var result []interface{}
+	var result []any
 	db.Raw("SELECT ?", 1).Scan(&result)
 	assert.Equal(t, "SELECT 1", loggerHook.LastEntry().Message)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -1127,7 +1126,7 @@ func Test_SQLQueryLogging_SQLError(t *testing.T) {
 
 	mock.ExpectQuery("SELECT 2").WillReturnError(errors.New("a query error"))
 
-	var result []interface{}
+	var result []any
 	db.Raw("SELECT 2").Scan(&result)
 
 	assert.Equal(t, "SELECT 2", loggerHook.Entries[0].Message)

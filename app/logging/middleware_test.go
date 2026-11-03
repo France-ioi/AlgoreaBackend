@@ -61,7 +61,7 @@ func doRequest(logger *Logger, forcePanic bool) {
 	loggerMiddleware := NewStructuredLogger()
 	handler := http.HandlerFunc(func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
 		LogEntrySetField(httpRequest, "my_key", 42)
-		LogEntrySetFields(httpRequest, map[string]interface{}{"opt_one": 1, "foo": "bar"})
+		LogEntrySetFields(httpRequest, map[string]any{"opt_one": 1, "foo": "bar"})
 		GetLogEntry(httpRequest).Print("in service log")
 		if forcePanic {
 			panic("my panic msg")

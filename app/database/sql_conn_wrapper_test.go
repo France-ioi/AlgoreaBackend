@@ -18,7 +18,7 @@ func TestSQLConnWrapper_Prepare_Panics(t *testing.T) {
 		connWrapper, ok := db.db.CommonDB().(*sqlConnWrapper)
 		require.True(t, ok)
 		assert.Panics(t, func() {
-			_, _ = connWrapper.Prepare("SELECT 1") //nolint:sqlclosecheck // there is no statement to close as the Prepare should panic
+			_, _ = connWrapper.Prepare("SELECT 1")
 		})
 		return nil
 	}))

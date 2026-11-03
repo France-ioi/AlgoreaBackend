@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"bou.ke/monkey"
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/payloadstest"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/tokentest"
+	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 )
 
 const (
@@ -55,7 +55,7 @@ func TestParseAndValidate(t *testing.T) {
 		name        string
 		currentTime time.Time
 		token       []byte
-		wantPayload map[string]interface{}
+		wantPayload map[string]any
 		wantError   error
 	}{
 		{
@@ -125,7 +125,7 @@ func TestGenerate(t *testing.T) {
 		name         string
 		platformName string
 		currentTime  time.Time
-		payload      map[string]interface{}
+		payload      map[string]any
 	}{
 		{
 			name:         "task payload",
@@ -145,7 +145,7 @@ func TestGenerate(t *testing.T) {
 			monkey.Patch(time.Now, func() time.Time { return tt.currentTime })
 			defer monkey.UnpatchAll()
 
-			patchedPayload := make(map[string]interface{}, len(tt.payload))
+			patchedPayload := make(map[string]any, len(tt.payload))
 			for k := range tt.payload {
 				patchedPayload[k] = tt.payload[k]
 			}
@@ -172,5 +172,5 @@ func TestGenerate_PanicsOnError(t *testing.T) {
 		// check used by older Go versions, so the panic value's message changed.
 		assert.Equal(t, errors.New("crypto/rsa: 0-bit keys are insecure (see https://go.dev/pkg/crypto/rsa#hdr-Minimum_key_size)"), e)
 	}()
-	Generate(map[string]interface{}{}, privateKey)
+	Generate(map[string]any{}, privateKey)
 }

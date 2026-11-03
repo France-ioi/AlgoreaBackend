@@ -306,7 +306,7 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 	}
 
 	var rawData []rawListChildItem
-	scanItemChildren(store, []int64{params.itemID}, params, requiredViewPermissionOnItems, "", includeDescription, &rawData)
+	scanItemChildren(store, []int64{params.itemID}, params, requiredViewPermissionOnItems, false, includeDescription, &rawData)
 
 	response := childItemsFromRawData(rawData, params.watchedGroupIDIsSet, store.PermissionsGranted(), includeDescription)
 	if showLevel2Children {
@@ -317,8 +317,8 @@ func (srv *Service) getItemChildren(responseWriter http.ResponseWriter, httpRequ
 	return nil
 }
 
-// itemChildrenColumnList is the list of SQL columns selected for a child item, shared by both
-// the level-1 and the level-2 (`show_level2_children`) queries so that they yield the same format.
+// Keep in sync with itemChildrenOuterColumnList: adding an inner alias without the matching
+// outer items.<alias> silently scans a zero value.
 // The `?` placeholder is the participant id used by the `best_score` sub-query.
 const itemChildrenColumnList = `items.allows_multiple_attempts, category, score_weight, content_view_propagation,
 				upper_view_levels_propagation, grant_view_propagation, watch_propagation, edit_propagation, request_help_propagation,
@@ -337,6 +337,23 @@ const itemChildrenColumnList = `items.allows_multiple_attempts, category, score_
 				child_order,
 				EXISTS(SELECT 1 FROM item_dependencies WHERE item_id = items.id AND grant_content_view) AS grants_access_to_items`
 
+// Keep in sync with itemChildrenColumnList (watched-group columns are appended by the helper).
+const itemChildrenOuterColumnList = `items.allows_multiple_attempts, items.category, items.score_weight, items.content_view_propagation,
+				items.upper_view_levels_propagation, items.grant_view_propagation, items.watch_propagation,
+				items.edit_propagation, items.request_help_propagation,
+				items.id, items.type, items.default_language_tag,
+				items.validation_type, items.requires_explicit_entry, items.duration, items.entry_participant_type, items.no_score,
+				items.display_settings,
+				items.can_view_generated_value, items.can_grant_view_generated_value, items.can_watch_generated_value,
+				items.can_edit_generated_value, items.is_owner_generated,
+				items.best_score, items.child_order, items.grants_access_to_items`
+
+// Level-2 only: paired with itemChildrenOuterParentItemIDColumn.
+const itemChildrenInnerParentItemIDColumn = `, items_items.parent_item_id`
+
+// Level-2 only: paired with itemChildrenInnerParentItemIDColumn.
+const itemChildrenOuterParentItemIDColumn = `, items.parent_item_id`
+
 // itemChildrenExternalColumnList is the list of SQL columns resolved outside of the items sub-query,
 // on the strings joined by JoinsUserAndDefaultItemStrings.
 const itemChildrenExternalColumnList = `COALESCE(user_strings.language_tag, default_strings.language_tag) AS language_tag,
@@ -349,11 +366,17 @@ const itemChildrenDescriptionColumn = `,
 			 IF(user_strings.language_tag IS NULL, default_strings.description, user_strings.description) AS description`
 
 func scanItemChildren(store *database.DataStore, parentItemIDs []int64, params *getParentsOrChildrenServiceParams,
-	requiredViewPermissionOnItems, additionalColumnList string, includeDescription bool, dest interface{},
+	requiredViewPermissionOnItems string, withParentItemID, includeDescription bool, dest any,
 ) {
 	externalColumnList := itemChildrenExternalColumnList
 	if includeDescription {
 		externalColumnList += itemChildrenDescriptionColumn
+	}
+	innerColumnList := itemChildrenColumnList
+	outerItemColumnList := itemChildrenOuterColumnList
+	if withParentItemID {
+		innerColumnList += itemChildrenInnerParentItemIDColumn
+		outerItemColumnList += itemChildrenOuterParentItemIDColumn
 	}
 	service.MustNotBeError(
 		constructItemChildrenQuery(
@@ -364,8 +387,9 @@ func scanItemChildren(store *database.DataStore, parentItemIDs []int64, params *
 			params.attemptID,
 			params.watchedGroupIDIsSet,
 			params.watchedGroupID,
-			itemChildrenColumnList+additionalColumnList,
-			[]interface{}{params.participantID},
+			innerColumnList,
+			[]any{params.participantID},
+			outerItemColumnList,
 			externalColumnList,
 			func(db *database.DB) *database.DB {
 				return db.Joins(
@@ -428,8 +452,8 @@ func fillLevel2Children(
 	}
 
 	var rawLevel2 []rawListChildItem
-	// Level-2 never selects or maps description (includeDescription=false).
-	scanItemChildren(store, startedIDs, params, requiredViewPermissionOnItems, ", items_items.parent_item_id", false, &rawLevel2)
+	// Level-2 never selects or maps description (includeDescription=false); needs parent_item_id for grouping.
+	scanItemChildren(store, startedIDs, params, requiredViewPermissionOnItems, true, false, &rawLevel2)
 
 	rawByParent := make(map[int64][]rawListChildItem, len(startedIDs))
 	for index := range rawLevel2 {
@@ -458,9 +482,9 @@ func constructItemChildrenQuery(
 	attemptID int64,
 	watchedGroupIDIsSet bool,
 	watchedGroupID int64,
-	columnList string,
-	columnListValues []interface{},
-	externalColumnList string,
+	innerColumnList string,
+	innerColumnListValues []any,
+	outerItemColumnList, externalColumnList string,
 	joinItemRelationsToItemsFunc func(*database.DB) *database.DB,
 ) *database.DB {
 	return constructItemListQuery(
@@ -469,8 +493,9 @@ func constructItemChildrenQuery(
 		requiredViewPermissionOnItems,
 		watchedGroupIDIsSet,
 		watchedGroupID,
-		columnList,
-		columnListValues,
+		innerColumnList,
+		innerColumnListValues,
+		outerItemColumnList,
 		externalColumnList,
 		joinItemRelationsToItemsFunc,
 		func(db *database.DB) *database.DB {

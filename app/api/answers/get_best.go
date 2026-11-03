@@ -64,7 +64,7 @@ func (srv *Service) getBestAnswer(responseWriter http.ResponseWriter, httpReques
 
 	user := srv.GetUser(httpRequest)
 	store := srv.GetStore(httpRequest)
-	var result []map[string]interface{}
+	var result []map[string]any
 
 	bestAnswerQuery := store.Answers().
 		WithGradings().

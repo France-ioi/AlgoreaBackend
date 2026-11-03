@@ -40,7 +40,7 @@ func init() { //nolint:gochecknoinits // cobra suggests using init functions to 
 			store := database.NewDataStore(application.Database)
 			itemNumber := 0
 			err = store.Items().Where("type = 'Chapter' OR type = 'Skill'").Select("id").
-				ScanAndHandleMaps(func(item map[string]interface{}) error {
+				ScanAndHandleMaps(func(item map[string]any) error {
 					itemNumber++
 					return store.InTransaction(func(store *database.DataStore) error {
 						log.Printf("Recomputing results for item %s (#%d)\n", item["id"], itemNumber)

@@ -45,7 +45,7 @@ func TestGroupAncestorStore_ManagedByUser(t *testing.T) {
 			mock.ExpectQuery(regexp.QuoteMeta(test.expectedQuery)).WithArgs(2).
 				WillReturnRows(mock.NewRows([]string{"id"}))
 
-			var result []interface{}
+			var result []any
 			err := test.storeFunc(db).ManagedByUser(mockUser).Scan(&result).Error()
 
 			assert.NoError(t, err)

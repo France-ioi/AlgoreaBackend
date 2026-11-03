@@ -23,8 +23,8 @@ func (ctx *TestContext) getParameterMap(parameters string) map[string]string {
 	preprocessed := ctx.preprocessString(parameters)
 
 	parameterMap := make(map[string]string)
-	arrayParameters := strings.Split(preprocessed, ",")
-	for _, paramKeyValue := range arrayParameters {
+	arrayParameters := strings.SplitSeq(preprocessed, ",")
+	for paramKeyValue := range arrayParameters {
 		keyVal := strings.Split(paramKeyValue, "=")
 
 		parameterMap[keyVal[0]] = keyVal[1]
@@ -420,9 +420,9 @@ func (ctx *TestContext) ThereAreTheFollowingItems(items *godog.Table) error {
 		})
 
 		if _, ok := item["parent"]; ok {
-			parents := strings.Split(item["parent"], ",")
+			parents := strings.SplitSeq(item["parent"], ",")
 
-			for _, parent := range parents {
+			for parent := range parents {
 				ctx.addItemItem(parent, item["item"])
 			}
 		}

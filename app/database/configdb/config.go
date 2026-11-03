@@ -65,10 +65,10 @@ func CreateMissingData(datastore *database.DataStore, domainsConfig []domain.Con
 func insertRootGroupsAndRelations(store *database.DataStore, domainsConfig []domain.ConfigItem) error {
 	groupStore := store.Groups()
 	groupGroupStore := store.GroupGroups()
-	var relationsToCreate []map[string]interface{}
+	var relationsToCreate []map[string]any
 	for _, domainConfig := range domainsConfig {
 		insertRootGroups(groupStore, &domainConfig)
-		for _, spec := range []map[string]interface{}{
+		for _, spec := range []map[string]any{
 			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.NonTempUsersGroup},
 			{"parent_group_id": domainConfig.AllUsersGroup, "child_group_id": domainConfig.TempUsersGroup},
 		} {
@@ -113,7 +113,7 @@ func insertRootGroups(groupStore *database.GroupStore, domainConfig *domain.Conf
 		mustNotBeError(err)
 
 		if !found {
-			mustNotBeError(groupStore.InsertMap(map[string]interface{}{
+			mustNotBeError(groupStore.InsertMap(map[string]any{
 				"id": spec.id, "type": "Base", "name": spec.name, "text_id": spec.name,
 			}))
 		}

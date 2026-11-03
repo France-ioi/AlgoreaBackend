@@ -31,7 +31,7 @@ func configFromContext(ctx context.Context) *dispatcherConfig {
 // Dispatch sends an event using the dispatcher from context.
 // If no dispatcher is configured, this is a silent no-op.
 // Errors are logged but not returned (best-effort dispatch).
-func Dispatch(ctx context.Context, eventType string, payload map[string]interface{}) {
+func Dispatch(ctx context.Context, eventType string, payload map[string]any) {
 	dispatcher := DispatcherFromContext(ctx)
 	if dispatcher == nil {
 		return // silent no-op when no dispatcher configured

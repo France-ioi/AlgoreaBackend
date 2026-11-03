@@ -69,7 +69,7 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 			mock.ExpectQuery("SELECT \\* FROM " + tt.wantTable).
 				WithArgs().WillReturnRows(mock.NewRows([]string{"id"}))
 
-			var result []interface{}
+			var result []any
 			assert.NoError(t, tt.function(NewDataStore(db)).Scan(&result).Error())
 			assert.NoError(t, mock.ExpectationsWereMet())
 		})
@@ -79,40 +79,40 @@ func TestDataStore_StoreConstructorsSetTablesCorrectly(t *testing.T) {
 func TestDataStore_StoreConstructorsReturnObjectsOfRightTypes(t *testing.T) {
 	tests := []struct {
 		name     string
-		function func(store *DataStore) interface{}
-		wantType interface{}
+		function func(store *DataStore) any
+		wantType any
 	}{
-		{"Answers", func(store *DataStore) interface{} { return store.Answers() }, &AnswerStore{}},
-		{"Attempts", func(store *DataStore) interface{} { return store.Attempts() }, &AttemptStore{}},
-		{"Gradings", func(store *DataStore) interface{} { return store.Gradings() }, &GradingStore{}},
-		{"Groups", func(store *DataStore) interface{} { return store.Groups() }, &GroupStore{}},
-		{"GroupAncestors", func(store *DataStore) interface{} { return store.GroupAncestors() }, &GroupAncestorStore{}},
-		{"ActiveGroupAncestors", func(store *DataStore) interface{} { return store.ActiveGroupAncestors() }, &GroupAncestorStore{}},
-		{"GroupGroups", func(store *DataStore) interface{} { return store.GroupGroups() }, &GroupGroupStore{}},
-		{"ActiveGroupGroups", func(store *DataStore) interface{} { return store.ActiveGroupGroups() }, &GroupGroupStore{}},
-		{"GroupMembershipChanges", func(store *DataStore) interface{} { return store.GroupMembershipChanges() }, &GroupMembershipChangeStore{}},
+		{"Answers", func(store *DataStore) any { return store.Answers() }, &AnswerStore{}},
+		{"Attempts", func(store *DataStore) any { return store.Attempts() }, &AttemptStore{}},
+		{"Gradings", func(store *DataStore) any { return store.Gradings() }, &GradingStore{}},
+		{"Groups", func(store *DataStore) any { return store.Groups() }, &GroupStore{}},
+		{"GroupAncestors", func(store *DataStore) any { return store.GroupAncestors() }, &GroupAncestorStore{}},
+		{"ActiveGroupAncestors", func(store *DataStore) any { return store.ActiveGroupAncestors() }, &GroupAncestorStore{}},
+		{"GroupGroups", func(store *DataStore) any { return store.GroupGroups() }, &GroupGroupStore{}},
+		{"ActiveGroupGroups", func(store *DataStore) any { return store.ActiveGroupGroups() }, &GroupGroupStore{}},
+		{"GroupMembershipChanges", func(store *DataStore) any { return store.GroupMembershipChanges() }, &GroupMembershipChangeStore{}},
 		{
-			"GroupItemAdditionalTimes", func(store *DataStore) interface{} { return store.GroupItemAdditionalTimes() },
+			"GroupItemAdditionalTimes", func(store *DataStore) any { return store.GroupItemAdditionalTimes() },
 			&GroupItemAdditionalTimeStore{},
 		},
-		{"GroupManagers", func(store *DataStore) interface{} { return store.GroupManagers() }, &GroupManagerStore{}},
-		{"GroupPendingRequests", func(store *DataStore) interface{} { return store.GroupPendingRequests() }, &GroupPendingRequestStore{}},
-		{"Permissions", func(store *DataStore) interface{} { return store.Permissions() }, &PermissionGeneratedStore{}},
-		{"PermissionsGranted", func(store *DataStore) interface{} { return store.PermissionsGranted() }, &PermissionGrantedStore{}},
-		{"Items", func(store *DataStore) interface{} { return store.Items() }, &ItemStore{}},
-		{"ItemAncestors", func(store *DataStore) interface{} { return store.ItemAncestors() }, &ItemAncestorStore{}},
-		{"ItemItems", func(store *DataStore) interface{} { return store.ItemItems() }, &ItemItemStore{}},
-		{"ItemStrings", func(store *DataStore) interface{} { return store.ItemStrings() }, &ItemStringStore{}},
-		{"ItemDependencies", func(store *DataStore) interface{} { return store.ItemDependencies() }, &ItemDependencyStore{}},
-		{"Languages", func(store *DataStore) interface{} { return store.Languages() }, &LanguageStore{}},
-		{"Platforms", func(store *DataStore) interface{} { return store.Platforms() }, &PlatformStore{}},
-		{"Results", func(store *DataStore) interface{} { return store.Results() }, &ResultStore{}},
-		{"Sessions", func(store *DataStore) interface{} { return store.Sessions() }, &SessionStore{}},
-		{"AccessTokens", func(store *DataStore) interface{} { return store.AccessTokens() }, &AccessTokenStore{}},
-		{"Threads", func(store *DataStore) interface{} { return store.Threads() }, &ThreadStore{}},
-		{"Users", func(store *DataStore) interface{} { return store.Users() }, &UserStore{}},
-		{"UserBatches", func(store *DataStore) interface{} { return store.UserBatches() }, &UserBatchStore{}},
-		{"UserBatchPrefixes", func(store *DataStore) interface{} { return store.UserBatchPrefixes() }, &UserBatchPrefixStore{}},
+		{"GroupManagers", func(store *DataStore) any { return store.GroupManagers() }, &GroupManagerStore{}},
+		{"GroupPendingRequests", func(store *DataStore) any { return store.GroupPendingRequests() }, &GroupPendingRequestStore{}},
+		{"Permissions", func(store *DataStore) any { return store.Permissions() }, &PermissionGeneratedStore{}},
+		{"PermissionsGranted", func(store *DataStore) any { return store.PermissionsGranted() }, &PermissionGrantedStore{}},
+		{"Items", func(store *DataStore) any { return store.Items() }, &ItemStore{}},
+		{"ItemAncestors", func(store *DataStore) any { return store.ItemAncestors() }, &ItemAncestorStore{}},
+		{"ItemItems", func(store *DataStore) any { return store.ItemItems() }, &ItemItemStore{}},
+		{"ItemStrings", func(store *DataStore) any { return store.ItemStrings() }, &ItemStringStore{}},
+		{"ItemDependencies", func(store *DataStore) any { return store.ItemDependencies() }, &ItemDependencyStore{}},
+		{"Languages", func(store *DataStore) any { return store.Languages() }, &LanguageStore{}},
+		{"Platforms", func(store *DataStore) any { return store.Platforms() }, &PlatformStore{}},
+		{"Results", func(store *DataStore) any { return store.Results() }, &ResultStore{}},
+		{"Sessions", func(store *DataStore) any { return store.Sessions() }, &SessionStore{}},
+		{"AccessTokens", func(store *DataStore) any { return store.AccessTokens() }, &AccessTokenStore{}},
+		{"Threads", func(store *DataStore) any { return store.Threads() }, &ThreadStore{}},
+		{"Users", func(store *DataStore) any { return store.Users() }, &UserStore{}},
+		{"UserBatches", func(store *DataStore) any { return store.UserBatches() }, &UserBatchStore{}},
+		{"UserBatchPrefixes", func(store *DataStore) any { return store.UserBatchPrefixes() }, &UserBatchPrefixStore{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -136,7 +136,7 @@ func TestDataStore_ByID(t *testing.T) {
 		WithArgs(idToFetch).
 		WillReturnRows(mock.NewRows([]string{"id"}))
 
-	var result []interface{}
+	var result []any
 	err := NewDataStoreWithTable(db, "tableName").ByID(idToFetch).Scan(&result).Error()
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -199,7 +199,7 @@ func TestDataStore_InTransaction_DBError(t *testing.T) {
 		assert.NotEqual(t, store, s)
 		assert.NotEqual(t, store.db, s.db)
 
-		var result []interface{}
+		var result []any
 		return db.Raw("SELECT 1").Scan(&result).Error()
 	})
 
@@ -215,7 +215,7 @@ func TestDataStore_InTransaction_ContextAndTxOptions(t *testing.T) {
 	type ctxKey string
 
 	txOptions := &sql.TxOptions{Isolation: sql.LevelReadCommitted}
-	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, map[interface{}]interface{}{ctxKey("key"): "value"})
+	patch := patchGormBeginTxWithVerifier(t, &callsCount, txOptions, map[any]any{ctxKey("key"): "value"})
 	defer patch.Unpatch()
 
 	ctx, _, _ := logging.NewContextWithNewMockLogger()
@@ -252,7 +252,7 @@ func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes(t *
 
 	store := NewDataStoreWithContext(ContextWithTransactionRetrying(db.GetContext()), db)
 	gotError := store.InTransaction(func(s *DataStore) error {
-		var result []interface{}
+		var result []any
 		return s.Raw("SELECT 1").Scan(&result).Error()
 	})
 
@@ -285,7 +285,7 @@ func TestDataStore_InTransaction_ForcesTransactionRetryingForTestingPurposes_Hoo
 
 	store := NewDataStoreWithContext(ContextWithTransactionRetrying(db.GetContext()), db)
 	gotError := store.InTransaction(func(s *DataStore) error {
-		var result []interface{}
+		var result []any
 		called = append(called, "1")
 		return s.Raw("SELECT 1").Scan(&result).Error()
 	})
@@ -359,7 +359,7 @@ func TestDataStore_WithForeignKeyChecksDisabled_DBErrorOnCommittingTransaction(t
 
 	store := NewDataStore(db)
 	gotError := store.WithForeignKeyChecksDisabled(func(s *DataStore) error {
-		var result []interface{}
+		var result []any
 		return s.Raw("SELECT 1").Scan(&result).Error()
 	})
 
@@ -448,7 +448,7 @@ func assertNamedLockMethod(t *testing.T, expectedLockName string, expectedTimeou
 		assert.Equal(t, expectedTableName, s.tableName)
 		assert.NotEqual(t, store, s)
 		assert.Equal(t, store.db.CommonDB(), s.db.CommonDB())
-		var result []interface{}
+		var result []any
 		return db.Raw("SELECT 1 AS id").Scan(&result).Error()
 	})
 	assert.NoError(t, err)
@@ -508,7 +508,7 @@ func TestDataStore_InsertMap(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
+	dataRow := map[string]any{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?)")).
@@ -525,7 +525,7 @@ func TestDataStore_InsertOrUpdateMap(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	dataRow := map[string]interface{}{"id": int64(1), "sField": "some value", "sNullField": nil}
+	dataRow := map[string]any{"id": int64(1), "sField": "some value", "sNullField": nil}
 
 	expectedError := errors.New("some error")
 	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `myTable` (`id`, `sField`, `sNullField`) VALUES (?, ?, ?) "+
@@ -544,7 +544,7 @@ func TestDataStore_InsertOrUpdateMaps(t *testing.T) {
 	db, mock := NewDBMock()
 	defer func() { _ = db.Close() }()
 
-	dataRows := []map[string]interface{}{
+	dataRows := []map[string]any{
 		{"id": int64(1), "sField": "some value", "sNullField": "value"},
 		{"id": int64(2), "sField": "another value", "sNullField": nil},
 	}
@@ -576,7 +576,7 @@ func TestDataStore_WithSharedWriteLock(t *testing.T) {
 		newDataStore := NewDataStore(db).WithSharedWriteLock()
 		assert.NotEqual(t, newDataStore, dataStore)
 		assert.NoError(t, newDataStore.Error())
-		var result []interface{}
+		var result []any
 		assert.NoError(t, newDataStore.Scan(&result).Error())
 		return nil
 	})
@@ -610,7 +610,7 @@ func TestDataStore_WithCustomWriteLock(t *testing.T) {
 		newDataStore := NewDataStore(db).WithCustomWriteLocks(golang.NewSet("t1", "t2"), golang.NewSet("t3", "t4"))
 		assert.NotEqual(t, newDataStore, dataStore)
 		assert.NoError(t, newDataStore.Error())
-		var result []interface{}
+		var result []any
 		assert.NoError(t, newDataStore.Scan(&result).Error())
 		return nil
 	})

@@ -30,7 +30,7 @@ func (conn *DB) WhereSearchStringMatches(field, fallbackField, searchString stri
 		return conn.Where("FALSE")
 	}
 
-	for wordIndex := 0; wordIndex < len(words); wordIndex++ {
+	for wordIndex := range words {
 		word := words[wordIndex]
 
 		// The "+" sign means that the word must be present in the result.

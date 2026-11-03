@@ -272,7 +272,7 @@ func (s *PermissionGrantedStore) CreateTemporaryTablesForPermissionsExplanation(
 	s.mustBeFixed()
 	defer recoverPanics(&err)
 
-	var cleanupFuncsToCall []func()
+	cleanupFuncsToCall := make([]func(), 0, 5) //nolint:mnd // five DROP TEMPORARY TABLE cleanups registered below
 	cleanupFunc = func() {
 		for i := len(cleanupFuncsToCall) - 1; i >= 0; i-- {
 			cleanupFuncsToCall[i]()

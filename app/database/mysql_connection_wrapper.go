@@ -76,6 +76,12 @@ type ifaceAccessor struct {
 	conn *mysqlConn
 }
 
+// mysqlConnReset runs COM_RESET_CONNECTION on the wrapped conn.
+// Tests replace this to fake Reset without a real MySQL connection.
+//
+//nolint:gochecknoglobals // replaceable for unit tests that cannot open a real MySQL conn
+var mysqlConnReset = (*mysqlConnWrapper).Reset
+
 func (conn *mysqlConnWrapper) ResetSession(ctx context.Context) error {
 	//nolint:forcetypeassert // panic if conn.conn does not implement driver.SessionResetter
 	err := conn.conn.(driver.SessionResetter).ResetSession(ctx)
@@ -84,7 +90,7 @@ func (conn *mysqlConnWrapper) ResetSession(ctx context.Context) error {
 	}
 
 	// really reset the session
-	if err := conn.Reset(ctx); err != nil {
+	if err := mysqlConnReset(conn, ctx); err != nil {
 		return discardConnectionAfterResetFailure(ctx, "resetting session", err)
 	}
 

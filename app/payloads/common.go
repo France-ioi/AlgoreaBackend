@@ -15,7 +15,7 @@ type Binder interface {
 }
 
 // ParseMap converts a map into a structure and validates fields.
-func ParseMap(raw map[string]interface{}, target interface{}) error {
+func ParseMap(raw map[string]any, target any) error {
 	if err := formdata.NewFormData(target).ParseMapData(raw); err != nil {
 		typeName := reflect.TypeOf(target).Elem().Name()
 		return fmt.Errorf("invalid %s: %s", typeName, err.Error())
@@ -32,12 +32,12 @@ func ParseMap(raw map[string]interface{}, target interface{}) error {
 // that can convert themselves into a map.
 // payloads.ConvertIntoMap uses this interface to convert structs into maps.
 type ConverterIntoMap interface {
-	ConvertIntoMap() map[string]interface{}
+	ConvertIntoMap() map[string]any
 }
 
 // ConvertIntoMap converts a struct into a map
 // Fields without a `json` tag or having '-' as a json field name are skipped.
-func ConvertIntoMap(source interface{}) map[string]interface{} {
+func ConvertIntoMap(source any) map[string]any {
 	if converter, ok := source.(ConverterIntoMap); ok {
 		return converter.ConvertIntoMap()
 	}
@@ -49,7 +49,7 @@ func ConvertIntoMap(source interface{}) map[string]interface{} {
 
 	sourceType := sourceValue.Type()
 	fieldsCount := sourceValue.NumField()
-	out := make(map[string]interface{}, fieldsCount)
+	out := make(map[string]any, fieldsCount)
 	for fieldNumber := range fieldsCount {
 		field := sourceType.Field(fieldNumber)
 		jsonName, omitEmpty := getJSONFieldNameAndOmitEmpty(&field)

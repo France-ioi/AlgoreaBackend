@@ -23,7 +23,7 @@ func TestItemItemStore_TriggerAfterInsert_MarksResultsAsChanged(t *testing.T) {
 	dataStore := database.NewDataStore(db)
 	assertResultsMarkedAsChanged(t, dataStore, "results_propagate", []resultPrimaryKeyAndState{})
 
-	require.NoError(t, dataStore.ItemItems().InsertMap(map[string]interface{}{
+	require.NoError(t, dataStore.ItemItems().InsertMap(map[string]any{
 		"parent_item_id": 1, "child_item_id": 2, "child_order": 1,
 	}))
 
@@ -67,7 +67,7 @@ func TestItemItemStore_TriggerAfterInsert_MarksPermissionsForRecomputing(t *test
 		Order("group_id, item_id").Scan(&markedPermissions).Error())
 	require.Empty(t, markedPermissions)
 
-	assert.NoError(t, dataStore.ItemItems().InsertMap(map[string]interface{}{
+	assert.NoError(t, dataStore.ItemItems().InsertMap(map[string]any{
 		"parent_item_id": 1, "child_item_id": 2, "child_order": 1,
 	}))
 
@@ -86,7 +86,7 @@ func TestItemItemStore_TriggerAfterUpdate_MarksPermissionsForRecomputing(t *test
 	ctx := testhelpers.CreateTestContext()
 	for _, test := range []struct {
 		column   string
-		newValue interface{}
+		newValue any
 	}{
 		{column: "content_view_propagation", newValue: "as_info"},
 		{column: "upper_view_levels_propagation", newValue: "as_is"},

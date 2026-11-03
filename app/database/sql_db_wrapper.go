@@ -23,14 +23,14 @@ type sqlDBWrapper struct {
 // The args are for any placeholder parameters in the query.
 //
 // Exec uses the context of [sqlDBWrapper] internally.
-func (sqlDB *sqlDBWrapper) Exec(query string, args ...interface{}) (result sql.Result, err error) {
+func (sqlDB *sqlDBWrapper) Exec(query string, args ...any) (result sql.Result, err error) {
 	return execCallingExecContext(sqlDB.ctx, sqlDB.logConfig, sqlDB, sqlDB.sqlDB, query, args...)
 }
 
 func execCallingExecContext[dbObject interface {
 	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
 }](
-	ctx context.Context, logConfig *LogConfig, dbWrapper queryRowWithoutLogging, db dbObject, query string, args ...interface{},
+	ctx context.Context, logConfig *LogConfig, dbWrapper queryRowWithoutLogging, db dbObject, query string, args ...any,
 ) (result sql.Result, err error) {
 	err = retryOnRetriableError(ctx, func() error {
 		defer getSQLExecutionPlanLoggingFunc(ctx, dbWrapper, logConfig, query, args...)()
@@ -59,7 +59,7 @@ func (sqlDB *sqlDBWrapper) Prepare(_ string) (*sql.Stmt, error) {
 // The args are for any placeholder parameters in the query.
 //
 // Query uses the context of [sqlDBWrapper] internally.
-func (sqlDB *sqlDBWrapper) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
+func (sqlDB *sqlDBWrapper) Query(query string, args ...any) (rows *sql.Rows, err error) {
 	if d := maxSelectExecutionTimeFromContext(sqlDB.ctx); d > 0 {
 		query = injectMaxExecutionTimeHint(query, d)
 	}
@@ -85,7 +85,7 @@ func (sqlDB *sqlDBWrapper) Query(query string, args ...interface{}) (rows *sql.R
 // the rest.
 //
 // QueryRow uses the context of [sqlDBWrapper] internally.
-func (sqlDB *sqlDBWrapper) QueryRow(query string, args ...interface{}) (row *sql.Row) {
+func (sqlDB *sqlDBWrapper) QueryRow(query string, args ...any) (row *sql.Row) {
 	if d := maxSelectExecutionTimeFromContext(sqlDB.ctx); d > 0 {
 		query = injectMaxExecutionTimeHint(query, d)
 	}
@@ -177,14 +177,14 @@ type txBeginner interface {
 var _ txBeginner = &sqlDBWrapper{}
 
 type queryRowWithoutLogging interface {
-	queryRowWithoutLogging(query string, args ...interface{}) *sql.Row
+	queryRowWithoutLogging(query string, args ...any) *sql.Row
 }
 
-func (sqlDB *sqlDBWrapper) queryRowWithoutLogging(query string, args ...interface{}) *sql.Row {
+func (sqlDB *sqlDBWrapper) queryRowWithoutLogging(query string, args ...any) *sql.Row {
 	return sqlDB.sqlDB.QueryRowContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlDB.ctx)), query, args...)
 }
 
-func (sqlDB *sqlDBWrapper) queryRowsWithoutLogging(query string, args ...interface{}) (*sql.Rows, error) {
+func (sqlDB *sqlDBWrapper) queryRowsWithoutLogging(query string, args ...any) (*sql.Rows, error) {
 	return sqlDB.sqlDB.QueryContext(log.ContextWithLogger(context.Background(), log.LoggerFromContext(sqlDB.ctx)), query, args...)
 }
 

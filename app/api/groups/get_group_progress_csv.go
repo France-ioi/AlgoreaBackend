@@ -144,10 +144,7 @@ func writeGroupProgressCSV(
 	}
 
 	for startFromGroup := 0; startFromGroup < len(ancestorGroupIDs); startFromGroup += csvExportGroupProgressBatchSize {
-		batchBoundary := startFromGroup + csvExportGroupProgressBatchSize
-		if batchBoundary > len(ancestorGroupIDs) {
-			batchBoundary = len(ancestorGroupIDs)
-		}
+		batchBoundary := min(startFromGroup+csvExportGroupProgressBatchSize, len(ancestorGroupIDs))
 		ancestorsInBatch := ancestorGroupIDs[startFromGroup:batchBoundary]
 		ancestorsInBatchIDsList := strings.Join(ancestorsInBatch, ", ")
 
