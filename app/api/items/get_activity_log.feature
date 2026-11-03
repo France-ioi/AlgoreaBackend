@@ -77,6 +77,7 @@ Feature: Get activity log
       | 37 | 31        | 11             | 0          | 203     | Submission | State37 | 2017-05-29 06:38:38 |
       | 38 | 31        | 11             | 1          | 203     | Submission | State38 | 2017-05-30 06:38:38 |
       | 39 | 31        | 11             | 1          | 204     | Submission | State39 | 2017-05-30 06:38:38 |
+      | 40 | 21        | 30             | 0          | 204     | Submission | State40 | 2017-05-30 06:38:38 |
     And the database has the following table "gradings":
       | answer_id | graded_at           | score |
       | 2         | 2017-05-29 06:38:38 | 100   |
@@ -616,6 +617,44 @@ Feature: Get activity log
     ]
     """
 
+  Scenario: Participant-only activity log on a single item without descendants
+      Item 204 is not an ancestor of other items; the team should still see its
+      submissions and started/validated results for that item alone.
+    Given I am the user with id "21"
+    When I send a GET request to "/items/204/log?as_team_id=30"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    [
+      {
+        "activity_type": "result_validated",
+        "at": "2017-05-30T12:00:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "204", "string": {"title": null}, "type": "Task"},
+        "from_answer_id": "-1"
+      },
+      {
+        "activity_type": "submission",
+        "at": "2017-05-30T06:38:38Z",
+        "answer_id": "40",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "204", "string": {"title": null}, "type": "Task"},
+        "user": {"id": "21", "first_name": "Jean-Michel", "last_name": "Blanquer", "login": "owner"},
+        "from_answer_id": "40"
+      },
+      {
+        "activity_type": "result_started",
+        "at": "2017-05-29T06:38:00Z",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "204", "string": {"title": null}, "type": "Task"},
+        "from_answer_id": "40"
+      }
+    ]
+    """
+
   Scenario: A user can view activity of his team
       This spec also checks that only items visible to the team are shown,
       not the items visible to the user.
@@ -650,12 +689,22 @@ Feature: Get activity log
         "from_answer_id": "-1"
       },
       {
+        "activity_type": "submission",
+        "at": "2017-05-30T06:38:38Z",
+        "answer_id": "40",
+        "participant": {"id": "30", "name": "Our Team", "type": "Team"},
+        "attempt_id": "0",
+        "item": {"id": "204", "string": {"title": null}, "type": "Task"},
+        "user": {"id": "21", "first_name": "Jean-Michel", "last_name": "Blanquer", "login": "owner"},
+        "from_answer_id": "40"
+      },
+      {
         "activity_type": "result_started",
         "at": "2017-05-29T06:38:00Z",
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
         "item": {"id": "200", "string": {"title": "Tache 1"}, "type": "Task"},
-        "from_answer_id": "-1"
+        "from_answer_id": "40"
       },
       {
         "activity_type": "result_started",
@@ -663,7 +712,7 @@ Feature: Get activity log
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
         "item": {"id": "204", "string": {"title": null}, "type": "Task"},
-        "from_answer_id": "-1"
+        "from_answer_id": "40"
       },
       {
         "activity_type": "result_started",
@@ -671,7 +720,7 @@ Feature: Get activity log
         "participant": {"id": "30", "name": "Our Team", "type": "Team"},
         "attempt_id": "0",
         "item": {"id": "201", "string": {"title": "Chapitre 1"}, "type": "Chapter"},
-        "from_answer_id": "-1"
+        "from_answer_id": "40"
       }
     ]
     """
