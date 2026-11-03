@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.59.2](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.1...v2.59.2) - 2026-11-03
+
+- speed up participant-only `GET /items/{ids}/log` by filtering on participant and item equalities (or a join) instead of CTE `IN` scans; the watched-group path is unchanged
+
 ## [v2.59.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.0...v2.59.1) - 2026-11-03
 
 - security: bump indirect modules `golang.org/x/net` (v0.62.0), `golang.org/x/sys` (v0.49.0), `golang.org/x/text` (v0.43.0); building now requires Go 1.26; chi v3→v5 still deferred (GO-2026-4316)
