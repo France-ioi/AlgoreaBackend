@@ -270,7 +270,7 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 
 	store := srv.GetStore(httpRequest)
 
-	participantsQuery := store.Raw("SELECT ? AS id", participantID)
+	var participantsQuery *database.DB
 	visibleItemDescendantsQuery := store.Permissions().MatchingGroupAncestors(participantID).
 		Select("item_id AS id").
 		Group("item_id").
@@ -291,43 +291,31 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 			Where("item_id = ? OR item_id IN ?", *ancestorItemID, itemDescendants.SubQuery())
 	}
 
+	// Prefer equalities / joins so MySQL can use index condition pushdown on participant/item indexes.
+	// A dedicated answers index on (participant_id, item_id, created_at DESC, …) remains optional follow-up
+	// for multi-item ordered limits; this change intentionally does not add a migration.
+	var singletonItemID *int64
+	if !watchedGroupIDIsSet && ancestorItemID != nil {
+		var itemHasDescendants bool
+		itemHasDescendants, err = store.ItemAncestors().
+			Where("items_ancestors.ancestor_item_id = ?", *ancestorItemID).HasRows()
+		service.MustNotBeError(err)
+		if !itemHasDescendants {
+			singletonItemID = ancestorItemID
+		}
+	}
+
+	filters := constructItemActivityLogFilters(
+		participantID, visibleItemDescendantsQuery, participantsQuery, singletonItemID)
+
 	return srv.getActivityLog(
 		responseWriter, httpRequest,
 		[]string{"activity_type", "participant_id", "attempt_id", "item_id", "answer_id"},
-		func(query *database.DB) *database.DB {
-			return query.
-				With("items_to_show", visibleItemDescendantsQuery).
-				With("participants", participantsQuery)
-		},
-		func(answersQuery *database.DB) *database.DB {
-			return answersQuery.
-				Where("answers.participant_id IN (SELECT id FROM participants)").
-				Where("answers.item_id IN (SELECT id FROM items_to_show)")
-		},
-		func(answersQuery *database.DB) *database.DB {
-			return answersQuery.
-				Where("answers.created_at <= NOW()").
-				Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
-				Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
-				Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
-				Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
-		},
-		func(startedResultsQuery *database.DB) *database.DB {
-			return startedResultsQuery.
-				Where("started_results.item_id <= (SELECT MAX(id) FROM items_to_show)").
-				Where("started_results.item_id >= (SELECT MIN(id) FROM items_to_show)").
-				Where("started_results.item_id IN (SELECT id FROM items_to_show)").
-				Where("started_results.started_at <= NOW()").
-				Where("started_results.participant_id <= (SELECT MAX(id) FROM participants)").
-				Where("started_results.participant_id >= (SELECT MIN(id) FROM participants)").
-				Where("started_results.participant_id IN (SELECT id FROM participants)")
-		},
-		func(validatedResultsQuery *database.DB) *database.DB {
-			return validatedResultsQuery.
-				Where("validated_results.item_id IN (SELECT id FROM items_to_show)").
-				Where("validated_results.validated_at <= NOW()").
-				Where("validated_results.participant_id IN (SELECT id FROM participants)")
-		},
+		filters.addWithTables,
+		filters.answersMandatory,
+		filters.answersStraightJoin,
+		filters.startedResults,
+		filters.validatedResults,
 		func(unQuery *database.DB) *database.DB {
 			return unQuery.JoinsPermissionsForGroupToItems(participantID)
 		},
@@ -339,6 +327,111 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 			func() string { return "NULL AS can_watch_answer" }),
 		"-at,item_id,participant_id,-attempt_id",
 		true)
+}
+
+type itemActivityLogFilters struct {
+	addWithTables       func(*database.DB) *database.DB
+	answersMandatory    func(*database.DB) *database.DB
+	answersStraightJoin func(*database.DB) *database.DB
+	startedResults      func(*database.DB) *database.DB
+	validatedResults    func(*database.DB) *database.DB
+}
+
+// constructItemActivityLogFilters builds answer/result predicates for the item / all-items activity log.
+// When participantsQuery is nil (no watched_group_id), the participant is a singleton and filters use
+// equalities / joins instead of IN (SELECT … FROM participants|items_to_show) so indexes can drive the scan.
+// singletonItemID, when set, means the visible item set is known to be that single ancestor (no descendants).
+func constructItemActivityLogFilters(
+	participantID int64,
+	visibleItemDescendantsQuery, participantsQuery *database.DB,
+	singletonItemID *int64,
+) itemActivityLogFilters {
+	watchedGroup := participantsQuery != nil
+
+	addWithTables := func(query *database.DB) *database.DB {
+		query = query.With("items_to_show", visibleItemDescendantsQuery)
+		if watchedGroup {
+			query = query.With("participants", participantsQuery)
+		}
+		return query
+	}
+
+	if watchedGroup {
+		return itemActivityLogFilters{
+			addWithTables: addWithTables,
+			answersMandatory: func(answersQuery *database.DB) *database.DB {
+				return answersQuery.
+					Where("answers.participant_id IN (SELECT id FROM participants)").
+					Where("answers.item_id IN (SELECT id FROM items_to_show)")
+			},
+			answersStraightJoin: func(answersQuery *database.DB) *database.DB {
+				return answersQuery.
+					Where("answers.created_at <= NOW()").
+					Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
+					Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
+					Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
+					Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
+			},
+			startedResults: func(startedResultsQuery *database.DB) *database.DB {
+				return startedResultsQuery.
+					Where("started_results.item_id <= (SELECT MAX(id) FROM items_to_show)").
+					Where("started_results.item_id >= (SELECT MIN(id) FROM items_to_show)").
+					Where("started_results.item_id IN (SELECT id FROM items_to_show)").
+					Where("started_results.started_at <= NOW()").
+					Where("started_results.participant_id <= (SELECT MAX(id) FROM participants)").
+					Where("started_results.participant_id >= (SELECT MIN(id) FROM participants)").
+					Where("started_results.participant_id IN (SELECT id FROM participants)")
+			},
+			validatedResults: func(validatedResultsQuery *database.DB) *database.DB {
+				return validatedResultsQuery.
+					Where("validated_results.item_id IN (SELECT id FROM items_to_show)").
+					Where("validated_results.validated_at <= NOW()").
+					Where("validated_results.participant_id IN (SELECT id FROM participants)")
+			},
+		}
+	}
+
+	return itemActivityLogFilters{
+		addWithTables: addWithTables,
+		answersMandatory: func(answersQuery *database.DB) *database.DB {
+			answersQuery = answersQuery.Where("answers.participant_id = ?", participantID)
+			return applyParticipantOnlyItemFilter(answersQuery, "answers", singletonItemID)
+		},
+		answersStraightJoin: func(answersQuery *database.DB) *database.DB {
+			answersQuery = answersQuery.
+				Where("answers.created_at <= NOW()").
+				Where("answers.participant_id = ?", participantID)
+			if singletonItemID != nil {
+				return answersQuery.Where("answers.item_id = ?", *singletonItemID)
+			}
+			return answersQuery.
+				Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
+				Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
+		},
+		startedResults: func(startedResultsQuery *database.DB) *database.DB {
+			startedResultsQuery = startedResultsQuery.
+				Where("started_results.participant_id = ?", participantID).
+				Where("started_results.started_at <= NOW()")
+			return applyParticipantOnlyItemFilter(startedResultsQuery, "started_results", singletonItemID)
+		},
+		validatedResults: func(validatedResultsQuery *database.DB) *database.DB {
+			validatedResultsQuery = validatedResultsQuery.
+				Where("validated_results.participant_id = ?", participantID).
+				Where("validated_results.validated_at <= NOW()")
+			return applyParticipantOnlyItemFilter(validatedResultsQuery, "validated_results", singletonItemID)
+		},
+	}
+}
+
+func applyParticipantOnlyItemFilter(query *database.DB, tableAlias string, singletonItemID *int64) *database.DB {
+	if singletonItemID != nil {
+		// Visibility still goes through items_to_show (empty when the caller cannot view the item).
+		return query.
+			Where(tableAlias+".item_id = ?", *singletonItemID).
+			Where("EXISTS(SELECT 1 FROM items_to_show WHERE items_to_show.id = ?)", *singletonItemID)
+	}
+	// Prefer a join over item_id IN (SELECT … FROM items_to_show) so participant equality can drive access.
+	return query.Joins("JOIN items_to_show ON items_to_show.id = " + tableAlias + ".item_id")
 }
 
 func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpRequest *http.Request,

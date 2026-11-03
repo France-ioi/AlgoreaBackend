@@ -79,10 +79,104 @@ func callConstructActivityLogQueryForTestsOfIndexForcing(
 		func(q *database.DB) *database.DB { return q }, func(q *database.DB) *database.DB { return q },
 		func(q *database.DB) *database.DB { return q },
 		"NULL AS can_watch_answer", "-at", doForceIndex)
+	sql = sqlFromQueryExpr(t, query)
+
+	return sjcFuncCalled, sql
+}
+
+func Test_constructItemActivityLogFilters_ParticipantOnlySingletonUsesEqualities(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	store := database.NewDataStore(db)
+	participantID := int64(42)
+	itemID := int64(100)
+
+	filters := constructItemActivityLogFilters(participantID, store.Raw("SELECT 100 AS id"), nil, &itemID)
+
+	assertParticipantOnlySingletonFilterSQL(t, filters.answersMandatory(store.Answers().DB),
+		"answers.participant_id", "answers.item_id")
+	assertParticipantOnlySingletonFilterSQL(t, filters.startedResults(store.Table("results AS started_results")),
+		"started_results.participant_id", "started_results.item_id")
+	assertParticipantOnlySingletonFilterSQL(t, filters.validatedResults(store.Table("results AS validated_results")),
+		"validated_results.participant_id", "validated_results.item_id")
+
+	straightJoinSQL := sqlFromQueryExpr(t, filters.answersStraightJoin(store.Answers().DB))
+	assert.Contains(t, straightJoinSQL, "answers.participant_id =")
+	assert.Contains(t, straightJoinSQL, "answers.item_id =")
+	assert.NotContains(t, straightJoinSQL, "IN (SELECT id FROM participants)")
+	assert.NotContains(t, straightJoinSQL, "IN (SELECT id FROM items_to_show)")
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_constructItemActivityLogFilters_ParticipantOnlyMultiItemJoinsItemsToShow(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	store := database.NewDataStore(db)
+	participantID := int64(42)
+
+	filters := constructItemActivityLogFilters(participantID, store.Raw("SELECT 100 AS id"), nil, nil)
+
+	assertParticipantOnlyMultiItemFilterSQL(t, filters.answersMandatory(store.Answers().DB), "answers")
+	assertParticipantOnlyMultiItemFilterSQL(t, filters.startedResults(store.Table("results AS started_results")), "started_results")
+	assertParticipantOnlyMultiItemFilterSQL(t, filters.validatedResults(store.Table("results AS validated_results")), "validated_results")
+
+	straightJoinSQL := sqlFromQueryExpr(t, filters.answersStraightJoin(store.Answers().DB))
+	assert.Contains(t, straightJoinSQL, "answers.participant_id =")
+	assert.Contains(t, straightJoinSQL, "answers.item_id <=")
+	assert.Contains(t, straightJoinSQL, "answers.item_id >=")
+	assert.NotContains(t, straightJoinSQL, "IN (SELECT id FROM participants)")
+	assert.NotContains(t, straightJoinSQL, "JOIN items_to_show")
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func Test_constructItemActivityLogFilters_WatchedGroupKeepsCTEInPredicates(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	db, mock := database.NewDBMock()
+	defer func() { _ = db.Close() }()
+	store := database.NewDataStore(db)
+	participantID := int64(42)
+
+	filters := constructItemActivityLogFilters(
+		participantID, store.Raw("SELECT 100 AS id"), store.Raw("SELECT 1 AS id"), nil)
+
+	answersSQL := sqlFromQueryExpr(t, filters.answersMandatory(store.Answers().DB))
+	assert.Contains(t, answersSQL, "answers.participant_id IN (SELECT id FROM participants)")
+	assert.Contains(t, answersSQL, "answers.item_id IN (SELECT id FROM items_to_show)")
+	assert.NotContains(t, answersSQL, "answers.participant_id =")
+	assert.NotContains(t, answersSQL, "JOIN items_to_show")
+
+	require.NoError(t, mock.ExpectationsWereMet())
+}
+
+func assertParticipantOnlySingletonFilterSQL(t *testing.T, query *database.DB, participantColumn, itemColumn string) {
+	t.Helper()
+	sql := sqlFromQueryExpr(t, query)
+	assert.Contains(t, sql, participantColumn+" =")
+	assert.Contains(t, sql, itemColumn+" =")
+	assert.NotContains(t, sql, participantColumn+" IN (SELECT id FROM participants)")
+	assert.NotContains(t, sql, itemColumn+" IN (SELECT id FROM items_to_show)")
+}
+
+func assertParticipantOnlyMultiItemFilterSQL(t *testing.T, query *database.DB, tableAlias string) {
+	t.Helper()
+	sql := sqlFromQueryExpr(t, query)
+	assert.Contains(t, sql, tableAlias+".participant_id =")
+	assert.Contains(t, sql, "JOIN items_to_show")
+	assert.NotContains(t, sql, tableAlias+".participant_id IN (SELECT id FROM participants)")
+	assert.NotContains(t, sql, tableAlias+".item_id IN (SELECT id FROM items_to_show)")
+}
+
+func sqlFromQueryExpr(t *testing.T, query *database.DB) string {
+	t.Helper()
 	queryExpr, ok := query.QueryExpr().(*gorm.SqlExpr)
 	require.True(t, ok)
 	require.NotNil(t, queryExpr)
-	sql = (*struct{ sql string })(unsafe.Pointer(queryExpr)).sql //nolint:gosec // here we extract the SQL string for test verification
-
-	return sjcFuncCalled, sql
+	return (*struct{ sql string })(unsafe.Pointer(queryExpr)).sql //nolint:gosec // extract SQL for test verification
 }
