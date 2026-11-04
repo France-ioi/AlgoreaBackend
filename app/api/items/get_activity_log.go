@@ -30,6 +30,11 @@ type itemActivityLogResponseRow struct {
 	ActivityType string `json:"activity_type"`
 	// required: true
 	AttemptID int64 `json:"attempt_id,string"`
+	// The 1-based order of this started result among other started results
+	// for the same item and parent attempt, including the parent/default
+	// attempt's own result on the item, sorted by `started_at` then `attempt_id`
+	// (only for items allowing multiple attempts).
+	AttemptOrder *int64 `json:"attempt_order,omitempty"`
 	// `answers.id`
 	AnswerID *int64 `json:"answer_id,string,omitempty"`
 	// use this as `{from.answer_id}` for pagination
@@ -680,6 +685,20 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 			StartFromRowQuery:   startFromRowQuery,
 		})
 
+	// The union above is already limited to the page. Rank only those rows so the
+	// answers, started-result and validated-result arms, and the pagination queries, stay unchanged.
+	// row_attempt is not named attempts: the ranking subquery uses that name itself.
+	// activities.participant_id is qualified because row_attempt has the same column.
+	// LEFT JOIN: a missing attempt row must not drop the log row (the rank is then null).
+	// Results reference attempts by FK, but several activity-log fixtures insert results without that row.
+	attemptOrderSQL := database.StartedResultAttemptOrderSQL(
+		"items.allows_multiple_attempts",
+		"items.id",
+		"row_attempt.participant_id",
+		"row_attempt.id",
+		"row_attempt.root_item_id",
+		"row_attempt.parent_attempt_id",
+	)
 	query := addWithTablesFunc(store.Raw(`
 		SELECT STRAIGHT_JOIN
 			CASE activity_type_int
@@ -689,7 +708,8 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 				WHEN 4 THEN 'saved_answer'
 				WHEN 5 THEN 'current_answer'
 			END AS activity_type,
-			at, answer_id, attempt_id, participant_id, score,
+			at, answer_id, attempt_id, activities.participant_id, score,
+			`+attemptOrderSQL+` AS attempt_order,
 			items.id AS item__id, items.type AS item__type,
 			`+canWatchAnswerColumnString+`,
 			groups.id AS participant__id,
@@ -705,7 +725,9 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 		user.GroupID, user.GroupID, user.GroupID,
 		unionQuery.SubQuery()).
 		Joins("JOIN items ON items.id = item_id").
-		Joins("JOIN `groups` ON groups.id = participant_id").
+		Joins(`LEFT JOIN attempts AS row_attempt ON row_attempt.participant_id = activities.participant_id AND
+			row_attempt.id = activities.attempt_id`).
+		Joins("JOIN `groups` ON groups.id = activities.participant_id").
 		Joins("LEFT JOIN users ON users.group_id = user_id").
 		WithPersonalInfoViewApprovals(user).
 		JoinsUserAndDefaultItemStrings(user)).
