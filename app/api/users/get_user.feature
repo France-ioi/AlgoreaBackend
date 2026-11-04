@@ -1,11 +1,11 @@
 Feature: Get user info
   Background:
     Given the database has the following users:
-      | group_id | temp_user | login | first_name | last_name | default_language | free_text | web_site   | profile                                    |
-      | 2        | 0         | user  | John       | Doe       | en               | Some text | mysite.com | {"first_name": "John", "last_name": "Doe"} |
-      | 3        | 1         | jane  | null       | null      | fr               | null      | null       | null                                       |
-      | 4        | 0         | john  | null       | null      | fr               | null      | null       | null                                       |
-      | 5        | 0         | paul  | null       | null      | fr               | null      | null       | null                                       |
+      | group_id | temp_user | login | default_language | profile                                    |
+      | 2        | 0         | user  | en               | {"first_name": "John", "last_name": "Doe"} |
+      | 3        | 1         | jane  | fr               | null                                       |
+      | 4        | 0         | john  | fr               | null                                       |
+      | 5        | 0         | paul  | fr               | null                                       |
     And the database has the following table "groups":
       | id | name          |
       | 10 | Some group    |
@@ -29,22 +29,22 @@ Feature: Get user info
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    {
-      "group_id": "2",
-      "temp_user": false,
-      "login": "user",
-      "profile": {
-        "first_name": "John",
-        "last_name": "Doe"
-      },
-      "first_name": "John",
-      "last_name": "Doe",
-      "free_text": "Some text",
-      "web_site": "mysite.com",
-      "is_current_user": true,
-      "ancestors_current_user_is_manager_of": []
-    }
-    """
+{
+  "group_id": "2",
+  "temp_user": false,
+  "login": "user",
+  "profile": {
+    "first_name": "John",
+    "last_name": "Doe"
+  },
+  "first_name": "John",
+  "last_name": "Doe",
+  "free_text": null,
+  "web_site": null,
+  "is_current_user": true,
+  "ancestors_current_user_is_manager_of": []
+}
+"""
 
   Scenario: All nullable field values are nulls
     Given I am the user with id "3"
@@ -72,16 +72,16 @@ Feature: Get user info
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    {
-      "group_id": "2",
-      "temp_user": false,
-      "login": "user",
-      "free_text": "Some text",
-      "web_site": "mysite.com",
-      "is_current_user": false,
-      "ancestors_current_user_is_manager_of": []
-    }
-    """
+{
+  "group_id": "2",
+  "temp_user": false,
+  "login": "user",
+  "free_text": null,
+  "web_site": null,
+  "is_current_user": false,
+  "ancestors_current_user_is_manager_of": []
+}
+"""
 
   Scenario: A user has approved access to his personal info for a group managed by the current user
     Given I am the user with id "4"
@@ -89,25 +89,30 @@ Feature: Get user info
     Then the response code should be 200
     And the response body should be, in JSON:
     """
+{
+  "group_id": "2",
+  "temp_user": false,
+  "login": "user",
+  "profile": {
+    "first_name": "John",
+    "last_name": "Doe"
+  },
+  "free_text": null,
+  "web_site": null,
+  "first_name": "John",
+  "last_name": "Doe",
+  "is_current_user": false,
+  "ancestors_current_user_is_manager_of": [
     {
-      "group_id": "2",
-      "temp_user": false,
-      "login": "user",
-      "profile": {
-        "first_name": "John",
-        "last_name": "Doe"
-      },
-      "free_text": "Some text",
-      "web_site": "mysite.com",
-      "first_name": "John",
-      "last_name": "Doe",
-      "is_current_user": false,
-      "ancestors_current_user_is_manager_of": [{"id": "10", "name": "Some group"}],
-      "current_user_can_grant_user_access": false,
-      "current_user_can_watch_user": false,
-      "personal_info_access_approval_to_current_user": "none"
+      "id": "10",
+      "name": "Some group"
     }
-    """
+  ],
+  "current_user_can_grant_user_access": false,
+  "current_user_can_watch_user": false,
+  "personal_info_access_approval_to_current_user": "none"
+}
+"""
 
   Scenario: The current user can watch members of one of user's groups
     Given I am the user with id "4"

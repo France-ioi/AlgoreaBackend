@@ -4,10 +4,10 @@ Feature: Invite users - robustness
       | id | type  |
       | 13 | Class |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
-      | 11       | user  | John        | Doe       |
-      | 22       | jane  | Jane        | Doe       |
+      | group_id | login |
+      | 21       | owner |
+      | 11       | user  |
+      | 22       | jane  |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |

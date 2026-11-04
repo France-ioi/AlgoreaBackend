@@ -1,8 +1,8 @@
 Feature: Get group by groupID (groupView) - robustness
   Background:
     Given the database has the following user:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | fr               |
+      | group_id | login | default_language |
+      | 21       | owner | fr               |
     And the database has the following table "groups":
       | id | name                | description         | created_at          | type                | root_activity_id    | is_open | is_public | code       | code_lifetime | code_expires_at     | open_activity_when_joining |
       | 11 | Group A             | Group A is here     | 2019-02-06 09:26:40 | Class               | 1672978871462145361 | true    | true      | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 | true                       |

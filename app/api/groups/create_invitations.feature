@@ -6,12 +6,12 @@ Feature: Invite users
       | 444 | Team  | none                                  | false                    | null             |
       | 555 | Class | view                                  | false                    | null             |
     And the database has the following users:
-      | group_id | login | first_name  | last_name | temp_user |
-      | 21       | owner | Jean-Michel | Blanquer  | false     |
-      | 101      | john  | John        | Doe       | false     |
-      | 102      | jane  | Jane        | Doe       | false     |
-      | 103      | Jane  | Jane        | Smith     | false     |
-      | 104      | tmp   | Temp        | User      | true      |
+      | group_id | login | temp_user |
+      | 21       | owner | false     |
+      | 101      | john  | false     |
+      | 102      | jane  | false     |
+      | 103      | Jane  | false     |
+      | 104      | tmp   | true      |
     And the groups ancestors are computed
     And the database has the following table "items":
       | id   | default_language_tag |

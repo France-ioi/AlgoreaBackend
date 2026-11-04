@@ -16,10 +16,10 @@ Feature: Update a group (groupEdit)
       | 41 | john    | -4    | john            | 2019-04-06 09:26:40 | User    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
       | 50 | Admins  | -4    | Admins          | 2019-04-06 09:26:40 | Club    | null                | null          | false   | false     | null       | null          | null                | false                      | false               | false                          | null      | null          | null          | null             | null         | null            | null                | false             | none                                  | null                                   | false                  | null             | false                    |
     And the database has the following users:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | fr               |
-      | 24       | other | John        | Doe       | en               |
-      | 25       | jane  | Jane        | Doe       | en               |
+      | group_id | login | default_language |
+      | 21       | owner | fr               |
+      | 24       | other | en               |
+      | 25       | jane  | en               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |

@@ -31,8 +31,6 @@ func (ctx *TestContext) addUser(user string) {
 				{"login", referenceToName(user)},
 				{"login_id", "null"},
 				{"temp_user", "false"},
-				{"first_name", "null"},
-				{"last_name", "null"},
 			}))
 		if err != nil {
 			panic(err)

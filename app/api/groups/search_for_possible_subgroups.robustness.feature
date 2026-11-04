@@ -1,8 +1,8 @@
 Feature: Search for possible subgroups - robustness
   Background:
     Given the database has the following users:
-      | login | temp_user | group_id | first_name  | last_name | grade |
-      | owner | 0         | 21       | Jean-Michel | Blanquer  | 3     |
+      | login | temp_user | group_id |
+      | owner | 0         | 21       |
 
   Scenario: Should fail if the search string is not present
     Given I am the user with id "21"

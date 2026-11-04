@@ -35,9 +35,9 @@ Feature: Get group parents (groupParentsView)
       | 265 | Public group 2                             | Club                | true      |
       | 500 | Owner's group                              | Club                | false     |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
-      | 400      | jack  | Jack        | Smith     |
+      | group_id | login |
+      | 21       | owner |
+      | 400      | jack  |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access |
       | 158      | 21         | false                  |

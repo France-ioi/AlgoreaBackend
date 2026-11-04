@@ -63,8 +63,8 @@ Feature: Search for items
       | 30      | en           | chapter                                   |
       | 31      | en           | chapter                                   |
     And the database has the following users:
-      | login | default_language | temp_user | group_id | first_name  | last_name | grade |
-      | owner | fr               | 0         | 21       | Jean-Michel | Blanquer  | 3     |
+      | login | default_language | temp_user | group_id |
+      | owner | fr               | 0         | 21       |
     And the groups ancestors are computed
     And the database has the following table "permissions_generated":
       | group_id | item_id | can_view_generated       |

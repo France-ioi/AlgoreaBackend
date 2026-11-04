@@ -15,9 +15,9 @@ Feature: Get group memberships for the current user
       | 31 | Team                | Team With Entry Conditions | Team With Entry Conditions | false             | null                                   | none                                  | true                   |
       | 32 | ContestParticipants |                            |                            | false             | null                                   | none                                  | false                  |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
-      | 11       | user  | John        | Doe       |
+      | group_id | login |
+      | 21       | owner |
+      | 11       | user  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | lock_membership_approved_at |
       | 5               | 21             | 2019-05-30 11:00:00         |

@@ -1,11 +1,11 @@
 Feature: Get pending requests for managed groups
   Background:
     Given the database has the following users:
-      | group_id | login   | grade | profile                                                |
-      | 21       | owner   | 3     | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
-      | 11       | user    | 1     | {"first_name": "John", "last_name": "Doe"}             |
-      | 31       | jane    | 2     | {"first_name": "Jane", "last_name": "Doe"}             |
-      | 41       | richard | 2     | {"first_name": "Richard", "last_name": "Roe"}          |
+      | group_id | login   | profile                                                |
+      | 21       | owner   | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | 11       | user    | {"first_name": "John", "last_name": "Doe"}             |
+      | 31       | jane    | {"first_name": "Jane", "last_name": "Doe"}             |
+      | 41       | richard | {"first_name": "Richard", "last_name": "Roe"}          |
     And the database has the following table "groups":
       | id  | name       |
       | 1   | Root       |
@@ -70,7 +70,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -85,7 +85,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -110,7 +110,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -125,7 +125,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -140,7 +140,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jean-Michel",
-          "grade": 3,
+          "grade": null,
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
@@ -165,7 +165,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jean-Michel",
-          "grade": 3,
+          "grade": null,
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
@@ -180,7 +180,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -195,7 +195,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -220,7 +220,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -235,7 +235,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -260,7 +260,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -275,7 +275,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jean-Michel",
-          "grade": 3,
+          "grade": null,
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
@@ -290,7 +290,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -315,7 +315,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -340,7 +340,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -355,7 +355,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -380,7 +380,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jean-Michel",
-          "grade": 3,
+          "grade": null,
           "group_id": "21",
           "last_name": "Blanquer",
           "login": "owner"
@@ -395,7 +395,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -410,7 +410,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -435,7 +435,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -450,7 +450,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -467,37 +467,37 @@ Feature: Get pending requests for managed groups
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "group": {
-          "id": "14",
-          "name": "Friends"
-        },
-        "user": {
-          "first_name": "Jane",
-          "grade": 2,
-          "group_id": "31",
-          "last_name": "Doe",
-          "login": "jane"
-        },
-        "at": "2017-05-27T06:38:38Z",
-        "type": "leave_request"
-      },
-      {
-        "group": {
-          "id": "14",
-          "name": "Friends"
-        },
-        "user": {
-          "grade": 3,
-          "group_id": "21",
-          "login": "owner"
-        },
-        "at": "2017-05-27T06:38:38Z",
-        "type": "join_request"
-      }
-    ]
-    """
+[
+  {
+    "group": {
+      "id": "14",
+      "name": "Friends"
+    },
+    "user": {
+      "first_name": "Jane",
+      "grade": null,
+      "group_id": "31",
+      "last_name": "Doe",
+      "login": "jane"
+    },
+    "at": "2017-05-27T06:38:38Z",
+    "type": "leave_request"
+  },
+  {
+    "group": {
+      "id": "14",
+      "name": "Friends"
+    },
+    "user": {
+      "grade": null,
+      "group_id": "21",
+      "login": "owner"
+    },
+    "at": "2017-05-27T06:38:38Z",
+    "type": "join_request"
+  }
+]
+"""
 
   Scenario: group_id is given, types=leave_request (default sort)
     Given I am the user with id "21"
@@ -512,7 +512,7 @@ Feature: Get pending requests for managed groups
           "name": "Class"
         },
         "user": {
-          "grade": 1,
+          "grade": null,
           "group_id": "11",
           "login": "user"
         },
@@ -536,7 +536,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Jane",
-          "grade": 2,
+          "grade": null,
           "group_id": "31",
           "last_name": "Doe",
           "login": "jane"
@@ -551,7 +551,7 @@ Feature: Get pending requests for managed groups
         },
         "user": {
           "first_name": "Richard",
-          "grade": 2,
+          "grade": null,
           "group_id": "41",
           "last_name": "Roe",
           "login": "richard"
@@ -565,7 +565,7 @@ Feature: Get pending requests for managed groups
           "name": "Class"
         },
         "user": {
-          "grade": 1,
+          "grade": null,
           "group_id": "11",
           "login": "user"
         },

@@ -31,6 +31,7 @@ type groupsMembersViewResponseRow struct {
 
 		ShowPersonalInfo bool `json:"-"`
 
+		// Backward-compat dummy: always null. The users.grade column is gone.
 		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
@@ -62,6 +63,8 @@ type groupsMembersViewResponseRow struct {
 //			items:
 //				type: string
 //				enum: [member_since,-member_since,user.login,-user.login,user.grade,-user.grade,id,-id]
+//			description: >
+//				`user.grade` is accepted for older clients. Grade is a null dummy, so that sort does not change order.
 //		- name: from.id
 //			description: Start the page from the member next to the member with `groups.id`=`{from.id}`
 //			in: query
@@ -110,8 +113,8 @@ func (srv *Service) getMembers(responseWriter http.ResponseWriter, httpRequest *
 			users.login AS user__login,
 			users.group_id = ? OR personal_info_view_approvals.approved AS user__show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS user__first_name,
-			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS user__last_name,
-			users.grade AS user__grade`, user.GroupID, user.GroupID, user.GroupID).
+			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS user__last_name`,
+			user.GroupID, user.GroupID, user.GroupID).
 		Joins("JOIN users ON users.group_id = groups_groups.child_group_id").
 		WithPersonalInfoViewApprovals(user).
 		Joins(`
@@ -130,8 +133,9 @@ func (srv *Service) getMembers(responseWriter http.ResponseWriter, httpRequest *
 		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
-				"user.login":   {ColumnName: "users.login"},
-				"user.grade":   {ColumnName: "users.grade"},
+				"user.login": {ColumnName: "users.login"},
+				// Kept so older clients that sort by user.grade do not get a 400. The value is always null.
+				"user.grade":   {ColumnName: "NULL", Nullable: true},
 				"member_since": {ColumnName: "latest_change.at"},
 				"id":           {ColumnName: "groups_groups.child_group_id"},
 			},

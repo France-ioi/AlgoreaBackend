@@ -1,8 +1,8 @@
 Feature: Explain permissions
   Background:
     Given the database has the following users:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | fr               |
+      | group_id | login | default_language |
+      | 21       | owner | fr               |
     And the database has the following table "items":
       | id  | default_language_tag |
       | 100 | en                   |

@@ -1,10 +1,10 @@
 Feature: Get user info - robustness
   Background:
     Given the database has the following users:
-      | group_id | temp_user | login | first_name | last_name | default_language | free_text | web_site   |
-      | 2        | 0         | user  | John       | Doe       | en               | Some text | mysite.com |
-      | 3        | 1         | jane  | null       | null      | fr               | null      | null       |
-      | 4        | 0         | john  | null       | null      | fr               | null      | null       |
+      | group_id | temp_user | login | default_language |
+      | 2        | 0         | user  | en               |
+      | 3        | 1         | jane  | fr               |
+      | 4        | 0         | john  | fr               |
 
   Scenario: Invalid user_id
     Given I am the user with id "2"

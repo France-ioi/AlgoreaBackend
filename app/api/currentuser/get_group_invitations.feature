@@ -18,10 +18,10 @@ Feature: Get group invitations for the current user
       | 35 | Class   | Group with broken change log  | Group with broken change log  | edit                                  | null                                   | false                  |
       | 36 | Class   | Group without inviting user   | Group without inviting user   | edit                                  | null                                   | false                  |
     And the database has the following users:
-      | group_id | login       | grade | profile                                                |
-      | 12       | user        | 1     | {"first_name": "John", "last_name": "Doe"}             |
-      | 13       | anotheruser | 1     | {"first_name": "Another", "last_name": "User"}         |
-      | 21       | owner       | 3     | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | group_id | login       | profile                                                |
+      | 12       | user        | {"first_name": "John", "last_name": "Doe"}             |
+      | 13       | anotheruser | {"first_name": "Another", "last_name": "User"}         |
+      | 21       | owner       | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 5               | 21             |

@@ -1,10 +1,10 @@
 Feature: Get pending requests for managed groups - robustness
   Background:
     Given the database has the following users:
-      | login | temp_user | group_id | grade |
-      | owner | 0         | 21       | 3     |
-      | user  | 0         | 11       | 1     |
-      | jane  | 0         | 31       | 2     |
+      | login | temp_user | group_id |
+      | owner | 0         | 21       |
+      | user  | 0         | 11       |
+      | jane  | 0         | 31       |
     And the database has the following table "groups":
       | id |
       | 13 |

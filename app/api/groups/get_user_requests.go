@@ -41,6 +41,7 @@ type groupUserRequestsViewResponseRow struct {
 
 		ShowPersonalInfo bool `json:"-"`
 
+		// Backward-compat dummy: always null. The users.grade column is gone.
 		// required: true
 		Grade *int32 `json:"grade"`
 	} `json:"user" gorm:"embedded;embedded_prefix:user__"`
@@ -145,8 +146,7 @@ func (srv *Service) getUserRequests(responseWriter http.ResponseWriter, httpRequ
 			user.login AS user__login,
 			users_with_approval.group_id IS NOT NULL AS user__show_personal_info,
 			IF(users_with_approval.group_id IS NOT NULL, user.profile_first_name, NULL) AS user__first_name,
-			IF(users_with_approval.group_id IS NOT NULL, user.profile_last_name, NULL) AS user__last_name,
-			user.grade AS user__grade`).
+			IF(users_with_approval.group_id IS NOT NULL, user.profile_last_name, NULL) AS user__last_name`).
 		Joins("JOIN `groups` AS `group` ON group.id = group_pending_requests.group_id").
 		Joins(`LEFT JOIN users AS user ON user.group_id = member_id`).
 		Joins(`LEFT JOIN users_with_approval ON users_with_approval.group_id = user.group_id`).

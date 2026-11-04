@@ -11,9 +11,9 @@ Feature: Remove a direct parent-child relation between two groups - robustness
       | 53 | AllUsers | Base  |
       | 55 | User     | User  |
     And the database has the following users:
-      | group_id | login   | first_name  | last_name |
-      | 21       | owner   | Jean-Michel | Blanquer  |
-      | 23       | teacher | John        | Smith     |
+      | group_id | login   |
+      | 21       | owner   |
+      | 23       | teacher |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |

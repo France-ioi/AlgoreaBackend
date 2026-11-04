@@ -5,8 +5,8 @@ Feature: Explain permissions - robustness
       | 25 | some class    | Class |
       | 26 | some team     | Team  |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
+      | group_id | login |
+      | 21       | owner |
     And the groups ancestors are computed
     And the database has the following table "items":
       | id  | default_language_tag |

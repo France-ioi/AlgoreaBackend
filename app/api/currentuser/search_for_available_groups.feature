@@ -16,8 +16,8 @@ Feature: Search for groups available to the current user
       | 21 | User                | amazing user self                     |                        | 0         |
       | 22 | ContestParticipants | amazing                               |                        | 1         |
     And the database has the following user:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id | expires_at          |
       | 2               | 21             | 2019-05-30 11:00:00 |

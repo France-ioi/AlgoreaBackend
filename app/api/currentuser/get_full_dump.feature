@@ -17,10 +17,10 @@ Feature: Export the current user's data
       | 21 | User    | jack               |                        |
       | 31 | User    | jane               |                        |
     And the database has the following users:
-      | login | group_id | first_name | last_name | grade | profile                |
-      | user  | 11       | John       | Doe       | 1     | {"first_name": "John"} |
-      | jack  | 21       | Jack       | Smith     | 2     | null                   |
-      | jane  | 31       | Jane       | Doe       | 2     | null                   |
+      | login | group_id | profile                |
+      | user  | 11       | {"first_name": "John"} |
+      | jack  | 21       | null                   |
+      | jane  | 31       | null                   |
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token    |
       | 1          | 21      | refreshTokenFor1 |
@@ -80,175 +80,325 @@ Feature: Export the current user's data
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
     And the response body should be, in JSON:
     """
+{
+  "current_user": {
+    "group_id": "11",
+    "is_admin": 0,
+    "creator_id": null,
+    "member_state": 0,
+    "access_group_id": null,
+    "login_id": null,
+    "latest_profile_sync_at": null,
+    "help_given": 0,
+    "default_language": "fr",
+    "latest_activity_at": null,
+    "last_ip": null,
+    "latest_login_at": null,
+    "login": "user",
+    "notifications_read_at": null,
+    "open_id_identity": null,
+    "password_md5": null,
+    "recover": null,
+    "registered_at": null,
+    "salt": null,
+    "temp_user": 0,
+    "profile": "{\"first_name\": \"John\"}"
+  },
+  "attempts": [
     {
-      "current_user": {
-        "group_id": "11", "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
-        "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
-        "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
-        "access_group_id": null, "login_id": null, "latest_profile_sync_at": null,
-        "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
-        "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
-        "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
-        "latest_activity_at": null, "last_ip": null, "latest_login_at": null, "last_name": "Doe", "login": "user",
-        "notifications_read_at": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
-        "recover": null, "registered_at": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
-        "web_site": null, "zipcode": null, "temp_user": 0, "profile": "{\"first_name\": \"John\"}"
-      },
-      "attempts": [
-        {
-          "id": "0", "participant_id": "2", "creator_id": null,
-          "created_at": "2019-05-28T11:00:00Z", "parent_attempt_id": null, "root_item_id": null,
-          "allows_submissions_until": "9999-12-31T23:59:59Z", "ended_at": null
-        },
-        {
-          "id": "0", "participant_id": "11", "creator_id": null,
-          "created_at": "2019-05-28T11:00:00Z", "parent_attempt_id": null, "root_item_id": null,
-          "allows_submissions_until": "9999-12-31T23:59:59Z", "ended_at": null
-        }
-      ],
-      "results": [
-        {
-          "attempt_id": "0", "validated": 0,
-          "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
-          "participant_id": "2", "item_id": "404",
-          "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "score_obtained_at": null, "hints_requested": null,
-          "latest_activity_at": "2019-05-29T11:00:00Z", "latest_submission_at": null,
-          "latest_hint_at": null, "score_edit_comment": null,
-          "started": 0, "started_at": null, "validated_at": null, "help_requested": 0,
-          "recomputing_state": "unchanged"
-        },
-        {
-          "attempt_id": "0", "validated": 0,
-          "score_computed": 0, "score_edit_rule": null, "score_edit_value": null,
-          "participant_id": "11", "item_id": "404",
-          "hints_cached": 0, "submissions": 0, "tasks_tried": 0,
-          "tasks_with_help": 0, "score_obtained_at": null, "hints_requested": null,
-          "latest_activity_at": "2019-05-30T11:00:00Z", "latest_submission_at": null,
-          "latest_hint_at": null, "score_edit_comment": null,
-          "started": 0, "started_at": null, "validated_at": null, "help_requested": 0,
-          "recomputing_state": "unchanged"
-        }
-      ],
-      "groups_groups": [
-        {
-          "child_group_id": "11", "parent_group_id": "2", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 1
-        },
-        {
-          "child_group_id": "11", "parent_group_id": "5", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Other people", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 0
-        },
-        {
-          "child_group_id": "11", "parent_group_id": "6", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 0
-        },
-        {
-          "child_group_id": "11", "parent_group_id": "9", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 0
-        },
-        {
-          "child_group_id": "11", "parent_group_id": "10", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Secret group", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 0
-        }
-      ],
-      "group_managers": [
-        {
-          "can_grant_group_access": 1,
-          "can_manage": "memberships",
-          "can_manage_value": 2,
-          "can_watch_members": 0,
-          "can_edit_personal_info": 0,
-          "group_id": "1",
-          "manager_id": "11",
-          "name": "Our Class"
-        },
-        {
-          "can_grant_group_access": 0,
-          "can_manage": "memberships_and_group",
-          "can_manage_value": 3,
-          "can_watch_members": 1,
-          "can_edit_personal_info": 0,
-          "group_id": "2",
-          "manager_id": "11",
-          "name": "Our Team"
-        }
-      ],
-      "group_membership_changes": [
-        {
-          "action": "left", "at": "2019-07-10T04:02:28.003Z", "group_id": "8", "initiator_id": "11",
-          "member_id": "11", "name": "Another Club"
-        },
-        {
-          "action": "removed", "at": "2019-07-10T03:02:28.002Z", "group_id": "7", "initiator_id": "31",
-          "member_id": "11", "name": "Another Team"
-        },
-        {
-          "action": "join_request_refused", "at": "2019-07-10T00:02:28.001Z", "group_id": "4", "initiator_id": "11",
-          "member_id": "11", "name": "Our Friends"
-        }
-      ],
-      "group_pending_requests": [
-        {
-          "group_id": "1", "member_id": "11", "name": "Our Class", "type": "invitation",
-          "lock_membership_approved": 0, "personal_info_view_approved": 0,
-          "watch_approved": 0, "at": "2019-08-10T00:00:00.001Z"
-        },
-        {
-          "group_id": "3", "member_id": "11", "name": "Our Club", "type": "join_request",
-          "lock_membership_approved": 0, "personal_info_view_approved": 0,
-          "watch_approved": 0, "at": "2019-08-11T00:00:00.002Z"
-        }
-      ],
-      "joined_groups": [
-        {"id": "2", "name": "Our Team"},
-        {"id": "5", "name": "Other people"},
-        {"id": "6", "name": "Another Class"},
-        {"id": "9", "name": "Some other friends"},
-        {"id": "10", "name": "Secret group"}
-      ],
-      "managed_groups": [
-        {"id": "1", "name": "Our Class"},
-        {"id": "2", "name": "Our Team"},
-        {"id": "6", "name": "Another Class"},
-        {"id": "11", "name": "user self"}
-      ],
-      "sessions": [
-        {"session_id": "2", "user_id": "11", "refresh_token": "***"},
-        {"session_id": "123451234512345", "user_id": "11", "refresh_token": "***"}
-      ],
-      "access_tokens": [
-        {"session_id": "2", "token": "***", "expires_at": "2020-01-01T02:00:00Z", "issued_at": "2020-01-01T00:00:00Z"},
-        {"session_id": "123451234512345", "token": "***", "expires_at": "2019-07-17T00:02:28Z", "issued_at": "2019-07-16T22:02:28Z"}
-      ],
-      "answers": [
-        {
-          "id": "1", "attempt_id": "0", "participant_id": "11", "item_id": "404", "author_id": "11", "answer": null,
-          "state": null, "created_at": "2019-07-09T21:02:28Z", "type": "Submission"
-        }
-      ]
+      "id": "0",
+      "participant_id": "2",
+      "creator_id": null,
+      "created_at": "2019-05-28T11:00:00Z",
+      "parent_attempt_id": null,
+      "root_item_id": null,
+      "allows_submissions_until": "9999-12-31T23:59:59Z",
+      "ended_at": null
+    },
+    {
+      "id": "0",
+      "participant_id": "11",
+      "creator_id": null,
+      "created_at": "2019-05-28T11:00:00Z",
+      "parent_attempt_id": null,
+      "root_item_id": null,
+      "allows_submissions_until": "9999-12-31T23:59:59Z",
+      "ended_at": null
     }
-    """
+  ],
+  "results": [
+    {
+      "attempt_id": "0",
+      "validated": 0,
+      "score_computed": 0,
+      "score_edit_rule": null,
+      "score_edit_value": null,
+      "participant_id": "2",
+      "item_id": "404",
+      "hints_cached": 0,
+      "submissions": 0,
+      "tasks_tried": 0,
+      "tasks_with_help": 0,
+      "score_obtained_at": null,
+      "hints_requested": null,
+      "latest_activity_at": "2019-05-29T11:00:00Z",
+      "latest_submission_at": null,
+      "latest_hint_at": null,
+      "score_edit_comment": null,
+      "started": 0,
+      "started_at": null,
+      "validated_at": null,
+      "help_requested": 0,
+      "recomputing_state": "unchanged"
+    },
+    {
+      "attempt_id": "0",
+      "validated": 0,
+      "score_computed": 0,
+      "score_edit_rule": null,
+      "score_edit_value": null,
+      "participant_id": "11",
+      "item_id": "404",
+      "hints_cached": 0,
+      "submissions": 0,
+      "tasks_tried": 0,
+      "tasks_with_help": 0,
+      "score_obtained_at": null,
+      "hints_requested": null,
+      "latest_activity_at": "2019-05-30T11:00:00Z",
+      "latest_submission_at": null,
+      "latest_hint_at": null,
+      "score_edit_comment": null,
+      "started": 0,
+      "started_at": null,
+      "validated_at": null,
+      "help_requested": 0,
+      "recomputing_state": "unchanged"
+    }
+  ],
+  "groups_groups": [
+    {
+      "child_group_id": "11",
+      "parent_group_id": "2",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Our Team",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 1
+    },
+    {
+      "child_group_id": "11",
+      "parent_group_id": "5",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Other people",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 0
+    },
+    {
+      "child_group_id": "11",
+      "parent_group_id": "6",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Another Class",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 0
+    },
+    {
+      "child_group_id": "11",
+      "parent_group_id": "9",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Some other friends",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 0
+    },
+    {
+      "child_group_id": "11",
+      "parent_group_id": "10",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Secret group",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 0
+    }
+  ],
+  "group_managers": [
+    {
+      "can_grant_group_access": 1,
+      "can_manage": "memberships",
+      "can_manage_value": 2,
+      "can_watch_members": 0,
+      "can_edit_personal_info": 0,
+      "group_id": "1",
+      "manager_id": "11",
+      "name": "Our Class"
+    },
+    {
+      "can_grant_group_access": 0,
+      "can_manage": "memberships_and_group",
+      "can_manage_value": 3,
+      "can_watch_members": 1,
+      "can_edit_personal_info": 0,
+      "group_id": "2",
+      "manager_id": "11",
+      "name": "Our Team"
+    }
+  ],
+  "group_membership_changes": [
+    {
+      "action": "left",
+      "at": "2019-07-10T04:02:28.003Z",
+      "group_id": "8",
+      "initiator_id": "11",
+      "member_id": "11",
+      "name": "Another Club"
+    },
+    {
+      "action": "removed",
+      "at": "2019-07-10T03:02:28.002Z",
+      "group_id": "7",
+      "initiator_id": "31",
+      "member_id": "11",
+      "name": "Another Team"
+    },
+    {
+      "action": "join_request_refused",
+      "at": "2019-07-10T00:02:28.001Z",
+      "group_id": "4",
+      "initiator_id": "11",
+      "member_id": "11",
+      "name": "Our Friends"
+    }
+  ],
+  "group_pending_requests": [
+    {
+      "group_id": "1",
+      "member_id": "11",
+      "name": "Our Class",
+      "type": "invitation",
+      "lock_membership_approved": 0,
+      "personal_info_view_approved": 0,
+      "watch_approved": 0,
+      "at": "2019-08-10T00:00:00.001Z"
+    },
+    {
+      "group_id": "3",
+      "member_id": "11",
+      "name": "Our Club",
+      "type": "join_request",
+      "lock_membership_approved": 0,
+      "personal_info_view_approved": 0,
+      "watch_approved": 0,
+      "at": "2019-08-11T00:00:00.002Z"
+    }
+  ],
+  "joined_groups": [
+    {
+      "id": "2",
+      "name": "Our Team"
+    },
+    {
+      "id": "5",
+      "name": "Other people"
+    },
+    {
+      "id": "6",
+      "name": "Another Class"
+    },
+    {
+      "id": "9",
+      "name": "Some other friends"
+    },
+    {
+      "id": "10",
+      "name": "Secret group"
+    }
+  ],
+  "managed_groups": [
+    {
+      "id": "1",
+      "name": "Our Class"
+    },
+    {
+      "id": "2",
+      "name": "Our Team"
+    },
+    {
+      "id": "6",
+      "name": "Another Class"
+    },
+    {
+      "id": "11",
+      "name": "user self"
+    }
+  ],
+  "sessions": [
+    {
+      "session_id": "2",
+      "user_id": "11",
+      "refresh_token": "***"
+    },
+    {
+      "session_id": "123451234512345",
+      "user_id": "11",
+      "refresh_token": "***"
+    }
+  ],
+  "access_tokens": [
+    {
+      "session_id": "2",
+      "token": "***",
+      "expires_at": "2020-01-01T02:00:00Z",
+      "issued_at": "2020-01-01T00:00:00Z"
+    },
+    {
+      "session_id": "123451234512345",
+      "token": "***",
+      "expires_at": "2019-07-17T00:02:28Z",
+      "issued_at": "2019-07-16T22:02:28Z"
+    }
+  ],
+  "answers": [
+    {
+      "id": "1",
+      "attempt_id": "0",
+      "participant_id": "11",
+      "item_id": "404",
+      "author_id": "11",
+      "answer": null,
+      "state": null,
+      "created_at": "2019-07-09T21:02:28Z",
+      "type": "Submission"
+    }
+  ]
+}
+"""
 
   Scenario: All optional arrays and objects are empty
     Given I am the user with id "31"
@@ -258,33 +408,53 @@ Feature: Export the current user's data
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
     And the response body should be, in JSON:
     """
+{
+  "current_user": {
+    "group_id": "31",
+    "is_admin": 0,
+    "creator_id": null,
+    "member_state": 0,
+    "access_group_id": null,
+    "login_id": null,
+    "help_given": 0,
+    "default_language": "fr",
+    "latest_activity_at": null,
+    "last_ip": null,
+    "latest_login_at": null,
+    "login": "jane",
+    "notifications_read_at": null,
+    "open_id_identity": null,
+    "password_md5": null,
+    "recover": null,
+    "registered_at": null,
+    "salt": null,
+    "temp_user": 0,
+    "latest_profile_sync_at": null,
+    "profile": null
+  },
+  "attempts": [],
+  "results": [],
+  "groups_groups": [],
+  "group_managers": [],
+  "group_membership_changes": [],
+  "group_pending_requests": [],
+  "joined_groups": [],
+  "managed_groups": [],
+  "sessions": [
     {
-      "current_user": {
-        "group_id": "31", "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
-        "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0, "creator_id": null,
-        "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "access_group_id": null,
-        "login_id": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
-        "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
-        "free_text": null, "land_line_number": null, "lang_prog": "Python", "latest_activity_at": null, "last_ip": null,
-        "latest_login_at": null, "last_name": "Doe", "login": "jane", "notifications_read_at": null, "notify": "Answers",
-        "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
-        "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0,
-        "latest_profile_sync_at": null, "profile": null
-      },
-      "attempts": [],
-      "results": [],
-      "groups_groups": [],
-      "group_managers": [],
-      "group_membership_changes": [],
-      "group_pending_requests": [],
-      "joined_groups": [],
-      "managed_groups": [],
-      "sessions": [
-        {"session_id": "123451234512345", "user_id": "31", "refresh_token": "***"}
-      ],
-      "access_tokens": [
-        {"session_id": "123451234512345", "token": "***", "expires_at": "2019-07-17T00:02:28Z", "issued_at": "2019-07-16T22:02:28Z"}
-      ],
-      "answers": []
+      "session_id": "123451234512345",
+      "user_id": "31",
+      "refresh_token": "***"
     }
-    """
+  ],
+  "access_tokens": [
+    {
+      "session_id": "123451234512345",
+      "token": "***",
+      "expires_at": "2019-07-17T00:02:28Z",
+      "issued_at": "2019-07-16T22:02:28Z"
+    }
+  ],
+  "answers": []
+}
+"""

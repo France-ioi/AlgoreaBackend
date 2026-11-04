@@ -79,7 +79,7 @@ func (srv *Service) getUserDescendants(responseWriter http.ResponseWriter, httpR
 			users.group_id = ? OR MAX(personal_info_view_approvals.approved) AS show_personal_info,
 			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile_first_name, NULL) AS first_name,
 			IF(users.group_id = ? OR MAX(personal_info_view_approvals.approved), users.profile_last_name, NULL) AS last_name,
-			users.login, users.grade`, user.GroupID, user.GroupID, user.GroupID).
+			users.login`, user.GroupID, user.GroupID, user.GroupID).
 		Joins("JOIN groups_groups_active ON groups_groups_active.child_group_id = groups.id").
 		Joins(`
 			JOIN groups_ancestors_active ON groups_ancestors_active.child_group_id = groups_groups_active.parent_group_id AND
@@ -140,6 +140,7 @@ type userDescendantUser struct {
 
 	// required:true
 	Login string `json:"login"`
+	// Backward-compat dummy: always null. The users.grade column is gone.
 	// required:true
 	Grade *int32 `json:"grade"`
 }

@@ -16,8 +16,8 @@ Feature: Accept requests to leave a group - robustness
       | 161 | User    |
       | 444 | Team    |
     And the database has the following user:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 31             |

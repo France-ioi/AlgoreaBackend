@@ -7,8 +7,8 @@ Feature: Create a user batch
       | 4  | Friends | Friends      | 2018-08-10 12:34:55 | edit                                  | 2019-01-01 00:00:00                    | 0                      |
       | 21 | User    | owner        | 2016-08-10 12:34:55 | none                                  | null                                   | 0                      |
     And the database has the following user:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | en               |
+      | group_id | login | default_language |
+      | 21       | owner | en               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 3        | 21         | memberships           |
@@ -94,10 +94,10 @@ Feature: Create a user batch
       | group_prefix | custom_prefix | size | creator_id | created_at          |
       | test         | custom        | 2    | 21         | 2019-07-16 22:02:28 |
     And the table "users" should be:
-      | group_id            | latest_login_at | latest_activity_at | temp_user | registered_at       | login_id  | login           | default_language | email | first_name  | last_name |
-      | 21                  | null            | null               | 0         | null                | null      | owner           | en               | null  | Jean-Michel | Blanquer  |
-      | 5577006791947779410 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000029 | test_custom_jzk | en               | null  | null        | null      |
-      | 8674665223082153551 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000030 | test_custom_ctc | en               | null  | null        | null      |
+      | group_id            | latest_login_at | latest_activity_at | temp_user | registered_at       | login_id  | login           | default_language |
+      | 21                  | null            | null               | 0         | null                | null      | owner           | en               |
+      | 5577006791947779410 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000029 | test_custom_jzk | en               |
+      | 8674665223082153551 | null            | null               | 0         | 2019-07-16 22:02:28 | 100000030 | test_custom_ctc | en               |
     And the table "groups" should be:
       | id                  | name            | type    | description     | created_at          | is_open | send_emails |
       | 2                   | NonTempUsers    | Base    | null            | 2015-08-10 12:34:55 | false   | false       |

@@ -13,10 +13,10 @@ Feature: Accept group requests - robustness
       | 131 | User  | false             |
       | 141 | User  | false             |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
-      | 11       | user  | John        | Doe       |
-      | 12       | jane  | Jane        | Doe       |
+      | group_id | login |
+      | 21       | owner |
+      | 11       | user  |
+      | 12       | jane  |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 12       | 12         | memberships |

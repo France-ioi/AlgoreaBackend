@@ -26,18 +26,18 @@ Feature: List team descendants of the group (groupTeamDescendantView)
       | 67 | User    | janed          | -2    |
       | 69 | User    | janee          | -2    |
     And the database has the following users:
-      | group_id | login | grade | profile                                                |
-      | 21       | owner | 10    | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
-      | 51       | johna | 1     | {"first_name": "John", "last_name": "Adams"}           |
-      | 53       | johnb | 2     | {"first_name": "John", "last_name": "Baker"}           |
-      | 55       | johnc | 3     | {"first_name": "John"}                                 |
-      | 57       | johnd | -1    | {"last_name": "Davis"}                                 |
-      | 59       | johne | null  | {"first_name": "John", "last_name": "Edwards"}         |
-      | 61       | janea | 3     | {"first_name": "Jane", "last_name": "Adams"}           |
-      | 63       | janeb | null  | {"first_name": "Jane", "last_name": "Baker"}           |
-      | 65       | janec | 4     | {"first_name": "Jane"}                                 |
-      | 67       | janed | -2    | {"first_name": "Jane", "last_name": "Doe"}             |
-      | 69       | janee | null  | {"first_name": "Jane", "last_name": "Edwards"}         |
+      | group_id | login | profile                                                |
+      | 21       | owner | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | 51       | johna | {"first_name": "John", "last_name": "Adams"}           |
+      | 53       | johnb | {"first_name": "John", "last_name": "Baker"}           |
+      | 55       | johnc | {"first_name": "John"}                                 |
+      | 57       | johnd | {"last_name": "Davis"}                                 |
+      | 59       | johne | {"first_name": "John", "last_name": "Edwards"}         |
+      | 61       | janea | {"first_name": "Jane", "last_name": "Adams"}           |
+      | 63       | janeb | {"first_name": "Jane", "last_name": "Baker"}           |
+      | 65       | janec | {"first_name": "Jane"}                                 |
+      | 67       | janed | {"first_name": "Jane", "last_name": "Doe"}             |
+      | 69       | janee | {"first_name": "Jane", "last_name": "Edwards"}         |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 1        | 21         |
@@ -75,69 +75,69 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
+[
+  {
+    "grade": 0,
+    "id": "16",
+    "members": [
       {
-        "grade": 0,
-        "id": "16",
-        "members": [
-          {
-            "first_name": "Jane",
-            "grade": null,
-            "last_name": "Baker",
-            "login": "janeb",
-            "group_id": "63"
-          },
-          {
-            "first_name": "Jane",
-            "grade": 4,
-            "last_name": null,
-            "login": "janec",
-            "group_id": "65"
-          },
-          {
-            "grade": -2,
-            "login": "janed",
-            "group_id": "67"
-          }
-        ],
-        "name": "First Team",
-        "parents": [
-          {
-            "id": "11",
-            "name": "Our Class"
-          }
-        ]
+        "first_name": "Jane",
+        "grade": null,
+        "last_name": "Baker",
+        "login": "janeb",
+        "group_id": "63"
       },
       {
-        "grade": -2,
-        "id": "14",
-        "members": [
-          {
-            "grade": 1,
-            "login": "johna",
-            "group_id": "51"
-          },
-          {
-            "grade": 2,
-            "login": "johnb",
-            "group_id": "53"
-          },
-          {
-            "grade": 3,
-            "login": "johnc",
-            "group_id": "55"
-          }
-        ],
-        "name": "Super Team",
-        "parents": [
-          {
-            "id": "11",
-            "name": "Our Class"
-          }
-        ]
+        "first_name": "Jane",
+        "grade": null,
+        "last_name": null,
+        "login": "janec",
+        "group_id": "65"
+      },
+      {
+        "grade": null,
+        "login": "janed",
+        "group_id": "67"
+      }
+    ],
+    "name": "First Team",
+    "parents": [
+      {
+        "id": "11",
+        "name": "Our Class"
       }
     ]
-    """
+  },
+  {
+    "grade": -2,
+    "id": "14",
+    "members": [
+      {
+        "grade": null,
+        "login": "johna",
+        "group_id": "51"
+      },
+      {
+        "grade": null,
+        "login": "johnb",
+        "group_id": "53"
+      },
+      {
+        "grade": null,
+        "login": "johnc",
+        "group_id": "55"
+      }
+    ],
+    "name": "Super Team",
+    "parents": [
+      {
+        "id": "11",
+        "name": "Our Class"
+      }
+    ]
+  }
+]
+"""
 
   Scenario: Get the first team from the list
     Given I am the user with id "21"
@@ -145,41 +145,41 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
+[
+  {
+    "grade": 0,
+    "id": "16",
+    "members": [
       {
-        "grade": 0,
-        "id": "16",
-        "members": [
-          {
-            "first_name": "Jane",
-            "grade": null,
-            "last_name": "Baker",
-            "login": "janeb",
-            "group_id": "63"
-          },
-          {
-            "first_name": "Jane",
-            "grade": 4,
-            "last_name": null,
-            "login": "janec",
-            "group_id": "65"
-          },
-          {
-            "grade": -2,
-            "login": "janed",
-            "group_id": "67"
-          }
-        ],
-        "name": "First Team",
-        "parents": [
-          {
-            "id": "11",
-            "name": "Our Class"
-          }
-        ]
+        "first_name": "Jane",
+        "grade": null,
+        "last_name": "Baker",
+        "login": "janeb",
+        "group_id": "63"
+      },
+      {
+        "first_name": "Jane",
+        "grade": null,
+        "last_name": null,
+        "login": "janec",
+        "group_id": "65"
+      },
+      {
+        "grade": null,
+        "login": "janed",
+        "group_id": "67"
+      }
+    ],
+    "name": "First Team",
+    "parents": [
+      {
+        "id": "11",
+        "name": "Our Class"
       }
     ]
-    """
+  }
+]
+"""
 
   Scenario: Get teams skipping the first one
     Given I am the user with id "21"
@@ -187,37 +187,37 @@ Feature: List team descendants of the group (groupTeamDescendantView)
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
+[
+  {
+    "grade": -2,
+    "id": "14",
+    "members": [
       {
-        "grade": -2,
-        "id": "14",
-        "members": [
-          {
-            "grade": 1,
-            "login": "johna",
-            "group_id": "51"
-          },
-          {
-            "grade": 2,
-            "login": "johnb",
-            "group_id": "53"
-          },
-          {
-            "grade": 3,
-            "login": "johnc",
-            "group_id": "55"
-          }
-        ],
-        "name": "Super Team",
-        "parents": [
-          {
-            "id": "11",
-            "name": "Our Class"
-          }
-        ]
+        "grade": null,
+        "login": "johna",
+        "group_id": "51"
+      },
+      {
+        "grade": null,
+        "login": "johnb",
+        "group_id": "53"
+      },
+      {
+        "grade": null,
+        "login": "johnc",
+        "group_id": "55"
+      }
+    ],
+    "name": "Super Team",
+    "parents": [
+      {
+        "id": "11",
+        "name": "Our Class"
       }
     ]
-    """
+  }
+]
+"""
 
   Scenario: No teams
     Given I am the user with id "21"

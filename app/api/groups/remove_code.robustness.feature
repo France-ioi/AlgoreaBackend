@@ -9,10 +9,10 @@ Feature: Remove the code of the given group - robustness
       | 31 | jane    | -4    | owner           | 2019-04-06 09:26:40 | User  | null       | null          | null                |
       | 41 | user    | -4    | user            | 2019-04-06 09:26:40 | User  | null       | null          | null                |
     And the database has the following users:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | fr               |
-      | 41       | user  | John        | Doe       | en               |
-      | 31       | jane  | Jane        | Doe       | en               |
+      | group_id | login | default_language |
+      | 21       | owner | fr               |
+      | 41       | user  | en               |
+      | 31       | jane  | en               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 13       | 21         | memberships_and_group |
