@@ -687,10 +687,8 @@ func constructActivityLogQuery(store *database.DataStore, httpRequest *http.Requ
 
 	// The union above is already limited to the page. Rank only those rows so the
 	// answers, started-result and validated-result arms, and the pagination queries, stay unchanged.
-	// row_attempt is not named attempts: the ranking subquery uses that name itself.
 	// activities.participant_id is qualified because row_attempt has the same column.
-	// LEFT JOIN: a missing attempt row must not drop the log row (the rank is then null).
-	// Results reference attempts by FK, but several activity-log fixtures insert results without that row.
+	// LEFT JOIN so a missing attempt row does not drop the log row; the rank is then null.
 	attemptOrderSQL := database.StartedResultAttemptOrderSQL(
 		"items.allows_multiple_attempts",
 		"items.id",
