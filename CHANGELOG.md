@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.60.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.3...v2.60.0) - 2026-11-04
+
+- slim `GET /current-user` to `group_id`, `login`, `profile`, `default_language`, and `temp_user` (flat personal/preference fields removed; use `profile`)
+- drop retired flat `users` columns; login-module sync persists `profile`, `login`, `login_id`, `default_language`, and `badges` only
+- keep `grade`, `free_text`, and `web_site` as always-null on user view / members / requests / descendants responses for older clients (`groups.grade` unchanged)
+
 ## [v2.59.3](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.2...v2.59.3) - 2026-11-03
 
 - speed up participant-only `GET /items/{ids}/log` by ignoring the answers `created_at` index when the matching set is not large; the watched-group path is unchanged
