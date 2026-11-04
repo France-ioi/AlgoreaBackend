@@ -9,10 +9,10 @@ Feature: Get permissions granted to a group
       | 26 | other class | Class |
       | 27 | third class | Class |
     And the database has the following users:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | fr               |
-      | 23       | user  | John        | Doe       | en               |
-      | 31       | jane  | Jane        | Doe       | en               |
+      | group_id | login | default_language |
+      | 21       | owner | fr               |
+      | 23       | user  | en               |
+      | 31       | jane  | en               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_grant_group_access |
       | 25       | 8          | 1                      |

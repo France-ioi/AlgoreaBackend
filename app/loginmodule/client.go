@@ -14,7 +14,6 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
@@ -244,35 +243,14 @@ func Encode(data []byte, clientKey string) string {
 	return base64.StdEncoding.EncodeToString(encrypted)
 }
 
-// UserProfile represents normalized user profile data returned by the login module.
+// UserProfile is the part of a login-module account this platform stores.
+// Flat personal and preference attributes are ignored: identity beyond login lives in Profile.
 type UserProfile struct {
 	Profile *map[string]any `json:"profile"`
 
 	LoginID         int64            `json:"login_id"`
 	Login           string           `json:"login"`
-	Email           *string          `json:"email"`
-	FirstName       *string          `json:"first_name"`
-	LastName        *string          `json:"last_name"`
-	Sex             *string          `json:"sex"`
-	StudentID       *string          `json:"student_id"`
-	CountryCode     string           `json:"country_code"`
-	BirthDate       *string          `json:"birth_date"`
-	GraduationYear  int64            `json:"graduation_year"`
-	Grade           *int64           `json:"grade"`
-	Address         *string          `json:"address"`
-	Zipcode         *string          `json:"zipcode"`
-	City            *string          `json:"city"`
-	LandLineNumber  *string          `json:"land_line_number"`
-	CellPhoneNumber *string          `json:"cell_phone_number"`
 	DefaultLanguage *string          `json:"default_language"`
-	FreeText        *string          `json:"free_text"`
-	WebSite         *string          `json:"web_site"`
-	TimeZone        *string          `json:"time_zone"`
-	EmailVerified   bool             `json:"email_verified"`
-	PhotoUpload     bool             `json:"photo_autoload"`
-	NotifyNews      bool             `json:"notify_news"`
-	PublicFirstName bool             `json:"public_first_name"`
-	PublicLastName  bool             `json:"public_last_name"`
 	Badges          []database.Badge `json:"badges"`
 }
 
@@ -307,59 +285,21 @@ func (up *UserProfile) ToMap() map[string]any {
 }
 
 func convertUserProfile(source map[string]any) (*UserProfile, error) {
-	//nolint:mnd // we are going to add two fields: sex, public_first_name, public_last_name, and badges
-	dest := make(map[string]any, len(source)+4)
-	/*
-	 We ignore fields: birthday_year, client_id, created_at, creator_client_id,
-	 school_grade, graduation_grade_expire_at, ip, last_password_recovery_at, last_login,
-	 login_change_required, login_fixed, login_revalidate_required, login_updated_at,
-	 logout_config, merge_group_id, ministry_of_education, ministry_of_education_fr,
-	 nationality (capitalized country code), origin_instance_id, picture (URL),
-	 role, secondary_email, secondary_email_verified, subscription_results (bool), verification.
-
-	 "badges" are returned as []database.Badge (always set, but can be nil), all unnecessary inner properties are skipped.
-	*/
+	// Flat personal and preference fields from the login module are intentionally ignored.
+	// "badges" are returned as []database.Badge (always set, but can be nil); inner properties we do not store are skipped.
+	dest := make(map[string]any, 5) //nolint:mnd // profile, login_id, login, default_language, and badges
 
 	mapping := map[string]string{
-		"profile": "profile",
-
-		"login_id":          "id", // unsigned int
-		"login":             "login",
-		"email":             "primary_email",
-		"first_name":        "first_name",
-		"last_name":         "last_name",
-		"student_id":        "student_id",
-		"country_code":      "country_code",
-		"birth_date":        "birthday",
-		"graduation_year":   "graduation_year",  // int
-		"grade":             "graduation_grade", // int
-		"address":           "address",
-		"zipcode":           "zipcode",
-		"city":              "city",
-		"land_line_number":  "primary_phone",
-		"cell_phone_number": "secondary_phone",
-		"default_language":  "language",
-		"free_text":         "presentation",
-		"web_site":          "website",
-		"time_zone":         "timezone",
-		"email_verified":    "primary_email_verified",
-		"photo_autoload":    "has_picture",
-		"notify_news":       "subscription_news",
+		"profile":          "profile",
+		"login_id":         "id", // unsigned int
+		"login":            "login",
+		"default_language": "language",
 	}
 	for destKey, sourceKey := range mapping {
 		dest[destKey] = source[sourceKey]
 		if number, ok := dest[destKey].(json.Number); ok {
 			dest[destKey], _ = number.Int64()
 		}
-	}
-
-	convertUserGender(source, dest)
-	normalizeUserProfileBooleanFields(dest)
-
-	if countryCode, ok := dest["country_code"].(string); ok {
-		dest["country_code"] = strings.ToLower(countryCode)
-	} else {
-		dest["country_code"] = ""
 	}
 
 	if dest["login_id"] == nil {
@@ -369,17 +309,6 @@ func convertUserProfile(source map[string]any) (*UserProfile, error) {
 	if _, ok := dest["login"].(string); !ok {
 		return nil, errors.New("no login in user's profile")
 	}
-
-	if dest["graduation_year"] == nil {
-		dest["graduation_year"] = int64(0)
-	}
-
-	var realNameVisible bool
-	if value, ok := source["real_name_visible"]; ok && value == true {
-		realNameVisible = true
-	}
-	dest["public_first_name"] = realNameVisible
-	dest["public_last_name"] = realNameVisible
 
 	err := convertBadges(source, dest)
 	if err != nil {
@@ -409,22 +338,6 @@ func createUserProfileFromNormalizedMap(data map[string]any) *UserProfile {
 		targetValue.Set(reflect.ValueOf(value))
 	}
 	return userProfile
-}
-
-func normalizeUserProfileBooleanFields(dest map[string]any) {
-	for _, fieldName := range [...]string{"email_verified", "notify_news", "photo_autoload"} {
-		dest[fieldName] = (dest[fieldName] == true) || (dest[fieldName] == int64(1))
-	}
-}
-
-func convertUserGender(source, dest map[string]any) {
-	dest["sex"] = nil
-	switch source["gender"] {
-	case "m":
-		dest["sex"] = "Male"
-	case "f":
-		dest["sex"] = "Female"
-	}
 }
 
 func convertBadges(source, dest map[string]any) error {

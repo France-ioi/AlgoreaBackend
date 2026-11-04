@@ -15,8 +15,8 @@ Feature: Accept group requests
       | 151 | User    | none                                  | false                    | null             |
       | 161 | User    | none                                  | false                    | null             |
     And the database has the following user:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "items":
       | id   | default_language_tag |
       | 1234 | fr                   |

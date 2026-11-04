@@ -2,8 +2,8 @@ Feature: Create a group (groupCreate)
 
   Background:
     Given the database has the following user:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
+      | group_id | login |
+      | 21       | owner |
 
   Scenario Outline: Create a group
     Given I am the user with id "21"

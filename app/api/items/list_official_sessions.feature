@@ -15,10 +15,10 @@ Feature: List official sessions for item_id
       | 73 | Parent2       | null        | Friends | false               | false     | null             | null                                   | none                                  | false                  | false                          | false                      | null                | null                   | null         | null            | null                        | null                 | null             |
       | 80 | Group         | null        | Friends | false               | false     | null             | null                                   | none                                  | false                  | false                          | false                      | null                | null                   | null         | null            | null                        | null                 | null             |
     And the database has the following users:
-      | group_id | login | first_name | last_name |
-      | 11       | jdoe  | John       | Doe       |
-      | 21       | other | George     | Bush      |
-      | 31       | jack  | Jack       | Black     |
+      | group_id | login |
+      | 11       | jdoe  |
+      | 21       | other |
+      | 31       | jack  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 13              | 11             |

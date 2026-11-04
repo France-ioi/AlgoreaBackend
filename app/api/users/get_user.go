@@ -50,8 +50,10 @@ type userViewResponse struct {
 	TempUser bool `json:"temp_user"`
 	// required: true
 	Login string `json:"login"`
+	// Backward-compat dummy: always null. The users.free_text column is gone.
 	// required: true
 	FreeText *string `json:"free_text"`
+	// Backward-compat dummy: always null. The users.web_site column is gone.
 	// required: true
 	WebSite *string `json:"web_site"`
 
@@ -142,7 +144,7 @@ func (srv *Service) getUser(responseWriter http.ResponseWriter, httpRequest *htt
 	var userInfo userViewResponse
 	err := scope.
 		Select(`
-			group_id, temp_user, login, free_text, web_site, profile,
+			group_id, temp_user, login, profile,
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS last_name,

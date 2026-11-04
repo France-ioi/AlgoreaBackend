@@ -1,16 +1,16 @@
 Feature: Get members of group_id
   Background:
     Given the database has the following users:
-      | login | group_id | grade | profile                                                |
-      | owner | 21       | 3     | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
-      | user  | 11       | 1     | {"first_name": "John", "last_name": "Doe"}             |
-      | jane  | 31       | 2     | {"first_name": "Jane", "last_name": "Doe"}             |
-      | john  | 41       | -1    | {"first_name": "John", "last_name": "Connor"}          |
-      | billg | 51       | 5     | {"first_name": "Bill", "last_name": "Gates"}           |
-      | zuck  | 61       | 9     | {"first_name": "Mark", "last_name": "Zuckerberg"}      |
-      | jeff  | 71       | 7     | {"first_name": "Jeff", "last_name": "Bezos"}           |
-      | larry | 81       | 8     | {"first_name": "Larry", "last_name": "Ellison"}        |
-      | lp    | 91       | 6     | {"first_name": "Larry", "last_name": "Page"}           |
+      | login | group_id | profile                                                |
+      | owner | 21       | {"first_name": "Jean-Michel", "last_name": "Blanquer"} |
+      | user  | 11       | {"first_name": "John", "last_name": "Doe"}             |
+      | jane  | 31       | {"first_name": "Jane", "last_name": "Doe"}             |
+      | john  | 41       | {"first_name": "John", "last_name": "Connor"}          |
+      | billg | 51       | {"first_name": "Bill", "last_name": "Gates"}           |
+      | zuck  | 61       | {"first_name": "Mark", "last_name": "Zuckerberg"}      |
+      | jeff  | 71       | {"first_name": "Jeff", "last_name": "Bezos"}           |
+      | larry | 81       | {"first_name": "Larry", "last_name": "Ellison"}        |
+      | lp    | 91       | {"first_name": "Larry", "last_name": "Page"}           |
     And the database has the following table "groups":
       | id |
       | 13 |
@@ -56,43 +56,43 @@ Feature: Get members of group_id
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "id": "51",
-        "user": {
-          "first_name": "Bill",
-          "group_id": "51",
-          "last_name": "Gates",
-          "login": "billg",
-          "grade": 5
-        },
-        "member_since": "2017-07-29T06:38:38Z",
-        "action": "invitation_accepted"
-      },
-      {
-        "id": "61",
-        "user": {
-          "first_name": "Mark",
-          "group_id": "61",
-          "last_name": "Zuckerberg",
-          "login": "zuck",
-          "grade": 9
-        },
-        "member_since": "2017-06-29T06:38:38Z",
-        "action": "join_request_accepted"
-      },
-      {
-        "id": "91",
-        "user": {
-          "group_id": "91",
-          "login": "lp",
-          "grade": 6
-        },
-        "member_since": "2017-03-29T06:38:38Z",
-        "action": "added_directly"
-      }
-    ]
-    """
+[
+  {
+    "id": "51",
+    "user": {
+      "first_name": "Bill",
+      "group_id": "51",
+      "last_name": "Gates",
+      "login": "billg",
+      "grade": null
+    },
+    "member_since": "2017-07-29T06:38:38Z",
+    "action": "invitation_accepted"
+  },
+  {
+    "id": "61",
+    "user": {
+      "first_name": "Mark",
+      "group_id": "61",
+      "last_name": "Zuckerberg",
+      "login": "zuck",
+      "grade": null
+    },
+    "member_since": "2017-06-29T06:38:38Z",
+    "action": "join_request_accepted"
+  },
+  {
+    "id": "91",
+    "user": {
+      "group_id": "91",
+      "login": "lp",
+      "grade": null
+    },
+    "member_since": "2017-03-29T06:38:38Z",
+    "action": "added_directly"
+  }
+]
+"""
 
   Scenario: User is a manager of the group (default sort, different approvals)
     Given I am the user with id "91"
@@ -100,87 +100,87 @@ Feature: Get members of group_id
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "id": "51",
-        "user": {
-          "group_id": "51",
-          "login": "billg",
-          "grade": 5
-        },
-        "member_since": "2017-07-29T06:38:38Z",
-        "action": "invitation_accepted"
-      },
-      {
-        "id": "61",
-        "user": {
-          "first_name": "Mark",
-          "group_id": "61",
-          "last_name": "Zuckerberg",
-          "login": "zuck",
-          "grade": 9
-        },
-        "member_since": "2017-06-29T06:38:38Z",
-        "action": "join_request_accepted"
-      },
-      {
-        "id": "91",
-        "user": {
-          "first_name": "Larry",
-          "group_id": "91",
-          "last_name": "Page",
-          "login": "lp",
-          "grade": 6
-        },
-        "member_since": "2017-03-29T06:38:38Z",
-        "action": "added_directly"
-      }
-    ]
-    """
+[
+  {
+    "id": "51",
+    "user": {
+      "group_id": "51",
+      "login": "billg",
+      "grade": null
+    },
+    "member_since": "2017-07-29T06:38:38Z",
+    "action": "invitation_accepted"
+  },
+  {
+    "id": "61",
+    "user": {
+      "first_name": "Mark",
+      "group_id": "61",
+      "last_name": "Zuckerberg",
+      "login": "zuck",
+      "grade": null
+    },
+    "member_since": "2017-06-29T06:38:38Z",
+    "action": "join_request_accepted"
+  },
+  {
+    "id": "91",
+    "user": {
+      "first_name": "Larry",
+      "group_id": "91",
+      "last_name": "Page",
+      "login": "lp",
+      "grade": null
+    },
+    "member_since": "2017-03-29T06:38:38Z",
+    "action": "added_directly"
+  }
+]
+"""
 
-  Scenario: User is a manager of the group (sort by user's grade)
+  Scenario: User is a manager of the group (user.grade sort does not change id order)
     Given I am the user with id "21"
     When I send a GET request to "/groups/13/members?sort=user.grade,id"
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "id": "51",
-        "user": {
-          "first_name": "Bill",
-          "group_id": "51",
-          "last_name": "Gates",
-          "login": "billg",
-          "grade": 5
-        },
-        "member_since": "2017-07-29T06:38:38Z",
-        "action": "invitation_accepted"
-      },
-      {
-        "id": "91",
-        "user": {
-          "group_id": "91",
-          "login": "lp",
-          "grade": 6
-        },
-        "member_since": "2017-03-29T06:38:38Z",
-        "action": "added_directly"
-      },
-      {
-        "id": "61",
-        "user": {
-          "first_name": "Mark",
-          "group_id": "61",
-          "last_name": "Zuckerberg",
-          "login": "zuck",
-          "grade": 9
-        },
-        "member_since": "2017-06-29T06:38:38Z",
-        "action": "join_request_accepted"
-      }
-    ]
-    """
+[
+  {
+    "id": "51",
+    "user": {
+      "first_name": "Bill",
+      "group_id": "51",
+      "last_name": "Gates",
+      "login": "billg",
+      "grade": null
+    },
+    "member_since": "2017-07-29T06:38:38Z",
+    "action": "invitation_accepted"
+  },
+  {
+    "id": "61",
+    "user": {
+      "first_name": "Mark",
+      "group_id": "61",
+      "last_name": "Zuckerberg",
+      "login": "zuck",
+      "grade": null
+    },
+    "member_since": "2017-06-29T06:38:38Z",
+    "action": "join_request_accepted"
+  },
+  {
+    "id": "91",
+    "user": {
+      "group_id": "91",
+      "login": "lp",
+      "grade": null
+    },
+    "member_since": "2017-03-29T06:38:38Z",
+    "action": "added_directly"
+  }
+]
+"""
 
   Scenario: User is a manager of the group (sort by user's login in descending order)
     Given I am the user with id "21"
@@ -188,43 +188,43 @@ Feature: Get members of group_id
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "id": "61",
-        "user": {
-          "first_name": "Mark",
-          "group_id": "61",
-          "last_name": "Zuckerberg",
-          "login": "zuck",
-          "grade": 9
-        },
-        "member_since": "2017-06-29T06:38:38Z",
-        "action": "join_request_accepted"
-      },
-      {
-        "id": "91",
-        "user": {
-          "group_id": "91",
-          "login": "lp",
-          "grade": 6
-        },
-        "member_since": "2017-03-29T06:38:38Z",
-        "action": "added_directly"
-      },
-      {
-        "id": "51",
-        "user": {
-          "first_name": "Bill",
-          "group_id": "51",
-          "last_name": "Gates",
-          "login": "billg",
-          "grade": 5
-        },
-        "member_since": "2017-07-29T06:38:38Z",
-        "action": "invitation_accepted"
-      }
-    ]
-    """
+[
+  {
+    "id": "61",
+    "user": {
+      "first_name": "Mark",
+      "group_id": "61",
+      "last_name": "Zuckerberg",
+      "login": "zuck",
+      "grade": null
+    },
+    "member_since": "2017-06-29T06:38:38Z",
+    "action": "join_request_accepted"
+  },
+  {
+    "id": "91",
+    "user": {
+      "group_id": "91",
+      "login": "lp",
+      "grade": null
+    },
+    "member_since": "2017-03-29T06:38:38Z",
+    "action": "added_directly"
+  },
+  {
+    "id": "51",
+    "user": {
+      "first_name": "Bill",
+      "group_id": "51",
+      "last_name": "Gates",
+      "login": "billg",
+      "grade": null
+    },
+    "member_since": "2017-07-29T06:38:38Z",
+    "action": "invitation_accepted"
+  }
+]
+"""
 
   Scenario: User is a manager of the group; request the first row
     Given I am the user with id "21"
@@ -232,21 +232,21 @@ Feature: Get members of group_id
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "id": "51",
-        "user": {
-          "first_name": "Bill",
-          "group_id": "51",
-          "last_name": "Gates",
-          "login": "billg",
-          "grade": 5
-        },
-        "member_since": "2017-07-29T06:38:38Z",
-        "action": "invitation_accepted"
-      }
-    ]
-    """
+[
+  {
+    "id": "51",
+    "user": {
+      "first_name": "Bill",
+      "group_id": "51",
+      "last_name": "Gates",
+      "login": "billg",
+      "grade": null
+    },
+    "member_since": "2017-07-29T06:38:38Z",
+    "action": "invitation_accepted"
+  }
+]
+"""
 
   Scenario: User is a manager of the group; request the second row
     Given I am the user with id "21"
@@ -254,21 +254,21 @@ Feature: Get members of group_id
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "id": "61",
-        "user": {
-          "first_name": "Mark",
-          "group_id": "61",
-          "last_name": "Zuckerberg",
-          "login": "zuck",
-          "grade": 9
-        },
-        "member_since": "2017-06-29T06:38:38Z",
-        "action": "join_request_accepted"
-      }
-    ]
-    """
+[
+  {
+    "id": "61",
+    "user": {
+      "first_name": "Mark",
+      "group_id": "61",
+      "last_name": "Zuckerberg",
+      "login": "zuck",
+      "grade": null
+    },
+    "member_since": "2017-06-29T06:38:38Z",
+    "action": "join_request_accepted"
+  }
+]
+"""
 
   Scenario: Non-user members are not listed
     Given I am the user with id "21"
@@ -276,17 +276,17 @@ Feature: Get members of group_id
     Then the response code should be 200
     And the response body should be, in JSON:
     """
-    [
-      {
-        "id": "51",
-        "user": {
-          "first_name": "Bill",
-          "grade": 5,
-          "group_id": "51",
-          "last_name": "Gates",
-          "login": "billg"
-        }
-      }
-    ]
-    """
+[
+  {
+    "id": "51",
+    "user": {
+      "first_name": "Bill",
+      "grade": null,
+      "group_id": "51",
+      "last_name": "Gates",
+      "login": "billg"
+    }
+  }
+]
+"""
 

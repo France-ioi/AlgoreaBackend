@@ -7,8 +7,8 @@ Feature: Get breadcrumbs (groupBreadcrumbsView) - robustness
       | 42 | ContestParticipants | ContestParticipants | false     |
       | 43 | Another Team        | Team                | false     |
     And the database has the following user:
-      | group_id | login | first_name  | last_name |
-      | 41       | owner | Jean-Michel | Blanquer  |
+      | group_id | login |
+      | 41       | owner |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 1          |

@@ -130,7 +130,7 @@ func (srv *Service) getTeamDescendants(responseWriter http.ResponseWriter, httpR
 			users.group_id = ? OR personal_info_view_approvals.approved AS show_personal_info,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_first_name, NULL) AS first_name,
 			IF(users.group_id = ? OR personal_info_view_approvals.approved, users.profile_last_name, NULL) AS last_name,
-			users.login, users.grade`,
+			users.login`,
 			user.GroupID, user.GroupID, user.GroupID).
 		Joins(`
 			JOIN groups_groups_active AS member_links ON
@@ -161,6 +161,7 @@ type teamDescendantMember struct {
 
 	// required:true
 	Login string `json:"login"`
+	// Backward-compat dummy: always null. The users.grade column is gone.
 	// required:true
 	Grade *int32 `json:"grade"`
 

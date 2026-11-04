@@ -32,9 +32,9 @@ Feature: Get breadcrumbs (groupBreadcrumbsView)
       | 41 | user                                | User    | false     |
       | 49 | User                                | User    | false     |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 41       | owner | Jean-Michel | Blanquer  |
-      | 49       | jack  | Jack        | Smith     |
+      | group_id | login |
+      | 41       | owner |
+      | 49       | jack  |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 2        | 41         |

@@ -5,8 +5,8 @@ Feature: Get group children (groupChildrenView) - robustness
       | 11 | Group A | Class | true    | false     | ybqybxnlyo |
       | 13 | Group B | Class | true    | true      | ybabbxnlyo |
     And the database has the following users:
-      | login | group_id | first_name  | last_name | default_language |
-      | owner | 21       | Jean-Michel | Blanquer  | fr               |
+      | login | group_id | default_language |
+      | owner | 21       | fr               |
     And the database has the following table "group_managers":
       | group_id | manager_id |
       | 13       | 21         |

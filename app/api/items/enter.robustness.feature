@@ -7,11 +7,11 @@ Feature: Enters an item as a group (user self or team) (itemEnter) - robustness
       | 11 | Team 2       | Team                | 60               |
       | 99 | item50-group | ContestParticipants | null             |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
-      | 31       | john  | John        | Doe       |
-      | 41       | jane  | Jane        | null      |
-      | 51       | jack  | Jack        | Daniel    |
+      | group_id | login |
+      | 21       | owner |
+      | 31       | john  |
+      | 41       | jane  |
+      | 51       | jack  |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 9               | 31             |

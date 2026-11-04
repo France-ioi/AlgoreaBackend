@@ -97,8 +97,8 @@ Feature: Create an access token
       {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed 🐱", "last_name": "Amrani 🐱"}}
       """
     And the table "users" should be:
-      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name  | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text              | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed 🐱 | Amrani 🐱 | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani 🐱 | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | default_language | last_ip   |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | en               | 127.0.0.1 |
     And the column "users.profile" at group_id "5577006791947779410" should be, in JSON:
       """
         {"first_name": "Mohammed 🐱", "last_name": "Amrani 🐱"}
@@ -216,9 +216,9 @@ Feature: Create an access token
       | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false   | true        |
       | 13 | john     | User | john        | 2018-05-10 10:42:11 | false   | false       |
     And the database has the following table "users":
-      | group_id | latest_login_at     | latest_activity_at  | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     | time_zone     | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 | Europe/Moscow | true        | false          | false             | false            |
-      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 | null          | true        | false          | false             | false            |
+      | group_id | latest_login_at     | latest_activity_at  | registered_at       | latest_profile_sync_at | login_id  | login    | default_language | last_ip     |
+      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000001 | mohammed | en               | 192.168.0.1 |
+      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000002 | john     | en               | 110.55.10.2 |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 3               | 11             |
@@ -265,8 +265,8 @@ Feature: Create an access token
       """
     And the table "users" should remain unchanged, regardless of the row with group_id "11"
     And the table "users" at group_id "11" should be:
-      | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login | email   | first_name   | last_name   | student_id   | country_code   | birth_date   | graduation_year   | grade   | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text   | web_site   | sex   | email_verified   | last_ip   | time_zone   | notify_news   | photo_autoload   | public_first_name   | public_last_name    |
-      | 11       | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 2019-07-16 22:02:28    | 100000001 | jane  | <email> | <first_name> | <last_name> | <student_id> | <country_code> | <birth_date> | <graduation_year> | <grade> | null    | null    | null | null             | null              | en               | <free_text> | <web_site> | <sex> | <email_verified> | 127.0.0.1 | <time_zone> | <notify_news> | <photo_autoload> | <real_name_visible> | <real_name_visible> |
+      | group_id | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login | default_language | last_ip   |
+      | 11       | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-05-10 10:42:11 | 2019-07-16 22:02:28    | 100000001 | jane  | en               | 127.0.0.1 |
     And the column "users.profile" at group_id "11" should be, in JSON:
       """
         {
@@ -308,8 +308,8 @@ Feature: Create an access token
       | id | name     | type | description | created_at          | is_open | send_emails |
       | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false   | true        |
     And the database has the following table "users":
-      | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode | city    | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
-      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000   | Algiers | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
+      | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | default_language | last_ip     |
+      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | en               | 192.168.0.1 |
     And the groups ancestors are computed
     And the login module "token" endpoint for code "{{code_from_oauth}}" returns 200 with body:
       """
@@ -448,9 +448,9 @@ Feature: Create an access token
       | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false   | true        |
       | 13 | john     | User | john        | 2018-05-10 10:42:11 | false   | false       |
     And the database has the following table "users":
-      | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     |
-      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 |
-      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | johndoe@gmail.com    | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 |
+      | group_id | latest_login_at     | latest_activity_at  | registered_at       | login_id  | login    | default_language | last_ip     |
+      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 100000001 | mohammed | en               | 192.168.0.1 |
+      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 100000002 | john     | en               | 110.55.10.2 |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 3               | 11             |
@@ -723,8 +723,8 @@ Feature: Create an access token
       Cannot add badge group 6129484611666145821 into badge group 8674665223082153551 (https://badges.example.com/examples/one) because it would create a cycle
       """
     And the table "users" should be:
-      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | default_language | last_ip   |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | en               | 127.0.0.1 |
     And the column "users.profile" at group_id "5577006791947779410" should be, in JSON:
       """
         {"first_name": "Mohammed", "last_name": "Amrani"}
@@ -835,8 +835,8 @@ Feature: Create an access token
       {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed", "last_name": "Amrani"}}
       """
     And the table "users" should be:
-      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | default_language | last_ip   |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | en               | 127.0.0.1 |
     And the column "users.profile" at group_id "5577006791947779410" should be, in JSON:
       """
         {"first_name": "Mohammed", "last_name": "Amrani"}
@@ -945,8 +945,8 @@ Feature: Create an access token
       Cannot add the user 5577006791947779410 into a badge group 8674665223082153551 (https://badges.example.com/examples/one), reason: approvals_missing
       """
     And the table "users" should be:
-      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | email                | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address | zipcode | city | land_line_number | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip   | time_zone      | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | mohammedam@gmail.com | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | null    | null    | null | null             | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 127.0.0.1 | Africa/Algiers | true        | true           | true              | true             |
+      | group_id            | latest_login_at     | latest_activity_at  | temp_user | registered_at       | latest_profile_sync_at | login_id  | login    | default_language | last_ip   |
+      | 5577006791947779410 | 2019-07-16 22:02:28 | 2019-07-16 22:02:28 | 0         | 2019-07-16 22:02:28 | 2019-07-16 22:02:28    | 100000001 | mohammed | en               | 127.0.0.1 |
     And the column "users.profile" at group_id "5577006791947779410" should be, in JSON:
       """
         {"first_name": "Mohammed", "last_name": "Amrani"}
@@ -1067,9 +1067,9 @@ Feature: Create an access token
       | 11 | mohammed | User | mohammed    | 2019-05-10 10:42:11 | false   | true        |
       | 13 | john     | User | john        | 2018-05-10 10:42:11 | false   | false       |
     And the database has the following table "users":
-      | group_id | latest_login_at     | latest_activity_at  | registered_at       | latest_profile_sync_at | login_id  | login    | email                | profile                                           | first_name | last_name | student_id | country_code | birth_date | graduation_year | grade | address           | zipcode  | city                | land_line_number  | cell_phone_number | default_language | free_text           | web_site                      | sex  | email_verified | last_ip     | time_zone     | notify_news | photo_autoload | public_first_name | public_last_name |
-      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000001 | mohammed | mohammedam@gmail.com | {"first_name": "Mohammed", "last_name": "Amrani"} | Mohammed   | Amrani    | 123456789  | dz           | 2000-07-02 | 2020            | 0     | Rue Tebessi Larbi | 16000    | Algiers             | +213 778 02 85 31 | null              | en               | I'm Mohammed Amrani | http://mohammed.freepages.com | Male | 0              | 192.168.0.1 | Europe/Moscow | true        | false          | false             | false            |
-      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000002 | john     | johndoe@gmail.com    | {"first_name": "John", "last_name": "Doe"}        | John       | Doe       | 987654321  | gb           | 1999-03-20 | 2021            | 1     | 1, Trafalgar sq.  | WC2N 5DN | City of Westminster | +44 20 7747 2885  | +44 333 300 7774  | en               | I'm John Doe        | http://johndoe.freepages.com  | Male | 1              | 110.55.10.2 | null          | true        | false          | false             | false            |
+      | group_id | latest_login_at     | latest_activity_at  | registered_at       | latest_profile_sync_at | login_id  | login    | profile                                           | default_language | last_ip     |
+      | 11       | 2019-06-16 21:01:25 | 2019-06-16 22:05:44 | 2019-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000001 | mohammed | {"first_name": "Mohammed", "last_name": "Amrani"} | en               | 192.168.0.1 |
+      | 13       | 2018-06-16 21:01:25 | 2018-06-16 22:05:44 | 2018-05-10 10:42:11 | 2019-05-11 10:42:11    | 100000002 | john     | {"first_name": "John", "last_name": "Doe"}        | en               | 110.55.10.2 |
     And the database has the following table "groups_groups":
       | parent_group_id | child_group_id |
       | 3               | 11             |

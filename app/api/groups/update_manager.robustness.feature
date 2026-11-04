@@ -7,9 +7,9 @@ Feature: Update the group manager's permissions (groupManagerEdit) - robustness
       | 2  | Team    | Team    |
       | 3  | Friends | Friends |
     And the database has the following users:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
-      | 22       | john  | John        | Doe       |
+      | group_id | login |
+      | 21       | owner |
+      | 22       | john  |
     And the database has the following table "group_managers":
       | manager_id | group_id | can_manage            |
       | 21         | 1        | memberships_and_group |

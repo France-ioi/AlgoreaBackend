@@ -15,9 +15,9 @@ Feature: Export the short version of the current user's data
       | 11 | User    | user self          |                        |
       | 31 | User    | jane               |                        |
     And the database has the following users:
-      | group_id | login | first_name | last_name | grade | profile                |
-      | 11       | user  | John       | Doe       | 1     | {"first_name": "John"} |
-      | 31       | jane  | Jane       | Doe       | 2     | null                   |
+      | group_id | login | profile                |
+      | 11       | user  | {"first_name": "John"} |
+      | 31       | jane  | null                   |
     And the database has the following table "sessions":
       | session_id | user_id | refresh_token    |
       | 1          | 11      | refreshTokenFor1 |
@@ -75,90 +75,148 @@ Feature: Export the short version of the current user's data
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
     And the response body should be, in JSON:
     """
+{
+  "current_user": {
+    "group_id": "11",
+    "is_admin": 0,
+    "creator_id": null,
+    "member_state": 0,
+    "access_group_id": null,
+    "login_id": null,
+    "latest_profile_sync_at": null,
+    "help_given": 0,
+    "default_language": "fr",
+    "latest_activity_at": null,
+    "last_ip": null,
+    "latest_login_at": null,
+    "login": "user",
+    "notifications_read_at": null,
+    "open_id_identity": null,
+    "password_md5": null,
+    "recover": null,
+    "registered_at": null,
+    "salt": null,
+    "temp_user": 0,
+    "profile": "{\"first_name\": \"John\"}"
+  },
+  "groups_groups": [
     {
-      "current_user": {
-        "group_id": "11", "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0,
-        "no_ranking": 0, "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0,
-        "creator_id": null, "grade": 1, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0,
-        "access_group_id": null, "login_id": null, "latest_profile_sync_at": null,
-        "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null,
-        "cell_phone_number": null, "city": null, "country_code": "", "default_language": "fr", "email": null,
-        "first_name": "John", "free_text": null, "land_line_number": null, "lang_prog": "Python",
-        "latest_activity_at": null, "last_ip": null, "latest_login_at": null, "last_name": "Doe", "login": "user",
-        "notifications_read_at": null, "notify": "Answers", "open_id_identity": null, "password_md5": null,
-        "recover": null, "registered_at": null, "salt": null, "sex": null, "student_id": null, "time_zone": null,
-        "web_site": null, "zipcode": null, "temp_user": 0, "profile": "{\"first_name\": \"John\"}"
-      },
-      "groups_groups": [
-        {
-          "child_group_id": "11", "parent_group_id": "2", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Our Team", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 1
-        },
-        {
-          "child_group_id": "11", "parent_group_id": "5", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Other people", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 0
-        },
-        {
-          "child_group_id": "11", "parent_group_id": "6", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Another Class", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 0
-        },
-        {
-          "child_group_id": "11", "parent_group_id": "9", "child_group_type": "User",
-          "lock_membership_approved_at": null, "lock_membership_approved": 0,
-          "personal_info_view_approved_at": null, "personal_info_view_approved": 0,
-          "watch_approved_at": null, "watch_approved": 0,
-          "name": "Some other friends", "expires_at": "9999-12-31T23:59:59Z",
-          "is_team_membership": 0
-        }
-      ],
-      "group_managers": [
-        {
-          "can_grant_group_access": 1,
-          "can_manage": "memberships",
-          "can_manage_value": 2,
-          "can_watch_members": 0,
-          "can_edit_personal_info": 0,
-          "group_id": "1",
-          "manager_id": "11",
-          "name": "Our Class"
-        },
-        {
-          "can_grant_group_access": 0,
-          "can_manage": "memberships_and_group",
-          "can_manage_value": 3,
-          "can_watch_members": 1,
-          "can_edit_personal_info": 0,
-          "group_id": "2",
-          "manager_id": "11",
-          "name": "Our Team"
-        }
-      ],
-      "joined_groups": [
-        {"id": "2", "name": "Our Team"},
-        {"id": "5", "name": "Other people"},
-        {"id": "6", "name": "Another Class"},
-        {"id": "9", "name": "Some other friends"}
-      ],
-      "managed_groups": [
-        {"id": "1", "name": "Our Class"},
-        {"id": "2", "name": "Our Team"},
-        {"id": "6", "name": "Another Class"},
-        {"id": "11", "name": "user self"}
-      ]
+      "child_group_id": "11",
+      "parent_group_id": "2",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Our Team",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 1
+    },
+    {
+      "child_group_id": "11",
+      "parent_group_id": "5",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Other people",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 0
+    },
+    {
+      "child_group_id": "11",
+      "parent_group_id": "6",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Another Class",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 0
+    },
+    {
+      "child_group_id": "11",
+      "parent_group_id": "9",
+      "child_group_type": "User",
+      "lock_membership_approved_at": null,
+      "lock_membership_approved": 0,
+      "personal_info_view_approved_at": null,
+      "personal_info_view_approved": 0,
+      "watch_approved_at": null,
+      "watch_approved": 0,
+      "name": "Some other friends",
+      "expires_at": "9999-12-31T23:59:59Z",
+      "is_team_membership": 0
     }
-    """
+  ],
+  "group_managers": [
+    {
+      "can_grant_group_access": 1,
+      "can_manage": "memberships",
+      "can_manage_value": 2,
+      "can_watch_members": 0,
+      "can_edit_personal_info": 0,
+      "group_id": "1",
+      "manager_id": "11",
+      "name": "Our Class"
+    },
+    {
+      "can_grant_group_access": 0,
+      "can_manage": "memberships_and_group",
+      "can_manage_value": 3,
+      "can_watch_members": 1,
+      "can_edit_personal_info": 0,
+      "group_id": "2",
+      "manager_id": "11",
+      "name": "Our Team"
+    }
+  ],
+  "joined_groups": [
+    {
+      "id": "2",
+      "name": "Our Team"
+    },
+    {
+      "id": "5",
+      "name": "Other people"
+    },
+    {
+      "id": "6",
+      "name": "Another Class"
+    },
+    {
+      "id": "9",
+      "name": "Some other friends"
+    }
+  ],
+  "managed_groups": [
+    {
+      "id": "1",
+      "name": "Our Class"
+    },
+    {
+      "id": "2",
+      "name": "Our Team"
+    },
+    {
+      "id": "6",
+      "name": "Another Class"
+    },
+    {
+      "id": "11",
+      "name": "user self"
+    }
+  ]
+}
+"""
 
   Scenario: All optional arrays and objects are empty
     Given I am the user with id "31"
@@ -168,22 +226,33 @@ Feature: Export the short version of the current user's data
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
     And the response body should be, in JSON:
     """
-    {
-      "current_user": {
-        "group_id": "31", "basic_editor_mode": 1, "email_verified": 0, "is_admin": 0, "no_ranking": 0,
-        "notify_news": 0, "photo_autoload": 0, "public_first_name": 0, "public_last_name": 0, "creator_id": null,
-        "grade": 2, "graduation_year": 0, "member_state": 0, "step_level_in_site": 0, "access_group_id": null,
-        "login_id": null, "help_given": 0, "spaces_for_tab": 3, "address": null, "birth_date": null, "cell_phone_number": null,
-        "city": null, "country_code": "", "default_language": "fr", "email": null, "first_name": "Jane",
-        "free_text": null, "land_line_number": null, "lang_prog": "Python", "latest_activity_at": null, "last_ip": null,
-        "latest_login_at": null, "last_name": "Doe", "login": "jane", "notifications_read_at": null, "notify": "Answers",
-        "open_id_identity": null, "password_md5": null, "recover": null, "registered_at": null, "salt": null,
-        "sex": null, "student_id": null, "time_zone": null, "web_site": null, "zipcode": null, "temp_user": 0,
-        "latest_profile_sync_at": null, "profile": null
-      },
-      "groups_groups": [],
-      "group_managers": [],
-      "joined_groups": [],
-      "managed_groups": []
-    }
-    """
+{
+  "current_user": {
+    "group_id": "31",
+    "is_admin": 0,
+    "creator_id": null,
+    "member_state": 0,
+    "access_group_id": null,
+    "login_id": null,
+    "help_given": 0,
+    "default_language": "fr",
+    "latest_activity_at": null,
+    "last_ip": null,
+    "latest_login_at": null,
+    "login": "jane",
+    "notifications_read_at": null,
+    "open_id_identity": null,
+    "password_md5": null,
+    "recover": null,
+    "registered_at": null,
+    "salt": null,
+    "temp_user": 0,
+    "latest_profile_sync_at": null,
+    "profile": null
+  },
+  "groups_groups": [],
+  "group_managers": [],
+  "joined_groups": [],
+  "managed_groups": []
+}
+"""

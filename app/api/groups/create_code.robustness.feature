@@ -6,10 +6,10 @@ Feature: Create a new code for the given group - robustness
       | 11 | Group A | Group A is here | 2019-02-06 09:26:40 | Class | ybqybxnlyo | 3600          | 2017-10-13 05:39:48 |
       | 13 | Group B | Group B is here | 2019-03-06 09:26:40 | Class | 3456789abc | 3600          | 2017-10-14 05:39:48 |
     And the database has the following users:
-      | group_id | login | first_name  | last_name | default_language |
-      | 21       | owner | Jean-Michel | Blanquer  | fr               |
-      | 31       | jane  | Jane        | Doe       | en               |
-      | 41       | user  | John        | Doe       | en               |
+      | group_id | login | default_language |
+      | 21       | owner | fr               |
+      | 31       | jane  | en               |
+      | 41       | user  | en               |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage  |
       | 13       | 21         | memberships |

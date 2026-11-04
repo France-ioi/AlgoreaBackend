@@ -18,8 +18,8 @@ Feature: Delete a group
           allUsersGroup: 31
       """
     And the database has the following user:
-      | group_id | login | first_name  | last_name |
-      | 21       | owner | Jean-Michel | Blanquer  |
+      | group_id | login |
+      | 21       | owner |
     And the database has the following table "group_managers":
       | group_id | manager_id | can_manage            |
       | 14       | 21         | none                  |
