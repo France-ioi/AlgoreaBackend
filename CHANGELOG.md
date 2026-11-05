@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.61.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.60.0...v2.61.0) - 2026-11-05
+
+- add optional `attempt_order` on activity log rows (item, all-items, and thread) when the item allows multiple attempts; same ranking as breadcrumbs
+
 ## [v2.60.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.59.3...v2.60.0) - 2026-11-04
 
 - slim `GET /current-user` to `group_id`, `login`, `profile`, `default_language`, and `temp_user` (flat personal/preference fields removed; use `profile`)
