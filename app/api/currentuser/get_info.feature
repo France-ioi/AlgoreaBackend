@@ -9,6 +9,7 @@ Feature: Get user info for the current user
     Given I am the user with id "2"
     When I send a GET request to "/current-user"
     Then the response code should be 200
+    And the response header "Cache-Control" should be "no-store"
     And the response body should be, in JSON:
     """
     {

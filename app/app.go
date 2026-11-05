@@ -17,6 +17,7 @@ import (
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/api"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/appenv"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/cachecontrol"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	_ "github.com/France-ioi/AlgoreaBackend/v2/app/doc" // for doc generation
 	"github.com/France-ioi/AlgoreaBackend/v2/app/domain"
@@ -181,6 +182,9 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	router.Use(dataStoreContextMiddleware(app, configs.maxSelectExecutionTime, eventInstance))
 
 	router.Use(version.AddVersionHeader)
+	// Set before compress/request-id/logger/recoverer so the header is present even on panic 500s.
+	// Handlers that set Cache-Control replace this default (Set semantics).
+	router.Use(cachecontrol.AddNoStoreHeader)
 
 	router.Use(middleware.RealIP) // must be before logger or any middleware using remote IP
 	if configs.server.GetBool("compress") {

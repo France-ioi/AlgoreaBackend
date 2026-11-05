@@ -1,6 +1,6 @@
 # AlgoreaBackend Architecture
 
-**Targeted at agents.** Last updated: 2026-10-23.
+**Targeted at agents.** Last updated: 2026-11-05.
 
 ## Overview
 
@@ -53,7 +53,7 @@ AlgoreaBackend/
 
 ```
 HTTP Request
-  → Middleware (RealIP, RequestID, compress?, logger, Recoverer, CORS, Domain)
+  → Middleware (VersionHeader, Cache-Control: no-store, RealIP, RequestID, compress?, logger, Recoverer, CORS, Domain)
   → API router → service router (JSON + UserMiddleware)
   → Handler (params, user, store, logic)
   → AppHandler (panic/error → APIError → JSON)
@@ -63,6 +63,8 @@ HTTP Request
 App lifecycle: `main.go` → cobra (`serve`, `db-*`, Lambda default) → `app.New()` (config, logger, DB, router) → `server.Start()`.
 
 Middleware order and DataStore/User injection: [api-services.md](docs/architecture/api-services.md), [auth.md](docs/architecture/auth.md).
+
+Every API response is non-cacheable (`Cache-Control: no-store`); a handler may override this.
 
 ## Conventions (every change)
 

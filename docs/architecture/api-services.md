@@ -52,7 +52,9 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) error {
 
 ## Middleware (app stack)
 
-Logger → DataStore → VersionHeader → RealIP → Compression? → RequestID → StructuredLogger → Recoverer → CORS → Domain → (per-service) UserMiddleware.
+Logger → DataStore → VersionHeader → Cache-Control: no-store → RealIP → Compression? → RequestID → StructuredLogger → Recoverer → CORS → Domain → (per-service) UserMiddleware.
+
+`cachecontrol.AddNoStoreHeader` sets `Cache-Control: no-store` before the rest of the chain (including recoverer) can write the response. A handler that sets its own `Cache-Control` replaces the default.
 
 ## `service.Base`
 

@@ -9,6 +9,7 @@ Feature: Check if a login id is the current user's login id
     Given I am the user with id "2"
     When I send a GET request to "/current-user/check-login-id?login_id=1234"
     Then the response code should be 200
+    And the response header "Cache-Control" should be "no-store"
     And the response body should be, in JSON:
     """
     {
