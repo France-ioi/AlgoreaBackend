@@ -92,6 +92,7 @@ Feature: Create an access token
       }
       """
     And the response header "Set-Cookie" should be "<expected_cookie>"
+    And the response header "Cache-Control" should be "no-store"
     And an event "user_authenticated" should have been dispatched with:
       """
       {"user_id": "5577006791947779410", "login_id": "100000001", "login": "mohammed", "user_ip": "127.0.0.1", "profile": {"first_name": "Mohammed 🐱", "last_name": "Amrani 🐱"}}

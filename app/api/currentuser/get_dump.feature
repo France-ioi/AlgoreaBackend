@@ -73,6 +73,7 @@ Feature: Export the short version of the current user's data
     Then the response code should be 200
     And the response header "Content-Type" should be "application/json; charset=utf-8"
     And the response header "Content-Disposition" should be "attachment; filename=user_data.json"
+    And the response header "Cache-Control" should be "no-store"
     And the response body should be, in JSON:
     """
 {

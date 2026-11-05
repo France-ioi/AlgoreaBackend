@@ -21,6 +21,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/event"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/logging"
+	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/version"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/monkey"
 	"github.com/France-ioi/AlgoreaBackend/v2/testhelpers/testoutput"
@@ -43,7 +44,7 @@ func TestNew_Success(t *testing.T) {
 	assert.NotNil(t, app.Database)
 	assert.NotNil(t, app.HTTPHandler)
 	assert.NotNil(t, app.apiCtx)
-	assert.Len(t, app.HTTPHandler.Middlewares(), 11)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 12)
 	require.NotEmpty(t, app.HTTPHandler.Routes())
 	assert.Equal(t, "/*", app.HTTPHandler.Routes()[0].Pattern) // test default val
 }
@@ -57,7 +58,7 @@ func TestNew_SuccessNoCompress(t *testing.T) {
 	appenv.SetDefaultEnvToTest()
 	t.Setenv("ALGOREA_SERVER__COMPRESS", "false")
 	app, _ := New()
-	assert.Len(t, app.HTTPHandler.Middlewares(), 10)
+	assert.Len(t, app.HTTPHandler.Middlewares(), 11)
 }
 
 func TestNew_NotDefaultRootPath(t *testing.T) {
@@ -246,6 +247,7 @@ func TestMiddlewares_OnPanic(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, response.StatusCode)
 	assert.Equal(t, "Internal Server Error\n", string(respBody))
 	assert.Equal(t, "text/plain; charset=utf-8", response.Header.Get("Content-Type"))
+	assert.Equal(t, "no-store", response.Header.Get("Cache-Control"))
 	allLogs := hook.AllEntries()
 	require.Equal(t, 2, len(allLogs)-nbLogsBeforeRequest)
 	// check that the req id is correct
@@ -298,6 +300,61 @@ func TestMiddlewares_OnSuccess(t *testing.T) {
 	// check that the compression has been applied but the length in the logs is not altered by compression i
 	assert.Equal(t, 23, hook.LastEntry().Data["resp_bytes_length"])
 	assert.Equal(t, "gzip", response.Header.Get("Content-Encoding"))
+	assert.Equal(t, version.Get(), response.Header.Get("Backend-Version"))
+	assert.Equal(t, "no-store", response.Header.Get("Cache-Control"))
+}
+
+func TestMiddlewares_OnHandlerError(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
+	require.NoError(t, err)
+	router := app.HTTPHandler
+	router.Get("/dummy-unauthorized", service.AppHandler(func(http.ResponseWriter, *http.Request) error {
+		return &service.APIError{HTTPStatusCode: http.StatusUnauthorized, EmbeddedError: errors.New("no access token")}
+	}).ServeHTTP)
+	router.Get("/dummy-not-found", service.AppHandler(func(http.ResponseWriter, *http.Request) error {
+		return service.ErrNotFound(errors.New("missing"))
+	}).ServeHTTP)
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	for _, path := range []string{"/dummy-unauthorized", "/dummy-not-found"} {
+		response, requestErr := http.Get(srv.URL + path)
+		require.NoError(t, requestErr)
+		_ = response.Body.Close()
+		assert.Equal(t, "no-store", response.Header.Get("Cache-Control"), "path %s", path)
+		assert.Equal(t, version.Get(), response.Header.Get("Backend-Version"), "path %s", path)
+	}
+}
+
+func TestMiddlewares_HandlerCanOverrideCacheControl(t *testing.T) {
+	testoutput.SuppressIfPasses(t)
+
+	mockDatabaseOpen()
+	defer monkey.UnpatchAll()
+
+	logger, _ := logging.NewMockLogger()
+	app, err := New(logger)
+	require.NoError(t, err)
+	router := app.HTTPHandler
+	router.Get("/dummy-cacheable", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=60")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+	srv := httptest.NewServer(router)
+	defer srv.Close()
+
+	response, err := http.Get(srv.URL + "/dummy-cacheable")
+	require.NoError(t, err)
+	defer func() { _ = response.Body.Close() }()
+	assert.Equal(t, http.StatusOK, response.StatusCode)
+	assert.Equal(t, "public, max-age=60", response.Header.Get("Cache-Control"))
 	assert.Equal(t, version.Get(), response.Header.Get("Backend-Version"))
 }
 
