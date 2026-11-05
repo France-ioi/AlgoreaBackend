@@ -182,8 +182,7 @@ func (app *Application) Reset(config *viper.Viper, loggerOptional ...*logging.Lo
 	router.Use(dataStoreContextMiddleware(app, configs.maxSelectExecutionTime, eventInstance))
 
 	router.Use(version.AddVersionHeader)
-	// Set before compress/request-id/logger/recoverer so the header is present even on panic 500s.
-	// Handlers that set Cache-Control replace this default (Set semantics).
+	// Ahead of compress/request-id/logger/recoverer so panic 500s still carry the header.
 	router.Use(cachecontrol.AddNoStoreHeader)
 
 	router.Use(middleware.RealIP) // must be before logger or any middleware using remote IP

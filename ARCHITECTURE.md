@@ -53,7 +53,7 @@ AlgoreaBackend/
 
 ```
 HTTP Request
-  → Middleware (VersionHeader, Cache-Control: no-store, RealIP, RequestID, compress?, logger, Recoverer, CORS, Domain)
+  → Middleware (VersionHeader, NoStoreCacheControl, RealIP, RequestID, compress?, logger, Recoverer, CORS, Domain)
   → API router → service router (JSON + UserMiddleware)
   → Handler (params, user, store, logic)
   → AppHandler (panic/error → APIError → JSON)
