@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.62.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.61.0...v2.62.0) - 2026-11-05
+
+- send `Cache-Control: no-store` on every API response (handlers may override)
+
 ## [v2.61.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.60.0...v2.61.0) - 2026-11-05
 
 - add optional `attempt_order` on activity log rows (item, all-items, and thread) when the item allows multiple attempts; same ranking as breadcrumbs
