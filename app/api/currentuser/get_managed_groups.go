@@ -1,10 +1,12 @@
 package currentuser
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
 
+	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
@@ -20,6 +22,16 @@ type managedGroupsGetResponseRow struct {
 	// required:true
 	// enum: Class,Team,Club,Friends,Other,Session,Base
 	Type string `json:"type"`
+	// required:true
+	RootActivityID *int64 `json:"root_activity_id,string"`
+	// required:true
+	ExpectedStart *database.Time `json:"expected_start"`
+	// required:true
+	Organizer *string `json:"organizer"`
+	// required:true
+	Code *string `json:"code"`
+	// required:true
+	CodeExpiresAt *database.Time `json:"code_expires_at"`
 
 	CanManageValue int `json:"-"`
 	// required:true
@@ -36,8 +48,25 @@ type managedGroupsGetResponseRow struct {
 //	---
 //	summary: List groups managed by the current user
 //	description:
-//		Returns groups for which the current user is a manager (subgroups are skipped)
+//		Returns groups for which the current user is a manager (subgroups are skipped).
+//
+//
+//		Optional `type` keeps only groups of that type.
+//
+//
+//		Optional `root_activity_id_among` (comma-separated item ids) keeps only groups whose
+//		`root_activity_id` is one of them. When the parameter is present but empty, no group matches.
 //	parameters:
+//		- name: type
+//			in: query
+//			type: string
+//			enum: [Class,Team,Club,Friends,Other,Session,Base]
+//		- name: root_activity_id_among
+//			in: query
+//			type: array
+//			items:
+//				type: integer
+//				format: int64
 //		- name: sort
 //			in: query
 //			default: [type,name,id]
@@ -75,6 +104,15 @@ func (srv *Service) getManagedGroups(responseWriter http.ResponseWriter, httpReq
 	user := srv.GetUser(httpRequest)
 	store := srv.GetStore(httpRequest)
 
+	groupType, err := resolveManagedGroupsTypeFilter(httpRequest)
+	if err != nil {
+		return err
+	}
+	rootActivityIDs, rootActivityIDAmongSet, err := resolveManagedGroupsRootActivityIDAmongFilter(httpRequest)
+	if err != nil {
+		return err
+	}
+
 	query := store.Groups().
 		Joins("JOIN group_managers ON group_managers.group_id = groups.id").
 		Joins(`
@@ -83,13 +121,25 @@ func (srv *Service) getManagedGroups(responseWriter http.ResponseWriter, httpReq
 					user_ancestors.child_group_id = ?`, user.GroupID).
 		Select(`
 			groups.id, groups.name, groups.type, groups.description,
+			groups.root_activity_id, groups.expected_start, groups.organizer, groups.code, groups.code_expires_at,
 			MAX(can_manage_value) AS can_manage_value,
 			MAX(can_grant_group_access) AS can_grant_group_access,
 			MAX(can_watch_members) AS can_watch_members`).
 		Group("groups.id")
 
+	if groupType != "" {
+		query = query.Where("groups.type = ?", groupType)
+	}
+	if rootActivityIDAmongSet {
+		if len(rootActivityIDs) == 0 {
+			query = query.Where("FALSE")
+		} else {
+			query = query.Where("groups.root_activity_id IN (?)", rootActivityIDs)
+		}
+	}
+
 	query = service.NewQueryLimiter().Apply(httpRequest, query)
-	query, err := service.ApplySortingAndPaging(
+	query, err = service.ApplySortingAndPaging(
 		httpRequest, query,
 		&service.SortingAndPagingParameters{
 			Fields: service.SortingAndPagingFields{
@@ -112,4 +162,28 @@ func (srv *Service) getManagedGroups(responseWriter http.ResponseWriter, httpReq
 
 	render.Respond(responseWriter, httpRequest, &result)
 	return nil
+}
+
+func resolveManagedGroupsTypeFilter(httpRequest *http.Request) (string, error) {
+	if !service.URLQueryPathHasField(httpRequest, "type") {
+		return "", nil
+	}
+	groupType := httpRequest.URL.Query().Get("type")
+	if !map[string]bool{
+		"Class": true, "Team": true, "Club": true, "Friends": true, "Other": true, "Session": true, "Base": true,
+	}[groupType] {
+		return "", service.ErrInvalidRequest(fmt.Errorf("wrong value for type: %q", groupType))
+	}
+	return groupType, nil
+}
+
+func resolveManagedGroupsRootActivityIDAmongFilter(httpRequest *http.Request) (ids []int64, set bool, err error) {
+	if !service.URLQueryPathHasField(httpRequest, "root_activity_id_among") {
+		return nil, false, nil
+	}
+	ids, err = service.ResolveURLQueryGetInt64SliceField(httpRequest, "root_activity_id_among")
+	if err != nil {
+		return nil, true, service.ErrInvalidRequest(err)
+	}
+	return ids, true, nil
 }

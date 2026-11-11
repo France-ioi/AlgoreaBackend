@@ -15,3 +15,15 @@ Feature: List groups managed by the current user - robustness
     When I send a GET request to "/current-user/managed-groups?from.type=Class"
     Then the response code should be 400
     And the response error message should contain "Unallowed paging parameters (from.type)"
+
+  Scenario: Unknown type
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/managed-groups?type=User"
+    Then the response code should be 400
+    And the response error message should contain "Wrong value for type: "User""
+
+  Scenario: Unparsable root_activity_id_among
+    Given I am the user with id "21"
+    When I send a GET request to "/current-user/managed-groups?root_activity_id_among=200,abc"
+    Then the response code should be 400
+    And the response error message should contain "Unable to parse one of the integers given as query args (value: 'abc', param: 'root_activity_id_among')"
