@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.63.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.63.0...v2.63.1) - 2026-11-12
+
+- bump Go toolchain to 1.26.11 to address GO-2026-6859
+
 ## [v2.63.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.62.0...v2.63.0) - 2026-11-11
 
 - extend `GET /current-user/managed-groups` with `root_activity_id`, `expected_start`, `organizer`, `code`, and `code_expires_at` on each row, plus optional `type` and `root_activity_id_among` filters
