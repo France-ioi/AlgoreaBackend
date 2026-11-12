@@ -62,9 +62,9 @@ func TestLoadUserByID(t *testing.T) {
 	)).
 		WithArgs(int64(21)).
 		WillReturnRows(sqlmock.NewRows([]string{
-			"login", "login_id", "is_admin", "group_id", "access_group_id",
+			"login", "login_id", "group_id",
 			"temp_user", "notifications_read_at", "default_language",
-		}).AddRow("owner", nil, false, int64(21), nil, false, nil, "en"))
+		}).AddRow("owner", nil, int64(21), false, nil, "en"))
 
 	user, err := loadUserByID(store, 21)
 	require.NoError(t, err)

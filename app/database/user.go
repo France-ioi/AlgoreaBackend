@@ -6,9 +6,7 @@ type User struct {
 	Login               string
 	LoginID             *int64
 	DefaultLanguage     string
-	IsAdmin             bool
 	IsTempUser          bool `sql:"column:temp_user"`
-	AccessGroupID       *int64
 	NotificationsReadAt *Time
 }
 
@@ -22,10 +20,6 @@ func (u *User) Clone() *User {
 	if result.LoginID != nil {
 		loginIDCopy := *result.LoginID
 		result.LoginID = &loginIDCopy
-	}
-	if result.AccessGroupID != nil {
-		accessGroupIDCopy := *result.AccessGroupID
-		result.AccessGroupID = &accessGroupIDCopy
 	}
 	return &result
 }
