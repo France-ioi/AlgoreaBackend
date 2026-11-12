@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.64.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.63.1...v2.64.0) - 2026-11-12
+
+- add optional `attempt_id` filter on `GET /items/{item_id}/log` (tasks only; rejected for chapters/skills)
+
 ## [v2.63.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.63.0...v2.63.1) - 2026-11-12
 
 - bump Go toolchain to 1.26.11 to address GO-2026-6859
