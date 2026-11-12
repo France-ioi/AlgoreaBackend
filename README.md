@@ -31,7 +31,7 @@ docker exec -it algoreabackend_db_1 mysql -h localhost -u algorea -pa_db_passwor
 
 ## Running the setup (as dev)
 
-The project targets **Go 1.26** (see `go.mod`). The `toolchain go1.26.10` directive instructs the `go` command to auto-fetch the pinned toolchain on first use; if you have set `GOTOOLCHAIN=local` (or are on an air-gapped host), install Go 1.26.10 manually.
+The project targets **Go 1.26** (see `go.mod`). The `toolchain go1.26.11` directive instructs the `go` command to auto-fetch the pinned toolchain on first use; if you have set `GOTOOLCHAIN=local` (or are on an air-gapped host), install Go 1.26.11 manually.
 
 The application needs a database (MySQL) to run and requires it for a major part of its tests.
 
