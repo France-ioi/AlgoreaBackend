@@ -104,6 +104,10 @@ type itemActivityLogResponseRow struct {
 //		If `{watched_group_id}` is not given, all rows of the result are related to the participant group (the current user or `{as_team_id}`)
 //		and items that are descendants of `{ancestor_item_id}` (+ `{ancestor_item_id}` itself) and
 //		visible to the current user (at least 'info' access).
+//
+//		If `{attempt_id}` is given, only rows of that attempt are returned. This filter is accepted only when
+//		`{ancestor_item_id}` is a task (item type Task); otherwise a bad request error is returned.
+//		It is independent from the `{from.attempt_id}` pagination cursor.
 //	parameters:
 //		- name: ancestor_item_id
 //			in: path
@@ -117,6 +121,12 @@ type itemActivityLogResponseRow struct {
 //		- name: watched_group_id
 //			description: The current user should be a manager of the watched group with `can_watch_members` = true,
 //							 otherwise the 'forbidden' error is returned
+//			in: query
+//			type: integer
+//			format: int64
+//		- name: attempt_id
+//			description: If given, only return rows for this attempt. Allowed only when `{ancestor_item_id}` is a task.
+//							 Distinct from `{from.attempt_id}` (pagination cursor).
 //			in: query
 //			type: integer
 //			format: int64
@@ -279,6 +289,13 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 
 	store := srv.GetStore(httpRequest)
 
+	var attemptID *int64
+	if attemptIDValue, attemptIDIsSet, resolveErr := parseOptionalTaskAttemptID(store, httpRequest, ancestorItemID); resolveErr != nil {
+		return resolveErr
+	} else if attemptIDIsSet {
+		attemptID = &attemptIDValue
+	}
+
 	var participantsQuery *database.DB
 	visibleItemDescendantsQuery := store.Permissions().MatchingGroupAncestors(participantID).
 		Select("item_id AS id").
@@ -313,7 +330,7 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 	}
 
 	filters := constructItemActivityLogFilters(
-		participantID, visibleItemDescendantsQuery, participantsQuery, singletonItemID)
+		participantID, visibleItemDescendantsQuery, participantsQuery, singletonItemID, attemptID)
 
 	return srv.getActivityLog(
 		responseWriter, httpRequest,
@@ -337,6 +354,29 @@ func (srv *Service) getActivityLogForParticipantOrWatchedGroup(
 		!watchedGroupIDIsSet)
 }
 
+// parseOptionalTaskAttemptID returns the attempt_id filter when present and the item is a task.
+func parseOptionalTaskAttemptID(
+	store *database.DataStore, httpRequest *http.Request, ancestorItemID *int64,
+) (attemptID int64, isSet bool, err error) {
+	if ancestorItemID == nil || len(httpRequest.URL.Query()["attempt_id"]) == 0 {
+		return 0, false, nil
+	}
+
+	attemptID, err = service.ResolveURLQueryGetInt64Field(httpRequest, "attempt_id")
+	if err != nil {
+		return 0, false, service.ErrInvalidRequest(err)
+	}
+
+	var isTask bool
+	isTask, err = store.Items().ByID(*ancestorItemID).Where("items.type = 'Task'").HasRows()
+	service.MustNotBeError(err)
+	if !isTask {
+		return 0, false, service.ErrInvalidRequest(errors.New("attempt_id is only allowed when the item is a task"))
+	}
+
+	return attemptID, true, nil
+}
+
 type itemActivityLogFilters struct {
 	addWithTables       func(*database.DB) *database.DB
 	answersMandatory    func(*database.DB) *database.DB
@@ -349,10 +389,11 @@ type itemActivityLogFilters struct {
 // When participantsQuery is nil (no watched_group_id), the participant is a singleton and filters use
 // equalities / joins instead of IN (SELECT … FROM participants|items_to_show) so indexes can drive the scan.
 // singletonItemID, when set, means the visible item set is known to be that single ancestor (no descendants).
+// attemptID, when set, restricts answers and results to that attempt (task-only filter).
 func constructItemActivityLogFilters(
 	participantID int64,
 	visibleItemDescendantsQuery, participantsQuery *database.DB,
-	singletonItemID *int64,
+	singletonItemID, attemptID *int64,
 ) itemActivityLogFilters {
 	watchedGroup := participantsQuery != nil
 
@@ -368,33 +409,35 @@ func constructItemActivityLogFilters(
 		return itemActivityLogFilters{
 			addWithTables: addWithTables,
 			answersMandatory: func(answersQuery *database.DB) *database.DB {
-				return answersQuery.
+				return applyAttemptIDFilter(answersQuery.
 					Where("answers.participant_id IN (SELECT id FROM participants)").
-					Where("answers.item_id IN (SELECT id FROM items_to_show)")
+					Where("answers.item_id IN (SELECT id FROM items_to_show)"), "answers", attemptID)
 			},
 			answersStraightJoin: func(answersQuery *database.DB) *database.DB {
-				return answersQuery.
+				return applyAttemptIDFilter(answersQuery.
 					Where("answers.created_at <= NOW()").
 					Where("answers.participant_id <= (SELECT MAX(id) FROM participants)").
 					Where("answers.participant_id >= (SELECT MIN(id) FROM participants)").
 					Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
-					Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
+					Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)"), "answers", attemptID)
 			},
 			startedResults: func(startedResultsQuery *database.DB) *database.DB {
-				return startedResultsQuery.
+				return applyAttemptIDFilter(startedResultsQuery.
 					Where("started_results.item_id <= (SELECT MAX(id) FROM items_to_show)").
 					Where("started_results.item_id >= (SELECT MIN(id) FROM items_to_show)").
 					Where("started_results.item_id IN (SELECT id FROM items_to_show)").
 					Where("started_results.started_at <= NOW()").
 					Where("started_results.participant_id <= (SELECT MAX(id) FROM participants)").
 					Where("started_results.participant_id >= (SELECT MIN(id) FROM participants)").
-					Where("started_results.participant_id IN (SELECT id FROM participants)")
+					Where("started_results.participant_id IN (SELECT id FROM participants)"),
+					"started_results", attemptID)
 			},
 			validatedResults: func(validatedResultsQuery *database.DB) *database.DB {
-				return validatedResultsQuery.
+				return applyAttemptIDFilter(validatedResultsQuery.
 					Where("validated_results.item_id IN (SELECT id FROM items_to_show)").
 					Where("validated_results.validated_at <= NOW()").
-					Where("validated_results.participant_id IN (SELECT id FROM participants)")
+					Where("validated_results.participant_id IN (SELECT id FROM participants)"),
+					"validated_results", attemptID)
 			},
 		}
 	}
@@ -403,30 +446,38 @@ func constructItemActivityLogFilters(
 		addWithTables: addWithTables,
 		answersMandatory: func(answersQuery *database.DB) *database.DB {
 			answersQuery = answersQuery.Where("answers.participant_id = ?", participantID)
-			return applyParticipantOnlyItemFilter(answersQuery, "answers", singletonItemID)
+			return applyAttemptIDFilter(
+				applyParticipantOnlyItemFilter(answersQuery, "answers", singletonItemID),
+				"answers", attemptID)
 		},
 		answersStraightJoin: func(answersQuery *database.DB) *database.DB {
 			answersQuery = answersQuery.
 				Where("answers.created_at <= NOW()").
 				Where("answers.participant_id = ?", participantID)
 			if singletonItemID != nil {
-				return answersQuery.Where("answers.item_id = ?", *singletonItemID)
+				answersQuery = answersQuery.Where("answers.item_id = ?", *singletonItemID)
+			} else {
+				answersQuery = answersQuery.
+					Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
+					Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
 			}
-			return answersQuery.
-				Where("answers.item_id <= (SELECT MAX(id) FROM items_to_show)").
-				Where("answers.item_id >= (SELECT MIN(id) FROM items_to_show)")
+			return applyAttemptIDFilter(answersQuery, "answers", attemptID)
 		},
 		startedResults: func(startedResultsQuery *database.DB) *database.DB {
 			startedResultsQuery = startedResultsQuery.
 				Where("started_results.participant_id = ?", participantID).
 				Where("started_results.started_at <= NOW()")
-			return applyParticipantOnlyItemFilter(startedResultsQuery, "started_results", singletonItemID)
+			return applyAttemptIDFilter(
+				applyParticipantOnlyItemFilter(startedResultsQuery, "started_results", singletonItemID),
+				"started_results", attemptID)
 		},
 		validatedResults: func(validatedResultsQuery *database.DB) *database.DB {
 			validatedResultsQuery = validatedResultsQuery.
 				Where("validated_results.participant_id = ?", participantID).
 				Where("validated_results.validated_at <= NOW()")
-			return applyParticipantOnlyItemFilter(validatedResultsQuery, "validated_results", singletonItemID)
+			return applyAttemptIDFilter(
+				applyParticipantOnlyItemFilter(validatedResultsQuery, "validated_results", singletonItemID),
+				"validated_results", attemptID)
 		},
 	}
 }
@@ -440,6 +491,13 @@ func applyParticipantOnlyItemFilter(query *database.DB, tableAlias string, singl
 	}
 	// Prefer a join over item_id IN (SELECT … FROM items_to_show) so participant equality can drive access.
 	return query.Joins("JOIN items_to_show ON items_to_show.id = " + tableAlias + ".item_id")
+}
+
+func applyAttemptIDFilter(query *database.DB, tableAlias string, attemptID *int64) *database.DB {
+	if attemptID == nil {
+		return query
+	}
+	return query.Where(tableAlias+".attempt_id = ?", *attemptID)
 }
 
 func (srv *Service) getActivityLog(responseWriter http.ResponseWriter, httpRequest *http.Request,
