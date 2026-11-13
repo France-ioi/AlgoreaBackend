@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.65.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.64.0...v2.65.0) - 2026-11-13
+
+- drop unused `users` columns; `GET /current-user/dump` and `GET /current-user/full-dump` no longer emit those keys
+
 ## [v2.64.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.63.1...v2.64.0) - 2026-11-12
 
 - add optional `attempt_id` filter on `GET /items/{item_id}/log` (tasks only; rejected for chapters/skills)
