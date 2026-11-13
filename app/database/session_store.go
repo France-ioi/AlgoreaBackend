@@ -16,9 +16,7 @@ func (s *SessionStore) GetUserAndSessionIDByValidAccessToken(token string) (user
 		Select(`
 			users.login,
 			users.login_id,
-			users.is_admin,
 			users.group_id,
-			users.access_group_id,
 			users.temp_user,
 			users.notifications_read_at,
 			users.default_language,

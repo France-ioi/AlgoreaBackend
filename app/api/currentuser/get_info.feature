@@ -1,9 +1,9 @@
 Feature: Get user info for the current user
   Background:
     Given the database has the following users:
-      | group_id | temp_user | login | registered_at       | latest_profile_sync_at | profile                                    | default_language | is_admin |
-      | 2        | 0         | user  | 2017-02-26 06:38:38 | 2019-05-30 12:00:00    | {"first_name": "John", "last_name": "Doe"} | en               | false    |
-      | 3        | 1         | jane  | null                | null                   | null                                       | fr               | true     |
+      | group_id | temp_user | login | registered_at       | latest_profile_sync_at | profile                                    | default_language |
+      | 2        | 0         | user  | 2017-02-26 06:38:38 | 2019-05-30 12:00:00    | {"first_name": "John", "last_name": "Doe"} | en               |
+      | 3        | 1         | jane  | null                | null                   | null                                       | fr               |
 
   Scenario: All field values are not nulls
     Given I am the user with id "2"
