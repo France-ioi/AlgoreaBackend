@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.66.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.65.0...v2.66.0) - 2026-11-16
+
+- allow observers who may watch a user's answers to get a read-only task token for that user's started attempt via `POST /items/{item_id}/participant/{participant_id}/attempts/{attempt_id}/generate-task-token`
+
 ## [v2.65.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.64.0...v2.65.0) - 2026-11-13
 
 - drop unused `users` columns; `GET /current-user/dump` and `GET /current-user/full-dump` no longer emit those keys
