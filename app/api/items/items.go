@@ -57,6 +57,8 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	routerWithAuthAndParticipant.Post("/items/{item_id}/attempts/{attempt_id}/generate-task-token",
 		service.AppHandler(srv.generateTaskToken).ServeHTTP)
+	routerWithAuth.Post("/items/{item_id}/participant/{participant_id}/attempts/{attempt_id}/generate-task-token",
+		service.AppHandler(srv.generateObservedUserTaskToken).ServeHTTP)
 	routerWithAuthAndParticipant.Post("/items/{item_id}/attempts/{attempt_id}/publish", service.AppHandler(srv.publishResult).ServeHTTP)
 	routerWithAuthAndParticipant.Put("/items/{item_id}/attempts/{attempt_id}", service.AppHandler(srv.updateResult).ServeHTTP)
 	routerWithAuthAndParticipant.Get("/items/{item_id}/attempts", service.AppHandler(srv.listAttempts).ServeHTTP)
