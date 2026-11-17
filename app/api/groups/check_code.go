@@ -10,7 +10,7 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-// Present when the code is valid or when reason is already_member.
+// Present when the code is valid, including when reason is already_member.
 // Other reasons omit the group.
 type groupCodeCheckResponseGroup struct {
 	// required: true
@@ -45,7 +45,7 @@ type groupCodeCheckResponseGroup struct {
 type groupCodeCheckResponse struct {
 	// required: true
 	Valid bool `json:"valid"`
-	// Only if invalid
+	// Set when the code cannot be used to join. Also set to already_member when valid is true.
 	// enum: no_group,frozen_membership,already_member,conflicting_team_participation,team_conditions_not_met
 	Reason string                       `json:"reason,omitempty"`
 	Group  *groupCodeCheckResponseGroup `json:"group,omitempty"`
@@ -69,17 +69,15 @@ type groupCodeCheckResponse struct {
 //
 //		* if the group membership is frozen (`reason` = 'frozen_membership');
 //
-//		* if there is already an active row in `groups_groups` with the found group as a parent
-//			and the user’s id as a child (`reason` = 'already_member');
-//
 //		* if the group is a team and joining breaks entry conditions of at least one of the team's participations
 //			(i.e. any of `entry_min_admitted_members_ratio` or `entry_max_team_size` would not be satisfied)
 //			(`reason` = 'team_conditions_not_met').
 //
-//		Otherwise, the service returns true.
+//		Otherwise, the service returns true. That includes a code for a group the user already belongs to
+//		(`reason` = 'already_member'): the code is correct, and the reason tells the client not to join again.
 //
-//		`group` is included when the code is valid and when `reason` is `already_member`,
-//		so a contestant who already joined still learns which group and stage activity the code names.
+//		`group` is included whenever the check is valid, so a contestant who already joined still learns
+//		which group and stage activity the code names.
 //		`group.id` is the group's id. Other reasons omit the group.
 //	parameters:
 //		- name: code
@@ -118,8 +116,7 @@ func (srv *Service) checkCode(responseWriter http.ResponseWriter, httpRequest *h
 		Reason: string(reason),
 	}
 
-	// already_member keeps valid false, but the group is the one the code named.
-	if valid || reason == alreadyMemberReason {
+	if valid {
 		var groupInfo groupCodeCheckResponseGroup
 		service.MustNotBeError(store.Groups().ByID(groupID).Select(`
 			id, name, require_personal_info_access_approval, require_lock_membership_approval_until,
@@ -167,7 +164,8 @@ func checkGroupCodeForUser(store *database.DataStore, userIDToCheck int64, code 
 		HasRows()
 	service.MustNotBeError(err)
 	if alreadyMember {
-		return false, alreadyMemberReason, info.GroupID
+		// The code names a real group, so the check is valid. The reason tells the client not to join again.
+		return true, alreadyMemberReason, info.GroupID
 	}
 
 	if info.Type != "Team" {

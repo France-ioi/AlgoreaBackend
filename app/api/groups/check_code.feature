@@ -73,7 +73,7 @@ Feature: Check if the group code is valid
     And the response body should be, in JSON:
     """
     {
-      "valid": false,
+      "valid": true,
       "reason": "already_member",
       "group": {
         "id": "14",
