@@ -69,6 +69,25 @@ func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierReturns
 	return nil
 }
 
+// TheLoginModuleTokenEndpointForCodeAndRedirectURIReturns mocks the return of the login module /oauth/token,
+// called with the provided code and redirect_uri and no code verifier.
+func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndRedirectURIReturns(
+	code, redirectURI string,
+	statusCode int,
+	body *godog.DocString,
+) error {
+	preprocessedCode := ctx.preprocessString(code)
+	preprocessedRedirectURI := ctx.preprocessString(redirectURI)
+	preprocessedBody := ctx.preprocessString(body.Content)
+	params := url.Values{
+		"grant_type":   {"authorization_code"},
+		"code":         {preprocessedCode},
+		"redirect_uri": {preprocessedRedirectURI},
+	}
+	ctx.stubOAuth2RequestToLoginModule(params, statusCode, preprocessedBody)
+	return nil
+}
+
 // TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns mocks the return of the login module /oauth/token,
 // called with the provided code, code_verifier, and redirect_uri.
 func (ctx *TestContext) TheLoginModuleTokenEndpointForCodeAndCodeVerifierAndRedirectURIReturns(
@@ -179,6 +198,12 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 		responder, httpmock.WithHeader(&http.Header{"Content-Type": []string{"application/json"}}),
 		httpmock.WithBody(bytes.NewReader(requestBody))))
 	return nil
+}
+
+// TheLoginModuleCreateContestantEndpointReturns mocks the return of the login module
+// /platform_api/accounts_manager/create_contestant called with no parameters.
+func (ctx *TestContext) TheLoginModuleCreateContestantEndpointReturns(statusCode int, body *godog.DocString) error {
+	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create_contestant", "", statusCode, body)
 }
 
 // TheLoginModuleCreateEndpointWithParamsReturns mocks the return of the login module

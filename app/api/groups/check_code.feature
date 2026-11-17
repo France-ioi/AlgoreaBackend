@@ -7,7 +7,7 @@ Feature: Check if the group code is valid
       | 11 | Team  | 3456789abc | 2037-05-29 06:38:38 | 3723          | false             | Our Team       | null                                   | edit                                  | false                  | 1234             | null          |
       | 12 | Team  | abc3456789 | null                | 45296         | false             | Their Team     | null                                   | none                                  | false                  | null             | null          |
       | 13 | Team  | 456789abcd | 2017-05-29 06:38:38 | 3723          | false             | Some Team      | null                                   | none                                  | false                  | null             | null          |
-      | 14 | Team  | cba9876543 | null                | null          | false             | Another Team   | null                                   | none                                  | false                  | null             | null          |
+      | 14 | Team  | cba9876543 | null                | null          | false             | Another Team   | null                                   | none                                  | false                  | 1234             | 5678          |
       | 15 | Team  | 987654321a | null                | null          | false             | Someone's Team | null                                   | none                                  | false                  | null             | null          |
       | 16 | Class | dcef123492 | null                | null          | false             | Our Class      | 2037-01-02 12:30:55                    | none                                  | true                   | null             | 5678          |
       | 18 | Team  | 5987654abc | null                | null          | false             | One More Team  | null                                   | none                                  | false                  | null             | null          |
@@ -46,9 +46,9 @@ Feature: Check if the group code is valid
     {"valid": true, "group": <group_info>}
     """
     Examples:
-      | code       | group_info                                                                                                                                                                                                                                                                                                                                                             |
-      | 3456789abc | {"name": "Our Team", "require_lock_membership_approval_until": null, "require_personal_info_access_approval": "edit", "require_watch_approval": false, "root_activity_id": "1234", "root_skill_id": null, "managers": [{"id": "23", "login": "jane", "first_name": "Jane", "last_name": "Doe"}, {"id": "21", "login": "john", "first_name": null, "last_name": null}]} |
-      | dcef123492 | {"name": "Our Class", "require_lock_membership_approval_until": "2037-01-02T12:30:55Z", "require_personal_info_access_approval": "none", "require_watch_approval": true, "root_activity_id": null, "root_skill_id": "5678", "managers": []}                                                                                                                            |
+      | code       | group_info                                                                                                                                                                                                                                                                                                                                                                         |
+      | 3456789abc | {"id": "11", "name": "Our Team", "require_lock_membership_approval_until": null, "require_personal_info_access_approval": "edit", "require_watch_approval": false, "root_activity_id": "1234", "root_skill_id": null, "managers": [{"id": "23", "login": "jane", "first_name": "Jane", "last_name": "Doe"}, {"id": "21", "login": "john", "first_name": null, "last_name": null}]} |
+      | dcef123492 | {"id": "16", "name": "Our Class", "require_lock_membership_approval_until": "2037-01-02T12:30:55Z", "require_personal_info_access_approval": "none", "require_watch_approval": true, "root_activity_id": null, "root_skill_id": "5678", "managers": []}                                                                                                                        |
 
   Scenario Outline: The code is not valid
     Given I am the user with id "21"
@@ -63,9 +63,30 @@ Feature: Check if the group code is valid
       | abcdef     | no_group                       | no such code                                                                              |
       | 456789abcd | no_group                       | expired                                                                                   |
       | 5987654abc | conflicting_team_participation | a member of another team participating in solving the same items requiring explicit entry |
-      | cba9876543 | already_member                 | already a member of the group                                                             |
       | 87654abcde | frozen_membership              | frozen membership                                                                         |
       | 3333333333 | no_group                       | the group is a user                                                                       |
+
+  Scenario: The user is already a member
+    Given I am the user with id "21"
+    When I send a GET request to "/groups/is-code-valid?code=cba9876543"
+    Then the response code should be 200
+    And the response body should be, in JSON:
+    """
+    {
+      "valid": true,
+      "reason": "already_member",
+      "group": {
+        "id": "14",
+        "name": "Another Team",
+        "require_lock_membership_approval_until": null,
+        "require_personal_info_access_approval": "none",
+        "require_watch_approval": false,
+        "root_activity_id": "1234",
+        "root_skill_id": "5678",
+        "managers": []
+      }
+    }
+    """
 
   Scenario: The user is temporary
     Given I am the user with id "22"
@@ -83,6 +104,7 @@ Feature: Check if the group code is valid
     {
       "valid": true,
       "group": {
+        "id": "11",
         "name": "Our Team", "require_lock_membership_approval_until": null, "require_personal_info_access_approval": "edit",
         "require_watch_approval": false, "root_activity_id": "1234", "root_skill_id": null,
         "managers": [

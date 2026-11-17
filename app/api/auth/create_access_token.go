@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -254,19 +255,31 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 		return nil
 	}
 
+	accessToken, expiresIn, _ := srv.createSessionFromAuthorizationCode(
+		httpRequest, *requestParameters.Code, requestParameters.CodeVerifier, requestParameters.RedirectURI)
+	srv.respondWithNewAccessToken(
+		responseWriter, httpRequest, service.CreationSuccess[map[string]any], accessToken, expiresIn, cookieAttributes, nil)
+	return nil
+}
+
+// createSessionFromAuthorizationCode exchanges an authorization code the way coordinator sign-in does
+// and stores the resulting session. It returns the access token, its lifetime, and the account login.
+func (srv *Service) createSessionFromAuthorizationCode(
+	httpRequest *http.Request, code string, codeVerifier, redirectURI *string,
+) (accessToken string, expiresIn int32, login string) {
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
-	oauthOptions := make([]oauth2.AuthCodeOption, 0, 1)
-	if requestParameters.CodeVerifier != nil {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", *requestParameters.CodeVerifier))
+	var oauthOptions []oauth2.AuthCodeOption
+	if codeVerifier != nil {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("code_verifier", *codeVerifier))
 	}
-	if requestParameters.RedirectURI != nil {
-		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", *requestParameters.RedirectURI))
+	if redirectURI != nil {
+		oauthOptions = append(oauthOptions, oauth2.SetAuthURLParam("redirect_uri", *redirectURI))
 	}
 
-	token, err := oauthConfig.Exchange(httpRequest.Context(), *requestParameters.Code, oauthOptions...)
+	token, err := oauthConfig.Exchange(httpRequest.Context(), code, oauthOptions...)
 	service.MustNotBeError(err)
 
-	expiresIn, err := validateAndGetExpiresInFromOAuth2Token(token)
+	expiresIn, err = validateAndGetExpiresInFromOAuth2Token(token)
 	service.MustNotBeError(err)
 
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
@@ -301,18 +314,17 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 	event.Dispatch(httpRequest.Context(), event.TypeUserAuthenticated,
 		userAuthenticatedEventPayload(userID, userProfile, userIP))
 
-	srv.respondWithNewAccessToken(
-		responseWriter, httpRequest, service.CreationSuccess[map[string]any], token.AccessToken, expiresIn, cookieAttributes)
-	return nil
+	return token.AccessToken, expiresIn, userProfile.Login
 }
 
 func (srv *Service) respondWithNewAccessToken(responseWriter http.ResponseWriter, httpRequest *http.Request,
 	rendererGenerator func(map[string]any) render.Renderer, token string, expiresIn int32,
-	cookieAttributes *auth.SessionCookieAttributes,
+	cookieAttributes *auth.SessionCookieAttributes, extra map[string]any,
 ) {
 	response := map[string]any{
 		"expires_in": expiresIn,
 	}
+	maps.Copy(response, extra)
 	oldCookieAttributes := auth.SessionCookieAttributesFromContext(httpRequest.Context())
 	if oldCookieAttributes == nil {
 		oldCookieAttributes = &auth.SessionCookieAttributes{}
