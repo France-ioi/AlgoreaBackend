@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.67.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.66.0...v2.67.0) - 2026-11-17
+
+- extend `GET /groups/is-code-valid` so a valid code (including `already_member`) returns `group` with `id`, `root_activity_id`, and `root_skill_id`; `already_member` is now `valid: true` with `reason: already_member`
+- add `POST /auth/user` to create a temporary user via the login façade and start a session (`login`, `expires_in`, optional session cookie)
+
 ## [v2.66.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.65.0...v2.66.0) - 2026-11-16
 
 - allow observers who may watch a user's answers to get a read-only task token for that user's started attempt via `POST /items/{item_id}/participant/{participant_id}/attempts/{attempt_id}/generate-task-token`
