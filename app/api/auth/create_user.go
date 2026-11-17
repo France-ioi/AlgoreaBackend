@@ -15,9 +15,9 @@ import (
 //		Asks the login module for one user and a bridge code, then exchanges that code
 //		the same way `POST /auth/token` exchanges a coordinator's authorization code, and sets the session cookie.
 //
-//		The login module chooses the login. There is no password, and the login module returns a bridge code.
+//		The login module chooses the login. There is no password.
 //		No participation code is required. No session is required: a temporary session cookie, or no session, is accepted.
-//		The client secret stays on the server. The response data is the user's login and `expires_in`.
+//		The client secret and any password stay on the server. The response data is the user's login and `expires_in`.
 //		When `{use_cookie}` is not 1, the access token is returned in the data instead of a cookie, as for `POST /auth/token`.
 //
 //		The cookie's `SameSite` attribute is always `Strict`.

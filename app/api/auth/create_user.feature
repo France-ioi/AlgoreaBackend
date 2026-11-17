@@ -77,10 +77,10 @@ Feature: Create a user and sign in
       | 3                   | 5577006791947779410 |
     And the table "sessions" should be:
       | session_id          | user_id             | refresh_token           |
-      | 8674665223082153551 | 5577006791947779410 | userrefreshtoken  |
+      | 8674665223082153551 | 5577006791947779410 | userrefreshtoken        |
     And the table "access_tokens" should be:
       | session_id          | token                  | expires_at          | issued_at           |
-      | 8674665223082153551 | useraccesstoken  | 2019-07-17 00:02:28 | 2019-07-16 22:02:28 |
+      | 8674665223082153551 | useraccesstoken        | 2019-07-17 00:02:28 | 2019-07-16 22:02:28 |
 
   Scenario: A temporary session is replaced by the user session
     Given the time now is "2019-07-16T22:02:28Z"
@@ -133,7 +133,7 @@ Feature: Create a user and sign in
       | 5577006791947779410 | beoi27_k3mnpq | 0         |
     And the table "sessions" at user_id "5577006791947779410" should be:
       | session_id          | user_id             | refresh_token          |
-      | 8674665223082153551 | 5577006791947779410 | userrefreshtoken |
+      | 8674665223082153551 | 5577006791947779410 | userrefreshtoken       |
     And the table "sessions" at user_id "22" should be:
       | session_id | user_id | refresh_token |
       | 900        | 22      | temprefresh   |

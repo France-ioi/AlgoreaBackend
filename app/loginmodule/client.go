@@ -96,6 +96,7 @@ type UserBridge struct {
 }
 
 // CreateUser asks the login module for one user with a generated login and no password.
+// The request carries no participation code.
 // Unlike CreateUsers, this creates one user and returns a bridge code rather than a batch of passwords.
 // Note that the context must have a logger (set by logging.ContextWithLogger),
 // otherwise CreateUser will panic on logging.

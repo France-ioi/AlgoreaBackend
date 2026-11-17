@@ -29,7 +29,7 @@ Feature: Create a user and sign in - robustness
     And the database has the following table "access_tokens":
       | session_id |
 
-  Scenario: The login module refuses to create the account
+  Scenario: The login module refuses to create the user
     Given the login module "create_user" endpoint returns 200 with encoded body:
       """
       {"success": false, "error": "some error"}
