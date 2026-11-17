@@ -10,8 +10,11 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-// Only if valid.
+// Present when the code is valid or when reason is already_member.
+// Other reasons omit the group.
 type groupCodeCheckResponseGroup struct {
+	// required: true
+	ID int64 `json:"id,string"`
 	// required: true
 	Name string `json:"name"`
 	// required: true
@@ -74,6 +77,10 @@ type groupCodeCheckResponse struct {
 //			(`reason` = 'team_conditions_not_met').
 //
 //		Otherwise, the service returns true.
+//
+//		`group` is included when the code is valid and when `reason` is `already_member`,
+//		so a contestant who already joined still learns which group and stage activity the code names.
+//		`group.id` is the group's id. Other reasons omit the group.
 //	parameters:
 //		- name: code
 //			in: query
@@ -111,7 +118,8 @@ func (srv *Service) checkCode(responseWriter http.ResponseWriter, httpRequest *h
 		Reason: string(reason),
 	}
 
-	if valid {
+	// already_member keeps valid false, but the group is the one the code named.
+	if valid || reason == alreadyMemberReason {
 		var groupInfo groupCodeCheckResponseGroup
 		service.MustNotBeError(store.Groups().ByID(groupID).Select(`
 			id, name, require_personal_info_access_approval, require_lock_membership_approval_until,

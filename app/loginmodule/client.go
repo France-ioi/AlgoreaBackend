@@ -87,6 +87,38 @@ type CreateUsersResponseDataRow struct {
 	Password string `json:"password"`
 }
 
+// ContestantBridge is the one-time authorization code for a contestant the login module just created.
+// RedirectURI is the redirect stored with that code: the token endpoint rejects an exchange that does not send it.
+// A password is not part of this value, so it cannot be returned to the browser.
+type ContestantBridge struct {
+	Code        string `json:"code"`
+	RedirectURI string `json:"redirect_uri"`
+}
+
+// CreateContestant asks the login module for one contestant account.
+// The request carries no password and no participation code; the login module chooses the login.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise CreateContestant will panic on logging.
+func (client *Client) CreateContestant(ctx context.Context, clientID, clientKey string) (*ContestantBridge, error) {
+	response, err := client.requestAccountsManagerAndDecode(
+		ctx, "/platform_api/accounts_manager/create_contestant", map[string]string{}, clientID, clientKey)
+	if err != nil {
+		return nil, fmt.Errorf("can't create a contestant account: %s", err.Error())
+	}
+	if !response.Success {
+		return nil, errors.New("login module failed")
+	}
+
+	var bridge ContestantBridge
+	if err := json.Unmarshal(response.Data, &bridge); err != nil {
+		return nil, fmt.Errorf("can't create a contestant account: %s", err.Error())
+	}
+	if bridge.Code == "" || bridge.RedirectURI == "" {
+		return nil, errors.New("login module failed")
+	}
+	return &bridge, nil
+}
+
 // CreateUsers creates a batch of users in the login module.
 // Note that the context must have a logger (set by logging.ContextWithLogger),
 // otherwise CreateUsers will panic on logging.
