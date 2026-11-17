@@ -200,10 +200,10 @@ func (ctx *TestContext) TheLoginModuleLTIResultSendEndpointForUserIDContentIDSco
 	return nil
 }
 
-// TheLoginModuleCreateContestantEndpointReturns mocks the return of the login module
-// /platform_api/accounts_manager/create_contestant called with no parameters.
-func (ctx *TestContext) TheLoginModuleCreateContestantEndpointReturns(statusCode int, body *godog.DocString) error {
-	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create_contestant", "", statusCode, body)
+// TheLoginModuleCreateUserEndpointReturns mocks the return of the login module
+// /platform_api/accounts_manager/create_user called with no parameters.
+func (ctx *TestContext) TheLoginModuleCreateUserEndpointReturns(statusCode int, body *godog.DocString) error {
+	return ctx.theLoginModuleAccountsManagerEndpointWithParamsReturns("create_user", "", statusCode, body)
 }
 
 // TheLoginModuleCreateEndpointWithParamsReturns mocks the return of the login module

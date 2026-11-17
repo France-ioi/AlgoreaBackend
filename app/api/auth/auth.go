@@ -27,7 +27,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.With(middleware.AllowContentType("", "application/json", "application/x-www-form-urlencoded")).
 		Post("/auth/token", service.AppHandler(srv.createAccessToken).ServeHTTP)
-	router.Post("/auth/contestant", service.AppHandler(srv.createContestant).ServeHTTP)
+	router.Post("/auth/user", service.AppHandler(srv.createUser).ServeHTTP)
 	router.With(auth.UserMiddleware(srv.Base)).
 		Post("/auth/logout", service.AppHandler(srv.logout).ServeHTTP)
 	router.With(auth.UserMiddleware(srv.Base)).
