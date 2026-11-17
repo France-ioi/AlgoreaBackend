@@ -154,8 +154,8 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 		ctx.TheLoginModuleAccountEndpointForTokenReturns)
 	scenarioContext.Step(`^the login module "unlink_client" endpoint for user id "([^"]*)" returns (\d+) with encoded body:$`,
 		ctx.TheLoginModuleUnlinkClientEndpointForUserIDReturns)
-	scenarioContext.Step(`^the login module "create_contestant" endpoint returns (\d+) with encoded body:$`,
-		ctx.TheLoginModuleCreateContestantEndpointReturns)
+	scenarioContext.Step(`^the login module "create_user" endpoint returns (\d+) with encoded body:$`,
+		ctx.TheLoginModuleCreateUserEndpointReturns)
 	scenarioContext.Step(`^the login module "create" endpoint with params "([^"]*)" returns (\d+) with encoded body:$`,
 		ctx.TheLoginModuleCreateEndpointWithParamsReturns)
 	scenarioContext.Step(`^the login module "delete" endpoint with params "([^"]*)" returns (\d+) with encoded body:$`,

@@ -1,4 +1,4 @@
-Feature: Create a contestant account and sign in
+Feature: Create a user and sign in
   Background:
     Given the application config is:
       """
@@ -23,9 +23,9 @@ Feature: Create a contestant account and sign in
       | 2               | 3              |
       | 2               | 4              |
 
-  Scenario: A visitor with no session gets a contestant account and a session cookie
+  Scenario: A visitor with no session gets a user and a session cookie
     Given the time now is "2019-07-16T22:02:28Z"
-    And the login module "create_contestant" endpoint returns 200 with encoded body:
+    And the login module "create_user" endpoint returns 200 with encoded body:
       """
       {"success": true, "data": {"code": "bridgecode", "redirect_uri": "https://contest.example/cb", "password": "should-not-leak"}}
       """
@@ -34,16 +34,16 @@ Feature: Create a contestant account and sign in
       {
         "token_type": "Bearer",
         "expires_in": 7200,
-        "access_token": "contestantaccesstoken",
-        "refresh_token": "contestantrefreshtoken"
+        "access_token": "useraccesstoken",
+        "refresh_token": "userrefreshtoken"
       }
       """
-    And the login module "account" endpoint for token "contestantaccesstoken" returns 200 with body:
+    And the login module "account" endpoint for token "useraccesstoken" returns 200 with body:
       """
       {"id": 100000042, "login": "beoi27_k3mnpq", "language": "en", "badges": []}
       """
     # The participation code must not be forwarded: the façade stub expects an empty body.
-    When I send a POST request to "/auth/contestant?use_cookie=1&cookie_secure=1&code=join-me"
+    When I send a POST request to "/auth/user?use_cookie=1&cookie_secure=1&code=join-me"
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -56,7 +56,7 @@ Feature: Create a contestant account and sign in
         }
       }
       """
-    And the response header "Set-Cookie" should be "access_token=3!contestantaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict"
+    And the response header "Set-Cookie" should be "access_token=3!useraccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict"
     And an event "user_authenticated" should have been dispatched with:
       """
       {"user_id": "5577006791947779410", "login_id": "100000042", "login": "beoi27_k3mnpq", "user_ip": "127.0.0.1", "profile": null}
@@ -77,12 +77,12 @@ Feature: Create a contestant account and sign in
       | 3                   | 5577006791947779410 |
     And the table "sessions" should be:
       | session_id          | user_id             | refresh_token           |
-      | 8674665223082153551 | 5577006791947779410 | contestantrefreshtoken  |
+      | 8674665223082153551 | 5577006791947779410 | userrefreshtoken        |
     And the table "access_tokens" should be:
       | session_id          | token                  | expires_at          | issued_at           |
-      | 8674665223082153551 | contestantaccesstoken  | 2019-07-17 00:02:28 | 2019-07-16 22:02:28 |
+      | 8674665223082153551 | useraccesstoken        | 2019-07-17 00:02:28 | 2019-07-16 22:02:28 |
 
-  Scenario: A temporary session is replaced by the contestant session
+  Scenario: A temporary session is replaced by the user session
     Given the time now is "2019-07-16T22:02:28Z"
     And the database has the following users:
       | group_id | login  | temp_user |
@@ -94,7 +94,7 @@ Feature: Create a contestant account and sign in
       | session_id | token     | issued_at           | expires_at          |
       | 900        | temptoken | 2019-07-16 20:00:00 | 2019-07-17 00:00:00 |
     And the "Cookie" request header is "access_token=3!temptoken!127.0.0.1!/"
-    And the login module "create_contestant" endpoint returns 200 with encoded body:
+    And the login module "create_user" endpoint returns 200 with encoded body:
       """
       {"success": true, "data": {"code": "bridgecode", "redirect_uri": "https://contest.example/cb", "password": "should-not-leak"}}
       """
@@ -103,15 +103,15 @@ Feature: Create a contestant account and sign in
       {
         "token_type": "Bearer",
         "expires_in": 7200,
-        "access_token": "contestantaccesstoken",
-        "refresh_token": "contestantrefreshtoken"
+        "access_token": "useraccesstoken",
+        "refresh_token": "userrefreshtoken"
       }
       """
-    And the login module "account" endpoint for token "contestantaccesstoken" returns 200 with body:
+    And the login module "account" endpoint for token "useraccesstoken" returns 200 with body:
       """
       {"id": 100000042, "login": "beoi27_k3mnpq", "language": "en", "badges": []}
       """
-    When I send a POST request to "/auth/contestant?use_cookie=1&cookie_secure=1"
+    When I send a POST request to "/auth/user?use_cookie=1&cookie_secure=1"
     Then the response code should be 201
     And the response body should be, in JSON:
       """
@@ -124,7 +124,7 @@ Feature: Create a contestant account and sign in
         }
       }
       """
-    And the response header "Set-Cookie" should be "access_token=3!contestantaccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict"
+    And the response header "Set-Cookie" should be "access_token=3!useraccesstoken!127.0.0.1!/; Path=/; Domain=127.0.0.1; Expires=Wed, 17 Jul 2019 00:02:28 GMT; Max-Age=7200; HttpOnly; Secure; SameSite=Strict"
     And the table "users" at group_id "22" should be:
       | group_id | login  | temp_user |
       | 22       | tmp-22 | 1         |
@@ -133,7 +133,7 @@ Feature: Create a contestant account and sign in
       | 5577006791947779410 | beoi27_k3mnpq | 0         |
     And the table "sessions" at user_id "5577006791947779410" should be:
       | session_id          | user_id             | refresh_token          |
-      | 8674665223082153551 | 5577006791947779410 | contestantrefreshtoken |
+      | 8674665223082153551 | 5577006791947779410 | userrefreshtoken       |
     And the table "sessions" at user_id "22" should be:
       | session_id | user_id | refresh_token |
       | 900        | 22      | temprefresh   |

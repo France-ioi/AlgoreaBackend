@@ -6,7 +6,7 @@ API and persistence for the Algorea platform: users, groups, items, attempts, an
 
 **User**:
 A person on the platform, represented by a `User`-type group and a row in `users`.
-_Avoid_: account, member (unless meaning group membership)
+_Avoid_: account, member (unless meaning group membership), contestant
 
 **Profile**:
 The login-module `profile` JSON stored on the user (`users.profile`). It is not the flat personal columns on `users`.

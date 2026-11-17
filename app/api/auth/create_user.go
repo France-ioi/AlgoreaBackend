@@ -7,16 +7,17 @@ import (
 	"github.com/France-ioi/AlgoreaBackend/v2/app/service"
 )
 
-// swagger:operation POST /auth/contestant auth contestantAccountCreate
+// swagger:operation POST /auth/user auth userCreate
 //
 //	---
-//	summary: Create a contestant account and sign that contestant in
+//	summary: Create a user and sign that user in
 //	description: >
-//		Asks the login module for one contestant account and a bridge code, then exchanges that code
+//		Asks the login module for one user and a bridge code, then exchanges that code
 //		the same way `POST /auth/token` exchanges a coordinator's authorization code, and sets the session cookie.
 //
+//		The login module chooses the login. There is no password.
 //		No participation code is required. No session is required: a temporary session cookie, or no session, is accepted.
-//		The client secret and any password stay on the server. The response data is the contestant's login and `expires_in`.
+//		The client secret and any password stay on the server. The response data is the user's login and `expires_in`.
 //		When `{use_cookie}` is not 1, the access token is returned in the data instead of a cookie, as for `POST /auth/token`.
 //
 //		The cookie's `SameSite` attribute is always `Strict`.
@@ -39,7 +40,7 @@ import (
 //			default: 1
 //	responses:
 //		"201":
-//			description: Created. The contestant is signed in.
+//			description: Created. The user is signed in.
 //			schema:
 //				type: object
 //				required: [success, message, data]
@@ -66,12 +67,12 @@ import (
 //			"$ref": "#/responses/badRequestResponse"
 //		"500":
 //			"$ref": "#/responses/internalErrorResponse"
-func (srv *Service) createContestant(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
+func (srv *Service) createUser(responseWriter http.ResponseWriter, httpRequest *http.Request) error {
 	cookieAttributes, err := srv.resolveSessionCookieAttributesFromRequest(httpRequest)
 	service.MustNotBeError(err)
 
 	bridge, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
-		CreateContestant(httpRequest.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"))
+		CreateUser(httpRequest.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"))
 	if err != nil {
 		return service.ErrUnexpected(err)
 	}

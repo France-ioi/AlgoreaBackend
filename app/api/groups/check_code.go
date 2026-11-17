@@ -76,8 +76,8 @@ type groupCodeCheckResponse struct {
 //		Otherwise, the service returns true. That includes a code for a group the user already belongs to
 //		(`reason` = 'already_member'): the code is correct, and the reason tells the client not to join again.
 //
-//		`group` is included whenever the check is valid, so a contestant who already joined still learns
-//		which group and stage activity the code names.
+//		`group` is included whenever the check is valid, so a user who already joined still learns
+//		which group and root activity the code names.
 //		`group.id` is the group's id. Other reasons omit the group.
 //	parameters:
 //		- name: code
