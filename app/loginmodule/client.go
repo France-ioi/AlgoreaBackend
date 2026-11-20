@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/France-ioi/AlgoreaBackend/v2/app/database"
 	"github.com/France-ioi/AlgoreaBackend/v2/app/formdata"
@@ -38,30 +39,77 @@ func NewClient(loginModuleURL string) *Client {
 func (client *Client) GetUserProfile(ctx context.Context, accessToken string) (profile *UserProfile, err error) {
 	defer recoverPanics(&err)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, client.url+"/user_api/account", http.NoBody)
-	mustNotBeError(err)
-	request.Header.Set("Authorization", "Bearer "+accessToken)
-	response, err := http.DefaultClient.Do(request)
-	mustNotBeError(err)
-	body, err := io.ReadAll(io.LimitReader(response.Body, oneMegabyte))
-	_ = response.Body.Close()
-	mustNotBeError(err)
-	if response.StatusCode != http.StatusOK {
+	statusCode, body := client.requestUserAPIAccount(ctx, http.MethodGet, accessToken, nil)
+	if statusCode != http.StatusOK {
 		logging.EntryFromContext(ctx).
-			Warnf("Can't retrieve user's profile (status code = %d, response = %q)", response.StatusCode, body)
-		return nil, fmt.Errorf("can't retrieve user's profile (status code = %d)", response.StatusCode)
+			Warnf("Can't retrieve user's profile (status code = %d, response = %q)", statusCode, body)
+		return nil, fmt.Errorf("can't retrieve user's profile (status code = %d)", statusCode)
 	}
+	return parseUserProfile(ctx, body)
+}
+
+// UpdateUserProfile sends the given profile to the login module on behalf of the user owning the access token
+// and returns the user profile the login module answers with.
+// A 4xx answer from the login module is returned as *ProfileRejectedError.
+// Note that the context must have a logger (set by logging.ContextWithLogger),
+// otherwise UpdateUserProfile will panic on logging.
+func (client *Client) UpdateUserProfile(
+	ctx context.Context, accessToken string, profile map[string]string,
+) (userProfile *UserProfile, err error) {
+	defer recoverPanics(&err)
+
+	requestBody, _ := json.Marshal(map[string]map[string]string{"profile": profile})
+	statusCode, body := client.requestUserAPIAccount(ctx, http.MethodPut, accessToken, requestBody)
+	if statusCode != http.StatusOK {
+		logging.EntryFromContext(ctx).
+			Warnf("Can't update user's profile (status code = %d, response = %q)", statusCode, body)
+		if statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError {
+			return nil, &ProfileRejectedError{Message: rejectionMessage(statusCode, body)}
+		}
+		return nil, fmt.Errorf("can't update user's profile (status code = %d)", statusCode)
+	}
+	return parseUserProfile(ctx, body)
+}
+
+// ProfileRejectedError is returned by Client.UpdateUserProfile when the login module refuses the profile.
+type ProfileRejectedError struct {
+	Message string
+}
+
+func (e *ProfileRejectedError) Error() string {
+	return e.Message
+}
+
+// rejectionMessage extracts the message from a login module refusal.
+// Login modules differ: some answer with plain text (as Go's http.Error does), others with
+// a JSON object holding the message in "error" or "message".
+func rejectionMessage(statusCode int, body []byte) string {
+	var decoded map[string]any
+	if json.Unmarshal(body, &decoded) == nil {
+		for _, key := range []string{"error", "message"} {
+			if message, ok := decoded[key].(string); ok {
+				return message
+			}
+		}
+	}
+	if message := strings.TrimSpace(string(body)); message != "" {
+		return message
+	}
+	return http.StatusText(statusCode)
+}
+
+func parseUserProfile(ctx context.Context, body []byte) (*UserProfile, error) {
 	var decoded map[string]any
 	decoder := json.NewDecoder(bytes.NewReader(body))
 	decoder.UseNumber()
-	err = decoder.Decode(&decoded)
+	err := decoder.Decode(&decoded)
 	if err != nil {
 		logging.EntryFromContext(ctx).
 			Warnf("Can't parse user's profile (response = %q, error = %q)", body, err)
 		return nil, errors.New("can't parse user's profile")
 	}
 
-	profile, err = convertUserProfile(decoded)
+	profile, err := convertUserProfile(decoded)
 	if err != nil {
 		logging.EntryFromContext(ctx).
 			Warnf("User's profile is invalid (response = %q, error = %q)", body, err)
@@ -200,6 +248,29 @@ func (client *Client) SendLTIResult(
 		return false, fmt.Errorf("can't publish score: %s", err.Error())
 	}
 	return response.Success, nil
+}
+
+// requestUserAPIAccount calls /user_api/account on behalf of the user owning the access token
+// and returns the status code and the (size-limited) response body. It panics on transport errors.
+func (client *Client) requestUserAPIAccount(
+	ctx context.Context, method, accessToken string, jsonBody []byte,
+) (statusCode int, body []byte) {
+	requestBody := io.Reader(http.NoBody)
+	if jsonBody != nil {
+		requestBody = bytes.NewReader(jsonBody)
+	}
+	request, err := http.NewRequestWithContext(ctx, method, client.url+"/user_api/account", requestBody)
+	mustNotBeError(err)
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+	if jsonBody != nil {
+		request.Header.Set("Content-Type", "application/json")
+	}
+	response, err := http.DefaultClient.Do(request)
+	mustNotBeError(err)
+	body, err = io.ReadAll(io.LimitReader(response.Body, oneMegabyte))
+	_ = response.Body.Close()
+	mustNotBeError(err)
+	return response.StatusCode, body
 }
 
 type accountManagerResponse struct {

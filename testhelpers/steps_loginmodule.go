@@ -7,6 +7,7 @@ import (
 	"maps"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/cucumber/godog"
 	"github.com/spf13/viper"
@@ -140,6 +141,25 @@ func (ctx *TestContext) TheLoginModuleAccountEndpointForTokenReturns(
 	httpmock.RegisterStubRequests(httpmock.NewStubRequest("GET",
 		ctx.appAuthConfig().GetString("LoginModuleURL")+"/user_api/account", responder,
 		httpmock.WithHeader(&http.Header{"Authorization": {"Bearer " + preprocessedToken}})))
+	return nil
+}
+
+// TheLoginModuleAccountPUTEndpointForTokenAndBodyReturns mocks the return of the login module PUT /user_api/account
+// for the provided token and the exact request body.
+func (ctx *TestContext) TheLoginModuleAccountPUTEndpointForTokenAndBodyReturns(
+	authToken, requestBody string,
+	statusCode int,
+	body *godog.DocString,
+) error {
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	preprocessedToken := ctx.preprocessString(authToken)
+	preprocessedRequestBody := ctx.preprocessString(requestBody)
+	preprocessedBody := ctx.preprocessString(body.Content)
+	responder := httpmock.NewStringResponder(statusCode, preprocessedBody)
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest(http.MethodPut,
+		ctx.appAuthConfig().GetString("LoginModuleURL")+"/user_api/account", responder,
+		httpmock.WithHeader(&http.Header{"Authorization": {"Bearer " + preprocessedToken}}),
+		httpmock.WithBody(strings.NewReader(preprocessedRequestBody))))
 	return nil
 }
 

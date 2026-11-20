@@ -11,6 +11,10 @@ auth:
   loginModuleURL: "http://127.0.0.1:8000"
   clientID: "1"
   clientSecret: "tzxsLyFtJiGnmD6sjZMqSEidVpVsL3hEoSxIXCpI"
+  # Enables PUT /current-user/profile, which forwards a profile update to the login module
+  # (PUT {loginModuleURL}/user_api/account). Only turn it on if the login module supports it.
+  # While false (default), the route answers 404.
+  #profileUpdateEnabled: false
 token:
   platformName: algrorea_backend
   publicKeyFile: public_key.pem # one of (publicKeyFile, publicKey) is required

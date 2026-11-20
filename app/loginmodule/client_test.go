@@ -761,3 +761,110 @@ func TestEncode(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_UpdateUserProfile(t *testing.T) {
+	tests := []struct {
+		name            string
+		responseCode    int
+		response        string
+		expectedProfile *UserProfile
+		expectedErr     error
+	}{
+		{
+			name:         "success",
+			responseCode: 200,
+			response:     `{"id":100000001,"login":"jane","profile":{"first_name":"Jane","gender":"female"}}`,
+			expectedProfile: &UserProfile{
+				Profile: new(map[string]any{"first_name": "Jane", "gender": "female"}),
+				LoginID: 100000001,
+				Login:   "jane",
+			},
+		},
+		{
+			name:         "plain-text refusal",
+			responseCode: 400,
+			response:     "invalid value for gender\n",
+			expectedErr:  &ProfileRejectedError{Message: "invalid value for gender"},
+		},
+		{
+			name:         "refusal with a JSON error",
+			responseCode: 422,
+			response:     `{"error":"unknown key: nickname"}`,
+			expectedErr:  &ProfileRejectedError{Message: "unknown key: nickname"},
+		},
+		{
+			name:         "refusal with a JSON message",
+			responseCode: 403,
+			response:     `{"message":"profile updates are not allowed"}`,
+			expectedErr:  &ProfileRejectedError{Message: "profile updates are not allowed"},
+		},
+		{
+			name:         "refusal with a JSON object without a message",
+			responseCode: 400,
+			response:     `{"error":1}`,
+			expectedErr:  &ProfileRejectedError{Message: `{"error":1}`},
+		},
+		{
+			name:         "refusal with an empty body",
+			responseCode: 404,
+			response:     "",
+			expectedErr:  &ProfileRejectedError{Message: "Not Found"},
+		},
+		{
+			name:         "server error",
+			responseCode: 500,
+			response:     "Unknown error",
+			expectedErr:  errors.New("can't update user's profile (status code = 500)"),
+		},
+		{
+			name:         "invalid response",
+			responseCode: 200,
+			response:     "{}",
+			expectedErr:  errors.New("user's profile is invalid"),
+		},
+	}
+
+	const moduleURL = "http://login.url.com"
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &Client{url: moduleURL}
+			httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+			defer httpmock.DeactivateAndReset()
+			responder := httpmock.NewStringResponder(tt.responseCode, tt.response)
+			httpmock.RegisterStubRequests(httpmock.NewStubRequest("PUT",
+				moduleURL+"/user_api/account", responder,
+				httpmock.WithHeader(&http.Header{
+					"Authorization": {"Bearer accesstoken"},
+					"Content-Type":  {"application/json"},
+				}),
+				httpmock.WithBody(strings.NewReader(`{"profile":{"first_name":"Jane","gender":"female"}}`))))
+			ctx, _, _ := logging.NewContextWithNewMockLogger()
+
+			gotProfile, err := client.UpdateUserProfile(ctx, "accesstoken",
+				map[string]string{"gender": "female", "first_name": "Jane"})
+
+			require.Equal(t, tt.expectedErr, err)
+			assert.Equal(t, tt.expectedProfile, gotProfile)
+			assert.NoError(t, httpmock.AllStubsCalled())
+		})
+	}
+}
+
+func TestClient_UpdateUserProfile_ReturnsTransportErrors(t *testing.T) {
+	const moduleURL = "http://login.url.com"
+	client := &Client{url: moduleURL}
+	httpmock.Activate(httpmock.WithAllowedHosts("127.0.0.1"))
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterStubRequests(httpmock.NewStubRequest("PUT", moduleURL+"/user_api/account",
+		func(*http.Request) (*http.Response, error) { return nil, context.DeadlineExceeded }))
+	ctx, _, _ := logging.NewContextWithNewMockLogger()
+
+	gotProfile, err := client.UpdateUserProfile(ctx, "accesstoken", map[string]string{})
+
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.Nil(t, gotProfile)
+}
+
+func TestProfileRejectedError_Error(t *testing.T) {
+	assert.Equal(t, "invalid value", (&ProfileRejectedError{Message: "invalid value"}).Error())
+}

@@ -104,3 +104,11 @@ type internalError struct {
 	// enum: Internal Server Error
 	Message string `json:"message"`
 }
+
+type badGateway struct {
+	genericError
+
+	// required: true
+	// enum: Bad Gateway
+	Message string `json:"message"`
+}

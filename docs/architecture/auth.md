@@ -15,6 +15,8 @@ Context helpers: `auth.UserFromContext`, `auth.SessionIDFromContext`, `domain.Co
 
 `POST /auth/user` does not require a session. It asks the login module for one user (`POST /platform_api/accounts_manager/create_user`, no password and no participation code), exchanges the returned bridge code the same way `POST /auth/token` exchanges a coordinator's code, and sets the session cookie. The JSON data is the login and `expires_in`. The client secret stays in server config.
 
+`PUT /current-user/profile` (off unless `auth.profileUpdateEnabled`) forwards `{"profile": {...}}` unchanged to the login module's `PUT /user_api/account` with the caller's bearer token, then stores the returned profile like `PUT /current-user/refresh`. A login-module 4xx becomes a 400 with its message; any other failure or timeout, a 502. Temporary users are refused.
+
 ## Authorization
 
 **Groups:** hierarchy via `groups_groups` / `groups_ancestors`; manager capabilities; visibility via `PickVisibleGroups()`.

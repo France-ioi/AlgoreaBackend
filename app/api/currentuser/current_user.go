@@ -53,6 +53,7 @@ func (srv *Service) SetRoutes(router chi.Router) {
 
 	router.Put("/current-user/notifications-read-at", service.AppHandler(srv.updateNotificationsReadAt).ServeHTTP)
 	router.Put("/current-user/refresh", service.AppHandler(srv.refresh).ServeHTTP)
+	router.Put("/current-user/profile", service.AppHandler(srv.updateProfile).ServeHTTP)
 
 	router.Get("/current-user/full-dump", service.AppHandler(srv.getFullDump).ServeHTTP)
 	router.Get("/current-user/dump", service.AppHandler(srv.getDump).ServeHTTP)
