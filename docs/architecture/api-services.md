@@ -46,7 +46,7 @@ func (srv *Service) getGroup(w http.ResponseWriter, r *http.Request) error {
 
 ## Errors & responses
 
-`APIError` helpers in `service/errors.go`: `ErrInvalidRequest` (400), `ErrUnauthorized` (401), `ErrAPIInsufficientAccessRights` / `ErrForbidden` (403), `ErrNotFound` (404), `ErrRequestTimeout` (408), `ErrUnexpected` (500). `AppHandler` turns them into JSON.
+`APIError` helpers in `service/errors.go`: `ErrInvalidRequest` (400), `ErrUnauthorized` (401), `ErrAPIInsufficientAccessRights` / `ErrForbidden` (403), `ErrNotFound` (404), `ErrRequestTimeout` (408), `ErrUnexpected` (500), `ErrBadGateway` (502, an upstream such as the login module failed). `AppHandler` turns them into JSON.
 
 `go-chi/render` + `service.AppResponder`: success gets `success: true`; errors `success: false` + message; pagination metadata when present.
 

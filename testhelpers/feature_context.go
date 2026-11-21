@@ -152,6 +152,8 @@ func InitializeScenario(scenarioContext *godog.ScenarioContext) {
 		ctx.TheLoginModuleTokenEndpointForRefreshTokenReturns)
 	scenarioContext.Step(`^the login module "account" endpoint for token "([^"]*)" returns (\d+) with body:$`,
 		ctx.TheLoginModuleAccountEndpointForTokenReturns)
+	scenarioContext.Step(`^the login module "account" PUT endpoint for token "([^"]*)" and body '([^']*)' returns (\d+) with body:$`,
+		ctx.TheLoginModuleAccountPUTEndpointForTokenAndBodyReturns)
 	scenarioContext.Step(`^the login module "unlink_client" endpoint for user id "([^"]*)" returns (\d+) with encoded body:$`,
 		ctx.TheLoginModuleUnlinkClientEndpointForUserIDReturns)
 	scenarioContext.Step(`^the login module "create_user" endpoint returns (\d+) with encoded body:$`,

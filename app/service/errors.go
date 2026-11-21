@@ -100,6 +100,12 @@ func ErrUnexpected(err error) *APIError {
 	return &APIError{http.StatusInternalServerError, err}
 }
 
+// ErrBadGateway is for errors caused by a failure of an upstream service we depend on (e.g., the login module)
+// It results in a 502 Bad Gateway response.
+func ErrBadGateway(err error) *APIError {
+	return &APIError{http.StatusBadGateway, err}
+}
+
 // MustNotBeError panics if the error is not nil.
 func MustNotBeError(err error) {
 	if err != nil {

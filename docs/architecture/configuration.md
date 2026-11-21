@@ -34,6 +34,6 @@ If `async: true` without SQS dispatcher, scheduling logs an error and skips (no 
 
 Ops: with `async: true`, run periodic `propagation` as a safety net (0.5s lock wait leaves a residual lost-wakeup window). Diagnostics: `performance_schema=ON`, `GRANT PROCESS ON *.*` — [propagation.md](propagation.md).
 
-**Auth / token / domains** — login-module client, JWT keys, domain group IDs.
+**Auth / token / domains** — login-module client, JWT keys, domain group IDs. `auth.profileUpdateEnabled` (default false) exposes `PUT /current-user/profile`, which forwards to the login module's `PUT /user_api/account`; off, the route answers 404 — enable only for login modules that implement it.
 
 **CORS** — [cors.md](cors.md).

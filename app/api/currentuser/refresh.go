@@ -33,6 +33,17 @@ func (srv *Service) refresh(responseWriter http.ResponseWriter, httpRequest *htt
 	userProfile, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).GetUserProfile(httpRequest.Context(), accessToken)
 	service.MustNotBeError(err)
 
+	srv.storeUserProfile(httpRequest, user.GroupID, userProfile)
+
+	response := service.UpdateSuccess[*struct{}](nil)
+	render.Respond(responseWriter, httpRequest, &response)
+
+	return nil
+}
+
+// storeUserProfile updates the local user info cache stored in the `users` table and the badges
+// from the user profile returned by the login module.
+func (srv *Service) storeUserProfile(httpRequest *http.Request, userID int64, userProfile *loginmodule.UserProfile) {
 	badges := userProfile.Badges
 	userData := userProfile.ToMap()
 	userData["latest_activity_at"] = database.Now()
@@ -41,13 +52,8 @@ func (srv *Service) refresh(responseWriter http.ResponseWriter, httpRequest *htt
 	delete(userData, "badges")
 
 	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
-		service.MustNotBeError(store.Groups().StoreBadges(badges, user.GroupID, false))
-		service.MustNotBeError(store.Users().ByID(user.GroupID).UpdateColumn(userData).Error())
+		service.MustNotBeError(store.Groups().StoreBadges(badges, userID, false))
+		service.MustNotBeError(store.Users().ByID(userID).UpdateColumn(userData).Error())
 		return nil
 	}))
-
-	response := service.UpdateSuccess[*struct{}](nil)
-	render.Respond(responseWriter, httpRequest, &response)
-
-	return nil
 }

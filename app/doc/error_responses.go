@@ -79,3 +79,10 @@ type internalErrorResponse struct {
 	// in: body
 	Body struct{ internalError }
 }
+
+// Bad Gateway. An upstream service the request depends on (e.g., the login module) failed or did not answer in time.
+// swagger:response badGatewayResponse
+type badGatewayResponse struct {
+	// in: body
+	Body struct{ badGateway }
+}

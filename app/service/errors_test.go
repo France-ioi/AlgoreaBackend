@@ -57,6 +57,13 @@ func TestInvalidRequest(t *testing.T) {
 	assert.Equal(http.StatusBadRequest, recorder.Code)
 }
 
+func TestBadGateway(t *testing.T) {
+	assert := assertlib.New(t)
+	recorder := responseForError(service.ErrBadGateway(errors.New("upstream failed")))
+	assert.JSONEq(`{"success":false,"message":"Bad Gateway","error_text":"Upstream failed"}`, recorder.Body.String())
+	assert.Equal(http.StatusBadGateway, recorder.Code)
+}
+
 func TestUnprocessableEntityRequest(t *testing.T) {
 	assert := assertlib.New(t)
 	recorder := responseForError(service.ErrUnprocessableEntity(errors.New(someErrorMessage)))
