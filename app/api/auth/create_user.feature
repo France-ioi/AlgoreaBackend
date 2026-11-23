@@ -137,3 +137,62 @@ Feature: Create a user and sign in
     And the table "sessions" at user_id "22" should be:
       | session_id | user_id | refresh_token |
       | 900        | 22      | temprefresh   |
+
+  Scenario Outline: The default_language parameter applies only when the login module gives no language
+    Given the time now is "2019-07-16T22:02:28Z"
+    And the login module "create_user" endpoint returns 200 with encoded body:
+      """
+      {"success": true, "data": {"code": "bridgecode", "redirect_uri": "https://contest.example/cb"}}
+      """
+    And the login module "token" endpoint for code "bridgecode" and redirect_uri "https://contest.example/cb" returns 200 with body:
+      """
+      {
+        "token_type": "Bearer",
+        "expires_in": 7200,
+        "access_token": "useraccesstoken",
+        "refresh_token": "userrefreshtoken"
+      }
+      """
+    And the login module "account" endpoint for token "useraccesstoken" returns 200 with body:
+      """
+      {"id": 100000042, "login": "beoi27_k3mnpq"<account_language>, "badges": []}
+      """
+    When I send a POST request to "/auth/user<query>"
+    Then the response code should be 201
+    And the table "users" should be:
+      | group_id            | login_id  | login         | default_language            |
+      | 5577006791947779410 | 100000042 | beoi27_k3mnpq | <expected_default_language> |
+  Examples:
+    | query                  | account_language        | expected_default_language |
+    |                        |                         | fr                        |
+    | ?default_language=nl   |                         | nl                        |
+    | ?default_language=nl   | , "language": "en"      | en                        |
+    |                        | , "language": "en"      | en                        |
+
+  Scenario: The default_language parameter never changes the language of an existing user
+    Given the time now is "2019-07-16T22:02:28Z"
+    And the database has the following users:
+      | group_id | login_id  | login         | default_language |
+      | 22       | 100000042 | beoi27_k3mnpq | de               |
+    And the login module "create_user" endpoint returns 200 with encoded body:
+      """
+      {"success": true, "data": {"code": "bridgecode", "redirect_uri": "https://contest.example/cb"}}
+      """
+    And the login module "token" endpoint for code "bridgecode" and redirect_uri "https://contest.example/cb" returns 200 with body:
+      """
+      {
+        "token_type": "Bearer",
+        "expires_in": 7200,
+        "access_token": "useraccesstoken",
+        "refresh_token": "userrefreshtoken"
+      }
+      """
+    And the login module "account" endpoint for token "useraccesstoken" returns 200 with body:
+      """
+      {"id": 100000042, "login": "beoi27_k3mnpq", "badges": []}
+      """
+    When I send a POST request to "/auth/user?default_language=nl"
+    Then the response code should be 201
+    And the table "users" at group_id "22" should be:
+      | group_id | default_language |
+      | 22       | de               |

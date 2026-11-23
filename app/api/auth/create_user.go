@@ -24,6 +24,15 @@ import (
 //		If `{cookie_secure}` is not set explicitly to `0`, the cookie is also issued with the `Secure` attribute.
 //	security: []
 //	parameters:
+//		- name: default_language
+//			in: query
+//			description: >
+//				Language of the new user, at most 3 characters. It applies only when the user is created
+//				and only if the login module returns no language for the user (the login module's language wins).
+//				It never changes the language of an existing user.
+//				If neither is given, the `DEFAULT` definition of `default_language` in the `users` table is used.
+//			type: string
+//			maxLength: 3
 //		- name: use_cookie
 //			in: query
 //			description: If 1, set a cookie instead of returning the access token in the data
@@ -71,6 +80,15 @@ func (srv *Service) createUser(responseWriter http.ResponseWriter, httpRequest *
 	cookieAttributes, err := srv.resolveSessionCookieAttributesFromRequest(httpRequest)
 	service.MustNotBeError(err)
 
+	defaultLanguageString, languageGiven, err := parseDefaultLanguage(httpRequest)
+	if err != nil {
+		return err
+	}
+	var defaultLanguage any
+	if languageGiven {
+		defaultLanguage = defaultLanguageString
+	}
+
 	bridge, err := loginmodule.NewClient(srv.AuthConfig.GetString("loginModuleURL")).
 		CreateUser(httpRequest.Context(), srv.AuthConfig.GetString("clientID"), srv.AuthConfig.GetString("clientSecret"))
 	if err != nil {
@@ -78,7 +96,7 @@ func (srv *Service) createUser(responseWriter http.ResponseWriter, httpRequest *
 	}
 
 	accessToken, expiresIn, login := srv.createSessionFromAuthorizationCode(
-		httpRequest, bridge.Code, nil, &bridge.RedirectURI)
+		httpRequest, bridge.Code, nil, &bridge.RedirectURI, defaultLanguage)
 	srv.respondWithNewAccessToken(
 		responseWriter, httpRequest, service.CreationSuccess[map[string]any], accessToken, expiresIn, cookieAttributes,
 		map[string]any{"login": login})

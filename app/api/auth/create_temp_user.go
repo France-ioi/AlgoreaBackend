@@ -67,13 +67,12 @@ func (srv *Service) createTempUser(responseWriter http.ResponseWriter, httpReque
 		return service.ErrInvalidRequest(errors.New("the 'Authorization' header must not be present"))
 	}
 
+	defaultLanguageString, languageGiven, err := parseDefaultLanguage(httpRequest)
+	if err != nil {
+		return err
+	}
 	defaultLanguage := database.Default()
-	if len(httpRequest.URL.Query()["default_language"]) != 0 {
-		defaultLanguageString := httpRequest.URL.Query().Get("default_language")
-		const maxLanguageLength = 3
-		if utf8.RuneCountInString(defaultLanguageString) > maxLanguageLength {
-			return service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
-		}
+	if languageGiven {
 		defaultLanguage = defaultLanguageString
 	}
 
@@ -167,4 +166,17 @@ func parseCookieParametersForCreateTempUser(r *http.Request) (*CookieParameters,
 		return nil, service.ErrInvalidRequest(err)
 	}
 	return &requestParameters, nil
+}
+
+// parseDefaultLanguage returns the `default_language` query parameter and whether it is present.
+func parseDefaultLanguage(httpRequest *http.Request) (defaultLanguage string, present bool, err error) {
+	if len(httpRequest.URL.Query()["default_language"]) == 0 {
+		return "", false, nil
+	}
+	defaultLanguage = httpRequest.URL.Query().Get("default_language")
+	const maxLanguageLength = 3
+	if utf8.RuneCountInString(defaultLanguage) > maxLanguageLength {
+		return "", false, service.ErrInvalidRequest(errors.New("the length of default_language should be no more than 3 characters"))
+	}
+	return defaultLanguage, true, nil
 }
