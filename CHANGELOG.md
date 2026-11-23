@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [v2.68.1](https://github.com/France-ioi/AlgoreaBackend/compare/v2.68.0...v2.68.1) - 2026-11-23
+
+- `POST /auth/user` accepts an optional `default_language` parameter, used as the language of a newly created user when the login module returns none (existing users are never updated)
+
 ## [v2.68.0](https://github.com/France-ioi/AlgoreaBackend/compare/v2.67.0...v2.68.0) - 2026-11-21
 
 - new service: `PUT /current-user/profile` lets a signed-in user update their own profile through the login module (disabled by default, enabled with `auth.profileUpdateEnabled`)
