@@ -256,7 +256,7 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 	}
 
 	accessToken, expiresIn, _ := srv.createSessionFromAuthorizationCode(
-		httpRequest, *requestParameters.Code, requestParameters.CodeVerifier, requestParameters.RedirectURI)
+		httpRequest, *requestParameters.Code, requestParameters.CodeVerifier, requestParameters.RedirectURI, nil)
 	srv.respondWithNewAccessToken(
 		responseWriter, httpRequest, service.CreationSuccess[map[string]any], accessToken, expiresIn, cookieAttributes, nil)
 	return nil
@@ -264,8 +264,9 @@ func (srv *Service) createAccessToken(responseWriter http.ResponseWriter, httpRe
 
 // createSessionFromAuthorizationCode exchanges an authorization code the way coordinator sign-in does
 // and stores the resulting session. It returns the access token, its lifetime, and the account login.
+// defaultLanguage (nil for none) is used only when a new user is created and the login module gives no language.
 func (srv *Service) createSessionFromAuthorizationCode(
-	httpRequest *http.Request, code string, codeVerifier, redirectURI *string,
+	httpRequest *http.Request, code string, codeVerifier, redirectURI *string, defaultLanguage any,
 ) (accessToken string, expiresIn int32, login string) {
 	oauthConfig := auth.GetOAuthConfig(srv.AuthConfig)
 	var oauthOptions []oauth2.AuthCodeOption
@@ -291,7 +292,7 @@ func (srv *Service) createSessionFromAuthorizationCode(
 
 	var userID int64
 	service.MustNotBeError(srv.GetStore(httpRequest).InTransaction(func(store *database.DataStore) error {
-		userID = createOrUpdateUser(store.Users(), userProfile, domainConfig, userIP)
+		userID = createOrUpdateUser(store.Users(), userProfile, domainConfig, userIP, defaultLanguage)
 		logging.LogEntrySetField(httpRequest, "user_id", userID)
 		service.MustNotBeError(store.Groups().StoreBadges(userProfile.Badges, userID, true))
 
@@ -465,6 +466,7 @@ func extractOptionalParameter(query url.Values, paramName string, requestData ma
 
 func createOrUpdateUser(
 	userStore *database.UserStore, userProfile *loginmodule.UserProfile, domainConfig *domain.CtxConfig, userIP string,
+	defaultLanguage any,
 ) int64 {
 	var groupID int64
 	err := userStore.WithExclusiveWriteLock().
@@ -477,8 +479,11 @@ func createOrUpdateUser(
 	userData["latest_profile_sync_at"] = database.Now()
 	userData["last_ip"] = userIP
 
-	if defaultLanguage, ok := userData["default_language"]; ok && defaultLanguage == nil {
-		userData["default_language"] = database.Default()
+	if profileLanguage, ok := userData["default_language"]; ok && profileLanguage == nil {
+		if defaultLanguage == nil {
+			defaultLanguage = database.Default()
+		}
+		userData["default_language"] = defaultLanguage
 	}
 
 	badges := userData["badges"]

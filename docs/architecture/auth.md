@@ -13,7 +13,7 @@ sessionID := srv.GetSessionID(r) // int64
 
 Context helpers: `auth.UserFromContext`, `auth.SessionIDFromContext`, `domain.ConfigFromContext`, `logging.EntryFromContext`.
 
-`POST /auth/user` does not require a session. It asks the login module for one user (`POST /platform_api/accounts_manager/create_user`, no password and no participation code), exchanges the returned bridge code the same way `POST /auth/token` exchanges a coordinator's code, and sets the session cookie. The JSON data is the login and `expires_in`. The client secret stays in server config.
+`POST /auth/user` does not require a session. It asks the login module for one user (`POST /platform_api/accounts_manager/create_user`, no password and no participation code), exchanges the returned bridge code the same way `POST /auth/token` exchanges a coordinator's code, and sets the session cookie. The JSON data is the login and `expires_in`. The client secret stays in server config. The optional `default_language` query parameter (at most 3 characters, validated before the login module is called) sets the language of the new user only when the user row is created and the login module returns no language; the login module's language wins, and an existing user's language is never changed.
 
 `PUT /current-user/profile` (off unless `auth.profileUpdateEnabled`) forwards `{"profile": {...}}` unchanged to the login module's `PUT /user_api/account` with the caller's bearer token, then stores the returned profile like `PUT /current-user/refresh`. A login-module 4xx becomes a 400 with its message; any other failure or timeout, a 502. Temporary users are refused.
 

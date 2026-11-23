@@ -117,3 +117,14 @@ Feature: Create a user and sign in - robustness
     And the table "users" should remain unchanged
     And the table "sessions" should remain unchanged
     And the table "access_tokens" should remain unchanged
+
+  Scenario: default_language is too long
+    When I send a POST request to "/auth/user?default_language=russian"
+    Then the response code should be 400
+    And the response error message should contain "The length of default_language should be no more than 3 characters"
+    And the response header "Set-Cookie" should not be set
+    And the table "users" should remain unchanged
+    And the table "groups" should remain unchanged
+    And the table "groups_groups" should remain unchanged
+    And the table "sessions" should remain unchanged
+    And the table "access_tokens" should remain unchanged
